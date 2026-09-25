@@ -7,7 +7,7 @@ Guia passo a passo. Para a versão curta, veja a seção
 
 ## 🧭 Sumário
 
-[✅ Pré-requisitos](#-pré-requisitos) · [1️⃣ Configuração base](#1-configuração-base) · [2️⃣ Senha do usuário inicial](#2-senha-do-usuário-inicial) · [3️⃣ Subir a stack](#3-subir-a-stack) · [4️⃣ Validar](#4-validar) · [♻️ Como desfazer](#-como-desfazer) · [⏭️ Próximos passos](#-próximos-passos)
+[✅ Pré-requisitos](#-pré-requisitos) · [1️⃣ Configuração base](#1️-configuração-base) · [2️⃣ Senha do usuário inicial](#2️-senha-do-usuário-inicial) · [3️⃣ Subir a stack](#3️-subir-a-stack) · [4️⃣ Validar](#4️-validar) · [♻️ Como desfazer](#️-como-desfazer) · [⏭️ Próximos passos](#️-próximos-passos)
 
 ---
 
@@ -59,7 +59,7 @@ chmod 600 .secrets/ftp_password.txt
 
 - Mínimo **12 caracteres** — o [`entrypoint.sh`](../scripts/entrypoint.sh) recusa senhas menores (a gerada tem ~48).
 - O arquivo é montado somente-leitura em `/run/.secrets/ftp_password.txt` (via `FTP_PASSWORD_FILE`).
-- Arquivos `.txt` de [`.secrets/`](../.secrets/README.md) são ignorados pelo Git.
+- Arquivos `.txt` de [`.secrets/`](segredos.md) são ignorados pelo Git.
 - Alternativa (não recomendada): definir `FTP_PASSWORD` direto no `.env` e deixar `FTP_PASSWORD_FILE` vazio.
 
 ---
@@ -126,4 +126,4 @@ usar `-v`, nada é perdido.
 
 - Criar mais usuários: [`operacao.md`](operacao.md#-usuários).
 - Colocar em produção: [`seguranca.md`](seguranca.md) + certificado real.
-- Monitoramento: a stack [`../../04-monitoring/allsafe-zabbix-isp-stack/`](../../04-monitoring/allsafe-zabbix-isp-stack/) acompanha o container.
+- Monitoramento: a stack `allsafe-zabbix-isp-stack` acompanha o container.

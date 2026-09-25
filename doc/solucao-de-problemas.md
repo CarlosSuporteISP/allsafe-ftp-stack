@@ -2,6 +2,12 @@
 
 ---
 
+## 🧭 Sumário
+
+[🧭 Diagnóstico em 30 segundos](#-diagnóstico-em-30-segundos) · [❌ O container não sobe](#-o-container-não-sobe) · [🔌 Conecta mas falha no login ou na listagem](#-conecta-mas-falha-no-login-ou-na-listagem) · [📁 Problemas de arquivo/permissão](#-problemas-de-arquivopermissão) · [🔐 Certificado / TLS](#-certificado--tls) · [🧪 Ferramentas de validação](#-ferramentas-de-validação)
+
+---
+
 ## 🧭 Diagnóstico em 30 segundos
 
 ```bash
@@ -19,7 +25,7 @@ o motivo está sempre na primeira tentativa do log.
 
 | Mensagem no log | Causa | Correção |
 |---|---|---|
-| `FALHA: FTP_PASSWORD_FILE nao pode ser lido` | `FTP_PASSWORD_FILE` aponta para um arquivo ausente ou sem permissão de leitura. | Crie [`.secrets/ftp_password.txt`](../.secrets/README.md) e `chmod 600`. Confirme que o bind `./.secrets` existe. |
+| `FALHA: FTP_PASSWORD_FILE nao pode ser lido` | `FTP_PASSWORD_FILE` aponta para um arquivo ausente ou sem permissão de leitura. | Crie [`.secrets/ftp_password.txt`](segredos.md) e `chmod 600`. Confirme que o bind `./.secrets` existe. |
 | `FALHA: a senha FTP deve ter pelo menos 12 caracteres` | Senha curta (ou arquivo com espaço/linha em branco). | Regrave o arquivo: `printf '%s' 'senha-com-12+' > .secrets/ftp_password.txt`. |
 | `FALHA: FTP_USER invalido` | Nome fora de `^[a-z_][a-z0-9_-]{0,31}$`. | Use minúsculas, sem espaço/acento; comece com letra ou `_`. |
 | `FALHA: faixa passiva invalida` / `fora dos limites` | `FTP_PASSIVE_PORT_START/END` não numéricos, `<1024`, `>65535` ou invertidos. | Corrija no `.env`; mantenha `START ≤ END`. |

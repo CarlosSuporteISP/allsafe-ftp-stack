@@ -18,7 +18,7 @@
 | 4 | Uso de contas do sistema para login | Usuários **virtuais** em PureDB + `-u 10000` (UID mínimo). Sem anônimo (`-E`). |
 | 5 | Escalonamento a partir do container | `read_only`, `cap_drop: ALL`, `no-new-privileges`, `tmpfs` `noexec`. |
 | 6 | Abuso de recursos / DoS local | `-c`/`-C` (limites de sessão), `pids_limit`, `mem_limit`, `cpus`, `ulimits`. |
-| 7 | Vazamento de segredo pelo Git ou pela imagem | Senha em [`.secrets/*.txt`](../.secrets/README.md) (git-ignored) e `.dockerignore`; nunca em `ENV` da imagem. |
+| 7 | Vazamento de segredo pelo Git ou pela imagem | Senha em [`.secrets/*.txt`](segredos.md) (git-ignored) e `.dockerignore`; nunca em `ENV` da imagem. |
 | 8 | Enumeração via DNS reverso / _fingerprint_ | `-H` (sem resolução reversa). |
 
 **Fora de escopo:** proteção de rede (faça ACL no host/borda), _rate-limiting_ de
@@ -76,9 +76,9 @@ Nenhuma delas permite montar filesystem, carregar módulo, `ptrace` ou acessar
 
 ## 🔑 Gestão de segredos
 
-- Senha do usuário inicial: [`.secrets/ftp_password.txt`](../.secrets/README.md),
+- Senha do usuário inicial: [`.secrets/ftp_password.txt`](segredos.md),
   `chmod 600`, montado **ro** em `/run/.secrets/`.
-- [`.gitignore`](../.gitignore): `.env` e `.secrets/*.txt` (mantém só o `README.md`).
+- [`.gitignore`](../.gitignore): `.env` e `.secrets/*.txt` (mantém só `.secrets/.gitkeep`, para a pasta existir no clone).
 - [`.dockerignore`](../.dockerignore): `.env`, `.git`, `.secrets`, `doc`, `README.md` — nada de segredo entra na imagem.
 - O [`entrypoint.sh`](../scripts/entrypoint.sh) faz `unset` de `FTP_PASSWORD`/`password` antes do `exec`.
 
@@ -92,6 +92,6 @@ Nenhuma delas permite montar filesystem, carregar módulo, `ptrace` ou acessar
 3. `fail2ban` no host lendo o log CLF do container (`docker logs allsafe-ftp`).
 4. Rever `FTP_MAX_CLIENTS` / faixa passiva conforme o nº real de equipamentos.
 5. Backup dos volumes `allsafe-ftp-data` e `allsafe-ftp-auth`
-   ([`operacao.md`](operacao.md#-backup-dos-volumes)).
-6. Considerar SFTP ([`../allsafe-sftp-stack/`](../allsafe-sftp-stack/)) onde o
+   ([`operacao.md`](operacao.md#️-backup-dos-volumes)).
+6. Considerar SFTP (`allsafe-sftp-stack`) onde o
    equipamento suportar — canal único, sem faixa passiva.

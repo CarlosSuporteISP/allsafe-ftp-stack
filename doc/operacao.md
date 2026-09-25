@@ -6,7 +6,7 @@ Tarefas do dia a dia. Todos os comandos rodam na raiz da stack.
 
 ## 🧭 Sumário
 
-[👤 Usuários](#-usuários) · [🔏 Certificado real de produção](#-certificado-real-de-produção) · [♻️ Backup dos volumes](#-backup-dos-volumes) · [📜 Logs](#-logs) · [⬆️ Atualização da imagem](#-atualização-da-imagem) · [🔍 Inspeção rápida](#-inspeção-rápida) · [⏹️ Parar / remover](#-parar--remover)
+[👤 Usuários](#-usuários) · [🔏 Certificado real de produção](#-certificado-real-de-produção) · [♻️ Backup dos volumes](#️-backup-dos-volumes) · [📜 Logs](#-logs) · [⬆️ Atualização da imagem](#️-atualização-da-imagem) · [🔍 Inspeção rápida](#-inspeção-rápida) · [⏹️ Parar / remover](#️-parar--remover)
 
 ---
 

@@ -10,6 +10,7 @@
 | [`perfis.md`](perfis.md) | Perfis `small`/`medium`/`large` de [`profiles/`](../profiles/): dimensionamento por porte e impacto na faixa passiva. |
 | [`arquitetura.md`](arquitetura.md) | Container, imagem, [`entrypoint.sh`](../scripts/entrypoint.sh), volumes, rede e as flags do `pure-ftpd`. |
 | [`seguranca.md`](seguranca.md) | Modelo de ameaça, superfície exposta e o hardening do [`compose.yaml`](../compose.yaml) linha a linha. |
+| [`segredos.md`](segredos.md) | O que fica em [`.secrets/`](../.secrets/), quem gera cada arquivo e como trocar. |
 | [`operacao.md`](operacao.md) | Usuários, certificado real, backup dos volumes, logs e atualização da imagem. |
 | [`solucao-de-problemas.md`](solucao-de-problemas.md) | Sintoma → causa → correção; como ler healthcheck e logs. |
 

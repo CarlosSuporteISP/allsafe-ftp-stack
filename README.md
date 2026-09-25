@@ -12,7 +12,7 @@ segredos ficam fora da imagem e do Git.
 
 ## 🧭 Sumário
 
-[✨ Destaques](#-destaques) · [🚀 Instalação rápida](#-instalação-rápida) · [🏗️ Arquitetura](#-arquitetura) · [🔌 Portas e binds](#-portas-e-binds) · [🔐 Segurança](#-segurança) · [📊 Perfis de capacidade](#-perfis-de-capacidade) · [🗂️ Estrutura de arquivos](#-estrutura-de-arquivos) · [📚 Documentação completa](#-documentação-completa) · [🔗 Stacks relacionadas](#-stacks-relacionadas)
+[✨ Destaques](#-destaques) · [🚀 Instalação rápida](#-instalação-rápida) · [🏗️ Arquitetura](#️-arquitetura) · [🔌 Portas e binds](#-portas-e-binds) · [🔐 Segurança](#-segurança) · [📊 Perfis de capacidade](#-perfis-de-capacidade) · [🗂️ Estrutura de arquivos](#️-estrutura-de-arquivos) · [📚 Documentação completa](#-documentação-completa) · [🔗 Stacks relacionadas](#-stacks-relacionadas)
 
 ---
 
@@ -94,7 +94,7 @@ alinhe a quantidade de portas ao `FTP_MAX_CLIENTS`.
 - 🔒 TLS **obrigatório** (`FTP_TLS_MODE=2`), `chroot` em todos, sem usuário anônimo, sem DNS reverso.
 - 🧱 `read_only` no root filesystem, `cap_drop: ALL` (só as estritamente
   necessárias voltam), `no-new-privileges`, limites de CPU/memória/PIDs e `nofile`.
-- 🔑 Senha via [`.secrets/ftp_password.txt`](.secrets/README.md) (mín. 12
+- 🔑 Senha via [`.secrets/ftp_password.txt`](doc/segredos.md) (mín. 12
   caracteres, `0600`), fora da imagem e ignorada pelo Git.
 - 📜 Logs rotacionados (`max-size: 10m`, `max-file: 3`).
 
@@ -132,7 +132,7 @@ firewall do host ao trocar. Tabela completa em [`doc/perfis.md`](doc/perfis.md).
 | [`scripts/validate.sh`](scripts/validate.sh) | Checagem de sintaxe/compose (todos os perfis) e, com `--runtime`, do container no ar. |
 | [`profiles/`](profiles/small.env) | Perfis de capacidade (`--size small\|medium\|large`): sessões, faixa passiva e limites de recurso. |
 | [`.env.example`](.env.example) | Modelo de configuração — copie para `.env`. |
-| [`.secrets/`](.secrets/README.md) | Senha do usuário inicial (`.txt` ignorados pelo Git). |
+| [`.secrets/`](doc/segredos.md) | Senha do usuário inicial (`.txt` ignorados pelo Git). |
 | [`doc/`](doc/README.md) | Documentação completa. |
 
 ---
@@ -153,6 +153,6 @@ firewall do host ao trocar. Tabela completa em [`doc/perfis.md`](doc/perfis.md).
 
 ## 🔗 Stacks relacionadas
 
-- [`../allsafe-sftp-stack/`](../allsafe-sftp-stack/) · [`../allsafe-scp-stack/`](../allsafe-scp-stack/) · [`../allsafe-tftp-stack/`](../allsafe-tftp-stack/) — outros servidores de transferência para backup de equipamentos.
-- [`../../04-monitoring/allsafe-zabbix-isp-stack/`](../../04-monitoring/allsafe-zabbix-isp-stack/) — monitora o container desta stack.
-- [`../../README.md`](../../README.md) — visão geral e instalador guarda-chuva.
+- `allsafe-sftp-stack` · `allsafe-scp-stack` · `allsafe-tftp-stack` — outros servidores de transferência para backup de equipamentos.
+- `allsafe-zabbix-isp-stack` — monitora o container desta stack.
+- 📦 `dev/README.md` e `dev/install.sh` — no pacote local AllSafe (fora deste repositório) instalam esta stack junto das outras.

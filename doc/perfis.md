@@ -60,4 +60,4 @@ medium 150, large 400). Ao trocar de perfil:
 3. mantenha `FTP_PUBLIC_IP` com o IP que o cliente realmente alcança.
 
 Não coloque IPs, credenciais ou particularidades de cliente nestes arquivos —
-isso pertence ao [`../.env`](../.env.example) e à [`../.secrets/`](../.secrets/README.md) locais.
+isso pertence ao [`../.env`](../.env.example) e à [`../.secrets/`](segredos.md) locais.
