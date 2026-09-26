@@ -10,11 +10,16 @@ segredos ficam fora da imagem e do Git.
 
 ---
 
-## 🧭 Sumário
+<details>
+<summary>🧭 Sumário — clique para expandir</summary>
 
-[✨ Destaques](#-destaques) · [🚀 Instalação rápida](#-instalação-rápida) · [🏗️ Arquitetura](#️-arquitetura) · [🔌 Portas e binds](#-portas-e-binds) · [🔐 Segurança](#-segurança) · [📊 Perfis de capacidade](#-perfis-de-capacidade) · [🗂️ Estrutura de arquivos](#️-estrutura-de-arquivos) · [📚 Documentação completa](#-documentação-completa) · [🔗 Stacks relacionadas](#-stacks-relacionadas)
+[✨ Destaques](#destaques) · [🚀 Instalação rápida](#instalacao) · [🏗️ Arquitetura](#arquitetura) · [🔌 Portas e binds](#portas) · [🔐 Segurança](#seguranca) · [📊 Perfis de capacidade](#perfis-de-capacidade) · [🗂️ Estrutura de arquivos](#arquivos) · [📚 Documentação completa](#documentacao) · [🔗 Stacks relacionadas](#relacionadas)
+
+</details>
 
 ---
+
+<a name="destaques"></a>
 
 ## ✨ Destaques
 
@@ -26,6 +31,8 @@ segredos ficam fora da imagem e do Git.
 - 📜 **Logs no `stdout`** em formato CLF, rotacionados pelo Docker.
 
 ---
+
+<a name="instalacao"></a>
 
 ## 🚀 Instalação rápida
 
@@ -55,6 +62,8 @@ Passo a passo comentado em [`doc/instalacao.md`](doc/instalacao.md).
 
 ---
 
+<a name="arquitetura"></a>
+
 ## 🏗️ Arquitetura
 
 ```text
@@ -76,6 +85,8 @@ cliente FTPS ──▶ FTP_BIND_IP:21  (+ passivo 30000-30049)
 
 ---
 
+<a name="portas"></a>
+
 ## 🔌 Portas e binds
 
 | Porta (host) | Protocolo | Bind padrão | Para que serve |
@@ -87,6 +98,8 @@ A faixa passiva é 1:1 entre host e container. Ao mudar `FTP_PASSIVE_PORT_*`,
 alinhe a quantidade de portas ao `FTP_MAX_CLIENTS`.
 
 ---
+
+<a name="seguranca"></a>
 
 ## 🔐 Segurança
 
@@ -101,6 +114,8 @@ alinhe a quantidade de portas ao `FTP_MAX_CLIENTS`.
 Modelo de ameaça e o hardening linha a linha em [`doc/seguranca.md`](doc/seguranca.md).
 
 ---
+
+<a name="perfis-de-capacidade"></a>
 
 ## 📊 Perfis de capacidade
 
@@ -118,6 +133,8 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS` — ajuste o
 firewall do host ao trocar. Tabela completa em [`doc/perfis.md`](doc/perfis.md).
 
 ---
+
+<a name="arquivos"></a>
 
 ## 🗂️ Estrutura de arquivos
 
@@ -137,7 +154,11 @@ firewall do host ao trocar. Tabela completa em [`doc/perfis.md`](doc/perfis.md).
 
 ---
 
+<a name="documentacao"></a>
+
 ## 📚 Documentação completa
+
+Índice: [📚 doc/README.md](doc/README.md).
 
 | Guia | Assunto |
 |---|---|
@@ -146,10 +167,13 @@ firewall do host ao trocar. Tabela completa em [`doc/perfis.md`](doc/perfis.md).
 | [`doc/perfis.md`](doc/perfis.md) | Perfis `small`/`medium`/`large`: dimensionamento e faixa passiva |
 | [`doc/arquitetura.md`](doc/arquitetura.md) | Container, entrypoint, volumes e flags do Pure-FTPd |
 | [`doc/seguranca.md`](doc/seguranca.md) | Modelo de ameaça e hardening aplicado |
+| [`doc/scripts.md`](doc/scripts.md) | O que cada script faz, parâmetros e saída esperada |
 | [`doc/operacao.md`](doc/operacao.md) | Usuários, certificado real, backup, logs, atualização |
 | [`doc/solucao-de-problemas.md`](doc/solucao-de-problemas.md) | Erros comuns e como diagnosticar |
 
 ---
+
+<a name="relacionadas"></a>
 
 ## 🔗 Stacks relacionadas
 

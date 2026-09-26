@@ -1,12 +1,19 @@
 # 🏗️ Arquitetura — allsafe-ftp-stack
 
----
-
-## 🧭 Sumário
-
-[🧩 Componentes](#-componentes) · [💾 Volumes](#-volumes) · [🌐 Rede](#-rede) · [🔄 Fluxo da primeira subida](#-fluxo-da-primeira-subida) · [🚩 Flags do `pure-ftpd`](#-flags-do-pure-ftpd) · [🩺 Healthcheck](#-healthcheck) · [🧱 Endurecimento (resumo)](#-endurecimento-resumo)
+↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
 
 ---
+
+<details>
+<summary>🧭 Sumário — clique para expandir</summary>
+
+[🧩 Componentes](#componentes) · [💾 Volumes](#volumes) · [🌐 Rede](#rede) · [🔄 Fluxo da primeira subida](#fluxo-da-primeira-subida) · [🚩 Flags do `pure-ftpd`](#flags-do-pure-ftpd) · [🩺 Healthcheck](#healthcheck) · [🧱 Endurecimento (resumo)](#endurecimento-resumo)
+
+</details>
+
+---
+
+<a name="componentes"></a>
 
 ## 🧩 Componentes
 
@@ -19,6 +26,8 @@
 | Gestão de usuários | [`scripts/ftp-user.sh`](../scripts/ftp-user.sh) → `/usr/local/sbin/allsafe-ftp-user` | `add`/`passwd`/`del`/`list` no PureDB, chamado de fora por [`manage-user.sh`](../manage-user.sh). |
 
 ---
+
+<a name="volumes"></a>
 
 ## 💾 Volumes
 
@@ -33,15 +42,19 @@
 
 ---
 
+<a name="rede"></a>
+
 ## 🌐 Rede
 
 - Rede bridge dedicada `allsafe-ftp-network`.
-- Publicações no host (ver [`configuracao.md`](configuracao.md#-rede-e-portas)):
+- Publicações no host (ver [`configuracao.md`](configuracao.md#rede-e-portas)):
   - `FTP_BIND_IP:FTP_PORT → 2121/tcp` (controle);
   - `FTP_BIND_IP:30000-30049 → 30000-30049/tcp` (dados, passivo, 1:1).
 - Sem DNS reverso (`-H`): o `pure-ftpd` nunca resolve o IP do cliente.
 
 ---
+
+<a name="fluxo-da-primeira-subida"></a>
 
 ## 🔄 Fluxo da primeira subida
 
@@ -64,6 +77,8 @@ Nas subidas seguintes o usuário é **atualizado** (`usermod`) e o certificado
 existente é **mantido**.
 
 ---
+
+<a name="flags-do-pure-ftpd"></a>
 
 ## 🚩 Flags do `pure-ftpd`
 
@@ -91,6 +106,8 @@ Linha final do [`entrypoint.sh`](../scripts/entrypoint.sh):
 
 ---
 
+<a name="healthcheck"></a>
+
 ## 🩺 Healthcheck
 
 ```yaml
@@ -102,6 +119,8 @@ Verifica apenas que o processo está vivo. Para uma checagem funcional (usuário
 existe no PureDB), use [`scripts/validate.sh --runtime`](../scripts/validate.sh).
 
 ---
+
+<a name="endurecimento-resumo"></a>
 
 ## 🧱 Endurecimento (resumo)
 

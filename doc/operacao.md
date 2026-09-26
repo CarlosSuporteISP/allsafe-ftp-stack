@@ -1,14 +1,21 @@
 # 🛠️ Operação — allsafe-ftp-stack
 
+↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
+
 Tarefas do dia a dia. Todos os comandos rodam na raiz da stack.
 
 ---
 
-## 🧭 Sumário
+<details>
+<summary>🧭 Sumário — clique para expandir</summary>
 
-[👤 Usuários](#-usuários) · [🔏 Certificado real de produção](#-certificado-real-de-produção) · [♻️ Backup dos volumes](#️-backup-dos-volumes) · [📜 Logs](#-logs) · [⬆️ Atualização da imagem](#️-atualização-da-imagem) · [🔍 Inspeção rápida](#-inspeção-rápida) · [⏹️ Parar / remover](#️-parar--remover)
+[👤 Usuários](#usuarios) · [🔏 Certificado real de produção](#certificado-real-de-producao) · [♻️ Backup dos volumes](#backup-dos-volumes) · [📜 Logs](#logs) · [⬆️ Atualização da imagem](#atualizacao-da-imagem) · [🔍 Inspeção rápida](#inspecao-rapida) · [⏹️ Parar / remover](#parar-remover)
+
+</details>
 
 ---
+
+<a name="usuarios"></a>
 
 ## 👤 Usuários
 
@@ -35,6 +42,8 @@ Regras:
 
 ---
 
+<a name="certificado-real-de-producao"></a>
+
 ## 🔏 Certificado real de produção
 
 O certificado inicial é **autoassinado** (gerado na 1ª subida). Para um real:
@@ -56,6 +65,8 @@ docker compose restart ftp
 - Renovação: repita os passos 1–3 (ex.: via `cron` no host puxando do seu ACME).
 
 ---
+
+<a name="backup-dos-volumes"></a>
 
 ## ♻️ Backup dos volumes
 
@@ -81,6 +92,8 @@ docker compose up -d
 
 ---
 
+<a name="logs"></a>
+
 ## 📜 Logs
 
 ```bash
@@ -92,6 +105,8 @@ Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (ver [`compose.yaml`](../c
 Para `fail2ban`, aponte o filtro para a saída de `docker logs allsafe-ftp`.
 
 ---
+
+<a name="atualizacao-da-imagem"></a>
 
 ## ⬆️ Atualização da imagem
 
@@ -106,6 +121,8 @@ uma base nova, atualize o digest do `FROM` e refaça o build.
 
 ---
 
+<a name="inspecao-rapida"></a>
+
 ## 🔍 Inspeção rápida
 
 ```bash
@@ -116,6 +133,8 @@ docker compose exec ftp pure-pw show transfer -f /auth/pureftpd.passwd
 ```
 
 ---
+
+<a name="parar-remover"></a>
 
 ## ⏹️ Parar / remover
 

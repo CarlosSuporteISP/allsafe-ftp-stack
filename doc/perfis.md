@@ -14,11 +14,16 @@ do cliente (IPs, portas, imagem, certificado); o perfil, só o dimensionamento.
 
 ---
 
-## 🧭 Sumário
+<details>
+<summary>🧭 Sumário — clique para expandir</summary>
 
-[📐 Tabela de perfis](#-tabela-de-perfis) · [🎛️ Campos dimensionados](#️-campos-dimensionados) · [⚠️ Faixa passiva e firewall](#️-faixa-passiva-e-firewall)
+[📐 Tabela de perfis](#tabela-de-perfis) · [🎛️ Campos dimensionados](#campos-dimensionados) · [⚠️ Faixa passiva e firewall](#faixa-passiva-e-firewall)
+
+</details>
 
 ---
+
+<a name="tabela-de-perfis"></a>
 
 ## 📐 Tabela de perfis
 
@@ -34,6 +39,8 @@ connections` ou saturação de CPU/memória do container.
 
 ---
 
+<a name="campos-dimensionados"></a>
+
 ## 🎛️ Campos dimensionados
 
 | Campo | Efeito |
@@ -48,6 +55,8 @@ connections` ou saturação de CPU/memória do container.
 Descrição completa de cada variável em [`configuracao.md`](configuracao.md).
 
 ---
+
+<a name="faixa-passiva-e-firewall"></a>
 
 ## ⚠️ Faixa passiva e firewall
 

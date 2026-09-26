@@ -1,15 +1,22 @@
 # 🚀 Instalação — allsafe-ftp-stack
 
+↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
+
 Guia passo a passo. Para a versão curta, veja a seção
-[🚀 Instalação rápida](../README.md#-instalação-rápida) do `README.md`.
+[🚀 Instalação rápida](../README.md#instalacao) do `README.md`.
 
 ---
 
-## 🧭 Sumário
+<details>
+<summary>🧭 Sumário — clique para expandir</summary>
 
-[✅ Pré-requisitos](#-pré-requisitos) · [1️⃣ Configuração base](#1️-configuração-base) · [2️⃣ Senha do usuário inicial](#2️-senha-do-usuário-inicial) · [3️⃣ Subir a stack](#3️-subir-a-stack) · [4️⃣ Validar](#4️-validar) · [♻️ Como desfazer](#️-como-desfazer) · [⏭️ Próximos passos](#️-próximos-passos)
+[✅ Pré-requisitos](#pre-requisitos) · [1️⃣ Configuração base](#1-configuracao-base) · [2️⃣ Senha do usuário inicial](#2-senha-do-usuario-inicial) · [3️⃣ Subir a stack](#3-subir-a-stack) · [4️⃣ Validar](#4-validar) · [♻️ Como desfazer](#como-desfazer) · [⏭️ Próximos passos](#proximos-passos)
+
+</details>
 
 ---
+
+<a name="pre-requisitos"></a>
 
 ## ✅ Pré-requisitos
 
@@ -21,6 +28,8 @@ Guia passo a passo. Para a versão curta, veja a seção
 | 🕰️ Relógio sincronizado | O certificado TLS depende de data/hora corretas (veja `../../08-time/allsafe-ntp-nts-stack/`). |
 
 ---
+
+<a name="1-configuracao-base"></a>
 
 ## 1️⃣ Configuração base
 
@@ -39,6 +48,8 @@ Isto cria o [`.env`](../.env.example). Cada variável está explicada em
 | `FTP_USER` | nome do usuário inicial (padrão `transfer`). Regra: `^[a-z_][a-z0-9_-]{0,31}$`. |
 
 ---
+
+<a name="2-senha-do-usuario-inicial"></a>
 
 ## 2️⃣ Senha do usuário inicial
 
@@ -63,6 +74,8 @@ chmod 600 .secrets/ftp_password.txt
 - Alternativa (não recomendada): definir `FTP_PASSWORD` direto no `.env` e deixar `FTP_PASSWORD_FILE` vazio.
 
 ---
+
+<a name="3-subir-a-stack"></a>
 
 ## 3️⃣ Subir a stack
 
@@ -90,6 +103,8 @@ Na **primeira** subida o [`entrypoint.sh`](../scripts/entrypoint.sh):
 
 ---
 
+<a name="4-validar"></a>
+
 ## 4️⃣ Validar
 
 ```bash
@@ -106,9 +121,11 @@ lftp -u "$FTP_USER" -e 'set ssl:verify-certificate no; ls; bye' ftp://SEU_IP
 
 > ⚠️ Como o certificado inicial é autoassinado, o cliente vai reclamar da
 > validação até você instalar um certificado real — veja
-> [`operacao.md`](operacao.md#-certificado-real-de-produção).
+> [`operacao.md`](operacao.md#certificado-real-de-producao).
 
 ---
+
+<a name="como-desfazer"></a>
 
 ## ♻️ Como desfazer
 
@@ -122,8 +139,10 @@ usar `-v`, nada é perdido.
 
 ---
 
+<a name="proximos-passos"></a>
+
 ## ⏭️ Próximos passos
 
-- Criar mais usuários: [`operacao.md`](operacao.md#-usuários).
+- Criar mais usuários: [`operacao.md`](operacao.md#usuarios).
 - Colocar em produção: [`seguranca.md`](seguranca.md) + certificado real.
 - Monitoramento: a stack `allsafe-zabbix-isp-stack` acompanha o container.

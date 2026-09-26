@@ -1,12 +1,19 @@
 # 🩺 Solução de problemas — allsafe-ftp-stack
 
----
-
-## 🧭 Sumário
-
-[🧭 Diagnóstico em 30 segundos](#-diagnóstico-em-30-segundos) · [❌ O container não sobe](#-o-container-não-sobe) · [🔌 Conecta mas falha no login ou na listagem](#-conecta-mas-falha-no-login-ou-na-listagem) · [📁 Problemas de arquivo/permissão](#-problemas-de-arquivopermissão) · [🔐 Certificado / TLS](#-certificado--tls) · [🧪 Ferramentas de validação](#-ferramentas-de-validação)
+↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
 
 ---
+
+<details>
+<summary>🧭 Sumário — clique para expandir</summary>
+
+[🧭 Diagnóstico em 30 segundos](#diagnostico-em-30-segundos) · [❌ O container não sobe](#o-container-nao-sobe) · [🔌 Conecta mas falha no login ou na listagem](#conecta-mas-falha-no-login-ou-na-listagem) · [📁 Problemas de arquivo/permissão](#problemas-de-arquivo-permissao) · [🔐 Certificado / TLS](#certificado-tls) · [🧪 Ferramentas de validação](#ferramentas-de-validacao)
+
+</details>
+
+---
+
+<a name="diagnostico-em-30-segundos"></a>
 
 ## 🧭 Diagnóstico em 30 segundos
 
@@ -20,6 +27,8 @@ O `entrypoint.sh` aborta com `FALHA: <motivo>` e o container reinicia em laço �
 o motivo está sempre na primeira tentativa do log.
 
 ---
+
+<a name="o-container-nao-sobe"></a>
 
 ## ❌ O container não sobe
 
@@ -35,6 +44,8 @@ o motivo está sempre na primeira tentativa do log.
 
 ---
 
+<a name="conecta-mas-falha-no-login-ou-na-listagem"></a>
+
 ## 🔌 Conecta mas falha no login ou na listagem
 
 | Sintoma | Causa provável | Correção |
@@ -43,10 +54,12 @@ o motivo está sempre na primeira tentativa do log.
 | `530 Login authentication failed` | Senha errada, usuário não existe no PureDB, ou UID abaixo de 10000. | `./manage-user.sh list`; recrie com `./manage-user.sh passwd <user>`. |
 | Login OK, `LIST`/`STOR` trava e dá timeout | Modo **ativo**, ou faixa passiva/`FTP_PUBLIC_IP` bloqueada/errada. | Use modo **passivo**; libere `30000-30049/tcp` no firewall; `FTP_PUBLIC_IP` = IP que o cliente alcança. |
 | `425 Could not open data connection` atrás de NAT | `FTP_PUBLIC_IP` aponta para IP interno. | Defina `FTP_PUBLIC_IP` com o IP público e garanta NAT 1:1 da faixa passiva. |
-| Erro de certificado no cliente | Certificado ainda é o autoassinado. | Instale um certificado real — [`operacao.md`](operacao.md#-certificado-real-de-produção) — ou, só em teste, desative a verificação no cliente. |
+| Erro de certificado no cliente | Certificado ainda é o autoassinado. | Instale um certificado real — [`operacao.md`](operacao.md#certificado-real-de-producao) — ou, só em teste, desative a verificação no cliente. |
 | `421 Too many connections` | `FTP_MAX_CLIENTS` ou `FTP_MAX_CLIENTS_PER_IP` atingido. | Aumente no `.env` (e amplie a faixa passiva junto) e `docker compose up -d`. |
 
 ---
+
+<a name="problemas-de-arquivo-permissao"></a>
 
 ## 📁 Problemas de arquivo/permissão
 
@@ -59,6 +72,8 @@ o motivo está sempre na primeira tentativa do log.
 
 ---
 
+<a name="certificado-tls"></a>
+
 ## 🔐 Certificado / TLS
 
 | Sintoma | Causa | Correção |
@@ -68,6 +83,8 @@ o motivo está sempre na primeira tentativa do log.
 | Handshake TLS falha com "certificate expired" | Relógio do host errado, ou certificado vencido (autoassinado dura 825 dias). | Sincronize a hora (`08-time/allsafe-ntp-nts-stack`); regenere/renove o certificado. |
 
 ---
+
+<a name="ferramentas-de-validacao"></a>
 
 ## 🧪 Ferramentas de validação
 

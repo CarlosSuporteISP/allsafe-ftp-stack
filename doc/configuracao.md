@@ -1,16 +1,23 @@
 # ⚙️ Configuração — allsafe-ftp-stack
 
+↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
+
 Todas as variáveis vivem no [`.env`](../.env.example) (copiado de
 `.env.example`). O [`compose.yaml`](../compose.yaml) aplica um _default_ quando a
 variável está ausente — a coluna **Default** abaixo é esse valor.
 
 ---
 
-## 🧭 Sumário
+<details>
+<summary>🧭 Sumário — clique para expandir</summary>
 
-[🌍 Geral](#-geral) · [🔌 Rede e portas](#-rede-e-portas) · [👤 Usuário inicial e senha](#-usuário-inicial-e-senha) · [🔐 TLS](#-tls) · [👥 Limites de sessão](#-limites-de-sessão) · [🧱 Limites de recurso do container](#-limites-de-recurso-do-container) · [🧾 Exemplo mínimo de produção](#-exemplo-mínimo-de-produção) · [🌐 Rede Docker](#-rede-docker-sub-rede)
+[🌍 Geral](#geral) · [🔌 Rede e portas](#rede-e-portas) · [👤 Usuário inicial e senha](#usuario-inicial-e-senha) · [🔐 TLS](#tls) · [👥 Limites de sessão](#limites-de-sessao) · [🧱 Limites de recurso do container](#limites-de-recurso-do-container) · [🧾 Exemplo mínimo de produção](#exemplo-minimo-de-producao) · [🌐 Rede Docker](#rede-docker-sub-rede)
+
+</details>
 
 ---
+
+<a name="geral"></a>
 
 ## 🌍 Geral
 
@@ -20,6 +27,8 @@ variável está ausente — a coluna **Default** abaixo é esse valor.
 | `FTP_IMAGE` | Tag da imagem construída/local. | `nome:tag` | `allsafe-ftp:local` |
 
 ---
+
+<a name="rede-e-portas"></a>
 
 ## 🔌 Rede e portas
 
@@ -36,6 +45,8 @@ variável está ausente — a coluna **Default** abaixo é esse valor.
 
 ---
 
+<a name="usuario-inicial-e-senha"></a>
+
 ## 👤 Usuário inicial e senha
 
 | Variável | Para que serve | Valores | Default |
@@ -45,9 +56,11 @@ variável está ausente — a coluna **Default** abaixo é esse valor.
 | `FTP_PASSWORD_FILE` | Caminho, **dentro do container**, do arquivo com a senha. Tem precedência sobre `FTP_PASSWORD`. | Caminho legível; padrão aponta para o bind `.secrets/` | `/run/.secrets/ftp_password.txt` |
 
 Só o usuário inicial vem do `.env`. Os demais são criados com
-[`manage-user.sh`](../manage-user.sh) — veja [`operacao.md`](operacao.md#-usuários).
+[`manage-user.sh`](../manage-user.sh) — veja [`operacao.md`](operacao.md#usuarios).
 
 ---
+
+<a name="tls"></a>
 
 ## 🔐 TLS
 
@@ -56,9 +69,11 @@ Só o usuário inicial vem do `.env`. Os demais são criados com
 | `FTP_TLS_MODE` | Política de TLS do `pure-ftpd` (`-Y`). | `1` = opcional (aceita texto puro) · `2` = **obrigatório** no controle e dados · `3` = obrigatório + exige TLS já no `CCC` | `2` |
 | `FTP_CERT_CN` | `CN`/`SAN` do certificado autoassinado gerado na 1ª subida. Se for um IPv4, entra como `IP:`; senão como `DNS:`. | hostname ou IPv4 | `ftp.exemplo.com.br` (no exemplo) / `localhost` (fallback do entrypoint) |
 
-Trocar o certificado autoassinado por um real: [`operacao.md`](operacao.md#-certificado-real-de-produção).
+Trocar o certificado autoassinado por um real: [`operacao.md`](operacao.md#certificado-real-de-producao).
 
 ---
+
+<a name="limites-de-sessao"></a>
 
 ## 👥 Limites de sessão
 
@@ -68,6 +83,8 @@ Trocar o certificado autoassinado por um real: [`operacao.md`](operacao.md#-cert
 | `FTP_MAX_CLIENTS_PER_IP` | Máximo de conexões por IP de origem (`-C`). | inteiro > 0 | `8` |
 
 ---
+
+<a name="limites-de-recurso-do-container"></a>
 
 ## 🧱 Limites de recurso do container
 
@@ -83,6 +100,8 @@ Trocar o certificado autoassinado por um real: [`operacao.md`](operacao.md#-cert
 > a editar os valores à mão — veja [`perfis.md`](perfis.md).
 
 ---
+
+<a name="exemplo-minimo-de-producao"></a>
 
 ## 🧾 Exemplo mínimo de produção
 
@@ -107,6 +126,8 @@ Depois de editar o `.env`, valide sem subir:
 ```bash
 docker compose --env-file .env config --quiet && echo OK
 ```
+
+<a name="rede-docker-sub-rede"></a>
 
 ## 🌐 Rede Docker (sub-rede)
 

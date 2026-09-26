@@ -1,12 +1,19 @@
 # 🔐 Segurança — allsafe-ftp-stack
 
----
-
-## 🧭 Sumário
-
-[🎯 Modelo de ameaça](#-modelo-de-ameaça) · [🌐 Superfície exposta](#-superfície-exposta) · [🧱 Hardening do `compose.yaml` — linha a linha](#-hardening-do-composeyaml--linha-a-linha) · [🔑 Gestão de segredos](#-gestão-de-segredos) · [🏭 O que endurecer antes de produção](#-o-que-endurecer-antes-de-produção)
+↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
 
 ---
+
+<details>
+<summary>🧭 Sumário — clique para expandir</summary>
+
+[🎯 Modelo de ameaça](#modelo-de-ameaca) · [🌐 Superfície exposta](#superficie-exposta) · [🧱 Hardening do `compose.yaml` — linha a linha](#hardening-do-compose-yaml-linha-a-linha) · [🔑 Gestão de segredos](#gestao-de-segredos) · [🏭 O que endurecer antes de produção](#o-que-endurecer-antes-de-producao)
+
+</details>
+
+---
+
+<a name="modelo-de-ameaca"></a>
 
 ## 🎯 Modelo de ameaça
 
@@ -26,6 +33,8 @@ brute force (use `fail2ban` no host lendo os logs CLF), e antivírus de conteúd
 
 ---
 
+<a name="superficie-exposta"></a>
+
 ## 🌐 Superfície exposta
 
 | Porta | Quem deve alcançar |
@@ -37,6 +46,8 @@ Tudo o mais fica interno ao container. O painel/administração **não existe** 
 gestão é por CLI ([`manage-user.sh`](../manage-user.sh)).
 
 ---
+
+<a name="hardening-do-compose-yaml-linha-a-linha"></a>
 
 ## 🧱 Hardening do `compose.yaml` — linha a linha
 
@@ -74,6 +85,8 @@ Nenhuma delas permite montar filesystem, carregar módulo, `ptrace` ou acessar
 
 ---
 
+<a name="gestao-de-segredos"></a>
+
 ## 🔑 Gestão de segredos
 
 - Senha do usuário inicial: [`.secrets/ftp_password.txt`](segredos.md),
@@ -84,14 +97,16 @@ Nenhuma delas permite montar filesystem, carregar módulo, `ptrace` ou acessar
 
 ---
 
+<a name="o-que-endurecer-antes-de-producao"></a>
+
 ## 🏭 O que endurecer antes de produção
 
 1. **Certificado real** no lugar do autoassinado — veja
-   [`operacao.md`](operacao.md#-certificado-real-de-produção).
+   [`operacao.md`](operacao.md#certificado-real-de-producao).
 2. `FTP_BIND_IP` = IP dedicado; **ACL no firewall** do host para as origens de backup.
 3. `fail2ban` no host lendo o log CLF do container (`docker logs allsafe-ftp`).
 4. Rever `FTP_MAX_CLIENTS` / faixa passiva conforme o nº real de equipamentos.
 5. Backup dos volumes `allsafe-ftp-data` e `allsafe-ftp-auth`
-   ([`operacao.md`](operacao.md#️-backup-dos-volumes)).
+   ([`operacao.md`](operacao.md#backup-dos-volumes)).
 6. Considerar SFTP (`allsafe-sftp-stack`) onde o
    equipamento suportar — canal único, sem faixa passiva.
