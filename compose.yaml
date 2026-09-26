@@ -86,3 +86,6 @@ networks:
   ftp:
     name: allsafe-ftp-network
     driver: bridge
+    ipam:
+      config:
+        - subnet: ${FTP_SUBNET:-172.29.1.0/29}

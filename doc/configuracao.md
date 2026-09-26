@@ -8,7 +8,7 @@ variável está ausente — a coluna **Default** abaixo é esse valor.
 
 ## 🧭 Sumário
 
-[🌍 Geral](#-geral) · [🔌 Rede e portas](#-rede-e-portas) · [👤 Usuário inicial e senha](#-usuário-inicial-e-senha) · [🔐 TLS](#-tls) · [👥 Limites de sessão](#-limites-de-sessão) · [🧱 Limites de recurso do container](#-limites-de-recurso-do-container) · [🧾 Exemplo mínimo de produção](#-exemplo-mínimo-de-produção)
+[🌍 Geral](#-geral) · [🔌 Rede e portas](#-rede-e-portas) · [👤 Usuário inicial e senha](#-usuário-inicial-e-senha) · [🔐 TLS](#-tls) · [👥 Limites de sessão](#-limites-de-sessão) · [🧱 Limites de recurso do container](#-limites-de-recurso-do-container) · [🧾 Exemplo mínimo de produção](#-exemplo-mínimo-de-produção) · [🌐 Rede Docker](#-rede-docker-sub-rede)
 
 ---
 
@@ -106,4 +106,22 @@ Depois de editar o `.env`, valide sem subir:
 
 ```bash
 docker compose --env-file .env config --quiet && echo OK
+```
+
+## 🌐 Rede Docker (sub-rede)
+
+Cada rede Docker desta stack tem sub-rede fixa (padrão do bloco AllSafe
+`172.29.1.0/24` para /29 e `172.29.2.0/24` para /28 e /27), trocável por uma variável
+no `.env` — use quando a faixa colidir com a LAN/VPN do cliente.
+
+| Variável | Rede | Containers | Padrão | Exemplo |
+|---|---|---|---|---|
+| `FTP_SUBNET` | `ftp` | ftp | `172.29.1.0/29` | `FTP_SUBNET=10.250.1.0/29` |
+
+Numa instalação que já está rodando, a sub-rede nova só vale depois de recriar a
+rede (os volumes/dados não são afetados):
+
+```bash
+docker compose down
+docker compose up -d
 ```
