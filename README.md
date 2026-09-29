@@ -1,4 +1,17 @@
+<!-- readme-padrao:v1 — ver doc/padrao-readme.md em assistentes-ia -->
+<div align="center">
+
 # 📁 allsafe-ftp-stack
+
+**Servidor FTP dedicado (Pure-FTPd) com usuários virtuais, chroot e FTPS obrigatório para backup de equipamentos.**
+
+![Docker Compose](https://img.shields.io/badge/Docker_Compose-2496ed?logo=docker&logoColor=white)
+![Pure-FTPd](https://img.shields.io/badge/Pure--FTPd-555555)
+![Bash](https://img.shields.io/badge/Bash-4eaa25?logo=gnubash&logoColor=white)
+
+</div>
+
+---
 
 > Servidor **FTP dedicado** (Pure-FTPd) para backup de configuração de
 > equipamentos de rede — usuários virtuais, `chroot` e **FTPS obrigatório**.
@@ -13,7 +26,7 @@ segredos ficam fora da imagem e do Git.
 <details>
 <summary>🧭 Sumário — clique para expandir</summary>
 
-[✨ Destaques](#destaques) · [🚀 Instalação rápida](#instalacao) · [🏗️ Arquitetura](#arquitetura) · [🔌 Portas e binds](#portas) · [🔐 Segurança](#seguranca) · [📊 Perfis de capacidade](#perfis-de-capacidade) · [🗂️ Estrutura de arquivos](#arquivos) · [📚 Documentação completa](#documentacao) · [🔗 Stacks relacionadas](#relacionadas)
+[✨ Destaques](#destaques) · [🚀 Instalação rápida](#instalacao) · [🏗️ Arquitetura](#arquitetura) · [🔌 Portas e binds](#portas) · [🔐 Segurança](#seguranca) · [📊 Perfis de capacidade](#perfis-de-capacidade) · [🗂️ Estrutura de arquivos](#arquivos) · [📚 Documentação completa](#documentacao) · [🔗 Stacks relacionadas](#relacionadas) · [🤝 Créditos](#creditos) · [📄 Licença](#licenca)
 
 </details>
 
@@ -180,3 +193,40 @@ firewall do host ao trocar. Tabela completa em [`doc/perfis.md`](doc/perfis.md).
 - `allsafe-sftp-stack` · `allsafe-scp-stack` · `allsafe-tftp-stack` — outros servidores de transferência para backup de equipamentos.
 - `allsafe-zabbix-isp-stack` — monitora o container desta stack.
 - 📦 `dev/README.md` e `dev/install.sh` — no pacote local AllSafe (fora deste repositório) instalam esta stack junto das outras.
+
+---
+
+<a name="creditos"></a>
+
+## 🤝 Créditos
+
+Os campos marcados são para o Carlos completar (nomes, links e contribuições).
+
+### Pessoas
+
+| Quem | Papel | Perfil / link |
+|---|---|---|
+| **Carlos** ([@CarlosSuporteISP](https://github.com/CarlosSuporteISP)) | Idealização, direção e uso | [github.com/CarlosSuporteISP](https://github.com/CarlosSuporteISP) |
+| **Josué** | <!-- CARLOS: contribuição --> | <!-- CARLOS: link --> |
+| <!-- CARLOS: nome --> | <!-- CARLOS: papel --> | <!-- CARLOS: link --> |
+
+### Inteligências artificiais
+
+| Quem | Contribuição | Link |
+|---|---|---|
+| **Claude** (Claude Code) — [Anthropic](https://www.anthropic.com) | README e documentação no padrão do Carlos | [claude.com/claude-code](https://claude.com/claude-code) |
+| **ChatGPT / Codex** — [OpenAI](https://openai.com) | <!-- CARLOS: contribuição, se participou --> | [github.com/openai/codex](https://github.com/openai/codex) |
+| <!-- CARLOS: outra IA --> | <!-- CARLOS: contribuição --> | <!-- CARLOS: link --> |
+
+### Projetos de terceiros
+
+| Projeto | Uso aqui | Licença / origem |
+|---|---|---|
+| [Pure-FTPd](https://www.pureftpd.org) | Servidor FTP | BSD-style |
+
+<a name="licenca"></a>
+
+## 📄 Licença
+
+<!-- CARLOS: escolha a licença do repositório. Sem arquivo LICENSE, vale "todos os direitos reservados". -->
+Este repositório **ainda não tem arquivo de licença definido**. Os projetos de terceiros citados mantêm as licenças originais.
