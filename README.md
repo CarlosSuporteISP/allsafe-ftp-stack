@@ -200,23 +200,30 @@ firewall do host ao trocar. Tabela completa em [`doc/perfis.md`](doc/perfis.md).
 
 ## 🤝 Créditos
 
-Os campos marcados são para o Carlos completar (nomes, links e contribuições).
+Quem participou do projeto e como. As pessoas e as IAs vêm do arquivo [`creditos.env`](creditos.env): edite lá e rode
+`python3 -B scripts/readme_padrao.py creditos .` (do repositório `assistentes-ia`) para atualizar esta seção.
 
+<!-- creditos:inicio -->
 ### Pessoas
 
-| Quem | Papel | Perfil / link |
+| Quem | Tipo de ajuda | Perfil / link |
 |---|---|---|
-| **Carlos** ([@CarlosSuporteISP](https://github.com/CarlosSuporteISP)) | Idealização, direção e uso | [github.com/CarlosSuporteISP](https://github.com/CarlosSuporteISP) |
-| **Josué** | <!-- CARLOS: contribuição --> | <!-- CARLOS: link --> |
-| <!-- CARLOS: nome --> | <!-- CARLOS: papel --> | <!-- CARLOS: link --> |
+| **Carlos** | Idealização, direção e uso | [github.com/CarlosSuporteISP](https://github.com/CarlosSuporteISP) |
+| <!-- CARLOS: nova pessoa: acrescente PESSOA_n_* em creditos.env --> | | |
 
 ### Inteligências artificiais
 
-| Quem | Contribuição | Link |
+| Quem | Tipo de ajuda | Link |
 |---|---|---|
-| **Claude** (Claude Code) — [Anthropic](https://www.anthropic.com) | README e documentação no padrão do Carlos | [claude.com/claude-code](https://claude.com/claude-code) |
-| **ChatGPT / Codex** — [OpenAI](https://openai.com) | <!-- CARLOS: contribuição, se participou --> | [github.com/openai/codex](https://github.com/openai/codex) |
-| <!-- CARLOS: outra IA --> | <!-- CARLOS: contribuição --> | <!-- CARLOS: link --> |
+| **Claude (Claude Code) — Anthropic** | Código e documentação | [claude.com/claude-code](https://claude.com/claude-code) |
+| **ChatGPT / Codex — OpenAI** | Código e documentação | [github.com/openai/codex](https://github.com/openai/codex) |
+
+### Marca
+
+| Marca | Onde |
+|---|---|
+| **AllSafe** | [site](https://allsafe.inf.br/) · [GitHub](https://github.com/allsafe-inf) |
+<!-- creditos:fim -->
 
 ### Projetos de terceiros
 
@@ -230,3 +237,8 @@ Os campos marcados são para o Carlos completar (nomes, links e contribuições)
 
 <!-- CARLOS: escolha a licença do repositório. Sem arquivo LICENSE, vale "todos os direitos reservados". -->
 Este repositório **ainda não tem arquivo de licença definido**. Os projetos de terceiros citados mantêm as licenças originais.
+
+<!-- allsafe:rodape -->
+<div align="center">
+<sub>Projeto <b>AllSafe</b> · <a href="https://allsafe.inf.br/">allsafe.inf.br</a> · <a href="https://github.com/allsafe-inf">github.com/allsafe-inf</a></sub>
+</div>
