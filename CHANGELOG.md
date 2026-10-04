@@ -8,8 +8,12 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 ### Adicionado
 
+- Aviso de uso **só em rede privada, atrás de firewall**, no README e em `doc/seguranca.md`, com exemplo de regra na cadeia `DOCKER-USER`.
+- Plano refeito com as fases 04 a 09: pastas fixas, segredos e rede privada; painel web seguro; instalação em um comando; testes automatizados; backup e restauração; documentação final. Um fluxograma por fase.
+- Diagramas abrem com zoom e movimento: a imagem liga para o `.mmd` (visualizador do GitHub) e cada pasta `diagramas/` tem um `visualizador.html`.
+- `*.pdf` e todo o conteúdo de `.secrets/` no `.gitignore`.
 - Plano mestre em `doc/planos/`, com as fases entregues e as fases a fazer, `PROGRESSO.md` e as pastas de teste por tipo (`testes/`, `seguranca/`, `rede/`).
-- Diagramas sem cor, com fonte `.mmd` e SVG claro e escuro: 11 em `doc/diagramas/` e 4 em `doc/planos/diagramas/`.
+- Diagramas sem cor, com fonte `.mmd` e SVG claro e escuro: 11 em `doc/diagramas/` e 11 em `doc/planos/diagramas/`.
 - Guia `doc/segredos.md` ampliado, com a troca da senha do usuário inicial.
 - Resultado datado da validação estática.
 - `VERSION` e este `CHANGELOG.md`.

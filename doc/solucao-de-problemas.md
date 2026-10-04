@@ -6,12 +6,12 @@
 
 Quando algo falha, quase sempre o próprio servidor já disse o motivo. O caminho é sempre o mesmo: ver se o container está de pé, ler a mensagem do log, achar a linha correspondente nas tabelas deste guia, aplicar a correção e conferir de novo.
 
-<picture>
+<a href="diagramas/diagnostico-diagrama.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagramas/diagnostico-diagrama-escuro.svg">
   <img src="diagramas/diagnostico-diagrama.svg" alt="Diagnóstico: o usuário vê o estado com docker compose ps, lê os logs, acha a causa nas tabelas deste guia e confere de novo com validate.sh" width="100%">
-</picture>
+</picture></a>
 
-<sub>📐 Nível 1 · Diagrama · fonte: [diagnostico-diagrama.mmd](diagramas/diagnostico-diagrama.mmd)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/diagnostico-diagrama.mmd) · [no computador](diagramas/visualizador.html#diagnostico-diagrama)</sub>
 
 **🧭 Sequência:** 👤 Usuário ➜ ⌨️ `docker compose ps` ➜ 📚 `docker compose logs` ➜ 🚨 tabelas deste guia ➜ 🧪 `validate.sh --runtime` ➜ 🏁 serviço saudável
 

@@ -1,0 +1,24 @@
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início<br>fase 07" }
+    instancia@{ shape: subproc, label: "🧪 scripts/testar.sh<br>sobe a instância isolada" }
+    funcional@{ shape: rect, label: "🧪 Funcionais<br>login, envio, download, usuários" }
+    seguranca@{ shape: rect, label: "🔐 Segurança<br>sem TLS, chroot, painel, IP público" }
+    rede@{ shape: rect, label: "🌐 Rede<br>bind, faixa passiva, limites" }
+    portao@{ shape: diam, label: "✅ portão 07<br>tudo aprovado?" }
+    limpa@{ shape: subproc, label: "🧹 scripts/testar.sh<br>remove a instância de teste" }
+    fim@{ shape: stadium, label: "🏁 stack provada<br>por execução" }
+    volta@{ shape: rect, label: "↩️ corrigir a stack<br>ou o teste" }
+    resultados@{ shape: docs, label: "🧪 resultados datados<br>testes, seguranca, rede" }
+    tmp@{ shape: folder, label: "🧹 tmp/allsafe-ftp-stack<br>dados da instância de teste" }
+
+    inicio -- "1 · sobe em portas e nomes próprios" --> instancia
+    instancia -- "2 · roda os casos funcionais" --> funcional
+    funcional -- "3 · roda os casos de segurança" --> seguranca
+    seguranca -- "4 · roda os casos de rede" --> rede
+    rede -- "5 · confere o resultado" --> portao
+    portao -- "6a · ✅ sim" --> limpa
+    limpa -- "7 · conclui" --> fim
+    portao -- "6b · ❌ não" --> volta
+    volta -- "6c · roda de novo" --> instancia
+    rede -. "grava a saída, sem segredo" .-> resultados
+    instancia -. "usa" .-> tmp

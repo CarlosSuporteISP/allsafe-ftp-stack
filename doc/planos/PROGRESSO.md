@@ -4,9 +4,9 @@
 
 | Campo | Valor |
 |---|---|
-| Status | ⛔ Bloqueado — aguarda a ordem do usuário para executar a fase 04 |
-| Última atualização | 2026-10-04 06:45 — por Claude Code (Flatpak/VS Code) |
-| Branch | `docs/padrao-doc-e-plano` |
+| Status | 🔄 Em execução — fase 04 a começar |
+| Última atualização | 2026-10-04 — por Claude Code (VS Code) |
+| Branch | `feat/painel-web-e-pastas-fixas` |
 | Tamanho | 🟡 Médio |
 
 ---
@@ -18,22 +18,30 @@
 | 01 | Base da stack | ✅ Concluído | 2026-09-11 |
 | 02 | Perfis e operação | ✅ Concluído | 2026-09-25 |
 | 03 | Documentação e plano no padrão | ✅ Concluído | 2026-10-04 |
-| 04 | Pastas fixas e instância isolada | ⛔ Bloqueado (ordem do usuário) | — |
-| 05 | Instalação em um comando | ⏳ A fazer | — |
-| 06 | Testes automatizados | ⏳ A fazer | — |
-| 07 | Backup, restauração e produção | ⏳ A fazer | — |
+| 04 | Pastas fixas, segredos e rede privada | ⏳ A fazer | — |
+| 05 | Painel web seguro | ⏳ A fazer | — |
+| 06 | Instalação em um comando | ⏳ A fazer | — |
+| 07 | Testes automatizados | ⏳ A fazer | — |
+| 08 | Backup e restauração | ⏳ A fazer | — |
+| 09 | Documentação final e capturas | ⏳ A fazer | — |
 
 ---
 
 ## ▶️ Próximo passo
 
-> ⚠️ **Não executar sem a ordem do usuário.** O pedido desta entrega foi criar a documentação e o plano, fazer commit e push, e **não executar ainda**.
+O usuário mandou executar o plano inteiro, uma fase emendada na outra, sem perguntar entre elas.
 
-Quando o usuário mandar executar:
+1. Abrir a [fase 04](README.md#fase-04) e começar pelo passo 1: variáveis de pasta e de nome no `.env.example`, sem `FTP_PASSWORD` nem `FTP_PASSWORD_FILE`.
+2. Seguir os passos na ordem, validar no portão, registrar aqui e fazer commit.
+3. Emendar a fase 05, e assim até a 09.
 
-1. Criar a branch `feat/pastas-fixas` a partir da `main` atualizada.
-2. Abrir a [fase 04](README.md#fase-04) e seguir os passos na ordem, começando pelo passo 1 (`DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR` no `.env.example`).
-3. Validar no portão da fase, registrar o resultado e seguir para a fase 05.
+Ordens do usuário que valem para todas as fases:
+
+- Commit e push **deste plano antes de executar**, e de novo ao final.
+- A stack é só para **IP privado, interno, atrás de firewall**: avisar na documentação e recusar por código.
+- O painel web tem de ser **seguro**.
+- `.env` só com variável ajustável; senha, token, chave e identificador de integração só em `.secrets/`.
+- PDF só a pedido, e nunca no Git.
 
 ---
 
@@ -42,9 +50,10 @@ Quando o usuário mandar executar:
 | Arquivo | Por quê |
 |---|---|
 | [Plano mestre](README.md) | Fases, portões, riscos e pendências |
-| [`compose.yaml`](../../compose.yaml) | Volumes, nomes e rede que a fase 04 altera |
-| [`deploy.sh`](../../deploy.sh) | Fluxo de instalação que a fase 05 altera |
-| [`scripts/validate.sh`](../../scripts/validate.sh) | Validação existente, base da fase 06 |
+| [`compose.yaml`](../../compose.yaml) | Volumes, nomes, rede e segredos que a fase 04 altera; serviço que a fase 05 acrescenta |
+| [`scripts/entrypoint.sh`](../../scripts/entrypoint.sh) | Leitura da senha e validações que a fase 04 altera |
+| [`scripts/ftp-user.sh`](../../scripts/ftp-user.sh) | Regra de usuário e senha que o painel reutiliza |
+| [`deploy.sh`](../../deploy.sh) | Fluxo de instalação, alterado nas fases 04, 05 e 06 |
 | [`.env.example`](../../.env.example) | Variáveis atuais |
 
 Não leia nem exponha o `.env` e o conteúdo de `.secrets/`.
@@ -55,14 +64,19 @@ Não leia nem exponha o `.env` e o conteúdo de `.secrets/`.
 
 | Decisão | Motivo |
 |---|---|
-| Tamanho 🟡 Médio, fases como seções do plano mestre | Um serviço, com dependência de ordem entre as mudanças e dados a preservar |
-| Fases 01 a 03 registradas como entregues | Já existiam no repositório ou foram feitas nesta entrega |
+| Tamanho 🟡 Médio, fases como seções do plano mestre | Dois serviços em um host, com dependência de ordem entre as mudanças |
 | _Bind mount_ nas pastas fixas em vez de volumes nomeados | Dado em caminho conhecido, backup simples |
-| Instalação em um comando com padrão em `127.0.0.1` | Sobe sem perguntas e sem expor nada |
-| Testes com `curl --ssl-reqd` a partir do host | Já instalado e testa a porta publicada; `lftp` como alternativa |
-| Nenhuma alteração de código da stack na fase 03 | Pedido do usuário: só criar, sem executar |
+| Senhas só em `.secrets/`, entregues por `secrets:` do Compose | Regra do usuário; cada serviço vê só o segredo dele |
+| Senha do FTP inicial em texto (`0600`), senha do painel só como hash scrypt | O entrypoint e o equipamento precisam do valor da primeira; a segunda só é conferida |
+| Recusa por código de `0.0.0.0` e de IP público | Aviso sozinho não impede o erro |
+| Painel próprio em Python, só biblioteca padrão, sem JavaScript | Menor superfície de ataque; nenhuma dependência externa para manter |
+| Painel altera usuários pela pasta `auth` compartilhada, sem socket do Docker | O socket equivale a root no host |
+| Instalação em um comando com padrão em `127.0.0.1` | Sobe sem perguntas e sem ficar acessível pela rede |
+| Perfil gravado no `.env` | `docker compose up -d` direto mantém os limites |
+| Testes com `curl --ssl-reqd` a partir do host, em instância isolada | Já instalado; testa a porta publicada sem tocar na instância definitiva |
+| Firewall do host: só documentar | É sistema fora do projeto |
 | Créditos: usuário, Claude e projetos oficiais | Determinação do usuário |
-| Versão em `0.1.0`, sem tag | Tag e release só por ordem |
+| Versão em `0.1.0`, sem tag | Versão, tag e release só por ordem |
 
 ---
 
@@ -71,27 +85,30 @@ Não leia nem exponha o `.env` e o conteúdo de `.secrets/`.
 | Problema | Situação |
 |---|---|
 | `gh` não autenticado neste host | O PR é aberto pelo usuário, pelo link de comparação; descrição e tópicos ficam em Pendências |
-| Stack não instalada neste host | Só a validação estática pôde ser executada |
-| `lftp` e `shellcheck` ausentes | Instalar na fase 06, se forem usados |
+| `lftp` e `shellcheck` ausentes | Não são obrigatórios; os testes usam `curl` |
 
 ---
 
 ## 🧪 Comandos para validar
 
 ```bash
-git status --short                 # só documentação, diagramas, VERSION e CHANGELOG.md
-./scripts/validate.sh              # 'Validacao FTP concluida.'
-./deploy.sh --check-only           # valida perfil e Compose sem subir nada (exige o .env)
-docker ps -a --filter name=allsafe-ftp   # nenhuma instância neste host
+git status --short                       # árvore limpa ao fim de cada fase
+./scripts/validate.sh                    # 'Validacao FTP concluida.'
+docker ps -a --filter name=allsafe-ftp   # o que está no ar neste host
 ```
+
+---
+
+## 🛑 Como derrubar
+
+Nada no ar ainda. A partir da fase 06: `./deploy.sh --remover` derruba e preserva os dados; com `--apagar-dados`, apaga também `DATA_DIR`.
 
 ---
 
 ## 🙋 Depende do usuário
 
-- Ordem para executar a fase 04.
-- Confirmar ou ajustar as fases 04 a 07.
-- Aceitar o PR da branch `docs/padrao-doc-e-plano`.
+- Aplicar as regras de firewall no host, quando abrir a stack para a rede interna.
+- Aceitar o PR da branch `feat/painel-web-e-pastas-fixas`.
 - Versão, tag e release.
 - Licença.
 - Descrição e tópicos do repositório (`gh repo edit`, no plano mestre).

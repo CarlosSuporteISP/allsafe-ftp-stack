@@ -1,0 +1,22 @@
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início<br>fase 09" }
+    sobe@{ shape: subproc, label: "🐳 deploy.sh<br>stack definitiva no ar" }
+    capturas@{ shape: subproc, label: "📸 Playwright<br>captura cada aba e cada menu" }
+    guias@{ shape: docs, label: "📖 README e guias de doc/<br>painel, rede privada, backup" }
+    diagramas@{ shape: docs, label: "📐 diagramas<br>com zoom e movimento" }
+    portao@{ shape: diam, label: "✅ portão 09<br>doc igual ao sistema?" }
+    fim@{ shape: stadium, label: "🏁 plano concluído<br>pergunta do fim" }
+    volta@{ shape: rect, label: "↩️ corrigir<br>a documentação" }
+    abas@{ shape: folder, label: "📸 doc/imagens<br>principal e abas" }
+    menus@{ shape: folder, label: "🖥️ doc/aplicacao/imagens<br>menu por menu" }
+
+    inicio -- "1 · instala a stack definitiva" --> sobe
+    sobe -- "2 · fotografa o painel real" --> capturas
+    capturas -- "3 · reescreve os guias" --> guias
+    guias -- "4 · refaz os diagramas" --> diagramas
+    diagramas -- "5 · confere links, fotos e segredos" --> portao
+    portao -- "6a · ✅ sim" --> fim
+    portao -- "6b · ❌ não" --> volta
+    volta -- "6c · confere de novo" --> portao
+    capturas -. "grava" .-> abas
+    capturas -. "grava" .-> menus

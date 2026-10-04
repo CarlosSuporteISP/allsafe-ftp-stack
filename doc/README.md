@@ -6,14 +6,16 @@
 
 Esta pasta explica a stack **como ela é hoje**: como instalar, configurar, operar e consertar o servidor FTP que recebe o backup dos equipamentos de rede. Cada guia começa com um resumo para quem nunca viu o projeto e guarda o detalhe técnico em menus recolhidos. O que ainda vai mudar fica no plano, não aqui.
 
-<picture>
+<a href="diagramas/visao-geral-diagrama.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagramas/visao-geral-diagrama-escuro.svg">
   <img src="diagramas/visao-geral-diagrama.svg" alt="Visão geral: o equipamento de rede envia o backup ao Pure-FTPd, que confere o usuário no PureDB e grava o arquivo em /data" width="100%">
-</picture>
+</picture></a>
 
-<sub>📐 Nível 1 · Diagrama · fonte: [visao-geral-diagrama.mmd](diagramas/visao-geral-diagrama.mmd)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/visao-geral-diagrama.mmd) · [no computador](diagramas/visualizador.html#visao-geral-diagrama)</sub>
 
 **🧭 Sequência:** 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 backup guardado
+
+> 🧱 **Uso só em rede privada:** IP privado, atrás de firewall, nunca na internet. Veja [🔐 Segurança](seguranca.md#rede-privada).
 
 ---
 
@@ -36,7 +38,7 @@ Esta pasta explica a stack **como ela é hoje**: como instalar, configurar, oper
 | 2 | [⚙️ Configuração](configuracao.md) | Todas as variáveis do `.env`: nome, para que serve, valores válidos e padrão |
 | 3 | [🎚️ Perfis](perfis.md) | Perfis `small`, `medium` e `large`: dimensionamento por porte e impacto na faixa passiva |
 | 4 | [🏗️ Arquitetura](arquitetura.md) | Container, imagem, entrypoint, volumes, rede e as opções do `pure-ftpd` |
-| 5 | [🔐 Segurança](seguranca.md) | Modelo de ameaça, superfície exposta e o endurecimento do Compose linha a linha |
+| 5 | [🔐 Segurança](seguranca.md) | Rede privada e firewall, modelo de ameaça, superfície exposta e o endurecimento do Compose linha a linha |
 | 6 | [🔑 Segredos](segredos.md) | O que fica em `.secrets/`, quem gera cada arquivo e como trocar |
 | 7 | [⌨️ Scripts](scripts.md) | O que cada script faz, parâmetros e saída esperada |
 | 8 | [🧰 Operação](operacao.md) | Usuários, certificado real, backup dos volumes, logs e atualização da imagem |
@@ -51,7 +53,7 @@ Esta pasta explica a stack **como ela é hoje**: como instalar, configurar, oper
 | Situação | Leia, nesta ordem |
 |---|---|
 | Primeira vez | [🚀 Instalação](instalacao.md) ➜ [⚙️ Configuração](configuracao.md) ➜ [🎚️ Perfis](perfis.md) |
-| Antes de produção | [🔐 Segurança](seguranca.md) ➜ [🧰 Operação](operacao.md#certificado-real-de-producao) |
+| Antes de produção | [🧱 Rede privada e firewall](seguranca.md#rede-privada) ➜ [🔐 Segurança](seguranca.md) ➜ [🧰 Operação](operacao.md#certificado-real-de-producao) |
 | Algo quebrou | [🚨 Solução de problemas](solucao-de-problemas.md) |
 
 ---
@@ -77,7 +79,7 @@ Esta pasta explica a stack **como ela é hoje**: como instalar, configurar, oper
 
 ## 📐 Diagramas
 
-Fonte em `.mmd` e imagem em SVG, clara e escura, na pasta [`diagramas/`](diagramas/). Para gerar de novo depois de editar uma fonte:
+Fonte em `.mmd` e imagem em SVG, clara e escura, na pasta [`diagramas/`](diagramas/). Todo diagrama **abre com zoom e movimento**: no GitHub, clicando na imagem (abre o `.mmd`); no computador, pelo [`visualizador.html`](diagramas/visualizador.html) da pasta. Para gerar de novo depois de editar uma fonte:
 
 ```bash
 /home/carlos/code/padrao-diagramas/renderizar.sh doc/diagramas doc/planos/diagramas
@@ -103,7 +105,7 @@ Fonte em `.mmd` e imagem em SVG, clara e escura, na pasta [`diagramas/`](diagram
 
 ## 🗺️ Plano
 
-A criação da stack, o que já foi entregue e as fases que faltam estão no plano mestre: [🗺️ planos/README.md](planos/README.md).
+A criação da stack, o que já foi entregue e as fases em execução (pastas fixas, segredos, rede privada, painel web seguro, instalação em um comando, testes e backup) estão no plano mestre: [🗺️ planos/README.md](planos/README.md).
 
 ---
 
