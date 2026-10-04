@@ -4,24 +4,25 @@
 
 ## 💡 Em poucas palavras
 
-Um perfil é um tamanho pronto de servidor: pequeno, médio ou grande. Você escolhe o tamanho na hora de subir e o perfil ajusta sozinho quantos equipamentos podem conectar ao mesmo tempo e quanto de CPU e memória o servidor pode usar. O `.env` guarda o que é do cliente (IPs, portas, certificado); o perfil guarda só o dimensionamento.
+Um perfil é um tamanho pronto de servidor: pequeno, médio ou grande. Você escolhe o tamanho na hora de subir e o perfil ajusta sozinho quantos equipamentos podem conectar ao mesmo tempo e quanto de CPU e memória o servidor pode usar. O `.env` guarda o que é do cliente (IPs, portas, certificado); o perfil guarda só o dimensionamento, que o `deploy.sh` grava no `.env` quando você escolhe o tamanho.
 
 <!-- diagrama: diagramas/configuracao-diagrama.mmd -->
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    env@{ shape: doc, label: "📄 .env<br>valores do ambiente" }
-    perfil@{ shape: doc, label: "🎚️ profiles/small.env<br>limites do perfil" }
-    compose@{ shape: rect, label: "🐳 Docker Compose<br>junta os dois" }
+    perfil@{ shape: doc, label: "🎚️ profiles/medium.env<br>limites do perfil" }
+    deploy@{ shape: console, label: "⌨️ deploy.sh --size medium<br>grava os limites no .env" }
+    env@{ shape: doc, label: "📄 .env<br>ambiente e limites" }
+    compose@{ shape: rect, label: "🐳 Docker Compose<br>lê só o .env" }
     ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
     fim@{ shape: stadium, label: "🏁 limites aplicados" }
 
-    env --> perfil --> compose --> ftp --> fim
+    perfil --> deploy --> env --> compose --> ftp --> fim
 ```
 
 <sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 📄 `.env` ➜ 🎚️ `profiles/small.env` ➜ 🐳 Docker Compose ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 limites aplicados
+**🧭 Sequência:** 🎚️ `profiles/medium.env` ➜ ⌨️ `deploy.sh --size medium` (grava os limites no `.env`) ➜ 📄 `.env` ➜ 🐳 Docker Compose ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 limites aplicados
 
 ---
 
@@ -38,14 +39,15 @@ flowchart LR
 
 ## 🚀 Como usar
 
-Passe o nome do perfil em `--size` para o [`deploy.sh`](../deploy.sh) (padrão: `small`):
+Passe o nome do perfil em `--size` para o [`deploy.sh`](../deploy.sh). Ele grava os limites do perfil no `.env`, com o nome em `FTP_PROFILE`, e reaplica a stack. A instalação nasce com o `small`; sem `--size`, o perfil em uso continua valendo:
 
 ```bash
-./deploy.sh --size medium                 # sobe com profiles/medium.env
-./deploy.sh --size large --check-only     # só valida, não sobe nada
+./deploy.sh --size medium                 # grava o medium no .env e reaplica
+./deploy.sh                               # continua no medium
+./deploy.sh --size large --check-only     # só valida o large, não grava nem sobe nada
 ```
 
-**Resultado esperado:** com `--check-only`, a mensagem `OK: perfil 'large', rede privada e compose validados; nada foi alterado.`; sem ele, a tabela do `docker compose ps`.
+**Resultado esperado:** com `--check-only`, a mensagem `OK: perfil 'large', rede privada e compose validados; nada foi alterado.`; sem ele, o resumo `Pronto: FTP e painel no ar (healthy), perfil 'medium'.` com a faixa passiva nova.
 
 ---
 
@@ -75,7 +77,9 @@ Os números são **pontos de partida**, não garantia de capacidade. FTP de back
 | `FTP_PIDS_LIMIT` | `128` | `256` | `512` |
 | `FTP_NOFILE` | `16384` | `32768` | `65536` |
 
-O `deploy.sh` passa os dois arquivos ao Compose, nesta ordem: `--env-file .env --env-file profiles/<perfil>.env`. O último vence, por isso o perfil sobrescreve o `.env`.
+O `deploy.sh --size <perfil>` copia cada `CHAVE=VALOR` de `profiles/<perfil>.env` para o `.env` (troca a linha da chave ou acrescenta no fim) e grava `FTP_PROFILE=<perfil>`. O Compose lê só o `.env`: os limites valem também para um `docker compose up -d` direto. Trocar de perfil recria o container do FTP, porque a faixa de portas publicada muda; os dados ficam.
+
+> 📌 Instalou com `--size medium` ou `large` antes da versão `0.4.0`? Rode uma vez `./deploy.sh --size <perfil>` para gravar o perfil no `.env`.
 
 </details>
 

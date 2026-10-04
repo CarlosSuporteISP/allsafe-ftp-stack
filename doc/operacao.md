@@ -176,19 +176,18 @@ Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](.
 ## ⬆️ Atualização da imagem
 
 ```bash
-docker compose build --pull        # refaz as duas imagens
-./deploy.sh --size small           # recria os containers com o mesmo perfil (dados preservados)
+./deploy.sh --atualizar            # refaz as duas imagens sem cache e recria os containers (dados preservados)
 ./scripts/validate.sh --runtime    # confere 'running' e 'healthy'
 ```
 
 **Resultado esperado:** `Validacao FTP concluida.` e os usuários e arquivos intactos. As sessões abertas no painel são encerradas.
 
-> ⚠️ Recrie os containers sempre pelo `deploy.sh` com o **mesmo perfil** da instalação. Um `docker compose up -d` puro lê só o `.env` e devolve os limites e a faixa passiva aos valores dele.
+> 📌 O `--atualizar` reinstala os pacotes com a versão atual do repositório Debian. O perfil em uso está no `.env` e continua valendo.
 
 <details>
 <summary>🔬 Detalhe técnico — base fixada por digest</summary>
 
-A base no [`Dockerfile`](../Dockerfile) está **fixada por digest**: o `--pull` não troca a base sozinho. Para pegar uma base nova, atualize o digest do `FROM` e refaça o build. Enquanto o `Dockerfile` não muda, o Docker reaproveita a camada de instalação dos pacotes; para reinstalá-los com a versão atual do repositório Debian, acrescente `--no-cache` ao build.
+A base no [`Dockerfile`](../Dockerfile) está **fixada por digest**: um `docker compose build --pull` não troca a base sozinho. Para pegar uma base nova, atualize o digest do `FROM` e rode `./deploy.sh --atualizar`. Enquanto o `Dockerfile` não muda, um `docker compose build` comum reaproveita a camada de instalação dos pacotes; o `--atualizar` usa `build --no-cache`, que refaz essa camada e reinstala os pacotes na versão atual do repositório Debian.
 
 </details>
 
@@ -215,13 +214,14 @@ docker compose exec ftp pure-pw show transfer -f /auth/pureftpd.passwd
 ## ⏹️ Parar e remover
 
 ```bash
-docker compose stop      # para sem remover
-docker compose down      # remove os containers e a rede; os dados continuam em DATA_DIR
+docker compose stop                       # para sem remover
+./deploy.sh --remover                     # remove os containers e a rede; os dados continuam em DATA_DIR
+./deploy.sh --remover --apagar-dados      # remove e apaga as pastas de DATA_DIR (pede para digitar "apagar")
 ```
 
-**Resultado esperado:** `docker compose ps` vazio. As pastas `dados/`, `auth/`, `certs/` e `painel/` de `DATA_DIR` e os segredos continuam no host; apagar os dados é uma decisão à parte, manual.
+**Resultado esperado:** `docker compose ps` vazio. As pastas `dados/`, `auth/`, `certs/` e `painel/` de `DATA_DIR` e os segredos continuam no host; apagar os dados é uma decisão à parte, só com `--apagar-dados`.
 
-> ⚠️ Os dados ficam em pastas do host: nem o `docker compose down -v` os apaga. Para apagar de vez, remova as pastas de `DATA_DIR` à mão, depois do [backup](#backup-dos-volumes).
+> ⚠️ Os dados ficam em pastas do host: nem o `docker compose down -v` os apaga. O `--apagar-dados` **não tem volta**: faça o [backup](#backup-dos-volumes) antes. Sem terminal (em script), ele só roda com `--sim`. Os segredos e o `.env` não são apagados.
 
 ---
 

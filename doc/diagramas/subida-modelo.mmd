@@ -2,10 +2,10 @@
 flowchart LR
     subgraph OPERACAO["👤 Operação"]
         operador@{ shape: person, label: "👤 Usuário" }
-        deploy@{ shape: console, label: "⌨️ deploy.sh<br>--size small" }
+        deploy@{ shape: console, label: "⌨️ deploy.sh<br>instala em um comando" }
     end
     subgraph HOST["🖥️ Host"]
-        env@{ shape: doc, label: "📄 .env<br>e profiles/small.env" }
+        env@{ shape: doc, label: "📄 .env<br>configuração e limites" }
         segredo@{ shape: doc, label: "🔑 .secrets<br>ftp_password.txt" }
         compose@{ shape: rect, label: "🐳 Docker Compose<br>compose.yaml" }
     end
@@ -27,7 +27,7 @@ flowchart LR
     end
 
     operador -- "1 · executa" --> deploy
-    deploy -- "2 · docker compose build e up -d" --> compose
+    deploy -- "2 · docker compose build e up -d --wait" --> compose
     compose -- "3 · inicia o container" --> entry
     entry -- "4 · confere usuário, senha, faixa e TLS" --> valida
     valida -- "5a · ✅ sim" --> pw

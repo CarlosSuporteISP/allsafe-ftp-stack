@@ -8,6 +8,29 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.4.0] - 2026-10-04
+
+### Adicionado
+
+- **Instalação em um comando:** `./deploy.sh`, sem perguntas. Sem `.env`, o script cria um a partir do exemplo (tudo em `127.0.0.1`) e segue, em vez de parar e pedir uma segunda execução.
+- Conferência dos requisitos antes de agir: `docker`, plugin `docker compose`, serviço do Docker e portas livres (FTP, painel e faixa passiva).
+- `./deploy.sh --atualizar`: reconstrói as imagens sem cache, com os pacotes atuais do Debian.
+- `./deploy.sh --remover`: derruba os containers e a rede, preservando dados, segredos, `.env` e imagens. Com `--apagar-dados`, apaga também as pastas de `DATA_DIR`, depois de confirmação (ou `--sim`).
+- Resumo final com os endereços do FTP e do painel, o usuário inicial e o arquivo onde está cada senha, sem mostrar senha.
+- Variável `FTP_PROFILE` no `.env`, com o nome do perfil em uso.
+
+### Alterado
+
+- **O perfil passa a ser gravado no `.env`:** `./deploy.sh --size <perfil>` copia os limites de `profiles/<perfil>.env` para o `.env`. O Compose lê só o `.env`, e um `docker compose up -d` direto mantém os limites.
+- Sem `--size`, o `deploy.sh` não reaplica mais o `small`: mantém o perfil em uso. **Quem instalou com `--size medium` ou `large` antes desta versão precisa rodar uma vez `./deploy.sh --size <perfil>`** para gravar o perfil no `.env`.
+- O `deploy.sh` espera os dois containers ficarem `healthy` (`up -d --wait`, limite de 180 s) e falha com a indicação do log quando isso não acontece.
+- `./deploy.sh --check-only` sem `.env` valida com o `.env.example` e não cria nada.
+
+### Corrigido
+
+- Um `docker compose up -d` fora do `deploy.sh` devolvia os limites e a faixa passiva aos valores do `.env`, desfazendo o perfil escolhido.
+- A documentação indicava `docker compose build --pull` para atualizar; com a base fixada por digest e a camada de pacotes em cache, ele não atualizava nada.
+
 ## [0.3.0] - 2026-10-04
 
 Painel web seguro. **Uso só em rede privada, atrás de firewall**: o painel recusa por código endereço e rede que não sejam privados.

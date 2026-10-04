@@ -48,7 +48,7 @@ flowchart LR
     end
     subgraph HOST["🖥️ Host"]
         scripts@{ shape: console, label: "⌨️ deploy.sh<br>manage-user.sh" }
-        env@{ shape: doc, label: "📄 .env<br>e perfil" }
+        env@{ shape: doc, label: "📄 .env<br>configuração e limites" }
         segredo@{ shape: doc, label: "🔑 .secrets<br>senha do FTP, hash do painel" }
     end
     subgraph CONTAINERS["🐳 Containers · rede allsafe-ftp-network"]
@@ -66,14 +66,14 @@ flowchart LR
         fim@{ shape: stadium, label: "🏁 backup guardado" }
     end
 
-    operador -- "1 · ./deploy.sh --size small" --> scripts
-    scripts -- "2 · docker compose build e up -d" --> ftp
+    operador -- "1 · ./deploy.sh" --> scripts
+    scripts -- "2 · docker compose build e up -d --wait" --> ftp
     operador -- "3 · HTTPS, TCP 8443" --> painel
     painel -- "4 · cria, troca a senha ou remove o usuário" --> vauth
     equip -- "5 · FTPS, TCP 21 para 2121" --> ftp
     ftp -- "6 · grava o arquivo, passivo 30000 a 30049" --> vdata
     vdata -- "7 · arquivo no volume" --> fim
-    scripts -. "lê" .-> env
+    scripts -. "cria, lê e grava o perfil" .-> env
     ftp -. "lê a senha na subida, só leitura" .-> segredo
     painel -. "lê o hash a cada entrada, só leitura" .-> segredo
     ftp -. "consulta os usuários" .-> vauth
@@ -87,8 +87,8 @@ flowchart LR
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
-| 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | O usuário executa `./deploy.sh --size small` no host |
-| 2 | ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd | O script valida a configuração, constrói as imagens (`docker compose build`) e sobe os dois containers (`up -d`) |
+| 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | O usuário executa `./deploy.sh` no host |
+| 2 | ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd | O script valida a configuração, constrói as imagens (`docker compose build`), sobe os dois containers (`up -d --wait`) e espera ficarem `healthy` |
 | 3 | 👤 Usuário ➜ 🖥️ Painel web | O usuário abre o painel por HTTPS em `8443/tcp` |
 | 4 | 🖥️ Painel web ➜ 🗄️ `DATA_DIR/auth` | O painel cria, troca a senha ou remove o usuário no PureDB |
 | 5 | 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
@@ -99,7 +99,7 @@ flowchart LR
 
 | Quem | Usa | Como |
 |---|---|---|
-| ⌨️ `deploy.sh` e `manage-user.sh` | 📄 `.env` e perfil | lê |
+| ⌨️ `deploy.sh` e `manage-user.sh` | 📄 `.env` | cria, lê e grava o perfil |
 | ⚙️ Pure-FTPd | 🔑 `.secrets` (`ftp_password.txt`) | lê a senha na subida, somente leitura |
 | 🖥️ Painel web | 🔑 `.secrets` (`painel_password_hash.txt`) | lê o hash a cada entrada, somente leitura |
 | ⚙️ Pure-FTPd | 🗄️ `DATA_DIR/auth` (PureDB) | consulta os usuários |
@@ -177,10 +177,10 @@ O que acontece entre o `./deploy.sh` e o container `healthy`.
 flowchart LR
     subgraph OPERACAO["👤 Operação"]
         operador@{ shape: person, label: "👤 Usuário" }
-        deploy@{ shape: console, label: "⌨️ deploy.sh<br>--size small" }
+        deploy@{ shape: console, label: "⌨️ deploy.sh<br>instala em um comando" }
     end
     subgraph HOST["🖥️ Host"]
-        env@{ shape: doc, label: "📄 .env<br>e profiles/small.env" }
+        env@{ shape: doc, label: "📄 .env<br>configuração e limites" }
         segredo@{ shape: doc, label: "🔑 .secrets<br>ftp_password.txt" }
         compose@{ shape: rect, label: "🐳 Docker Compose<br>compose.yaml" }
     end
@@ -202,7 +202,7 @@ flowchart LR
     end
 
     operador -- "1 · executa" --> deploy
-    deploy -- "2 · docker compose build e up -d" --> compose
+    deploy -- "2 · docker compose build e up -d --wait" --> compose
     compose -- "3 · inicia o container" --> entry
     entry -- "4 · confere usuário, senha, faixa e TLS" --> valida
     valida -- "5a · ✅ sim" --> pw
@@ -227,8 +227,8 @@ flowchart LR
 
 | Nº | De ➜ Para | O que acontece | Protocolo e porta | Regra |
 |---|---|---|---|---|
-| 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | Executa `./deploy.sh --size small` | — | Sem `.env`, o script cria um a partir do exemplo e para |
-| 2 | ⌨️ `deploy.sh` ➜ 🐳 Docker Compose | Roda `docker compose build` e `up -d` com `.env` e o perfil | — | Antes roda `config --quiet`; configuração inválida não sobe |
+| 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | Executa `./deploy.sh` | — | Sem `.env`, o script cria um a partir do exemplo e segue; antes de agir confere Docker, Compose e portas livres |
+| 2 | ⌨️ `deploy.sh` ➜ 🐳 Docker Compose | Roda `docker compose build` e `up -d --wait` com o `.env` | — | Antes roda `config --quiet`; configuração inválida não sobe |
 | 3 | 🐳 Docker Compose ➜ ⚙️ entrypoint | Inicia o container `allsafe-ftp` | — | Raiz somente leitura, `tini` como processo 1 |
 | 4 | ⚙️ entrypoint ➜ ❓ variáveis válidas? | Confere usuário, senha, faixa passiva e modo TLS | — | Nome `^[a-z_][a-z0-9_-]{0,31}$`, senha de 12 ou mais, faixa entre `1024` e `65535`, TLS `1`, `2` ou `3` |
 | 5a | ❓ variáveis válidas? ➜ 👥 `pure-pw` | ✅ Sim: cria (`useradd`) ou atualiza (`usermod`) o usuário inicial | — | Usuário virtual com uid e gid `ftpdata`, home `/data/<usuario>` |
@@ -245,7 +245,7 @@ flowchart LR
 | Quem | Usa | Como |
 |---|---|---|
 | ⌨️ `deploy.sh` | 🔑 `.secrets/ftp_password.txt` | gera a senha se o arquivo estiver vazio, `0600` |
-| 🐳 Docker Compose | 📄 `.env` e `profiles/small.env` | lê |
+| 🐳 Docker Compose | 📄 `.env` | lê |
 | ⚙️ entrypoint | 🔑 `.secrets/ftp_password.txt` | lê, somente leitura |
 | ⚙️ entrypoint | 💽 `/data` | cria a pasta do usuário |
 | 👥 `pure-pw` | 🗄️ PureDB (`/auth/pureftpd.pdb`) | grava |

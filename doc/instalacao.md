@@ -4,25 +4,24 @@
 
 ## 💡 Em poucas palavras
 
-Você copia o arquivo de configuração, informa o IP do servidor, roda um script e o servidor FTP sobe sozinho, já com senha forte e conexão criptografada, junto com o painel web para administrar os usuários. No fim, um segundo script confere se está tudo no ar. Leva poucos minutos e dá para desfazer sem perder os arquivos.
+Você roda um comando e o servidor FTP sobe sozinho, já com senha forte e conexão criptografada, junto com o painel web para administrar os usuários. Ele nasce atendendo só o próprio servidor; para atender a rede interna, você informa o IP privado no arquivo de configuração e roda o mesmo comando de novo. No fim, um segundo script confere se está tudo no ar. Leva poucos minutos e dá para desfazer sem perder os arquivos.
 
 <!-- diagrama: diagramas/instalacao-diagrama.mmd -->
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     usuario@{ shape: person, label: "👤 Usuário" }
-    env@{ shape: doc, label: "📄 .env<br>IP, porta e usuário" }
-    deploy@{ shape: console, label: "⌨️ deploy.sh<br>gera a senha e sobe" }
+    deploy@{ shape: console, label: "⌨️ deploy.sh<br>cria o .env, gera as senhas e sobe" }
     ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
     valida@{ shape: console, label: "🧪 validate.sh<br>confere a subida" }
     fim@{ shape: stadium, label: "🏁 FTP pronto" }
 
-    usuario --> env --> deploy --> ftp --> valida --> fim
+    usuario --> deploy --> ftp --> valida --> fim
 ```
 
 <sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 👤 Usuário ➜ 📄 `.env` ➜ ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🧪 `validate.sh` ➜ 🏁 FTP pronto
+**🧭 Sequência:** 👤 Usuário ➜ ⌨️ `deploy.sh` (cria o `.env`, gera as senhas e sobe) ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🧪 `validate.sh` ➜ 🏁 FTP pronto
 
 ---
 
@@ -53,8 +52,11 @@ flowchart LR
 
 ## 1️⃣ Configuração base
 
+Este passo é **opcional na primeira vez**: sem `.env`, o [`deploy.sh`](../deploy.sh) cria um a partir do exemplo, com tudo em `127.0.0.1` (só o próprio servidor acessa), e segue. Para já subir atendendo a rede interna, crie e ajuste o arquivo antes:
+
 ```bash
 cp .env.example .env
+chmod 600 .env
 ```
 
 **Resultado esperado:** o arquivo `.env` passa a existir na raiz da stack.
@@ -69,7 +71,7 @@ Cada variável está explicada em [⚙️ Configuração](configuracao.md). Os c
 | `FTP_CERT_CN` | o hostname (exemplo: `ftp.exemplo.com.br`) ou IP que vai no certificado |
 | `FTP_USER` | nome do usuário inicial (padrão `transfer`). Regra: `^[a-z_][a-z0-9_-]{0,31}$` |
 
-> 💡 Se você pular este passo, a primeira execução do `deploy.sh` cria o `.env` a partir do exemplo e para, com a mensagem `Edite <pasta>/.env e execute novamente.`
+> 💡 Pulou este passo? Ajuste o `.env` depois e rode `./deploy.sh` de novo: ele reaplica a configuração sem trocar senha nem apagar dado.
 
 ---
 
@@ -110,10 +112,21 @@ chmod 600 .secrets/ftp_password.txt
 ## 3️⃣ Subir a stack
 
 ```bash
-./deploy.sh --size small     # ou: medium | large (padrão: small)
+./deploy.sh                  # outro porte: ./deploy.sh --size medium (ou large)
 ```
 
-**Resultado esperado:** a tabela do `docker compose ps` com os containers `allsafe-ftp` e `allsafe-ftp-painel` e, no fim, a linha `Painel: https://<IP>:8443  (certificado autoassinado; só rede privada, atrás de firewall)`. Segundos depois os dois ficam `healthy`. Na primeira vez aparecem também `Gerada uma senha forte em .secrets/ftp_password.txt (0600). Guarde-a para o cliente FTP.` e `Gerada uma senha forte para o painel em .secrets/painel_password.txt (0600).`
+**Resultado esperado:** o comando só termina com os dois containers `healthy` e fecha com o resumo:
+
+```text
+Pronto: FTP e painel no ar (healthy), perfil 'small'.
+FTP:    127.0.0.1:21 com TLS explícito, modo passivo 30000-30049
+        usuário 'transfer', senha no arquivo ./.secrets/ftp_password.txt
+Painel: https://127.0.0.1:8443  (certificado autoassinado; só rede privada, atrás de firewall)
+        senha inicial no arquivo ./.secrets/painel_password.txt; troque com ./scripts/painel-senha.sh
+Remover: ./deploy.sh --remover  (os dados ficam em <DATA_DIR>)
+```
+
+O resumo diz **onde** está cada senha e nunca a mostra. Na primeira vez aparecem também `Gerada uma senha forte em .secrets/ftp_password.txt (0600). Guarde-a para o cliente FTP.` e `Gerada uma senha forte para o painel em .secrets/painel_password.txt (0600).`
 
 Abra o endereço do painel no navegador e entre com a senha de `.secrets/painel_password.txt`. O primeiro acesso, o aviso de certificado e a troca da senha estão em [🖥️ Painel web](painel.md#abrir).
 
@@ -124,15 +137,19 @@ Qual perfil usar: [🎚️ Perfis](perfis.md).
 
 O [`deploy.sh`](../deploy.sh), nesta ordem:
 
-1. resolve o perfil de `--size` e confere que `profiles/<perfil>.env` existe;
-2. cria o `.env` a partir do exemplo se ele não existir (e para, pedindo revisão);
+1. confere os requisitos: `docker`, o plugin `docker compose` e o serviço do Docker respondendo;
+2. cria o `.env` a partir do exemplo (`0600`) se ele não existir, e segue;
 3. recusa senha no `.env` e endereço ou rede fora de IP privado;
-4. roda `docker compose --env-file .env --env-file profiles/<perfil>.env config --quiet`, que falha cedo se a configuração estiver inválida; com `--check-only` para por aqui, com `OK: perfil '<perfil>', rede privada e compose validados; nada foi alterado.`;
-5. cria as pastas `dados/`, `auth/`, `certs/` e `painel/` em `DATA_DIR` e gera a senha em `.secrets/ftp_password.txt` se o arquivo estiver vazio;
-6. `docker compose build`, que constrói as duas imagens;
-7. gera a senha inicial do painel e grava o hash dela, se ainda não houver hash;
-8. `docker compose up -d`;
-9. `docker compose ps` e o endereço do painel.
+4. com `--size`, grava no `.env` os valores de `profiles/<perfil>.env` e o nome do perfil em `FTP_PROFILE`; sem `--size`, o `.env` fica como está;
+5. confere que a porta do FTP, a do painel e a faixa passiva estão livres no host (as que a própria stack já publica não contam); porta ocupada para o comando com `ERRO: porta já em uso por outro programa: ...`;
+6. cria as pastas `dados/`, `auth/`, `certs/` e `painel/` em `DATA_DIR` e gera a senha em `.secrets/ftp_password.txt` se o arquivo estiver vazio;
+7. roda `docker compose --env-file .env config --quiet`, que falha cedo se a configuração estiver inválida;
+8. `docker compose build`, que constrói as duas imagens (com `--atualizar`, `build --no-cache`);
+9. gera a senha inicial do painel e grava o hash dela, se ainda não houver hash;
+10. `docker compose up -d --wait`, que só volta com os dois containers `healthy` (limite de 180 s);
+11. `docker compose ps` e o resumo com os endereços e o lugar de cada senha.
+
+Com `--check-only`, o script para depois do passo 3 e de um `config --quiet`, sem criar `.env`, pasta ou senha, com `OK: perfil '<perfil>', rede privada e compose validados; nada foi alterado.`
 
 Na **primeira** subida o [`entrypoint.sh`](../scripts/entrypoint.sh):
 
@@ -178,12 +195,12 @@ lftp -u "$FTP_USER" -e 'set ssl:verify-certificate no; ls; bye' ftp://SEU_IP
 ## ♻️ Como desfazer
 
 ```bash
-docker compose down             # remove os containers e a rede; os dados continuam no host
+./deploy.sh --remover           # remove os containers e a rede; dados, segredos e .env ficam
 ```
 
-**Resultado esperado:** `docker compose ps` não lista mais o `allsafe-ftp` nem o `allsafe-ftp-painel`.
+**Resultado esperado:** `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` e `docker compose ps` não lista mais o `allsafe-ftp` nem o `allsafe-ftp-painel`. Um novo `./deploy.sh` sobe tudo de volta com os mesmos dados e as mesmas senhas.
 
-Os arquivos dos usuários, o PureDB e os certificados ficam em `DATA_DIR`, no host: o `down` não apaga nada, nem com `-v`. Para apagar de vez, remova as pastas de `DATA_DIR` à mão.
+Os arquivos dos usuários, o PureDB e os certificados ficam em `DATA_DIR`, no host: a remoção não apaga nada (nem um `docker compose down -v` apagaria). Para apagar de vez, use `./deploy.sh --remover --apagar-dados`: ele pede para digitar `apagar` e remove as pastas `dados/`, `auth/`, `certs/` e `painel/` de `DATA_DIR`; os segredos e o `.env` continuam.
 
 ---
 

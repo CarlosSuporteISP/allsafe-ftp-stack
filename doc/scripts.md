@@ -41,7 +41,7 @@ flowchart LR
 
 | Script | Onde roda | Para que serve |
 |---|---|---|
-| [`deploy.sh`](../deploy.sh) | host | Valida a configuração com o perfil escolhido, gera os segredos e sobe o FTP e o painel |
+| [`deploy.sh`](../deploy.sh) | host | Instala, reaplica, atualiza ou remove a stack em um comando, sem perguntas |
 | [`manage-user.sh`](../manage-user.sh) | host | Atalho para criar, trocar senha, remover e listar usuários FTP |
 | [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | host | Troca a senha do painel, gravando só o hash |
 | [`scripts/validate.sh`](../scripts/validate.sh) | host | Checagem de sintaxe, do Compose de todos os perfis e, opcionalmente, do container no ar |
@@ -60,27 +60,38 @@ Os scripts da pasta [`scripts/`](../scripts/) que rodam em container são copiad
 ## 🚀 `deploy.sh`
 
 ```bash
-./deploy.sh [--size small|medium|large] [--check-only]
+./deploy.sh [--size small|medium|large] [--atualizar] [--check-only]
+./deploy.sh --remover [--apagar-dados [--sim]]
 ```
 
 | Parâmetro | Efeito |
 |---|---|
-| `--size` | Carrega `profiles/<perfil>.env` por cima do `.env` (padrão `small`) |
+| sem opção | Instala ou reaplica: cria o `.env`, as pastas e as senhas que faltarem, sobe os containers e espera ficarem `healthy` |
+| `--size` | Grava no `.env` os limites de `profiles/<perfil>.env` e o nome em `FTP_PROFILE`. Sem a opção, o `.env` fica como está |
+| `--atualizar` | Reconstrói as duas imagens sem cache, com os pacotes atuais do Debian, e recria os containers |
 | `--check-only` | Só valida o perfil, a rede privada e o Compose; não cria nem sobe nada |
+| `--remover` | Derruba os containers e a rede; dados, segredos, `.env` e imagens ficam |
+| `--apagar-dados` | Com `--remover`: apaga também `dados/`, `auth/`, `certs/` e `painel/` de `DATA_DIR`, depois de pedir para digitar `apagar` |
+| `--sim` | Com `--apagar-dados`: dispensa a confirmação (obrigatório quando não há terminal) |
 | `-h`, `--help` | Mostra o uso |
 
-**Resultado esperado:** a tabela do `docker compose ps` com `allsafe-ftp` e `allsafe-ftp-painel` e, no fim, a linha `Painel: https://<PAINEL_BIND_IP>:<PAINEL_PORT>  (certificado autoassinado; só rede privada, atrás de firewall)`. Segundos depois os dois ficam `healthy`. Com `--check-only`: `OK: perfil '<perfil>', rede privada e compose validados; nada foi alterado.`
+**Resultado esperado:** o comando só termina com `allsafe-ftp` e `allsafe-ftp-painel` em `healthy` e fecha com `Pronto: FTP e painel no ar (healthy), perfil '<perfil>'.`, os endereços do FTP e do painel e o arquivo onde está cada senha (a senha em si nunca aparece). Com `--remover`: `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` Com `--check-only`: `OK: perfil '<perfil>', rede privada e compose validados; nada foi alterado.`
 
 <details>
 <summary>🔬 Detalhe técnico — comportamento e códigos de saída</summary>
 
-- Na primeira execução sem `.env`, copia o [`.env.example`](../.env.example), aplica `0600`, mostra `Edite <pasta>/.env e execute novamente.` e sai com código `1`.
+- **Não faz pergunta.** A única confirmação é a do `--apagar-dados`, dispensada com `--sim`.
+- **Requisitos conferidos antes de agir:** `docker`, o plugin `docker compose`, o serviço do Docker respondendo e as portas livres (a do FTP, a do painel e a faixa passiva, no endereço de bind). As portas que a própria stack já publica não contam. Falhou: `ERRO: ...` e código `1`, sem subir nada.
+- Na primeira execução sem `.env`, copia o [`.env.example`](../.env.example), aplica `0600`, avisa `Criado .env a partir do .env.example: tudo em 127.0.0.1, só este servidor acessa.` e **segue**. Com `--check-only` nada é criado: a validação usa o `.env.example`.
+- **Idempotente:** rodado de novo sem mudança, não recria container, não troca senha e não regrava o `.env`.
 - Se `.secrets/ftp_password.txt` estiver vazio ou ausente, gera uma senha forte (`0600`): veja [🔑 Segredos](segredos.md).
 - Recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env`, e qualquer `FTP_BIND_IP`, `FTP_PUBLIC_IP`, `PAINEL_BIND_IP`, `PAINEL_REDES_PERMITIDAS` ou `PAINEL_CERT_CN` (em forma de IP) fora de rede privada.
 - Se `.secrets/painel_password_hash.txt` não existir, gera a senha inicial do painel em `.secrets/painel_password.txt` (`0600`) e grava o hash dela, chamando o `scripts/painel-senha.sh --inicial` depois de construir a imagem.
 - Opção desconhecida ou perfil inexistente: mensagem `Opção inválida: ...` ou `ERRO: perfil inexistente: ...` e código `64`.
-- O Compose é sempre chamado com `--env-file .env --env-file profiles/<perfil>.env`; o perfil vence o `.env`.
-- Constrói as duas imagens com `docker compose build`, sobe com `docker compose up -d` e termina mostrando o `docker compose ps` e o endereço do painel. O painel só inicia depois de o FTP ficar `healthy`; o script não espera o `healthy` do painel.
+- O Compose é sempre chamado só com `--env-file .env`. O perfil não é um segundo arquivo na subida: `--size` grava os valores dele no `.env`, por isso um `docker compose up -d` direto mantém os mesmos limites.
+- Combinação inválida (`--remover` com `--size`, `--apagar-dados` sem `--remover`, `--sim` sem `--apagar-dados`): `Opção inválida: ...`, o uso e código `64`.
+- `--apagar-dados` apaga as pastas por um container descartável sem rede (os arquivos pertencem ao usuário do container, não ao do host) e só aceita `DATA_DIR` com pelo menos dois níveis de pasta.
+- Constrói as duas imagens com `docker compose build` (`build --no-cache` com `--atualizar`), sobe com `docker compose up -d --wait --wait-timeout 180` e termina mostrando o `docker compose ps` e o resumo. Se algum container não ficar `healthy` no prazo: `ERRO: os containers não ficaram healthy. Veja o motivo com: docker compose logs --tail 50 ftp painel`.
 
 </details>
 
@@ -255,7 +266,7 @@ Não são executados: outros scripts os carregam com `source`.
 | Script | Função | Quem usa |
 |---|---|---|
 | [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | `ip_privado`, `cidr_privado` e `exigir_ip_privado`: aceitam só `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16` | `deploy.sh`, `entrypoint.sh` e `painel-entrypoint.sh` |
-| [`scripts/ambiente.sh`](../scripts/ambiente.sh) | `env_valor <chave> [padrão]`: lê uma chave do `.env` sem executar o arquivo; a última ocorrência vale, como no Compose | `deploy.sh` e `painel-senha.sh` |
+| [`scripts/ambiente.sh`](../scripts/ambiente.sh) | `env_valor <chave> [padrão]`: lê uma chave do `.env` sem executar o arquivo; a última ocorrência vale, como no Compose. `env_gravar <chave> <valor>`: troca a linha da chave ou acrescenta no fim, sem regravar quando o valor já é o pedido | `deploy.sh` e `painel-senha.sh` |
 
 ---
 

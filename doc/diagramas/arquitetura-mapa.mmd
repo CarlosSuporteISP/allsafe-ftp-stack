@@ -6,7 +6,7 @@ flowchart LR
     end
     subgraph HOST["🖥️ Host"]
         scripts@{ shape: console, label: "⌨️ deploy.sh<br>manage-user.sh" }
-        env@{ shape: doc, label: "📄 .env<br>e perfil" }
+        env@{ shape: doc, label: "📄 .env<br>configuração e limites" }
         segredo@{ shape: doc, label: "🔑 .secrets<br>senha do FTP, hash do painel" }
     end
     subgraph CONTAINERS["🐳 Containers · rede allsafe-ftp-network"]
@@ -24,14 +24,14 @@ flowchart LR
         fim@{ shape: stadium, label: "🏁 backup guardado" }
     end
 
-    operador -- "1 · ./deploy.sh --size small" --> scripts
-    scripts -- "2 · docker compose build e up -d" --> ftp
+    operador -- "1 · ./deploy.sh" --> scripts
+    scripts -- "2 · docker compose build e up -d --wait" --> ftp
     operador -- "3 · HTTPS, TCP 8443" --> painel
     painel -- "4 · cria, troca a senha ou remove o usuário" --> vauth
     equip -- "5 · FTPS, TCP 21 para 2121" --> ftp
     ftp -- "6 · grava o arquivo, passivo 30000 a 30049" --> vdata
     vdata -- "7 · arquivo no volume" --> fim
-    scripts -. "lê" .-> env
+    scripts -. "cria, lê e grava o perfil" .-> env
     ftp -. "lê a senha na subida, só leitura" .-> segredo
     painel -. "lê o hash a cada entrada, só leitura" .-> segredo
     ftp -. "consulta os usuários" .-> vauth

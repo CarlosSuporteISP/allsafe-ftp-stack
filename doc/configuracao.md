@@ -4,24 +4,25 @@
 
 ## 💡 Em poucas palavras
 
-Tudo o que muda de uma instalação para outra fica em um arquivo só, o `.env`: o IP, a porta, o nome do usuário e os limites. O porte do servidor vem de um segundo arquivo, o perfil, que só troca os números de capacidade. O Docker Compose junta os dois e aplica ao servidor FTP.
+Tudo o que muda de uma instalação para outra fica em um arquivo só, o `.env`: o IP, a porta, o nome do usuário e os limites. O porte do servidor vem de um perfil pronto: ao escolher o tamanho, o `deploy.sh` grava os números de capacidade dele no próprio `.env`. O Docker Compose lê o `.env` e aplica ao servidor FTP.
 
 <!-- diagrama: diagramas/configuracao-diagrama.mmd -->
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    env@{ shape: doc, label: "📄 .env<br>valores do ambiente" }
-    perfil@{ shape: doc, label: "🎚️ profiles/small.env<br>limites do perfil" }
-    compose@{ shape: rect, label: "🐳 Docker Compose<br>junta os dois" }
+    perfil@{ shape: doc, label: "🎚️ profiles/medium.env<br>limites do perfil" }
+    deploy@{ shape: console, label: "⌨️ deploy.sh --size medium<br>grava os limites no .env" }
+    env@{ shape: doc, label: "📄 .env<br>ambiente e limites" }
+    compose@{ shape: rect, label: "🐳 Docker Compose<br>lê só o .env" }
     ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
     fim@{ shape: stadium, label: "🏁 limites aplicados" }
 
-    env --> perfil --> compose --> ftp --> fim
+    perfil --> deploy --> env --> compose --> ftp --> fim
 ```
 
 <sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 📄 `.env` ➜ 🎚️ `profiles/small.env` ➜ 🐳 Docker Compose ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 limites aplicados
+**🧭 Sequência:** 🎚️ `profiles/medium.env` ➜ ⌨️ `deploy.sh --size medium` (grava os limites no `.env`) ➜ 📄 `.env` ➜ 🐳 Docker Compose ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 limites aplicados
 
 ---
 
@@ -196,8 +197,9 @@ Os perfis de [`profiles/`](../profiles/) não mexem nas variáveis do painel.
 | `FTP_CPU_LIMIT` | `cpus` do serviço | exemplo: `0.5`, `1.0`, `2` | `1.0` |
 | `FTP_PIDS_LIMIT` | `pids_limit` (barreira contra _fork bomb_) | inteiro | `128` |
 | `FTP_NOFILE` | `ulimit nofile` (soft igual a hard) | inteiro | `16384` |
+| `FTP_PROFILE` | Nome do perfil em uso. Só informa: quem grava é o `./deploy.sh --size` | `small`, `medium`, `large` | `small` |
 
-> 💡 Estes campos, mais `FTP_MAX_CLIENTS*` e a faixa passiva, são o que os perfis de [`profiles/`](../profiles/) sobrescrevem. Prefira `./deploy.sh --size medium` a editar os valores à mão: veja [🎚️ Perfis](perfis.md).
+> 💡 Estes campos, mais `FTP_MAX_CLIENTS*` e a faixa passiva, são o que o `./deploy.sh --size <perfil>` grava a partir de [`profiles/`](../profiles/). Prefira `./deploy.sh --size medium` a editar os valores à mão: veja [🎚️ Perfis](perfis.md).
 
 ---
 
@@ -214,13 +216,13 @@ A rede Docker desta stack tem sub-rede fixa, trocável por uma variável no `.en
 Numa instalação que já está rodando, a sub-rede nova só vale depois de recriar a rede (os volumes e os dados não são afetados):
 
 ```bash
-docker compose down
-./deploy.sh --size small   # use o mesmo perfil da instalação
+./deploy.sh --remover      # derruba os containers e a rede; os dados ficam
+./deploy.sh                # sobe de novo, com a rede nova
 ```
 
 **Resultado esperado:** `docker network inspect allsafe-ftp-network` mostra a sub-rede nova.
 
-> ⚠️ Suba de novo pelo `deploy.sh`, com o perfil em uso. Um `docker compose up -d` puro lê só o `.env` e devolve os limites e a faixa passiva aos valores dele.
+> 📌 O perfil em uso está gravado no `.env`: o `deploy.sh` sem `--size` e o `docker compose up -d` aplicam os mesmos limites.
 
 <details>
 <summary>🔬 Detalhe técnico — o bloco de endereços das stacks AllSafe</summary>

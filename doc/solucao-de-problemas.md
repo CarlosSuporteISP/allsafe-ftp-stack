@@ -58,6 +58,9 @@ Os dois entrypoints abortam com `FALHA: <motivo>` e o container reinicia em laç
 
 | Mensagem no log | Causa | Como verificar | Correção |
 |---|---|---|---|
+| `ERRO: porta já em uso por outro programa: <IP>:<porta>` (no `deploy.sh`) | Outro programa do host já escuta na porta do FTP, do painel ou da faixa passiva | `ss -ltnp` | Troque `FTP_PORT`, `PAINEL_PORT` ou a faixa passiva no `.env`, ou pare o outro programa, e rode `./deploy.sh` de novo |
+| `ERRO: os containers não ficaram healthy` (no `deploy.sh`) | Um dos containers parou ou não respondeu em 180 s | `docker compose logs --tail 50 ftp painel` | Corrija a causa mostrada no log (as linhas abaixo cobrem as mais comuns) e rode `./deploy.sh` de novo |
+| `ERRO: Docker não encontrado`, `ERRO: plugin Docker Compose não encontrado` ou `ERRO: sem acesso ao Docker` (no `deploy.sh`) | Docker parado, sem permissão para o usuário, ou sem o plugin Compose | `docker info` e `docker compose version` | Inicie o Docker, entre no grupo `docker` ou instale o plugin Compose v2 |
 | `FALHA: segredo /run/secrets/ftp_password ausente` | `.secrets/ftp_password.txt` não existe | `ls -l .secrets/` | Rode `./deploy.sh`, que cria o arquivo com uma senha forte. Veja [🔑 Segredos](segredos.md) |
 | `FALHA: FTP_BIND_IP=… não é IP privado` (ou `FTP_PUBLIC_IP`) | Endereço fora de `127/8`, `10/8`, `172.16/12` e `192.168/16`; o container reinicia em laço | `grep -E "FTP_(BIND|PUBLIC)_IP" .env` | Use o IP **interno** do servidor. A stack não aceita `0.0.0.0` nem IP público: veja [🛡️ Segurança](seguranca.md) |
 | `ERRO: .env ainda traz FTP_PASSWORD` (no `deploy.sh`) | `.env` de uma versão anterior, com senha | `grep -c "^FTP_PASSWORD" .env` | Grave a senha em `.secrets/ftp_password.txt` (`chmod 600`) e apague `FTP_PASSWORD` e `FTP_PASSWORD_FILE` do `.env` |

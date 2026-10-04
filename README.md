@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório, usuários virtuais, chroot e painel web seguro, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.3.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.4.0-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -29,7 +29,7 @@ flowchart LR
 
 <sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.3.0</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.4.0</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -94,19 +94,16 @@ São **dois containers**: o servidor FTP e o painel. O FTP usa o banco local **P
 ```bash
 git clone https://github.com/CarlosSuporteISP/allsafe-ftp-stack.git
 cd allsafe-ftp-stack
-./deploy.sh --size small              # 1ª execução: cria o .env a partir do exemplo e para
-$EDITOR .env                          # ajuste os campos da tabela abaixo
-./deploy.sh --size small              # valida, gera as senhas e sobe o FTP e o painel
-./scripts/validate.sh --runtime       # confere o container no ar
+./deploy.sh        # cria o .env, gera as senhas, sobe o FTP e o painel e espera ficarem healthy
 ```
 
-> ⚠️ Hoje a instalação pede **duas execuções** do `deploy.sh`: a primeira só cria o `.env`. A instalação em um único comando está prevista no [plano](#plano).
+**Um comando, sem perguntas.** Sem `.env`, o `deploy.sh` cria um a partir do exemplo, com tudo em `127.0.0.1`: só o próprio servidor acessa. Antes de agir ele confere o Docker, o Compose e se as portas estão livres. Pode ser rodado quantas vezes for preciso: o que já existe (senhas, dados, containers iguais) fica como está.
 
 O `deploy.sh` **gera uma senha forte** em `.secrets/ftp_password.txt` (`0600`) se o arquivo estiver vazio: guarde-a para o cliente FTP. Para usar uma senha própria, grave-a nesse arquivo antes de rodar.
 
-No fim, o script mostra o endereço do painel: `Painel: https://<IP>:8443`. A senha inicial dele está em `.secrets/painel_password.txt`; troque-a depois do primeiro acesso.
+No fim, o script mostra os endereços do FTP e do painel (`Painel: https://<IP>:8443`) e **em que arquivo** está cada senha, sem mostrá-las. A senha inicial do painel está em `.secrets/painel_password.txt`; troque-a depois do primeiro acesso.
 
-Ajuste no `.env` (modelo em [`.env.example`](.env.example)) antes da segunda execução:
+Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.example)) e rode `./deploy.sh` de novo:
 
 | Variável | Troque para |
 |---|---|
@@ -117,14 +114,15 @@ Ajuste no `.env` (modelo em [`.env.example`](.env.example)) antes da segunda exe
 
 | Quero | Comando |
 |---|---|
-| Subir com outro porte | `./deploy.sh --size medium` (ou `large`) |
-| Só validar, sem subir nada | `./deploy.sh --size small --check-only` |
+| Subir com outro porte | `./deploy.sh --size medium` (ou `large`); o porte fica gravado no `.env` |
+| Só validar, sem subir nada | `./deploy.sh --check-only` |
+| Atualizar os pacotes das imagens | `./deploy.sh --atualizar` |
 | Abrir o painel | `https://<PAINEL_BIND_IP>:8443` no navegador, com a senha de `.secrets/painel_password.txt` |
 | Trocar a senha do painel | `./scripts/painel-senha.sh` |
 | Criar um usuário | pelo painel, aba `👥 Usuários`, ou `./manage-user.sh add backup-olt` |
 | Ver o estado | `docker compose ps` |
-| Parar, mantendo os dados | `docker compose down` |
-| Apagar os dados | remover à mão as pastas de `DATA_DIR`, depois do `down`; o Docker não as apaga |
+| Remover, mantendo os dados | `./deploy.sh --remover` |
+| Remover e apagar os dados | `./deploy.sh --remover --apagar-dados` (pede para digitar `apagar`) |
 
 Passo a passo comentado em [🚀 doc/instalacao.md](doc/instalacao.md).
 
@@ -280,7 +278,7 @@ flowchart LR
     end
     subgraph HOST["🖥️ Host"]
         scripts@{ shape: console, label: "⌨️ deploy.sh<br>manage-user.sh" }
-        env@{ shape: doc, label: "📄 .env<br>e perfil" }
+        env@{ shape: doc, label: "📄 .env<br>configuração e limites" }
         segredo@{ shape: doc, label: "🔑 .secrets<br>senha do FTP, hash do painel" }
     end
     subgraph CONTAINERS["🐳 Containers · rede allsafe-ftp-network"]
@@ -298,14 +296,14 @@ flowchart LR
         fim@{ shape: stadium, label: "🏁 backup guardado" }
     end
 
-    operador -- "1 · ./deploy.sh --size small" --> scripts
-    scripts -- "2 · docker compose build e up -d" --> ftp
+    operador -- "1 · ./deploy.sh" --> scripts
+    scripts -- "2 · docker compose build e up -d --wait" --> ftp
     operador -- "3 · HTTPS, TCP 8443" --> painel
     painel -- "4 · cria, troca a senha ou remove o usuário" --> vauth
     equip -- "5 · FTPS, TCP 21 para 2121" --> ftp
     ftp -- "6 · grava o arquivo, passivo 30000 a 30049" --> vdata
     vdata -- "7 · arquivo no volume" --> fim
-    scripts -. "lê" .-> env
+    scripts -. "cria, lê e grava o perfil" .-> env
     ftp -. "lê a senha na subida, só leitura" .-> segredo
     painel -. "lê o hash a cada entrada, só leitura" .-> segredo
     ftp -. "consulta os usuários" .-> vauth
@@ -319,8 +317,8 @@ flowchart LR
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
-| 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | O usuário executa `./deploy.sh --size small` no host |
-| 2 | ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd | O script valida a configuração, constrói as imagens (`docker compose build`) e sobe os dois containers (`up -d`) |
+| 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | O usuário executa `./deploy.sh` no host |
+| 2 | ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd | O script valida a configuração, constrói as imagens (`docker compose build`), sobe os dois containers (`up -d --wait`) e espera ficarem `healthy` |
 | 3 | 👤 Usuário ➜ 🖥️ Painel web | O usuário abre o painel por HTTPS em `8443/tcp` |
 | 4 | 🖥️ Painel web ➜ 🗄️ `DATA_DIR/auth` | O painel cria, troca a senha ou remove o usuário no PureDB |
 | 5 | 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
@@ -331,7 +329,7 @@ flowchart LR
 
 | Quem | Usa | Como |
 |---|---|---|
-| ⌨️ `deploy.sh` e `manage-user.sh` | 📄 `.env` e perfil | lê |
+| ⌨️ `deploy.sh` e `manage-user.sh` | 📄 `.env` | cria, lê e grava o perfil |
 | ⚙️ Pure-FTPd | 🔑 `.secrets` (`ftp_password.txt`) | lê a senha na subida, somente leitura |
 | 🖥️ Painel web | 🔑 `.secrets` (`painel_password_hash.txt`) | lê o hash a cada entrada, somente leitura |
 | ⚙️ Pure-FTPd | 🗄️ `DATA_DIR/auth` (PureDB) | consulta os usuários |
@@ -396,7 +394,7 @@ A faixa passiva é 1:1 entre host e container. Ao mudar `FTP_PASSIVE_PORT_*`, al
 
 ## ⚙️ Configuração
 
-Toda a configuração vem do `.env`, copiado de [`.env.example`](.env.example). O `./deploy.sh --size <perfil>` carrega `profiles/<perfil>.env` **depois** do `.env`, sobrescrevendo só o dimensionamento (limites de sessão, faixa passiva, CPU, memória, PIDs e `nofile`).
+Toda a configuração vem do `.env`, criado a partir do [`.env.example`](.env.example). O `./deploy.sh --size <perfil>` **grava no `.env`** os valores de `profiles/<perfil>.env` e o nome do perfil em `FTP_PROFILE`, trocando só o dimensionamento (limites de sessão, faixa passiva, CPU, memória, PIDs e `nofile`).
 
 | Perfil | Host de referência | Sessões simultâneas | Quando usar |
 |---|---|---|---|
@@ -445,7 +443,7 @@ Os testes automatizados de envio, download, `chroot` e recusa sem TLS ainda não
 |---|---|
 | [`compose.yaml`](compose.yaml) | Definição dos serviços `ftp` e `painel`, volumes, rede, limites e healthchecks |
 | [`Dockerfile`](Dockerfile) | Imagens: base Debian slim com Pure-FTPd e o usuário `ftpdata`; alvos `ftp` e `painel` |
-| [`deploy.sh`](deploy.sh) | Valida a configuração, gera os segredos, constrói as imagens e sobe a stack |
+| [`deploy.sh`](deploy.sh) | Instala, reaplica, atualiza ou remove a stack em um comando |
 | [`manage-user.sh`](manage-user.sh) | Atalho do host para `add`, `passwd`, `del` e `list` de usuários |
 | [`scripts/entrypoint.sh`](scripts/entrypoint.sh) | Prepara o usuário inicial e o certificado e executa o `pure-ftpd` |
 | [`scripts/ftp-user.sh`](scripts/ftp-user.sh) | Gestão de usuários **dentro** dos containers (chamado pelo `manage-user.sh` e pelo painel) |
@@ -492,7 +490,7 @@ Os testes automatizados de envio, download, `chroot` e recusa sem TLS ainda não
 
 O plano de criação e mudança da stack (fases, testes, evidências e progresso) **não é publicado neste repositório**: fica na pasta local `doc/planos/` e em um repositório privado próprio, só do plano.
 
-**Status:** fases 01 a 05 ✅ concluídas, a última com o painel web seguro · fases 06 a 09 🔄 em execução: instalação em um comando, testes automatizados, backup e restauração, documentação final.
+**Status:** fases 01 a 06 ✅ concluídas, a última com a instalação em um comando · fases seguintes 🔄 em execução: nginx na frente do painel, testes automatizados, backup e restauração, documentação final.
 
 ---
 
@@ -500,7 +498,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.3.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.4.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 
