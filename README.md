@@ -207,7 +207,7 @@ Os campos marcados são para o Carlos completar (nomes, links e contribuições)
 | Quem | Papel | Perfil / link |
 |---|---|---|
 | **Carlos** ([@CarlosSuporteISP](https://github.com/CarlosSuporteISP)) | Idealização, direção e uso | [github.com/CarlosSuporteISP](https://github.com/CarlosSuporteISP) |
-| **Josué** | <!-- CARLOS: contribuição --> | <!-- CARLOS: link --> |
+| <!-- CARLOS: contribuição --> | <!-- CARLOS: link --> |
 | <!-- CARLOS: nome --> | <!-- CARLOS: papel --> | <!-- CARLOS: link --> |
 
 ### Inteligências artificiais
