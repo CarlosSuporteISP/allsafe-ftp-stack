@@ -9,7 +9,7 @@ from config import CFG, FALHAS_MAX, JANELA_FALHAS, SESSAO_ABSOLUTA, SESSOES_MAX,
 
 CHAVE_PROCESSO = secrets.token_bytes(32)  # assina o formulário de entrada; some ao reiniciar
 TRAVA = threading.Lock()
-SESSOES = {}   # sha256 do token → {'criada', 'uso', 'csrf', 'ip'}
+SESSOES = {}   # sha256 do token → {'criada', 'uso', 'csrf', 'ip', 'admin'}
 FALHAS = {}    # ip → [instantes das falhas]
 
 
@@ -17,7 +17,7 @@ def resumo_token(token):
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def criar_sessao(ip):
+def criar_sessao(ip, admin):
     token = secrets.token_urlsafe(32)
     agora = time.time()
     with TRAVA:
@@ -25,7 +25,8 @@ def criar_sessao(ip):
             del SESSOES[chave]
         while len(SESSOES) >= SESSOES_MAX:
             del SESSOES[min(SESSOES, key=lambda c: SESSOES[c]['uso'])]
-        SESSOES[resumo_token(token)] = {'criada': agora, 'uso': agora, 'csrf': secrets.token_urlsafe(32), 'ip': ip}
+        SESSOES[resumo_token(token)] = {'criada': agora, 'uso': agora, 'csrf': secrets.token_urlsafe(32), 'ip': ip,
+                                         'admin': admin}
     return token
 
 
@@ -50,6 +51,30 @@ def buscar_sessao(token, ip):
 def encerrar_sessao(token):
     with TRAVA:
         SESSOES.pop(resumo_token(token), None)
+
+
+def encerrar_sessoes_de(admin, menos=None):
+    """Encerra as sessões de um administrador; `menos` é a sessão que continua (a de quem fez a alteração)."""
+    with TRAVA:
+        for chave in [c for c, s in SESSOES.items() if s['admin'] == admin and s is not menos]:
+            del SESSOES[chave]
+
+
+def sessoes_por_admin():
+    """Quantas sessões válidas cada administrador tem agora: {nome: quantidade}."""
+    agora, conta = time.time(), {}
+    with TRAVA:
+        for sessao in SESSOES.values():
+            if not sessao_vencida(sessao, agora):
+                conta[sessao['admin']] = conta.get(sessao['admin'], 0) + 1
+    return conta
+
+
+def renomear_sessoes(antigo, novo):
+    with TRAVA:
+        for sessao in SESSOES.values():
+            if sessao['admin'] == antigo:
+                sessao['admin'] = novo
 
 
 def bloqueado(ip):

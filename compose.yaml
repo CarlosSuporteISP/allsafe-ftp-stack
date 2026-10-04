@@ -92,7 +92,7 @@ services:
     networks:
       - ftp
 
-  # Painel web de administração: uma senha, sem socket do Docker e sem porta de rede. Só o nginx
+  # Painel web de administração: administradores com usuário e senha, sem socket do Docker e sem porta de rede. Só o nginx
   # chega nele, pelo soquete Unix da pasta nginx. Altera os usuários do FTP pela pasta auth, que
   # divide com o serviço ftp.
   painel:
@@ -114,6 +114,7 @@ services:
       PAINEL_BIND_IP: ${PAINEL_BIND_IP:-127.0.0.1}
       PAINEL_PORT: ${PAINEL_PORT:-8443}
       PAINEL_REDES_PERMITIDAS: ${PAINEL_REDES_PERMITIDAS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      PAINEL_ADMIN_USER: ${PAINEL_ADMIN_USER:-admin}
       PAINEL_SESSAO_MINUTOS: ${PAINEL_SESSAO_MINUTOS:-15}
       PAINEL_CERT_CN: ${PAINEL_CERT_CN:-}
       PAINEL_FTP_HOST: ftp

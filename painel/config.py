@@ -9,6 +9,7 @@ ARQ_SOQUETE = '/nginx/painel.sock'
 GID_NGINX = 10001
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 ARQ_HASH = '/run/secrets/painel_admin_inicial_senha_hash'
+ARQ_ADMINS = '/painel/administradores'
 ARQ_CERT = '/painel/tls/painel-cert.pem'
 ARQ_AUDITORIA = '/painel/auditoria.log'
 ARQ_USUARIOS = '/auth/pureftpd.passwd'
@@ -16,7 +17,7 @@ ARQ_CERT_FTP = '/auth/ftp-cert.pem'
 CMD_USUARIO = '/usr/local/sbin/allsafe-ftp-user'
 PASTA_DADOS = '/data'
 
-# Mesma regra de nome do allsafe-ftp-user; aqui ela só antecipa a mensagem de erro.
+# Mesma regra de nome do allsafe-ftp-user; aqui ela só antecipa a mensagem de erro. Vale também para administrador.
 NOME = re.compile(r'[a-z_][a-z0-9_-]{0,31}')
 PRIVADAS = [ipaddress.ip_network(r) for r in ('127.0.0.0/8', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16')]
 
@@ -27,6 +28,7 @@ FALHAS_MAX = 5              # falhas de entrada por IP...
 JANELA_FALHAS = 15 * 60     # ...nesta janela, em segundos
 SESSAO_ABSOLUTA = 8 * 3600
 SESSOES_MAX = 50
+ADMINS_MAX = 20
 VALIDADE_FORMULARIO = 15 * 60
 AUDITORIA_MAX = 1024 * 1024
 SENHA_MIN, SENHA_MAX = 12, 128
@@ -70,6 +72,9 @@ def configuracao():
             if rede.prefixlen < 8 or not 1 <= int(rede.network_address) >> 24 <= 223:
                 falha(f'PAINEL_REDES_PERMITIDAS: {rede} não é uma rede aceita (prefixo de /8 a /32; "todo mundo" é recusado)')
         redes.append(rede)
+    admin = amb('PAINEL_ADMIN_USER', 'admin')
+    if not NOME.fullmatch(admin):
+        falha('PAINEL_ADMIN_USER inválido: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres')
     minutos = amb('PAINEL_SESSAO_MINUTOS', '15')
     if not (minutos.isdigit() and 1 <= int(minutos) <= 120):
         falha('PAINEL_SESSAO_MINUTOS deve ficar entre 1 e 120')
@@ -81,6 +86,7 @@ def configuracao():
     return {
         'ip_publico': publico,
         'redes': redes,
+        'admin_inicial': admin,
         'inatividade': int(minutos) * 60,
         'cert_cn': amb('PAINEL_CERT_CN', '').strip().lower(),
         'painel_bind': amb('PAINEL_BIND_IP', '127.0.0.1'),

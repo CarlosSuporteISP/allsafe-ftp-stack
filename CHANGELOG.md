@@ -8,6 +8,33 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.12.0] - 2026-10-04
+
+O painel deixa de ter uma senha só: cada administrador entra com o próprio usuário e a própria senha, e os administradores são criados, alterados e removidos pelo próprio painel. Quem atualiza continua entrando com a senha que já usava, agora com o usuário `admin`. **Por padrão, uso só em rede privada, atrás de firewall.**
+
+### Adicionado
+
+- **Entrada com usuário e senha:** a tela de entrada pede os dois. A recusa é a mesma para usuário que não existe e para senha errada, e o nome digitado em uma entrada recusada não vai para a auditoria nem para os logs.
+- **`PAINEL_ADMIN_USER`** (padrão `admin`) no [`.env.example`](.env.example): o nome do primeiro administrador, criado na primeira subida com a senha inicial de `.secrets/`. Depois disso, a variável não é mais consultada. Nome fora da regra é recusado pelo `deploy.sh` e pelo container.
+- **Aba Administradores:** lista com as sessões abertas de cada um, criação (com senha informada ou gerada pelo painel, mostrada uma única vez), troca de senha, troca de nome e remoção. Até 20 administradores, todos com o mesmo acesso: [Administradores do painel](doc/painel.md#administradores).
+- **Senha atual em toda alteração de administrador:** criar, trocar senha, trocar nome e remover pedem a senha de quem está na sessão. A recusa conta no mesmo limite da tela de entrada: cinco erros em 15 minutos bloqueiam o endereço.
+- **Sessões encerradas na alteração:** trocar a senha, trocar o nome ou remover um administrador encerra as sessões dele. Ninguém remove a própria conta.
+- **Auditoria com o administrador:** as entradas e as alterações de usuário passam a registrar quem fez (`admin=`), e há eventos novos para os administradores (`admin_inicial_criado`, `admin_criado`, `admin_senha_trocada`, `admin_renomeado`, `admin_removido`, `admin_senha_atual_recusada`, `admin_definido_no_host`). O nome de quem está na sessão aparece no topo do painel.
+- [`scripts/painel-senha.sh`](scripts/painel-senha.sh): opção `--usuario NOME`, para definir pelo host a senha de qualquer administrador ou criar um novo, com o painel no ar ou parado.
+- Bateria de testes: dois casos funcionais (administradores pelo painel e recuperação do acesso pelo host) e seis de segurança (administrador inexistente não é revelado, alteração só com a senha atual, sessão de administrador alterado, ninguém remove a própria conta, arquivo de administradores só com hash e nome de administrador inválido).
+
+### Alterado
+
+- **Onde a senha do painel fica:** o nome e o hash `scrypt` da senha de cada administrador ficam em `DATA_DIR/painel/administradores` (`0600`, do `root`), gravado pelo painel. O segredo `.secrets/painel-admin-inicial-senha-hash.txt` passa a servir só para criar o primeiro administrador.
+- **Cópia de segurança:** os administradores entram na cópia do `scripts/backup.sh`, só com o hash, e voltam na restauração; a mensagem final do [`scripts/restaurar.sh`](scripts/restaurar.sh) diz isso.
+- [`scripts/painel-senha.sh`](scripts/painel-senha.sh): passa a ser o caminho de recuperação do acesso. A mensagem final muda para `Administrador NOME com a senha trocada; painel reiniciado e sessões abertas encerradas.`
+- [`deploy.sh`](deploy.sh): o resumo mostra o usuário do painel ao lado do arquivo da senha inicial, e o `LEIAME.txt` de `.secrets/` explica o papel novo de cada arquivo.
+- Bateria de testes: a instância de teste sobe com o primeiro administrador `gestor` (`TESTE_ADMIN`), de propósito diferente do padrão.
+
+### Atualização a partir da 0.11.x
+
+Rode `./deploy.sh`. Na primeira subida, o painel cria o administrador `admin` com a senha que já valia; para outro nome, defina `PAINEL_ADMIN_USER` no `.env` **antes** de atualizar, ou troque o nome depois, na aba Administradores. As sessões abertas são encerradas.
+
 ## [0.11.1] - 2026-10-04
 
 O código do painel, que era um arquivo só, passa a ser dividido em módulos, um assunto por arquivo. Nada muda para quem usa: as mesmas telas, as mesmas respostas, a mesma auditoria. **Por padrão, uso só em rede privada, atrás de firewall.**

@@ -9,8 +9,8 @@ flowchart LR
     end
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
-        senha@{ shape: diam, label: "senha<br>confere?" }
-        hash@{ shape: doc, label: "hash da senha<br>painel_admin_inicial_senha_hash" }
+        senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
+        hash@{ shape: doc, label: "administradores<br>DATA_DIR/painel, nome e hash da senha" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 15 min<br>cookie e token CSRF" }
@@ -30,8 +30,8 @@ flowchart LR
     nginx -- "2 · confere a origem e a taxa de pedidos" --> rede
     rede -- "3a · sim: repassa pelo soquete Unix" --> painel
     rede -- "3b · não: 403 ou 429" --> recusa
-    painel -- "4 · pede a senha" --> senha
-    senha -. "5 · compara com o hash" .-> hash
+    painel -- "4 · pede usuário e senha" --> senha
+    senha -. "5 · compara com o hash do administrador" .-> hash
     senha -- "6a · sim: abre a sessão" --> sessao
     senha -- "6b · não: 5 erros bloqueiam o endereço" --> recusa
     sessao -- "7 · envia o formulário" --> pedido

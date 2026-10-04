@@ -54,7 +54,7 @@ def seguranca(pedido, sessao, consulta, formulario, token):
               f'Clientes de <code>{e(redes)}</code>; os demais são recusados pelo nginx, antes de chegar ao painel.'
               + (f' <strong>Rede pública na lista: {e(", ".join(redes_publicas))}.</strong>' if redes_publicas else '')),
         linha('✅', 'Sessão', f'Encerra com {CFG["inatividade"] // 60} minutos sem uso e, de qualquer forma, em 8 horas. '
-              f'{FALHAS_MAX} senhas erradas bloqueiam o endereço por 15 minutos.'),
+              f'{FALHAS_MAX} entradas erradas bloqueiam o endereço por 15 minutos.'),
         linha('✅' if somente_leitura else '⚠️', 'Container do painel',
               ('Raiz somente leitura' if somente_leitura else 'Raiz gravável: confira o <code>read_only</code>')
               + (' e sem acesso ao Docker do host.' if sem_docker else '. <strong>Há um socket do Docker montado: remova.</strong>')),

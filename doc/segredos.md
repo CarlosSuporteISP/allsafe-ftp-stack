@@ -42,8 +42,8 @@ flowchart LR
 | Arquivo | Quem gera | Você preenche? | Para quê |
 |---|---|---|---|
 | `ftp-usuario-inicial-senha.txt` | [`deploy.sh`](../deploy.sh), na primeira execução, se o arquivo não existir ou estiver vazio | Só se quiser uma senha própria | Senha do usuário inicial (`FTP_USER`) |
-| `painel-admin-inicial-senha.txt` | [`deploy.sh`](../deploy.sh), na primeira execução | Não | Senha **inicial** do painel, em texto. Fica só no host e é apagada na primeira troca |
-| `painel-admin-inicial-senha-hash.txt` | [`deploy.sh`](../deploy.sh) e [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | Não | Hash `scrypt` da senha do painel. É o único arquivo que o painel enxerga |
+| `painel-admin-inicial-senha.txt` | [`deploy.sh`](../deploy.sh), na primeira execução | Não | Senha **inicial** do primeiro administrador do painel (`PAINEL_ADMIN_USER`), em texto. Fica só no host e vale até ser trocada na aba Administradores; trocou, apague o arquivo |
+| `painel-admin-inicial-senha-hash.txt` | [`deploy.sh`](../deploy.sh) e [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | Não | Hash `scrypt` dessa senha inicial. É o único arquivo da pasta que o painel enxerga, e só é usado para criar o primeiro administrador |
 | `LEIAME.txt` | [`deploy.sh`](../deploy.sh), a cada execução | Não | Diz para que serve cada arquivo da pasta. Não guarda segredo nenhum |
 | `.gitkeep` | já vem no repositório | Não | Mantém a pasta no clone |
 
@@ -53,7 +53,7 @@ Ver as senhas geradas, para configurar o equipamento e para entrar no painel pel
 
 ```bash
 cat .secrets/ftp-usuario-inicial-senha.txt       # usuário inicial do FTP
-cat .secrets/painel-admin-inicial-senha.txt    # painel, até a primeira troca
+cat .secrets/painel-admin-inicial-senha.txt    # primeiro administrador do painel, até a primeira troca
 ```
 
 **Resultado esperado:** em cada comando, uma linha com a senha, de 48 caracteres.
@@ -82,16 +82,19 @@ A senha do usuário inicial é **reaplicada a cada subida** a partir deste arqui
 
 ## 🖥️ Senha do painel
 
-O painel tem uma senha só, de administrador. Troque a senha inicial logo depois do primeiro acesso:
+Cada administrador do painel tem usuário e senha próprios. O primeiro nasce na instalação, com o nome de `PAINEL_ADMIN_USER` e a senha de `.secrets/painel-admin-inicial-senha.txt`. Troque essa senha logo depois do primeiro acesso, **pelo painel**, na aba Administradores, e apague o arquivo da senha inicial: [Administradores do painel](painel.md#administradores).
+
+Sem acesso ao painel, a senha é definida pelo host:
 
 ```bash
-./scripts/painel-senha.sh            # pergunta a senha nova duas vezes, sem mostrar na tela
-./scripts/painel-senha.sh --gerar    # ou: cria uma senha forte e mostra uma única vez
+./scripts/painel-senha.sh --gerar                    # senha forte para o primeiro administrador, mostrada uma única vez
+./scripts/painel-senha.sh                            # ou: pergunta a senha nova duas vezes, sem mostrar na tela
+./scripts/painel-senha.sh --usuario NOME --gerar     # outro administrador; se NOME não existe, é criado
 ```
 
-**Resultado esperado:** `Hash gravado em ./.secrets/painel-admin-inicial-senha-hash.txt; painel reiniciado e sessões abertas encerradas.` O arquivo `painel-admin-inicial-senha.txt` deixa de existir.
+**Resultado esperado:** `Administrador admin com a senha trocada; painel reiniciado e sessões abertas encerradas.` Quando o administrador é o de `PAINEL_ADMIN_USER`, o arquivo `painel-admin-inicial-senha.txt` deixa de existir.
 
-A senha nova tem de ter no mínimo 12 caracteres e **não fica gravada em lugar nenhum**: guarde-a no seu cofre de senhas. Se for perdida, rode o mesmo script de novo. Uso do painel: [Painel web](painel.md).
+A senha tem de ter no mínimo 12 caracteres e **não fica gravada em lugar nenhum**: o painel guarda só o hash, em `DATA_DIR/painel/administradores`. Guarde-a no seu cofre de senhas. Uso do painel: [Painel web](painel.md).
 
 ---
 
@@ -154,7 +157,7 @@ Com `./deploy.sh --check-only` nada é alterado: sai só o aviso `AVISO: esta in
 - **Sem senha em variável:** o `.env` guarda só o que se ajusta. O `deploy.sh` recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env` e os containers recusam essas variáveis.
 - **Leitura:** o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) lê o arquivo sem as quebras de linha, valida o mínimo de 12 caracteres e entrega a senha ao `pure-pw` pelo `stdin`.
 - **Descarte:** antes do `exec` do `pure-ftpd`, o entrypoint faz `unset` da variável interna da senha.
-- **Painel:** o hash é `scrypt` (N=2^15, r=8, p=1, sal aleatório de 16 bytes), calculado dentro da imagem do painel, em um container descartável sem rede. O segredo `painel_admin_inicial_senha_hash` chega **só** ao serviço `painel`, em `/run/secrets/painel_admin_inicial_senha_hash`, somente leitura, e é lido a cada tentativa de entrada. O `painel-admin-inicial-senha.txt` nunca é montado em container.
+- **Painel:** o hash é `scrypt` (N=2^15, r=8, p=1, sal aleatório de 16 bytes), calculado dentro da imagem do painel, em um container descartável sem rede. O segredo `painel_admin_inicial_senha_hash` chega **só** ao serviço `painel`, em `/run/secrets/painel_admin_inicial_senha_hash`, somente leitura, e só é lido na subida em que ainda não existe nenhum administrador. A senha atual de cada administrador fica como hash em `DATA_DIR/painel/administradores` (`0600`, do `root`), fora de `.secrets/`. O `painel-admin-inicial-senha.txt` nunca é montado em container.
 - **Git:** o [`.gitignore`](../.gitignore) ignora `.env` e tudo o que está em `.secrets/`, mantendo só o `.gitkeep`.
 - **`LEIAME.txt`:** regravado pelo `deploy.sh` a cada execução, com modo `0600`. Traz só o nome e a função de cada arquivo; nunca é montado em container.
 - **Imagem:** o [`.dockerignore`](../.dockerignore) deixa `.env` e `.secrets` fora do contexto de build.

@@ -124,6 +124,6 @@ if [[ -n "$no_ar" ]]; then
 else
   echo "Restaurado. A stack estava parada e continua parada: suba com ./deploy.sh"
 fi
-echo "Usuários, arquivos, certificados e auditoria voltaram ao estado da cópia."
-echo "As senhas do usuário inicial e do painel continuam as de $secrets_dir, que não fazem parte da cópia."
+echo "Usuários, arquivos, certificados, administradores do painel e auditoria voltaram ao estado da cópia."
+echo "A senha do usuário inicial do FTP continua a de $secrets_dir, que não faz parte da cópia."
 [[ -z "$anterior" ]] || echo "Desfazer: ./scripts/restaurar.sh $(basename -- "$anterior")"

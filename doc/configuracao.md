@@ -192,6 +192,7 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 | `PAINEL_BIND_IP` | IP do **host** onde o nginx publica o painel | IP privado do host; `0.0.0.0` é sempre recusado; IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.1` |
 | `PAINEL_PORT` | Porta HTTPS do painel publicada no host pelo nginx (mapeada para `8443` no container do nginx) | `1` a `65535` | `8443` |
 | `PAINEL_REDES_PERMITIDAS` | Redes de onde o painel aceita cliente. Quem está fora recebe `403` do nginx, antes de chegar ao painel; o painel confere de novo | Lista de redes **privadas** separadas por vírgula, em notação CIDR; rede pública (de `/8` a `/32`), só com `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
+| `PAINEL_ADMIN_USER` | Nome do primeiro administrador do painel, criado na primeira subida com a senha inicial de `.secrets/`. Só vale enquanto não existe nenhum administrador: depois, nome, senha e os outros administradores são alterados na aba Administradores | Letras minúsculas, números, `_` e `-`; começa com letra ou `_`; até 32 caracteres | `admin` |
 | `PAINEL_SESSAO_MINUTOS` | Minutos sem uso até a sessão encerrar (o teto de 8 horas não muda) | `1` a `120` | `15` |
 | `PAINEL_CERT_CN` | Nome interno ou IP privado a mais no certificado autoassinado do painel | Nome em minúsculas ou IP **privado** (IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim`); vazio para nenhum | vazio |
 | `PAINEL_MEMORY_LIMIT` | `mem_limit` do painel | exemplo: `192M` | `192M` |
@@ -203,7 +204,7 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 
 > 🧱 **Rede privada:** por padrão o painel é só para rede interna, atrás de firewall. `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e um `PAINEL_CERT_CN` em forma de IP têm de ser privados: o [`deploy.sh`](../deploy.sh) e os containers do painel e do nginx param com `não é IP privado` ou `não é rede privada` para qualquer outro valor. Endereço e rede públicos só passam com a opção [`REDE_PERMITIR_IP_PUBLICO`](#rede-permitir-ip-publico).
 
-A senha do painel **não** é variável: fica em `.secrets/`, como hash. O `deploy.sh` e o container recusam `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`. Veja [Segredos](segredos.md#senha-do-painel) e o guia [Painel web](painel.md).
+A senha do painel **não** é variável: a inicial fica em `.secrets/`, e a de cada administrador, só como hash, em `DATA_DIR/painel/administradores`. O `deploy.sh` e o container recusam `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`, e param com `PAINEL_ADMIN_USER inválido` para um nome fora da regra. Veja [Segredos](segredos.md#senha-do-painel) e [Administradores do painel](painel.md#administradores).
 
 O navegador nunca fala direto com o painel: só o nginx publica porta, e ele repassa o pedido ao painel por um soquete dentro de `DATA_DIR/nginx`. O limite de pedidos por endereço e o tamanho máximo do pedido são fixos na configuração do nginx ([`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo)), sem variável. Os perfis de [`profiles/`](../profiles/) não mexem nas variáveis do painel nem nas do nginx.
 

@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.11.1-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.12.0-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -34,7 +34,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.11.1</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.12.0</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -59,7 +59,7 @@ flowchart LR
 
 Um servidor de arquivos para onde roteadores, switches, OLTs e outros equipamentos de rede mandam a cópia de segurança da própria configuração. Cada equipamento entra com usuário e senha, só enxerga a própria pasta e, no padrão, só consegue entrar por conexão criptografada. As contas dos equipamentos são criadas pelo navegador, em um **painel web seguro**, ou pela linha de comando.
 
-São **três containers**: o servidor FTP, o painel e o **nginx**, a única porta de entrada do painel. O FTP usa o banco local **PureDB** em vez de PostgreSQL: menos memória, menos superfície de ataque e autenticação sem latência de rede. O painel é pequeno de propósito: uma senha, sem JavaScript, sem acesso ao Docker e sem porta de rede própria; quem fala HTTPS com o navegador é o nginx, que confere a rede de origem e o volume de pedidos antes de repassar. Nos três, o sistema de arquivos raiz é somente leitura, as `capabilities` são mínimas e os segredos ficam fora da imagem e do Git.
+São **três containers**: o servidor FTP, o painel e o **nginx**, a única porta de entrada do painel. O FTP usa o banco local **PureDB** em vez de PostgreSQL: menos memória, menos superfície de ataque e autenticação sem latência de rede. O painel é pequeno de propósito: administradores com usuário e senha, sem JavaScript, sem acesso ao Docker e sem porta de rede própria; quem fala HTTPS com o navegador é o nginx, que confere a rede de origem e o volume de pedidos antes de repassar. Nos três, o sistema de arquivos raiz é somente leitura, as `capabilities` são mínimas e os segredos ficam fora da imagem e do Git.
 
 | | |
 |---|---|
@@ -127,7 +127,7 @@ cd allsafe-ftp-stack
 
 O `deploy.sh` **gera uma senha forte** em `.secrets/ftp-usuario-inicial-senha.txt` (`0600`) se o arquivo estiver vazio: guarde-a para o cliente FTP. Para usar uma senha própria, grave-a nesse arquivo antes de rodar.
 
-No fim, o script mostra os endereços do FTP e do painel (`Painel: https://<IP>:8443`) e **em que arquivo** está cada senha, sem mostrá-las. A senha inicial do painel está em `.secrets/painel-admin-inicial-senha.txt`; troque-a depois do primeiro acesso.
+No fim, o script mostra os endereços do FTP e do painel (`Painel: https://<IP>:8443`) e **em que arquivo** está cada senha, sem mostrá-las. O painel abre com o usuário de `PAINEL_ADMIN_USER` (`admin`, se não for trocado) e a senha inicial de `.secrets/painel-admin-inicial-senha.txt`; troque-a depois do primeiro acesso, na aba Administradores.
 
 Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.example)) e rode `./deploy.sh` de novo:
 
@@ -145,8 +145,10 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | Subir com outro porte | `./deploy.sh --size medium` (ou `large`, `xlarge`, `extended`); o porte fica gravado no `.env` |
 | Só validar, sem subir nada | `./deploy.sh --check-only` |
 | Atualizar os pacotes das imagens | `./deploy.sh --atualizar` |
-| Abrir o painel | `https://<PAINEL_BIND_IP>:8443` no navegador, com a senha de `.secrets/painel-admin-inicial-senha.txt` |
-| Trocar a senha do painel | `./scripts/painel-senha.sh` |
+| Abrir o painel | `https://<PAINEL_BIND_IP>:8443` no navegador, com o usuário de `PAINEL_ADMIN_USER` e a senha de `.secrets/painel-admin-inicial-senha.txt` |
+| Trocar o usuário ou a senha do painel | pelo painel, aba Administradores |
+| Criar outro administrador do painel | pelo painel, aba Administradores, botão **Novo administrador** |
+| Recuperar o acesso ao painel | `./scripts/painel-senha.sh --gerar` (outro administrador: `--usuario NOME`) |
 | Criar um usuário | pelo painel, aba `👥 Usuários`, ou `./manage-user.sh add backup-olt` |
 | Guardar uma cópia de segurança | `./scripts/backup.sh`; para voltar a ela, `./scripts/restaurar.sh <cópia>` |
 | Ver o estado | `docker compose ps` |
@@ -248,8 +250,8 @@ flowchart LR
     end
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
-        senha@{ shape: diam, label: "senha<br>confere?" }
-        hash@{ shape: doc, label: "hash da senha<br>painel_admin_inicial_senha_hash" }
+        senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
+        hash@{ shape: doc, label: "administradores<br>DATA_DIR/painel, nome e hash da senha" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 15 min<br>cookie e token CSRF" }
@@ -269,8 +271,8 @@ flowchart LR
     nginx -- "2 · confere a origem e a taxa de pedidos" --> rede
     rede -- "3a · sim: repassa pelo soquete Unix" --> painel
     rede -- "3b · não: 403 ou 429" --> recusa
-    painel -- "4 · pede a senha" --> senha
-    senha -. "5 · compara com o hash" .-> hash
+    painel -- "4 · pede usuário e senha" --> senha
+    senha -. "5 · compara com o hash do administrador" .-> hash
     senha -- "6a · sim: abre a sessão" --> sessao
     senha -- "6b · não: 5 erros bloqueiam o endereço" --> recusa
     sessao -- "7 · envia o formulário" --> pedido
@@ -289,10 +291,10 @@ flowchart LR
 | 2 | nginx ➜ rede permitida e dentro do limite? | O endereço de origem é comparado com `PAINEL_REDES_PERMITIDAS`, e o pedido, com os limites de taxa, de conexões e de tamanho |
 | 3a | rede permitida e dentro do limite? ➜ Painel web | Sim: o nginx repassa o pedido pelo soquete Unix, com o endereço do cliente |
 | 3b | rede permitida e dentro do limite? ➜ pedido recusado | Não: `403` para rede de fora, `429` para pedidos demais; o painel nem recebe o pedido |
-| 4 | Painel web ➜ senha confere? | O painel confere de novo a rede e o nome de host e mostra a tela de entrada |
-| 5 | senha confere? ➜ hash da senha | A senha digitada é comparada com o hash `scrypt` de `/run/secrets/painel_admin_inicial_senha_hash` |
-| 6a | senha confere? ➜ sessão | Sim: abre a sessão, com cookie e token CSRF |
-| 6b | senha confere? ➜ pedido recusado | Não: `401`; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
+| 4 | Painel web ➜ usuário e senha conferem? | O painel confere de novo a rede e o nome de host e mostra a tela de entrada, que pede usuário e senha |
+| 5 | usuário e senha conferem? ➜ administradores | A senha digitada é comparada com o hash `scrypt` do administrador, em `DATA_DIR/painel/administradores`; nome que não existe passa pela mesma conta |
+| 6a | usuário e senha conferem? ➜ sessão | Sim: abre a sessão do administrador, com cookie e token CSRF |
+| 6b | usuário e senha conferem? ➜ pedido recusado | Não: `401`, sem dizer qual dos dois errou; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
 | 7 | sessão ➜ pedido legítimo? | Cada formulário enviado traz o token CSRF da sessão e a origem do próprio painel |
 | 8a | pedido legítimo? ➜ `allsafe-ftp-user` | Sim: o painel chama o comando, com a senha pela entrada padrão |
 | 8b | pedido legítimo? ➜ pedido recusado | Não: `403`, sem alterar nada |
@@ -303,7 +305,7 @@ flowchart LR
 
 | Quem | Usa | Como |
 |---|---|---|
-| senha confere? | hash da senha (`painel_admin_inicial_senha_hash`) | lê a cada entrada, somente leitura |
+| usuário e senha conferem? | administradores (`DATA_DIR/painel/administradores`) | lê a cada entrada |
 | Painel web | `auditoria.log` | registra cada entrada, recusa e alteração |
 
 </details>
@@ -327,7 +329,7 @@ flowchart LR
     subgraph HOST["Host"]
         scripts@{ shape: console, label: "deploy.sh<br>manage-user.sh" }
         env@{ shape: doc, label: ".env<br>configuração e limites" }
-        segredo@{ shape: doc, label: ".secrets<br>senha do FTP, hash do painel" }
+        segredo@{ shape: doc, label: ".secrets<br>senha do FTP, hash inicial do painel" }
     end
     subgraph CONTAINERS["Containers · rede allsafe-ftp-network"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
@@ -337,7 +339,7 @@ flowchart LR
     end
     subgraph VOLUMES["Volumes"]
         vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
-        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>/painel, certificado e auditoria" }
+        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>/painel, certificado, administradores e auditoria" }
         vauth@{ shape: cyl, label: "DATA_DIR/auth<br>/auth, PureDB" }
         vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>/etc/ssl/private" }
         vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>/data" }
@@ -356,10 +358,10 @@ flowchart LR
     vdata -- "8 · arquivo no volume" --> fim
     scripts -. "cria, lê e grava o perfil" .-> env
     ftp -. "lê a senha na subida, só leitura" .-> segredo
-    painel -. "lê o hash a cada entrada, só leitura" .-> segredo
+    painel -. "lê o hash inicial na subida, só leitura" .-> segredo
     ftp -. "consulta os usuários" .-> vauth
     ftp -. "lê o certificado" .-> vcerts
-    painel -. "grava certificado e auditoria" .-> vpainel
+    painel -. "grava certificado, administradores e auditoria" .-> vpainel
     painel -. "cria o soquete e copia o certificado" .-> vnginx
     nginx -. "lê, só leitura" .-> vnginx
     painel -. "cria a pasta do usuário" .-> vdata
@@ -385,10 +387,10 @@ flowchart LR
 |---|---|---|
 | `deploy.sh` e `manage-user.sh` | `.env` | cria, lê e grava o perfil |
 | Pure-FTPd | `.secrets` (`ftp-usuario-inicial-senha.txt`) | lê a senha na subida, somente leitura |
-| Painel web | `.secrets` (`painel-admin-inicial-senha-hash.txt`) | lê o hash a cada entrada, somente leitura |
+| Painel web | `.secrets` (`painel-admin-inicial-senha-hash.txt`) | lê o hash inicial na subida, somente leitura |
 | Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
 | Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
-| Painel web | `DATA_DIR/painel` | grava o certificado e a auditoria |
+| Painel web | `DATA_DIR/painel` | grava o certificado, os administradores e a auditoria |
 | Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
 | nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
 | Painel web | `DATA_DIR/dados` | cria a pasta do usuário |
@@ -405,10 +407,10 @@ flowchart LR
 | Pasta `DATA_DIR/auth` | Banco PureDB dos usuários virtuais, dividido pelo FTP e pelo painel | — | `/auth` |
 | Pasta `DATA_DIR/dados` | Arquivos enviados, uma pasta por usuário | — | `/data` |
 | Pasta `DATA_DIR/certs` | Chave e certificado TLS do FTP (`pure-ftpd.pem`) | — | `/etc/ssl/private` |
-| Pasta `DATA_DIR/painel` | Certificado do painel e `auditoria.log` | — | `/painel` |
+| Pasta `DATA_DIR/painel` | Certificado do painel, administradores (nome e hash da senha) e `auditoria.log` | — | `/painel` |
 | Pasta `DATA_DIR/nginx` | Soquete do painel e cópia do certificado, refeitos a cada subida; o nginx só lê | — | `/nginx` |
 | Segredo `ftp_usuario_inicial_senha` | Senha do usuário inicial (`.secrets/ftp-usuario-inicial-senha.txt`), somente leitura | — | `/run/secrets/ftp_usuario_inicial_senha` |
-| Segredo `painel_admin_inicial_senha_hash` | Hash da senha do painel (`.secrets/painel-admin-inicial-senha-hash.txt`), somente leitura | — | `/run/secrets/painel_admin_inicial_senha_hash` |
+| Segredo `painel_admin_inicial_senha_hash` | Hash da senha inicial do primeiro administrador do painel (`.secrets/painel-admin-inicial-senha-hash.txt`), somente leitura | — | `/run/secrets/painel_admin_inicial_senha_hash` |
 | Rede `allsafe-ftp-network` | Bridge dedicada, sub-rede `172.29.1.0/29` | — | — |
 
 - **Imagens:** [`Dockerfile`](Dockerfile) com três alvos sobre o mesmo `debian:trixie-slim` (Debian 13), fixado por digest: `ftp` (`pure-ftpd` e o usuário `ftpdata`, uid e gid **10000**), `painel` (o mesmo, com `python3`) e `nginx` (só `nginx` e `openssl`, com o usuário `frente`, uid e gid **10001**).
@@ -557,7 +559,7 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`nginx/entrypoint.sh`](nginx/entrypoint.sh) | Confere a rede privada, monta a configuração e executa o nginx |
 | [`nginx/saude.sh`](nginx/saude.sh) | Healthcheck do nginx: pede `/saude` por HTTPS, de ponta a ponta |
 | [`web/estilo.css`](web/estilo.css) | Aparência do painel, entregue direto pelo nginx |
-| [`scripts/painel-senha.sh`](scripts/painel-senha.sh) | Troca a senha do painel, gravando só o hash |
+| [`scripts/painel-senha.sh`](scripts/painel-senha.sh) | Recupera o acesso ao painel pelo host: define a senha de um administrador ou cria o administrador, gravando só o hash |
 | [`scripts/rede-privada.sh`](scripts/rede-privada.sh) | Funções que recusam IP e rede que não sejam privados e que tratam a opção de IP público |
 | [`scripts/ambiente.sh`](scripts/ambiente.sh) | Função que lê uma chave do `.env` sem executar o arquivo |
 | [`scripts/backup.sh`](scripts/backup.sh) | Grava a cópia de segurança dos dados, dos usuários, dos certificados e da auditoria em `BACKUP_DIR` |
@@ -612,7 +614,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.11.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.12.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

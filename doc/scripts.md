@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-Os scripts da stack são de dois tipos. Os que você roda no host sobem o servidor, cuidam dos usuários, trocam a senha do painel, fazem e restauram a cópia de segurança e conferem se está tudo certo. Os demais ficam dentro dos containers do FTP, do painel e do nginx e são chamados sozinhos; você não os executa direto.
+Os scripts da stack são de dois tipos. Os que você roda no host sobem o servidor, cuidam dos usuários, recuperam o acesso ao painel, fazem e restauram a cópia de segurança e conferem se está tudo certo. Os demais ficam dentro dos containers do FTP, do painel e do nginx e são chamados sozinhos; você não os executa direto.
 
 <!-- diagrama: diagramas/scripts-diagrama.mmd -->
 ```mermaid
@@ -43,7 +43,7 @@ flowchart LR
 |---|---|---|
 | [`deploy.sh`](../deploy.sh) | host | Instala, reaplica, atualiza ou remove a stack em um comando, sem perguntas |
 | [`manage-user.sh`](../manage-user.sh) | host | Atalho para criar, trocar senha, remover e listar usuários FTP |
-| [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | host | Troca a senha do painel, gravando só o hash |
+| [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | host | Recupera o acesso ao painel: define a senha de um administrador ou cria o administrador, gravando só o hash |
 | [`scripts/backup.sh`](../scripts/backup.sh) | host | Grava a cópia de segurança de `dados/`, `auth/`, `certs/` e `painel/` em `BACKUP_DIR` |
 | [`scripts/restaurar.sh`](../scripts/restaurar.sh) | host | Devolve a stack ao estado de uma cópia, guardando antes o estado atual |
 | [`scripts/validate.sh`](../scripts/validate.sh) | host | Checagem de sintaxe, do Compose de todos os perfis e, opcionalmente, dos três serviços no ar |
@@ -99,6 +99,7 @@ A pasta [`scripts/`](../scripts/) tem só o que roda no servidor. O que roda em 
 - Recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env` e, por padrão, qualquer `FTP_BIND_IP`, `FTP_PASSIVE_IP`, `PAINEL_BIND_IP`, `PAINEL_REDES_PERMITIDAS` ou `PAINEL_CERT_CN` (em forma de IP) fora de rede privada.
 - **Opção de IP público:** `REDE_PERMITIR_IP_PUBLICO` diferente de `nao` e de `sim` para com `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` e código `1`. Com `sim`, aceita IPv4 público de servidor e rede de `/8` a `/32`, continua recusando `0.0.0.0` e rede mais larga, exige `FTP_TLS_MODE` em `2` ou `3` (`ERRO: REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3`) e mostra o `ALERTA` ao final, também no `--check-only`.
 - Se `.secrets/painel-admin-inicial-senha-hash.txt` não existir, gera a senha inicial do painel em `.secrets/painel-admin-inicial-senha.txt` (`0600`) e grava o hash dela, chamando o `scripts/painel-senha.sh --inicial` depois de construir a imagem.
+- Confere o `PAINEL_ADMIN_USER` antes de agir: nome fora da regra para com `ERRO: PAINEL_ADMIN_USER inválido em .env: ...` e código `1`. No resumo, mostra o usuário e o arquivo da senha inicial enquanto esse arquivo existir; depois, `usuário e senha: os definidos na aba Administradores ou com ./scripts/painel-senha.sh`.
 - Opção desconhecida ou perfil inexistente: mensagem `Opção inválida: ...` ou `ERRO: perfil inexistente: ...` e código `64`.
 - O Compose é sempre chamado só com `--env-file .env`. O perfil não é um segundo arquivo na subida: `--size` grava os valores dele no `.env`, por isso um `docker compose up -d` direto mantém os mesmos limites.
 - Combinação inválida (`--remover` com `--size`, `--apagar-dados` sem `--remover`, `--sim` sem `--apagar-dados`): `Opção inválida: ...`, o uso e código `64`.
@@ -130,25 +131,29 @@ A senha é lida do terminal e enviada pelo `stdin` para o container: não aparec
 
 ## 🔑 `scripts/painel-senha.sh`
 
+Recupera o acesso ao painel pelo host. No dia a dia, usuário e senha são trocados no próprio painel, na aba Administradores.
+
 ```bash
-./scripts/painel-senha.sh            # pergunta a senha nova duas vezes, sem ecoar
-./scripts/painel-senha.sh --gerar    # cria uma senha forte e mostra uma única vez
+./scripts/painel-senha.sh                           # pergunta a senha nova duas vezes, sem ecoar
+./scripts/painel-senha.sh --gerar                   # cria uma senha forte e mostra uma única vez
+./scripts/painel-senha.sh --usuario NOME --gerar    # outro administrador; se NOME não existe, é criado
 ```
 
-**Resultado esperado:** `Hash gravado em ./.secrets/painel-admin-inicial-senha-hash.txt; painel reiniciado e sessões abertas encerradas.`
+**Resultado esperado:** `Administrador admin com a senha trocada; painel reiniciado e sessões abertas encerradas.` Para um nome novo, `Administrador NOME criado; ...`.
 
-A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.secrets/painel-admin-inicial-senha.txt` da instalação é apagado. Quando usar: [Painel web](painel.md#senha).
+Sem `--usuario`, o administrador é o de `PAINEL_ADMIN_USER`. A senha tem de ter no mínimo 12 caracteres e só o hash é gravado. Quando usar: [Painel web](painel.md#senha).
 
 <details>
-<summary>Detalhe técnico — como o hash é calculado</summary>
+<summary>Detalhe técnico — como o hash é calculado e gravado</summary>
 
-- Lê `SECRETS_DIR` e `PAINEL_IMAGE` do `.env` (ou do arquivo em `ENV_FILE`), sem executar o arquivo.
+- Lê `SECRETS_DIR`, `DATA_DIR`, `PAINEL_IMAGE` e `PAINEL_ADMIN_USER` do `.env` (ou do arquivo em `ENV_FILE`), sem executar o arquivo.
 - A senha também pode vir pela entrada padrão: `./scripts/painel-senha.sh < arquivo`.
 - O hash `scrypt` é calculado **dentro da imagem do painel**, em um container descartável sem rede, com a raiz somente leitura e sem capabilities (`docker run --rm -i --network none --read-only --cap-drop ALL`). O host não precisa de Python.
-- O hash é gravado por cima do mesmo arquivo: o segredo é um _bind mount_ de arquivo, e trocar o arquivo por outro faria o container continuar vendo o antigo.
-- Depois de gravar, reinicia o serviço `painel` (encerra as sessões). Se o painel não estiver rodando, o hash vale na próxima subida.
-- `--inicial` é de uso do `deploy.sh`: não reinicia nada e mantém o `painel-admin-inicial-senha.txt`.
-- Opção desconhecida: código `64`. Falta do `.env` ou da imagem: `ERRO: ... rode ./deploy.sh primeiro`, código `1`.
+- Quem grava o arquivo de administradores é o painel: o script entrega o hash pela entrada padrão a `servidor.py --administrador NOME`, no container que está no ar (`docker compose exec`) ou, com o painel parado, em um container de uso único, sem os outros serviços (`docker compose run --rm --no-deps`). A alteração fica na auditoria como `admin_definido_no_host`.
+- Com o painel no ar, reinicia o serviço `painel` (encerra todas as sessões e zera o bloqueio por tentativas). Com o painel parado, fecha com `...; vale na próxima subida do painel.`
+- Quando o administrador é o de `PAINEL_ADMIN_USER`, regrava também o hash de `.secrets/painel-admin-inicial-senha-hash.txt`, por cima do mesmo arquivo, e apaga o `.secrets/painel-admin-inicial-senha.txt`. Para outro administrador, a pasta `.secrets/` não é tocada.
+- `--inicial` é de uso do `deploy.sh`: grava só o hash da senha inicial, antes da primeira subida, não reinicia nada e mantém o `painel-admin-inicial-senha.txt`.
+- Nome fora da regra: `ERRO: nome de administrador inválido: ...`, código `1`. Opção desconhecida: código `64`. Falta do `.env`, da imagem ou da instalação: `ERRO: ... rode ./deploy.sh primeiro`, código `1`.
 
 </details>
 
@@ -250,6 +255,7 @@ Roda a bateria de testes da stack: funcional, de segurança e de rede. O script 
 | Porta do painel | `8444` | `TESTE_PAINEL_PORT` |
 | Faixa passiva | `32000` a `32019` | `TESTE_PASSIVA_INICIO` |
 | Sub-rede Docker | `172.29.2.0/29` | `TESTE_SUBNET` |
+| Primeiro administrador do painel | `gestor`, de propósito diferente do padrão | `TESTE_ADMIN` |
 | Segunda instância, usada no caso das duas instâncias no mesmo host | `allsafe-ftp-teste-b`, portas seguintes, `172.29.3.0/29` | `TESTE_SUBNET_B` |
 | Pasta de trabalho, dados, segredos e cópias de segurança | `TEMP_DIR/testar` | `TEMP_DIR` |
 
@@ -259,8 +265,8 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 
 | Bateria | Casos | Exemplos |
 |---|---|---|
-| Funcional | 21 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh` |
-| Segurança | 45 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, a opção de IP público (só com `sim`, "todos" sempre recusado, TLS obrigatório, valor inválido, alerta em execução), CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos |
+| Funcional | 23 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh`, administradores pelo painel, recuperação do acesso pelo host |
+| Segurança | 51 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, a opção de IP público (só com `sim`, "todos" sempre recusado, TLS obrigatório, valor inválido, alerta em execução), CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos, entrada que não revela nomes de administrador, senha atual em toda alteração de administrador, sessões do administrador alterado encerradas, arquivo de administradores só com hash |
 | Rede | 13 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host, rede pública no painel só com a opção |
 
 **Organização:** o [`tests/testar.sh`](../tests/testar.sh) prepara a instância de teste e carrega o [`tests/comum.sh`](../tests/comum.sh), com as funções de registro, de FTP, do painel e de gravação dos resultados. Os casos ficam em [`tests/etapas/`](../tests/etapas/), um arquivo por etapa, executados na ordem do nome: cada etapa parte do estado que a anterior deixou e não roda sozinha.
@@ -337,9 +343,9 @@ Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; 
 
 Roda a cada início do container do painel. Não tem parâmetros: tudo vem das variáveis de [Configuração](configuracao.md#painel).
 
-1. Recusa senha em variável e exige o segredo `/run/secrets/painel_admin_inicial_senha_hash`.
+1. Recusa senha em variável, exige o segredo `/run/secrets/painel_admin_inicial_senha_hash` e confere o `PAINEL_ADMIN_USER`.
 2. Confere que `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e o `PAINEL_CERT_CN` (se for IP) são privados, ou públicos aceitos com `REDE_PERMITIR_IP_PUBLICO=sim`.
-3. Ajusta dono e modo de `/painel` (`0700`, do `root`) e gera o certificado autoassinado do painel quando ele falta, quando os endereços mudam ou quando faltam menos de 30 dias para vencer.
+3. Ajusta dono e modo de `/painel` (`0700`, do `root`) e do arquivo de administradores (`0600`, do `root`), também depois de uma restauração, e gera o certificado autoassinado do painel quando ele falta, quando os endereços mudam ou quando faltam menos de 30 dias para vencer.
 4. Prepara a pasta `/nginx` (`0750`, grupo `10001`, o do nginx): copia o certificado e a chave para `/nginx/tls` e apaga o soquete da subida anterior.
 5. Executa o servidor [`painel/servidor.py`](../painel/servidor.py), o ponto de entrada dos [módulos do painel](painel.md#modulos), que abre o soquete `/nginx/painel.sock`. O painel não abre porta de rede.
 
@@ -358,6 +364,7 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 | `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é uma rede IPv4 aceita` | com a opção em `sim`, a rede é mais larga que `/8`, como `0.0.0.0/0` |
 | `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` | a opção tem outro valor |
 | `FALHA: PAINEL_REDES_PERMITIDAS está vazia` | a variável chegou vazia ao container |
+| `FALHA: PAINEL_ADMIN_USER inválido: ...` | o nome do primeiro administrador tem maiúscula, espaço, mais de 32 caracteres ou caractere fora de `a-z`, `0-9`, `_` e `-` |
 | `FALHA: PAINEL_CERT_CN inválido` | nome com maiúscula, espaço ou caractere fora de `a-z`, `0-9`, `.` e `-` |
 | `FALHA: pastas /auth e /data ausentes` | o painel subiu sem as pastas do serviço `ftp` |
 | `FALHA: pasta /nginx ausente` | o painel subiu sem a pasta `DATA_DIR/nginx`, por onde o nginx o alcança: rode o `deploy.sh` |

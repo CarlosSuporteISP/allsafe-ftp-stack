@@ -123,14 +123,15 @@ Pronto: FTP, painel e nginx no ar (healthy), perfil 'small'.
 FTP:    127.0.0.1:21, TLS explícito obrigatório no login, modo passivo 30000-30049
         usuário 'transfer', senha no arquivo ./.secrets/ftp-usuario-inicial-senha.txt
 Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede privada, atrás de firewall)
-        senha inicial no arquivo ./.secrets/painel-admin-inicial-senha.txt; troque com ./scripts/painel-senha.sh
+        usuário 'admin', senha inicial no arquivo ./.secrets/painel-admin-inicial-senha.txt
+        (valem até serem trocados na aba Administradores do painel)
 Segredos: ./.secrets/LEIAME.txt diz para que serve cada arquivo.
 Remover: ./deploy.sh --remover  (os dados ficam em <DATA_DIR>)
 ```
 
 O resumo diz **onde** está cada senha e nunca a mostra. O `LEIAME.txt` da pasta `.secrets/` explica para que serve cada arquivo dela. Na primeira vez aparecem também `Gerada uma senha forte em .secrets/ftp-usuario-inicial-senha.txt (0600). Guarde-a para o cliente FTP.` e `Gerada uma senha forte para o painel em .secrets/painel-admin-inicial-senha.txt (0600).`
 
-Abra o endereço do painel no navegador e entre com a senha de `.secrets/painel-admin-inicial-senha.txt`. O primeiro acesso, o aviso de certificado e a troca da senha estão em [Painel web](painel.md#abrir).
+Abra o endereço do painel no navegador e entre com o usuário `admin` (o de `PAINEL_ADMIN_USER`) e a senha de `.secrets/painel-admin-inicial-senha.txt`. O primeiro acesso, o aviso de certificado e a troca do usuário e da senha estão em [Painel web](painel.md#abrir).
 
 Qual perfil usar: [Perfis](perfis.md). Nos perfis `xlarge` e `extended` a subida leva minutos, porque o Docker publica as portas passivas uma a uma: [tempo de subida](perfis.md#tempo-de-subida).
 

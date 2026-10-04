@@ -112,17 +112,28 @@ ftp_cru() { # [comando...]: conversa sem TLS; devolve a saudação (sem comando)
   exec {fd}>&-
 }
 c() { sleep 0.05; curl -sk --max-time 20 "$@"; }
-entrar() { # <pote de cookies> <arquivo da senha> [cabeçalhos a mais...] → código HTTP
+# Administrador da entrada: $COMO (sem ele, o inicial, $ADMIN). Sessão dos envios: $POTE (sem ele, a principal, $J).
+entrar() { # <pote de cookies> <arquivo da senha> [opções do curl a mais...] → código HTTP
   local pote="$1" senha="$2" formulario; shift 2
   formulario="$(c -c "$pote" "$B/entrar" | sed -n 's/.*name="token" value="\([^"]*\)".*/\1/p')"
   c -o "$W/entrada.corpo" -D "$W/entrada.cab" -w '%{http_code}' -b "$pote" -c "$pote" -H "Origin: $B" "$@" \
-    --data-urlencode "token=$formulario" --data-urlencode "senha@$senha" "$B/entrar"
+    --data-urlencode "token=$formulario" --data-urlencode "usuario=${COMO:-$ADMIN}" --data-urlencode "senha@$senha" "$B/entrar"
 }
 J="$W/sessao.jar"
-csrf() { c -b "$J" "$B/usuarios/novo" | sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' | head -1; }
+csrf() { c -b "${POTE:-$J}" "$B/usuarios/novo" | sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' | head -1; }
 envio() { # <caminho> <campos...> → "código destino"
   local caminho="$1"; shift
-  c -o /dev/null -w '%{http_code} %{redirect_url}' -b "$J" -H "Origin: $B" "$@" "$B$caminho" | sed "s|$B||"
+  c -o /dev/null -w '%{http_code} %{redirect_url}' -b "${POTE:-$J}" -H "Origin: $B" "$@" "$B$caminho" | sed "s|$B||"
+}
+biscoito_de() { awk '$6 == "__Host-sessao" {print $7}' "$1"; }  # <pote>: valor do cookie de sessão
+admins() { docker exec "$PAINEL" cut -d: -f1 /painel/administradores 2>/dev/null | tr '\n' ' '; }
+painel_de_pe() { # até 60 s pelo painel respondendo pelo nginx
+  local _
+  for _ in $(seq 1 120); do
+    [[ "$(curl -sk --max-time 5 -o /dev/null -w '%{http_code}' "$B/saude")" == 200 ]] && return 0
+    sleep 0.5
+  done
+  return 1
 }
 aba() { c -o "$W/corpo" -w '%{http_code} %{redirect_url}' "$@" | sed "s|$B||"; }
 tls_painel() { openssl s_client -connect "$IP:$PAINEL_PORTA" -"$1" -cipher 'DEFAULT@SECLEVEL=0' < /dev/null 2>&1 | grep -a -o -m1 'New, TLSv1[.0-9]*' || echo recusado; }
@@ -199,8 +210,8 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
   printf '%-9s %s → %s\n' "$tipo" "$resultado" "$arquivo"
 }
 declare -A ESPERADOS=(
-  [testes]="$(seq -s ' ' 1 21)"
-  [seguranca]="$(seq -s ' ' 1 45)"
+  [testes]="$(seq -s ' ' 1 23)"
+  [seguranca]="$(seq -s ' ' 1 51)"
   [rede]="$(seq -s ' ' 1 13)"
 )
 ARQUIVOS=()
@@ -219,9 +230,9 @@ encerrar() { # grava os três arquivos, confere que nenhum segredo entrou e sai
   LIMPEZA+=" · outros containers do host: $(printf '%s\n' "$OUTROS_ANTES" | grep -c .), $([[ "$OUTROS_ANTES" == "$(outros)" ]] && echo 'os mesmos antes e depois' || echo 'a lista MUDOU durante a bateria')"
   echo
   gravar testes funcional "🧪 Resultado — bateria funcional" "Testes funcionais" \
-    "Validação estática e em execução, instalação em um comando, login, envio e download por FTPS, ciclo de usuário pelo terminal e pelo painel, reinício, healthcheck do FTP, backup e restauração, abas do painel, atividade e saída, arquivos estáticos pelo nginx e conversão dos nomes antigos"
+    "Validação estática e em execução, instalação em um comando, login, envio e download por FTPS, ciclo de usuário pelo terminal e pelo painel, reinício, healthcheck do FTP, backup e restauração, abas do painel, atividade e saída, arquivos estáticos pelo nginx, conversão dos nomes antigos, administradores pelo painel e recuperação do acesso pelo host"
   gravar seguranca seguranca "🔐 Resultado — bateria de segurança" "Testes de segurança" \
-    "Recusas do FTP (sem TLS, anônimo, fuga da pasta, outro usuário, \`SITE CHMOD\`), modos de TLS, containers endurecidos, segredos fora da imagem, do Git, do \`.env\` e das variáveis, recusa de IP e rede públicos, a opção \`REDE_PERMITIR_IP_PUBLICO\` (o que passa, o que continua recusado e o alerta), e o painel (sessão, CSRF, origem, cabeçalhos, TLS, limite de tentativas, auditoria)"
+    "Recusas do FTP (sem TLS, anônimo, fuga da pasta, outro usuário, \`SITE CHMOD\`), modos de TLS, containers endurecidos, segredos fora da imagem, do Git, do \`.env\` e das variáveis, recusa de IP e rede públicos, a opção \`REDE_PERMITIR_IP_PUBLICO\` (o que passa, o que continua recusado e o alerta), o painel (sessão, CSRF, origem, cabeçalhos, TLS, limite de tentativas, auditoria) e os administradores (entrada sem revelar nomes, senha atual em toda alteração, sessões encerradas, arquivo só com hash, própria conta, nome inválido)"
   gravar rede rede "🌐 Resultado — bateria de rede" "Testes de rede" \
     "Endereços e portas publicados, faixa passiva, endereço anunciado, limite de sessões por IP, sub-rede Docker, troca de perfil, duas instâncias no mesmo host, painel só em HTTPS e rede pública liberada no nginx só com a opção ligada"
   for arquivo in "${ARQUIVOS[@]}"; do
@@ -258,4 +269,5 @@ preparar() { # <arquivo> <sufixo> <porta FTP> <porta do painel> <início da faix
   gravar_env "$1" FTP_PASSIVE_PORT_START "$5"
   gravar_env "$1" FTP_PASSIVE_PORT_END "$(( $5 + 19 ))"
   gravar_env "$1" FTP_SUBNET "$6"
+  gravar_env "$1" PAINEL_ADMIN_USER "$ADMIN"
 }

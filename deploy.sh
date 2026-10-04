@@ -250,6 +250,9 @@ painel_cn="$(env_valor PAINEL_CERT_CN)"
 if [[ "$painel_cn" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   exigir_ip PAINEL_CERT_CN "$painel_cn" || exit 1
 fi
+painel_admin="$(env_valor PAINEL_ADMIN_USER admin)"
+[[ "$painel_admin" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] \
+  || die "PAINEL_ADMIN_USER inválido em $env_file: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres."
 if ip_publico_permitido; then rede_texto="endereço público aceito"; else rede_texto="rede privada"; fi
 
 if [[ "$check_only" == true ]]; then
@@ -333,14 +336,17 @@ ftp-usuario-inicial-senha.txt
   docker compose restart ftp. Ela é reaplicada a cada subida; o painel não altera este usuário.
 
 painel-admin-inicial-senha.txt
-  Senha inicial do painel web, em texto, gerada na instalação. Serve para a primeira entrada.
-  É apagada quando a senha é trocada com ./scripts/painel-senha.sh.
+  Senha inicial do primeiro administrador do painel web (o nome dele é PAINEL_ADMIN_USER, no .env),
+  em texto, gerada na instalação. Serve para a primeira entrada e vale até ser trocada na aba
+  Administradores do painel: trocou, apague este arquivo. O ./scripts/painel-senha.sh apaga sozinho
+  quando redefine a senha desse administrador.
 
 painel-admin-inicial-senha-hash.txt
-  Hash scrypt da senha do painel: é o que o container do painel recebe para conferir a entrada.
-  Não é a senha e não entra no campo de senha. Gravado por ./scripts/painel-senha.sh.
+  Hash scrypt dessa senha inicial: o container do painel usa para criar o primeiro administrador,
+  enquanto não existe nenhum. Não é a senha e não entra no campo de senha. Os administradores e o
+  hash da senha atual de cada um ficam em DATA_DIR/painel/administradores, alterado pelo painel.
 
-Perdeu a senha do painel: ./scripts/painel-senha.sh --gerar
+Perdeu a senha do painel: ./scripts/painel-senha.sh --gerar   (outro administrador: --usuario NOME)
 Estes arquivos não entram na cópia do ./scripts/backup.sh: guarde-os no seu cofre de senhas.
 LEIAME
 chmod 0600 "$secrets_dir/LEIAME.txt"
@@ -353,8 +359,8 @@ else
   compose build
 fi
 
-# Senha do painel: gerada forte na primeira execução. O container recebe só o hash scrypt;
-# a senha em texto fica em painel-admin-inicial-senha.txt, só no host, até ser trocada por scripts/painel-senha.sh.
+# Senha do primeiro administrador do painel: gerada forte na primeira execução. O container recebe só o
+# hash scrypt e cria o administrador PAINEL_ADMIN_USER com ele; a senha em texto fica só no host.
 painel_hash="$secrets_dir/painel-admin-inicial-senha-hash.txt"
 painel_senha="$secrets_dir/painel-admin-inicial-senha.txt"
 if [[ ! -s "$painel_hash" ]]; then
@@ -387,9 +393,10 @@ echo "FTP:    $ftp_ip:$(env_valor FTP_PORT 21), $tls_texto, modo passivo $(env_v
 echo "        usuário '$(env_valor FTP_USER transfer)', senha no arquivo $secret_file"
 echo "Painel: https://$(env_valor PAINEL_BIND_IP 127.0.0.1):$(env_valor PAINEL_PORT 8443)  (pelo nginx; certificado autoassinado; $rede_texto, atrás de firewall)"
 if [[ -s "$painel_senha" ]]; then
-  echo "        senha inicial no arquivo $painel_senha; troque com ./scripts/painel-senha.sh"
+  echo "        usuário '$painel_admin', senha inicial no arquivo $painel_senha"
+  echo "        (valem até serem trocados na aba Administradores do painel)"
 else
-  echo "        senha: a que foi definida com ./scripts/painel-senha.sh"
+  echo "        usuário e senha: os definidos na aba Administradores ou com ./scripts/painel-senha.sh"
 fi
 echo "Segredos: $secrets_dir/LEIAME.txt diz para que serve cada arquivo."
 echo "Remover: ./deploy.sh --remover  (os dados ficam em $data_dir)"

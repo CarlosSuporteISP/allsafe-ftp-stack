@@ -97,9 +97,9 @@ def criar_usuario(pedido, sessao, consulta, formulario, token):
         return tela_novo(pedido, sessao, erro=erro, codigo=400, nome=nome)
     feito, mensagem = executar_usuario('add', nome, senha)
     if not feito:
-        auditar(pedido.ip, 'falha_comando', f'acao=criar usuario={nome}')
+        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=criar usuario={nome}')
         return tela_novo(pedido, sessao, erro='Não foi possível criar: ' + mensagem, codigo=500, nome=nome)
-    auditar(pedido.ip, 'usuario_criado', f'usuario={nome} credencial={"gerada" if gerada else "informada"}')
+    auditar(pedido.ip, 'usuario_criado', f'admin={sessao["admin"]} usuario={nome} credencial={"gerada" if gerada else "informada"}')
     if gerada:
         return tela_senha_gerada(pedido, sessao, nome, senha, '✅ Usuário criado')
     return pedido.redirecionar('/usuarios?m=criado')
@@ -144,9 +144,9 @@ def trocar_senha(pedido, sessao, consulta, formulario, token):
         return tela_trocar_senha(pedido, sessao, {'usuario': nome}, erro=erro, codigo=400)
     feito, mensagem = executar_usuario('passwd', nome, senha)
     if not feito:
-        auditar(pedido.ip, 'falha_comando', f'acao=trocar_senha usuario={nome}')
+        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=trocar_senha usuario={nome}')
         return tela_trocar_senha(pedido, sessao, {'usuario': nome}, erro='Não foi possível trocar: ' + mensagem, codigo=500)
-    auditar(pedido.ip, 'senha_trocada', f'usuario={nome} credencial={"gerada" if gerada else "informada"}')
+    auditar(pedido.ip, 'senha_trocada', f'admin={sessao["admin"]} usuario={nome} credencial={"gerada" if gerada else "informada"}')
     if gerada:
         return tela_senha_gerada(pedido, sessao, nome, senha, '✅ Senha trocada')
     return pedido.redirecionar('/usuarios?m=senha')
@@ -178,7 +178,7 @@ def remover_usuario(pedido, sessao, consulta, formulario, token):
         return pedido.redirecionar('/usuarios/remover?usuario=' + urllib.parse.quote(nome))
     feito, mensagem = executar_usuario('del', nome)
     if not feito:
-        auditar(pedido.ip, 'falha_comando', f'acao=remover usuario={nome}')
+        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=remover usuario={nome}')
         return pedido.recusar(500, 'Não foi possível remover: ' + mensagem)
-    auditar(pedido.ip, 'usuario_removido', f'usuario={nome}')
+    auditar(pedido.ip, 'usuario_removido', f'admin={sessao["admin"]} usuario={nome}')
     return pedido.redirecionar('/usuarios?m=removido')

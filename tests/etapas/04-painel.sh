@@ -6,7 +6,7 @@ codigo="$(c -o "$W/corpo" -w '%{http_code}' "$B/saude")"
 [[ "$codigo" == 200 && "$(tr -d '\n' < "$W/corpo")" == ok ]]; caso $? testes 11 "Saúde do painel" "GET /saude: $codigo, corpo: $(tr -d '\n' < "$W/corpo")"
 
 ev=""; ok=0
-for caminho in / /usuarios /seguranca /atividade; do
+for caminho in / /usuarios /administradores /seguranca /atividade; do
   r="$(aba "$B$caminho")"; [[ "$r" == "303 /entrar" && "$(grep -c -E '<table|name="csrf"' "$W/corpo")" == 0 ]] || ok=1
   ev+="GET $caminho: $r; "
 done
@@ -45,7 +45,9 @@ proibir "$(awk '$6 == "__Host-sessao" {print $7}' "$J")"
 K="$(csrf)"; proibir "$K"
 geral="$(aba -b "$J" "$B/")"
 [[ "$codigo" == 303 && "$destino_entrada" == / && "$geral" == "200 " ]] && grep -q '<h1>.*Visão geral</h1>' "$W/corpo"
-caso $? testes 12 "Entrada" "POST /entrar com a senha certa: $codigo → $destino_entrada · GET / com a sessão: $geral· $(grep -o '<h1>[^<]*</h1>' "$W/corpo" | head -1 | sed 's/<[^>]*>//g')"
+quem="$(sed -n 's/.*class="quem"[^>]*>\([^<]*\)<.*/\1/p' "$W/corpo" | head -1)"; auditoria
+[[ "$quem" == "$ADMIN" && "$(eventos admin_inicial_criado)" == 1 ]] || false
+caso $? testes 12 "Entrada" "POST /entrar com o usuário '$ADMIN' (PAINEL_ADMIN_USER) e a senha inicial: $codigo → $destino_entrada · GET / com a sessão: $geral· $(grep -o '<h1>[^<]*</h1>' "$W/corpo" | head -1 | sed 's/<[^>]*>//g') · administrador mostrado no topo: ${quem:-nenhum} · admin_inicial_criado na auditoria: $(eventos admin_inicial_criado)"
 ok=0; for atributo in '__Host-sessao=' 'Path=/' 'Secure' 'HttpOnly' 'SameSite=Strict'; do [[ "$biscoito" == *"$atributo"* ]] || ok=1; done
 caso $ok seguranca 28 "Atributos do cookie" "$(sed -E 's/(__Host-sessao=)[^;]+/\1<REDACTED>/' <<< "$biscoito")"
 

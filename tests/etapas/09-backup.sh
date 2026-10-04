@@ -9,7 +9,8 @@ copia="$(sed -n 's/^Cópia gravada: \(.*\.tar\.gz\) (.*/\1/p' "$W/backup.log")"
 modos="$(stat -c '%a' "$copias" "$copia" "$copia.sha256" 2>/dev/null | tr '\n' ' ')"
 tar -tzf "$copia" > "$W/copia.lista" 2>/dev/null
 de_fora="$(grep -c -v -E '^(dados|auth|certs|painel)(/|$)' "$W/copia.lista" || true)"
-senhas="$(tar -xzOf "$copia" 2>/dev/null | grep -c -a -F -f "$W/proibidos" || true)"
+# Hash não é senha em texto: o dos administradores do painel entra na cópia, como o dos usuários do FTP.
+senhas="$(tar -xzOf "$copia" 2>/dev/null | grep -c -a -F -f <(grep -v '^scrypt\$' "$W/proibidos") || true)"
 # Depois da cópia: o arquivo é apagado, o usuário é removido e entra um usuário que a cópia não tem.
 r_dele="$(ftp_curl tls equip09 "$W/u6.senha" -Q "DELE copia.cfg" "$F/")"
 mu del equip09; r_del=$?

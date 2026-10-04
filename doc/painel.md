@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-O painel é uma página, aberta pelo navegador **de dentro da rede interna**, para criar, trocar a senha e remover os usuários do FTP sem usar a linha de comando. Entra-se com uma senha de administrador, só por HTTPS. Quem atende o navegador é o nginx, a porta de entrada: ele barra quem está fora da rede interna e só então passa o pedido ao painel. O que é feito no painel vale no FTP na hora, sem reiniciar nada.
+O painel é uma página, aberta pelo navegador **de dentro da rede interna**, para criar, trocar a senha e remover os usuários do FTP sem usar a linha de comando. Cada administrador entra com o próprio usuário e a própria senha, só por HTTPS. Quem atende o navegador é o nginx, a porta de entrada: ele barra quem está fora da rede interna e só então passa o pedido ao painel. O que é feito no painel vale no FTP na hora, sem reiniciar nada.
 
 <!-- diagrama: diagramas/painel-diagrama.mmd -->
 ```mermaid
@@ -31,7 +31,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Senha do painel](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
+[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
 
 </details>
 
@@ -49,13 +49,13 @@ Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede priv
 
 1. Abra o endereço no navegador. Na instalação padrão, só o próprio servidor alcança (`127.0.0.1`).
 2. O navegador avisa que o certificado é autoassinado: confira a impressão digital (comando abaixo) antes de aceitar.
-3. Digite a senha de administrador. Na primeira instalação ela está em `.secrets/painel-admin-inicial-senha.txt`:
+3. Digite o usuário e a senha de administrador. Na primeira instalação, o usuário é o de `PAINEL_ADMIN_USER` (`admin`, se você não trocou no `.env`) e a senha está em `.secrets/painel-admin-inicial-senha.txt`:
 
 ```bash
 cat .secrets/painel-admin-inicial-senha.txt
 ```
 
-**Resultado esperado:** a tela **Visão geral**, com o FTP `🟢 No ar`.
+**Resultado esperado:** a tela **Visão geral**, com o FTP `🟢 No ar` e, no topo, o nome do administrador que entrou.
 
 Impressão digital do certificado do painel, para comparar com a que o navegador mostra:
 
@@ -63,7 +63,7 @@ Impressão digital do certificado do painel, para comparar com a que o navegador
 docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -fingerprint -sha256
 ```
 
-> ⚠️ Troque a senha inicial depois do primeiro acesso: [Senha do painel](#senha). Nunca cole a senha em documento, captura de tela ou mensagem.
+> ⚠️ Troque a senha inicial depois do primeiro acesso: [Administradores do painel](#administradores). Nunca cole a senha em documento, captura de tela ou mensagem.
 
 ---
 
@@ -75,10 +75,11 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar |
 | Usuários | Um usuário por linha: pasta no host, espaço usado, quantidade de arquivos e último envio | Criar, trocar a senha e remover |
+| Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
 | Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, isolamento do container e o lembrete do firewall | Só consultar |
-| Atividade | Os últimos 300 registros do painel: entradas, recusas e alterações de usuário, com data e endereço de origem | Só consultar |
+| Atividade | Os últimos 300 registros do painel: entradas, recusas e alterações de usuário e de administrador, com data, endereço de origem e o administrador que fez | Só consultar |
 
-O botão **Sair**, no topo, encerra a sessão na hora.
+No topo ficam o nome do administrador da sessão e o botão **Sair**, que encerra a sessão na hora.
 
 A foto de cada tela, com a explicação item por item, está em [Fotos da aplicação](aplicacao/README.md).
 
@@ -110,26 +111,66 @@ A linha de comando continua valendo: painel e `manage-user.sh` alteram as mesmas
 
 ---
 
+<a name="administradores"></a>
+
+## 🛡️ Administradores do painel
+
+Cada pessoa que administra o painel tem o **próprio usuário e a própria senha**. Todos têm o mesmo acesso, e o que cada um faz fica na aba Atividade com o nome de quem fez. O primeiro administrador nasce na instalação, com o nome de `PAINEL_ADMIN_USER`; os outros são criados aqui.
+
+| Quero | Onde | O que acontece |
+|---|---|---|
+| Criar um administrador | Administradores ➜ **Novo administrador** | Cria a conta. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
+| Trocar a senha, a minha ou a de outro | Administradores ➜ **Trocar senha** | A senha antiga deixa de valer na hora e as outras sessões desse administrador são encerradas |
+| Trocar o nome, o meu ou o de outro | Administradores ➜ **Trocar nome** | A entrada passa a ser pelo nome novo; a senha continua a mesma |
+| Remover um administrador | Administradores ➜ **Remover** | A conta some e as sessões dela são encerradas |
+
+**Resultado esperado:** a lista volta com o aviso da alteração (`Administrador criado.`, `Senha trocada.`, `Nome trocado.` ou `Administrador removido.`) e o administrador novo entra logo em seguida, sem reiniciar nada.
+
+Regras:
+
+- **Toda alteração pede a sua senha atual**, a de quem está usando o painel, no campo **Sua senha atual**. Um navegador esquecido aberto não basta para criar um administrador nem para trocar a senha de outro.
+- Nome com letras minúsculas, números, `_` e `-`, começando por letra ou `_`, até 32 caracteres. Senha com no mínimo 12 caracteres.
+- **Ninguém remove a própria conta:** o botão Remover só aparece nas contas dos outros. Assim sempre sobra um administrador.
+- Até 20 administradores.
+- Trocar o nome do primeiro administrador pelo painel não mexe no `.env`: o `PAINEL_ADMIN_USER` só é usado enquanto não existe nenhum administrador.
+
+<details>
+<summary>Detalhe técnico — onde os administradores ficam</summary>
+
+- **Arquivo:** `DATA_DIR/painel/administradores` (`/painel/administradores` no container), `0600`, do `root`, uma linha `nome:hash` por administrador. Só o hash `scrypt` é gravado; a senha em texto não fica em lugar nenhum.
+- **Primeira subida:** sem nenhum administrador no arquivo, o painel cria o de `PAINEL_ADMIN_USER` com o hash do segredo `painel_admin_inicial_senha_hash` e registra `admin_inicial_criado`. Depois disso, quem manda é o arquivo.
+- **Instalação anterior à `0.12.0`:** na primeira subida depois da atualização, o painel cria o administrador `admin` (ou o nome de `PAINEL_ADMIN_USER`) com a mesma senha que já valia.
+- **Gravação:** o painel escreve um arquivo ao lado e troca de uma vez, uma alteração por vez: uma queda no meio não deixa o painel sem administrador.
+- **Senha atual recusada:** responde `403`, registra `admin_senha_atual_recusada` e conta no mesmo limite da tela de entrada: cinco recusas em 15 minutos bloqueiam o endereço (`429`).
+- **Sessões:** a troca de senha, a troca de nome e a remoção encerram as sessões do administrador alterado. Quando a alteração é na própria conta, a sessão em uso continua e as outras caem.
+- **Cópia de segurança:** o arquivo entra na cópia do `scripts/backup.sh`, junto com o resto de `painel/`, e volta na restauração: veja [Backup e restauração](backup.md#restaurar).
+
+</details>
+
+---
+
 <a name="senha"></a>
 
-## 🔑 Senha do painel
+## 🔑 Recuperar o acesso
 
-O painel tem **uma** senha de administrador. Só o hash dela fica guardado, em `.secrets/painel-admin-inicial-senha-hash.txt`.
+Perdeu a senha e não há outro administrador para trocá-la pelo painel? Quem tem acesso ao servidor define uma nova, pelo host. Não existe recuperação pelo navegador.
 
 | Quero | Comando |
 |---|---|
-| Escolher a senha nova | `./scripts/painel-senha.sh` (pergunta duas vezes) |
-| Deixar o script gerar uma senha forte | `./scripts/painel-senha.sh --gerar` (mostra uma única vez) |
+| Senha nova para o primeiro administrador (`PAINEL_ADMIN_USER`) | `./scripts/painel-senha.sh --gerar` (mostra uma única vez) |
+| Escolher a senha, em vez de gerar | `./scripts/painel-senha.sh` (pergunta duas vezes) |
+| Senha nova para outro administrador | `./scripts/painel-senha.sh --usuario NOME --gerar` |
+| Criar um administrador pelo host | o mesmo comando, com um `NOME` que ainda não existe |
 
 **Resultado esperado:**
 
 ```text
-Hash gravado em ./.secrets/painel-admin-inicial-senha-hash.txt; painel reiniciado e sessões abertas encerradas.
+Administrador admin com a senha trocada; painel reiniciado e sessões abertas encerradas.
 ```
 
-Depois da troca, a senha antiga é recusada, quem estava dentro do painel volta para a tela de entrada e o arquivo `.secrets/painel-admin-inicial-senha.txt` (a senha inicial em texto) é apagado. Detalhe em [Segredos](segredos.md#senha-do-painel).
+Depois disso, a senha antiga é recusada e quem estava dentro do painel volta para a tela de entrada. Quando o administrador é o de `PAINEL_ADMIN_USER`, o arquivo `.secrets/painel-admin-inicial-senha.txt` (a senha inicial em texto) é apagado. Detalhe em [Scripts](scripts.md#painel-senha) e [Segredos](segredos.md#senha-do-painel).
 
-> ⚠️ Perdeu a senha? Rode `./scripts/painel-senha.sh` de novo no servidor: quem tem acesso ao host define uma nova. Não existe recuperação pelo navegador.
+> ⚠️ O script reinicia o painel, e o nginx junto: o painel fica alguns segundos fora do ar e todos os administradores entram de novo.
 
 ---
 
@@ -189,7 +230,7 @@ A lista é aplicada duas vezes: pelo nginx, antes de o pedido chegar ao painel, 
 
 ## 🔄 Como o painel decide
 
-Cada pedido passa por três conferências antes de mudar alguma coisa: a rede de origem (nginx), a senha e o token do formulário (painel).
+Cada pedido passa por três conferências antes de mudar alguma coisa: a rede de origem (nginx), o usuário e a senha, e o token do formulário (painel).
 
 <details>
 <summary>Fluxograma do painel, com a sequência escrita — clique para expandir</summary>
@@ -207,8 +248,8 @@ flowchart LR
     end
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
-        senha@{ shape: diam, label: "senha<br>confere?" }
-        hash@{ shape: doc, label: "hash da senha<br>painel_admin_inicial_senha_hash" }
+        senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
+        hash@{ shape: doc, label: "administradores<br>DATA_DIR/painel, nome e hash da senha" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 15 min<br>cookie e token CSRF" }
@@ -228,8 +269,8 @@ flowchart LR
     nginx -- "2 · confere a origem e a taxa de pedidos" --> rede
     rede -- "3a · sim: repassa pelo soquete Unix" --> painel
     rede -- "3b · não: 403 ou 429" --> recusa
-    painel -- "4 · pede a senha" --> senha
-    senha -. "5 · compara com o hash" .-> hash
+    painel -- "4 · pede usuário e senha" --> senha
+    senha -. "5 · compara com o hash do administrador" .-> hash
     senha -- "6a · sim: abre a sessão" --> sessao
     senha -- "6b · não: 5 erros bloqueiam o endereço" --> recusa
     sessao -- "7 · envia o formulário" --> pedido
@@ -248,10 +289,10 @@ flowchart LR
 | 2 | nginx ➜ rede permitida e dentro do limite? | O endereço de origem é comparado com `PAINEL_REDES_PERMITIDAS`, e o pedido, com os limites de taxa, de conexões e de tamanho |
 | 3a | rede permitida e dentro do limite? ➜ Painel web | Sim: o nginx repassa o pedido pelo soquete Unix, com o endereço do cliente |
 | 3b | rede permitida e dentro do limite? ➜ pedido recusado | Não: `403` para rede de fora, `429` para pedidos demais; o painel nem recebe o pedido |
-| 4 | Painel web ➜ senha confere? | O painel confere de novo a rede e o nome de host e mostra a tela de entrada |
-| 5 | senha confere? ➜ hash da senha | A senha digitada é comparada com o hash `scrypt` de `/run/secrets/painel_admin_inicial_senha_hash` |
-| 6a | senha confere? ➜ sessão | Sim: abre a sessão, com cookie e token CSRF |
-| 6b | senha confere? ➜ pedido recusado | Não: `401`; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
+| 4 | Painel web ➜ usuário e senha conferem? | O painel confere de novo a rede e o nome de host e mostra a tela de entrada, que pede usuário e senha |
+| 5 | usuário e senha conferem? ➜ administradores | A senha digitada é comparada com o hash `scrypt` do administrador, em `DATA_DIR/painel/administradores`; nome que não existe passa pela mesma conta |
+| 6a | usuário e senha conferem? ➜ sessão | Sim: abre a sessão do administrador, com cookie e token CSRF |
+| 6b | usuário e senha conferem? ➜ pedido recusado | Não: `401`, sem dizer qual dos dois errou; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
 | 7 | sessão ➜ pedido legítimo? | Cada formulário enviado traz o token CSRF da sessão e a origem do próprio painel |
 | 8a | pedido legítimo? ➜ `allsafe-ftp-user` | Sim: o painel chama o comando, com a senha pela entrada padrão |
 | 8b | pedido legítimo? ➜ pedido recusado | Não: `403`, sem alterar nada |
@@ -262,7 +303,7 @@ flowchart LR
 
 | Quem | Usa | Como |
 |---|---|---|
-| senha confere? | hash da senha (`painel_admin_inicial_senha_hash`) | lê a cada entrada, somente leitura |
+| usuário e senha conferem? | administradores (`DATA_DIR/painel/administradores`) | lê a cada entrada |
 | Painel web | `auditoria.log` | registra cada entrada, recusa e alteração |
 
 </details>
@@ -276,22 +317,27 @@ flowchart LR
 Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `root`) e aparece na aba Atividade.
 
 ```text
-2026-10-04T08:33:49-0300 ip=172.29.1.1 evento=usuario_criado usuario=equip01 credencial=informada
+2026-10-04T08:33:49-0300 ip=172.29.1.1 evento=usuario_criado admin=admin usuario=equip01 credencial=informada
+2026-10-04T08:33:47-0300 ip=172.29.1.1 evento=entrada_ok admin=admin
 2026-10-04T08:33:46-0300 ip=172.29.1.1 evento=entrada_falha
 ```
 
 | Evento | Quando acontece |
 |---|---|
 | `painel_iniciado` | O painel subiu |
-| `entrada_ok` · `entrada_falha` · `entrada_bloqueada` | Entrada aceita · senha errada · endereço bloqueado por excesso de erros |
+| `entrada_ok` · `entrada_falha` · `entrada_bloqueada` | Entrada aceita, com o administrador · usuário ou senha errados, sem o nome digitado · endereço bloqueado por excesso de erros |
 | `saida` | Alguém clicou em **Sair** |
-| `usuario_criado` · `senha_trocada` · `usuario_removido` | Alteração de usuário do FTP |
+| `usuario_criado` · `senha_trocada` · `usuario_removido` | Alteração de usuário do FTP, com o administrador que fez |
+| `admin_inicial_criado` | Primeira subida: o painel criou o administrador de `PAINEL_ADMIN_USER` |
+| `admin_criado` · `admin_senha_trocada` · `admin_renomeado` · `admin_removido` | Alteração de administrador pelo painel, com quem fez e quem foi alterado |
+| `admin_senha_atual_recusada` | Alteração de administrador recusada: a senha atual de quem pediu não conferiu |
+| `admin_definido_no_host` | O `scripts/painel-senha.sh` criou um administrador ou trocou a senha dele |
 | `falha_comando` | O `allsafe-ftp-user` devolveu erro |
 | `recusa_csrf` · `recusa_origem` · `recusa_host` · `recusa_rede` | Pedido recusado: sem token, de outra origem, com nome de host inválido ou de rede não permitida |
 
 Quem está fora das redes permitidas é barrado antes, pelo nginx: essa recusa fica no log dele (`docker compose logs nginx`), não aqui. O `recusa_rede` só aparece se um pedido assim chegar ao painel.
 
-Senha, token e cookie **nunca** são gravados. As transferências dos equipamentos não ficam aqui: estão no log do FTP, em [Operação](operacao.md#logs).
+Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada recusada também não: é comum a senha cair nesse campo por engano. As transferências dos equipamentos não ficam aqui: estão no log do FTP, em [Operação](operacao.md#logs).
 
 ---
 
@@ -305,7 +351,8 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 | Rede | Por padrão, bind só em IP privado e `PAINEL_REDES_PERMITIDAS` só com redes privadas, aplicada pelo nginx e conferida de novo pelo painel; `deploy.sh` e os dois containers recusam o resto. Com `REDE_PERMITIR_IP_PUBLICO=sim`, o painel mostra o alerta na entrada, no rodapé e na aba Segurança |
 | Transporte | Só HTTPS, TLS 1.2 ou 1.3; HTTP puro recebe `400` |
 | Volume de pedidos | No nginx, por endereço: 20 pedidos por segundo (rajada de 40), 16 conexões e 16 KiB por pedido; o que passa disso recebe `429` ou `413` |
-| Entrada | Senha de no mínimo 12 caracteres, guardada como hash `scrypt`; cinco erros bloqueiam o endereço por 15 minutos |
+| Entrada | Usuário e senha por administrador; senha de no mínimo 12 caracteres, guardada só como hash `scrypt`; a recusa não diz se o erro foi no usuário ou na senha; cinco erros bloqueiam o endereço por 15 minutos |
+| Administradores | Toda alteração de administrador pede a senha atual de quem está alterando; o administrador alterado tem as sessões encerradas; ninguém remove a própria conta |
 | Sessão | Cookie `__Host-sessao` com `Secure`, `HttpOnly` e `SameSite=Strict`, presa ao endereço de origem; encerra com 15 minutos sem uso e, de qualquer forma, em 8 horas |
 | Formulários | Token CSRF por sessão e conferência de `Origin`: o envio tem de partir do próprio painel; corpo limitado a 8 KiB |
 | Navegador | `Content-Security-Policy` sem script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS e `no-store`; a página não carrega nada de fora |
@@ -316,10 +363,10 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 
 - **Código:** os módulos de [`painel/`](../painel/), só com a biblioteca padrão do Python 3.13 do Debian 13, listados [logo abaixo](#modulos); a aparência está em [`web/estilo.css`](../web/estilo.css), que o nginx entrega direto, sem passar pelo painel. Não há JavaScript, fonte nem imagem externa.
 - **Imagem:** alvo `painel` do [`Dockerfile`](../Dockerfile), sobre a mesma base do FTP (traz o `pure-pw` e o `allsafe-ftp-user`). Imagem `PAINEL_IMAGE`, container `PAINEL_CONTAINER_NAME`.
-- **Entrada do container:** [`painel/entrypoint.sh`](../painel/entrypoint.sh) recusa senha em variável, confere IP e redes privados, ajusta dono e modo de `/painel`, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
+- **Entrada do container:** [`painel/entrypoint.sh`](../painel/entrypoint.sh) recusa senha em variável, confere o `PAINEL_ADMIN_USER`, o IP e as redes privados, ajusta dono e modo de `/painel` e do arquivo de administradores, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
 - **Frente web:** alvo `nginx` do [`Dockerfile`](../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo). O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [Segurança](seguranca.md#painel).
-- **Hash da senha:** `scrypt` com `N=2^15`, `r=8`, `p=1` e sal de 16 bytes, no formato `scrypt$15$8$1$<sal>$<resumo>`. É lido de `/run/secrets/painel_admin_inicial_senha_hash` a cada entrada e comparado em tempo constante.
-- **Sessão:** o token do cookie tem 256 bits aleatórios e o servidor guarda só o resumo SHA-256 dele, em memória. Reiniciar o painel encerra todas as sessões e zera a contagem de erros de entrada.
+- **Hash da senha:** `scrypt` com `N=2^15`, `r=8`, `p=1` e sal de 16 bytes, no formato `scrypt$15$8$1$<sal>$<resumo>`. Cada administrador tem o seu, em `/painel/administradores`; o arquivo é lido a cada entrada e a comparação é em tempo constante. Usuário que não existe passa pela mesma conta e recebe a mesma resposta. O segredo `/run/secrets/painel_admin_inicial_senha_hash` só é usado na subida em que ainda não existe nenhum administrador.
+- **Sessão:** o token do cookie tem 256 bits aleatórios e o servidor guarda só o resumo SHA-256 dele, em memória, com o nome do administrador que entrou. Reiniciar o painel encerra todas as sessões e zera a contagem de erros de entrada.
 - **Tela de entrada:** o formulário leva um token assinado (HMAC) com validade curta, para a entrada também não aceitar pedido forjado por outro site.
 - **Origem do envio:** todo `POST` tem de trazer `Origin` igual ao endereço do painel (`https://` mais o `Host`). A política `Referrer-Policy: same-origin` faz o navegador mandar a origem real no envio que parte do próprio painel e `Origin: null` no que parte de outro endereço; `null` e origem de fora recebem `403` e o evento `recusa_origem`.
 - **Nome de host:** o cabeçalho `Host` tem de ser um IP privado, `localhost` ou o `PAINEL_CERT_CN`; outro nome recebe `400`. Com `REDE_PERMITIR_IP_PUBLICO=sim`, qualquer endereço IPv4 é aceito no lugar do nome.
@@ -339,18 +386,20 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 
 | Módulo | O que tem |
 |---|---|
-| [`servidor.py`](../painel/servidor.py) | Ponto de entrada: sobe o servidor e atende os modos `--hash` e `--saude` |
+| [`servidor.py`](../painel/servidor.py) | Ponto de entrada: sobe o servidor, cria o primeiro administrador e atende os modos `--hash`, `--saude` e `--administrador` |
 | [`config.py`](../painel/config.py) | Caminhos, limites e a leitura das variáveis do container, com as recusas de rede e de sessão |
-| [`senha.py`](../painel/senha.py) | Hash `scrypt` da senha do painel e a conferência em tempo constante |
-| [`sessao.py`](../painel/sessao.py) | Sessões em memória, limite de tentativas de entrada e token do formulário de entrada |
+| [`senha.py`](../painel/senha.py) | Hash `scrypt` das senhas dos administradores e a conferência em tempo constante |
+| [`administradores.py`](../painel/administradores.py) | Leitura e gravação do arquivo de administradores, uma alteração por vez |
+| [`sessao.py`](../painel/sessao.py) | Sessões em memória, por administrador, limite de tentativas e token do formulário de entrada |
 | [`auditoria.py`](../painel/auditoria.py) | Gravação e leitura do `auditoria.log` |
 | [`estado.py`](../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados) e a chamada do `allsafe-ftp-user` |
 | [`pagina.py`](../painel/pagina.py) | Moldura das telas e os textos que mais de uma aba usa |
 | [`atendimento.py`](../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF) e roteamento |
 | [`rotas.py`](../painel/rotas.py) | Tabela de método e caminho para a função que responde |
-| [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada e saída |
+| [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, e saída |
 | [`aba_visao_geral.py`](../painel/aba_visao_geral.py) | Aba Visão geral |
 | [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação, troca de senha e remoção |
+| [`aba_administradores.py`](../painel/aba_administradores.py) | Aba Administradores: lista, criação, troca de senha, troca de nome e remoção |
 | [`aba_seguranca.py`](../painel/aba_seguranca.py) | Aba Segurança |
 | [`aba_atividade.py`](../painel/aba_atividade.py) | Aba Atividade |
 

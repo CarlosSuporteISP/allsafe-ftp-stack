@@ -5,7 +5,8 @@ import time
 from config import CFG
 from estado import dias_restantes
 
-ABAS = (('/', '📊 Visão geral'), ('/usuarios', '👥 Usuários'), ('/seguranca', '🔐 Segurança'), ('/atividade', '📜 Atividade'))
+ABAS = (('/', '📊 Visão geral'), ('/usuarios', '👥 Usuários'), ('/administradores', '🛡️ Administradores'),
+        ('/seguranca', '🔐 Segurança'), ('/atividade', '📜 Atividade'))
 ICONE = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" rx="3" fill="#0d1117"/>'
          '<path d="M3 5h10v2H3zm0 4h10v2H3z" fill="#58a6ff"/></svg>')
 
@@ -63,7 +64,8 @@ def pagina(titulo, miolo, sessao=None, ativa=''):
         links = ''.join(f'<a href="{caminho}"' + (' class="ativa" aria-current="page"' if caminho == ativa else '') + f'>{rotulo}</a>'
                         for caminho, rotulo in ABAS)
         menu = (f'<nav aria-label="Abas do painel">{links}<form method="post" action="/sair">'
-                f'<input type="hidden" name="csrf" value="{e(sessao["csrf"])}"><button type="submit">🚪 Sair</button></form></nav>')
+                f'<input type="hidden" name="csrf" value="{e(sessao["csrf"])}"><span class="quem" title="Administrador desta sessão">'
+                f'{e(sessao["admin"])}</span><button type="submit">🚪 Sair</button></form></nav>')
     return f'''<!doctype html>
 <html lang="pt-BR">
 <head>

@@ -44,7 +44,7 @@ flowchart LR
 | `dados/` | Arquivos enviados pelos equipamentos, uma pasta por usuário | Sim |
 | `auth/` | Usuários do FTP, com o hash de cada senha | Sim |
 | `certs/` | Certificado e chave privada do FTP | Sim |
-| `painel/` | Certificado e chave privada do painel e o `auditoria.log` | Sim |
+| `painel/` | Certificado e chave privada do painel, os administradores (nome e hash da senha) e o `auditoria.log` | Sim |
 | `nginx/` | Soquete do painel e cópia do certificado, refeitos a cada subida | Não |
 
 Ficam fora, e precisam ser guardados à parte: o `.env` e a pasta `.secrets/`. Veja [Guardar o `.env` e os segredos](#segredos).
@@ -120,8 +120,8 @@ Parando a stack...
 Estado atual guardado em: <BACKUP_DIR>/allsafe-ftp-stack-AAAAMMDD-HHMMSS-antes-da-restauracao.tar.gz
 Subindo a stack...
 Restaurado e no ar (healthy).
-Usuários, arquivos, certificados e auditoria voltaram ao estado da cópia.
-As senhas do usuário inicial e do painel continuam as de ./.secrets, que não fazem parte da cópia.
+Usuários, arquivos, certificados, administradores do painel e auditoria voltaram ao estado da cópia.
+A senha do usuário inicial do FTP continua a de ./.secrets, que não faz parte da cópia.
 Desfazer: ./scripts/restaurar.sh allsafe-ftp-stack-AAAAMMDD-HHMMSS-antes-da-restauracao.tar.gz
 ```
 
@@ -129,7 +129,7 @@ O que muda depois de restaurar:
 
 - Usuários criados depois da cópia deixam de existir; os removidos depois dela voltam.
 - Cada usuário volta com a senha que tinha na cópia. A exceção é o usuário inicial (`FTP_USER`), que continua com a senha de `.secrets/ftp-usuario-inicial-senha.txt`.
-- A senha do painel continua a atual: ela não faz parte da cópia.
+- Os administradores do painel voltam os da cópia, cada um com a senha que tinha: quem foi criado depois dela deixa de existir e todos entram de novo. Cópia feita antes da `0.12.0` não tem administradores: o painel cria o de `PAINEL_ADMIN_USER` com o hash de `.secrets/painel-admin-inicial-senha-hash.txt`.
 - Se a stack estava parada, continua parada: `Restaurado. A stack estava parada e continua parada: suba com ./deploy.sh`.
 
 > ⚠️ A cópia é conferida antes de qualquer alteração. Se a soma não confere, se o arquivo não abre ou se ele não é uma cópia desta stack, o comando para com `ERRO: ... Nada foi tocado.` e a stack segue como estava.
@@ -193,9 +193,9 @@ A cópia não leva o `.env` nem a pasta `.secrets/`, para que um arquivo de back
 |---|---|
 | `.env` | Endereços, portas, perfil e limites da instalação |
 | `.secrets/ftp-usuario-inicial-senha.txt` | Senha do usuário inicial do FTP |
-| `.secrets/painel-admin-inicial-senha-hash.txt` | Hash da senha do painel |
+| `.secrets/painel-admin-inicial-senha-hash.txt` | Hash da senha inicial do primeiro administrador do painel |
 
-Sem eles, a stack volta do mesmo jeito: o `./deploy.sh` cria um `.env` novo e senhas novas. Nesse caso, o usuário inicial passa a ter a senha nova, que precisa ser configurada no equipamento que o usa, e o painel abre com a senha inicial nova. Os demais usuários não são afetados: a senha deles está na cópia. Detalhes de cada arquivo em [Segredos](segredos.md).
+Sem eles, a stack volta do mesmo jeito: o `./deploy.sh` cria um `.env` novo e senhas novas. Nesse caso, o usuário inicial passa a ter a senha nova, que precisa ser configurada no equipamento que o usa. Os demais usuários e os administradores do painel não são afetados: o hash da senha deles está na cópia. Detalhes de cada arquivo em [Segredos](segredos.md).
 
 ---
 

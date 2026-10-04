@@ -54,7 +54,7 @@ flowchart LR
     subgraph HOST["Host"]
         scripts@{ shape: console, label: "deploy.sh<br>manage-user.sh" }
         env@{ shape: doc, label: ".env<br>configuração e limites" }
-        segredo@{ shape: doc, label: ".secrets<br>senha do FTP, hash do painel" }
+        segredo@{ shape: doc, label: ".secrets<br>senha do FTP, hash inicial do painel" }
     end
     subgraph CONTAINERS["Containers · rede allsafe-ftp-network"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
@@ -64,7 +64,7 @@ flowchart LR
     end
     subgraph VOLUMES["Volumes"]
         vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
-        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>/painel, certificado e auditoria" }
+        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>/painel, certificado, administradores e auditoria" }
         vauth@{ shape: cyl, label: "DATA_DIR/auth<br>/auth, PureDB" }
         vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>/etc/ssl/private" }
         vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>/data" }
@@ -83,10 +83,10 @@ flowchart LR
     vdata -- "8 · arquivo no volume" --> fim
     scripts -. "cria, lê e grava o perfil" .-> env
     ftp -. "lê a senha na subida, só leitura" .-> segredo
-    painel -. "lê o hash a cada entrada, só leitura" .-> segredo
+    painel -. "lê o hash inicial na subida, só leitura" .-> segredo
     ftp -. "consulta os usuários" .-> vauth
     ftp -. "lê o certificado" .-> vcerts
-    painel -. "grava certificado e auditoria" .-> vpainel
+    painel -. "grava certificado, administradores e auditoria" .-> vpainel
     painel -. "cria o soquete e copia o certificado" .-> vnginx
     nginx -. "lê, só leitura" .-> vnginx
     painel -. "cria a pasta do usuário" .-> vdata
@@ -112,10 +112,10 @@ flowchart LR
 |---|---|---|
 | `deploy.sh` e `manage-user.sh` | `.env` | cria, lê e grava o perfil |
 | Pure-FTPd | `.secrets` (`ftp-usuario-inicial-senha.txt`) | lê a senha na subida, somente leitura |
-| Painel web | `.secrets` (`painel-admin-inicial-senha-hash.txt`) | lê o hash a cada entrada, somente leitura |
+| Painel web | `.secrets` (`painel-admin-inicial-senha-hash.txt`) | lê o hash inicial na subida, somente leitura |
 | Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
 | Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
-| Painel web | `DATA_DIR/painel` | grava o certificado e a auditoria |
+| Painel web | `DATA_DIR/painel` | grava o certificado, os administradores e a auditoria |
 | Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
 | nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
 | Painel web | `DATA_DIR/dados` | cria a pasta do usuário |
@@ -157,10 +157,10 @@ O que cada script faz, com parâmetros e saída: [Scripts](scripts.md). Uso e pr
 | `DATA_DIR/dados` | `/data` | `ftp` e `painel` | Arquivos dos usuários: um diretório `chroot` por usuário (`/data/<usuario>`) |
 | `DATA_DIR/auth` | `/auth` | `ftp` e `painel` | Base **PureDB**: `pureftpd.passwd` (texto, com o hash das senhas) e `pureftpd.pdb` (compilada), ambos `0600`; `ftp-cert.pem`, cópia do certificado do FTP **sem a chave**; `.lock`, a trava das alterações |
 | `DATA_DIR/certs` | `/etc/ssl/private` | só `ftp` | `pure-ftpd.pem`: chave e certificado concatenados, `0600` |
-| `DATA_DIR/painel` | `/painel` | só `painel` | `tls/painel-cert.pem`, `tls/painel-key.pem` (`0600`) e `auditoria.log` (`0600`); pasta `0700` |
+| `DATA_DIR/painel` | `/painel` | só `painel` | `tls/painel-cert.pem`, `tls/painel-key.pem` (`0600`), `administradores` (`0600`, o nome e o hash `scrypt` da senha de cada administrador) e `auditoria.log` (`0600`); pasta `0700` |
 | `DATA_DIR/nginx` | `/nginx` | `painel` (grava) e `nginx` (somente leitura) | `painel.sock`, o soquete Unix do painel, e `tls/`, a cópia do certificado e da chave (`0640`) para o nginx; pasta `0750`, do grupo `10001`. Refeita a cada subida |
 | segredo `ftp_usuario_inicial_senha` (`SECRETS_DIR/ftp-usuario-inicial-senha.txt`) | `/run/secrets/ftp_usuario_inicial_senha` (somente leitura) | só `ftp` | Senha do usuário inicial |
-| segredo `painel_admin_inicial_senha_hash` (`SECRETS_DIR/painel-admin-inicial-senha-hash.txt`) | `/run/secrets/painel_admin_inicial_senha_hash` (somente leitura) | só `painel` | Hash `scrypt` da senha do painel |
+| segredo `painel_admin_inicial_senha_hash` (`SECRETS_DIR/painel-admin-inicial-senha-hash.txt`) | `/run/secrets/painel_admin_inicial_senha_hash` (somente leitura) | só `painel` | Hash `scrypt` da senha inicial do primeiro administrador do painel, usado só enquanto não existe nenhum |
 
 Cada serviço vê um único arquivo de `.secrets/`, e o `nginx` não vê nenhum. Além disso, o `ftp` e o `painel` têm dois `tmpfs`, `/run` (8 MiB) e `/tmp` (16 MiB), e o `nginx` tem `/run/nginx` (1 MiB) e `/tmp/nginx` (16 MiB), do usuário `10001`. Todos `noexec,nosuid,nodev`.
 

@@ -7,7 +7,7 @@ die() { echo "FALHA: $*" >&2; exit 1; }
 # shellcheck source=scripts/rede-privada.sh
 source /usr/local/lib/allsafe/rede-privada.sh
 
-# A senha do painel chega só como hash, pelo segredo montado pelo Compose.
+# A senha do primeiro administrador chega só como hash, pelo segredo montado pelo Compose.
 secret_file=/run/secrets/painel_admin_inicial_senha_hash
 for variavel in PAINEL_PASSWORD PAINEL_PASSWORD_HASH; do
   [[ -z "${!variavel:-}" ]] || die "$variavel não é aceita: a senha do painel fica em .secrets/, nunca em variável"
@@ -17,6 +17,7 @@ done
 PAINEL_BIND_IP="${PAINEL_BIND_IP:-127.0.0.1}"
 PAINEL_REDES_PERMITIDAS="${PAINEL_REDES_PERMITIDAS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
 PAINEL_CERT_CN="${PAINEL_CERT_CN:-}"
+PAINEL_ADMIN_USER="${PAINEL_ADMIN_USER:-admin}"
 
 conferir_opcao_ip_publico
 exigir_ip PAINEL_BIND_IP "$PAINEL_BIND_IP" || exit 1
@@ -28,6 +29,8 @@ for rede in "${redes[@]}"; do
 done
 [[ -z "$PAINEL_CERT_CN" || "$PAINEL_CERT_CN" =~ ^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$ ]] \
   || die "PAINEL_CERT_CN inválido: use um nome em minúsculas ou um endereço IPv4"
+[[ "$PAINEL_ADMIN_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] \
+  || die "PAINEL_ADMIN_USER inválido: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres"
 cn_ip=false
 if [[ "$PAINEL_CERT_CN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   cn_ip=true
@@ -43,6 +46,11 @@ chmod 0700 /painel
 install -d -o root -g root -m 0700 /painel/tls
 touch /painel/auditoria.log
 chmod 0600 /painel/auditoria.log
+# Administradores do painel (nome e hash da senha): só o root lê, também depois de uma restauração.
+if [[ -e /painel/administradores ]]; then
+  chown root:root /painel/administradores
+  chmod 0600 /painel/administradores
+fi
 
 # Certificado autoassinado, válido para os endereços pelos quais o painel é aberto.
 # O arquivo painel-san.txt marca que o certificado foi gerado aqui: enquanto ele existir, o
