@@ -256,7 +256,7 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 | Bateria | Casos | Exemplos |
 |---|---|---|
 | Funcional | 19 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração |
-| Segurança | 37 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, CSRF, `Origin` e `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs e na auditoria |
+| Segurança | 38 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs e na auditoria |
 | Rede | 12 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host |
 
 **Resultados:** três arquivos Markdown, um por bateria, com data, comando, versão, ambiente, a tabela dos casos com a evidência de cada um e os achados. Nenhuma senha, token, cookie ou hash é gravado: antes de terminar, o script procura nos três arquivos os segredos que usou e, se achar, apaga o arquivo e sai com `3`. Sem `--resultados`, eles vão para a pasta do plano, se ela existir, ou para `TEMP_DIR/resultados`.

@@ -30,7 +30,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Guias](#guias) · [Por onde começar](#por-onde-comecar) · [Onde ficam os dados](#onde-ficam-os-dados) · [Diagramas](#diagramas) · [Plano](#plano)
+[Guias](#guias) · [Por onde começar](#por-onde-comecar) · [Onde ficam os dados](#onde-ficam-os-dados) · [Diagramas](#diagramas) · [Imagens](#imagens) · [Plano](#plano)
 
 </details>
 
@@ -52,7 +52,8 @@ flowchart LR
 | 8 | [Operação](operacao.md) | Usuários, certificado real, logs e atualização da imagem |
 | 9 | [Backup e restauração](backup.md) | Cópia de segurança em um comando, restauração conferida e reversível, o que guardar à parte, outro servidor e cópia agendada |
 | 10 | [Painel web](painel.md) | Abrir o painel, o que há em cada aba, usuários pelo navegador, senha, certificado, auditoria e proteções |
-| 11 | [Solução de problemas](solucao-de-problemas.md) | Sintoma, causa, como verificar e correção |
+| 11 | [Fotos da aplicação](aplicacao/README.md) | Todas as telas do painel, menu por menu: a foto, para que serve, como chegar e o que há em cada uma |
+| 12 | [Solução de problemas](solucao-de-problemas.md) | Sintoma, causa, como verificar e correção |
 
 ---
 
@@ -64,6 +65,7 @@ flowchart LR
 |---|---|
 | Primeira vez | [Instalação](instalacao.md) ➜ [Painel web](painel.md) ➜ [Configuração](configuracao.md) ➜ [Perfis](perfis.md) |
 | Criar a conta de um equipamento | [Painel web](painel.md#usuarios) ou [Operação](operacao.md#usuarios) |
+| Ver as telas do painel antes de instalar | [Fotos da aplicação](aplicacao/README.md) |
 | Antes de produção | [Rede privada e firewall](seguranca.md#rede-privada) ➜ [Segurança](seguranca.md) ➜ [Operação](operacao.md#certificado-real-de-producao) ➜ [Backup e restauração](backup.md#automatica) |
 | Equipamento antigo que não fala TLS | [Equipamento sem TLS](seguranca.md#ftp-sem-tls) ➜ [Configuração](configuracao.md#tls) ➜ [Solução de problemas](solucao-de-problemas.md#ftp-sem-tls) |
 | Guardar ou recuperar os dados | [Backup e restauração](backup.md) |
@@ -117,6 +119,19 @@ Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com o
 | [painel-diagrama.mmd](diagramas/painel-diagrama.mmd) | 1 | [Painel web](painel.md) |
 | [painel-fluxograma.mmd](diagramas/painel-fluxograma.mmd) | 2 | [README do projeto](../README.md#como-funciona) e [Painel web](painel.md#como-decide) |
 | [diagnostico-diagrama.mmd](diagramas/diagnostico-diagrama.mmd) | 1 | [Solução de problemas](solucao-de-problemas.md) |
+
+---
+
+<a name="imagens"></a>
+
+## 📸 Imagens
+
+As fotos são capturas reais do painel, em tema escuro. No Markdown, toda foto é clicável e abre o próprio arquivo em tamanho real; cada pasta tem um `visualizador.html` para abrir, aproximar e mover as imagens fora do GitHub.
+
+| Pasta | O que guarda | Onde aparece | Visualizador |
+|---|---|---|---|
+| [`imagens/`](imagens/) | A imagem principal e uma imagem de cada aba do painel | [README do projeto](../README.md#imagens) | [`visualizador.html`](imagens/visualizador.html) |
+| [`aplicacao/imagens/`](aplicacao/imagens/) | As fotos de cada menu, formulário, recusa e confirmação | [Fotos da aplicação](aplicacao/README.md) | [`visualizador.html`](aplicacao/imagens/visualizador.html) |
 
 ---
 

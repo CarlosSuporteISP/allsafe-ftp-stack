@@ -80,6 +80,8 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 
 O botão **Sair**, no topo, encerra a sessão na hora.
 
+A foto de cada tela, com a explicação item por item, está em [Fotos da aplicação](aplicacao/README.md).
+
 > ⚠️ Com `FTP_TLS_MODE` em `0` ou `1`, as abas Visão geral e Segurança abrem com um alerta no topo: o FTP está aceitando senha e arquivo em texto puro. O alerta só some quando a variável volta para `2` ou `3`. Veja [Segurança](seguranca.md#ftp-sem-tls).
 
 ---
@@ -95,6 +97,8 @@ O botão **Sair**, no topo, encerra a sessão na hora.
 | Remover um usuário | Usuários ➜ **Remover** | Pede confirmação. A conta some; **os arquivos da pasta são preservados** |
 
 **Resultado esperado:** o usuário criado entra por FTPS logo em seguida, sem reiniciar o FTP.
+
+Os formulários, as mensagens de recusa e a tela da senha gerada estão em [Fotos da aplicação](aplicacao/README.md#usuarios).
 
 Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
 
@@ -303,8 +307,8 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 | Volume de pedidos | No nginx, por endereço: 20 pedidos por segundo (rajada de 40), 16 conexões e 16 KiB por pedido; o que passa disso recebe `429` ou `413` |
 | Entrada | Senha de no mínimo 12 caracteres, guardada como hash `scrypt`; cinco erros bloqueiam o endereço por 15 minutos |
 | Sessão | Cookie `__Host-sessao` com `Secure`, `HttpOnly` e `SameSite=Strict`, presa ao endereço de origem; encerra com 15 minutos sem uso e, de qualquer forma, em 8 horas |
-| Formulários | Token CSRF por sessão e conferência de `Origin`; corpo limitado a 8 KiB |
-| Navegador | `Content-Security-Policy` sem script, `X-Frame-Options: DENY`, `nosniff`, HSTS e `no-store`; a página não carrega nada de fora |
+| Formulários | Token CSRF por sessão e conferência de `Origin`: o envio tem de partir do próprio painel; corpo limitado a 8 KiB |
+| Navegador | `Content-Security-Policy` sem script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS e `no-store`; a página não carrega nada de fora |
 | Containers | Raiz somente leitura, `cap_drop: ALL`, `no-new-privileges`, sem socket do Docker, limites de CPU, memória e processos; o nginx roda sem root e sem nenhuma capability |
 
 <details>
@@ -317,6 +321,7 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 - **Hash da senha:** `scrypt` com `N=2^15`, `r=8`, `p=1` e sal de 16 bytes, no formato `scrypt$15$8$1$<sal>$<resumo>`. É lido de `/run/secrets/painel_password_hash` a cada entrada e comparado em tempo constante.
 - **Sessão:** o token do cookie tem 256 bits aleatórios e o servidor guarda só o resumo SHA-256 dele, em memória. Reiniciar o painel encerra todas as sessões e zera a contagem de erros de entrada.
 - **Tela de entrada:** o formulário leva um token assinado (HMAC) com validade curta, para a entrada também não aceitar pedido forjado por outro site.
+- **Origem do envio:** todo `POST` tem de trazer `Origin` igual ao endereço do painel (`https://` mais o `Host`). A política `Referrer-Policy: same-origin` faz o navegador mandar a origem real no envio que parte do próprio painel e `Origin: null` no que parte de outro endereço; `null` e origem de fora recebem `403` e o evento `recusa_origem`.
 - **Nome de host:** o cabeçalho `Host` tem de ser um IP privado, `localhost` ou o `PAINEL_CERT_CN`; outro nome recebe `400`.
 - **Usuários do FTP:** o painel monta as mesmas pastas `DATA_DIR/auth` e `DATA_DIR/dados` do serviço `ftp` e chama o mesmo `allsafe-ftp-user`, com `flock` em `/auth/.lock`. Por isso não precisa do socket do Docker.
 - **Capabilities devolvidas:** `CHOWN`, `DAC_OVERRIDE` e `FOWNER`, para criar a pasta do usuário com o dono `ftpdata` e gravar em `/auth`. Nenhuma de rede.
@@ -327,4 +332,4 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 
 ---
 
-⬅️ [Backup e restauração](backup.md) · 🏠 [Documentação](README.md) · ➡️ [Solução de problemas](solucao-de-problemas.md)
+⬅️ [Backup e restauração](backup.md) · 🏠 [Documentação](README.md) · ➡️ [Fotos da aplicação](aplicacao/README.md)

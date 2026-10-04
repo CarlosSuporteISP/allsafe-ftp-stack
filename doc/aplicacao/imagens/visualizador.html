@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visualizador de diagramas e imagens</title>
+<!-- Gerado por /home/carlos/code/padrao-diagramas/renderizar.sh. Não edite à mão: a lista é reescrita a cada renderização. -->
+<style>
+/* Fundo escuro é o padrão; o botão de tema troca para o claro. */
+:root { --fundo: #0d1117; --painel: #161b22; --borda: #30363d; --texto: #e6edf3; --apagado: #8b949e; --botao: #21262d; --sobre: #30363d; }
+:root[data-tema="claro"] { --fundo: #ffffff; --painel: #f6f8fa; --borda: #d0d7de; --texto: #1f2328; --apagado: #57606a; --botao: #ffffff; --sobre: #eaeef2; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--fundo); color: var(--texto); font: 14px/1.4 Arial, Helvetica, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+header { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--painel); border-bottom: 1px solid var(--borda); }
+header strong { white-space: nowrap; }
+header select { flex: 1; min-width: 0; max-width: 520px; padding: 6px 8px; background: var(--botao); color: var(--texto); border: 1px solid var(--borda); border-radius: 6px; font: inherit; }
+header .dica { color: var(--apagado); font-size: 12px; margin-left: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+button { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; background: var(--botao); color: var(--texto); border: 1px solid var(--borda); border-radius: 6px; cursor: pointer; }
+button:hover { background: var(--sobre); }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--texto); outline-offset: 2px; }
+button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#palco { position: relative; flex: 1; overflow: hidden; cursor: grab; touch-action: none; user-select: none; }
+#palco.arrastando { cursor: grabbing; }
+#desenho { position: absolute; left: 0; top: 0; transform-origin: 0 0; max-width: none; -webkit-user-drag: none; }
+#controles { position: absolute; right: 16px; bottom: 16px; display: grid; grid-template-columns: repeat(3, 34px); grid-template-rows: repeat(3, 34px); gap: 2px; padding: 6px; background: var(--painel); border: 1px solid var(--borda); border-radius: 8px; }
+#cima { grid-area: 1 / 2; } #mais { grid-area: 1 / 3; }
+#esquerda { grid-area: 2 / 1; } #reset { grid-area: 2 / 2; } #direita { grid-area: 2 / 3; }
+#baixo { grid-area: 3 / 2; } #menos { grid-area: 3 / 3; }
+#zoom { position: absolute; left: 16px; bottom: 16px; padding: 4px 8px; background: var(--painel); border: 1px solid var(--borda); border-radius: 6px; color: var(--apagado); font-size: 12px; }
+#vazio { margin: auto; padding: 24px; color: var(--apagado); text-align: center; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <strong>🔍 Visualizador</strong>
+  <select id="lista" aria-label="Escolher o diagrama ou a imagem"></select>
+  <span class="dica">roda do mouse aproxima · arrastar move · teclas + − 0, setas e T</span>
+  <button id="tema" title="Trocar entre fundo escuro e claro (T)" aria-label="Trocar entre fundo escuro e claro"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></button>
+  <button id="fechar" title="Fechar (Esc)" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</header>
+<main id="palco" aria-label="Área do diagrama ou da imagem">
+  <img id="desenho" alt="" draggable="false">
+  <div id="zoom" aria-live="polite">100%</div>
+  <div id="controles" role="group" aria-label="Aproximar, afastar e mover">
+    <button id="cima" title="Mover para cima (↑)" aria-label="Mover para cima"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button>
+    <button id="mais" title="Aproximar (+)" aria-label="Aproximar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5M11 8v6M8 11h6"/></svg></button>
+    <button id="esquerda" title="Mover para a esquerda (←)" aria-label="Mover para a esquerda"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <button id="reset" title="Voltar ao tamanho inicial (0)" aria-label="Voltar ao tamanho inicial"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg></button>
+    <button id="direita" title="Mover para a direita (→)" aria-label="Mover para a direita"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    <button id="baixo" title="Mover para baixo (↓)" aria-label="Mover para baixo"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+    <button id="menos" title="Afastar (−)" aria-label="Afastar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5M8 11h6"/></svg></button>
+  </div>
+  <p id="vazio" hidden>Nenhum diagrama nem imagem nesta pasta.</p>
+</main>
+<script>
+const DIAGRAMAS = /*LISTA*/["atividade.png", "entrar-recusada.png", "entrar.png", "seguranca.png", "usuarios-novo-recusado.png", "usuarios-novo.png", "usuarios-remover.png", "usuarios-removido.png", "usuarios-senha-gerada.png", "usuarios-trocar-senha.png", "usuarios.png", "visao-geral.png"];
+const palco = document.getElementById("palco");
+const desenho = document.getElementById("desenho");
+const lista = document.getElementById("lista");
+const rotuloZoom = document.getElementById("zoom");
+const IMAGEM = /\.(png|jpe?g|webp|gif)$/i; // item com extensão é imagem; sem extensão é diagrama (<nome>.svg)
+let claro = false;
+const MINIMO = 0.1, MAXIMO = 12, PASSO = 1.25, ANDAR = 80;
+let base = 1, escala = 1, x = 0, y = 0, razao = 0.5;
+
+function aplicar() {
+  desenho.style.width = base * escala + "px";
+  desenho.style.transform = `translate(${x}px, ${y}px)`;
+  rotuloZoom.textContent = Math.round(escala * 100) + "%";
+}
+// Tamanho inicial: o diagrama inteiro cabe na tela, centralizado.
+function ajustar() {
+  const l = palco.clientWidth - 32, a = palco.clientHeight - 32;
+  base = Math.max(50, Math.min(l, a / razao));
+  escala = 1;
+  x = (palco.clientWidth - base) / 2;
+  y = (palco.clientHeight - base * razao) / 2;
+  aplicar();
+}
+// Aproxima ou afasta mantendo fixo o ponto (px, py) do palco.
+function zoom(fator, px = palco.clientWidth / 2, py = palco.clientHeight / 2) {
+  const nova = Math.min(MAXIMO, Math.max(MINIMO, escala * fator));
+  const f = nova / escala;
+  x = px - (px - x) * f;
+  y = py - (py - y) * f;
+  escala = nova;
+  aplicar();
+}
+function mover(dx, dy) { x += dx; y += dy; aplicar(); }
+
+function abrir(nome) {
+  if (!DIAGRAMAS.includes(nome)) nome = DIAGRAMAS[0];
+  if (!nome) { document.getElementById("vazio").hidden = false; document.getElementById("controles").hidden = true; return; }
+  lista.value = nome;
+  const imagem = IMAGEM.test(nome);
+  document.title = nome + " · visualizador";
+  desenho.alt = (imagem ? "Imagem " : "Diagrama ") + nome;
+  document.documentElement.dataset.tema = claro ? "claro" : "escuro";
+  desenho.onload = () => { razao = desenho.naturalHeight / desenho.naturalWidth || 0.5; ajustar(); };
+  desenho.src = imagem ? nome : nome + (claro ? "-claro" : "") + ".svg";
+  if (decodeURIComponent(location.hash.slice(1)) !== nome) history.replaceState(null, "", "#" + nome);
+}
+
+for (const nome of DIAGRAMAS) lista.add(new Option(nome, nome));
+lista.onchange = () => abrir(lista.value);
+addEventListener("hashchange", () => abrir(decodeURIComponent(location.hash.slice(1))));
+document.getElementById("tema").onclick = () => { claro = !claro; abrir(lista.value); };
+addEventListener("resize", ajustar);
+
+document.getElementById("mais").onclick = () => zoom(PASSO);
+document.getElementById("menos").onclick = () => zoom(1 / PASSO);
+document.getElementById("reset").onclick = ajustar;
+document.getElementById("cima").onclick = () => mover(0, ANDAR);
+document.getElementById("baixo").onclick = () => mover(0, -ANDAR);
+document.getElementById("esquerda").onclick = () => mover(ANDAR, 0);
+document.getElementById("direita").onclick = () => mover(-ANDAR, 0);
+document.getElementById("fechar").onclick = () => { if (history.length > 1) history.back(); else window.close(); };
+
+palco.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const r = palco.getBoundingClientRect();
+  zoom(e.deltaY < 0 ? 1.1 : 1 / 1.1, e.clientX - r.left, e.clientY - r.top);
+}, { passive: false });
+
+// Arrastar com um dedo ou com o mouse; pinça com dois dedos.
+const pontos = new Map();
+let distancia = 0;
+palco.addEventListener("pointerdown", (e) => {
+  if (e.target.closest("button")) return;
+  palco.setPointerCapture(e.pointerId);
+  pontos.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  palco.classList.add("arrastando");
+});
+palco.addEventListener("pointermove", (e) => {
+  const antes = pontos.get(e.pointerId);
+  if (!antes) return;
+  pontos.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pontos.size === 1) return mover(e.clientX - antes.x, e.clientY - antes.y);
+  const [a, b] = [...pontos.values()];
+  const d = Math.hypot(a.x - b.x, a.y - b.y);
+  const r = palco.getBoundingClientRect();
+  if (distancia) zoom(d / distancia, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
+  distancia = d;
+});
+for (const tipo of ["pointerup", "pointercancel"]) palco.addEventListener(tipo, (e) => {
+  pontos.delete(e.pointerId);
+  distancia = 0;
+  if (!pontos.size) palco.classList.remove("arrastando");
+});
+
+addEventListener("keydown", (e) => {
+  if (e.target === lista) return;
+  const acoes = {
+    "+": () => zoom(PASSO), "=": () => zoom(PASSO), "-": () => zoom(1 / PASSO), "0": ajustar,
+    ArrowUp: () => mover(0, ANDAR), ArrowDown: () => mover(0, -ANDAR),
+    ArrowLeft: () => mover(ANDAR, 0), ArrowRight: () => mover(-ANDAR, 0),
+    t: () => document.getElementById("tema").click(), T: () => document.getElementById("tema").click(),
+    Escape: () => document.getElementById("fechar").click(),
+  };
+  if (acoes[e.key]) { e.preventDefault(); acoes[e.key](); }
+});
+
+abrir(decodeURIComponent(location.hash.slice(1)));
+</script>
+</body>
+</html>

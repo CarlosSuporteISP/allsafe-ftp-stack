@@ -207,7 +207,7 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 | Uma senha, só como hash | `scrypt` em `.secrets/painel_password_hash.txt`; o container nunca vê a senha em texto |
 | Limite de tentativas de senha | Cinco senhas erradas em 15 minutos bloqueiam o endereço do cliente |
 | Sessão curta | 15 minutos sem uso (`PAINEL_SESSAO_MINUTOS`) e teto de 8 horas; presa ao endereço do cliente; encerrada em `🚪 Sair` e quando o painel reinicia |
-| Formulário protegido | Token CSRF por sessão e conferência do `Origin` em todo envio |
+| Formulário protegido | Token CSRF por sessão e conferência do `Origin` em todo envio; `Referrer-Policy: same-origin` para o navegador informar a origem só ao próprio painel |
 | Página fechada | Sem JavaScript, sem conteúdo de terceiros, sem ser embutida em outra página (`Content-Security-Policy`) |
 | Auditoria | Cada entrada, saída e mudança de usuário vai para `DATA_DIR/painel/auditoria.log`, sem senha |
 | Usuário inicial preservado | O `FTP_USER` não pode ser alterado nem removido pelo painel |

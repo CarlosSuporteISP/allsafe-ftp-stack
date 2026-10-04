@@ -297,7 +297,7 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
 }
 declare -A ESPERADOS=(
   [testes]="$(seq -s ' ' 1 19)"
-  [seguranca]="$(seq -s ' ' 1 37)"
+  [seguranca]="$(seq -s ' ' 1 38)"
   [rede]="$(seq -s ' ' 1 12)"
 )
 ARQUIVOS=()
@@ -601,6 +601,11 @@ r="$(envio /usuarios/novo --data-urlencode 'usuario=invasor' --data-urlencode "s
 [[ "$r" == "403 " && "$antes" == "$(usuarios_ftp)" ]]; caso $? seguranca 25 "Envio sem token CSRF" "POST /usuarios/novo com sessão e sem o token: $r· usuários $([[ "$antes" == "$(usuarios_ftp)" ]] && echo inalterados || echo ALTERADOS)"
 r="$(c -o /dev/null -w '%{http_code}' -b "$J" -H 'Origin: https://site-de-fora.example' --data-urlencode 'usuario=invasor' --data-urlencode "csrf=$K" --data-urlencode "senha@$W/u4.senha" --data-urlencode "confirmacao@$W/u4.senha" "$B/usuarios/novo")"
 [[ "$r" == 403 && "$antes" == "$(usuarios_ftp)" ]]; caso $? seguranca 26 "Envio com Origin de fora" "POST com o token certo e Origin https://site-de-fora.example: $r · usuários $([[ "$antes" == "$(usuarios_ftp)" ]] && echo inalterados || echo ALTERADOS)"
+# O navegador manda "Origin: null" quando o envio parte de outro endereço ou de página sem referência. A política
+# same-origin faz o envio do próprio painel levar a origem real; com no-referrer, até ele chegaria como "null".
+politica="$(grep -i '^referrer-policy:' "$W/cabecalhos" | tr -d '\r' | cut -d ' ' -f 2-)"
+r="$(c -o /dev/null -w '%{http_code}' -b "$J" -H 'Origin: null' --data-urlencode 'usuario=invasor' --data-urlencode "csrf=$K" --data-urlencode "senha@$W/u4.senha" --data-urlencode "confirmacao@$W/u4.senha" "$B/usuarios/novo")"
+[[ "$politica" == same-origin && "$r" == 403 && "$antes" == "$(usuarios_ftp)" ]]; caso $? seguranca 38 "Envio com Origin null" "Referrer-Policy da resposta: ${politica:-ausente} · POST com o token certo e Origin null: $r · usuários $([[ "$antes" == "$(usuarios_ftp)" ]] && echo inalterados || echo ALTERADOS)"
 r="$(c -o /dev/null -w '%{http_code}' -b "$J" -H 'Host: painel.exemplo.com.br' "$B/")"
 [[ "$r" == 400 ]]; caso $? seguranca 27 "Cabeçalho Host inesperado" "GET / com Host: painel.exemplo.com.br: $r"
 

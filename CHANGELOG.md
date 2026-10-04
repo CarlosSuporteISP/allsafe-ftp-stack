@@ -8,6 +8,26 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [1.0.0] - 2026-10-04
+
+Primeira versão pronta para produção: o painel passa a aceitar a entrada pelo navegador e a documentação ganha as fotos de todas as telas. **Uso só em rede privada, atrás de firewall.**
+
+### Adicionado
+
+- Guia [Fotos da aplicação](doc/aplicacao/README.md): todas as telas do painel, menu por menu, com capturas reais, para que serve cada uma, como chegar e o que há na tela.
+- Imagem principal e uma imagem de cada aba do painel no [README](README.md#imagens).
+- Um caso na bateria de segurança, que passa a 38: a resposta traz `Referrer-Policy: same-origin` e o envio com `Origin: null` é recusado.
+
+### Alterado
+
+- **`Referrer-Policy`:** de `no-referrer` para `same-origin`, no painel e nas respostas do nginx. O endereço da página continua sem sair para outro site; só o próprio painel o recebe.
+- Lista de usuários do painel: o nome não quebra de linha e a coluna da pasta ganha a largura que sobrava na de ações.
+- Selo de status do README: de em desenvolvimento para estável.
+
+### Corrigido
+
+- **O painel recusava todo envio feito por navegador, inclusive a entrada**, com `403` e a mensagem `O envio não partiu deste painel.` Com `Referrer-Policy: no-referrer`, o navegador manda `Origin: null` em todo formulário, e o painel exige `Origin` igual ao próprio endereço. O defeito existia desde a `0.3.0`, quando o painel foi criado, e não aparecia nos testes porque a bateria envia os formulários com `curl`, informando o `Origin` certo. A correção foi conferida com o Google Chrome: entrada, cadastro, troca de senha e remoção de usuário.
+
 ## [0.7.0] - 2026-10-04
 
 Backup e restauração em um comando e healthcheck do FTP que confere se o servidor atende. **Uso só em rede privada, atrás de firewall.**

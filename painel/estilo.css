@@ -127,6 +127,8 @@ thead th { color: var(--suave); font-size: 0.8125rem; font-weight: 600; white-sp
 tbody th { width: 1%; font-weight: 600; white-space: nowrap; }
 tbody tr:last-child > * { border-bottom: 0; }
 .acoes { white-space: nowrap; }
+.acoes .suave { white-space: normal; }
+td:first-child strong { white-space: nowrap; }
 .conferencia .marca { width: 1%; font-size: 1.1rem; }
 .digital { font-size: 0.75rem; }
 

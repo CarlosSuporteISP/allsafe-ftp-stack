@@ -4,8 +4,8 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.7.0-blue)
-![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.0.0-blue)
+![Status](https://img.shields.io/badge/status-est%C3%A1vel-brightgreen)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
 ![Debian](https://img.shields.io/badge/Debian-13_trixie-a81d33?logo=debian&logoColor=white)
@@ -14,6 +14,10 @@
 ![nginx](https://img.shields.io/badge/nginx-1.26-009639?logo=nginx&logoColor=white)
 ![Bash](https://img.shields.io/badge/Bash-5.2-4eaa25?logo=gnubash&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.13-3776ab?logo=python&logoColor=white)
+
+<a href="doc/imagens/painel-principal.png"><img src="doc/imagens/painel-principal.png" alt="Painel web da allsafe-ftp-stack na aba Visão geral: servidor FTP no ar, usuários, espaço usado, último envio, certificado e os dados para configurar o equipamento" width="100%"></a>
+
+<sub><b>v1.0.0</b> · painel web, aba Visão geral · captura de 2026-10-04</sub>
 
 <!-- diagrama: doc/diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -30,7 +34,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.7.0</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v1.0.0</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -43,7 +47,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[O que é](#o-que-e) · [Destaques](#destaques) · [Instalação rápida](#instalacao) · [Como funciona](#como-funciona) · [Arquitetura](#arquitetura) · [Tecnologias](#tecnologias) · [Portas e binds](#portas) · [Configuração](#configuracao) · [Segurança](#seguranca) · [Testes](#testes) · [Estrutura de arquivos](#arquivos) · [Documentação](#documentacao) · [Plano](#plano) · [Versão](#versao) · [Projetos relacionados](#relacionados) · [Créditos](#creditos)
+[O que é](#o-que-e) · [Destaques](#destaques) · [Imagens](#imagens) · [Instalação rápida](#instalacao) · [Como funciona](#como-funciona) · [Arquitetura](#arquitetura) · [Tecnologias](#tecnologias) · [Portas e binds](#portas) · [Configuração](#configuracao) · [Segurança](#seguranca) · [Testes](#testes) · [Estrutura de arquivos](#arquivos) · [Documentação](#documentacao) · [Plano](#plano) · [Versão](#versao) · [Projetos relacionados](#relacionados) · [Créditos](#creditos)
 
 </details>
 
@@ -86,6 +90,23 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **Segredos em arquivo** | As senhas ficam em `.secrets/`, nunca na imagem nem no `compose.yaml`; a do painel, só como hash |
 | **Logs no `stdout`** | Formato CLF, rotacionados pelo Docker (10 MB × 3) |
 | **Cinco perfis de capacidade** | `--size small`, `medium`, `large`, `xlarge` ou `extended` ajusta sessões, faixa passiva e recursos; o `deploy.sh` confere se o servidor tem a CPU e a memória do perfil |
+
+---
+
+<a name="imagens"></a>
+
+## 📸 Imagens
+
+O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página.
+
+| | |
+|---|---|
+| <a href="doc/imagens/aba-usuarios.png"><img src="doc/imagens/aba-usuarios.png" alt="Aba Usuários do painel, com a lista de usuários do FTP e as ações Trocar senha e Remover" width="100%"></a> | <a href="doc/imagens/aba-seguranca.png"><img src="doc/imagens/aba-seguranca.png" alt="Aba Segurança do painel, com a conferência dos endereços, do TLS e dos certificados" width="100%"></a> |
+| **Usuários** — cria, troca a senha e remove a conta de cada equipamento | **Segurança** — confere rede privada, TLS e a impressão digital dos certificados |
+| <a href="doc/imagens/aba-atividade.png"><img src="doc/imagens/aba-atividade.png" alt="Aba Atividade do painel, com o registro de entradas e de alterações de usuário" width="100%"></a> | |
+| **Atividade** — quem entrou, de onde, e o que foi alterado | |
+
+Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplicação](doc/aplicacao/README.md).
 
 ---
 
@@ -544,7 +565,7 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | `.secrets/` | Senha do usuário inicial e senha do painel (arquivos `.txt` ignorados pelo Git) |
 | [`VERSION`](VERSION) | Versão atual, em um lugar só |
 | [`CHANGELOG.md`](CHANGELOG.md) | Histórico de mudanças por versão |
-| [`doc/`](doc/README.md) | Documentação e diagramas |
+| [`doc/`](doc/README.md) | Documentação, diagramas e fotos da aplicação |
 
 </details>
 
@@ -568,6 +589,7 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [Operação](doc/operacao.md) | Usuários, certificado real, logs e atualização |
 | [Backup e restauração](doc/backup.md) | Cópia de segurança em um comando, restauração e o que guardar à parte |
 | [Painel web](doc/painel.md) | Abrir o painel, abas, usuários, senha, certificado, auditoria e proteções |
+| [Fotos da aplicação](doc/aplicacao/README.md) | Todas as telas do painel, menu por menu, com a explicação de cada uma |
 | [Solução de problemas](doc/solucao-de-problemas.md) | Erros comuns e como diagnosticar |
 
 ---
@@ -584,7 +606,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.7.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**1.0.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

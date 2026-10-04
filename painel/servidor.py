@@ -65,7 +65,7 @@ CABECALHOS = (
                                 "frame-ancestors 'none'; base-uri 'none'"),
     ('X-Frame-Options', 'DENY'),
     ('X-Content-Type-Options', 'nosniff'),
-    ('Referrer-Policy', 'no-referrer'),
+    ('Referrer-Policy', 'same-origin'),
     ('Strict-Transport-Security', 'max-age=31536000'),
     ('Cross-Origin-Opener-Policy', 'same-origin'),
     ('Cross-Origin-Resource-Policy', 'same-origin'),
