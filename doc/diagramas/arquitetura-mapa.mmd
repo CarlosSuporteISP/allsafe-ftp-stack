@@ -1,0 +1,33 @@
+flowchart LR
+    subgraph USO["👤 Quem usa"]
+        operador@{ shape: person, label: "👤 Usuário<br>opera a stack" }
+        equip@{ shape: hex, label: "📡 Equipamento de rede<br>cliente FTP" }
+    end
+    subgraph HOST["🖥️ Host"]
+        scripts@{ shape: console, label: "⌨️ deploy.sh<br>manage-user.sh" }
+        env@{ shape: doc, label: "📄 .env<br>e perfil" }
+        segredo@{ shape: doc, label: "🔑 .secrets<br>ftp_password.txt" }
+    end
+    subgraph CONTAINER["🐳 Container allsafe-ftp · rede allsafe-ftp-network"]
+        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>2121/tcp" }
+        logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
+    end
+    subgraph VOLUMES["💽 Volumes"]
+        vcerts@{ shape: lin-cyl, label: "💽 allsafe-ftp-certs<br>/etc/ssl/private" }
+        vauth@{ shape: cyl, label: "🗄️ allsafe-ftp-auth<br>/auth, PureDB" }
+        vdata@{ shape: lin-cyl, label: "💽 allsafe-ftp-data<br>/data" }
+    end
+    subgraph RESULTADO["🏁 Resultado"]
+        fim@{ shape: stadium, label: "🏁 backup guardado" }
+    end
+
+    operador -- "1 · ./deploy.sh --size small" --> scripts
+    scripts -- "2 · docker compose up -d --build" --> ftp
+    equip -- "3 · FTPS, TCP 21 para 2121" --> ftp
+    ftp -- "4 · grava o arquivo, passivo 30000 a 30049" --> vdata
+    vdata -- "5 · arquivo no volume" --> fim
+    scripts -. "lê" .-> env
+    ftp -. "lê na subida, só leitura" .-> segredo
+    ftp -. "consulta os usuários" .-> vauth
+    ftp -. "lê o certificado" .-> vcerts
+    ftp -. "grava cada transferência" .-> logs

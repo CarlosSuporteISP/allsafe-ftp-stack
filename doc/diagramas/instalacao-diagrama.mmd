@@ -1,0 +1,9 @@
+flowchart LR
+    usuario@{ shape: person, label: "👤 Usuário" }
+    env@{ shape: doc, label: "📄 .env<br>IP, porta e usuário" }
+    deploy@{ shape: console, label: "⌨️ deploy.sh<br>gera a senha e sobe" }
+    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
+    valida@{ shape: console, label: "🧪 validate.sh<br>confere a subida" }
+    fim@{ shape: stadium, label: "🏁 FTP pronto" }
+
+    usuario --> env --> deploy --> ftp --> valida --> fim

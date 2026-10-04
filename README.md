@@ -1,34 +1,56 @@
-<!-- readme-padrao:v1 — ver doc/padrao-readme.md em assistentes-ia -->
 <div align="center">
 
 # 📁 allsafe-ftp-stack
 
 **Servidor FTP dedicado (Pure-FTPd) com usuários virtuais, chroot e FTPS obrigatório para backup de equipamentos.**
 
-![Docker Compose](https://img.shields.io/badge/Docker_Compose-2496ed?logo=docker&logoColor=white)
-![Pure-FTPd](https://img.shields.io/badge/Pure--FTPd-555555)
-![Bash](https://img.shields.io/badge/Bash-4eaa25?logo=gnubash&logoColor=white)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.1.0-blue)
+![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
+![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
+![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
+![Debian](https://img.shields.io/badge/Debian-12_bookworm-a81d33?logo=debian&logoColor=white)
+![Pure-FTPd](https://img.shields.io/badge/Pure--FTPd-1.0.50-555555)
+![OpenSSL](https://img.shields.io/badge/OpenSSL-3.0-721412?logo=openssl&logoColor=white)
+![Bash](https://img.shields.io/badge/Bash-5.2-4eaa25?logo=gnubash&logoColor=white)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="doc/diagramas/visao-geral-diagrama-escuro.svg">
+  <img src="doc/diagramas/visao-geral-diagrama.svg" alt="Visão geral: o equipamento de rede envia o backup ao Pure-FTPd, que confere o usuário no PureDB e grava o arquivo em /data" width="100%">
+</picture>
+
+<sub><b>v0.1.0</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
----
+<sub>📐 Nível 1 · Diagrama · fonte: [visao-geral-diagrama.mmd](doc/diagramas/visao-geral-diagrama.mmd)</sub>
 
-> Servidor **FTP dedicado** (Pure-FTPd) para backup de configuração de
-> equipamentos de rede — usuários virtuais, `chroot` e **FTPS obrigatório**.
-
-Stack de um container só. Usa o banco local **PureDB** em vez de PostgreSQL:
-menos memória, menos superfície de ataque e autenticação sem latência de rede.
-O `root filesystem` é somente leitura, as `capabilities` são mínimas e os
-segredos ficam fora da imagem e do Git.
+**🧭 Sequência:** 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 backup guardado
 
 ---
 
 <details>
 <summary>🧭 Sumário — clique para expandir</summary>
 
-[✨ Destaques](#destaques) · [🚀 Instalação rápida](#instalacao) · [🏗️ Arquitetura](#arquitetura) · [🔌 Portas e binds](#portas) · [🔐 Segurança](#seguranca) · [📊 Perfis de capacidade](#perfis-de-capacidade) · [🗂️ Estrutura de arquivos](#arquivos) · [📚 Documentação completa](#documentacao) · [🔗 Stacks relacionadas](#relacionadas) · [🤝 Créditos](#creditos) · [📄 Licença](#licenca)
+[💡 O que é](#o-que-e) · [✨ Destaques](#destaques) · [🚀 Instalação rápida](#instalacao) · [🔄 Como funciona](#como-funciona) · [🏗️ Arquitetura](#arquitetura) · [🛠️ Tecnologias](#tecnologias) · [🔌 Portas e binds](#portas) · [⚙️ Configuração](#configuracao) · [🔐 Segurança](#seguranca) · [🧪 Testes](#testes) · [🗂️ Estrutura de arquivos](#arquivos) · [📚 Documentação](#documentacao) · [🗺️ Plano](#plano) · [🏷️ Versão](#versao) · [🔗 Projetos relacionados](#relacionados) · [🤝 Créditos](#creditos) · [📄 Licença](#licenca)
 
 </details>
+
+---
+
+<a name="o-que-e"></a>
+
+## 💡 O que é
+
+Um servidor de arquivos para onde roteadores, switches, OLTs e outros equipamentos de rede mandam a cópia de segurança da própria configuração. Cada equipamento entra com usuário e senha, só enxerga a própria pasta e só consegue entrar por conexão criptografada.
+
+É uma stack de **um container só**. Usa o banco local **PureDB** em vez de PostgreSQL: menos memória, menos superfície de ataque e autenticação sem latência de rede. O sistema de arquivos raiz do container é somente leitura, as `capabilities` são mínimas e os segredos ficam fora da imagem e do Git.
+
+| | |
+|---|---|
+| 🎯 **Para quê** | Receber por FTPS o backup de configuração de equipamentos de rede |
+| 🛠️ **Tecnologias** | Docker Compose · Debian 12 · Pure-FTPd · PureDB · OpenSSL · Bash |
+| 🔑 **Acesso** | Cliente FTP com **TLS explícito** (`AUTH TLS`) na porta `21/tcp`, modo passivo `30000-30049/tcp` |
+| ✅ **Requisitos** | Docker Engine com Docker Compose v2 ou mais novo · um IP dedicado · firewall no host |
 
 ---
 
@@ -36,12 +58,15 @@ segredos ficam fora da imagem e do Git.
 
 ## ✨ Destaques
 
-- 🔒 **FTPS explícito obrigatório** (`AUTH TLS`) — sem TLS, sem login.
-- 🧍 **Usuários virtuais** em PureDB — não são contas do sistema; cada um em seu `chroot`.
-- 🚪 **Bind local por padrão** (`127.0.0.1`) — você expõe só um IP dedicado, com ACL no host.
-- 🛡️ **Container endurecido** — `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU/memória/PIDs.
-- 🔑 **Segredos em arquivo** (`.secrets/`), nunca na imagem nem no `compose.yaml`.
-- 📜 **Logs no `stdout`** em formato CLF, rotacionados pelo Docker.
+| | Destaque | Na prática |
+|---|---|---|
+| 🔒 | **FTPS explícito obrigatório** | Sem `AUTH TLS` não há login: usuário e senha nunca passam em texto puro |
+| 🧍 | **Usuários virtuais em PureDB** | Não são contas do sistema; cada um fica preso (`chroot`) na própria pasta |
+| 🚪 | **Bind local por padrão** | Sobe em `127.0.0.1`; você expõe só um IP dedicado, com ACL no host |
+| 🛡️ | **Container endurecido** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs |
+| 🔑 | **Segredos em arquivo** | A senha fica em `.secrets/`, nunca na imagem nem no `compose.yaml` |
+| 📜 | **Logs no `stdout`** | Formato CLF, rotacionados pelo Docker (10 MB × 3) |
+| 🎚️ | **Perfis de capacidade** | `--size small`, `medium` ou `large` ajusta sessões, faixa passiva e recursos |
 
 ---
 
@@ -50,20 +75,19 @@ segredos ficam fora da imagem e do Git.
 ## 🚀 Instalação rápida
 
 ```bash
-cp .env.example .env                                    # 1. configuração base
-$EDITOR .env                                            # 2. ajuste os campos abaixo
-./deploy.sh --size small                                # 3. valida e sobe (perfil small|medium|large)
-./scripts/validate.sh --runtime                         # 4. confere o container no ar
+git clone https://github.com/CarlosSuporteISP/allsafe-ftp-stack.git
+cd allsafe-ftp-stack
+./deploy.sh --size small              # 1ª execução: cria o .env a partir do exemplo e para
+$EDITOR .env                          # ajuste os três campos da tabela abaixo
+./deploy.sh --size small              # valida, gera a senha e sobe a stack
+./scripts/validate.sh --runtime       # confere o container no ar
 ```
 
-O `deploy.sh` **gera uma senha forte** em `.secrets/ftp_password.txt` (`0600`) na
-primeira execução se o arquivo estiver vazio — guarde-a para o cliente FTP. Para
-usar uma senha própria, grave-a nesse arquivo antes de rodar.
+> ⚠️ Hoje a instalação pede **duas execuções** do `deploy.sh`: a primeira só cria o `.env`. A instalação em um único comando está prevista no [plano](#plano).
 
-O `--size` escolhe o dimensionamento (`profiles/<perfil>.env`); o padrão é
-`small`. Detalhe em [`doc/perfis.md`](doc/perfis.md).
+O `deploy.sh` **gera uma senha forte** em `.secrets/ftp_password.txt` (`0600`) se o arquivo estiver vazio: guarde-a para o cliente FTP. Para usar uma senha própria, grave-a nesse arquivo antes de rodar.
 
-Ajuste em [`.env`](.env.example) antes do passo 4:
+Ajuste no `.env` (modelo em [`.env.example`](.env.example)) antes da segunda execução:
 
 | Variável | Troque para |
 |---|---|
@@ -71,7 +95,48 @@ Ajuste em [`.env`](.env.example) antes do passo 4:
 | `FTP_PUBLIC_IP` | o IP que o cliente enxerga (o mesmo, ou o IP público do NAT) |
 | `FTP_CERT_CN` | o hostname (ou IP) que vai no certificado |
 
-Passo a passo comentado em [`doc/instalacao.md`](doc/instalacao.md).
+| Quero | Comando |
+|---|---|
+| Subir com outro porte | `./deploy.sh --size medium` (ou `large`) |
+| Só validar, sem subir nada | `./deploy.sh --size small --check-only` |
+| Criar um usuário | `./manage-user.sh add backup-olt` |
+| Ver o estado | `docker compose ps` |
+| Parar, mantendo os dados | `docker compose down` |
+| Remover tudo, **apagando os dados** | `docker compose down -v` |
+
+Passo a passo comentado em [🚀 doc/instalacao.md](doc/instalacao.md).
+
+---
+
+<a name="como-funciona"></a>
+
+## 🔄 Como funciona
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="doc/diagramas/funcionamento-fluxograma-escuro.svg">
+  <img src="doc/diagramas/funcionamento-fluxograma.svg" alt="Fluxograma de um envio de backup: conexão, exigência de TLS, conferência de usuário e senha no PureDB, sessão em chroot, gravação em /data e recusa quando falta TLS ou a senha não confere" width="100%">
+</picture>
+
+<sub>📐 Nível 2 · Fluxograma · fonte: [funcionamento-fluxograma.mmd](doc/diagramas/funcionamento-fluxograma.mmd)</sub>
+
+| Nº | De ➜ Para | O que acontece |
+|---|---|---|
+| 1 | 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd | O equipamento abre a conexão de controle na porta `21/tcp` do host, entregue ao container em `2121/tcp` |
+| 2 | ⚙️ Pure-FTPd ➜ ❓ pediu TLS? | O servidor só aceita seguir se o cliente pedir `AUTH TLS`; o certificado `pure-ftpd.pem` é apresentado |
+| 3a | ❓ pediu TLS? ➜ ❓ usuário e senha conferem? | ✅ Sim: o cliente envia usuário e senha, já criptografados |
+| 3b | ❓ pediu TLS? ➜ ⛔ conexão recusada | ❌ Não: sessão em texto puro é recusada |
+| 4 | ❓ usuário e senha conferem? ➜ 🗄️ PureDB | A conta é procurada no banco de usuários virtuais (`/auth/pureftpd.pdb`) |
+| 5a | ❓ usuário e senha conferem? ➜ 🔒 sessão em chroot | ✅ Sim: a sessão abre presa na pasta do usuário |
+| 5b | ❓ usuário e senha conferem? ➜ ⛔ conexão recusada | ❌ Não: `530 Login authentication failed` |
+| 6 | 🔒 sessão em chroot ➜ 💽 `/data` | O arquivo sobe pelo canal de dados em modo passivo, portas `30000-30049/tcp` |
+| 7 | 💽 `/data` ➜ 🏁 backup guardado | O arquivo fica gravado na pasta do usuário, dentro do volume |
+
+**🧷 Apoio**
+
+| Quem | Usa | Como |
+|---|---|---|
+| ⚙️ Pure-FTPd | 📄 certificado `pure-ftpd.pem` | apresenta ao cliente na negociação TLS |
+| ⚙️ Pure-FTPd | 📚 log CLF | grava cada transferência no `stdout` do container |
 
 ---
 
@@ -79,22 +144,51 @@ Passo a passo comentado em [`doc/instalacao.md`](doc/instalacao.md).
 
 ## 🏗️ Arquitetura
 
-```text
-cliente FTPS ──▶ FTP_BIND_IP:21  (+ passivo 30000-30049)
-                        │
-                 [ allsafe-ftp ]  container único, Pure-FTPd em :2121
-                        │
-     ┌──────────────────┼───────────────────────┐
- allsafe-ftp-data   allsafe-ftp-auth      allsafe-ftp-certs
- (/data, arquivos)  (/auth, PureDB)       (/etc/ssl/private, .pem)
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="doc/diagramas/arquitetura-mapa-escuro.svg">
+  <img src="doc/diagramas/arquitetura-mapa.svg" alt="Mapa da arquitetura: usuário e scripts no host, container allsafe-ftp na rede allsafe-ftp-network, três volumes e o arquivo de senha montado somente leitura" width="100%">
+</picture>
 
-- **Imagem:** [`Dockerfile`](Dockerfile) — `debian:bookworm-slim` (pinada por
-  digest) + `pure-ftpd`, usuário `ftpdata` uid/gid **10000**.
-- **Entrypoint:** [`scripts/entrypoint.sh`](scripts/entrypoint.sh) — cria/atualiza
-  o usuário inicial, gera o certificado autoassinado na primeira subida e sobe o
-  `pure-ftpd`.
-- Detalhe completo em [`doc/arquitetura.md`](doc/arquitetura.md).
+<sub>📐 Nível 2 · Mapa · fonte: [arquitetura-mapa.mmd](doc/diagramas/arquitetura-mapa.mmd)</sub>
+
+| Nº | De ➜ Para | O que acontece |
+|---|---|---|
+| 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | O usuário executa `./deploy.sh --size small` no host |
+| 2 | ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd | O script valida o Compose e roda `docker compose up -d --build` |
+| 3 | 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
+| 4 | ⚙️ Pure-FTPd ➜ 💽 `allsafe-ftp-data` | O arquivo é gravado pelo canal passivo `30000-30049/tcp` |
+| 5 | 💽 `allsafe-ftp-data` ➜ 🏁 backup guardado | O arquivo fica no volume, na pasta do usuário |
+
+| Peça | Papel | Porta | Dados em |
+|---|---|---|---|
+| ⚙️ Container `allsafe-ftp` (serviço `ftp`) | Pure-FTPd com FTPS, `chroot` e limites | `21/tcp` ➜ `2121/tcp` e `30000-30049/tcp` | — |
+| 🗄️ Volume `allsafe-ftp-auth` | Banco PureDB dos usuários virtuais | — | `/auth` |
+| 💽 Volume `allsafe-ftp-data` | Arquivos enviados, uma pasta por usuário | — | `/data` |
+| 💽 Volume `allsafe-ftp-certs` | Chave e certificado TLS (`pure-ftpd.pem`) | — | `/etc/ssl/private` |
+| 🔑 Bind `./.secrets` | Senha do usuário inicial, somente leitura | — | `/run/.secrets` |
+| 🌐 Rede `allsafe-ftp-network` | Bridge dedicada, sub-rede `172.29.1.0/29` | — | — |
+
+- **Imagem:** [`Dockerfile`](Dockerfile) com `debian:bookworm-slim` fixada por digest, `pure-ftpd` e o usuário `ftpdata` (uid e gid **10000**).
+- **Entrypoint:** [`scripts/entrypoint.sh`](scripts/entrypoint.sh) cria ou atualiza o usuário inicial, gera o certificado autoassinado na primeira subida e executa o `pure-ftpd`.
+
+Detalhe completo, com o modelo da subida, em [🏗️ doc/arquitetura.md](doc/arquitetura.md).
+
+---
+
+<a name="tecnologias"></a>
+
+## 🛠️ Tecnologias
+
+| Tecnologia | Versão | Papel |
+|---|---|---|
+| Docker Engine | 29.8.2 | Executa o container (versão do host onde a stack foi validada) |
+| Docker Compose | 5.5.1 | Sobe o serviço, os volumes e a rede a partir do [`compose.yaml`](compose.yaml) |
+| Debian | 12 (bookworm-slim, fixada por digest) | Imagem base |
+| Pure-FTPd | 1.0.50 (pacote Debian `1.0.50-2.1`) | Servidor FTP com TLS, `chroot` e usuários virtuais |
+| PureDB | embutido no Pure-FTPd 1.0.50 | Banco local dos usuários virtuais |
+| OpenSSL | 3.0 (série do Debian 12) | Gera o certificado autoassinado e fornece o TLS |
+| tini | 0.19.0 (`docker-init` do Docker Engine) | Processo 1 do container (`init: true`) |
+| Bash | 5.2 | Scripts do host e do container |
 
 ---
 
@@ -107,8 +201,23 @@ cliente FTPS ──▶ FTP_BIND_IP:21  (+ passivo 30000-30049)
 | `${FTP_PORT:-21}` | TCP | `${FTP_BIND_IP:-127.0.0.1}` | canal de controle FTP (mapeada para `:2121` no container) |
 | `30000-30049` | TCP | `${FTP_BIND_IP:-127.0.0.1}` | canal de dados em **modo passivo** (50 portas = 50 clientes) |
 
-A faixa passiva é 1:1 entre host e container. Ao mudar `FTP_PASSIVE_PORT_*`,
-alinhe a quantidade de portas ao `FTP_MAX_CLIENTS`.
+A faixa passiva é 1:1 entre host e container. Ao mudar `FTP_PASSIVE_PORT_*`, alinhe a quantidade de portas ao `FTP_MAX_CLIENTS`.
+
+---
+
+<a name="configuracao"></a>
+
+## ⚙️ Configuração
+
+Toda a configuração vem do `.env`, copiado de [`.env.example`](.env.example). O `./deploy.sh --size <perfil>` carrega `profiles/<perfil>.env` **depois** do `.env`, sobrescrevendo só o dimensionamento (limites de sessão, faixa passiva, CPU, memória, PIDs e `nofile`).
+
+| Perfil | Host de referência | Sessões simultâneas | Quando usar |
+|---|---|---|---|
+| [`small`](profiles/small.env) | 2 vCPU · 2 GB | ~50 | padrão: cobre a maioria dos provedores |
+| [`medium`](profiles/medium.env) | 4 vCPU · 4 GB | ~120 | coleta noturna em lote (~50 a 200 equipamentos) |
+| [`large`](profiles/large.env) | 8 vCPU · 8 GB | ~300 | mais de 200 equipamentos ou vários coletores concorrentes |
+
+Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewall do host ao trocar. Todas as variáveis em [⚙️ doc/configuracao.md](doc/configuracao.md); a tabela completa dos perfis em [🎚️ doc/perfis.md](doc/perfis.md).
 
 ---
 
@@ -116,34 +225,26 @@ alinhe a quantidade de portas ao `FTP_MAX_CLIENTS`.
 
 ## 🔐 Segurança
 
-- 🚪 Bind em `127.0.0.1` por padrão — exponha só um IP dedicado e aplique ACL/firewall no host.
-- 🔒 TLS **obrigatório** (`FTP_TLS_MODE=2`), `chroot` em todos, sem usuário anônimo, sem DNS reverso.
-- 🧱 `read_only` no root filesystem, `cap_drop: ALL` (só as estritamente
-  necessárias voltam), `no-new-privileges`, limites de CPU/memória/PIDs e `nofile`.
-- 🔑 Senha via [`.secrets/ftp_password.txt`](doc/segredos.md) (mín. 12
-  caracteres, `0600`), fora da imagem e ignorada pelo Git.
+- 🚪 Bind em `127.0.0.1` por padrão: exponha só um IP dedicado e aplique ACL ou firewall no host.
+- 🔒 TLS **obrigatório** para entrar (`FTP_TLS_MODE=2`), `chroot` em todos, sem usuário anônimo, sem DNS reverso.
+- 🧱 `read_only` no sistema de arquivos raiz, `cap_drop: ALL` (só as estritamente necessárias voltam), `no-new-privileges`, limites de CPU, memória, PIDs e `nofile`.
+- 🔑 Senha em `.secrets/ftp_password.txt` (mínimo de 12 caracteres, `0600`), fora da imagem e ignorada pelo Git. Veja [🔑 doc/segredos.md](doc/segredos.md).
 - 📜 Logs rotacionados (`max-size: 10m`, `max-file: 3`).
 
-Modelo de ameaça e o hardening linha a linha em [`doc/seguranca.md`](doc/seguranca.md).
+Modelo de ameaça e o endurecimento linha a linha em [🔐 doc/seguranca.md](doc/seguranca.md).
 
 ---
 
-<a name="perfis-de-capacidade"></a>
+<a name="testes"></a>
 
-## 📊 Perfis de capacidade
+## 🧪 Testes
 
-`./deploy.sh --size <perfil>` carrega `profiles/<perfil>.env` **depois** do
-`.env`, sobrescrevendo só o dimensionamento (limites de sessão, faixa passiva,
-CPU/memória/PIDs/`nofile`).
+| Quero | Comando | Resultado esperado |
+|---|---|---|
+| Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `compose OK com <perfil>.env` para os três perfis e `Validacao FTP concluida.` |
+| Conferir o container no ar | `./scripts/validate.sh --runtime` | o mesmo, exigindo o serviço `running`, `healthy` e o usuário inicial no PureDB |
 
-| Perfil | Host de referência | Sessões simultâneas | Quando usar |
-|---|---|---|---|
-| [`small`](profiles/small.env) | 2 vCPU · 2 GB | ~50 | padrão — cobre a maioria dos provedores |
-| [`medium`](profiles/medium.env) | 4 vCPU · 4 GB | ~120 | coleta noturna em lote (~50–200 equipamentos) |
-| [`large`](profiles/large.env) | 8 vCPU · 8 GB | ~300 | +200 equipamentos ou vários coletores concorrentes |
-
-Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS` — ajuste o
-firewall do host ao trocar. Tabela completa em [`doc/perfis.md`](doc/perfis.md).
+Os testes automatizados de envio, download, `chroot` e recusa sem TLS ainda não existem: estão previstos no [plano](#plano), onde ficam também os resultados datados.
 
 ---
 
@@ -153,46 +254,69 @@ firewall do host ao trocar. Tabela completa em [`doc/perfis.md`](doc/perfis.md).
 
 | Caminho | O que é |
 |---|---|
-| [`compose.yaml`](compose.yaml) | Definição do serviço, volumes, rede, limites e healthcheck. |
-| [`Dockerfile`](Dockerfile) | Imagem: Debian slim + Pure-FTPd + usuário `ftpdata`. |
-| [`deploy.sh`](deploy.sh) | Valida o `compose` e sobe a stack (`up -d --build`). |
-| [`manage-user.sh`](manage-user.sh) | Atalho do host para `add`/`passwd`/`del`/`list` de usuários. |
-| [`scripts/entrypoint.sh`](scripts/entrypoint.sh) | Provisiona usuário inicial + certificado e executa o `pure-ftpd`. |
-| [`scripts/ftp-user.sh`](scripts/ftp-user.sh) | Gestão de usuários **dentro** do container (chamado pelo `manage-user.sh`). |
-| [`scripts/validate.sh`](scripts/validate.sh) | Checagem de sintaxe/compose (todos os perfis) e, com `--runtime`, do container no ar. |
-| [`profiles/`](profiles/small.env) | Perfis de capacidade (`--size small\|medium\|large`): sessões, faixa passiva e limites de recurso. |
-| [`.env.example`](.env.example) | Modelo de configuração — copie para `.env`. |
-| [`.secrets/`](doc/segredos.md) | Senha do usuário inicial (`.txt` ignorados pelo Git). |
-| [`doc/`](doc/README.md) | Documentação completa. |
+| [`compose.yaml`](compose.yaml) | Definição do serviço, volumes, rede, limites e healthcheck |
+| [`Dockerfile`](Dockerfile) | Imagem: Debian slim, Pure-FTPd e o usuário `ftpdata` |
+| [`deploy.sh`](deploy.sh) | Valida o Compose e sobe a stack (`up -d --build`) |
+| [`manage-user.sh`](manage-user.sh) | Atalho do host para `add`, `passwd`, `del` e `list` de usuários |
+| [`scripts/entrypoint.sh`](scripts/entrypoint.sh) | Prepara o usuário inicial e o certificado e executa o `pure-ftpd` |
+| [`scripts/ftp-user.sh`](scripts/ftp-user.sh) | Gestão de usuários **dentro** do container (chamado pelo `manage-user.sh`) |
+| [`scripts/validate.sh`](scripts/validate.sh) | Checagem de sintaxe e Compose de todos os perfis e, com `--runtime`, do container no ar |
+| [`profiles/`](profiles/) | Perfis de capacidade (`--size small\|medium\|large`) |
+| [`.env.example`](.env.example) | Modelo de configuração, copiado para `.env` |
+| `.secrets/` | Senha do usuário inicial (arquivos `.txt` ignorados pelo Git) |
+| [`VERSION`](VERSION) | Versão atual, em um lugar só |
+| [`CHANGELOG.md`](CHANGELOG.md) | Histórico de mudanças por versão |
+| [`doc/`](doc/README.md) | Documentação, diagramas e plano |
 
 ---
 
 <a name="documentacao"></a>
 
-## 📚 Documentação completa
+## 📚 Documentação
 
 Índice: [📚 doc/README.md](doc/README.md).
 
 | Guia | Assunto |
 |---|---|
-| [`doc/instalacao.md`](doc/instalacao.md) | Pré-requisitos e passo a passo comentado |
-| [`doc/configuracao.md`](doc/configuracao.md) | Todas as variáveis do [`.env`](.env.example) |
-| [`doc/perfis.md`](doc/perfis.md) | Perfis `small`/`medium`/`large`: dimensionamento e faixa passiva |
-| [`doc/arquitetura.md`](doc/arquitetura.md) | Container, entrypoint, volumes e flags do Pure-FTPd |
-| [`doc/seguranca.md`](doc/seguranca.md) | Modelo de ameaça e hardening aplicado |
-| [`doc/scripts.md`](doc/scripts.md) | O que cada script faz, parâmetros e saída esperada |
-| [`doc/operacao.md`](doc/operacao.md) | Usuários, certificado real, backup, logs, atualização |
-| [`doc/solucao-de-problemas.md`](doc/solucao-de-problemas.md) | Erros comuns e como diagnosticar |
+| [🚀 Instalação](doc/instalacao.md) | Pré-requisitos e passo a passo comentado |
+| [⚙️ Configuração](doc/configuracao.md) | Todas as variáveis do `.env` |
+| [🎚️ Perfis](doc/perfis.md) | Perfis `small`, `medium` e `large`: dimensionamento e faixa passiva |
+| [🏗️ Arquitetura](doc/arquitetura.md) | Container, entrypoint, volumes e opções do Pure-FTPd |
+| [🔐 Segurança](doc/seguranca.md) | Modelo de ameaça e endurecimento aplicado |
+| [🔑 Segredos](doc/segredos.md) | O que fica em `.secrets/` e como trocar |
+| [⌨️ Scripts](doc/scripts.md) | O que cada script faz, parâmetros e saída esperada |
+| [🧰 Operação](doc/operacao.md) | Usuários, certificado real, backup, logs e atualização |
+| [🚨 Solução de problemas](doc/solucao-de-problemas.md) | Erros comuns e como diagnosticar |
 
 ---
 
-<a name="relacionadas"></a>
+<a name="plano"></a>
 
-## 🔗 Stacks relacionadas
+## 🗺️ Plano
 
-- `allsafe-sftp-stack` · `allsafe-scp-stack` · `allsafe-tftp-stack` — outros servidores de transferência para backup de equipamentos.
-- `allsafe-zabbix-isp-stack` — monitora o container desta stack.
-- 📦 `dev/README.md` e `dev/install.sh` — no pacote local AllSafe (fora deste repositório) instalam esta stack junto das outras.
+O que já foi feito e o que falta fazer está em [🗺️ doc/planos/README.md](doc/planos/README.md).
+
+**Status:** fases 01 a 03 ✅ concluídas · fases 04 a 07 ⏳ a fazer, aguardando a ordem do usuário.
+
+---
+
+<a name="versao"></a>
+
+## 🏷️ Versão
+
+**0.1.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Ainda não há tag nem release publicada.
+
+---
+
+<a name="relacionados"></a>
+
+## 🔗 Projetos relacionados
+
+| Projeto | Relação |
+|---|---|
+| `allsafe-sftp-stack` · `allsafe-scp-stack` · `allsafe-tftp-stack` | Outros servidores de transferência para backup de equipamentos |
+| `allsafe-zabbix-isp-stack` | Monitora o container desta stack |
+| `allsafe-ntp-nts-stack` | Mantém o relógio do host correto, do qual o certificado TLS depende |
 
 ---
 
@@ -200,33 +324,25 @@ firewall do host ao trocar. Tabela completa em [`doc/perfis.md`](doc/perfis.md).
 
 ## 🤝 Créditos
 
-Os campos marcados são para o Carlos completar (nomes, links e contribuições).
-
-### Pessoas
-
-| Quem | Papel | Perfil / link |
+| Quem | Pelo quê | Link |
 |---|---|---|
-| **Carlos** ([@CarlosSuporteISP](https://github.com/CarlosSuporteISP)) | Idealização, direção e uso | [github.com/CarlosSuporteISP](https://github.com/CarlosSuporteISP) |
-| <!-- CARLOS: contribuição --> | <!-- CARLOS: link --> |
-| <!-- CARLOS: nome --> | <!-- CARLOS: papel --> | <!-- CARLOS: link --> |
+| **Carlos** (@CarlosSuporteISP) | Idealização e direção · projeto inicial, código e Docker (imagem, Compose, scripts e endurecimento), feitos à mão, sem IA | [github.com/CarlosSuporteISP](https://github.com/CarlosSuporteISP) |
+| **Claude** (Claude Code, Anthropic) | Evolução do projeto: melhorias, novas funcionalidades, documentação e plano | [claude.com/claude-code](https://claude.com/claude-code) |
 
-### Inteligências artificiais
+### Projetos oficiais usados
 
-| Quem | Contribuição | Link |
-|---|---|---|
-| **Claude** (Claude Code) — [Anthropic](https://www.anthropic.com) | README e documentação no padrão do Carlos | [claude.com/claude-code](https://claude.com/claude-code) |
-| **ChatGPT / Codex** — [OpenAI](https://openai.com) | <!-- CARLOS: contribuição, se participou --> | [github.com/openai/codex](https://github.com/openai/codex) |
-| <!-- CARLOS: outra IA --> | <!-- CARLOS: contribuição --> | <!-- CARLOS: link --> |
+| Projeto | Uso aqui | Licença | Origem | Fonte |
+|---|---|---|---|---|
+| Pure-FTPd | Servidor FTP e banco PureDB | ISC, permissiva no estilo BSD | [pureftpd.org](https://www.pureftpd.org) | [github.com/jedisct1/pure-ftpd](https://github.com/jedisct1/pure-ftpd) |
+| Debian | Imagem base `debian:bookworm-slim` | Software livre conforme a DFSG; cada pacote mantém a própria licença | [debian.org](https://www.debian.org) | [hub.docker.com/_/debian](https://hub.docker.com/_/debian) |
+| OpenSSL | TLS e geração do certificado | Apache-2.0 | [openssl.org](https://www.openssl.org) | [github.com/openssl/openssl](https://github.com/openssl/openssl) |
+| Docker Engine | Execução do container | Apache-2.0 | [docs.docker.com/engine](https://docs.docker.com/engine/) | [github.com/moby/moby](https://github.com/moby/moby) |
+| Docker Compose | Orquestração do serviço | Apache-2.0 | [docs.docker.com/compose](https://docs.docker.com/compose/) | [github.com/docker/compose](https://github.com/docker/compose) |
 
-### Projetos de terceiros
-
-| Projeto | Uso aqui | Licença / origem |
-|---|---|---|
-| [Pure-FTPd](https://www.pureftpd.org) | Servidor FTP | BSD-style |
+---
 
 <a name="licenca"></a>
 
 ## 📄 Licença
 
-<!-- CARLOS: escolha a licença do repositório. Sem arquivo LICENSE, vale "todos os direitos reservados". -->
 Este repositório **ainda não tem arquivo de licença definido**. Os projetos de terceiros citados mantêm as licenças originais.
