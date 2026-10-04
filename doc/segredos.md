@@ -116,6 +116,7 @@ chmod 600 .secrets/ftp_password.txt
 | `.env` | raiz da stack | `0600`, ignorado pelo Git e pelo build |
 | Chave privada TLS do FTP | pasta `DATA_DIR/certs`, arquivo `pure-ftpd.pem` | `0600`, fora do repositório |
 | Chave privada TLS do painel | pasta `DATA_DIR/painel/tls`, arquivo `painel-key.pem` | `0600`, pasta `0700`, fora do repositório |
+| Cópia da chave TLS do painel, para o nginx | pasta `DATA_DIR/nginx/tls`, arquivo `painel-key.pem` | `0640`, grupo `10001` (o do nginx), pasta `0750`; refeita a cada subida e montada no nginx só para leitura |
 | Registro de auditoria do painel | pasta `DATA_DIR/painel`, arquivo `auditoria.log` | `0600`; não guarda senha, mas mostra nomes de usuário e endereços |
 | Hash das senhas dos usuários | pasta `DATA_DIR/auth`, arquivos `pureftpd.passwd` e `pureftpd.pdb` | `0600`, fora do repositório |
 | Arquivos de backup dos volumes | onde você os guardar | fora da árvore do projeto |

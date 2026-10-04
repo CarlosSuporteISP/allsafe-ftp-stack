@@ -10,11 +10,13 @@ flowchart LR
         segredo@{ shape: doc, label: "🔑 .secrets<br>senha do FTP, hash do painel" }
     end
     subgraph CONTAINERS["🐳 Containers · rede allsafe-ftp-network"]
-        painel@{ shape: rect, label: "🖥️ Painel web<br>allsafe-ftp-painel, 8443/tcp" }
+        nginx@{ shape: rect, label: "🚦 nginx<br>allsafe-ftp-nginx, 8443/tcp" }
+        painel@{ shape: rect, label: "🖥️ Painel web<br>allsafe-ftp-painel, soquete Unix" }
         ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
         logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
     end
     subgraph VOLUMES["💽 Volumes"]
+        vnginx@{ shape: lin-cyl, label: "💽 DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
         vpainel@{ shape: lin-cyl, label: "💽 DATA_DIR/painel<br>/painel, certificado e auditoria" }
         vauth@{ shape: cyl, label: "🗄️ DATA_DIR/auth<br>/auth, PureDB" }
         vcerts@{ shape: lin-cyl, label: "💽 DATA_DIR/certs<br>/etc/ssl/private" }
@@ -26,16 +28,19 @@ flowchart LR
 
     operador -- "1 · ./deploy.sh" --> scripts
     scripts -- "2 · docker compose build e up -d --wait" --> ftp
-    operador -- "3 · HTTPS, TCP 8443" --> painel
-    painel -- "4 · cria, troca a senha ou remove o usuário" --> vauth
-    equip -- "5 · FTPS, TCP 21 para 2121" --> ftp
-    ftp -- "6 · grava o arquivo, passivo 30000 a 30049" --> vdata
-    vdata -- "7 · arquivo no volume" --> fim
+    operador -- "3 · HTTPS, TCP 8443" --> nginx
+    nginx -- "4 · repassa pelo soquete Unix" --> painel
+    painel -- "5 · cria, troca a senha ou remove o usuário" --> vauth
+    equip -- "6 · FTPS, TCP 21 para 2121" --> ftp
+    ftp -- "7 · grava o arquivo, faixa passiva do perfil" --> vdata
+    vdata -- "8 · arquivo no volume" --> fim
     scripts -. "cria, lê e grava o perfil" .-> env
     ftp -. "lê a senha na subida, só leitura" .-> segredo
     painel -. "lê o hash a cada entrada, só leitura" .-> segredo
     ftp -. "consulta os usuários" .-> vauth
     ftp -. "lê o certificado" .-> vcerts
     painel -. "grava certificado e auditoria" .-> vpainel
+    painel -. "cria o soquete e copia o certificado" .-> vnginx
+    nginx -. "lê, só leitura" .-> vnginx
     painel -. "cria a pasta do usuário" .-> vdata
     ftp -. "grava cada transferência" .-> logs

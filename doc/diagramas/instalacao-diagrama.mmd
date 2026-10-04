@@ -2,8 +2,8 @@
 flowchart LR
     usuario@{ shape: person, label: "👤 Usuário" }
     deploy@{ shape: console, label: "⌨️ deploy.sh<br>cria o .env, gera as senhas e sobe" }
-    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
+    stack@{ shape: rect, label: "🐳 Docker Compose<br>FTP, painel e nginx" }
     valida@{ shape: console, label: "🧪 validate.sh<br>confere a subida" }
-    fim@{ shape: stadium, label: "🏁 FTP pronto" }
+    fim@{ shape: stadium, label: "🏁 FTP e painel prontos" }
 
-    usuario --> deploy --> ftp --> valida --> fim
+    usuario --> deploy --> stack --> valida --> fim

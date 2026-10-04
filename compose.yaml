@@ -88,8 +88,9 @@ services:
     networks:
       - ftp
 
-  # Painel web de administração: HTTPS, uma senha, sem socket do Docker. Altera os usuários do FTP
-  # pela pasta auth, que divide com o serviço ftp.
+  # Painel web de administração: uma senha, sem socket do Docker e sem porta de rede. Só o nginx
+  # chega nele, pelo soquete Unix da pasta nginx. Altera os usuários do FTP pela pasta auth, que
+  # divide com o serviço ftp.
   painel:
     image: ${PAINEL_IMAGE:-allsafe-ftp-painel:local}
     build:
@@ -119,8 +120,6 @@ services:
       FTP_TLS_MODE: ${FTP_TLS_MODE:-2}
       FTP_PASSIVE_PORT_START: ${FTP_PASSIVE_PORT_START:-30000}
       FTP_PASSIVE_PORT_END: ${FTP_PASSIVE_PORT_END:-30049}
-    ports:
-      - "${PAINEL_BIND_IP:-127.0.0.1}:${PAINEL_PORT:-8443}:8443/tcp"
     volumes:
       - type: bind
         source: ${DATA_DIR}/dados
@@ -135,6 +134,11 @@ services:
       - type: bind
         source: ${DATA_DIR}/painel
         target: /painel
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${DATA_DIR}/nginx
+        target: /nginx
         bind:
           create_host_path: false
     secrets:
@@ -169,6 +173,64 @@ services:
     labels:
       com.allsafe.product: allsafe-ftp-stack
       com.allsafe.service: painel
+    networks:
+      - ftp
+
+  # Frente web do painel: a única porta publicada dele. Fecha o HTTPS, só atende as redes
+  # permitidas, limita a taxa de pedidos e repassa ao painel pelo soquete Unix. Sem root.
+  nginx:
+    image: ${NGINX_IMAGE:-allsafe-ftp-nginx:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
+    container_name: ${NGINX_CONTAINER_NAME:-allsafe-ftp-nginx}
+    hostname: ${NGINX_CONTAINER_NAME:-allsafe-ftp-nginx}
+    restart: unless-stopped
+    init: true
+    user: "10001:10001"
+    depends_on:
+      painel:
+        condition: service_healthy
+        restart: true
+    environment:
+      TZ: ${TZ:-America/Sao_Paulo}
+      PAINEL_REDES_PERMITIDAS: ${PAINEL_REDES_PERMITIDAS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+    ports:
+      - "${PAINEL_BIND_IP:-127.0.0.1}:${PAINEL_PORT:-8443}:8443/tcp"
+    volumes:
+      - type: bind
+        source: ${DATA_DIR}/nginx
+        target: /nginx
+        read_only: true
+        bind:
+          create_host_path: false
+    read_only: true
+    tmpfs:
+      - /run/nginx:rw,noexec,nosuid,nodev,size=1m,uid=10001,gid=10001,mode=0700
+      - /tmp/nginx:rw,noexec,nosuid,nodev,size=16m,uid=10001,gid=10001,mode=0700
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: ${NGINX_PIDS_LIMIT:-32}
+    mem_limit: ${NGINX_MEMORY_LIMIT:-64M}
+    cpus: ${NGINX_CPU_LIMIT:-0.5}
+    stop_grace_period: 10s
+    healthcheck:
+      test: ["CMD", "/usr/local/sbin/allsafe-nginx-saude"]
+      interval: 20s
+      timeout: 8s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+    labels:
+      com.allsafe.product: allsafe-ftp-stack
+      com.allsafe.service: nginx
     networks:
       - ftp
 

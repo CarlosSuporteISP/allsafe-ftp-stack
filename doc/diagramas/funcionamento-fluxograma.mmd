@@ -23,13 +23,13 @@ flowchart LR
     end
 
     equip -- "1 · conecta, TCP 21" --> ftp
-    ftp -- "2 · exige AUTH TLS" --> tls
+    ftp -- "2 · exige AUTH TLS, no padrão" --> tls
     tls -- "3a · ✅ sim: usuário e senha" --> login
-    tls -- "3b · ❌ não" --> recusa
+    tls -- "3b · ❌ não: recusado no padrão" --> recusa
     login -. "4 · consulta o usuário" .-> puredb
     login -- "5a · ✅ sim: abre a sessão" --> sessao
     login -- "5b · ❌ não" --> recusa
-    sessao -- "6 · envia o arquivo, TCP 30000 a 30049" --> dados
+    sessao -- "6 · envia o arquivo, faixa passiva do perfil" --> dados
     dados -- "7 · arquivo gravado" --> fim
     ftp -. "apresenta" .-> cert
     ftp -. "grava cada transferência" .-> logs

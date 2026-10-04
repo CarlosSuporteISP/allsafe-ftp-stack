@@ -8,6 +8,34 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.5.0] - 2026-10-04
+
+nginx na frente do painel, cinco portes, base Debian 13 e opção de FTP sem TLS para equipamento antigo. **Uso só em rede privada, atrás de firewall.**
+
+### Adicionado
+
+- **nginx na frente do painel:** serviço `nginx` (container `allsafe-ftp-nginx`), a única porta publicada do painel. Fecha o HTTPS (TLS 1.2 e 1.3), recusa quem está fora de `PAINEL_REDES_PERMITIDAS`, limita a taxa de pedidos (20 por segundo, rajada de 40) e as conexões (16) por endereço e o tamanho do pedido (16 KiB). Roda sem root, sem nenhuma capability e com a raiz somente leitura.
+- Portes **`xlarge`** e **`extended`**, em `profiles/xlarge.env` e `profiles/extended.env`: a stack passa a ter cinco perfis (`small`, `medium`, `large`, `xlarge`, `extended`), até 1200 sessões e 1600 portas passivas.
+- **Conferência dos recursos do servidor:** o `deploy.sh` recusa, sem alterar nada, o perfil que pede mais CPU ou memória do que o servidor tem.
+- **`FTP_TLS_MODE=0`, FTP sem TLS, só para equipamento antigo que não fala TLS.** Senhas e arquivos trafegam em texto puro: o `deploy.sh`, o registro do container e o painel (telas Visão geral e Segurança) avisam enquanto o modo `0` ou `1` estiver ligado. O padrão continua `2`, TLS obrigatório no login.
+- Variáveis `NGINX_IMAGE`, `NGINX_CONTAINER_NAME`, `NGINX_MEMORY_LIMIT`, `NGINX_CPU_LIMIT` e `NGINX_PIDS_LIMIT` no `.env.example`; pasta `DATA_DIR/nginx`, criada pelo `deploy.sh`.
+- `scripts/nginx-entrypoint.sh`, `scripts/nginx-saude.sh`, `nginx/nginx.conf.modelo` e as páginas de erro em `nginx/erro/`.
+- Seção sobre o FTP sem TLS em [🔐 Segurança](doc/seguranca.md#ftp-sem-tls), o porquê do nome `FTP_PUBLIC_IP` em [⚙️ Configuração](doc/configuracao.md#ftp-public-ip) e o serviço `nginx` em todos os guias e diagramas.
+
+### Alterado
+
+- **Base Debian 13 (trixie)** nas três imagens, fixada por digest, no lugar do Debian 12: Pure-FTPd 1.0.50-2.2, OpenSSL 3.5, Python 3.13 e nginx 1.26.
+- **O painel não escuta mais em porta de rede:** atende só o nginx, por soquete Unix em `DATA_DIR/nginx`, e recebe dele o endereço do cliente (`X-Real-IP`). O endereço e a porta de acesso continuam os mesmos (`PAINEL_BIND_IP` e `PAINEL_PORT`).
+- O healthcheck do painel passa a ser feito pelo soquete; o do nginx pede `/saude` por TLS e confere os dois de uma vez.
+- O `deploy.sh` espera os **três** containers ficarem `healthy`, com prazo proporcional à faixa passiva (180 s mais um quarto de segundo por porta), e avisa quando a publicação das portas vai demorar.
+- `./deploy.sh --remover --apagar-dados` apaga também a pasta `nginx/` de `DATA_DIR`.
+- O resumo do `deploy.sh` e a tela Visão geral do painel mostram o modo de TLS em uso.
+
+### Atualização e retorno
+
+- **Atualizar da `0.4.0`:** troque os arquivos e rode `./deploy.sh`. Usuários, senhas, dados, certificados e o `.env` são preservados; o container do painel deixa de publicar porta e o nginx assume a mesma.
+- **Voltar para a `0.4.0`:** rode `./deploy.sh --remover` ainda com os arquivos da `0.5.0`, volte os arquivos e rode `./deploy.sh`. Com `FTP_TLS_MODE=0`, troque antes para `1`, `2` ou `3`: a `0.4.0` não aceita o `0`.
+
 ## [0.4.0] - 2026-10-04
 
 ### Adicionado

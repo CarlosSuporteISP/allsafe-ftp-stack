@@ -1,0 +1,113 @@
+# Modelo da configuração do nginx da allsafe-ftp-stack. SÓ PARA REDE PRIVADA, atrás de firewall.
+# O nginx é a única porta publicada do painel: fecha o HTTPS, limita redes e taxa, e repassa o
+# pedido ao painel por soquete Unix. A entrada do container (scripts/nginx-entrypoint.sh) troca a
+# linha que contém só o marcador das redes pelas redes de PAINEL_REDES_PERMITIDAS e grava o resultado em /run/nginx/nginx.conf.
+daemon off;
+pid /run/nginx/nginx.pid;
+error_log stderr warn;
+worker_processes 1;
+
+events {
+    worker_connections 256;
+}
+
+http {
+    server_tokens off;
+
+    # A raiz do container é somente leitura: tudo o que o nginx grava vai para /tmp/nginx (tmpfs).
+    client_body_temp_path /tmp/nginx/corpo;
+    proxy_temp_path /tmp/nginx/proxy;
+    fastcgi_temp_path /tmp/nginx/fastcgi;
+    uwsgi_temp_path /tmp/nginx/uwsgi;
+    scgi_temp_path /tmp/nginx/scgi;
+
+    # Registro: só o que o próprio nginx respondeu sem passar ao painel (rede fora da lista, taxa,
+    # pedido malformado); o que chega ao painel é registrado pelo painel. Sem a parte da consulta
+    # (?...) e sem cabeçalho: nenhuma senha passa por aqui.
+    log_format painel '$remote_addr $request_method $caminho $status';
+    map $request_uri $caminho {
+        "~^(?<trecho>[^?]+)" $trecho;
+        default "-";
+    }
+    map $upstream_status $registrar {
+        "" 1;
+        default 0;
+    }
+    access_log /dev/stdout painel if=$registrar;
+
+    # Limites por endereço do cliente.
+    limit_req_zone $binary_remote_addr zone=pedidos:1m rate=20r/s;
+    limit_conn_zone $binary_remote_addr zone=conexoes:1m;
+    limit_req_status 429;
+    limit_conn_status 429;
+    # A recusa por taxa já sai na linha de registro acima; sem uma segunda linha de erro por pedido.
+    limit_req_log_level notice;
+    limit_conn_log_level notice;
+
+    client_max_body_size 16k;
+    client_header_timeout 15s;
+    client_body_timeout 15s;
+    send_timeout 15s;
+    keepalive_timeout 15s;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:tls:1m;
+    ssl_session_timeout 10m;
+    ssl_session_tickets off;
+
+    server {
+        listen 8443 ssl default_server;
+        server_name _;
+
+        ssl_certificate /nginx/tls/painel-cert.pem;
+        ssl_certificate_key /nginx/tls/painel-key.pem;
+
+        # Só as redes permitidas chegam ao painel; 127.0.0.1 é o healthcheck deste container.
+@REDES@
+        deny all;
+
+        limit_req zone=pedidos burst=40 nodelay;
+        limit_conn conexoes 16;
+
+        # Respostas do próprio nginx: texto curto, sem página padrão, com os cabeçalhos de segurança.
+        error_page 400 404 405 408 411 413 414 431 494 495 496 497 /_erro/pedido.txt;
+        error_page 403 /_erro/rede.txt;
+        error_page 429 /_erro/taxa.txt;
+        error_page 500 502 503 504 /_erro/painel.txt;
+
+        location /_erro/ {
+            internal;
+            allow all;
+            root /usr/share/allsafe-nginx;
+            types { }
+            default_type text/plain;
+            charset utf-8;
+            add_header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'" always;
+            add_header X-Frame-Options DENY always;
+            add_header X-Content-Type-Options nosniff always;
+            add_header Referrer-Policy no-referrer always;
+            add_header Strict-Transport-Security "max-age=31536000" always;
+            add_header Cross-Origin-Opener-Policy same-origin always;
+            add_header Cross-Origin-Resource-Policy same-origin always;
+            add_header Permissions-Policy "camera=(), geolocation=(), microphone=()" always;
+            add_header Cache-Control no-store always;
+        }
+
+        # O painel manda os próprios cabeçalhos de segurança; aqui o nginx só repassa.
+        location / {
+            proxy_pass http://unix:/nginx/painel.sock;
+            proxy_http_version 1.1;
+            proxy_set_header Connection close;
+            proxy_set_header Host $http_host;
+            # Endereço real do cliente: sempre o que o nginx viu, nunca o que o cliente mandou.
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For "";
+            proxy_set_header Forwarded "";
+            proxy_connect_timeout 5s;
+            proxy_send_timeout 15s;
+            proxy_read_timeout 30s;
+        }
+    }
+}

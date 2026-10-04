@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-Esta pasta explica a stack **como ela é hoje**: como instalar, configurar, operar e consertar o servidor FTP que recebe o backup dos equipamentos de rede, e o painel web que administra os usuários dele. Cada guia começa com um resumo para quem nunca viu o projeto e guarda o detalhe técnico em menus recolhidos. O que ainda vai mudar fica no plano, não aqui.
+Esta pasta explica a stack **como ela é hoje**: como instalar, configurar, operar e consertar o servidor FTP que recebe o backup dos equipamentos de rede, o painel web que administra os usuários dele e o nginx, que fica na frente do painel. Cada guia começa com um resumo para quem nunca viu o projeto e guarda o detalhe técnico em menus recolhidos. O que ainda vai mudar fica no plano, não aqui.
 
 <!-- diagrama: diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -44,9 +44,9 @@ flowchart LR
 |---|---|---|
 | 1 | [🚀 Instalação](instalacao.md) | Pré-requisitos, passo a passo comentado, primeira validação e como desfazer |
 | 2 | [⚙️ Configuração](configuracao.md) | Todas as variáveis do `.env`: nome, para que serve, valores válidos e padrão |
-| 3 | [🎚️ Perfis](perfis.md) | Perfis `small`, `medium` e `large`: dimensionamento por porte e impacto na faixa passiva |
+| 3 | [🎚️ Perfis](perfis.md) | Perfis `small`, `medium`, `large`, `xlarge` e `extended`: dimensionamento por porte, o que o servidor precisa ter e o impacto na faixa passiva |
 | 4 | [🏗️ Arquitetura](arquitetura.md) | Containers, imagens, entrypoints, volumes, rede e as opções do `pure-ftpd` |
-| 5 | [🔐 Segurança](seguranca.md) | Rede privada e firewall, modelo de ameaça, superfície exposta, proteções do painel e o endurecimento do Compose linha a linha |
+| 5 | [🔐 Segurança](seguranca.md) | Rede privada e firewall, o modo sem TLS para equipamento antigo, modelo de ameaça, superfície exposta, proteções do painel e do nginx e o endurecimento do Compose linha a linha |
 | 6 | [🔑 Segredos](segredos.md) | O que fica em `.secrets/`, quem gera cada arquivo e como trocar as senhas do FTP e do painel |
 | 7 | [⌨️ Scripts](scripts.md) | O que cada script faz, parâmetros e saída esperada |
 | 8 | [🧰 Operação](operacao.md) | Usuários, certificado real, backup dos volumes, logs e atualização da imagem |
@@ -64,6 +64,7 @@ flowchart LR
 | Primeira vez | [🚀 Instalação](instalacao.md) ➜ [🖥️ Painel web](painel.md) ➜ [⚙️ Configuração](configuracao.md) ➜ [🎚️ Perfis](perfis.md) |
 | Criar a conta de um equipamento | [🖥️ Painel web](painel.md#usuarios) ou [🧰 Operação](operacao.md#usuarios) |
 | Antes de produção | [🧱 Rede privada e firewall](seguranca.md#rede-privada) ➜ [🔐 Segurança](seguranca.md) ➜ [🧰 Operação](operacao.md#certificado-real-de-producao) |
+| Equipamento antigo que não fala TLS | [📟 Equipamento sem TLS](seguranca.md#ftp-sem-tls) ➜ [⚙️ Configuração](configuracao.md#tls) ➜ [🚨 Solução de problemas](solucao-de-problemas.md#ftp-sem-tls) |
 | Algo quebrou | [🚨 Solução de problemas](solucao-de-problemas.md) |
 
 ---
@@ -78,6 +79,7 @@ flowchart LR
 | Usuários virtuais (PureDB) | `DATA_DIR/auth` | `/auth` |
 | Chave e certificado TLS do FTP | `DATA_DIR/certs` | `/etc/ssl/private` |
 | Certificado e auditoria do painel | `DATA_DIR/painel` | `/painel` |
+| Soquete do painel e cópia do certificado, para o nginx (refeitos a cada subida) | `DATA_DIR/nginx` | `/nginx` |
 | Senha do usuário inicial | `.secrets/ftp_password.txt`, na pasta do projeto | `/run/secrets/ftp_password` (somente leitura) |
 | Senha do painel, só o hash | `.secrets/painel_password_hash.txt`, na pasta do projeto | `/run/secrets/painel_password_hash` (somente leitura) |
 | Configuração | `.env`, na pasta do projeto | variáveis de ambiente |

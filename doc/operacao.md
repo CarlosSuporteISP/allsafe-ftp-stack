@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>🧭 Sumário — clique para expandir</summary>
 
-[👤 Usuários](#usuarios) · [🔏 Certificado real de produção](#certificado-real-de-producao) · [♻️ Backup dos volumes](#backup-dos-volumes) · [📜 Logs](#logs) · [⬆️ Atualização da imagem](#atualizacao-da-imagem) · [🔍 Inspeção rápida](#inspecao-rapida) · [⏹️ Parar e remover](#parar-remover)
+[👤 Usuários](#usuarios) · [🔏 Certificado real de produção](#certificado-real-de-producao) · [♻️ Backup dos volumes](#backup-dos-volumes) · [📜 Logs](#logs) · [⬆️ Atualização da imagem](#atualizacao-da-imagem) · [↩️ Voltar de versão](#voltar-de-versao) · [🔍 Inspeção rápida](#inspecao-rapida) · [⏹️ Parar e remover](#parar-remover)
 
 </details>
 
@@ -98,7 +98,7 @@ docker compose restart ftp
 
 ## ♻️ Backup dos dados
 
-Pastas a salvar: `DATA_DIR/dados` (arquivos) e `DATA_DIR/auth` (PureDB). A `DATA_DIR/certs` é reconstruível se você tiver o PEM guardado em outro lugar. A `DATA_DIR/painel` guarda o certificado do painel, que é refeito sozinho, e o `auditoria.log`: para manter o histórico, acrescente `painel` ao fim do comando. A leitura é feita por um container, porque `auth/` pertence ao `root`.
+Pastas a salvar: `DATA_DIR/dados` (arquivos) e `DATA_DIR/auth` (PureDB). A `DATA_DIR/certs` é reconstruível se você tiver o PEM guardado em outro lugar. A `DATA_DIR/painel` guarda o certificado do painel, que é refeito sozinho, e o `auditoria.log`: para manter o histórico, acrescente `painel` ao fim do comando. A `DATA_DIR/nginx` não entra na cópia: o soquete e a cópia do certificado que ficam nela são refeitos a cada subida. A leitura é feita por um container, porque `auth/` pertence ao `root`.
 
 ```bash
 DATA_DIR=/home/carlos/code/data/allsafe-ftp-stack      # o DATA_DIR do seu .env
@@ -161,9 +161,12 @@ Só depois de conferir, e por decisão sua, apague os volumes antigos: `docker v
 docker compose logs -f ftp          # segue o log (acesso em formato CLF e mensagens do entrypoint)
 docker compose logs --since 1h ftp  # última hora
 docker compose logs -f painel       # subida do painel e avisos do servidor web
+docker compose logs -f nginx        # subida do nginx e os pedidos que ele recusou
 ```
 
-**Resultado esperado:** a linha `FTP pronto em 2121/tcp; ...` da subida e uma linha CLF por transferência; no painel, a linha `Painel pronto em 8443/tcp (HTTPS); ...`.
+**Resultado esperado:** a linha `FTP pronto em 2121/tcp; ...` da subida e uma linha CLF por transferência; no painel, a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; ...`; no nginx, `nginx pronto em 8443/tcp (HTTPS), à frente do painel; ...`.
+
+O nginx registra só o que ele mesmo recusa, uma linha por pedido, no formato `ip método caminho código` (exemplo: `10.99.0.7 GET /entrar 403`). Com `FTP_TLS_MODE` em `0` ou `1`, o log do FTP traz a cada subida o `AVISO` de FTP sem criptografia: [🔐 Segurança](seguranca.md#ftp-sem-tls).
 
 O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos) fica no `auditoria.log`, visível na aba `📜 Atividade`: veja [🖥️ Painel web](painel.md#auditoria).
 
@@ -176,7 +179,7 @@ Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](.
 ## ⬆️ Atualização da imagem
 
 ```bash
-./deploy.sh --atualizar            # refaz as duas imagens sem cache e recria os containers (dados preservados)
+./deploy.sh --atualizar            # refaz as três imagens sem cache e recria os containers (dados preservados)
 ./scripts/validate.sh --runtime    # confere 'running' e 'healthy'
 ```
 
@@ -187,7 +190,26 @@ Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](.
 <details>
 <summary>🔬 Detalhe técnico — base fixada por digest</summary>
 
-A base no [`Dockerfile`](../Dockerfile) está **fixada por digest**: um `docker compose build --pull` não troca a base sozinho. Para pegar uma base nova, atualize o digest do `FROM` e rode `./deploy.sh --atualizar`. Enquanto o `Dockerfile` não muda, um `docker compose build` comum reaproveita a camada de instalação dos pacotes; o `--atualizar` usa `build --no-cache`, que refaz essa camada e reinstala os pacotes na versão atual do repositório Debian.
+A base no [`Dockerfile`](../Dockerfile) está **fixada por digest**: um `docker compose build --pull` não troca a base sozinho. Para pegar uma base nova, atualize o digest do `FROM` e rode `./deploy.sh --atualizar`. Enquanto o `Dockerfile` não muda, um `docker compose build` comum reaproveita a camada de instalação dos pacotes; o `--atualizar` usa `build --no-cache`, que refaz essa camada e reinstala os pacotes na versão atual do repositório Debian. As três imagens (FTP, painel e nginx) saem da mesma base, `debian:trixie-slim` (Debian 13).
+
+</details>
+
+<a name="voltar-de-versao"></a>
+
+<details>
+<summary>🔬 Detalhe técnico — voltar para a versão anterior</summary>
+
+Os dados, os usuários, as senhas e os certificados ficam em `DATA_DIR` e em `.secrets/`, fora do código: voltar de versão é trocar os arquivos do projeto e subir de novo. Remova **antes**, ainda com os arquivos da versão atual, porque só ela conhece todos os containers que criou:
+
+```bash
+./deploy.sh --remover      # 1. versão atual: derruba os três containers e a rede; os dados ficam
+git checkout v0.4.0        # 2. volta os arquivos do projeto para a tag da versão anterior
+./deploy.sh                # 3. sobe a versão anterior com os mesmos dados
+```
+
+**Resultado esperado:** os containers da versão anterior em `healthy`, com os mesmos usuários, senhas e certificados.
+
+> ⚠️ `FTP_TLS_MODE=0` só existe a partir da `0.5.0`: antes do passo 3, volte a variável para `1`, `2` ou `3`. As chaves novas do `.env` (as `NGINX_*`) são ignoradas pela versão anterior e podem ficar.
 
 </details>
 
@@ -201,11 +223,12 @@ A base no [`Dockerfile`](../Dockerfile) está **fixada por digest**: um `docker 
 docker compose ps                                   # estado e portas
 docker inspect --format '{{.State.Health.Status}}' allsafe-ftp
 docker inspect --format '{{.State.Health.Status}}' allsafe-ftp-painel
+docker inspect --format '{{.State.Health.Status}}' allsafe-ftp-nginx
 ./manage-user.sh list                               # usuários do PureDB
 docker compose exec ftp pure-pw show transfer -f /auth/pureftpd.passwd
 ```
 
-**Resultado esperado:** os dois containers `running` e `healthy`, a lista de usuários e os dados do usuário `transfer` (pasta, uid e gid; a senha aparece só como hash).
+**Resultado esperado:** os três containers `running` e `healthy`, a lista de usuários e os dados do usuário `transfer` (pasta, uid e gid; a senha aparece só como hash).
 
 ---
 
@@ -219,7 +242,7 @@ docker compose stop                       # para sem remover
 ./deploy.sh --remover --apagar-dados      # remove e apaga as pastas de DATA_DIR (pede para digitar "apagar")
 ```
 
-**Resultado esperado:** `docker compose ps` vazio. As pastas `dados/`, `auth/`, `certs/` e `painel/` de `DATA_DIR` e os segredos continuam no host; apagar os dados é uma decisão à parte, só com `--apagar-dados`.
+**Resultado esperado:** `docker compose ps` vazio. As pastas `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` de `DATA_DIR` e os segredos continuam no host; apagar os dados é uma decisão à parte, só com `--apagar-dados`.
 
 > ⚠️ Os dados ficam em pastas do host: nem o `docker compose down -v` os apaga. O `--apagar-dados` **não tem volta**: faça o [backup](#backup-dos-volumes) antes. Sem terminal (em script), ele só roda com `--sim`. Os segredos e o `.env` não são apagados.
 

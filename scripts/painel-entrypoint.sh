@@ -33,6 +33,7 @@ if [[ "$PAINEL_CERT_CN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 
 [[ -d /auth && -d /data ]] || die "pastas /auth e /data ausentes: o painel usa as mesmas do serviço ftp"
+[[ -d /nginx ]] || die "pasta /nginx ausente: é por ela que o nginx alcança o painel (rode ./deploy.sh)"
 
 # /painel vem do host por bind mount: dono e modo são normalizados a cada subida.
 chown root:root /painel
@@ -74,5 +75,16 @@ if [[ "$gerar" == true ]]; then
 fi
 chmod 0600 "$chave"
 chmod 0644 "$certificado"
+
+# /nginx é a pasta que o painel divide com o nginx (uid e gid 10001, sem root): nela ficam o soquete
+# Unix do painel e a cópia do certificado. Só o root e o grupo do nginx entram; o nginx monta a pasta
+# somente para leitura. A cópia é refeita a cada subida, para acompanhar o certificado em /painel/tls.
+gid_nginx=10001
+chown root:"$gid_nginx" /nginx
+chmod 0750 /nginx
+install -d -o root -g "$gid_nginx" -m 0750 /nginx/tls
+install -o root -g "$gid_nginx" -m 0644 "$certificado" /nginx/tls/painel-cert.pem
+install -o root -g "$gid_nginx" -m 0640 "$chave" /nginx/tls/painel-key.pem
+rm -f /nginx/painel.sock
 
 exec python3 /opt/painel/servidor.py

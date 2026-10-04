@@ -27,7 +27,7 @@ exigir_ip_privado FTP_PUBLIC_IP "$FTP_PUBLIC_IP" || exit 1
 [[ ${#password} -ge 12 ]] || die "a senha FTP deve ter pelo menos 12 caracteres"
 [[ "$FTP_PASSIVE_PORT_START" =~ ^[0-9]+$ && "$FTP_PASSIVE_PORT_END" =~ ^[0-9]+$ ]] || die "faixa passiva invalida"
 (( FTP_PASSIVE_PORT_START >= 1024 && FTP_PASSIVE_PORT_END <= 65535 && FTP_PASSIVE_PORT_START <= FTP_PASSIVE_PORT_END )) || die "faixa passiva fora dos limites"
-[[ "$FTP_TLS_MODE" =~ ^[123]$ ]] || die "FTP_TLS_MODE deve ser 1, 2 ou 3"
+[[ "$FTP_TLS_MODE" =~ ^[0123]$ ]] || die "FTP_TLS_MODE deve ser 0, 1, 2 ou 3"
 
 # As pastas vêm do host por bind mount: o dono e o modo são normalizados a cada subida.
 chown root:root /data /auth /etc/ssl/private
@@ -70,6 +70,11 @@ openssl x509 -in "$certificate" -out /auth/ftp-cert.pem
 chmod 0644 /auth/ftp-cert.pem
 
 unset password
+# 0 e 1 existem para equipamento antigo sem suporte a TLS: o aviso fica no registro a cada subida.
+case "$FTP_TLS_MODE" in
+  0) echo "AVISO: FTP_TLS_MODE=0, FTP sem TLS: senhas e arquivos trafegam em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada." >&2 ;;
+  1) echo "AVISO: FTP_TLS_MODE=1, TLS opcional: quem entra sem TLS manda senha e arquivos em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada." >&2 ;;
+esac
 echo "FTP pronto em 2121/tcp; TLS=${FTP_TLS_MODE}; passivo=${FTP_PASSIVE_PORT_START}-${FTP_PASSIVE_PORT_END}"
 exec /usr/sbin/pure-ftpd \
   -A -E -H -j -R \

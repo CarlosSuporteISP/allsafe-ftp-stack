@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Painel web da allsafe-ftp-stack. SÓ PARA REDE PRIVADA, atrás de firewall.
 
-HTTPS obrigatório, uma senha de administrador conferida contra hash scrypt, sessão em cookie
-__Host-, token CSRF em todo envio e nenhuma dependência fora da biblioteca padrão do Python.
+O navegador fala HTTPS com o nginx, que é a única porta publicada; o painel não escuta na rede:
+atende só o soquete Unix que o nginx abre e recebe dele o endereço real do cliente. Uma senha de
+administrador conferida contra hash scrypt, sessão em cookie __Host-, token CSRF em todo envio e
+nenhuma dependência fora da biblioteca padrão do Python.
 Não usa JavaScript nem o socket do Docker: os usuários do FTP são alterados pelo mesmo
 allsafe-ftp-user do serviço ftp, na pasta /auth que os dois containers compartilham.
 
 Modos: sem argumento, sobe o servidor; --hash lê uma senha da entrada padrão e imprime o hash;
---saude confere /saude e sai com 0 ou 1 (healthcheck do container).
+--saude confere /saude pelo soquete e sai com 0 ou 1 (healthcheck do container).
 """
 import base64
 import datetime
@@ -21,19 +23,19 @@ import re
 import secrets
 import shutil
 import socket
-import ssl
+import socketserver
 import subprocess
 import sys
 import threading
 import time
 import urllib.parse
-import urllib.request
 
-PORTA = 8443
+# Soquete Unix na pasta que o painel divide com o nginx; o grupo é o do nginx (alvo `nginx` do Dockerfile).
+ARQ_SOQUETE = '/nginx/painel.sock'
+GID_NGINX = 10001
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 ARQ_HASH = '/run/secrets/painel_password_hash'
 ARQ_CERT = '/painel/tls/painel-cert.pem'
-ARQ_CHAVE = '/painel/tls/painel-key.pem'
 ARQ_AUDITORIA = '/painel/auditoria.log'
 ARQ_USUARIOS = '/auth/pureftpd.passwd'
 ARQ_CERT_FTP = '/auth/ftp-cert.pem'
@@ -452,6 +454,19 @@ def quando(instante):
     return time.strftime('%d/%m/%Y %H:%M', time.localtime(instante)) if instante else '—'
 
 
+def alerta_tls():
+    """Aviso das telas enquanto o FTP aceita sessão sem criptografia (FTP_TLS_MODE 0 ou 1)."""
+    resto = ('Use só para equipamento antigo sem suporte a TLS, em rede interna isolada, e volte para '
+             '<code>FTP_TLS_MODE=2</code> assim que puder.</p>')
+    if CFG['ftp_tls'] == '0':
+        return ('<p class="aviso" role="alert">⚠️ O FTP está <strong>sem TLS</strong> (<code>FTP_TLS_MODE=0</code>): '
+                'senhas e arquivos trafegam em texto puro e podem ser lidos por quem estiver na mesma rede. ' + resto)
+    if CFG['ftp_tls'] == '1':
+        return ('<p class="aviso" role="alert">⚠️ O TLS do FTP está <strong>opcional</strong> (<code>FTP_TLS_MODE=1</code>): '
+                'quem entra sem TLS manda senha e arquivos em texto puro. ' + resto)
+    return ''
+
+
 def validade(info):
     dias = dias_restantes(info)
     if dias is None:
@@ -462,16 +477,26 @@ def validade(info):
     return ('⚠️' if dias < 30 else '✅'), f'válido até {data} ({dias} dias)'
 
 
-# ---------------------------------------------------------------- servidor HTTPS
+# ---------------------------------------------------------------- servidor atrás do nginx
 
-class Servidor(http.server.ThreadingHTTPServer):
+class Servidor(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
+    """HTTP em soquete Unix: quem fecha o TLS e fala com a rede é o nginx."""
     daemon_threads = True
     request_queue_size = CONEXOES_MAX
-    allow_reuse_address = True
 
-    def __init__(self, endereco, tratador, contexto):
-        super().__init__(endereco, tratador)
-        self.contexto = contexto
+    def __init__(self, caminho, tratador):
+        try:
+            os.unlink(caminho)
+        except FileNotFoundError:
+            pass
+        # O soquete nasce fechado e só então é aberto para o grupo do nginx: ninguém mais conecta.
+        antiga = os.umask(0o177)
+        try:
+            super().__init__(caminho, tratador)
+        finally:
+            os.umask(antiga)
+        os.chown(caminho, 0, GID_NGINX)
+        os.chmod(caminho, 0o660)
         self.vagas = threading.BoundedSemaphore(CONEXOES_MAX)
 
     def process_request(self, request, client_address):
@@ -485,23 +510,15 @@ class Servidor(http.server.ThreadingHTTPServer):
             raise
 
     def process_request_thread(self, request, client_address):
-        # O aperto de mão TLS acontece aqui, na thread da conexão, com tempo limite:
-        # um cliente lento ou que fala HTTP puro não segura o laço que aceita conexões.
         try:
-            try:
-                request.settimeout(TEMPO_CONEXAO)
-                request = self.contexto.wrap_socket(request, server_side=True)
-            except (OSError, ssl.SSLError):
-                self.shutdown_request(request)
-                return
             super().process_request_thread(request, client_address)
         finally:
             self.vagas.release()
 
     def handle_error(self, request, client_address):
         erro = sys.exc_info()[1]
-        if not isinstance(erro, (OSError, ssl.SSLError)):
-            print(f'erro ao atender {client_address[0]}: {type(erro).__name__}', file=sys.stderr, flush=True)
+        if not isinstance(erro, OSError):
+            print(f'erro ao atender um pedido: {type(erro).__name__}', file=sys.stderr, flush=True)
 
 
 class Painel(http.server.BaseHTTPRequestHandler):
@@ -611,13 +628,22 @@ class Painel(http.server.BaseHTTPRequestHandler):
     # ------------------------------------------------------------ roteamento
 
     def tratar(self, metodo):
-        self.ip = self.client_address[0]
         url = urllib.parse.urlsplit(self.path)
         self.caminho = url.path
         try:
             consulta = {n: v[0] for n, v in urllib.parse.parse_qs(url.query, max_num_fields=5).items()}
         except ValueError:
             consulta = {}
+
+        # O endereço do cliente é o que o nginx viu: ele sempre sobrescreve X-Real-IP. Pedido sem o
+        # cabeçalho, com mais de um ou com valor que não é IP não veio pelo nginx e é recusado.
+        enderecos = self.headers.get_all('X-Real-IP') or []
+        self.ip = enderecos[0].strip() if len(enderecos) == 1 else ''
+        try:
+            ipaddress.ip_address(self.ip)
+        except ValueError:
+            self.ip = '-'
+            return self.enviar(400, 'pedido sem o endereço do cliente\n', 'text/plain; charset=utf-8')
 
         if not self.rede_permitida():
             auditar(self.ip, 'recusa_rede')
@@ -715,8 +741,13 @@ class Painel(http.server.BaseHTTPRequestHandler):
             livre = tamanho(shutil.disk_usage(PASTA_DADOS).free) + ' livres no disco'
         except OSError:
             livre = ''
-        tls = {'1': 'TLS opcional', '2': 'TLS obrigatório no login', '3': 'TLS obrigatório no login e nos dados'}
+        tls = {'0': '⚠️ Sem TLS: texto puro', '1': '⚠️ TLS opcional: aceita texto puro',
+               '2': 'TLS obrigatório no login', '3': 'TLS obrigatório no login e nos dados'}
+        protocolo = {'0': 'FTP sem TLS (texto puro), modo passivo',
+                     '1': 'FTPS explícito (FTP com TLS) ou, só para equipamento sem TLS, FTP em texto puro; modo passivo',
+                     '3': 'FTPS explícito (FTP com TLS), também no canal de dados; modo passivo'}
         self.enviar(200, pagina('Visão geral', f'''<h1>📊 Visão geral</h1>
+{alerta_tls()}
 <div class="grade">
 <section class="cartao"><h2>⚙️ Servidor FTP</h2><p class="numero {'bom' if no_ar else 'ruim'}">{'🟢 No ar' if no_ar else '🔴 Fora do ar'}</p>
 <p class="suave">{e(tls.get(CFG['ftp_tls'], 'modo TLS ' + CFG['ftp_tls']))}</p></section>
@@ -730,7 +761,7 @@ class Painel(http.server.BaseHTTPRequestHandler):
 <tr><th scope="row">Servidor</th><td><code>{e(CFG['ftp_anunciado'])}</code></td></tr>
 <tr><th scope="row">Porta de controle</th><td><code>{e(CFG['ftp_porta'])}</code>/tcp</td></tr>
 <tr><th scope="row">Portas passivas</th><td><code>{e(CFG['ftp_passiva'])}</code>/tcp</td></tr>
-<tr><th scope="row">Protocolo</th><td>FTPS explícito (FTP com TLS), modo passivo</td></tr>
+<tr><th scope="row">Protocolo</th><td>{e(protocolo.get(CFG['ftp_tls'], 'FTPS explícito (FTP com TLS), modo passivo'))}</td></tr>
 <tr><th scope="row">Usuário e senha</th><td>um usuário por equipamento ou por grupo, criado em <a href="/usuarios">👥 Usuários</a></td></tr>
 </tbody></table></section>''', sessao, '/'))
 
@@ -894,7 +925,9 @@ continuam em <code>{e(CFG['pasta_host'])}/{e(nome)}</code>.</p>
         return self.redirecionar('/usuarios?m=removido')
 
     def seguranca(self, sessao, consulta, formulario, token):
-        tls = {'1': ('⚠️', 'opcional: aceita login sem criptografia. Use só com equipamento legado.'),
+        tls = {'0': ('⚠️', '<strong>desligado</strong>: senhas e arquivos trafegam em texto puro. Só para equipamento '
+                     'sem suporte a TLS, em rede interna isolada.'),
+               '1': ('⚠️', 'opcional: aceita login sem criptografia. Use só com equipamento legado.'),
                '2': ('✅', 'obrigatório no login; os dados seguem o que o cliente pedir.'),
                '3': ('✅', 'obrigatório no login e nos dados.')}
         marca_tls, texto_tls = tls.get(CFG['ftp_tls'], ('⚠️', 'modo desconhecido'))
@@ -918,9 +951,11 @@ continuam em <code>{e(CFG['pasta_host'])}/{e(nome)}</code>.</p>
                   f'<code class="digital">{e(cert_ftp["digital"] if cert_ftp else "—")}</code>'),
             linha('✅', 'Endereço do painel', f'<code>{e(CFG["painel_bind"])}:{e(CFG["painel_porta"])}</code> — só HTTPS, '
                   f'{local(CFG["painel_bind"])}.'),
+            linha('✅', 'Frente web', 'O navegador fala com o nginx, a única porta publicada do painel: ele fecha o HTTPS, '
+                  'limita redes e taxa de pedidos e repassa por soquete Unix. O painel não escuta em porta de rede.'),
             linha(marca_painel, 'Certificado do painel', f'{e(validade_painel)}<br><span class="suave">SHA-256</span> '
                   f'<code class="digital">{e(cert_painel["digital"] if cert_painel else "—")}</code>'),
-            linha('✅', 'Quem pode abrir o painel', f'Clientes de <code>{e(redes)}</code>; os demais são recusados antes de qualquer tela.'),
+            linha('✅', 'Quem pode abrir o painel', f'Clientes de <code>{e(redes)}</code>; os demais são recusados pelo nginx, antes de chegar ao painel.'),
             linha('✅', 'Sessão', f'Encerra com {CFG["inatividade"] // 60} minutos sem uso e, de qualquer forma, em 8 horas. '
                   f'{FALHAS_MAX} senhas erradas bloqueiam o endereço por 15 minutos.'),
             linha('✅' if somente_leitura else '⚠️', 'Container do painel',
@@ -932,6 +967,7 @@ continuam em <code>{e(CFG['pasta_host'])}/{e(nome)}</code>.</p>
         ]
         self.enviar(200, pagina('Segurança', f'''<h1>🔐 Segurança</h1>
 <p class="aviso">🧱 Esta stack é só para rede privada, atrás de firewall. FTP e painel recusam, por código, escutar em IP público.</p>
+{alerta_tls()}
 <section class="cartao"><div class="rolagem"><table class="conferencia"><tbody>{''.join(itens)}</tbody></table></div></section>
 <p class="suave">Confira a impressão digital com a que o navegador e o cliente FTP mostram antes de aceitar o certificado.</p>''',
                                 sessao, '/seguranca'))
@@ -1014,12 +1050,23 @@ def modo_hash():
 
 
 def modo_saude():
-    contexto = ssl.create_default_context(cafile=ARQ_CERT)
+    """Pede /saude pelo soquete, como o nginx faria a partir do próprio host."""
+    pedido = b'GET /saude HTTP/1.1\r\nHost: localhost\r\nX-Real-IP: 127.0.0.1\r\nConnection: close\r\n\r\n'
+    resposta = b''
     try:
-        with urllib.request.urlopen(f'https://localhost:{PORTA}/saude', context=contexto, timeout=4) as resposta:
-            sys.exit(0 if resposta.status == 200 and resposta.read().strip() == b'ok' else 1)
-    except (OSError, ValueError):
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as conexao:
+            conexao.settimeout(4)
+            conexao.connect(ARQ_SOQUETE)
+            conexao.sendall(pedido)
+            while len(resposta) < 8192:
+                parte = conexao.recv(4096)
+                if not parte:
+                    break
+                resposta += parte
+    except OSError:
         sys.exit(1)
+    cabecalho, _, corpo = resposta.partition(b'\r\n\r\n')
+    sys.exit(0 if cabecalho.startswith(b'HTTP/1.1 200 ') and corpo.strip() == b'ok' else 1)
 
 
 def principal():
@@ -1033,12 +1080,9 @@ def principal():
         falha(f'{ARQ_HASH} ausente ou inválido: rode ./deploy.sh ou scripts/painel-senha.sh')
     with open(os.path.join(RAIZ, 'estilo.css'), encoding='utf-8') as arq:
         ESTILO = arq.read()
-    contexto = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    contexto.minimum_version = ssl.TLSVersion.TLSv1_2
-    contexto.load_cert_chain(ARQ_CERT, ARQ_CHAVE)
-    servidor = Servidor(('0.0.0.0', PORTA), Painel, contexto)
+    servidor = Servidor(ARQ_SOQUETE, Painel)
     auditar('-', 'painel_iniciado', f'versao={limpo(CFG["versao"])}')
-    print(f'Painel pronto em {PORTA}/tcp (HTTPS); sessão de {CFG["inatividade"] // 60} min; '
+    print(f'Painel pronto no soquete {ARQ_SOQUETE}, atrás do nginx; sessão de {CFG["inatividade"] // 60} min; '
           f'redes permitidas: {", ".join(str(r) for r in CFG["redes"])}', flush=True)
     servidor.serve_forever()
 

@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-A stack tem cinco scripts. Três você roda no host: um sobe o servidor, outro cuida dos usuários e o terceiro confere se está tudo certo. Os outros dois ficam dentro do container e são chamados pelos primeiros; você não os executa direto.
+Os scripts da stack são de dois tipos. Quatro você roda no host: um sobe o servidor, outro cuida dos usuários, outro troca a senha do painel e o último confere se está tudo certo. Os demais ficam dentro dos containers do FTP, do painel e do nginx e são chamados sozinhos; você não os executa direto.
 
 <!-- diagrama: diagramas/scripts-diagrama.mmd -->
 ```mermaid
@@ -13,7 +13,7 @@ flowchart LR
     usuario@{ shape: person, label: "👤 Usuário" }
     host@{ shape: console, label: "⌨️ deploy.sh, manage-user.sh<br>e validate.sh, no host" }
     compose@{ shape: rect, label: "🐳 Docker Compose" }
-    interno@{ shape: console, label: "⌨️ entrypoint e allsafe-ftp-user<br>dentro do container" }
+    interno@{ shape: console, label: "⌨️ entrypoints e allsafe-ftp-user<br>dentro dos containers" }
     ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
     fim@{ shape: stadium, label: "🏁 serviço operando" }
 
@@ -22,14 +22,14 @@ flowchart LR
 
 <sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 👤 Usuário ➜ ⌨️ scripts do host (`deploy.sh`, `manage-user.sh`, `validate.sh`) ➜ 🐳 Docker Compose ➜ ⌨️ entrypoint e `allsafe-ftp-user` ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 serviço operando
+**🧭 Sequência:** 👤 Usuário ➜ ⌨️ scripts do host (`deploy.sh`, `manage-user.sh`, `validate.sh`) ➜ 🐳 Docker Compose ➜ ⌨️ entrypoints e `allsafe-ftp-user` (nos containers) ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 serviço operando
 
 ---
 
 <details>
 <summary>🧭 Sumário — clique para expandir</summary>
 
-[📋 Visão geral](#visao-geral) · [🚀 `deploy.sh`](#deploy) · [👤 `manage-user.sh`](#manage-user) · [🔑 `scripts/painel-senha.sh`](#painel-senha) · [🧪 `scripts/validate.sh`](#validate) · [⚙️ `scripts/entrypoint.sh`](#entrypoint) · [🖥️ `scripts/painel-entrypoint.sh`](#painel-entrypoint) · [👥 `scripts/ftp-user.sh`](#ftp-user) · [🧩 Scripts de apoio](#apoio)
+[📋 Visão geral](#visao-geral) · [🚀 `deploy.sh`](#deploy) · [👤 `manage-user.sh`](#manage-user) · [🔑 `scripts/painel-senha.sh`](#painel-senha) · [🧪 `scripts/validate.sh`](#validate) · [⚙️ `scripts/entrypoint.sh`](#entrypoint) · [🖥️ `scripts/painel-entrypoint.sh`](#painel-entrypoint) · [🚦 `scripts/nginx-entrypoint.sh`](#nginx-entrypoint) · [🩺 `scripts/nginx-saude.sh`](#nginx-saude) · [👥 `scripts/ftp-user.sh`](#ftp-user) · [🧩 Scripts de apoio](#apoio)
 
 </details>
 
@@ -46,8 +46,10 @@ flowchart LR
 | [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | host | Troca a senha do painel, gravando só o hash |
 | [`scripts/validate.sh`](../scripts/validate.sh) | host | Checagem de sintaxe, do Compose de todos os perfis e, opcionalmente, do container no ar |
 | [`scripts/entrypoint.sh`](../scripts/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado e executa o `pure-ftpd` |
-| [`scripts/painel-entrypoint.sh`](../scripts/painel-entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel e executa o servidor web |
-| [`scripts/ftp-user.sh`](../scripts/ftp-user.sh) | os dois containers | Gestão de usuários no PureDB, chamada pelo `manage-user.sh` e pelo painel |
+| [`scripts/painel-entrypoint.sh`](../scripts/painel-entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel, entrega a cópia dele ao nginx e executa o painel |
+| [`scripts/nginx-entrypoint.sh`](../scripts/nginx-entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
+| [`scripts/nginx-saude.sh`](../scripts/nginx-saude.sh) | container do nginx | Healthcheck: pede `/saude` ao painel passando pelo nginx |
+| [`scripts/ftp-user.sh`](../scripts/ftp-user.sh) | containers do FTP e do painel | Gestão de usuários no PureDB, chamada pelo `manage-user.sh` e pelo painel |
 | [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | host e containers | Funções que conferem se um IP ou uma rede é privado; carregado pelos outros scripts |
 | [`scripts/ambiente.sh`](../scripts/ambiente.sh) | host | Função que lê uma chave do `.env` sem executar o arquivo; carregado pelos outros scripts |
 
@@ -60,28 +62,30 @@ Os scripts da pasta [`scripts/`](../scripts/) que rodam em container são copiad
 ## 🚀 `deploy.sh`
 
 ```bash
-./deploy.sh [--size small|medium|large] [--atualizar] [--check-only]
+./deploy.sh [--size small|medium|large|xlarge|extended] [--atualizar] [--check-only]
 ./deploy.sh --remover [--apagar-dados [--sim]]
 ```
 
 | Parâmetro | Efeito |
 |---|---|
 | sem opção | Instala ou reaplica: cria o `.env`, as pastas e as senhas que faltarem, sobe os containers e espera ficarem `healthy` |
-| `--size` | Grava no `.env` os limites de `profiles/<perfil>.env` e o nome em `FTP_PROFILE`. Sem a opção, o `.env` fica como está |
-| `--atualizar` | Reconstrói as duas imagens sem cache, com os pacotes atuais do Debian, e recria os containers |
-| `--check-only` | Só valida o perfil, a rede privada e o Compose; não cria nem sobe nada |
+| `--size` | Grava no `.env` os limites de `profiles/<perfil>.env` e o nome em `FTP_PROFILE`, depois de conferir que o servidor aguenta o perfil. Sem a opção, o `.env` fica como está |
+| `--atualizar` | Reconstrói as três imagens sem cache, com os pacotes atuais do Debian, e recria os containers |
+| `--check-only` | Só valida o perfil, a rede privada, os recursos do servidor e o Compose; não cria nem sobe nada |
 | `--remover` | Derruba os containers e a rede; dados, segredos, `.env` e imagens ficam |
-| `--apagar-dados` | Com `--remover`: apaga também `dados/`, `auth/`, `certs/` e `painel/` de `DATA_DIR`, depois de pedir para digitar `apagar` |
+| `--apagar-dados` | Com `--remover`: apaga também `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` de `DATA_DIR`, depois de pedir para digitar `apagar` |
 | `--sim` | Com `--apagar-dados`: dispensa a confirmação (obrigatório quando não há terminal) |
 | `-h`, `--help` | Mostra o uso |
 
-**Resultado esperado:** o comando só termina com `allsafe-ftp` e `allsafe-ftp-painel` em `healthy` e fecha com `Pronto: FTP e painel no ar (healthy), perfil '<perfil>'.`, os endereços do FTP e do painel e o arquivo onde está cada senha (a senha em si nunca aparece). Com `--remover`: `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` Com `--check-only`: `OK: perfil '<perfil>', rede privada e compose validados; nada foi alterado.`
+**Resultado esperado:** o comando só termina com `allsafe-ftp`, `allsafe-ftp-painel` e `allsafe-ftp-nginx` em `healthy` e fecha com `Pronto: FTP, painel e nginx no ar (healthy), perfil '<perfil>'.`, os endereços do FTP e do painel, o modo de TLS do FTP e o arquivo onde está cada senha (a senha em si nunca aparece). Com `FTP_TLS_MODE` em `0` ou `1`, a última coisa na tela é o `AVISO` de FTP sem criptografia: [🔐 Segurança](seguranca.md#ftp-sem-tls). Com `--remover`: `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` Com `--check-only`: `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.`
 
 <details>
 <summary>🔬 Detalhe técnico — comportamento e códigos de saída</summary>
 
 - **Não faz pergunta.** A única confirmação é a do `--apagar-dados`, dispensada com `--sim`.
 - **Requisitos conferidos antes de agir:** `docker`, o plugin `docker compose`, o serviço do Docker respondendo e as portas livres (a do FTP, a do painel e a faixa passiva, no endereço de bind). As portas que a própria stack já publica não contam. Falhou: `ERRO: ...` e código `1`, sem subir nada.
+- **Recursos do servidor conferidos antes de gravar:** se o servidor tem menos CPUs que `FTP_CPU_LIMIT` ou menos memória que `FTP_MEMORY_LIMIT`, para com `ERRO: o perfil '<perfil>' pede ... e este servidor tem ...` e código `1`, sem criar nem regravar o `.env` e sem tocar nos containers: [🎚️ Perfis](perfis.md#o-servidor-aguenta).
+- **`FTP_TLS_MODE` conferido antes de agir:** valor fora de `0` a `3` para com `ERRO: FTP_TLS_MODE deve ser 0 (sem TLS), 1 (opcional), 2 (obrigatório no login) ou 3 (obrigatório no login e nos dados)` e código `1`. Em `0` e `1` o deploy segue e avisa no fim.
 - Na primeira execução sem `.env`, copia o [`.env.example`](../.env.example), aplica `0600`, avisa `Criado .env a partir do .env.example: tudo em 127.0.0.1, só este servidor acessa.` e **segue**. Com `--check-only` nada é criado: a validação usa o `.env.example`.
 - **Idempotente:** rodado de novo sem mudança, não recria container, não troca senha e não regrava o `.env`.
 - Se `.secrets/ftp_password.txt` estiver vazio ou ausente, gera uma senha forte (`0600`): veja [🔑 Segredos](segredos.md).
@@ -91,7 +95,7 @@ Os scripts da pasta [`scripts/`](../scripts/) que rodam em container são copiad
 - O Compose é sempre chamado só com `--env-file .env`. O perfil não é um segundo arquivo na subida: `--size` grava os valores dele no `.env`, por isso um `docker compose up -d` direto mantém os mesmos limites.
 - Combinação inválida (`--remover` com `--size`, `--apagar-dados` sem `--remover`, `--sim` sem `--apagar-dados`): `Opção inválida: ...`, o uso e código `64`.
 - `--apagar-dados` apaga as pastas por um container descartável sem rede (os arquivos pertencem ao usuário do container, não ao do host) e só aceita `DATA_DIR` com pelo menos dois níveis de pasta.
-- Constrói as duas imagens com `docker compose build` (`build --no-cache` com `--atualizar`), sobe com `docker compose up -d --wait --wait-timeout 180` e termina mostrando o `docker compose ps` e o resumo. Se algum container não ficar `healthy` no prazo: `ERRO: os containers não ficaram healthy. Veja o motivo com: docker compose logs --tail 50 ftp painel`.
+- Constrói as três imagens com `docker compose build` (`build --no-cache` com `--atualizar`), sobe com `docker compose up -d --wait` e termina mostrando o `docker compose ps` e o resumo. O prazo da espera é de 180 s mais um quarto de segundo por porta passiva (192 s no `small`, 580 s no `extended`), porque o Docker publica as portas uma a uma; acima de 400 portas, avisa `Publicando <n> portas passivas: a subida pode levar alguns minutos.` Se algum container não ficar `healthy` no prazo: `ERRO: os containers não ficaram healthy. Veja o motivo com: docker compose logs --tail 50 ftp painel nginx`.
 
 </details>
 
@@ -175,7 +179,7 @@ Roda a cada início do container. Não tem parâmetros: tudo vem das variáveis 
 
 1. Confere que `FTP_BIND_IP` e `FTP_PUBLIC_IP` são IPs privados ([`rede-privada.sh`](../scripts/rede-privada.sh)), lê a senha do segredo `/run/secrets/ftp_password`, ajusta dono e modo de `/data`, `/auth` e `/etc/ssl/private` e cria ou atualiza o usuário inicial `FTP_USER` (recusa senha com menos de 12 caracteres).
 2. Gera um certificado autoassinado para `FTP_CERT_CN` se `DATA_DIR/certs` estiver vazia, e grava a parte pública dele em `/auth/ftp-cert.pem`.
-3. Executa o `pure-ftpd` com TLS, `chroot`, limites e faixa passiva do `.env`.
+3. Executa o `pure-ftpd` com o modo de TLS, o `chroot`, os limites e a faixa passiva do `.env`. Com `FTP_TLS_MODE` em `0` ou `1`, grava antes um `AVISO` no log.
 
 **Resultado esperado:** a linha `FTP pronto em 2121/tcp; TLS=2; passivo=30000-30049` no log do container.
 
@@ -195,7 +199,9 @@ Quando uma validação falha, o script sai com `FALHA: <motivo>`:
 | `FALHA: a senha FTP deve ter pelo menos 12 caracteres` | senha curta ou arquivo vazio |
 | `FALHA: faixa passiva invalida` | início ou fim não numéricos |
 | `FALHA: faixa passiva fora dos limites` | abaixo de `1024`, acima de `65535` ou invertida |
-| `FALHA: FTP_TLS_MODE deve ser 1, 2 ou 3` | valor fora da lista |
+| `FALHA: FTP_TLS_MODE deve ser 0, 1, 2 ou 3` | valor fora da lista |
+
+Não é falha, e o container sobe: `AVISO: FTP_TLS_MODE=0, FTP sem TLS: senhas e arquivos trafegam em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada.` (ou `FTP_TLS_MODE=1, TLS opcional: ...`). O aviso se repete a cada subida enquanto o modo estiver ligado.
 
 A correção de cada uma está em [🚨 Solução de problemas](solucao-de-problemas.md#o-container-nao-sobe). O modelo completo da subida está em [🏗️ Arquitetura](arquitetura.md#subida).
 
@@ -212,9 +218,10 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 1. Recusa senha em variável e exige o segredo `/run/secrets/painel_password_hash`.
 2. Confere que `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e o `PAINEL_CERT_CN` (se for IP) são privados.
 3. Ajusta dono e modo de `/painel` (`0700`, do `root`) e gera o certificado autoassinado do painel quando ele falta, quando os endereços mudam ou quando faltam menos de 30 dias para vencer.
-4. Executa o servidor [`painel/servidor.py`](../painel/servidor.py).
+4. Prepara a pasta `/nginx` (`0750`, grupo `10001`, o do nginx): copia o certificado e a chave para `/nginx/tls` e apaga o soquete da subida anterior.
+5. Executa o servidor [`painel/servidor.py`](../painel/servidor.py), que abre o soquete `/nginx/painel.sock`. O painel não abre porta de rede.
 
-**Resultado esperado:** a linha `Painel pronto em 8443/tcp (HTTPS); sessão de 15 min; redes permitidas: ...` no log do container.
+**Resultado esperado:** a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; sessão de 15 min; redes permitidas: ...` no log do container.
 
 <details>
 <summary>🔬 Detalhe técnico — mensagens de falha</summary>
@@ -225,11 +232,60 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 | `FALHA: segredo /run/secrets/painel_password_hash ausente` | `.secrets/painel_password_hash.txt` não existe: rode o `deploy.sh` |
 | `FALHA: PAINEL_BIND_IP=… não é IP privado` (ou `PAINEL_CERT_CN`) | endereço fora das faixas privadas |
 | `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é rede privada` | a lista tem rede pública ou `0.0.0.0/0` |
+| `FALHA: PAINEL_REDES_PERMITIDAS está vazia` | a variável chegou vazia ao container |
 | `FALHA: PAINEL_CERT_CN inválido` | nome com maiúscula, espaço ou caractere fora de `a-z`, `0-9`, `.` e `-` |
 | `FALHA: pastas /auth e /data ausentes` | o painel subiu sem as pastas do serviço `ftp` |
+| `FALHA: pasta /nginx ausente` | o painel subiu sem a pasta `DATA_DIR/nginx`, por onde o nginx o alcança: rode o `deploy.sh` |
 | `FALHA: não foi possível gerar o certificado do painel` | `DATA_DIR/painel` sem espaço ou sem permissão de escrita |
 
-O certificado é EC P-256, válido por 825 dias. O arquivo `painel-san.txt`, ao lado dele, marca que foi gerado pela stack: sem esse arquivo, o certificado é tratado como próprio e nunca é refeito. Veja [🖥️ Painel web](painel.md#certificado).
+O certificado é EC P-256, válido por 825 dias. O arquivo `painel-san.txt`, ao lado dele, marca que foi gerado pela stack: sem esse arquivo, o certificado é tratado como próprio e nunca é refeito. A cópia para `/nginx/tls` é refeita a cada subida (certificado `0644`, chave `0640`): é ela que o nginx apresenta ao navegador. Veja [🖥️ Painel web](painel.md#certificado).
+
+</details>
+
+---
+
+<a name="nginx-entrypoint"></a>
+
+## 🚦 `scripts/nginx-entrypoint.sh`
+
+Roda a cada início do container do nginx, já como usuário sem privilégio (`10001`). Não tem parâmetros: recebe só `TZ` e `PAINEL_REDES_PERMITIDAS`.
+
+1. Recusa rodar como root.
+2. Confere que cada rede de `PAINEL_REDES_PERMITIDAS` é privada.
+3. Espera até 30 segundos pelo soquete do painel (`/nginx/painel.sock`) e pela cópia do certificado (`/nginx/tls`).
+4. Gera a configuração em `/run/nginx/nginx.conf` a partir de [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo), trocando o marcador das redes por uma linha `allow` para cada rede permitida.
+5. Testa a configuração e executa o `nginx`.
+
+**Resultado esperado:** a linha `nginx pronto em 8443/tcp (HTTPS), à frente do painel; redes permitidas: ...` no log do container.
+
+<details>
+<summary>🔬 Detalhe técnico — mensagens de falha</summary>
+
+| Mensagem | Quando |
+|---|---|
+| `FALHA: o nginx desta stack não roda como root: confira 'user' no compose.yaml` | o serviço foi alterado para subir como root |
+| `FALHA: PAINEL_REDES_PERMITIDAS está vazia` | a variável chegou vazia ao container |
+| `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é rede privada. Esta stack é só para rede interna.` | a lista tem rede pública ou `0.0.0.0/0` |
+| `FALHA: soquete do painel ausente em /nginx/painel.sock: o serviço painel está no ar?` | o painel não subiu ou `DATA_DIR/nginx` não está montada nos dois containers |
+| `FALHA: certificado do painel ausente ou ilegível em /nginx/tls` | o painel não copiou o certificado, ou a permissão da pasta foi alterada à mão |
+| `FALHA: configuração do nginx recusada` | o modelo foi editado e ficou inválido; o erro do `nginx -t` aparece logo acima |
+
+A configuração gerada fica em `tmpfs` e some quando o container para: quem manda é o modelo, dentro da imagem. `127.0.0.1` entra sempre na lista de redes, para o healthcheck.
+
+</details>
+
+---
+
+<a name="nginx-saude"></a>
+
+## 🩺 `scripts/nginx-saude.sh`
+
+É o healthcheck do container do nginx, instalado como `/usr/local/sbin/allsafe-nginx-saude`. Não é chamado direto: o Docker o executa em intervalos.
+
+<details>
+<summary>🔬 Detalhe técnico — o que ele confere</summary>
+
+Abre uma conexão TLS de verdade em `127.0.0.1:8443`, de dentro do container, e pede `/saude`. Só considera saudável se a resposta for `HTTP/1.1 200` com o corpo `ok`. Como o pedido passa pelo nginx e chega ao painel pelo soquete, um único teste confere os dois. A cadeia do certificado não é conferida, para o teste valer também com certificado de uma autoridade interna.
 
 </details>
 
@@ -239,7 +295,7 @@ O certificado é EC P-256, válido por 825 dias. O arquivo `painel-san.txt`, ao 
 
 ## 👥 `scripts/ftp-user.sh`
 
-Instalado nas duas imagens como `/usr/local/sbin/allsafe-ftp-user`. Não é chamado diretamente: use o [`manage-user.sh`](../manage-user.sh) ou o [painel](painel.md#usuarios).
+Instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user`. Não é chamado diretamente: use o [`manage-user.sh`](../manage-user.sh) ou o [painel](painel.md#usuarios).
 
 <details>
 <summary>🔬 Detalhe técnico — o que ele faz dentro do container</summary>
@@ -265,7 +321,7 @@ Não são executados: outros scripts os carregam com `source`.
 
 | Script | Função | Quem usa |
 |---|---|---|
-| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | `ip_privado`, `cidr_privado` e `exigir_ip_privado`: aceitam só `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16` | `deploy.sh`, `entrypoint.sh` e `painel-entrypoint.sh` |
+| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | `ip_privado`, `cidr_privado` e `exigir_ip_privado`: aceitam só `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16` | `deploy.sh`, `entrypoint.sh`, `painel-entrypoint.sh` e `nginx-entrypoint.sh` |
 | [`scripts/ambiente.sh`](../scripts/ambiente.sh) | `env_valor <chave> [padrão]`: lê uma chave do `.env` sem executar o arquivo; a última ocorrência vale, como no Compose. `env_gravar <chave> <valor>`: troca a linha da chave ou acrescenta no fim, sem regravar quando o valor já é o pedido | `deploy.sh` e `painel-senha.sh` |
 
 ---

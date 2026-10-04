@@ -1,5 +1,41 @@
-# Uma base, duas imagens: `painel` (administração web) e `ftp` (servidor). O alvo padrão é o `ftp`.
-FROM debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171 AS base
+# Três imagens sobre o mesmo Debian 13 fixado por digest: `nginx` (frente web do painel), `painel`
+# (administração web) e `ftp` (servidor). O alvo padrão é o `ftp`.
+ARG DEBIAN=debian:trixie-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee5b77cc54cd1b20a
+
+
+# Frente web: só nginx e openssl, sem nada do FTP. Roda sem root (uid e gid 10001).
+FROM ${DEBIAN} AS nginx
+
+LABEL org.opencontainers.image.title="AllSafe FTP - nginx" \
+      org.opencontainers.image.description="Frente web do painel da allsafe-ftp-stack: HTTPS, so para rede privada" \
+      org.opencontainers.image.vendor="AllSafe"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nginx openssl \
+    && groupadd --gid 10001 frente \
+    && useradd --uid 10001 --gid frente --home-dir /nonexistent \
+       --shell /usr/sbin/nologin --no-create-home frente \
+    && mkdir -p /usr/local/lib/allsafe /etc/allsafe-nginx /usr/share/allsafe-nginx/_erro \
+    && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled /etc/nginx/sites-available /var/www/html
+
+# As pastas de destino já existem (0755): o --chmod de um COPY vale também para a pasta que ele cria,
+# e uma pasta 0644 não é atravessada por quem não é root.
+COPY --chmod=0644 scripts/rede-privada.sh /usr/local/lib/allsafe/rede-privada.sh
+COPY --chmod=0644 nginx/nginx.conf.modelo /etc/allsafe-nginx/nginx.conf.modelo
+COPY --chmod=0644 nginx/erro/pedido.txt nginx/erro/rede.txt nginx/erro/taxa.txt nginx/erro/painel.txt /usr/share/allsafe-nginx/_erro/
+COPY --chmod=0755 scripts/nginx-entrypoint.sh /usr/local/sbin/allsafe-nginx-entrypoint
+COPY --chmod=0755 scripts/nginx-saude.sh /usr/local/sbin/allsafe-nginx-saude
+
+USER 10001:10001
+
+EXPOSE 8443
+
+ENTRYPOINT ["/usr/local/sbin/allsafe-nginx-entrypoint"]
+
+
+FROM ${DEBIAN} AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -9,7 +45,7 @@ RUN apt-get update \
     && groupadd --gid 10000 ftpdata \
     && useradd --uid 10000 --gid ftpdata --home-dir /nonexistent \
        --shell /usr/sbin/nologin --no-create-home ftpdata \
-    && mkdir -p /data /auth /etc/ssl/private \
+    && mkdir -p /data /auth /etc/ssl/private /usr/local/lib/allsafe \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chmod=0644 scripts/rede-privada.sh /usr/local/lib/allsafe/rede-privada.sh
@@ -19,7 +55,7 @@ COPY --chmod=0755 scripts/ftp-user.sh /usr/local/sbin/allsafe-ftp-user
 FROM base AS painel
 
 LABEL org.opencontainers.image.title="AllSafe FTP - painel" \
-      org.opencontainers.image.description="Painel web da allsafe-ftp-stack: HTTPS, so para rede privada" \
+      org.opencontainers.image.description="Painel web da allsafe-ftp-stack: atras do nginx, so para rede privada" \
       org.opencontainers.image.vendor="AllSafe"
 
 # Só a biblioteca padrão do Python; a raiz do container é somente leitura, então nada de .pyc.
@@ -28,21 +64,20 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 \
-    && mkdir -p /painel /opt/painel \
+    && mkdir -p /painel /nginx /opt/painel \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chmod=0644 painel/servidor.py painel/estilo.css VERSION /opt/painel/
 COPY --chmod=0755 scripts/painel-entrypoint.sh /usr/local/sbin/allsafe-painel-entrypoint
 
-EXPOSE 8443
-
+# Sem EXPOSE: o painel não escuta em porta de rede, só no soquete Unix que o nginx abre.
 ENTRYPOINT ["/usr/local/sbin/allsafe-painel-entrypoint"]
 
 
 FROM base AS ftp
 
 LABEL org.opencontainers.image.title="AllSafe FTP" \
-      org.opencontainers.image.description="Pure-FTPd isolado com TLS e usuarios virtuais" \
+      org.opencontainers.image.description="Pure-FTPd isolado com usuarios virtuais, so para rede privada" \
       org.opencontainers.image.vendor="AllSafe"
 
 COPY --chmod=0755 scripts/entrypoint.sh /usr/local/sbin/allsafe-ftp-entrypoint

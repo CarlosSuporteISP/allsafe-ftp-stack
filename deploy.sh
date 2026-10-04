@@ -18,13 +18,14 @@ apagar_dados=false
 sim=false
 usage() {
   cat <<'USO'
-Uso: ./deploy.sh [--size small|medium|large] [--atualizar] [--check-only]
+Uso: ./deploy.sh [--size small|medium|large|xlarge|extended] [--atualizar] [--check-only]
      ./deploy.sh --remover [--apagar-dados [--sim]]
 
   (sem opção)       instala ou reaplica: cria o .env, as pastas e as senhas que faltarem,
                     sobe os containers e espera ficarem healthy
   --size <perfil>   grava no .env os limites de profiles/<perfil>.env
-                    (sem a opção, o .env fica como está)
+                    (sem a opção, o .env fica como está); o perfil não pode
+                    pedir mais CPU nem mais memória do que o servidor tem
   --atualizar       reconstrói as imagens sem cache, com os pacotes atuais do Debian
   --check-only      só valida a configuração; não cria nem sobe nada
   --remover         derruba os containers e a rede; dados, segredos e .env ficam
@@ -60,6 +61,39 @@ profile_file="profiles/${size:-small}.env"
 command -v docker >/dev/null 2>&1 || die "Docker não encontrado. Instale o Docker Engine com o plugin Compose e rode de novo."
 docker compose version >/dev/null 2>&1 || die "plugin Docker Compose não encontrado (docker compose version falhou)."
 docker info >/dev/null 2>&1 || die "sem acesso ao Docker: o serviço está parado ou este usuário não está no grupo docker."
+
+# Recursos: o perfil não pode pedir mais CPU nem mais memória do que o servidor do Docker tem.
+# O Docker recusa CPU a mais só na hora de subir; aqui a recusa vem antes de qualquer alteração,
+# inclusive antes de criar o .env.
+if [[ "$remover" == false ]]; then
+  do_perfil() { # <chave> <padrão>: valor do perfil pedido com --size ou, sem ele, do .env que já existe
+    local valor=""
+    if [[ -n "$size" ]]; then
+      valor="$(sed -n "s/^$1=//p" "$profile_file" | tail -n 1)"
+    elif [[ -f "$env_file" ]]; then
+      valor="$(env_valor "$1")"
+    fi
+    printf '%s' "${valor:-$2}"
+  }
+  perfil_nome="${size:-$(do_perfil FTP_PROFILE small)}"
+  read -r host_cpus host_memoria < <(docker info --format '{{.NCPU}} {{.MemTotal}}' 2>/dev/null) || true
+  cpu_pedida="$(do_perfil FTP_CPU_LIMIT 1.0)"
+  memoria_pedida="$(do_perfil FTP_MEMORY_LIMIT 256M)"
+  if [[ "${host_cpus:-}" =~ ^[0-9]+$ && "$cpu_pedida" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+    awk -v pedida="$cpu_pedida" -v tem="$host_cpus" 'BEGIN { exit !(pedida <= tem) }' \
+      || die "o perfil '$perfil_nome' pede $cpu_pedida CPUs (FTP_CPU_LIMIT) e este servidor tem $host_cpus. Use um perfil menor com --size ou ajuste FTP_CPU_LIMIT em $env_file."
+  fi
+  if [[ "${host_memoria:-}" =~ ^[0-9]+$ && "${memoria_pedida,,}" =~ ^([0-9]+)([kmg]?)b?$ ]]; then
+    case "${BASH_REMATCH[2]}" in
+      g) memoria_bytes=$(( BASH_REMATCH[1] * 1024 * 1024 * 1024 )) ;;
+      m) memoria_bytes=$(( BASH_REMATCH[1] * 1024 * 1024 )) ;;
+      k) memoria_bytes=$(( BASH_REMATCH[1] * 1024 )) ;;
+      *) memoria_bytes=${BASH_REMATCH[1]} ;;
+    esac
+    (( memoria_bytes <= host_memoria )) \
+      || die "o perfil '$perfil_nome' pede $memoria_pedida de memória (FTP_MEMORY_LIMIT) e este servidor tem $(( host_memoria / 1024 / 1024 )) MiB. Use um perfil menor com --size ou ajuste FTP_MEMORY_LIMIT em $env_file."
+  fi
+fi
 
 if [[ ! -f "$env_file" ]]; then
   if [[ "$check_only" == true ]]; then
@@ -106,7 +140,7 @@ if [[ "$remover" == true ]]; then
   compose down --remove-orphans
   if [[ "$apagar_dados" == true ]]; then
     pastas=()
-    for pasta in dados auth certs painel; do
+    for pasta in dados auth certs painel nginx; do
       [[ -d "$data_dir/$pasta" ]] && pastas+=("$pasta")
     done
     imagem="$(env_valor FTP_IMAGE allsafe-ftp:local)"
@@ -137,6 +171,24 @@ IFS=',' read -r -a redes_painel <<< "$(env_valor PAINEL_REDES_PERMITIDAS 127.0.0
 for rede in "${redes_painel[@]}"; do
   cidr_privado "${rede// /}" || die "PAINEL_REDES_PERMITIDAS: '${rede// /}' não é rede privada. Esta stack é só para rede interna."
 done
+# TLS do FTP: 0 e 1 deixam passar senha em texto puro e só existem para equipamento antigo.
+tls_modo="$(env_valor FTP_TLS_MODE 2)"
+case "$tls_modo" in
+  0) tls_texto="SEM TLS (texto puro)" ;;
+  1) tls_texto="TLS explícito opcional (aceita texto puro)" ;;
+  2) tls_texto="TLS explícito obrigatório no login" ;;
+  3) tls_texto="TLS explícito obrigatório no login e nos dados" ;;
+  *) die "FTP_TLS_MODE deve ser 0 (sem TLS), 1 (opcional), 2 (obrigatório no login) ou 3 (obrigatório no login e nos dados); em $env_file está '$tls_modo'." ;;
+esac
+aviso_tls() {
+  case "$tls_modo" in
+    0) echo "AVISO: FTP_TLS_MODE=0: o FTP está SEM criptografia. Senhas e arquivos passam em texto puro e podem ser" ;;
+    1) echo "AVISO: FTP_TLS_MODE=1: o TLS é opcional. Quem entra sem TLS manda senha e arquivos em texto puro, que podem ser" ;;
+    *) return 0 ;;
+  esac
+  echo "       lidos por quem estiver na mesma rede. Use só para equipamento antigo sem suporte a TLS, em rede interna"
+  echo "       isolada, com o firewall liberando só esses equipamentos, e volte para FTP_TLS_MODE=2 assim que puder."
+}
 painel_cn="$(env_valor PAINEL_CERT_CN)"
 if [[ "$painel_cn" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   exigir_ip_privado PAINEL_CERT_CN "$painel_cn" || exit 1
@@ -148,7 +200,8 @@ if [[ "$check_only" == true ]]; then
   else
     compose config --quiet
   fi
-  echo "OK: perfil '${size:-$(env_valor FTP_PROFILE small)}', rede privada e compose validados; nada foi alterado."
+  echo "OK: perfil '$perfil_nome', rede privada, recursos do servidor e compose validados; nada foi alterado."
+  aviso_tls
   exit 0
 fi
 
@@ -168,7 +221,7 @@ if command -v ss >/dev/null 2>&1; then
   while IFS= read -r alvo; do
     [[ -n "$alvo" ]] && escuta["${alvo/#\*:/0.0.0.0:}"]=1
   done < <(ss -Hltn 2>/dev/null | awk '{print $4}')
-  for servico in ftp painel; do
+  for servico in ftp painel nginx; do
     id="$(compose ps -q "$servico" 2>/dev/null || true)"
     [[ -n "$id" ]] || continue
     while IFS= read -r alvo; do
@@ -183,7 +236,9 @@ if command -v ss >/dev/null 2>&1; then
   painel_ip="$(env_valor PAINEL_BIND_IP 127.0.0.1)"
   porta_em_uso "$ftp_ip" "$(env_valor FTP_PORT 21)" && ocupadas+=("$ftp_ip:$(env_valor FTP_PORT 21)")
   porta_em_uso "$painel_ip" "$(env_valor PAINEL_PORT 8443)" && ocupadas+=("$painel_ip:$(env_valor PAINEL_PORT 8443)")
-  for ((porta = $(env_valor FTP_PASSIVE_PORT_START 30000); porta <= $(env_valor FTP_PASSIVE_PORT_END 30049); porta++)); do
+  passiva_inicio="$(env_valor FTP_PASSIVE_PORT_START 30000)"
+  passiva_fim="$(env_valor FTP_PASSIVE_PORT_END 30049)"
+  for ((porta = passiva_inicio; porta <= passiva_fim; porta++)); do
     porta_em_uso "$ftp_ip" "$porta" && ocupadas+=("$ftp_ip:$porta")
   done
   if [[ ${#ocupadas[@]} -gt 0 ]]; then
@@ -192,7 +247,7 @@ if command -v ss >/dev/null 2>&1; then
 fi
 
 # Pastas dos dados (bind mount). O container ajusta dono e modo de cada uma ao subir.
-mkdir -p "$data_dir/dados" "$data_dir/auth" "$data_dir/certs" "$data_dir/painel" \
+mkdir -p "$data_dir/dados" "$data_dir/auth" "$data_dir/certs" "$data_dir/painel" "$data_dir/nginx" \
   || die "não foi possível criar as pastas em $data_dir; ajuste DATA_DIR em $env_file."
 
 # Senha do usuário inicial: gerada forte na primeira execução; nunca regravada se já existe.
@@ -231,22 +286,28 @@ if [[ ! -s "$painel_hash" ]]; then
 fi
 chmod 0600 "$painel_hash"
 
-# Sobe e espera os dois containers ficarem healthy; só então informa onde acessar.
-if ! compose up -d --wait --wait-timeout 180; then
+# Sobe e espera os três containers ficarem healthy; só então informa onde acessar. O Docker publica
+# as portas passivas uma a uma: nos perfis grandes a subida leva minutos, e a espera acompanha.
+portas_passivas=$(( $(env_valor FTP_PASSIVE_PORT_END 30049) - $(env_valor FTP_PASSIVE_PORT_START 30000) + 1 ))
+if (( portas_passivas > 400 )); then
+  echo "Publicando $portas_passivas portas passivas: a subida pode levar alguns minutos."
+fi
+if ! compose up -d --wait --wait-timeout $(( 180 + portas_passivas / 4 )); then
   compose ps || true
-  die "os containers não ficaram healthy. Veja o motivo com: docker compose logs --tail 50 ftp painel"
+  die "os containers não ficaram healthy. Veja o motivo com: docker compose logs --tail 50 ftp painel nginx"
 fi
 compose ps
 
 ftp_ip="$(env_valor FTP_BIND_IP 127.0.0.1)"
 echo
-echo "Pronto: FTP e painel no ar (healthy), perfil '$(env_valor FTP_PROFILE small)'."
-echo "FTP:    $ftp_ip:$(env_valor FTP_PORT 21) com TLS explícito, modo passivo $(env_valor FTP_PASSIVE_PORT_START 30000)-$(env_valor FTP_PASSIVE_PORT_END 30049)"
+echo "Pronto: FTP, painel e nginx no ar (healthy), perfil '$(env_valor FTP_PROFILE small)'."
+echo "FTP:    $ftp_ip:$(env_valor FTP_PORT 21), $tls_texto, modo passivo $(env_valor FTP_PASSIVE_PORT_START 30000)-$(env_valor FTP_PASSIVE_PORT_END 30049)"
 echo "        usuário '$(env_valor FTP_USER transfer)', senha no arquivo $secret_file"
-echo "Painel: https://$(env_valor PAINEL_BIND_IP 127.0.0.1):$(env_valor PAINEL_PORT 8443)  (certificado autoassinado; só rede privada, atrás de firewall)"
+echo "Painel: https://$(env_valor PAINEL_BIND_IP 127.0.0.1):$(env_valor PAINEL_PORT 8443)  (pelo nginx; certificado autoassinado; só rede privada, atrás de firewall)"
 if [[ -s "$painel_senha" ]]; then
   echo "        senha inicial no arquivo $painel_senha; troque com ./scripts/painel-senha.sh"
 else
   echo "        senha: a que foi definida com ./scripts/painel-senha.sh"
 fi
 echo "Remover: ./deploy.sh --remover  (os dados ficam em $data_dir)"
+aviso_tls

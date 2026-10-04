@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-Você roda um comando e o servidor FTP sobe sozinho, já com senha forte e conexão criptografada, junto com o painel web para administrar os usuários. Ele nasce atendendo só o próprio servidor; para atender a rede interna, você informa o IP privado no arquivo de configuração e roda o mesmo comando de novo. No fim, um segundo script confere se está tudo no ar. Leva poucos minutos e dá para desfazer sem perder os arquivos.
+Você roda um comando e o servidor FTP sobe sozinho, já com senha forte e conexão criptografada, junto com o painel web para administrar os usuários e o nginx, que fica na frente do painel. Ele nasce atendendo só o próprio servidor; para atender a rede interna, você informa o IP privado no arquivo de configuração e roda o mesmo comando de novo. No fim, um segundo script confere se está tudo no ar. Leva poucos minutos e dá para desfazer sem perder os arquivos.
 
 <!-- diagrama: diagramas/instalacao-diagrama.mmd -->
 ```mermaid
@@ -12,16 +12,16 @@ Você roda um comando e o servidor FTP sobe sozinho, já com senha forte e conex
 flowchart LR
     usuario@{ shape: person, label: "👤 Usuário" }
     deploy@{ shape: console, label: "⌨️ deploy.sh<br>cria o .env, gera as senhas e sobe" }
-    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
+    stack@{ shape: rect, label: "🐳 Docker Compose<br>FTP, painel e nginx" }
     valida@{ shape: console, label: "🧪 validate.sh<br>confere a subida" }
-    fim@{ shape: stadium, label: "🏁 FTP pronto" }
+    fim@{ shape: stadium, label: "🏁 FTP e painel prontos" }
 
-    usuario --> deploy --> ftp --> valida --> fim
+    usuario --> deploy --> stack --> valida --> fim
 ```
 
 <sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 👤 Usuário ➜ ⌨️ `deploy.sh` (cria o `.env`, gera as senhas e sobe) ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🧪 `validate.sh` ➜ 🏁 FTP pronto
+**🧭 Sequência:** 👤 Usuário ➜ ⌨️ `deploy.sh` (cria o `.env`, gera as senhas e sobe) ➜ 🐳 Docker Compose (FTP, painel e nginx) ➜ 🧪 `validate.sh` ➜ 🏁 FTP e painel prontos
 
 ---
 
@@ -41,8 +41,9 @@ flowchart LR
 | Item | Detalhe |
 |---|---|
 | 🐳 Docker Engine com Docker Compose v2 ou mais novo | `docker compose version` deve responder |
-| 🌐 Um IP dedicado para o FTP | Não compartilhe o IP com outros serviços; o modo passivo abre 50 portas |
-| 🔥 Firewall no host | Libere `21/tcp` e `30000-30049/tcp` **só** para as redes de gerência dos equipamentos, e a porta do painel (`8443/tcp`) **só** para quem administra |
+| 🖥️ CPU e memória para o perfil | O `small` pede 1 CPU e 256 MB; o `extended`, 16 CPUs e 4 GB. O `deploy.sh` confere e recusa o perfil maior que o servidor: [🎚️ Perfis](perfis.md#o-servidor-aguenta) |
+| 🌐 Um IP dedicado para o FTP | Não compartilhe o IP com outros serviços; o modo passivo abre de 50 a 1600 portas, conforme o perfil |
+| 🔥 Firewall no host | Libere `21/tcp` e a faixa passiva do perfil (`30000-30049/tcp` no `small`) **só** para as redes de gerência dos equipamentos, e a porta do painel (`8443/tcp`) **só** para quem administra |
 | 🧱 Rede privada | A stack só aceita IP interno: veja [🔐 Segurança](seguranca.md#rede-privada) |
 | 🕰️ Relógio sincronizado | O certificado TLS depende de data e hora corretas (a stack `allsafe-ntp-nts-stack` cuida disso) |
 
@@ -112,16 +113,16 @@ chmod 600 .secrets/ftp_password.txt
 ## 3️⃣ Subir a stack
 
 ```bash
-./deploy.sh                  # outro porte: ./deploy.sh --size medium (ou large)
+./deploy.sh                  # outro porte: ./deploy.sh --size medium (ou large, xlarge, extended)
 ```
 
-**Resultado esperado:** o comando só termina com os dois containers `healthy` e fecha com o resumo:
+**Resultado esperado:** o comando só termina com os três containers `healthy` e fecha com o resumo:
 
 ```text
-Pronto: FTP e painel no ar (healthy), perfil 'small'.
-FTP:    127.0.0.1:21 com TLS explícito, modo passivo 30000-30049
+Pronto: FTP, painel e nginx no ar (healthy), perfil 'small'.
+FTP:    127.0.0.1:21, TLS explícito obrigatório no login, modo passivo 30000-30049
         usuário 'transfer', senha no arquivo ./.secrets/ftp_password.txt
-Painel: https://127.0.0.1:8443  (certificado autoassinado; só rede privada, atrás de firewall)
+Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; só rede privada, atrás de firewall)
         senha inicial no arquivo ./.secrets/painel_password.txt; troque com ./scripts/painel-senha.sh
 Remover: ./deploy.sh --remover  (os dados ficam em <DATA_DIR>)
 ```
@@ -130,7 +131,9 @@ O resumo diz **onde** está cada senha e nunca a mostra. Na primeira vez aparece
 
 Abra o endereço do painel no navegador e entre com a senha de `.secrets/painel_password.txt`. O primeiro acesso, o aviso de certificado e a troca da senha estão em [🖥️ Painel web](painel.md#abrir).
 
-Qual perfil usar: [🎚️ Perfis](perfis.md).
+Qual perfil usar: [🎚️ Perfis](perfis.md). Nos perfis `xlarge` e `extended` a subida leva minutos, porque o Docker publica as portas passivas uma a uma: [⏱️ tempo de subida](perfis.md#tempo-de-subida).
+
+> ⚠️ **Equipamento antigo que não fala TLS?** O padrão exige TLS e recusa esse equipamento. Existe a opção `FTP_TLS_MODE=0` (ou `1`), que aceita FTP em texto puro e deixa senha e arquivo legíveis para quem estiver na mesma rede. Leia as condições antes de ligar: [🔐 Segurança](seguranca.md#ftp-sem-tls).
 
 <details>
 <summary>🔬 Detalhe técnico — o que o <code>deploy.sh</code> e o entrypoint fazem</summary>
@@ -138,18 +141,19 @@ Qual perfil usar: [🎚️ Perfis](perfis.md).
 O [`deploy.sh`](../deploy.sh), nesta ordem:
 
 1. confere os requisitos: `docker`, o plugin `docker compose` e o serviço do Docker respondendo;
-2. cria o `.env` a partir do exemplo (`0600`) se ele não existir, e segue;
-3. recusa senha no `.env` e endereço ou rede fora de IP privado;
-4. com `--size`, grava no `.env` os valores de `profiles/<perfil>.env` e o nome do perfil em `FTP_PROFILE`; sem `--size`, o `.env` fica como está;
-5. confere que a porta do FTP, a do painel e a faixa passiva estão livres no host (as que a própria stack já publica não contam); porta ocupada para o comando com `ERRO: porta já em uso por outro programa: ...`;
-6. cria as pastas `dados/`, `auth/`, `certs/` e `painel/` em `DATA_DIR` e gera a senha em `.secrets/ftp_password.txt` se o arquivo estiver vazio;
-7. roda `docker compose --env-file .env config --quiet`, que falha cedo se a configuração estiver inválida;
-8. `docker compose build`, que constrói as duas imagens (com `--atualizar`, `build --no-cache`);
-9. gera a senha inicial do painel e grava o hash dela, se ainda não houver hash;
-10. `docker compose up -d --wait`, que só volta com os dois containers `healthy` (limite de 180 s);
-11. `docker compose ps` e o resumo com os endereços e o lugar de cada senha.
+2. confere que o servidor tem as CPUs e a memória que o perfil pede; se não tiver, para sem alterar nada;
+3. cria o `.env` a partir do exemplo (`0600`) se ele não existir, e segue;
+4. recusa senha no `.env`, endereço ou rede fora de IP privado e `FTP_TLS_MODE` fora de `0` a `3`;
+5. com `--size`, grava no `.env` os valores de `profiles/<perfil>.env` e o nome do perfil em `FTP_PROFILE`; sem `--size`, o `.env` fica como está;
+6. confere que a porta do FTP, a do painel e a faixa passiva estão livres no host (as que a própria stack já publica não contam); porta ocupada para o comando com `ERRO: porta já em uso por outro programa: ...`;
+7. cria as pastas `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` em `DATA_DIR` e gera a senha em `.secrets/ftp_password.txt` se o arquivo estiver vazio;
+8. roda `docker compose --env-file .env config --quiet`, que falha cedo se a configuração estiver inválida;
+9. `docker compose build`, que constrói as três imagens (com `--atualizar`, `build --no-cache`);
+10. gera a senha inicial do painel e grava o hash dela, se ainda não houver hash;
+11. `docker compose up -d --wait`, que só volta com os três containers `healthy` (limite de 180 s mais um quarto de segundo por porta passiva);
+12. `docker compose ps`, o resumo com os endereços, o modo de TLS e o lugar de cada senha e, nos modos `0` e `1`, o aviso de FTP sem criptografia.
 
-Com `--check-only`, o script para depois do passo 3 e de um `config --quiet`, sem criar `.env`, pasta ou senha, com `OK: perfil '<perfil>', rede privada e compose validados; nada foi alterado.`
+Com `--check-only`, o script para depois do passo 4 e de um `config --quiet`, sem criar `.env`, pasta ou senha, com `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.`
 
 Na **primeira** subida o [`entrypoint.sh`](../scripts/entrypoint.sh):
 
@@ -158,7 +162,7 @@ Na **primeira** subida o [`entrypoint.sh`](../scripts/entrypoint.sh):
 - gera um **certificado autoassinado** RSA 3072, válido por 825 dias, em `/etc/ssl/private/pure-ftpd.pem`, com SAN de acordo com `FTP_CERT_CN` (IP ou DNS);
 - executa o `pure-ftpd` escutando em `:2121`.
 
-Com o FTP `healthy`, o painel inicia: gera o próprio certificado autoassinado (EC P-256, 825 dias) em `DATA_DIR/painel/tls` e escuta em `:8443`.
+Com o FTP `healthy`, o painel inicia: gera o próprio certificado autoassinado (EC P-256, 825 dias) em `DATA_DIR/painel/tls`, entrega uma cópia ao nginx e abre o soquete Unix em `DATA_DIR/nginx`. Com o painel `healthy`, o nginx inicia e escuta em `:8443`.
 
 O modelo completo da subida está em [🏗️ Arquitetura](arquitetura.md#subida).
 
@@ -175,7 +179,7 @@ O modelo completo da subida está em [🏗️ Arquitetura](arquitetura.md#subida
 ./scripts/validate.sh --runtime  # exige o container 'running', 'healthy' e o usuário no PureDB
 ```
 
-**Resultado esperado:** `painel/servidor.py OK` (se o host tiver `python3`), `compose OK com large.env`, `compose OK com medium.env`, `compose OK com small.env` e, no fim, `Validacao FTP concluida.`
+**Resultado esperado:** `painel/servidor.py OK` (se o host tiver `python3`), uma linha `compose OK com <perfil>.env` para cada um dos cinco perfis e, no fim, `Validacao FTP concluida.`
 
 Teste manual com um cliente (FTP **explícito** sobre TLS, modo passivo):
 
@@ -198,9 +202,9 @@ lftp -u "$FTP_USER" -e 'set ssl:verify-certificate no; ls; bye' ftp://SEU_IP
 ./deploy.sh --remover           # remove os containers e a rede; dados, segredos e .env ficam
 ```
 
-**Resultado esperado:** `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` e `docker compose ps` não lista mais o `allsafe-ftp` nem o `allsafe-ftp-painel`. Um novo `./deploy.sh` sobe tudo de volta com os mesmos dados e as mesmas senhas.
+**Resultado esperado:** `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` e `docker compose ps` não lista mais o `allsafe-ftp`, o `allsafe-ftp-painel` nem o `allsafe-ftp-nginx`. Um novo `./deploy.sh` sobe tudo de volta com os mesmos dados e as mesmas senhas.
 
-Os arquivos dos usuários, o PureDB e os certificados ficam em `DATA_DIR`, no host: a remoção não apaga nada (nem um `docker compose down -v` apagaria). Para apagar de vez, use `./deploy.sh --remover --apagar-dados`: ele pede para digitar `apagar` e remove as pastas `dados/`, `auth/`, `certs/` e `painel/` de `DATA_DIR`; os segredos e o `.env` continuam.
+Os arquivos dos usuários, o PureDB e os certificados ficam em `DATA_DIR`, no host: a remoção não apaga nada (nem um `docker compose down -v` apagaria). Para apagar de vez, use `./deploy.sh --remover --apagar-dados`: ele pede para digitar `apagar` e remove as pastas `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` de `DATA_DIR`; os segredos e o `.env` continuam.
 
 ---
 
