@@ -6,12 +6,12 @@
 
 A senha do usuário inicial do FTP mora em um arquivo só, dentro da pasta `.secrets/`, que nunca vai para o Git nem para dentro da imagem. O script de instalação cria essa senha sozinho na primeira vez. O servidor lê o arquivo ao subir e guarda apenas o hash dela.
 
-<picture>
+<a href="diagramas/segredos-diagrama.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagramas/segredos-diagrama-escuro.svg">
   <img src="diagramas/segredos-diagrama.svg" alt="Caminho da senha: o deploy.sh gera o arquivo em .secrets, o container o monta somente leitura, o entrypoint lê e o PureDB guarda só o hash" width="100%">
-</picture>
+</picture></a>
 
-<sub>📐 Nível 1 · Diagrama · fonte: [segredos-diagrama.mmd](diagramas/segredos-diagrama.mmd)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/segredos-diagrama.mmd) · [no computador](diagramas/visualizador.html#segredos-diagrama)</sub>
 
 **🧭 Sequência:** ⌨️ `deploy.sh` ➜ 🔑 `.secrets/ftp_password.txt` ➜ 🐳 `/run/.secrets` (somente leitura) ➜ ⚙️ entrypoint ➜ 🗄️ PureDB (guarda só o hash) ➜ 🏁 senha fora da imagem
 

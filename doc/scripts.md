@@ -6,12 +6,12 @@
 
 A stack tem cinco scripts. Três você roda no host: um sobe o servidor, outro cuida dos usuários e o terceiro confere se está tudo certo. Os outros dois ficam dentro do container e são chamados pelos primeiros; você não os executa direto.
 
-<picture>
+<a href="diagramas/scripts-diagrama.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagramas/scripts-diagrama-escuro.svg">
   <img src="diagramas/scripts-diagrama.svg" alt="Scripts: o usuário roda os scripts do host, que chamam o Docker Compose, que aciona o entrypoint e o allsafe-ftp-user dentro do container" width="100%">
-</picture>
+</picture></a>
 
-<sub>📐 Nível 1 · Diagrama · fonte: [scripts-diagrama.mmd](diagramas/scripts-diagrama.mmd)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/scripts-diagrama.mmd) · [no computador](diagramas/visualizador.html#scripts-diagrama)</sub>
 
 **🧭 Sequência:** 👤 Usuário ➜ ⌨️ scripts do host (`deploy.sh`, `manage-user.sh`, `validate.sh`) ➜ 🐳 Docker Compose ➜ ⌨️ entrypoint e `allsafe-ftp-user` ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 serviço operando
 

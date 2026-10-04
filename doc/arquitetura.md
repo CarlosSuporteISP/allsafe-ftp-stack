@@ -6,12 +6,12 @@
 
 A stack é um servidor FTP dentro de um único container. Ele tem três "gavetas" que sobrevivem a reinícios: uma para os arquivos enviados, uma para a lista de usuários e uma para o certificado de segurança. O usuário opera pelo host com dois scripts; os equipamentos de rede conectam pela porta do FTP e enviam o backup.
 
-<picture>
+<a href="diagramas/visao-geral-diagrama.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagramas/visao-geral-diagrama-escuro.svg">
   <img src="diagramas/visao-geral-diagrama.svg" alt="Visão geral: o equipamento de rede envia o backup ao Pure-FTPd, que confere o usuário no PureDB e grava o arquivo em /data" width="100%">
-</picture>
+</picture></a>
 
-<sub>📐 Nível 1 · Diagrama · fonte: [visao-geral-diagrama.mmd](diagramas/visao-geral-diagrama.mmd)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/visao-geral-diagrama.mmd) · [no computador](diagramas/visualizador.html#visao-geral-diagrama)</sub>
 
 **🧭 Sequência:** 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 backup guardado
 
@@ -30,12 +30,12 @@ A stack é um servidor FTP dentro de um único container. Ele tem três "gavetas
 
 ## 🗺️ Mapa da arquitetura
 
-<picture>
+<a href="diagramas/arquitetura-mapa.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagramas/arquitetura-mapa-escuro.svg">
   <img src="diagramas/arquitetura-mapa.svg" alt="Mapa da arquitetura: usuário e scripts no host, container allsafe-ftp na rede allsafe-ftp-network, três volumes e o arquivo de senha montado somente leitura" width="100%">
-</picture>
+</picture></a>
 
-<sub>📐 Nível 2 · Mapa · fonte: [arquitetura-mapa.mmd](diagramas/arquitetura-mapa.mmd)</sub>
+<sub>📐 Nível 2 · Mapa · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/arquitetura-mapa.mmd) · [no computador](diagramas/visualizador.html#arquitetura-mapa)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
@@ -110,12 +110,12 @@ Além deles, dois `tmpfs`: `/run` (8 MiB) e `/tmp` (16 MiB), ambos `noexec,nosui
 
 O que acontece entre o `./deploy.sh` e o container `healthy`.
 
-<picture>
+<a href="diagramas/subida-modelo.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagramas/subida-modelo-escuro.svg">
   <img src="diagramas/subida-modelo.svg" alt="Modelo da subida: deploy.sh, Docker Compose, entrypoint, validação das variáveis, pure-pw, certificado, pure-ftpd e healthcheck" width="100%">
-</picture>
+</picture></a>
 
-<sub>📐 Nível 3 · Modelo · fonte: [subida-modelo.mmd](diagramas/subida-modelo.mmd)</sub>
+<sub>📐 Nível 3 · Modelo · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/subida-modelo.mmd) · [no computador](diagramas/visualizador.html#subida-modelo)</sub>
 
 | Nº | De ➜ Para | O que acontece | Protocolo e porta | Regra |
 |---|---|---|---|---|

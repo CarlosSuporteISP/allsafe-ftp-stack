@@ -1,0 +1,20 @@
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início<br>fase 06" }
+    requisitos@{ shape: subproc, label: "🔎 deploy.sh<br>confere Docker, portas e IP privado" }
+    prepara@{ shape: subproc, label: "🧰 deploy.sh<br>cria .env, segredos e pastas" }
+    sobe@{ shape: subproc, label: "🐳 deploy.sh<br>docker compose up e espera healthy" }
+    remover@{ shape: console, label: "⌨️ deploy.sh --remover<br>derruba, preserva os dados" }
+    portao@{ shape: diam, label: "✅ portão 06<br>passou?" }
+    fim@{ shape: stadium, label: "🏁 instalação<br>em um comando" }
+    volta@{ shape: rect, label: "↩️ corrigir ou<br>git revert" }
+    env@{ shape: doc, label: "📄 .env<br>com o perfil aplicado" }
+
+    inicio -- "1 · confere antes de agir" --> requisitos
+    requisitos -- "2 · prepara sem perguntar" --> prepara
+    prepara -- "3 · sobe e espera" --> sobe
+    sobe -- "4 · acrescenta a remoção" --> remover
+    remover -- "5 · instala do zero, duas vezes" --> portao
+    portao -- "6a · ✅ sim" --> fim
+    portao -- "6b · ❌ não" --> volta
+    volta -- "6c · valida de novo" --> portao
+    prepara -. "grava o perfil em" .-> env

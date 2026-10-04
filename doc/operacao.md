@@ -6,12 +6,12 @@
 
 Este guia reúne as tarefas do dia a dia: criar a conta de um equipamento novo, trocar uma senha, instalar o certificado definitivo, guardar uma cópia dos arquivos, ler os registros e atualizar o servidor. Todos os comandos rodam na pasta raiz da stack.
 
-<picture>
+<a href="diagramas/usuarios-diagrama.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagramas/usuarios-diagrama-escuro.svg">
   <img src="diagramas/usuarios-diagrama.svg" alt="Gestão de usuários: o usuário roda o manage-user.sh, que chama o allsafe-ftp-user no container, grava a conta no PureDB e cria a pasta em /data" width="100%">
-</picture>
+</picture></a>
 
-<sub>📐 Nível 1 · Diagrama · fonte: [usuarios-diagrama.mmd](diagramas/usuarios-diagrama.mmd)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/usuarios-diagrama.mmd) · [no computador](diagramas/visualizador.html#usuarios-diagrama)</sub>
 
 **🧭 Sequência:** 👤 Usuário ➜ ⌨️ `manage-user.sh` ➜ ⌨️ `allsafe-ftp-user` ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 conta pronta
 

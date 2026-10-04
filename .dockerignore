@@ -8,3 +8,4 @@ profiles
 README.md
 deploy.sh
 manage-user.sh
+*.pdf

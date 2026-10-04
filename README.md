@@ -13,18 +13,20 @@
 ![OpenSSL](https://img.shields.io/badge/OpenSSL-3.0-721412?logo=openssl&logoColor=white)
 ![Bash](https://img.shields.io/badge/Bash-5.2-4eaa25?logo=gnubash&logoColor=white)
 
-<picture>
+<a href="doc/diagramas/visao-geral-diagrama.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="doc/diagramas/visao-geral-diagrama-escuro.svg">
   <img src="doc/diagramas/visao-geral-diagrama.svg" alt="Visão geral: o equipamento de rede envia o backup ao Pure-FTPd, que confere o usuário no PureDB e grava o arquivo em /data" width="100%">
-</picture>
+</picture></a>
 
 <sub><b>v0.1.0</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
-<sub>📐 Nível 1 · Diagrama · fonte: [visao-geral-diagrama.mmd](doc/diagramas/visao-geral-diagrama.mmd)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](doc/diagramas/visao-geral-diagrama.mmd) · [no computador](doc/diagramas/visualizador.html#visao-geral-diagrama)</sub>
 
 **🧭 Sequência:** 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 backup guardado
+
+> 🧱 **Uso só em rede privada.** Esta stack é para rede interna: escuta **apenas em IP privado** (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` ou `127.0.0.1`), **atrás de firewall**, e **nunca** deve ser publicada na internet nem receber redirecionamento de porta da borda. Detalhes em [🔐 doc/seguranca.md](doc/seguranca.md#rede-privada).
 
 ---
 
@@ -50,7 +52,9 @@ Um servidor de arquivos para onde roteadores, switches, OLTs e outros equipament
 | 🎯 **Para quê** | Receber por FTPS o backup de configuração de equipamentos de rede |
 | 🛠️ **Tecnologias** | Docker Compose · Debian 12 · Pure-FTPd · PureDB · OpenSSL · Bash |
 | 🔑 **Acesso** | Cliente FTP com **TLS explícito** (`AUTH TLS`) na porta `21/tcp`, modo passivo `30000-30049/tcp` |
-| ✅ **Requisitos** | Docker Engine com Docker Compose v2 ou mais novo · um IP dedicado · firewall no host |
+| ✅ **Requisitos** | Docker Engine com Docker Compose v2 ou mais novo · um IP **privado** dedicado · firewall no host liberando só a rede interna |
+
+> 🖥️ Um **painel web seguro** para administrar os usuários pelo navegador está em construção: veja o [plano](#plano).
 
 ---
 
@@ -62,7 +66,8 @@ Um servidor de arquivos para onde roteadores, switches, OLTs e outros equipament
 |---|---|---|
 | 🔒 | **FTPS explícito obrigatório** | Sem `AUTH TLS` não há login: usuário e senha nunca passam em texto puro |
 | 🧍 | **Usuários virtuais em PureDB** | Não são contas do sistema; cada um fica preso (`chroot`) na própria pasta |
-| 🚪 | **Bind local por padrão** | Sobe em `127.0.0.1`; você expõe só um IP dedicado, com ACL no host |
+| 🚪 | **Bind local por padrão** | Sobe em `127.0.0.1`; você abre só um IP **privado** dedicado, com firewall no host |
+| 🧱 | **Só rede privada** | Feita para rede interna, atrás de firewall; nunca publicada na internet |
 | 🛡️ | **Container endurecido** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs |
 | 🔑 | **Segredos em arquivo** | A senha fica em `.secrets/`, nunca na imagem nem no `compose.yaml` |
 | 📜 | **Logs no `stdout`** | Formato CLF, rotacionados pelo Docker (10 MB × 3) |
@@ -91,8 +96,8 @@ Ajuste no `.env` (modelo em [`.env.example`](.env.example)) antes da segunda exe
 
 | Variável | Troque para |
 |---|---|
-| `FTP_BIND_IP` | o IP dedicado do servidor (não deixe `127.0.0.1` em produção) |
-| `FTP_PUBLIC_IP` | o IP que o cliente enxerga (o mesmo, ou o IP público do NAT) |
+| `FTP_BIND_IP` | o IP **privado** do servidor na rede interna (nunca `0.0.0.0` nem IP público) |
+| `FTP_PUBLIC_IP` | o IP privado que o equipamento enxerga (normalmente o mesmo) |
 | `FTP_CERT_CN` | o hostname (ou IP) que vai no certificado |
 
 | Quero | Comando |
@@ -112,12 +117,12 @@ Passo a passo comentado em [🚀 doc/instalacao.md](doc/instalacao.md).
 
 ## 🔄 Como funciona
 
-<picture>
+<a href="doc/diagramas/funcionamento-fluxograma.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="doc/diagramas/funcionamento-fluxograma-escuro.svg">
   <img src="doc/diagramas/funcionamento-fluxograma.svg" alt="Fluxograma de um envio de backup: conexão, exigência de TLS, conferência de usuário e senha no PureDB, sessão em chroot, gravação em /data e recusa quando falta TLS ou a senha não confere" width="100%">
-</picture>
+</picture></a>
 
-<sub>📐 Nível 2 · Fluxograma · fonte: [funcionamento-fluxograma.mmd](doc/diagramas/funcionamento-fluxograma.mmd)</sub>
+<sub>📐 Nível 2 · Fluxograma · 🔍 abrir com zoom e movimento: [no GitHub](doc/diagramas/funcionamento-fluxograma.mmd) · [no computador](doc/diagramas/visualizador.html#funcionamento-fluxograma)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
@@ -144,12 +149,12 @@ Passo a passo comentado em [🚀 doc/instalacao.md](doc/instalacao.md).
 
 ## 🏗️ Arquitetura
 
-<picture>
+<a href="doc/diagramas/arquitetura-mapa.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="doc/diagramas/arquitetura-mapa-escuro.svg">
   <img src="doc/diagramas/arquitetura-mapa.svg" alt="Mapa da arquitetura: usuário e scripts no host, container allsafe-ftp na rede allsafe-ftp-network, três volumes e o arquivo de senha montado somente leitura" width="100%">
-</picture>
+</picture></a>
 
-<sub>📐 Nível 2 · Mapa · fonte: [arquitetura-mapa.mmd](doc/diagramas/arquitetura-mapa.mmd)</sub>
+<sub>📐 Nível 2 · Mapa · 🔍 abrir com zoom e movimento: [no GitHub](doc/diagramas/arquitetura-mapa.mmd) · [no computador](doc/diagramas/visualizador.html#arquitetura-mapa)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
@@ -225,7 +230,8 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 
 ## 🔐 Segurança
 
-- 🚪 Bind em `127.0.0.1` por padrão: exponha só um IP dedicado e aplique ACL ou firewall no host.
+- 🧱 **Só rede privada:** IP privado, atrás de firewall, sem redirecionamento de porta da internet. Veja [🧱 rede privada e firewall](doc/seguranca.md#rede-privada).
+- 🚪 Bind em `127.0.0.1` por padrão: abra só um IP privado dedicado e libere no firewall do host apenas as redes que enviam backup.
 - 🔒 TLS **obrigatório** para entrar (`FTP_TLS_MODE=2`), `chroot` em todos, sem usuário anônimo, sem DNS reverso.
 - 🧱 `read_only` no sistema de arquivos raiz, `cap_drop: ALL` (só as estritamente necessárias voltam), `no-new-privileges`, limites de CPU, memória, PIDs e `nofile`.
 - 🔑 Senha em `.secrets/ftp_password.txt` (mínimo de 12 caracteres, `0600`), fora da imagem e ignorada pelo Git. Veja [🔑 doc/segredos.md](doc/segredos.md).
@@ -296,7 +302,7 @@ Os testes automatizados de envio, download, `chroot` e recusa sem TLS ainda não
 
 O que já foi feito e o que falta fazer está em [🗺️ doc/planos/README.md](doc/planos/README.md).
 
-**Status:** fases 01 a 03 ✅ concluídas · fases 04 a 07 ⏳ a fazer, aguardando a ordem do usuário.
+**Status:** fases 01 a 03 ✅ concluídas · fases 04 a 09 🔄 em execução: pastas fixas, segredos e rede privada, painel web seguro, instalação em um comando, testes automatizados, backup e restauração, documentação final.
 
 ---
 

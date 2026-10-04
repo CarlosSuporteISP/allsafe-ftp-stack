@@ -1,31 +1,43 @@
 flowchart LR
-    subgraph USO["👤 Quem usa"]
+    subgraph USO["👤 Quem usa · só rede privada"]
         operador@{ shape: person, label: "👤 Usuário<br>opera a stack" }
         equip@{ shape: hex, label: "📡 Equipamento de rede<br>cliente FTP" }
     end
-    subgraph HOST["🖥️ Host"]
+    subgraph BORDA["🧱 Proteção"]
+        fw@{ shape: hex, label: "🧱 Firewall do host<br>só origens internas" }
+    end
+    subgraph HOST["🖥️ Host · bind só em IP privado"]
         deploy@{ shape: console, label: "⌨️ deploy.sh<br>um comando, espera healthy" }
-        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, nome configurável" }
-        testar@{ shape: console, label: "🧪 scripts/testar.sh<br>instância isolada" }
-        backup@{ shape: console, label: "♻️ scripts/backup.sh<br>e restaurar.sh" }
+        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp · 21/tcp" }
+        painel@{ shape: rect, label: "🖥️ Painel web<br>allsafe-ftp-painel · 8443/tcp HTTPS" }
+        segredos@{ shape: doc, label: "🔑 .secrets/<br>senhas e hash, 0600" }
     end
     subgraph PASTAS["💽 Pastas fixas · /home/carlos/code"]
         dados@{ shape: lin-cyl, label: "💽 data/allsafe-ftp-stack/dados<br>/data" }
         auth@{ shape: cyl, label: "🗄️ data/allsafe-ftp-stack/auth<br>/auth, PureDB" }
-        certs@{ shape: lin-cyl, label: "💽 data/allsafe-ftp-stack/certs<br>/etc/ssl/private" }
+        certs@{ shape: lin-cyl, label: "💽 data/allsafe-ftp-stack/certs<br>certificado do FTP" }
+        pdados@{ shape: lin-cyl, label: "💽 data/allsafe-ftp-stack/painel<br>certificado e auditoria" }
         bkp@{ shape: folder, label: "♻️ backups/allsafe-ftp-stack<br>cópias datadas" }
-        tmp@{ shape: folder, label: "🧹 tmp/allsafe-ftp-stack<br>testes e coletas" }
+        tmp@{ shape: folder, label: "🧹 tmp/allsafe-ftp-stack<br>instância de teste" }
     end
     subgraph RESULTADO["🏁 Resultado"]
         fim@{ shape: stadium, label: "🏁 backup guardado<br>testado e restaurável" }
     end
 
     operador -- "1 · ./deploy.sh, uma execução" --> deploy
-    deploy -- "2 · sobe e espera healthy" --> ftp
-    equip -- "3 · FTPS, TCP 21 para 2121" --> ftp
-    ftp -- "4 · grava o arquivo" --> dados
-    dados -- "5 · arquivo na pasta fixa" --> fim
+    deploy -- "2 · sobe os dois serviços e espera healthy" --> ftp
+    operador -- "3 · HTTPS com senha, pelo navegador" --> fw
+    equip -- "4 · FTPS, TCP 21" --> fw
+    fw -- "5 · libera só rede interna" --> ftp
+    fw -- "6 · libera só rede interna" --> painel
+    painel -- "7 · cria, troca senha e remove usuário" --> auth
+    ftp -- "8 · grava o arquivo" --> dados
+    dados -- "9 · arquivo na pasta fixa" --> fim
     ftp -. "consulta os usuários" .-> auth
     ftp -. "lê o certificado" .-> certs
-    backup -. "copia dados e auth" .-> bkp
-    testar -. "sobe e remove a instância de teste" .-> tmp
+    ftp -. "lê a senha inicial" .-> segredos
+    painel -. "lê só o hash da senha" .-> segredos
+    painel -. "grava certificado e auditoria" .-> pdados
+    painel -. "lê o uso de cada pasta" .-> dados
+    deploy -. "backup.sh copia dados, auth e painel" .-> bkp
+    deploy -. "testar.sh sobe e remove a instância" .-> tmp

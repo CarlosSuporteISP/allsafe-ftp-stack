@@ -1,0 +1,20 @@
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início<br>fase 08" }
+    backup@{ shape: console, label: "♻️ scripts/backup.sh<br>copia dados, auth, certs e painel" }
+    restaurar@{ shape: console, label: "♻️ scripts/restaurar.sh<br>restaura uma cópia escolhida" }
+    saude@{ shape: rect, label: "🐳 compose.yaml<br>healthcheck pela porta de controle" }
+    ciclo@{ shape: subproc, label: "🧪 scripts/testar.sh<br>envia, copia, apaga, restaura, compara" }
+    portao@{ shape: diam, label: "✅ portão 08<br>sha256 igual?" }
+    fim@{ shape: stadium, label: "🏁 stack recuperável<br>a partir de uma cópia" }
+    volta@{ shape: rect, label: "↩️ corrigir ou<br>git revert" }
+    bkp@{ shape: folder, label: "♻️ backups/allsafe-ftp-stack<br>AAAAMMDD-HHMMSS" }
+
+    inicio -- "1 · escreve a cópia" --> backup
+    backup -- "2 · escreve a restauração" --> restaurar
+    restaurar -- "3 · troca o healthcheck" --> saude
+    saude -- "4 · testa o ciclo completo" --> ciclo
+    ciclo -- "5 · compara o arquivo" --> portao
+    portao -- "6a · ✅ sim" --> fim
+    portao -- "6b · ❌ não" --> volta
+    volta -- "6c · testa de novo" --> ciclo
+    backup -. "grava em" .-> bkp

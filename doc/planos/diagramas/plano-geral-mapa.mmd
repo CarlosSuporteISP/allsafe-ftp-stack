@@ -1,28 +1,23 @@
 flowchart LR
     inicio@{ shape: stadium, label: "🚀 início" }
     feito@{ shape: subproc, label: "✅ 01 a 03 · Entregue<br>stack, perfis, documentação" }
-    f4@{ shape: subproc, label: "💽 04 · Pastas fixas<br>e instância isolada" }
-    p4@{ shape: diam, label: "✅ portão<br>04" }
-    f5@{ shape: subproc, label: "🚀 05 · Instalação<br>em um comando" }
-    p5@{ shape: diam, label: "✅ portão<br>05" }
-    f6@{ shape: subproc, label: "🧪 06 · Testes<br>automatizados" }
-    p6@{ shape: diam, label: "✅ portão<br>06" }
-    f7@{ shape: subproc, label: "♻️ 07 · Backup<br>e produção" }
-    p7@{ shape: diam, label: "✅ portão<br>07" }
-    fim@{ shape: stadium, label: "🏁 stack no padrão" }
+    subgraph EXEC["🧱 Fases a executar, uma emendada na outra"]
+        f4@{ shape: subproc, label: "💽 04 · Pastas fixas,<br>segredos e rede privada" }
+        f5@{ shape: subproc, label: "🖥️ 05 · Painel<br>web seguro" }
+        f6@{ shape: subproc, label: "🚀 06 · Instalação<br>em um comando" }
+        f7@{ shape: subproc, label: "🧪 07 · Testes<br>automatizados" }
+        f8@{ shape: subproc, label: "♻️ 08 · Backup<br>e restauração" }
+        f9@{ shape: subproc, label: "📖 09 · Documentação<br>final e capturas" }
+    end
+    fim@{ shape: stadium, label: "🏁 stack no ar<br>testada e documentada" }
     volta@{ shape: rect, label: "↩️ corrigir ou<br>desfazer a fase" }
 
     inicio -- "1 · já existe" --> feito
-    feito -- "2 · ordem do usuário" --> f4
-    f4 -- "3 · validar" --> p4
-    p4 -- "4 · ✅ passou" --> f5
-    f5 -- "5 · validar" --> p5
-    p5 -- "6 · ✅ passou" --> f6
-    f6 -- "7 · validar" --> p6
-    p6 -- "8 · ✅ passou" --> f7
-    f7 -- "9 · validar" --> p7
-    p7 -- "10 · ✅ passou" --> fim
-    p4 -- "❌ falhou" --> volta
-    p5 -- "❌ falhou" --> volta
-    p6 -- "❌ falhou" --> volta
-    p7 -- "❌ falhou" --> volta
+    feito -- "2 · commit e push do plano" --> f4
+    f4 -- "3 · ✅ portão 04" --> f5
+    f5 -- "4 · ✅ portão 05" --> f6
+    f6 -- "5 · ✅ portão 06" --> f7
+    f7 -- "6 · ✅ portão 07" --> f8
+    f8 -- "7 · ✅ portão 08" --> f9
+    f9 -- "8 · ✅ portão 09" --> fim
+    EXEC -- "❌ portão reprovado" --> volta

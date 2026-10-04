@@ -6,12 +6,12 @@
 
 Um perfil é um tamanho pronto de servidor: pequeno, médio ou grande. Você escolhe o tamanho na hora de subir e o perfil ajusta sozinho quantos equipamentos podem conectar ao mesmo tempo e quanto de CPU e memória o servidor pode usar. O `.env` guarda o que é do cliente (IPs, portas, certificado); o perfil guarda só o dimensionamento.
 
-<picture>
+<a href="diagramas/configuracao-diagrama.mmd"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagramas/configuracao-diagrama-escuro.svg">
   <img src="diagramas/configuracao-diagrama.svg" alt="Perfis: o .env traz os valores do ambiente, o perfil sobrescreve os limites, o Docker Compose junta os dois e aplica ao Pure-FTPd" width="100%">
-</picture>
+</picture></a>
 
-<sub>📐 Nível 1 · Diagrama · fonte: [configuracao-diagrama.mmd](diagramas/configuracao-diagrama.mmd)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/configuracao-diagrama.mmd) · [no computador](diagramas/visualizador.html#configuracao-diagrama)</sub>
 
 **🧭 Sequência:** 📄 `.env` ➜ 🎚️ `profiles/small.env` ➜ 🐳 Docker Compose ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 limites aplicados
 
