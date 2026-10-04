@@ -8,6 +8,15 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.5.2] - 2026-10-04
+
+Página do repositório mais leve: só o principal fica aberto. Nenhuma mudança no funcionamento da stack.
+
+### Alterado
+
+- **Menus recolhidos no README:** os fluxogramas completos do FTP e do painel, o mapa da arquitetura, a tabela de peças, as tecnologias, as portas, os perfis, a lista de proteções, a estrutura de arquivos e os projetos oficiais passaram para menus recolhidos, cada um com uma frase de resumo fora do menu. Ficam abertos o que é, os destaques, a instalação rápida, o aviso de rede privada e o índice da documentação.
+- **Um diagrama aberto por página:** no README e nos guias de arquitetura e do painel, só o diagrama da abertura fica aberto; os outros carregam quando o menu é aberto. Medido na página do repositório: quatro diagramas carregados na abertura antes, um depois.
+
 ## [0.5.1] - 2026-10-04
 
 Diagramas mais leves para abrir no repositório. Nenhuma mudança no funcionamento da stack.
