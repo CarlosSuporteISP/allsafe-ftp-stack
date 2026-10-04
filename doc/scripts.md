@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>🧭 Sumário — clique para expandir</summary>
 
-[📋 Visão geral](#visao-geral) · [🚀 `deploy.sh`](#deploy) · [👤 `manage-user.sh`](#manage-user) · [🧪 `scripts/validate.sh`](#validate) · [⚙️ `scripts/entrypoint.sh`](#entrypoint) · [👥 `scripts/ftp-user.sh`](#ftp-user)
+[📋 Visão geral](#visao-geral) · [🚀 `deploy.sh`](#deploy) · [👤 `manage-user.sh`](#manage-user) · [🔑 `scripts/painel-senha.sh`](#painel-senha) · [🧪 `scripts/validate.sh`](#validate) · [⚙️ `scripts/entrypoint.sh`](#entrypoint) · [🖥️ `scripts/painel-entrypoint.sh`](#painel-entrypoint) · [👥 `scripts/ftp-user.sh`](#ftp-user) · [🧩 Scripts de apoio](#apoio)
 
 </details>
 
@@ -41,13 +41,17 @@ flowchart LR
 
 | Script | Onde roda | Para que serve |
 |---|---|---|
-| [`deploy.sh`](../deploy.sh) | host | Valida o Compose com o perfil escolhido e sobe a stack |
+| [`deploy.sh`](../deploy.sh) | host | Valida a configuração com o perfil escolhido, gera os segredos e sobe o FTP e o painel |
 | [`manage-user.sh`](../manage-user.sh) | host | Atalho para criar, trocar senha, remover e listar usuários FTP |
+| [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | host | Troca a senha do painel, gravando só o hash |
 | [`scripts/validate.sh`](../scripts/validate.sh) | host | Checagem de sintaxe, do Compose de todos os perfis e, opcionalmente, do container no ar |
 | [`scripts/entrypoint.sh`](../scripts/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado e executa o `pure-ftpd` |
-| [`scripts/ftp-user.sh`](../scripts/ftp-user.sh) | container | Gestão de usuários no PureDB, chamada pelo `manage-user.sh` |
+| [`scripts/painel-entrypoint.sh`](../scripts/painel-entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel e executa o servidor web |
+| [`scripts/ftp-user.sh`](../scripts/ftp-user.sh) | os dois containers | Gestão de usuários no PureDB, chamada pelo `manage-user.sh` e pelo painel |
+| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | host e containers | Funções que conferem se um IP ou uma rede é privado; carregado pelos outros scripts |
+| [`scripts/ambiente.sh`](../scripts/ambiente.sh) | host | Função que lê uma chave do `.env` sem executar o arquivo; carregado pelos outros scripts |
 
-Os dois da pasta [`scripts/`](../scripts/) que rodam no container são copiados para a imagem pelo [`Dockerfile`](../Dockerfile).
+Os scripts da pasta [`scripts/`](../scripts/) que rodam em container são copiados para a imagem pelo [`Dockerfile`](../Dockerfile).
 
 ---
 
@@ -62,19 +66,21 @@ Os dois da pasta [`scripts/`](../scripts/) que rodam no container são copiados 
 | Parâmetro | Efeito |
 |---|---|
 | `--size` | Carrega `profiles/<perfil>.env` por cima do `.env` (padrão `small`) |
-| `--check-only` | Só valida perfil e Compose; não sobe nada |
+| `--check-only` | Só valida o perfil, a rede privada e o Compose; não cria nem sobe nada |
 | `-h`, `--help` | Mostra o uso |
 
-**Resultado esperado:** a tabela do `docker compose ps` com `allsafe-ftp` em `health: starting` e, segundos depois, `healthy`. Com `--check-only`: `OK: perfil '<perfil>' e compose validados; nada foi alterado.`
+**Resultado esperado:** a tabela do `docker compose ps` com `allsafe-ftp` e `allsafe-ftp-painel` e, no fim, a linha `Painel: https://<PAINEL_BIND_IP>:<PAINEL_PORT>  (certificado autoassinado; só rede privada, atrás de firewall)`. Segundos depois os dois ficam `healthy`. Com `--check-only`: `OK: perfil '<perfil>', rede privada e compose validados; nada foi alterado.`
 
 <details>
 <summary>🔬 Detalhe técnico — comportamento e códigos de saída</summary>
 
 - Na primeira execução sem `.env`, copia o [`.env.example`](../.env.example), aplica `0600`, mostra `Edite <pasta>/.env e execute novamente.` e sai com código `1`.
 - Se `.secrets/ftp_password.txt` estiver vazio ou ausente, gera uma senha forte (`0600`): veja [🔑 Segredos](segredos.md).
+- Recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env`, e qualquer `FTP_BIND_IP`, `FTP_PUBLIC_IP`, `PAINEL_BIND_IP`, `PAINEL_REDES_PERMITIDAS` ou `PAINEL_CERT_CN` (em forma de IP) fora de rede privada.
+- Se `.secrets/painel_password_hash.txt` não existir, gera a senha inicial do painel em `.secrets/painel_password.txt` (`0600`) e grava o hash dela, chamando o `scripts/painel-senha.sh --inicial` depois de construir a imagem.
 - Opção desconhecida ou perfil inexistente: mensagem `Opção inválida: ...` ou `ERRO: perfil inexistente: ...` e código `64`.
 - O Compose é sempre chamado com `--env-file .env --env-file profiles/<perfil>.env`; o perfil vence o `.env`.
-- Sobe com `docker compose up -d --build` e termina mostrando o `docker compose ps`. Não espera o `healthy`.
+- Constrói as duas imagens com `docker compose build`, sobe com `docker compose up -d` e termina mostrando o `docker compose ps` e o endereço do painel. O painel só inicia depois de o FTP ficar `healthy`; o script não espera o `healthy` do painel.
 
 </details>
 
@@ -97,6 +103,34 @@ A senha é lida do terminal e enviada pelo `stdin` para o container: não aparec
 
 ---
 
+<a name="painel-senha"></a>
+
+## 🔑 `scripts/painel-senha.sh`
+
+```bash
+./scripts/painel-senha.sh            # pergunta a senha nova duas vezes, sem ecoar
+./scripts/painel-senha.sh --gerar    # cria uma senha forte e mostra uma única vez
+```
+
+**Resultado esperado:** `Hash gravado em ./.secrets/painel_password_hash.txt; painel reiniciado e sessões abertas encerradas.`
+
+A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.secrets/painel_password.txt` da instalação é apagado. Quando usar: [🖥️ Painel web](painel.md#senha).
+
+<details>
+<summary>🔬 Detalhe técnico — como o hash é calculado</summary>
+
+- Lê `SECRETS_DIR` e `PAINEL_IMAGE` do `.env` (ou do arquivo em `ENV_FILE`), sem executar o arquivo.
+- A senha também pode vir pela entrada padrão: `./scripts/painel-senha.sh < arquivo`.
+- O hash `scrypt` é calculado **dentro da imagem do painel**, em um container descartável sem rede, com a raiz somente leitura e sem capabilities (`docker run --rm -i --network none --read-only --cap-drop ALL`). O host não precisa de Python.
+- O hash é gravado por cima do mesmo arquivo: o segredo é um _bind mount_ de arquivo, e trocar o arquivo por outro faria o container continuar vendo o antigo.
+- Depois de gravar, reinicia o serviço `painel` (encerra as sessões). Se o painel não estiver rodando, o hash vale na próxima subida.
+- `--inicial` é de uso do `deploy.sh`: não reinicia nada e mantém o `painel_password.txt`.
+- Opção desconhecida: código `64`. Falta do `.env` ou da imagem: `ERRO: ... rode ./deploy.sh primeiro`, código `1`.
+
+</details>
+
+---
+
 <a name="validate"></a>
 
 ## 🧪 `scripts/validate.sh`
@@ -106,14 +140,14 @@ A senha é lida do terminal e enviada pelo `stdin` para o container: não aparec
 ./scripts/validate.sh --runtime  # também exige o container running e healthy e o usuário no PureDB
 ```
 
-**Resultado esperado:** `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Qualquer falha encerra com código diferente de zero.
+**Resultado esperado:** `painel/servidor.py OK`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Qualquer falha encerra com código diferente de zero.
 
 <details>
 <summary>🔬 Detalhe técnico — o que cada modo confere</summary>
 
 | Modo | Confere |
 |---|---|
-| sem parâmetro | `bash -n` em `deploy.sh`, `manage-user.sh` e `scripts/*.sh`; `docker compose config --quiet` com `.env.example` e cada arquivo de `profiles/` |
+| sem parâmetro | `bash -n` em `deploy.sh`, `manage-user.sh` e `scripts/*.sh`; a sintaxe de `painel/servidor.py`, se o host tiver `python3`; `docker compose config --quiet` com `.env.example` e cada arquivo de `profiles/` |
 | `--runtime` | tudo acima, mais: serviço `ftp` em `running`, saúde `healthy` e `pure-pw show` do usuário inicial |
 
 > ⚠️ No modo `--runtime`, o usuário conferido vem da variável `FTP_USER` **do shell**, com padrão `transfer`; o script não lê o `.env`. Se o seu usuário inicial tem outro nome, rode `FTP_USER=<usuario> ./scripts/validate.sh --runtime`.
@@ -158,11 +192,43 @@ A correção de cada uma está em [🚨 Solução de problemas](solucao-de-probl
 
 ---
 
+<a name="painel-entrypoint"></a>
+
+## 🖥️ `scripts/painel-entrypoint.sh`
+
+Roda a cada início do container do painel. Não tem parâmetros: tudo vem das variáveis de [⚙️ Configuração](configuracao.md#painel).
+
+1. Recusa senha em variável e exige o segredo `/run/secrets/painel_password_hash`.
+2. Confere que `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e o `PAINEL_CERT_CN` (se for IP) são privados.
+3. Ajusta dono e modo de `/painel` (`0700`, do `root`) e gera o certificado autoassinado do painel quando ele falta, quando os endereços mudam ou quando faltam menos de 30 dias para vencer.
+4. Executa o servidor [`painel/servidor.py`](../painel/servidor.py).
+
+**Resultado esperado:** a linha `Painel pronto em 8443/tcp (HTTPS); sessão de 15 min; redes permitidas: ...` no log do container.
+
+<details>
+<summary>🔬 Detalhe técnico — mensagens de falha</summary>
+
+| Mensagem | Quando |
+|---|---|
+| `FALHA: PAINEL_PASSWORD não é aceita` (ou `PAINEL_PASSWORD_HASH`) | há senha ou hash em variável de ambiente; o painel só lê o segredo |
+| `FALHA: segredo /run/secrets/painel_password_hash ausente` | `.secrets/painel_password_hash.txt` não existe: rode o `deploy.sh` |
+| `FALHA: PAINEL_BIND_IP=… não é IP privado` (ou `PAINEL_CERT_CN`) | endereço fora das faixas privadas |
+| `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é rede privada` | a lista tem rede pública ou `0.0.0.0/0` |
+| `FALHA: PAINEL_CERT_CN inválido` | nome com maiúscula, espaço ou caractere fora de `a-z`, `0-9`, `.` e `-` |
+| `FALHA: pastas /auth e /data ausentes` | o painel subiu sem as pastas do serviço `ftp` |
+| `FALHA: não foi possível gerar o certificado do painel` | `DATA_DIR/painel` sem espaço ou sem permissão de escrita |
+
+O certificado é EC P-256, válido por 825 dias. O arquivo `painel-san.txt`, ao lado dele, marca que foi gerado pela stack: sem esse arquivo, o certificado é tratado como próprio e nunca é refeito. Veja [🖥️ Painel web](painel.md#certificado).
+
+</details>
+
+---
+
 <a name="ftp-user"></a>
 
 ## 👥 `scripts/ftp-user.sh`
 
-Instalado na imagem como `/usr/local/sbin/allsafe-ftp-user`. Não é chamado diretamente: use o [`manage-user.sh`](../manage-user.sh).
+Instalado nas duas imagens como `/usr/local/sbin/allsafe-ftp-user`. Não é chamado diretamente: use o [`manage-user.sh`](../manage-user.sh) ou o [painel](painel.md#usuarios).
 
 <details>
 <summary>🔬 Detalhe técnico — o que ele faz dentro do container</summary>
@@ -172,9 +238,24 @@ Instalado na imagem como `/usr/local/sbin/allsafe-ftp-user`. Não é chamado dir
 - `add` cria `/data/<usuario>` com dono `ftpdata` e modo `0750` e registra o usuário com `pure-pw useradd`.
 - `passwd` usa `pure-pw passwd`; `del` usa `pure-pw userdel` e **não** apaga a pasta.
 - Depois de cada mudança, regenera o `pureftpd.pdb` com `pure-pw mkdb` e mantém os dois arquivos em `0600`.
+- Antes de alterar, pega a trava `/auth/.lock` (`flock`, espera até 30 segundos): o FTP, o `manage-user.sh` e o painel nunca gravam ao mesmo tempo.
+- `list` passa o arquivo pela variável `PURE_PASSWDFILE`, porque o `pure-pw list` não aceita `-f` logo depois da ação.
 - Uso inválido: mostra `Uso: ... add|passwd|del|list [usuario]` e sai com código `2`.
 
 </details>
+
+---
+
+<a name="apoio"></a>
+
+## 🧩 Scripts de apoio
+
+Não são executados: outros scripts os carregam com `source`.
+
+| Script | Função | Quem usa |
+|---|---|---|
+| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | `ip_privado`, `cidr_privado` e `exigir_ip_privado`: aceitam só `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16` | `deploy.sh`, `entrypoint.sh` e `painel-entrypoint.sh` |
+| [`scripts/ambiente.sh`](../scripts/ambiente.sh) | `env_valor <chave> [padrão]`: lê uma chave do `.env` sem executar o arquivo; a última ocorrência vale, como no Compose | `deploy.sh` e `painel-senha.sh` |
 
 ---
 

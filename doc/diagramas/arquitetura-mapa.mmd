@@ -7,15 +7,17 @@ flowchart LR
     subgraph HOST["🖥️ Host"]
         scripts@{ shape: console, label: "⌨️ deploy.sh<br>manage-user.sh" }
         env@{ shape: doc, label: "📄 .env<br>e perfil" }
-        segredo@{ shape: doc, label: "🔑 .secrets<br>ftp_password.txt" }
+        segredo@{ shape: doc, label: "🔑 .secrets<br>senha do FTP, hash do painel" }
     end
-    subgraph CONTAINER["🐳 Container allsafe-ftp · rede allsafe-ftp-network"]
-        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>2121/tcp" }
+    subgraph CONTAINERS["🐳 Containers · rede allsafe-ftp-network"]
+        painel@{ shape: rect, label: "🖥️ Painel web<br>allsafe-ftp-painel, 8443/tcp" }
+        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
         logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
     end
     subgraph VOLUMES["💽 Volumes"]
-        vcerts@{ shape: lin-cyl, label: "💽 DATA_DIR/certs<br>/etc/ssl/private" }
+        vpainel@{ shape: lin-cyl, label: "💽 DATA_DIR/painel<br>/painel, certificado e auditoria" }
         vauth@{ shape: cyl, label: "🗄️ DATA_DIR/auth<br>/auth, PureDB" }
+        vcerts@{ shape: lin-cyl, label: "💽 DATA_DIR/certs<br>/etc/ssl/private" }
         vdata@{ shape: lin-cyl, label: "💽 DATA_DIR/dados<br>/data" }
     end
     subgraph RESULTADO["🏁 Resultado"]
@@ -23,12 +25,17 @@ flowchart LR
     end
 
     operador -- "1 · ./deploy.sh --size small" --> scripts
-    scripts -- "2 · docker compose up -d --build" --> ftp
-    equip -- "3 · FTPS, TCP 21 para 2121" --> ftp
-    ftp -- "4 · grava o arquivo, passivo 30000 a 30049" --> vdata
-    vdata -- "5 · arquivo no volume" --> fim
+    scripts -- "2 · docker compose build e up -d" --> ftp
+    operador -- "3 · HTTPS, TCP 8443" --> painel
+    painel -- "4 · cria, troca a senha ou remove o usuário" --> vauth
+    equip -- "5 · FTPS, TCP 21 para 2121" --> ftp
+    ftp -- "6 · grava o arquivo, passivo 30000 a 30049" --> vdata
+    vdata -- "7 · arquivo no volume" --> fim
     scripts -. "lê" .-> env
-    ftp -. "lê na subida, só leitura" .-> segredo
+    ftp -. "lê a senha na subida, só leitura" .-> segredo
+    painel -. "lê o hash a cada entrada, só leitura" .-> segredo
     ftp -. "consulta os usuários" .-> vauth
     ftp -. "lê o certificado" .-> vcerts
+    painel -. "grava certificado e auditoria" .-> vpainel
+    painel -. "cria a pasta do usuário" .-> vdata
     ftp -. "grava cada transferência" .-> logs

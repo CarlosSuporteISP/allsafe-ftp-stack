@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>🧭 Sumário — clique para expandir</summary>
 
-[🧭 Diagnóstico em 30 segundos](#diagnostico-em-30-segundos) · [❌ O container não sobe](#o-container-nao-sobe) · [🔌 Conecta mas falha no login ou na listagem](#conecta-mas-falha-no-login-ou-na-listagem) · [📁 Arquivo e permissão](#problemas-de-arquivo-permissao) · [🔐 Certificado e TLS](#certificado-tls) · [🧪 Ferramentas de validação](#ferramentas-de-validacao)
+[🧭 Diagnóstico em 30 segundos](#diagnostico-em-30-segundos) · [❌ O container não sobe](#o-container-nao-sobe) · [🔌 Conecta mas falha no login ou na listagem](#conecta-mas-falha-no-login-ou-na-listagem) · [📁 Arquivo e permissão](#problemas-de-arquivo-permissao) · [🔐 Certificado e TLS](#certificado-tls) · [🖥️ Painel web](#painel) · [🧪 Ferramentas de validação](#ferramentas-de-validacao)
 
 </details>
 
@@ -43,11 +43,12 @@ flowchart LR
 docker compose ps                                               # o container está 'running'?
 docker inspect --format '{{.State.Health.Status}}' allsafe-ftp  # 'healthy'?
 docker compose logs --tail 50 ftp                               # o que o entrypoint e o pure-ftpd disseram?
+docker compose logs --tail 50 painel                            # e o painel?
 ```
 
-**Resultado esperado:** `running`, `healthy` e, no log, a linha `FTP pronto em 2121/tcp; ...`. Qualquer coisa diferente aponta para uma das tabelas abaixo.
+**Resultado esperado:** os dois containers `running` e `healthy` e, no log, as linhas `FTP pronto em 2121/tcp; ...` e `Painel pronto em 8443/tcp (HTTPS); ...`. Qualquer coisa diferente aponta para uma das tabelas abaixo.
 
-O `entrypoint.sh` aborta com `FALHA: <motivo>` e o container reinicia em laço: o motivo está sempre na primeira tentativa do log.
+Os dois entrypoints abortam com `FALHA: <motivo>` e o container reinicia em laço: o motivo está sempre na primeira tentativa do log.
 
 ---
 
@@ -60,7 +61,7 @@ O `entrypoint.sh` aborta com `FALHA: <motivo>` e o container reinicia em laço: 
 | `FALHA: segredo /run/secrets/ftp_password ausente` | `.secrets/ftp_password.txt` não existe | `ls -l .secrets/` | Rode `./deploy.sh`, que cria o arquivo com uma senha forte. Veja [🔑 Segredos](segredos.md) |
 | `FALHA: FTP_BIND_IP=… não é IP privado` (ou `FTP_PUBLIC_IP`) | Endereço fora de `127/8`, `10/8`, `172.16/12` e `192.168/16`; o container reinicia em laço | `grep -E "FTP_(BIND|PUBLIC)_IP" .env` | Use o IP **interno** do servidor. A stack não aceita `0.0.0.0` nem IP público: veja [🛡️ Segurança](seguranca.md) |
 | `ERRO: .env ainda traz FTP_PASSWORD` (no `deploy.sh`) | `.env` de uma versão anterior, com senha | `grep -c "^FTP_PASSWORD" .env` | Grave a senha em `.secrets/ftp_password.txt` (`chmod 600`) e apague `FTP_PASSWORD` e `FTP_PASSWORD_FILE` do `.env` |
-| `bind source path does not exist` ao subir | Pasta de `DATA_DIR` ausente (o Compose não cria) | `ls "$DATA_DIR"` | Rode `./deploy.sh`, que cria `dados/`, `auth/` e `certs/` |
+| `bind source path does not exist` ao subir | Pasta de `DATA_DIR` ausente (o Compose não cria) | `ls "$DATA_DIR"` | Rode `./deploy.sh`, que cria `dados/`, `auth/`, `certs/` e `painel/` |
 | `FALHA: a senha FTP deve ter pelo menos 12 caracteres` | Senha curta, ou arquivo vazio ou só com linha em branco | `wc -c .secrets/ftp_password.txt` | Regrave: `printf '%s' 'senha-com-12+' > .secrets/ftp_password.txt` |
 | `FALHA: FTP_USER invalido` | Nome fora de `^[a-z_][a-z0-9_-]{0,31}$` | `grep '^FTP_USER=' .env` | Use minúsculas, sem espaço nem acento; comece com letra ou `_` |
 | `FALHA: faixa passiva invalida` ou `fora dos limites` | `FTP_PASSIVE_PORT_START` ou `FTP_PASSIVE_PORT_END` não numéricos, abaixo de `1024`, acima de `65535` ou invertidos | `grep PASSIVE .env profiles/*.env` | Corrija no `.env`; mantenha o início menor ou igual ao fim |
@@ -79,7 +80,7 @@ O `entrypoint.sh` aborta com `FALHA: <motivo>` e o container reinicia em laço: 
 | Cliente conecta e cai ao ser exigido o `AUTH TLS` | Cliente usando FTP **puro** ou FTPS **implícito** (porta 990) | Configuração do cliente; log do container | Configure o cliente para **FTP explícito sobre TLS** na porta de controle |
 | `530 Login authentication failed` | Senha errada, usuário não existe no PureDB ou UID abaixo de 10000 | `./manage-user.sh list` | Recrie a senha com `./manage-user.sh passwd <usuario>` |
 | Login OK, `LIST` ou `STOR` trava e dá timeout | Modo **ativo**, ou faixa passiva ou `FTP_PUBLIC_IP` bloqueados ou errados | `docker compose ps` mostra a faixa publicada; teste a porta `30000/tcp` a partir do cliente | Use modo **passivo**; libere `30000-30049/tcp` no firewall; `FTP_PUBLIC_IP` com o IP que o cliente alcança |
-| `425 Could not open data connection` atrás de NAT | `FTP_PUBLIC_IP` aponta para IP interno | `grep '^FTP_PUBLIC_IP=' .env` | Defina `FTP_PUBLIC_IP` com o IP público e garanta NAT 1:1 da faixa passiva |
+| `425 Could not open data connection` | `FTP_PUBLIC_IP` aponta para um IP que o cliente não alcança | `grep '^FTP_PUBLIC_IP=' .env` | Defina `FTP_PUBLIC_IP` com o IP **privado** que o cliente alcança e libere a faixa passiva até ele. A stack não aceita IP público |
 | Erro de certificado no cliente | O certificado ainda é o autoassinado | `openssl s_client -connect SEU_IP:21 -starttls ftp` mostra o emissor | Instale um certificado real ([🧰 Operação](operacao.md#certificado-real-de-producao)) ou, só em teste, desative a verificação no cliente |
 | `421 Too many connections` | `FTP_MAX_CLIENTS` ou `FTP_MAX_CLIENTS_PER_IP` atingido | `docker compose logs --tail 50 ftp` | Suba de perfil com `./deploy.sh --size medium` e libere a faixa passiva nova: [🎚️ Perfis](perfis.md) |
 
@@ -110,6 +111,28 @@ O `entrypoint.sh` aborta com `FALHA: <motivo>` e o container reinicia em laço: 
 
 ---
 
+<a name="painel"></a>
+
+## 🖥️ Painel web
+
+| Sintoma | Causa | Como verificar | Correção |
+|---|---|---|---|
+| O navegador não abre o endereço (conexão recusada ou tempo esgotado) | Painel parado, endereço diferente do `PAINEL_BIND_IP` ou firewall | `docker compose ps painel`; `grep '^PAINEL_' .env` | Abra pelo IP e pela porta do `.env`. Com `PAINEL_BIND_IP=127.0.0.1` o painel só abre no próprio servidor |
+| Página em branco ou erro de conexão com `http://` | O painel só fala HTTPS | O endereço digitado | Use `https://` |
+| Aviso de certificado no navegador | O certificado inicial é autoassinado | A impressão digital mostrada na aba `🔐 Segurança` | Confira a impressão digital e aceite, ou instale um certificado próprio: [🖥️ Painel web](painel.md#certificado) |
+| `cliente fora das redes permitidas` (`403`) | O endereço do cliente não está em `PAINEL_REDES_PERMITIDAS` | `grep '^PAINEL_REDES_PERMITIDAS=' .env` | Inclua a rede **privada** de quem administra e rode o `deploy.sh`. Para abrir pelo próprio servidor, mantenha a sub-rede da stack (`FTP_SUBNET`) na lista |
+| `endereço não aceito` (`400`) | O painel foi aberto por um nome que ele não conhece, ou por IP público | O endereço digitado | Abra pelo IP privado, ou cadastre o nome interno em `PAINEL_CERT_CN` e rode o `deploy.sh` |
+| `Muitas tentativas. Aguarde alguns minutos e tente de novo.` (`429`) | Cinco senhas erradas em 15 minutos, vindas do mesmo endereço | Aba `📜 Atividade` ou `auditoria.log` | Espere 15 minutos, ou `docker compose restart painel`, que zera o bloqueio |
+| Senha do painel perdida | A senha não fica gravada, só o hash | — | `./scripts/painel-senha.sh --gerar`: veja [🔑 Segredos](segredos.md#senha-do-painel) |
+| A sessão cai sozinha | 15 minutos sem uso, teto de 8 horas, troca do endereço do cliente ou reinício do painel | `grep '^PAINEL_SESSAO_MINUTOS=' .env` | Entre de novo. O tempo sem uso vai de `1` a `120` minutos |
+| `O envio não partiu deste painel.` ou `Formulário sem token válido.` (`403`) | Aba antiga, depois de sair ou de a sessão vencer, ou painel aberto por um intermediário que troca o endereço | — | Abra a página de novo, direto pelo endereço do painel, e repita |
+| O usuário inicial não pode ser alterado (`409`) | O `FTP_USER` é recriado a cada subida a partir de `.secrets/ftp_password.txt` | — | Troque a senha dele pelo arquivo: [🔑 Segredos](segredos.md#trocar-a-senha) |
+| `allsafe-ftp-painel` reiniciando em laço | O entrypoint do painel recusou a configuração | `docker compose logs --tail 20 painel` | Corrija conforme a mensagem `FALHA:`: [⌨️ Scripts](scripts.md#painel-entrypoint) |
+| `dependency failed to start: container allsafe-ftp is unhealthy` | O painel só sobe depois do FTP | `docker compose logs --tail 50 ftp` | Resolva primeiro o FTP, pela tabela [❌ O container não sobe](#o-container-nao-sobe) |
+| `bind: address already in use` na porta do painel | `PAINEL_PORT` ocupada por outro serviço no mesmo IP | `ss -ltnp` | Troque `PAINEL_PORT` no `.env` |
+
+---
+
 <a name="ferramentas-de-validacao"></a>
 
 ## 🧪 Ferramentas de validação
@@ -127,14 +150,14 @@ Ainda travado? Colete e analise:
 ```bash
 TEMP_DIR=/home/carlos/code/tmp/allsafe-ftp-stack   # o TEMP_DIR do seu .env
 mkdir -p "$TEMP_DIR"
-docker compose logs --no-color ftp > "$TEMP_DIR/allsafe-ftp.log"
-docker inspect allsafe-ftp > "$TEMP_DIR/allsafe-ftp.inspect.json"
+docker compose logs --no-color ftp painel > "$TEMP_DIR/allsafe-ftp.log"
+docker inspect allsafe-ftp allsafe-ftp-painel > "$TEMP_DIR/allsafe-ftp.inspect.json"
 ```
 
-**Resultado esperado:** dois arquivos em `TEMP_DIR` com o log completo e a configuração efetiva do container. Apague-os ao terminar.
+**Resultado esperado:** dois arquivos em `TEMP_DIR` com o log completo e a configuração efetiva dos containers. Apague-os ao terminar.
 
 > ⚠️ O `inspect` traz as variáveis de ambiente do container. Nenhuma delas é senha (a senha só existe no segredo), mas o arquivo mostra IPs e caminhos do host: revise antes de compartilhar.
 
 ---
 
-⬅️ [🧰 Operação](operacao.md) · 🏠 [Documentação](README.md)
+⬅️ [🖥️ Painel web](painel.md) · 🏠 [Documentação](README.md)

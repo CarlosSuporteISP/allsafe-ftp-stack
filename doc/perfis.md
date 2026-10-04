@@ -45,7 +45,7 @@ Passe o nome do perfil em `--size` para o [`deploy.sh`](../deploy.sh) (padrão: 
 ./deploy.sh --size large --check-only     # só valida, não sobe nada
 ```
 
-**Resultado esperado:** com `--check-only`, a mensagem `OK: perfil 'large' e compose validados; nada foi alterado.`; sem ele, a tabela do `docker compose ps`.
+**Resultado esperado:** com `--check-only`, a mensagem `OK: perfil 'large', rede privada e compose validados; nada foi alterado.`; sem ele, a tabela do `docker compose ps`.
 
 ---
 

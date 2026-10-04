@@ -27,7 +27,7 @@ flowchart LR
     end
 
     operador -- "1 · executa" --> deploy
-    deploy -- "2 · docker compose up -d --build" --> compose
+    deploy -- "2 · docker compose build e up -d" --> compose
     compose -- "3 · inicia o container" --> entry
     entry -- "4 · confere usuário, senha, faixa e TLS" --> valida
     valida -- "5a · ✅ sim" --> pw

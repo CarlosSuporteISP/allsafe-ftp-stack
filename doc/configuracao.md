@@ -28,7 +28,7 @@ flowchart LR
 <details>
 <summary>🧭 Sumário — clique para expandir</summary>
 
-[🧾 Exemplo mínimo de produção](#exemplo-minimo-de-producao) · [🌍 Geral](#geral) · [🔌 Rede e portas](#rede-e-portas) · [👤 Usuário inicial e senha](#usuario-inicial-e-senha) · [🔐 TLS](#tls) · [👥 Limites de sessão](#limites-de-sessao) · [🧱 Limites de recurso do container](#limites-de-recurso-do-container) · [🌐 Rede Docker](#rede-docker-sub-rede)
+[🧾 Exemplo mínimo de produção](#exemplo-minimo-de-producao) · [🌍 Geral](#geral) · [🔌 Rede e portas](#rede-e-portas) · [👤 Usuário inicial e senha](#usuario-inicial-e-senha) · [🔐 TLS](#tls) · [👥 Limites de sessão](#limites-de-sessao) · [🖥️ Painel web](#painel) · [🧱 Limites de recurso do container](#limites-de-recurso-do-container) · [🌐 Rede Docker](#rede-docker-sub-rede)
 
 </details>
 
@@ -76,7 +76,8 @@ A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../.env.e
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
 | `TZ` | Fuso horário do container (afeta logs e validade do certificado) | Nome IANA, exemplo: `America/Sao_Paulo` | `America/Sao_Paulo` |
-| `FTP_IMAGE` | Nome e tag da imagem construída no host | `nome:tag` | `allsafe-ftp:local` |
+| `FTP_IMAGE` | Nome e tag da imagem do FTP, construída no host | `nome:tag` | `allsafe-ftp:local` |
+| `PAINEL_IMAGE` | Nome e tag da imagem do painel, construída no host | `nome:tag` | `allsafe-ftp-painel:local` |
 
 ---
 
@@ -86,15 +87,16 @@ A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../.env.e
 
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
-| `DATA_DIR` | Pasta do host com os dados da stack: `dados/` (arquivos enviados), `auth/` (PureDB) e `certs/` (TLS). Montada por _bind mount_; a stack não cria volume nomeado | Caminho absoluto | `/home/carlos/code/data/allsafe-ftp-stack` |
+| `DATA_DIR` | Pasta do host com os dados da stack: `dados/` (arquivos enviados), `auth/` (PureDB), `certs/` (TLS do FTP) e `painel/` (certificado e auditoria do painel). Montada por _bind mount_; a stack não cria volume nomeado | Caminho absoluto | `/home/carlos/code/data/allsafe-ftp-stack` |
 | `BACKUP_DIR` | Pasta do host para as cópias de segurança | Caminho absoluto | `/home/carlos/code/backups/allsafe-ftp-stack` |
 | `TEMP_DIR` | Pasta do host para temporários: instância de teste, coleta de diagnóstico | Caminho absoluto | `/home/carlos/code/tmp/allsafe-ftp-stack` |
 | `SECRETS_DIR` | Pasta dos segredos, um arquivo por segredo, modo `0700` | Caminho absoluto ou relativo à pasta do projeto | `./.secrets` |
 | `STACK_NAME` | Nome do projeto no Compose | Minúsculas, números e hífen | `allsafe-ftp-stack` |
 | `FTP_CONTAINER_NAME` | Nome do container e do host do FTP | Nome de container | `allsafe-ftp` |
+| `PAINEL_CONTAINER_NAME` | Nome do container e do host do painel | Nome de container | `allsafe-ftp-painel` |
 | `FTP_NETWORK_NAME` | Nome da rede Docker da stack | Nome de rede | `allsafe-ftp-network` |
 
-Para uma **segunda instância** no mesmo host, troque os três nomes, as pastas, as portas e a `FTP_SUBNET`. O [`deploy.sh`](../deploy.sh) aceita outro arquivo no lugar do `.env`: `ENV_FILE=/caminho/outro.env ./deploy.sh`.
+Para uma **segunda instância** no mesmo host, troque os quatro nomes, as imagens, as pastas, as portas (do FTP e do painel) e a `FTP_SUBNET`. O [`deploy.sh`](../deploy.sh) aceita outro arquivo no lugar do `.env`: `ENV_FILE=/caminho/outro.env ./deploy.sh`.
 
 ---
 
@@ -161,6 +163,29 @@ Trocar o certificado autoassinado por um real: [🧰 Operação](operacao.md#cer
 
 ---
 
+<a name="painel"></a>
+
+## 🖥️ Painel web
+
+| Variável | Para que serve | Valores | Padrão |
+|---|---|---|---|
+| `PAINEL_BIND_IP` | IP do **host** onde o painel escuta | **Só IP privado** do host; `0.0.0.0` e IP público são recusados | `127.0.0.1` |
+| `PAINEL_PORT` | Porta HTTPS do painel publicada no host (mapeada para `8443` no container) | `1` a `65535` | `8443` |
+| `PAINEL_REDES_PERMITIDAS` | Redes de onde o painel aceita cliente; as demais recebem `403` antes de qualquer tela | Lista de redes **privadas** separadas por vírgula, em notação CIDR | `127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
+| `PAINEL_SESSAO_MINUTOS` | Minutos sem uso até a sessão encerrar (o teto de 8 horas não muda) | `1` a `120` | `15` |
+| `PAINEL_CERT_CN` | Nome interno ou IP privado a mais no certificado autoassinado do painel | Nome em minúsculas ou IP **privado**; vazio para nenhum | vazio |
+| `PAINEL_MEMORY_LIMIT` | `mem_limit` do painel | exemplo: `192M` | `192M` |
+| `PAINEL_CPU_LIMIT` | `cpus` do painel | exemplo: `0.5` | `0.5` |
+| `PAINEL_PIDS_LIMIT` | `pids_limit` do painel | inteiro | `64` |
+
+> 🧱 **Rede privada:** o painel é só para rede interna, atrás de firewall. `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e um `PAINEL_CERT_CN` em forma de IP têm de ser privados: o [`deploy.sh`](../deploy.sh) e o container param com `não é IP privado` ou `não é rede privada` para qualquer outro valor.
+
+A senha do painel **não** é variável: fica em `.secrets/`, como hash. O `deploy.sh` e o container recusam `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`. Veja [🔑 Segredos](segredos.md#senha-do-painel) e o guia [🖥️ Painel web](painel.md).
+
+Os perfis de [`profiles/`](../profiles/) não mexem nas variáveis do painel.
+
+---
+
 <a name="limites-de-recurso-do-container"></a>
 
 ## 🧱 Limites de recurso do container
@@ -184,7 +209,7 @@ A rede Docker desta stack tem sub-rede fixa, trocável por uma variável no `.en
 
 | Variável | Rede | Containers | Padrão | Exemplo |
 |---|---|---|---|---|
-| `FTP_SUBNET` | `ftp` (`allsafe-ftp-network`) | `allsafe-ftp` | `172.29.1.0/29` | `FTP_SUBNET=10.250.1.0/29` |
+| `FTP_SUBNET` | `ftp` (`allsafe-ftp-network`) | `allsafe-ftp` e `allsafe-ftp-painel` | `172.29.1.0/29` | `FTP_SUBNET=10.250.1.0/29` |
 
 Numa instalação que já está rodando, a sub-rede nova só vale depois de recriar a rede (os volumes e os dados não são afetados):
 

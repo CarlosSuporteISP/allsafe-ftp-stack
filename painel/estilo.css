@@ -1,0 +1,185 @@
+/* Painel da allsafe-ftp-stack. Fundo escuro, sem fonte nem imagem de fora: a CSP só aceita o próprio painel. */
+:root {
+  --fundo: #0d1117;
+  --cartao: #161b22;
+  --campo: #010409;
+  --borda: #30363d;
+  --texto: #e6edf3;
+  --suave: #9198a1;
+  --destaque: #58a6ff;
+  --bom: #3fb950;
+  --atencao: #d29922;
+  --ruim: #f85149;
+  --raio: 8px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html { font-size: 16px; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Color Emoji", sans-serif;
+  line-height: 1.5;
+}
+
+a { color: var(--destaque); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
+
+h1 { margin: 0 0 16px; font-size: 1.5rem; }
+h2 { margin: 0 0 8px; font-size: 0.95rem; font-weight: 600; color: var(--suave); }
+p { margin: 0 0 12px; }
+
+code {
+  padding: 1px 6px;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  background: var(--campo);
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", "DejaVu Sans Mono", monospace;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------ topo, abas e rodapé */
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--borda);
+  background: var(--cartao);
+}
+
+.marca-topo { font-weight: 700; white-space: nowrap; }
+
+nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; flex: 1; }
+nav a { padding: 6px 12px; border-radius: var(--raio); color: var(--texto); }
+nav a:hover { background: var(--fundo); text-decoration: none; }
+nav a.ativa { background: var(--fundo); box-shadow: inset 0 -2px 0 var(--destaque); font-weight: 600; }
+nav form { margin: 0 0 0 auto; }
+nav button { margin: 0; background: transparent; color: var(--suave); border-color: var(--borda); }
+nav button:hover { color: var(--texto); background: var(--fundo); }
+
+main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--borda);
+  color: var(--suave);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------ cartões e números */
+
+.cartao {
+  margin: 0 0 16px;
+  padding: 16px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--cartao);
+}
+.cartao > :last-child { margin-bottom: 0; }
+.cartao.estreito { max-width: 560px; }
+.cartao.entrada { max-width: 420px; margin: 8vh auto 0; }
+.cartao.entrada h1 { margin-bottom: 4px; }
+
+.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 0 0 16px; }
+.grade .cartao { margin: 0; }
+
+.numero { margin: 0 0 4px; font-size: 1.75rem; font-weight: 700; line-height: 1.2; }
+.numero.menor { font-size: 1.05rem; }
+.bom { color: var(--bom); }
+.ruim { color: var(--ruim); }
+.suave { color: var(--suave); font-size: 0.875rem; }
+
+/* ------------------------------------------------------------ avisos */
+
+.aviso, .erro, .ok {
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-left-width: 4px;
+  border-radius: var(--raio);
+  background: var(--campo);
+}
+.aviso { border-left-color: var(--atencao); }
+.erro { border-left-color: var(--ruim); }
+.ok { border-left-color: var(--bom); }
+
+.segredo { margin: 16px 0; }
+.segredo code { display: block; padding: 12px; font-size: 1.05rem; user-select: all; }
+
+/* ------------------------------------------------------------ tabelas */
+
+.rolagem { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 8px 12px; border-bottom: 1px solid var(--borda); text-align: left; vertical-align: top; }
+thead th { color: var(--suave); font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
+tbody th { width: 1%; font-weight: 600; white-space: nowrap; }
+tbody tr:last-child > * { border-bottom: 0; }
+.acoes { white-space: nowrap; }
+.conferencia .marca { width: 1%; font-size: 1.1rem; }
+.digital { font-size: 0.75rem; }
+
+.etiqueta {
+  margin-left: 6px;
+  padding: 1px 8px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  color: var(--suave);
+  font-size: 0.75rem;
+}
+
+/* ------------------------------------------------------------ formulários e botões */
+
+label { display: block; margin: 12px 0 4px; font-weight: 600; }
+label .suave { font-weight: 400; }
+
+input:not([type="hidden"]) {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--campo);
+  color: var(--texto);
+  font: inherit;
+}
+input:focus-visible { border-color: var(--destaque); }
+
+button, .botao {
+  display: inline-block;
+  margin: 12px 0 0;
+  padding: 7px 14px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: #21262d;
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+}
+button:hover, .botao:hover { background: #30363d; text-decoration: none; }
+form button[type="submit"], .botao.principal { border-color: #2ea043; background: #238636; color: #fff; }
+form button[type="submit"]:hover, .botao.principal:hover { background: #2ea043; }
+form button.perigo, .botao.perigo { border-color: var(--borda); background: #21262d; color: var(--ruim); }
+form button.perigo:hover, .botao.perigo:hover { border-color: var(--ruim); background: #da3633; color: #fff; }
+nav form button[type="submit"] { border-color: var(--borda); background: transparent; color: var(--suave); font-weight: 400; }
+nav form button[type="submit"]:hover { background: var(--fundo); color: var(--texto); }
+td .botao { margin: 0; padding: 3px 10px; font-size: 0.875rem; font-weight: 400; }
+p > .botao { margin-top: 0; }
+
+@media (max-width: 640px) {
+  main { padding: 16px 12px; }
+  nav form { margin-left: 0; }
+  .acoes { white-space: normal; }
+}

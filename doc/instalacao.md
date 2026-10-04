@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-Você copia o arquivo de configuração, informa o IP do servidor, roda um script e o servidor FTP sobe sozinho, já com senha forte e conexão criptografada. No fim, um segundo script confere se está tudo no ar. Leva poucos minutos e dá para desfazer sem perder os arquivos.
+Você copia o arquivo de configuração, informa o IP do servidor, roda um script e o servidor FTP sobe sozinho, já com senha forte e conexão criptografada, junto com o painel web para administrar os usuários. No fim, um segundo script confere se está tudo no ar. Leva poucos minutos e dá para desfazer sem perder os arquivos.
 
 <!-- diagrama: diagramas/instalacao-diagrama.mmd -->
 ```mermaid
@@ -43,7 +43,8 @@ flowchart LR
 |---|---|
 | 🐳 Docker Engine com Docker Compose v2 ou mais novo | `docker compose version` deve responder |
 | 🌐 Um IP dedicado para o FTP | Não compartilhe o IP com outros serviços; o modo passivo abre 50 portas |
-| 🔥 Firewall no host | Libere `21/tcp` e `30000-30049/tcp` **só** para as redes de gerência dos equipamentos |
+| 🔥 Firewall no host | Libere `21/tcp` e `30000-30049/tcp` **só** para as redes de gerência dos equipamentos, e a porta do painel (`8443/tcp`) **só** para quem administra |
+| 🧱 Rede privada | A stack só aceita IP interno: veja [🔐 Segurança](seguranca.md#rede-privada) |
 | 🕰️ Relógio sincronizado | O certificado TLS depende de data e hora corretas (a stack `allsafe-ntp-nts-stack` cuida disso) |
 
 ---
@@ -62,8 +63,9 @@ Cada variável está explicada em [⚙️ Configuração](configuracao.md). Os c
 
 | Variável | Troque para |
 |---|---|
-| `FTP_BIND_IP` | o IP dedicado do servidor (em produção, **nunca** `127.0.0.1`) |
-| `FTP_PUBLIC_IP` | o IP que o cliente enxerga: igual ao `FTP_BIND_IP`, ou o IP público se houver NAT 1:1 |
+| `FTP_BIND_IP` | o IP **privado** dedicado do servidor (com `127.0.0.1` só o próprio servidor alcança o FTP) |
+| `FTP_PUBLIC_IP` | o IP que o cliente enxerga; normalmente igual ao `FTP_BIND_IP`. Também tem de ser privado |
+| `PAINEL_BIND_IP` | o IP **privado** por onde o painel será aberto; com `127.0.0.1` ele só abre no próprio servidor |
 | `FTP_CERT_CN` | o hostname (exemplo: `ftp.exemplo.com.br`) ou IP que vai no certificado |
 | `FTP_USER` | nome do usuário inicial (padrão `transfer`). Regra: `^[a-z_][a-z0-9_-]{0,31}$` |
 
@@ -111,7 +113,9 @@ chmod 600 .secrets/ftp_password.txt
 ./deploy.sh --size small     # ou: medium | large (padrão: small)
 ```
 
-**Resultado esperado:** a tabela do `docker compose ps` com o container `allsafe-ftp` em `health: starting` e, segundos depois, `healthy`. Na primeira vez aparece também `Gerada uma senha forte em .secrets/ftp_password.txt (0600). Guarde-a para o cliente FTP.`
+**Resultado esperado:** a tabela do `docker compose ps` com os containers `allsafe-ftp` e `allsafe-ftp-painel` e, no fim, a linha `Painel: https://<IP>:8443  (certificado autoassinado; só rede privada, atrás de firewall)`. Segundos depois os dois ficam `healthy`. Na primeira vez aparecem também `Gerada uma senha forte em .secrets/ftp_password.txt (0600). Guarde-a para o cliente FTP.` e `Gerada uma senha forte para o painel em .secrets/painel_password.txt (0600).`
+
+Abra o endereço do painel no navegador e entre com a senha de `.secrets/painel_password.txt`. O primeiro acesso, o aviso de certificado e a troca da senha estão em [🖥️ Painel web](painel.md#abrir).
 
 Qual perfil usar: [🎚️ Perfis](perfis.md).
 
@@ -122,10 +126,13 @@ O [`deploy.sh`](../deploy.sh), nesta ordem:
 
 1. resolve o perfil de `--size` e confere que `profiles/<perfil>.env` existe;
 2. cria o `.env` a partir do exemplo se ele não existir (e para, pedindo revisão);
-3. gera a senha em `.secrets/ftp_password.txt` se o arquivo estiver vazio;
-4. roda `docker compose --env-file .env --env-file profiles/<perfil>.env config --quiet`, que falha cedo se a configuração estiver inválida; com `--check-only` para por aqui, com `OK: perfil '<perfil>' e compose validados; nada foi alterado.`;
-5. `docker compose up -d --build`;
-6. `docker compose ps`.
+3. recusa senha no `.env` e endereço ou rede fora de IP privado;
+4. roda `docker compose --env-file .env --env-file profiles/<perfil>.env config --quiet`, que falha cedo se a configuração estiver inválida; com `--check-only` para por aqui, com `OK: perfil '<perfil>', rede privada e compose validados; nada foi alterado.`;
+5. cria as pastas `dados/`, `auth/`, `certs/` e `painel/` em `DATA_DIR` e gera a senha em `.secrets/ftp_password.txt` se o arquivo estiver vazio;
+6. `docker compose build`, que constrói as duas imagens;
+7. gera a senha inicial do painel e grava o hash dela, se ainda não houver hash;
+8. `docker compose up -d`;
+9. `docker compose ps` e o endereço do painel.
 
 Na **primeira** subida o [`entrypoint.sh`](../scripts/entrypoint.sh):
 
@@ -133,6 +140,8 @@ Na **primeira** subida o [`entrypoint.sh`](../scripts/entrypoint.sh):
 - grava o usuário no PureDB (`/auth/pureftpd.pdb`);
 - gera um **certificado autoassinado** RSA 3072, válido por 825 dias, em `/etc/ssl/private/pure-ftpd.pem`, com SAN de acordo com `FTP_CERT_CN` (IP ou DNS);
 - executa o `pure-ftpd` escutando em `:2121`.
+
+Com o FTP `healthy`, o painel inicia: gera o próprio certificado autoassinado (EC P-256, 825 dias) em `DATA_DIR/painel/tls` e escuta em `:8443`.
 
 O modelo completo da subida está em [🏗️ Arquitetura](arquitetura.md#subida).
 
@@ -149,7 +158,7 @@ O modelo completo da subida está em [🏗️ Arquitetura](arquitetura.md#subida
 ./scripts/validate.sh --runtime  # exige o container 'running', 'healthy' e o usuário no PureDB
 ```
 
-**Resultado esperado:** `compose OK com large.env`, `compose OK com medium.env`, `compose OK com small.env` e, no fim, `Validacao FTP concluida.`
+**Resultado esperado:** `painel/servidor.py OK` (se o host tiver `python3`), `compose OK com large.env`, `compose OK com medium.env`, `compose OK com small.env` e, no fim, `Validacao FTP concluida.`
 
 Teste manual com um cliente (FTP **explícito** sobre TLS, modo passivo):
 
@@ -169,13 +178,12 @@ lftp -u "$FTP_USER" -e 'set ssl:verify-certificate no; ls; bye' ftp://SEU_IP
 ## ♻️ Como desfazer
 
 ```bash
-docker compose down             # remove o container, mantém os volumes
-docker compose down -v          # remove TAMBÉM os volumes (apaga dados, PureDB e certificado)
+docker compose down             # remove os containers e a rede; os dados continuam no host
 ```
 
-**Resultado esperado:** `docker compose ps` não lista mais o `allsafe-ftp`.
+**Resultado esperado:** `docker compose ps` não lista mais o `allsafe-ftp` nem o `allsafe-ftp-painel`.
 
-Os arquivos dos usuários ficam em `DATA_DIR/dados`, no host: `docker compose down` não apaga nada.
+Os arquivos dos usuários, o PureDB e os certificados ficam em `DATA_DIR`, no host: o `down` não apaga nada, nem com `-v`. Para apagar de vez, remova as pastas de `DATA_DIR` à mão.
 
 ---
 
@@ -183,8 +191,9 @@ Os arquivos dos usuários ficam em `DATA_DIR/dados`, no host: `docker compose do
 
 ## ⏭️ Próximos passos
 
-- Criar mais usuários: [🧰 Operação](operacao.md#usuarios).
-- Colocar em produção: [🔐 Segurança](seguranca.md) e o certificado real.
+- Trocar a senha inicial do painel: [🔑 Segredos](segredos.md#senha-do-painel).
+- Criar mais usuários: pelo [🖥️ painel](painel.md#usuarios) ou por [🧰 Operação](operacao.md#usuarios).
+- Colocar em produção: [🔐 Segurança](seguranca.md#o-que-endurecer-antes-de-producao) e o certificado real.
 - Monitoramento: a stack `allsafe-zabbix-isp-stack` acompanha o container.
 
 ---

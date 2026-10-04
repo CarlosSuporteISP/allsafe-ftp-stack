@@ -35,10 +35,13 @@ chmod 0755 /data
 chmod 0750 /auth
 chmod 0700 /etc/ssl/private
 install -d -o ftpdata -g ftpdata -m 0750 "/data/$FTP_USER"
+# Mesma trava do allsafe-ftp-user: o painel pode estar alterando usuários agora.
+exec 9>/auth/.lock
+flock -w 30 9 || die "arquivo de usuarios em uso por outra alteracao"
 touch /auth/pureftpd.passwd
 chmod 0600 /auth/pureftpd.passwd
 
-if grep -Fq "${FTP_USER}:" /auth/pureftpd.passwd; then
+if grep -q "^${FTP_USER}:" /auth/pureftpd.passwd; then
   printf '%s\n%s\n' "$password" "$password" | pure-pw usermod "$FTP_USER" -f /auth/pureftpd.passwd >/dev/null
 else
   printf '%s\n%s\n' "$password" "$password" | pure-pw useradd "$FTP_USER" \
@@ -46,6 +49,7 @@ else
 fi
 pure-pw mkdb /auth/pureftpd.pdb -f /auth/pureftpd.passwd
 chmod 0600 /auth/pureftpd.passwd /auth/pureftpd.pdb
+exec 9>&-  # solta a trava: o descritor não pode ir para o pure-ftpd
 
 certificate=/etc/ssl/private/pure-ftpd.pem
 if [[ ! -s "$certificate" ]]; then

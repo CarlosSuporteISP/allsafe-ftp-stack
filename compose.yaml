@@ -7,6 +7,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: ftp
     container_name: ${FTP_CONTAINER_NAME:-allsafe-ftp}
     hostname: ${FTP_CONTAINER_NAME:-allsafe-ftp}
     restart: unless-stopped
@@ -87,9 +88,95 @@ services:
     networks:
       - ftp
 
+  # Painel web de administração: HTTPS, uma senha, sem socket do Docker. Altera os usuários do FTP
+  # pela pasta auth, que divide com o serviço ftp.
+  painel:
+    image: ${PAINEL_IMAGE:-allsafe-ftp-painel:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: painel
+    container_name: ${PAINEL_CONTAINER_NAME:-allsafe-ftp-painel}
+    hostname: ${PAINEL_CONTAINER_NAME:-allsafe-ftp-painel}
+    restart: unless-stopped
+    init: true
+    depends_on:
+      ftp:
+        condition: service_healthy
+    environment:
+      TZ: ${TZ:-America/Sao_Paulo}
+      PAINEL_BIND_IP: ${PAINEL_BIND_IP:-127.0.0.1}
+      PAINEL_PORT: ${PAINEL_PORT:-8443}
+      PAINEL_REDES_PERMITIDAS: ${PAINEL_REDES_PERMITIDAS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      PAINEL_SESSAO_MINUTOS: ${PAINEL_SESSAO_MINUTOS:-15}
+      PAINEL_CERT_CN: ${PAINEL_CERT_CN:-}
+      PAINEL_FTP_HOST: ftp
+      PAINEL_PASTA_DADOS: ${DATA_DIR}/dados
+      FTP_USER: ${FTP_USER:-transfer}
+      FTP_BIND_IP: ${FTP_BIND_IP:-127.0.0.1}
+      FTP_PORT: ${FTP_PORT:-21}
+      FTP_PUBLIC_IP: ${FTP_PUBLIC_IP:-127.0.0.1}
+      FTP_TLS_MODE: ${FTP_TLS_MODE:-2}
+      FTP_PASSIVE_PORT_START: ${FTP_PASSIVE_PORT_START:-30000}
+      FTP_PASSIVE_PORT_END: ${FTP_PASSIVE_PORT_END:-30049}
+    ports:
+      - "${PAINEL_BIND_IP:-127.0.0.1}:${PAINEL_PORT:-8443}:8443/tcp"
+    volumes:
+      - type: bind
+        source: ${DATA_DIR}/dados
+        target: /data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${DATA_DIR}/auth
+        target: /auth
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${DATA_DIR}/painel
+        target: /painel
+        bind:
+          create_host_path: false
+    secrets:
+      - painel_password_hash
+    read_only: true
+    tmpfs:
+      - /run:rw,noexec,nosuid,nodev,size=8m,mode=0755
+      - /tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: ${PAINEL_PIDS_LIMIT:-64}
+    mem_limit: ${PAINEL_MEMORY_LIMIT:-192M}
+    cpus: ${PAINEL_CPU_LIMIT:-0.5}
+    stop_grace_period: 10s
+    healthcheck:
+      test: ["CMD", "python3", "/opt/painel/servidor.py", "--saude"]
+      interval: 20s
+      timeout: 8s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+    labels:
+      com.allsafe.product: allsafe-ftp-stack
+      com.allsafe.service: painel
+    networks:
+      - ftp
+
 secrets:
   ftp_password:
     file: ${SECRETS_DIR:-./.secrets}/ftp_password.txt
+  painel_password_hash:
+    file: ${SECRETS_DIR:-./.secrets}/painel_password_hash.txt
 
 networks:
   ftp:

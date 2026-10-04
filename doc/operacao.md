@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-Este guia reúne as tarefas do dia a dia: criar a conta de um equipamento novo, trocar uma senha, instalar o certificado definitivo, guardar uma cópia dos arquivos, ler os registros e atualizar o servidor. Todos os comandos rodam na pasta raiz da stack.
+Este guia reúne as tarefas do dia a dia: criar a conta de um equipamento novo, trocar uma senha, instalar o certificado definitivo, guardar uma cópia dos arquivos, ler os registros e atualizar o servidor. As contas também podem ser administradas pelo navegador, no [🖥️ painel web](painel.md); aqui está o caminho pela linha de comando. Todos os comandos rodam na pasta raiz da stack.
 
 <!-- diagrama: diagramas/usuarios-diagrama.mmd -->
 ```mermaid
@@ -39,7 +39,7 @@ flowchart LR
 
 ## 👤 Usuários
 
-Gestão pelo host com [`manage-user.sh`](../manage-user.sh):
+Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.md#usuarios) faz as mesmas operações, com as mesmas regras:
 
 ```bash
 ./manage-user.sh add cliente01      # cria o usuário e /data/cliente01 (pede a senha)
@@ -61,7 +61,7 @@ Regras:
 <details>
 <summary>🔬 Detalhe técnico — onde a mudança é gravada</summary>
 
-O `manage-user.sh` encapsula o [`scripts/ftp-user.sh`](../scripts/ftp-user.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (volume `allsafe-ftp-auth`). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login.
+O `manage-user.sh` encapsula o [`scripts/ftp-user.sh`](../scripts/ftp-user.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo.
 
 </details>
 
@@ -98,7 +98,7 @@ docker compose restart ftp
 
 ## ♻️ Backup dos dados
 
-Pastas a salvar: `DATA_DIR/dados` (arquivos) e `DATA_DIR/auth` (PureDB). A `DATA_DIR/certs` é reconstruível se você tiver o PEM guardado em outro lugar. A leitura é feita por um container, porque `auth/` pertence ao `root`.
+Pastas a salvar: `DATA_DIR/dados` (arquivos) e `DATA_DIR/auth` (PureDB). A `DATA_DIR/certs` é reconstruível se você tiver o PEM guardado em outro lugar. A `DATA_DIR/painel` guarda o certificado do painel, que é refeito sozinho, e o `auditoria.log`: para manter o histórico, acrescente `painel` ao fim do comando. A leitura é feita por um container, porque `auth/` pertence ao `root`.
 
 ```bash
 DATA_DIR=/home/carlos/code/data/allsafe-ftp-stack      # o DATA_DIR do seu .env
@@ -160,9 +160,12 @@ Só depois de conferir, e por decisão sua, apague os volumes antigos: `docker v
 ```bash
 docker compose logs -f ftp          # segue o log (acesso em formato CLF e mensagens do entrypoint)
 docker compose logs --since 1h ftp  # última hora
+docker compose logs -f painel       # subida do painel e avisos do servidor web
 ```
 
-**Resultado esperado:** a linha `FTP pronto em 2121/tcp; ...` da subida e uma linha CLF por transferência.
+**Resultado esperado:** a linha `FTP pronto em 2121/tcp; ...` da subida e uma linha CLF por transferência; no painel, a linha `Painel pronto em 8443/tcp (HTTPS); ...`.
+
+O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos) fica no `auditoria.log`, visível na aba `📜 Atividade`: veja [🖥️ Painel web](painel.md#auditoria).
 
 Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](../compose.yaml)). Para o `fail2ban`, aponte o filtro para a saída de `docker logs allsafe-ftp`.
 
@@ -173,14 +176,14 @@ Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](.
 ## ⬆️ Atualização da imagem
 
 ```bash
-docker compose build --pull        # refaz a imagem
-./deploy.sh --size small           # recria o container com o mesmo perfil (volumes preservados)
+docker compose build --pull        # refaz as duas imagens
+./deploy.sh --size small           # recria os containers com o mesmo perfil (dados preservados)
 ./scripts/validate.sh --runtime    # confere 'running' e 'healthy'
 ```
 
-**Resultado esperado:** `Validacao FTP concluida.` e os usuários e arquivos intactos.
+**Resultado esperado:** `Validacao FTP concluida.` e os usuários e arquivos intactos. As sessões abertas no painel são encerradas.
 
-> ⚠️ Recrie o container sempre pelo `deploy.sh` com o **mesmo perfil** da instalação. Um `docker compose up -d` puro lê só o `.env` e devolve os limites e a faixa passiva aos valores dele.
+> ⚠️ Recrie os containers sempre pelo `deploy.sh` com o **mesmo perfil** da instalação. Um `docker compose up -d` puro lê só o `.env` e devolve os limites e a faixa passiva aos valores dele.
 
 <details>
 <summary>🔬 Detalhe técnico — base fixada por digest</summary>
@@ -198,11 +201,12 @@ A base no [`Dockerfile`](../Dockerfile) está **fixada por digest**: o `--pull` 
 ```bash
 docker compose ps                                   # estado e portas
 docker inspect --format '{{.State.Health.Status}}' allsafe-ftp
-docker compose exec ftp pure-pw list -f /auth/pureftpd.passwd
+docker inspect --format '{{.State.Health.Status}}' allsafe-ftp-painel
+./manage-user.sh list                               # usuários do PureDB
 docker compose exec ftp pure-pw show transfer -f /auth/pureftpd.passwd
 ```
 
-**Resultado esperado:** `running`, `healthy`, a lista de usuários e os dados do usuário `transfer` (pasta, uid e gid; a senha aparece só como hash).
+**Resultado esperado:** os dois containers `running` e `healthy`, a lista de usuários e os dados do usuário `transfer` (pasta, uid e gid; a senha aparece só como hash).
 
 ---
 
@@ -212,13 +216,13 @@ docker compose exec ftp pure-pw show transfer -f /auth/pureftpd.passwd
 
 ```bash
 docker compose stop      # para sem remover
-docker compose down      # remove o container e a rede; os dados continuam em DATA_DIR
+docker compose down      # remove os containers e a rede; os dados continuam em DATA_DIR
 ```
 
-**Resultado esperado:** `docker compose ps` vazio. As pastas `dados/`, `auth/` e `certs/` de `DATA_DIR` e os segredos continuam no host; apagar os dados é uma decisão à parte, manual.
+**Resultado esperado:** `docker compose ps` vazio. As pastas `dados/`, `auth/`, `certs/` e `painel/` de `DATA_DIR` e os segredos continuam no host; apagar os dados é uma decisão à parte, manual.
 
-> ⚠️ `docker compose down -v` apaga os arquivos recebidos, os usuários e o certificado. Faça o [backup](#backup-dos-volumes) antes.
+> ⚠️ Os dados ficam em pastas do host: nem o `docker compose down -v` os apaga. Para apagar de vez, remova as pastas de `DATA_DIR` à mão, depois do [backup](#backup-dos-volumes).
 
 ---
 
-⬅️ [⌨️ Scripts](scripts.md) · 🏠 [Documentação](README.md) · ➡️ [🚨 Solução de problemas](solucao-de-problemas.md)
+⬅️ [⌨️ Scripts](scripts.md) · 🏠 [Documentação](README.md) · ➡️ [🖥️ Painel web](painel.md)

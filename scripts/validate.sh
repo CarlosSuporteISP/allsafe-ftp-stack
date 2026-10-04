@@ -2,7 +2,12 @@
 set -Eeuo pipefail
 root_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root_dir"
-bash -n deploy.sh manage-user.sh scripts/*.sh
+for script in deploy.sh manage-user.sh scripts/*.sh; do bash -n "$script"; done
+# O host não precisa de Python; se tiver, confere a sintaxe do painel sem gravar nada.
+if command -v python3 >/dev/null 2>&1; then
+  python3 -c 'import ast, sys; ast.parse(open(sys.argv[1], encoding="utf-8").read(), sys.argv[1])' painel/servidor.py
+  echo "painel/servidor.py OK"
+fi
 for profile in profiles/*.env; do
   docker compose --env-file .env.example --env-file "$profile" config --quiet
   echo "compose OK com $(basename "$profile")"

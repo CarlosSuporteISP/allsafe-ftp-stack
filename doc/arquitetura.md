@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-A stack é um servidor FTP dentro de um único container. Ele tem três "gavetas" que sobrevivem a reinícios: uma para os arquivos enviados, uma para a lista de usuários e uma para o certificado de segurança. O usuário opera pelo host com dois scripts; os equipamentos de rede conectam pela porta do FTP e enviam o backup.
+A stack tem dois containers: o servidor FTP e o painel web que administra os usuários dele. Quatro "gavetas" sobrevivem a reinícios: uma para os arquivos enviados, uma para a lista de usuários, uma para o certificado do FTP e uma para o certificado e o histórico do painel. O usuário opera pelo painel ou pelo host, com scripts; os equipamentos de rede conectam pela porta do FTP e enviam o backup.
 
 <!-- diagrama: diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -49,15 +49,17 @@ flowchart LR
     subgraph HOST["🖥️ Host"]
         scripts@{ shape: console, label: "⌨️ deploy.sh<br>manage-user.sh" }
         env@{ shape: doc, label: "📄 .env<br>e perfil" }
-        segredo@{ shape: doc, label: "🔑 .secrets<br>ftp_password.txt" }
+        segredo@{ shape: doc, label: "🔑 .secrets<br>senha do FTP, hash do painel" }
     end
-    subgraph CONTAINER["🐳 Container allsafe-ftp · rede allsafe-ftp-network"]
-        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>2121/tcp" }
+    subgraph CONTAINERS["🐳 Containers · rede allsafe-ftp-network"]
+        painel@{ shape: rect, label: "🖥️ Painel web<br>allsafe-ftp-painel, 8443/tcp" }
+        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
         logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
     end
     subgraph VOLUMES["💽 Volumes"]
-        vcerts@{ shape: lin-cyl, label: "💽 DATA_DIR/certs<br>/etc/ssl/private" }
+        vpainel@{ shape: lin-cyl, label: "💽 DATA_DIR/painel<br>/painel, certificado e auditoria" }
         vauth@{ shape: cyl, label: "🗄️ DATA_DIR/auth<br>/auth, PureDB" }
+        vcerts@{ shape: lin-cyl, label: "💽 DATA_DIR/certs<br>/etc/ssl/private" }
         vdata@{ shape: lin-cyl, label: "💽 DATA_DIR/dados<br>/data" }
     end
     subgraph RESULTADO["🏁 Resultado"]
@@ -65,14 +67,19 @@ flowchart LR
     end
 
     operador -- "1 · ./deploy.sh --size small" --> scripts
-    scripts -- "2 · docker compose up -d --build" --> ftp
-    equip -- "3 · FTPS, TCP 21 para 2121" --> ftp
-    ftp -- "4 · grava o arquivo, passivo 30000 a 30049" --> vdata
-    vdata -- "5 · arquivo no volume" --> fim
+    scripts -- "2 · docker compose build e up -d" --> ftp
+    operador -- "3 · HTTPS, TCP 8443" --> painel
+    painel -- "4 · cria, troca a senha ou remove o usuário" --> vauth
+    equip -- "5 · FTPS, TCP 21 para 2121" --> ftp
+    ftp -- "6 · grava o arquivo, passivo 30000 a 30049" --> vdata
+    vdata -- "7 · arquivo no volume" --> fim
     scripts -. "lê" .-> env
-    ftp -. "lê na subida, só leitura" .-> segredo
+    ftp -. "lê a senha na subida, só leitura" .-> segredo
+    painel -. "lê o hash a cada entrada, só leitura" .-> segredo
     ftp -. "consulta os usuários" .-> vauth
     ftp -. "lê o certificado" .-> vcerts
+    painel -. "grava certificado e auditoria" .-> vpainel
+    painel -. "cria a pasta do usuário" .-> vdata
     ftp -. "grava cada transferência" .-> logs
 ```
 
@@ -81,19 +88,24 @@ flowchart LR
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
 | 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | O usuário executa `./deploy.sh --size small` no host |
-| 2 | ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd | O script valida o Compose e roda `docker compose up -d --build` |
-| 3 | 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
-| 4 | ⚙️ Pure-FTPd ➜ 💽 `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo `30000-30049/tcp` |
-| 5 | 💽 `DATA_DIR/dados` ➜ 🏁 backup guardado | O arquivo fica na pasta do usuário, no host |
+| 2 | ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd | O script valida a configuração, constrói as imagens (`docker compose build`) e sobe os dois containers (`up -d`) |
+| 3 | 👤 Usuário ➜ 🖥️ Painel web | O usuário abre o painel por HTTPS em `8443/tcp` |
+| 4 | 🖥️ Painel web ➜ 🗄️ `DATA_DIR/auth` | O painel cria, troca a senha ou remove o usuário no PureDB |
+| 5 | 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
+| 6 | ⚙️ Pure-FTPd ➜ 💽 `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo `30000-30049/tcp` |
+| 7 | 💽 `DATA_DIR/dados` ➜ 🏁 backup guardado | O arquivo fica na pasta do usuário, no host |
 
 **🧷 Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
 | ⌨️ `deploy.sh` e `manage-user.sh` | 📄 `.env` e perfil | lê |
-| ⚙️ Pure-FTPd | 🔑 `.secrets/ftp_password.txt` | lê na subida, somente leitura |
+| ⚙️ Pure-FTPd | 🔑 `.secrets` (`ftp_password.txt`) | lê a senha na subida, somente leitura |
+| 🖥️ Painel web | 🔑 `.secrets` (`painel_password_hash.txt`) | lê o hash a cada entrada, somente leitura |
 | ⚙️ Pure-FTPd | 🗄️ `DATA_DIR/auth` (PureDB) | consulta os usuários |
 | ⚙️ Pure-FTPd | 💽 `DATA_DIR/certs` | lê o certificado |
+| 🖥️ Painel web | 💽 `DATA_DIR/painel` | grava o certificado e a auditoria |
+| 🖥️ Painel web | 💽 `DATA_DIR/dados` | cria a pasta do usuário |
 | ⚙️ Pure-FTPd | 📚 log CLF (`stdout`) | grava cada transferência |
 
 ---
@@ -104,13 +116,16 @@ flowchart LR
 
 | Peça | Onde | Papel |
 |---|---|---|
-| Serviço `ftp` | [`compose.yaml`](../compose.yaml) | Único container da stack (`allsafe-ftp`) |
-| Imagem | [`Dockerfile`](../Dockerfile) | `debian:bookworm-slim` fixada por digest, com `pure-ftpd`, `pure-ftpd-common`, `openssl`, `procps` e `ca-certificates` |
+| Serviço `ftp` | [`compose.yaml`](../compose.yaml) | Container do servidor FTP (`allsafe-ftp`) |
+| Serviço `painel` | [`compose.yaml`](../compose.yaml) | Container do painel web (`allsafe-ftp-painel`); só inicia depois de o `ftp` ficar `healthy` |
+| Imagens | [`Dockerfile`](../Dockerfile) | Uma base e dois alvos. Base: `debian:bookworm-slim` fixada por digest, com `pure-ftpd`, `pure-ftpd-common`, `openssl`, `procps` e `ca-certificates`. Alvo `ftp`: a base e o entrypoint do FTP. Alvo `painel`: a base, `python3` e o painel |
 | Usuário do processo de dados | [`Dockerfile`](../Dockerfile) | `ftpdata`, uid e gid **10000**, shell `nologin`, sem home |
 | Entrypoint | [`scripts/entrypoint.sh`](../scripts/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-ftp-entrypoint` | Provisiona usuário e certificado e faz `exec` do `pure-ftpd` |
-| Gestão de usuários | [`scripts/ftp-user.sh`](../scripts/ftp-user.sh), instalado como `/usr/local/sbin/allsafe-ftp-user` | `add`, `passwd`, `del` e `list` no PureDB, chamado de fora por [`manage-user.sh`](../manage-user.sh) |
+| Gestão de usuários | [`scripts/ftp-user.sh`](../scripts/ftp-user.sh), instalado nas duas imagens como `/usr/local/sbin/allsafe-ftp-user` | `add`, `passwd`, `del` e `list` no PureDB, chamado de fora por [`manage-user.sh`](../manage-user.sh) e, dentro do painel, pelo servidor web |
+| Painel web | [`painel/servidor.py`](../painel/servidor.py) e [`painel/estilo.css`](../painel/estilo.css), em `/opt/painel` | Servidor HTTPS em Python, só com a biblioteca padrão e sem JavaScript: telas, sessão e auditoria |
+| Entrypoint do painel | [`scripts/painel-entrypoint.sh`](../scripts/painel-entrypoint.sh), instalado como `/usr/local/sbin/allsafe-painel-entrypoint` | Confere a rede privada, gera o certificado e faz `exec` do servidor |
 
-O que cada script faz, com parâmetros e saída: [⌨️ Scripts](scripts.md).
+O que cada script faz, com parâmetros e saída: [⌨️ Scripts](scripts.md). Uso e proteções do painel: [🖥️ Painel web](painel.md).
 
 ---
 
@@ -118,14 +133,16 @@ O que cada script faz, com parâmetros e saída: [⌨️ Scripts](scripts.md).
 
 ## 💽 Volumes
 
-| Volume (nome) | Monta em | Guarda |
-|---|---|---|
-| `DATA_DIR/dados` | `/data` | Arquivos dos usuários: um diretório `chroot` por usuário (`/data/<usuario>`) |
-| `DATA_DIR/auth` | `/auth` | Base **PureDB**: `pureftpd.passwd` (texto, com o hash das senhas) e `pureftpd.pdb` (compilada), ambos `0600` |
-| `DATA_DIR/certs` | `/etc/ssl/private` | `pure-ftpd.pem`: chave e certificado concatenados, `0600` |
-| segredo `ftp_password` (`SECRETS_DIR/ftp_password.txt`) | `/run/secrets/ftp_password` (somente leitura) | Senha do usuário inicial; é o único arquivo de `.secrets/` que o serviço vê |
+| Pasta no host | Monta em | Quem monta | Guarda |
+|---|---|---|---|
+| `DATA_DIR/dados` | `/data` | `ftp` e `painel` | Arquivos dos usuários: um diretório `chroot` por usuário (`/data/<usuario>`) |
+| `DATA_DIR/auth` | `/auth` | `ftp` e `painel` | Base **PureDB**: `pureftpd.passwd` (texto, com o hash das senhas) e `pureftpd.pdb` (compilada), ambos `0600`; `ftp-cert.pem`, cópia do certificado do FTP **sem a chave**; `.lock`, a trava das alterações |
+| `DATA_DIR/certs` | `/etc/ssl/private` | só `ftp` | `pure-ftpd.pem`: chave e certificado concatenados, `0600` |
+| `DATA_DIR/painel` | `/painel` | só `painel` | `tls/painel-cert.pem`, `tls/painel-key.pem` (`0600`) e `auditoria.log` (`0600`); pasta `0700` |
+| segredo `ftp_password` (`SECRETS_DIR/ftp_password.txt`) | `/run/secrets/ftp_password` (somente leitura) | só `ftp` | Senha do usuário inicial |
+| segredo `painel_password_hash` (`SECRETS_DIR/painel_password_hash.txt`) | `/run/secrets/painel_password_hash` (somente leitura) | só `painel` | Hash `scrypt` da senha do painel |
 
-Além deles, dois `tmpfs`: `/run` (8 MiB) e `/tmp` (16 MiB), ambos `noexec,nosuid,nodev`.
+Cada serviço vê um único arquivo de `.secrets/`. Além disso, cada container tem dois `tmpfs`: `/run` (8 MiB) e `/tmp` (16 MiB), ambos `noexec,nosuid,nodev`.
 
 ---
 
@@ -133,14 +150,17 @@ Além deles, dois `tmpfs`: `/run` (8 MiB) e `/tmp` (16 MiB), ambos `noexec,nosui
 
 ## 🌐 Rede
 
-- Rede bridge dedicada `allsafe-ftp-network`, sub-rede `172.29.1.0/29` (variável `FTP_SUBNET`).
-- Publicações no host (veja [⚙️ Configuração](configuracao.md#rede-e-portas)):
+- Rede bridge dedicada `allsafe-ftp-network`, sub-rede `172.29.1.0/29` (variável `FTP_SUBNET`), com os dois containers.
+- Publicações no host (veja [⚙️ Configuração](configuracao.md#rede-e-portas) e [🖥️ Painel web](configuracao.md#painel)):
 
 | Publicação | Para quê |
 |---|---|
 | `FTP_BIND_IP:FTP_PORT` ➜ `2121/tcp` | canal de controle |
 | `FTP_BIND_IP:30000-30049` ➜ `30000-30049/tcp` | canal de dados, modo passivo, 1:1 |
+| `PAINEL_BIND_IP:PAINEL_PORT` ➜ `8443/tcp` | painel web, HTTPS |
 
+- O painel não conversa com o FTP pela rede: os dois dividem as pastas `auth` e `dados`.
+- Quem abre o painel pelo próprio servidor, em `127.0.0.1`, chega ao container com o endereço do gateway desta rede (`172.29.1.1`), que já está dentro das redes permitidas por padrão.
 - Sem DNS reverso (`-H`): o `pure-ftpd` nunca resolve o IP do cliente.
 
 ---
@@ -182,7 +202,7 @@ flowchart LR
     end
 
     operador -- "1 · executa" --> deploy
-    deploy -- "2 · docker compose up -d --build" --> compose
+    deploy -- "2 · docker compose build e up -d" --> compose
     compose -- "3 · inicia o container" --> entry
     entry -- "4 · confere usuário, senha, faixa e TLS" --> valida
     valida -- "5a · ✅ sim" --> pw
@@ -208,7 +228,7 @@ flowchart LR
 | Nº | De ➜ Para | O que acontece | Protocolo e porta | Regra |
 |---|---|---|---|---|
 | 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | Executa `./deploy.sh --size small` | — | Sem `.env`, o script cria um a partir do exemplo e para |
-| 2 | ⌨️ `deploy.sh` ➜ 🐳 Docker Compose | Roda `docker compose up -d --build` com `.env` e o perfil | — | Antes roda `config --quiet`; configuração inválida não sobe |
+| 2 | ⌨️ `deploy.sh` ➜ 🐳 Docker Compose | Roda `docker compose build` e `up -d` com `.env` e o perfil | — | Antes roda `config --quiet`; configuração inválida não sobe |
 | 3 | 🐳 Docker Compose ➜ ⚙️ entrypoint | Inicia o container `allsafe-ftp` | — | Raiz somente leitura, `tini` como processo 1 |
 | 4 | ⚙️ entrypoint ➜ ❓ variáveis válidas? | Confere usuário, senha, faixa passiva e modo TLS | — | Nome `^[a-z_][a-z0-9_-]{0,31}$`, senha de 12 ou mais, faixa entre `1024` e `65535`, TLS `1`, `2` ou `3` |
 | 5a | ❓ variáveis válidas? ➜ 👥 `pure-pw` | ✅ Sim: cria (`useradd`) ou atualiza (`usermod`) o usuário inicial | — | Usuário virtual com uid e gid `ftpdata`, home `/data/<usuario>` |
@@ -233,7 +253,7 @@ flowchart LR
 | ⚙️ `pure-ftpd` | 📄 `pure-ftpd.pem` | lê |
 | ⚙️ `pure-ftpd` | 🗄️ PureDB | consulta |
 
-Nas subidas seguintes o usuário inicial é **atualizado** (`usermod`) e o certificado existente é **mantido**.
+Nas subidas seguintes o usuário inicial é **atualizado** (`usermod`) e o certificado existente é **mantido**. Com o FTP `healthy`, o Compose inicia o painel: o que o entrypoint dele confere está em [⌨️ Scripts](scripts.md#painel-entrypoint).
 
 <details>
 <summary>🔬 Detalhe técnico — quem é o processo 1</summary>
@@ -285,6 +305,13 @@ interval: 20s   timeout: 5s   retries: 5   start_period: 20s
 
 Verifica apenas que o processo está vivo. Para uma checagem funcional (o usuário existe no PureDB), use `./scripts/validate.sh --runtime`: veja [⌨️ Scripts](scripts.md#validate).
 
+O painel tem o dele, que abre uma conexão HTTPS de verdade com o próprio servidor:
+
+```yaml
+test: ["CMD", "python3", "/opt/painel/servidor.py", "--saude"]
+interval: 20s   timeout: 8s   retries: 5   start_period: 20s
+```
+
 ---
 
 <a name="endurecimento-resumo"></a>
@@ -294,7 +321,8 @@ Verifica apenas que o processo está vivo. Para uma checagem funcional (o usuár
 | Medida | Onde |
 |---|---|
 | Raiz somente leitura | `read_only: true` |
-| Sem privilégios além do necessário | `cap_drop: ALL` e só as capabilities que o `pure-ftpd` usa (chroot, troca de uid e gid, `nice`) |
+| Sem privilégios além do necessário | `cap_drop: ALL`; o `ftp` recebe só as capabilities que o `pure-ftpd` usa (chroot, troca de uid e gid, `nice`) e o `painel`, só três (`CHOWN`, `DAC_OVERRIDE`, `FOWNER`) |
+| Sem controle do Docker | nenhum container monta o socket do Docker |
 | Sem ganho de privilégio | `no-new-privileges: true` |
 | Limites de recurso | `pids_limit`, `mem_limit`, `cpus`, `ulimits.nofile` |
 | Log com rotação | `logging: local`, 10 MB × 3 |

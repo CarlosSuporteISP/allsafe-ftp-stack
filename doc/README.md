@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-Esta pasta explica a stack **como ela é hoje**: como instalar, configurar, operar e consertar o servidor FTP que recebe o backup dos equipamentos de rede. Cada guia começa com um resumo para quem nunca viu o projeto e guarda o detalhe técnico em menus recolhidos. O que ainda vai mudar fica no plano, não aqui.
+Esta pasta explica a stack **como ela é hoje**: como instalar, configurar, operar e consertar o servidor FTP que recebe o backup dos equipamentos de rede, e o painel web que administra os usuários dele. Cada guia começa com um resumo para quem nunca viu o projeto e guarda o detalhe técnico em menus recolhidos. O que ainda vai mudar fica no plano, não aqui.
 
 <!-- diagrama: diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -45,12 +45,13 @@ flowchart LR
 | 1 | [🚀 Instalação](instalacao.md) | Pré-requisitos, passo a passo comentado, primeira validação e como desfazer |
 | 2 | [⚙️ Configuração](configuracao.md) | Todas as variáveis do `.env`: nome, para que serve, valores válidos e padrão |
 | 3 | [🎚️ Perfis](perfis.md) | Perfis `small`, `medium` e `large`: dimensionamento por porte e impacto na faixa passiva |
-| 4 | [🏗️ Arquitetura](arquitetura.md) | Container, imagem, entrypoint, volumes, rede e as opções do `pure-ftpd` |
-| 5 | [🔐 Segurança](seguranca.md) | Rede privada e firewall, modelo de ameaça, superfície exposta e o endurecimento do Compose linha a linha |
-| 6 | [🔑 Segredos](segredos.md) | O que fica em `.secrets/`, quem gera cada arquivo e como trocar |
+| 4 | [🏗️ Arquitetura](arquitetura.md) | Containers, imagens, entrypoints, volumes, rede e as opções do `pure-ftpd` |
+| 5 | [🔐 Segurança](seguranca.md) | Rede privada e firewall, modelo de ameaça, superfície exposta, proteções do painel e o endurecimento do Compose linha a linha |
+| 6 | [🔑 Segredos](segredos.md) | O que fica em `.secrets/`, quem gera cada arquivo e como trocar as senhas do FTP e do painel |
 | 7 | [⌨️ Scripts](scripts.md) | O que cada script faz, parâmetros e saída esperada |
 | 8 | [🧰 Operação](operacao.md) | Usuários, certificado real, backup dos volumes, logs e atualização da imagem |
-| 9 | [🚨 Solução de problemas](solucao-de-problemas.md) | Sintoma, causa, como verificar e correção |
+| 9 | [🖥️ Painel web](painel.md) | Abrir o painel, o que há em cada aba, usuários pelo navegador, senha, certificado, auditoria e proteções |
+| 10 | [🚨 Solução de problemas](solucao-de-problemas.md) | Sintoma, causa, como verificar e correção |
 
 ---
 
@@ -60,7 +61,8 @@ flowchart LR
 
 | Situação | Leia, nesta ordem |
 |---|---|
-| Primeira vez | [🚀 Instalação](instalacao.md) ➜ [⚙️ Configuração](configuracao.md) ➜ [🎚️ Perfis](perfis.md) |
+| Primeira vez | [🚀 Instalação](instalacao.md) ➜ [🖥️ Painel web](painel.md) ➜ [⚙️ Configuração](configuracao.md) ➜ [🎚️ Perfis](perfis.md) |
+| Criar a conta de um equipamento | [🖥️ Painel web](painel.md#usuarios) ou [🧰 Operação](operacao.md#usuarios) |
 | Antes de produção | [🧱 Rede privada e firewall](seguranca.md#rede-privada) ➜ [🔐 Segurança](seguranca.md) ➜ [🧰 Operação](operacao.md#certificado-real-de-producao) |
 | Algo quebrou | [🚨 Solução de problemas](solucao-de-problemas.md) |
 
@@ -74,8 +76,10 @@ flowchart LR
 |---|---|---|
 | Arquivos enviados pelos equipamentos | `DATA_DIR/dados` | `/data` |
 | Usuários virtuais (PureDB) | `DATA_DIR/auth` | `/auth` |
-| Chave e certificado TLS | `DATA_DIR/certs` | `/etc/ssl/private` |
+| Chave e certificado TLS do FTP | `DATA_DIR/certs` | `/etc/ssl/private` |
+| Certificado e auditoria do painel | `DATA_DIR/painel` | `/painel` |
 | Senha do usuário inicial | `.secrets/ftp_password.txt`, na pasta do projeto | `/run/secrets/ftp_password` (somente leitura) |
+| Senha do painel, só o hash | `.secrets/painel_password_hash.txt`, na pasta do projeto | `/run/secrets/painel_password_hash` (somente leitura) |
 | Configuração | `.env`, na pasta do projeto | variáveis de ambiente |
 | Logs | driver `local` do Docker, 10 MB × 3 | `stdout` |
 
@@ -105,6 +109,8 @@ Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com o
 | [segredos-diagrama.mmd](diagramas/segredos-diagrama.mmd) | 1 | [🔑 Segredos](segredos.md) |
 | [scripts-diagrama.mmd](diagramas/scripts-diagrama.mmd) | 1 | [⌨️ Scripts](scripts.md) |
 | [usuarios-diagrama.mmd](diagramas/usuarios-diagrama.mmd) | 1 | [🧰 Operação](operacao.md) |
+| [painel-diagrama.mmd](diagramas/painel-diagrama.mmd) | 1 | [🖥️ Painel web](painel.md) |
+| [painel-fluxograma.mmd](diagramas/painel-fluxograma.mmd) | 2 | [README do projeto](../README.md#como-funciona) e [🖥️ Painel web](painel.md#como-decide) |
 | [diagnostico-diagrama.mmd](diagramas/diagnostico-diagrama.mmd) | 1 | [🚨 Solução de problemas](solucao-de-problemas.md) |
 
 ---
