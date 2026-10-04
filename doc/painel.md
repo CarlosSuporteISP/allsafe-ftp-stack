@@ -187,6 +187,11 @@ A lista é aplicada duas vezes: pelo nginx, antes de o pedido chegar ao painel, 
 
 ## 🔄 Como o painel decide
 
+Cada pedido passa por três conferências antes de mudar alguma coisa: a rede de origem (nginx), a senha e o token do formulário (painel).
+
+<details>
+<summary>🔄 Fluxograma do painel, com a sequência escrita — clique para expandir</summary>
+
 <!-- diagrama: diagramas/painel-fluxograma.mmd -->
 ```mermaid
 %%{init: {"theme": "dark"}}%%
@@ -257,6 +262,8 @@ flowchart LR
 |---|---|---|
 | ❓ senha confere? | 🔑 hash da senha (`painel_password_hash`) | lê a cada entrada, somente leitura |
 | 🖥️ Painel web | 📚 `auditoria.log` | registra cada entrada, recusa e alteração |
+
+</details>
 
 ---
 

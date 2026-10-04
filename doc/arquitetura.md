@@ -38,6 +38,11 @@ flowchart LR
 
 ## 🗺️ Mapa da arquitetura
 
+Os três containers, as pastas do host e quem fala com quem, na ordem em que as coisas acontecem.
+
+<details>
+<summary>🗺️ Mapa da arquitetura, com a sequência escrita — clique para expandir</summary>
+
 <!-- diagrama: diagramas/arquitetura-mapa.mmd -->
 ```mermaid
 %%{init: {"theme": "dark"}}%%
@@ -116,6 +121,8 @@ flowchart LR
 | 🖥️ Painel web | 💽 `DATA_DIR/dados` | cria a pasta do usuário |
 | ⚙️ Pure-FTPd | 📚 log CLF (`stdout`) | grava cada transferência |
 
+</details>
+
 ---
 
 <a name="componentes"></a>
@@ -183,6 +190,9 @@ Cada serviço vê um único arquivo de `.secrets/`, e o `nginx` não vê nenhum.
 ## 🔄 Modelo da subida
 
 O que acontece entre o `./deploy.sh` e o container `healthy`.
+
+<details>
+<summary>🔄 Modelo da subida, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: diagramas/subida-modelo.mmd -->
 ```mermaid
@@ -265,6 +275,8 @@ flowchart LR
 | 🔏 `openssl` | 📄 `pure-ftpd.pem` | grava |
 | ⚙️ `pure-ftpd` | 📄 `pure-ftpd.pem` | lê |
 | ⚙️ `pure-ftpd` | 🗄️ PureDB | consulta |
+
+</details>
 
 Nas subidas seguintes o usuário inicial é **atualizado** (`usermod`) e o certificado existente é **mantido**. Com o FTP `healthy`, o Compose inicia o painel e, com o painel `healthy`, o nginx: o que cada entrypoint confere está em [⌨️ Scripts](scripts.md#painel-entrypoint), nas seções do painel e do [nginx](scripts.md#nginx-entrypoint). Nos modos `0` e `1` de `FTP_TLS_MODE`, o entrypoint do FTP grava um `AVISO` no log antes de subir: [🔐 Segurança](seguranca.md#ftp-sem-tls).
 
