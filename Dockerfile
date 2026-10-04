@@ -43,7 +43,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-       ca-certificates openssl procps pure-ftpd-common pure-ftpd \
+       openssl pure-ftpd-common pure-ftpd \
     && groupadd --gid 10000 ftpdata \
     && useradd --uid 10000 --gid ftpdata --home-dir /nonexistent \
        --shell /usr/sbin/nologin --no-create-home ftpdata \

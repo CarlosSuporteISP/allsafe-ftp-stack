@@ -8,6 +8,24 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.8.2] - 2026-10-04
+
+As imagens do FTP e do painel deixam de levar dois pacotes que nada na stack usava. Nada muda para quem usa. **Uso só em rede privada, atrás de firewall.**
+
+### Removido
+
+- **`procps` e `ca-certificates` fora das imagens do FTP e do painel.** Nenhum script da stack chama `ps`, `pgrep` ou `top`, e nenhum serviço abre conexão de saída que precise conferir certificado de terceiros: os certificados do FTP e do painel são gerados na própria instalação. Com eles sai `libproc2-0` e, na imagem do FTP, `libncursesw6` (no painel, o Python continua a usá-la). O `pidof`, usado pela bateria de testes, vem de outro pacote e continua na imagem.
+
+### Tamanho das imagens
+
+Medido com `docker image inspect`, as duas versões construídas no mesmo host e no mesmo dia.
+
+| Imagem | Antes (`0.8.1`) | Agora (`0.8.2`) | Pacotes |
+|---|---|---|---|
+| FTP | 211,3 MB | 207,5 MB | 104 ➜ 100 |
+| Painel | 261,1 MB | 257,8 MB | 117 ➜ 114 |
+| nginx | 145,2 MB | 145,2 MB | sem mudança |
+
 ## [0.8.1] - 2026-10-04
 
 As pastas do projeto passam a seguir a divisão por serviço. Nada muda para quem usa: os comandos do dia a dia, o `.env`, os segredos e os dados continuam iguais. **Uso só em rede privada, atrás de firewall.**
