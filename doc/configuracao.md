@@ -39,7 +39,7 @@ flowchart LR
 
 ## 🧾 Exemplo mínimo de produção
 
-Todas as variáveis vivem no `.env`, copiado de [`.env.example`](../.env.example).
+Todas as variáveis vivem no `.env`, copiado de [`.env.example`](../.env.example). No exemplo, as variáveis vêm agrupadas por assunto e **cada uma tem, na linha de cima, um comentário dizendo para que serve**; este guia traz o mesmo, com mais detalhe.
 
 ```ini
 TZ=America/Sao_Paulo
@@ -66,7 +66,7 @@ Depois de editar o `.env`, valide sem subir:
 
 **Resultado esperado:** `OK: perfil 'small', rede privada, recursos do servidor e compose validados; nada foi alterado.` Um IP fora das faixas privadas, uma senha no `.env`, um `FTP_TLS_MODE` fora de `0` a `3` ou um perfil maior que o servidor param o comando com a explicação.
 
-A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../.env.example). Quando a variável falta no `.env`, o [`compose.yaml`](../compose.yaml) aplica o mesmo valor, com duas exceções: `FTP_CERT_CN` vira `localhost` e `FTP_PASSWORD_FILE` fica vazio, o que faz o container parar com `FALHA: a senha FTP deve ter pelo menos 12 caracteres`.
+A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../.env.example). Quando a variável falta no `.env`, o [`compose.yaml`](../compose.yaml) aplica o mesmo valor, com três exceções: `FTP_CERT_CN` vira `localhost`, e `DATA_DIR` e `FTP_PASSIVE_IP` não têm padrão no Compose: sem elas o comando para com `defina DATA_DIR no .env` ou `defina FTP_PASSIVE_IP no .env`.
 
 ---
 

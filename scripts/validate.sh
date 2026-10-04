@@ -8,6 +8,17 @@ if command -v python3 >/dev/null 2>&1; then
   python3 -c 'import ast, sys; ast.parse(open(sys.argv[1], encoding="utf-8").read(), sys.argv[1])' painel/servidor.py
   echo "painel/servidor.py OK"
 fi
+# Toda variável do .env.example tem comentário na linha de cima e está explicada no guia de configuração.
+awk -v guia=doc/configuracao.md '
+  BEGIN { while ((getline linha < guia) > 0) texto = texto linha "\n" }
+  /^[A-Z_]+=/ {
+    nome = $0; sub(/=.*/, "", nome); total++
+    if (anterior !~ /^# /) { print "ERRO: " nome " sem comentário na linha de cima, no .env.example" > "/dev/stderr"; falha = 1 }
+    if (index(texto, "`" nome "`") == 0) { print "ERRO: " nome " não está em " guia > "/dev/stderr"; falha = 1 }
+  }
+  { anterior = $0 }
+  END { if (falha) exit 1; print ".env.example OK: " total " variáveis, todas comentadas e no guia de configuração" }
+' .env.example
 for profile in profiles/*.env; do
   docker compose --env-file .env.example --env-file "$profile" config --quiet
   echo "compose OK com $(basename "$profile")"

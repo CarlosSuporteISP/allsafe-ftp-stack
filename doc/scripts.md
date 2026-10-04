@@ -190,18 +190,18 @@ Confere a cópia antes de alterar qualquer coisa, para a stack, guarda o estado 
 ## 🧪 `scripts/validate.sh`
 
 ```bash
-./scripts/validate.sh            # bash -n dos scripts e compose config de todos os perfis
+./scripts/validate.sh            # sintaxe dos scripts, .env.example comentado e compose config de todos os perfis
 ./scripts/validate.sh --runtime  # também exige os três serviços running e healthy e o usuário no PureDB
 ```
 
-**Resultado esperado:** `painel/servidor.py OK`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Com `--runtime`, também `servico ftp: running, healthy`, o mesmo para `painel` e `nginx`, e `usuario inicial '<usuário>' presente no PureDB`. Qualquer falha encerra com código diferente de zero.
+**Resultado esperado:** `painel/servidor.py OK`, `.env.example OK: <n> variáveis, todas comentadas e no guia de configuração`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Com `--runtime`, também `servico ftp: running, healthy`, o mesmo para `painel` e `nginx`, e `usuario inicial '<usuário>' presente no PureDB`. Qualquer falha encerra com código diferente de zero.
 
 <details>
 <summary>Detalhe técnico — o que cada modo confere</summary>
 
 | Modo | Confere |
 |---|---|
-| sem parâmetro | `bash -n` em `deploy.sh`, `manage-user.sh` e `scripts/*.sh`; a sintaxe de `painel/servidor.py`, se o host tiver `python3`; `docker compose config --quiet` com `.env.example` e cada arquivo de `profiles/` |
+| sem parâmetro | `bash -n` em `deploy.sh`, `manage-user.sh` e nos scripts de `scripts/`, `ftp/`, `painel/`, `nginx/` e `tests/`; a sintaxe de `painel/servidor.py`, se o host tiver `python3`; no `.env.example`, que cada variável tem comentário na linha de cima e está em [Configuração](configuracao.md); `docker compose config --quiet` com `.env.example` e cada arquivo de `profiles/` |
 | `--runtime` | tudo acima, mais: os serviços `ftp`, `painel` e `nginx` em `running` e `healthy`, e `pure-pw show` do usuário inicial, lido de `FTP_USER` no `.env` |
 
 O modo `--runtime` confere a instalação do `.env` desta pasta. Para conferir outra, aponte o arquivo dela: `ENV_FILE=<arquivo> ./scripts/validate.sh --runtime`. Sem o arquivo, o script para com `ERRO: ... não há instalação para conferir.`

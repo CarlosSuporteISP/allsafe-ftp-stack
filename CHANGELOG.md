@@ -8,6 +8,20 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.10.1] - 2026-10-04
+
+O [`.env.example`](.env.example) passa a explicar cada variável. Nenhum valor, nome ou comportamento muda. **Uso só em rede privada, atrás de firewall.**
+
+### Alterado
+
+- **`.env.example` comentado:** as 40 variáveis vêm agrupadas por assunto (geral, nomes, pastas, rede, servidor FTP, painel, perfil e limites) e cada uma tem, na linha de cima, um comentário dizendo para que serve. O `.env` de quem já instalou não é tocado.
+- [`scripts/validate.sh`](scripts/validate.sh) confere que nenhuma variável do exemplo fica sem comentário nem fora do guia de [Configuração](doc/configuracao.md).
+
+### Corrigido
+
+- [Configuração](doc/configuracao.md) citava `FTP_PASSWORD_FILE`, que deixou de existir na `0.2.0`, entre os padrões do Compose; o texto agora traz as variáveis que de fato não têm padrão (`DATA_DIR` e `FTP_PASSIVE_IP`).
+- [Scripts](doc/scripts.md) lista todas as pastas de script que o `validate.sh` confere.
+
 ## [0.10.0] - 2026-10-04
 
 Os arquivos de `.secrets/` passam a dizer no nome o que guardam, e a pasta ganha um `LEIAME.txt` que explica cada um. As senhas não mudam. **Uso só em rede privada, atrás de firewall.**
