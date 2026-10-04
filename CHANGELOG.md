@@ -8,6 +8,34 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.16.0] - 2026-10-04
+
+O administrador passa a escolher, no painel, quais usuários entram no FTP sem TLS: serve para o equipamento antigo que não fala TLS, sem abrir mão do TLS dos demais. A opção nasce desligada. **Por padrão, uso só em rede privada, atrás de firewall.**
+
+### Adicionado
+
+- **TLS por usuário (`FTP_TLS_EXCECOES`):** com `sim`, o servidor continua exigindo TLS de todos, menos dos usuários que um administrador dispensar, um a um. O padrão é `nao`, e nada muda para quem não ligar. Guia em [TLS por usuário](doc/seguranca.md#tls-por-usuario).
+- **Dispensa pelo painel:** na aba Usuários, a coluna **TLS** mostra quem é obrigado e quem entra sem TLS, e os botões **Dispensar TLS** e **Exigir TLS** alteram um usuário por vez, com confirmação. Qualquer administrador altera; vale na entrada seguinte do usuário, sem reiniciar.
+- **Dispensa pelo terminal:** `./manage-user.sh tls-dispensar <usuario>`, `tls-exigir <usuario>` e `tls-lista`.
+- **Recusa antes da senha:** sem TLS, o usuário que não foi dispensado recebe `530` com a senha certa ou errada, e a recusa fica no registro do container, com o usuário e a origem. Quem é removido sai da lista: um usuário novo com o mesmo nome não herda a dispensa.
+- **Falha fechada:** se o processo que consulta a lista dos dispensados (`pure-authd`) parar, o container do FTP encerra e o Docker o sobe de novo; ninguém entra sem a conferência. O healthcheck do FTP passa a exigir esse processo quando a exceção está ligada.
+- **Combinações recusadas** pelo `deploy.sh` e pelos containers do FTP e do painel: valor fora de `nao` e de `sim`, `sim` com `FTP_TLS_MODE` diferente de `2` e `sim` junto com `REDE_PERMITIR_IP_PUBLICO=sim`.
+- **Avisos:** o `AVISO` no fim do `./deploy.sh` e no registro do container, a faixa de alerta nas abas Visão geral e Segurança com a quantidade e os nomes dos dispensados, e os eventos `tls_dispensado` e `tls_exigido` na auditoria, com o administrador que fez.
+- Bateria de testes: dois casos funcionais (dispensa e volta pelo painel; pelo terminal e com o padrão desligado) e três de segurança (sem TLS só entra quem foi dispensado; `pure-authd` morto encerra o FTP; combinações recusadas e quem altera a lista).
+
+### Alterado
+
+- Com `FTP_TLS_EXCECOES=sim`, o container do FTP roda dois processos, `pure-authd` e `pure-ftpd`, vigiados pelo entrypoint. Com `nao`, continua como antes: só o `pure-ftpd`.
+- A seção de equipamento sem TLS do guia de segurança passa a comparar os quatro caminhos: segunda instância, exceção por usuário, modo `1` e modo `0`.
+
+### Segurança
+
+- Com a exceção ligada, o servidor só sabe quem é o usuário depois de receber o nome. O equipamento de um usuário **não dispensado** que esteja configurado sem TLS manda a senha em texto puro antes de ser recusado: a entrada é negada e registrada, e a senha tem de ser trocada. Com `nao`, a sessão sem TLS é recusada antes de a senha ser enviada.
+
+### Atualização a partir da 0.15.x
+
+Rode `./deploy.sh`. A variável nova é opcional: sem ela no `.env`, vale `nao`, e o TLS continua obrigatório para todos, como antes. Para usar, defina `FTP_TLS_EXCECOES=sim`, com `FTP_TLS_MODE=2` e `REDE_PERMITIR_IP_PUBLICO=nao`, rode `./deploy.sh` e dispense os usuários no painel. Não há mudança nos dados.
+
 ## [0.15.0] - 2026-10-04
 
 O dono dos arquivos passa a baixar os próprios backups pelo navegador: cada usuário do FTP entra no painel com o nome e a senha do FTP e vê só a pasta dele. A administração continua só com os administradores. **Por padrão, uso só em rede privada, atrás de firewall.**

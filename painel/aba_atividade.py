@@ -12,6 +12,8 @@ EVENTOS = {
     'usuario_criado': '👤 Usuário criado',
     'senha_trocada': '🔑 Senha trocada',
     'usuario_removido': '🗑️ Usuário removido',
+    'tls_dispensado': '🔓 Usuário dispensado do TLS',
+    'tls_exigido': '🔒 Usuário volta a exigir TLS',
     'falha_comando': '⚠️ Alteração não concluída',
     'arquivo_baixado': '⬇️ Arquivo baixado',
     'pasta_criada': '📁 Pasta criada',

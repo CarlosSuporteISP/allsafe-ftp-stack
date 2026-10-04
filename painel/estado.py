@@ -7,7 +7,7 @@ import subprocess
 import threading
 import time
 
-from config import ARQ_USUARIOS, CFG, CMD_USUARIO, NIVEL, NOME, PASTA_DADOS
+from config import ARQ_SEM_TLS, ARQ_USUARIOS, CFG, CMD_USUARIO, NIVEL, NOME, PASTA_DADOS
 
 TRAVA_CACHE = threading.Lock()
 CACHE = {}
@@ -54,6 +54,21 @@ def usuarios():
     except OSError:
         pass
     return dict(sorted(cadastro.items()))
+
+
+def sem_tls(cadastro=None):
+    """Usuários que o administrador dispensou do TLS, em ordem de nome. Só conta quem está no cadastro."""
+    cadastro = usuarios() if cadastro is None else cadastro
+    marcados = set()
+    try:
+        with open(ARQ_SEM_TLS, encoding='utf-8', errors='replace') as arq:
+            for linha in arq:
+                nome = linha.rstrip('\n')
+                if NOME.fullmatch(nome) and nome in cadastro:
+                    marcados.add(nome)
+    except OSError:
+        pass
+    return sorted(marcados)
 
 
 def vizinhos(cadastro, nome):

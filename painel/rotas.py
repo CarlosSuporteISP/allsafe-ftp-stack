@@ -21,6 +21,8 @@ ROTAS = {
     ('POST', '/usuarios/senha'): aba_usuarios.trocar_senha,
     ('GET', '/usuarios/remover'): aba_usuarios.tela_remover,
     ('POST', '/usuarios/remover'): aba_usuarios.remover_usuario,
+    ('GET', '/usuarios/tls'): aba_usuarios.tela_tls,
+    ('POST', '/usuarios/tls'): aba_usuarios.alterar_tls,
     ('GET', '/arquivos'): aba_arquivos.lista_arquivos,
     ('GET', '/arquivos/baixar'): aba_arquivos.baixar,
     ('POST', '/arquivos/pasta'): aba_arquivos.criar_pasta,

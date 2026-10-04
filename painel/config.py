@@ -14,6 +14,7 @@ ARQ_CERT = '/painel/tls/painel-cert.pem'
 ARQ_AUDITORIA = '/painel/auditoria.log'
 ARQ_USUARIOS = '/auth/pureftpd.passwd'
 ARQ_CERT_FTP = '/auth/ftp-cert.pem'
+ARQ_SEM_TLS = '/auth/sem-tls.lista'   # quem entra sem TLS com FTP_TLS_EXCECOES=sim; quem grava é o allsafe-ftp-user
 CMD_USUARIO = '/usr/local/sbin/allsafe-ftp-user'
 PASTA_DADOS = '/data'
 
@@ -90,6 +91,13 @@ def configuracao():
         falha('PAINEL_ADMIN_USER inválido: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres')
     if amb('PAINEL_ACESSO_USUARIOS_FTP', 'sim') not in ('nao', 'sim'):
         falha("PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'")
+    if amb('FTP_TLS_EXCECOES', 'nao') not in ('nao', 'sim'):
+        falha("FTP_TLS_EXCECOES deve ser 'nao' ou 'sim'")
+    excecoes = amb('FTP_TLS_EXCECOES', 'nao') == 'sim'
+    if excecoes and amb('FTP_TLS_MODE', '2') != '2':
+        falha('FTP_TLS_EXCECOES=sim exige FTP_TLS_MODE=2')
+    if excecoes and publico:
+        falha('FTP_TLS_EXCECOES=sim não combina com REDE_PERMITIR_IP_PUBLICO=sim')
     minutos = amb('PAINEL_SESSAO_MINUTOS', '15')
     if not (minutos.isdigit() and 1 <= int(minutos) <= 120):
         falha('PAINEL_SESSAO_MINUTOS deve ficar entre 1 e 120')
@@ -113,6 +121,7 @@ def configuracao():
         'ftp_porta': amb('FTP_PORT', '21'),
         'ftp_anunciado': amb('FTP_PASSIVE_IP', '127.0.0.1'),
         'ftp_tls': amb('FTP_TLS_MODE', '2'),
+        'tls_excecoes': excecoes,
         'ftp_passiva': f"{amb('FTP_PASSIVE_PORT_START', '30000')}–{amb('FTP_PASSIVE_PORT_END', '30049')}",
         'pasta_host': amb('PAINEL_PASTA_DADOS', 'DATA_DIR/dados').rstrip('/'),
         'versao': versao,

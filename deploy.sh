@@ -237,7 +237,26 @@ esac
 if ip_publico_permitido && (( tls_modo < 2 )); then
   die "REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3; em $env_file está '$tls_modo'. FTP sem TLS na internet entrega a senha a quem escuta."
 fi
+# TLS por usuário: só sobre o modo 2 e nunca com IP público aceito.
+tls_excecoes="$(env_valor FTP_TLS_EXCECOES nao)"
+[[ "$tls_excecoes" == sim || "$tls_excecoes" == nao ]] \
+  || die "FTP_TLS_EXCECOES deve ser 'sim' ou 'nao'; em $env_file está '$tls_excecoes'."
+if [[ "$tls_excecoes" == sim ]]; then
+  [[ "$tls_modo" == 2 ]] \
+    || die "FTP_TLS_EXCECOES=sim exige FTP_TLS_MODE=2; em $env_file está '$tls_modo'. Em 0 e 1 todos já entram sem TLS; o 3 exige TLS também nos dados."
+  if ip_publico_permitido; then
+    die "FTP_TLS_EXCECOES=sim não combina com REDE_PERMITIR_IP_PUBLICO=sim. FTP sem TLS na internet entrega a senha a quem escuta."
+  fi
+  tls_texto+=", com exceção por usuário"
+fi
 aviso_tls() {
+  if [[ "$tls_excecoes" == sim ]]; then
+    echo "AVISO: FTP_TLS_EXCECOES=sim: os usuários marcados na aba Usuários do painel entram SEM TLS, com senha e"
+    echo "       arquivos em texto puro, que podem ser lidos por quem estiver na mesma rede. Os demais continuam"
+    echo "       obrigados a usar TLS, mas um equipamento mal configurado manda a senha em texto puro antes de ser"
+    echo "       recusado. Use só para equipamento antigo sem suporte a TLS, em rede interna isolada, com o firewall"
+    echo "       liberando só esses equipamentos, e desmarque o usuário assim que puder."
+  fi
   case "$tls_modo" in
     0) echo "AVISO: FTP_TLS_MODE=0: o FTP está SEM criptografia. Senhas e arquivos passam em texto puro e podem ser" ;;
     1) echo "AVISO: FTP_TLS_MODE=1: o TLS é opcional. Quem entra sem TLS manda senha e arquivos em texto puro, que podem ser" ;;

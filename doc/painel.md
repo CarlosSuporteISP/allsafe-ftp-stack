@@ -74,10 +74,10 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 | Aba | O que mostra | O que dá para fazer |
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar |
-| Usuários | Um usuário por linha: pasta no host, com a marca **dividida** quando outro usuário também a alcança, espaço usado, quantidade de arquivos e último envio | Criar, escolhendo a pasta, trocar a senha, remover e abrir a pasta do usuário na aba Arquivos |
+| Usuários | Um usuário por linha: pasta no host, com a marca **dividida** quando outro usuário também a alcança, espaço usado, quantidade de arquivos e último envio; com `FTP_TLS_EXCECOES=sim`, a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta, trocar a senha, remover e abrir a pasta do usuário na aba Arquivos; com `FTP_TLS_EXCECOES=sim`, dispensar um usuário do TLS e voltar a exigir |
 | Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
 | Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
-| Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, isolamento do container e o lembrete do firewall | Só consultar |
+| Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, isolamento do container e o lembrete do firewall | Só consultar |
 | Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads, pastas criadas e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
 
 No topo ficam o nome do administrador da sessão e o botão **Sair**, que encerra a sessão na hora.
@@ -87,6 +87,8 @@ Quem entra com a conta do FTP não vê nenhuma dessas abas: vê uma tela só, **
 A foto de cada tela, com a explicação item por item, está em [Fotos da aplicação](aplicacao/README.md).
 
 > ⚠️ Com `FTP_TLS_MODE` em `0` ou `1`, as abas Visão geral e Segurança abrem com um alerta no topo: o FTP está aceitando senha e arquivo em texto puro. O alerta só some quando a variável volta para `2` ou `3`. Veja [Segurança](seguranca.md#ftp-sem-tls).
+
+> ⚠️ Com `FTP_TLS_EXCECOES=sim` e pelo menos um usuário dispensado do TLS, as mesmas abas abrem com o alerta de quantos e quais usuários entram no FTP sem TLS. Ele some quando o último volta a ser obrigado a usar TLS. Veja [Segurança](seguranca.md#tls-por-usuario).
 
 ---
 
@@ -99,6 +101,8 @@ A foto de cada tela, com a explicação item por item, está em [Fotos da aplica
 | Criar um usuário | Usuários ➜ **Novo usuário** | Cria a conta e a pasta dela: `DATA_DIR/dados/<usuario>` com o campo **Pasta** em branco, ou a pasta escolhida. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
 | Trocar a senha | Usuários ➜ **Trocar senha** | A senha antiga deixa de valer no próximo login |
 | Remover um usuário | Usuários ➜ **Remover** | Pede confirmação. A conta some; **os arquivos da pasta são preservados** |
+| Deixar um usuário entrar sem TLS | Usuários ➜ **Dispensar TLS** | Só existe com `FTP_TLS_EXCECOES=sim`. Pede confirmação e vale na entrada seguinte do usuário; os demais continuam obrigados a usar TLS |
+| Voltar a exigir o TLS de um usuário | Usuários ➜ **Exigir TLS** | Pede confirmação e vale na entrada seguinte. Troque a senha dele, que passou em texto puro |
 
 **Resultado esperado:** o usuário criado entra por FTPS logo em seguida, sem reiniciar o FTP.
 
@@ -114,6 +118,19 @@ Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
 - O **usuário inicial** (`FTP_USER`) não é alterado pelo painel: a senha dele vem de `.secrets/ftp-usuario-inicial-senha.txt` e é reaplicada a cada subida do FTP. Veja [Segredos](segredos.md#trocar-a-senha).
 
 > ⚠️ **Pasta dividida:** dois usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro. O painel aceita, porque serve para uma conta de consulta na pasta de cima, e avisa: a lista marca a pasta com **dividida** e mostra quem mais a alcança, e a tela de remoção repete o aviso. Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.
+
+> ⚠️ **Dispensa do TLS:** o usuário dispensado manda senha e arquivo em texto puro. Use só para o equipamento antigo que não fala TLS, em rede interna isolada, com usuário e senha só dele. As condições e o que a stack garante estão em [Segurança](seguranca.md#tls-por-usuario).
+
+<details>
+<summary>Detalhe técnico — a dispensa do TLS no painel</summary>
+
+- A coluna **TLS** e os botões **Dispensar TLS** e **Exigir TLS** só existem com `FTP_TLS_EXCECOES=sim`. Com `nao`, a lista dos dispensados fica guardada, não vale, e a tela responde `404`.
+- `GET /usuarios/tls?usuario=<nome>` mostra a confirmação; `POST /usuarios/tls` grava, com o token CSRF da sessão e o campo `acao` em `dispensar` ou `exigir`. Usuário que não existe e nome fora da regra respondem `404`; `acao` diferente volta para a confirmação sem alterar nada.
+- Quem grava é o `allsafe-ftp-user`, o mesmo script do `manage-user.sh`, na `sem-tls.lista` de `DATA_DIR/auth`. O painel só lê a lista para montar as telas.
+- Remover o usuário tira o nome dele da lista: um usuário novo com o mesmo nome não herda a dispensa.
+- Cada alteração fica na auditoria, com o administrador e o usuário: `tls_dispensado` e `tls_exigido`.
+
+</details>
 
 A linha de comando continua valendo: painel e `manage-user.sh` alteram as mesmas contas. Veja [Operação](operacao.md#usuarios).
 
@@ -423,7 +440,7 @@ flowchart LR
 | 7 | sessão ➜ pedido legítimo? | Cada formulário enviado pelo administrador traz o token CSRF da sessão e a origem do próprio painel; na sessão do usuário do FTP, o único formulário é o de sair |
 | 8a | pedido legítimo? ➜ `allsafe-ftp-user` | Sim: o painel chama o comando, com a senha pela entrada padrão |
 | 8b | pedido legítimo? ➜ pedido recusado | Não: `403`, sem alterar nada |
-| 9 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez |
+| 9 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez; a dispensa do TLS de um usuário fica na `sem-tls.lista`, na mesma pasta |
 | 10 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
 | 11 | sessão ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta, pede um arquivo ou cria uma pasta; na tela Meus arquivos, o usuário do FTP abre uma pasta ou pede um arquivo. O caminho pedido é conferido parte por parte |
 | 12 | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | O painel abre cada parte sem seguir link simbólico: a partir da pasta dos dados, para o administrador, e a partir da pasta do cadastro, para o usuário do FTP |
@@ -465,6 +482,7 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `sessao_encerrada` | A sessão de um usuário do FTP acabou antes da hora, com o usuário e o motivo: `cadastro_alterado` (senha ou pasta trocada, usuário removido), `nome_de_administrador` ou `acesso_desligado` |
 | `recusa_papel` | Um usuário do FTP pediu uma tela ou um formulário de administração, com o usuário e o caminho pedido |
 | `usuario_criado` · `senha_trocada` · `usuario_removido` | Alteração de usuário do FTP, com o administrador que fez; a criação leva também a pasta do usuário |
+| `tls_dispensado` · `tls_exigido` | Um administrador dispensou um usuário do TLS · voltou a exigir; com o administrador e o usuário |
 | `pasta_criada` | Pasta criada pela aba Arquivos, com o administrador e o caminho |
 | `arquivo_baixado` · `arquivo_interrompido` | Download pela aba Arquivos ou pela tela Meus arquivos, completo · cortado antes do fim; com quem baixou, o caminho e os bytes entregues |
 | `admin_inicial_criado` | Primeira subida: o painel criou o administrador de `PAINEL_ADMIN_USER` |
@@ -537,14 +555,14 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`administradores.py`](../painel/administradores.py) | Leitura e gravação do arquivo de administradores, uma alteração por vez |
 | [`sessao.py`](../painel/sessao.py) | Sessões em memória, de administrador e de usuário do FTP, limite de tentativas e token do formulário de entrada |
 | [`auditoria.py`](../painel/auditoria.py) | Gravação e leitura do `auditoria.log` |
-| [`estado.py`](../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados) e a chamada do `allsafe-ftp-user` |
+| [`estado.py`](../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados, quem entra sem TLS) e a chamada do `allsafe-ftp-user` |
 | [`pagina.py`](../painel/pagina.py) | Moldura das telas e os textos que mais de uma aba usa |
 | [`atendimento.py`](../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF), roteamento por papel (administrador ou usuário do FTP) e a entrega de arquivo em blocos |
 | [`rotas.py`](../painel/rotas.py) | Tabelas de método e caminho para a função que responde: uma para o administrador e outra para o usuário do FTP |
 | [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, do administrador e do usuário do FTP, e saída |
 | [`conta_ftp.py`](../painel/conta_ftp.py) | Conta do usuário do FTP no painel: leitura do cadastro dele, conferência da senha no servidor FTP e os motivos que encerram a sessão |
 | [`aba_visao_geral.py`](../painel/aba_visao_geral.py) | Aba Visão geral |
-| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação com a pasta escolhida, troca de senha e remoção |
+| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação com a pasta escolhida, troca de senha, remoção e a dispensa do TLS por usuário |
 | [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download e criação de pasta vazia |
 | [`aba_meus_arquivos.py`](../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação e download dentro da pasta dele |
 | [`aba_administradores.py`](../painel/aba_administradores.py) | Aba Administradores: lista, criação, troca de senha, troca de nome e remoção |

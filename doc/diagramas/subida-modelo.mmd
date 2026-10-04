@@ -19,6 +19,8 @@ flowchart LR
         gera@{ shape: rect, label: "openssl<br>autoassinado, 825 dias" }
         cert@{ shape: doc, label: "pure-ftpd.pem<br>/etc/ssl/private" }
         pure@{ shape: rect, label: "pure-ftpd<br>0.0.0.0, 2121" }
+        authd@{ shape: rect, label: "pure-authd<br>porteiro do TLS por usuário" }
+        semtls@{ shape: doc, label: "sem-tls.lista<br>/auth, quem entra sem TLS" }
         saude@{ shape: rect, label: "healthcheck<br>saudação na porta 2121" }
     end
     subgraph RESULTADO["Resultado"]
@@ -46,3 +48,5 @@ flowchart LR
     gera -. "grava" .-> cert
     pure -. "lê" .-> cert
     pure -. "consulta" .-> puredb
+    pure -. "pergunta a cada entrada, só com FTP_TLS_EXCECOES=sim" .-> authd
+    authd -. "lê" .-> semtls

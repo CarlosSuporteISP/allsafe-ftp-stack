@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`tests/testar.sh`](#testar) · [`ftp/entrypoint.sh`](#entrypoint) · [`ftp/saude.sh`](#ftp-saude) · [`painel/entrypoint.sh`](#painel-entrypoint) · [`nginx/entrypoint.sh`](#nginx-entrypoint) · [`nginx/saude.sh`](#nginx-saude) · [`ftp/usuario.sh`](#ftp-user) · [Scripts de apoio](#apoio)
+[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`tests/testar.sh`](#testar) · [`ftp/entrypoint.sh`](#entrypoint) · [`ftp/saude.sh`](#ftp-saude) · [`ftp/porteiro-tls.sh`](#porteiro-tls) · [`painel/entrypoint.sh`](#painel-entrypoint) · [`nginx/entrypoint.sh`](#nginx-entrypoint) · [`nginx/saude.sh`](#nginx-saude) · [`ftp/usuario.sh`](#ftp-user) · [Scripts de apoio](#apoio)
 
 </details>
 
@@ -42,7 +42,7 @@ flowchart LR
 | Script | Onde roda | Para que serve |
 |---|---|---|
 | [`deploy.sh`](../deploy.sh) | host | Instala, reaplica, atualiza ou remove a stack em um comando, sem perguntas |
-| [`manage-user.sh`](../manage-user.sh) | host | Atalho para criar, trocar senha, remover e listar usuários FTP |
+| [`manage-user.sh`](../manage-user.sh) | host | Atalho para criar, trocar senha, remover e listar usuários FTP, e para dispensar um usuário do TLS |
 | [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | host | Recupera o acesso ao painel: define a senha de um administrador ou cria o administrador, gravando só o hash |
 | [`scripts/backup.sh`](../scripts/backup.sh) | host | Grava a cópia de segurança de `dados/`, `auth/`, `certs/` e `painel/` em `BACKUP_DIR` |
 | [`scripts/restaurar.sh`](../scripts/restaurar.sh) | host | Devolve a stack ao estado de uma cópia, guardando antes o estado atual |
@@ -50,10 +50,11 @@ flowchart LR
 | [`tests/testar.sh`](../tests/testar.sh) | host | Bateria de testes funcional, de segurança e de rede, em instância de teste que o próprio script cria e remove |
 | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado e executa o `pure-ftpd` |
 | [`ftp/saude.sh`](../ftp/saude.sh) | container | Healthcheck: abre a porta de controle e espera a saudação do servidor |
+| [`ftp/porteiro-tls.sh`](../ftp/porteiro-tls.sh) | container | Com `FTP_TLS_EXCECOES=sim`, decide a cada entrada se a sessão sem TLS pode seguir para a conferência da senha |
 | [`painel/entrypoint.sh`](../painel/entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel, entrega a cópia dele ao nginx e executa o painel |
 | [`nginx/entrypoint.sh`](../nginx/entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
 | [`nginx/saude.sh`](../nginx/saude.sh) | container do nginx | Healthcheck: pede `/saude` ao painel passando pelo nginx |
-| [`ftp/usuario.sh`](../ftp/usuario.sh) | containers do FTP e do painel | Gestão de usuários no PureDB, chamada pelo `manage-user.sh` e pelo painel |
+| [`ftp/usuario.sh`](../ftp/usuario.sh) | containers do FTP e do painel | Gestão de usuários no PureDB e da lista de quem entra sem TLS, chamada pelo `manage-user.sh` e pelo painel |
 | [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | host e containers | Funções que conferem se um IP ou uma rede é privado e que tratam a opção de IP público; carregado pelos outros scripts |
 | [`scripts/ambiente.sh`](../scripts/ambiente.sh) | host | Função que lê uma chave do `.env` sem executar o arquivo; carregado pelos outros scripts |
 
@@ -81,7 +82,7 @@ A pasta [`scripts/`](../scripts/) tem só o que roda no servidor. O que roda em 
 | `--sim` | Com `--apagar-dados`: dispensa a confirmação (obrigatório quando não há terminal) |
 | `-h`, `--help` | Mostra o uso |
 
-**Resultado esperado:** o comando só termina com `allsafe-ftp`, `allsafe-ftp-painel` e `allsafe-ftp-nginx` em `healthy` e fecha com `Pronto: FTP, painel e nginx no ar (healthy), perfil '<perfil>'.`, os endereços do FTP e do painel, o modo de TLS do FTP e o arquivo onde está cada senha (a senha em si nunca aparece). Com `FTP_TLS_MODE` em `0` ou `1`, a última coisa na tela é o `AVISO` de FTP sem criptografia: [Segurança](seguranca.md#ftp-sem-tls). Com `--remover`: `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` Com `--check-only`: `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.` Com `REDE_PERMITIR_IP_PUBLICO=sim`, o resumo traz `endereço público aceito` no lugar de `rede privada` e a última coisa na tela é o `ALERTA` de endereço público: [Segurança](seguranca.md#ip-publico).
+**Resultado esperado:** o comando só termina com `allsafe-ftp`, `allsafe-ftp-painel` e `allsafe-ftp-nginx` em `healthy` e fecha com `Pronto: FTP, painel e nginx no ar (healthy), perfil '<perfil>'.`, os endereços do FTP e do painel, o modo de TLS do FTP e o arquivo onde está cada senha (a senha em si nunca aparece). Com `FTP_TLS_MODE` em `0` ou `1`, a última coisa na tela é o `AVISO` de FTP sem criptografia: [Segurança](seguranca.md#ftp-sem-tls). Com `FTP_TLS_EXCECOES=sim`, a linha do FTP termina em `com exceção por usuário` e o `AVISO` é o da exceção: [Segurança](seguranca.md#tls-por-usuario). Com `--remover`: `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` Com `--check-only`: `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.` Com `REDE_PERMITIR_IP_PUBLICO=sim`, o resumo traz `endereço público aceito` no lugar de `rede privada` e a última coisa na tela é o `ALERTA` de endereço público: [Segurança](seguranca.md#ip-publico).
 
 <details>
 <summary>Detalhe técnico — comportamento e códigos de saída</summary>
@@ -90,6 +91,7 @@ A pasta [`scripts/`](../scripts/) tem só o que roda no servidor. O que roda em 
 - **Requisitos conferidos antes de agir:** `docker`, o plugin `docker compose`, o serviço do Docker respondendo e as portas livres (a do FTP, a do painel e a faixa passiva, no endereço de bind). As portas que a própria stack já publica não contam. Falhou: `ERRO: ...` e código `1`, sem subir nada.
 - **Recursos do servidor conferidos antes de gravar:** se o servidor tem menos CPUs que `FTP_CPU_LIMIT` ou menos memória que `FTP_MEMORY_LIMIT`, para com `ERRO: o perfil '<perfil>' pede ... e este servidor tem ...` e código `1`, sem criar nem regravar o `.env` e sem tocar nos containers: [Perfis](perfis.md#o-servidor-aguenta).
 - **`FTP_TLS_MODE` conferido antes de agir:** valor fora de `0` a `3` para com `ERRO: FTP_TLS_MODE deve ser 0 (sem TLS), 1 (opcional), 2 (obrigatório no login) ou 3 (obrigatório no login e nos dados)` e código `1`. Em `0` e `1` o deploy segue e avisa no fim.
+- **`FTP_TLS_EXCECOES` conferida antes de agir:** valor fora de `nao` e de `sim` para com `ERRO: FTP_TLS_EXCECOES deve ser 'sim' ou 'nao'`; `sim` com outro modo de TLS, com `ERRO: FTP_TLS_EXCECOES=sim exige FTP_TLS_MODE=2`; `sim` com a opção de IP público, com `ERRO: FTP_TLS_EXCECOES=sim não combina com REDE_PERMITIR_IP_PUBLICO=sim`. Sempre com código `1`. Com `sim` válido, o deploy segue e avisa no fim, também no `--check-only`.
 - Na primeira execução sem `.env`, copia o [`.env.example`](../.env.example), aplica `0600`, avisa `Criado .env a partir do .env.example: tudo em 127.0.0.1, só este servidor acessa.` e **segue**. Com `--check-only` nada é criado: a validação usa o `.env.example`.
 - **Idempotente:** rodado de novo sem mudança, não recria container, não troca senha e não regrava o `.env`.
 - **Converte os nomes antigos, a variável:** em `.env` de instalação anterior à `0.9.0`, troca `FTP_PUBLIC_IP` por `FTP_PASSIVE_IP`, no mesmo ponto do arquivo e com o mesmo valor, depois de copiar o `.env` para `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env` (`0600`), e avisa `Convertido: FTP_PUBLIC_IP virou FTP_PASSIVE_IP`. A troca do nome, sozinha, não recria container; na atualização a partir de uma versão anterior, os três são recriados uma vez, porque as imagens mudam, e usuários, senhas e arquivos ficam como estavam. Com `--check-only`, só avisa `AVISO: esta instalação usa nomes antigos` e não altera nada.
@@ -121,9 +123,12 @@ A pasta [`scripts/`](../scripts/) tem só o que roda no servidor. O que roda em 
 ./manage-user.sh add olt01 clientes/olt-01   # o mesmo, com a pasta escolhida dentro de /data
 ./manage-user.sh passwd backup-olt    # troca a senha
 ./manage-user.sh del backup-olt       # remove o usuário (os arquivos ficam em /data)
+./manage-user.sh tls-dispensar olt-antiga   # deixa o usuário entrar sem TLS (só vale com FTP_TLS_EXCECOES=sim)
+./manage-user.sh tls-exigir olt-antiga      # volta a exigir o TLS do usuário
+./manage-user.sh tls-lista                  # lista os usuários dispensados do TLS
 ```
 
-**Resultado esperado:** `add` e `passwd` terminam sem erro e o usuário aparece no `list`; `del` responde `Usuario removido; os dados em /data/<pasta> foram preservados.`, com a pasta real do usuário. O `add` com uma pasta que outro usuário já alcança termina sem erro e mostra uma linha `Aviso:` por usuário.
+**Resultado esperado:** `add` e `passwd` terminam sem erro e o usuário aparece no `list`; `del` responde `Usuario removido; os dados em /data/<pasta> foram preservados.`, com a pasta real do usuário. O `add` com uma pasta que outro usuário já alcança termina sem erro e mostra uma linha `Aviso:` por usuário. `tls-dispensar` responde `Usuario <nome> dispensado do TLS: vale na proxima entrada, com FTP_TLS_EXCECOES=sim.` e `tls-exigir`, `Usuario <nome> volta a ser obrigado a usar TLS: vale na proxima entrada.`; `tls-lista` mostra um nome por linha, ou nada.
 
 A senha é lida do terminal e enviada pelo `stdin` para o container: não aparece na linha de comando nem no histórico. O script opera a instalação do `.env` desta pasta; para operar outra, aponte o arquivo dela: `ENV_FILE=<arquivo> ./manage-user.sh list`. Regras e casos de uso em [Operação](operacao.md#usuarios).
 
@@ -267,8 +272,8 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 
 | Bateria | Casos | Exemplos |
 |---|---|---|
-| Funcional | 30 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh`, administradores pelo painel, recuperação do acesso pelo host, download pelo painel (arquivo pequeno, subpasta, nome com acento e arquivo de 40 MiB, com a soma conferida), pasta criada pelo painel, usuário com pasta escolhida e pasta dividida entre usuários, usuário do FTP que entra no painel e baixa os próprios arquivos, sessão dele acompanhando o cadastro e a variável que desliga a entrada, e a entrada dele em cada modo de TLS |
-| Segurança | 63 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, a opção de IP público (só com `sim`, "todos" sempre recusado, TLS obrigatório, valor inválido, alerta em execução), CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos, entrada que não revela nomes de administrador, senha atual em toda alteração de administrador, sessões do administrador alterado encerradas, arquivo de administradores só com hash, aba Arquivos sem sessão, fuga da pasta pela aba Arquivos, link simbólico não seguido, arquivo entregue só como anexo, limite de downloads ao mesmo tempo, criação de pasta sem sessão e sem token, nome de pasta que tenta sair da pasta dos dados, usuário preso à pasta escolhida, usuário do FTP sem alcance à administração do painel, preso à própria pasta no painel, entrada dele sem brecha (telas iguais na recusa, nome de administrador, servidor FTP parado, certificado trocado, bloqueio por tentativas) e os limites de sessões e de downloads por usuário |
+| Funcional | 32 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh`, administradores pelo painel, recuperação do acesso pelo host, download pelo painel (arquivo pequeno, subpasta, nome com acento e arquivo de 40 MiB, com a soma conferida), pasta criada pelo painel, usuário com pasta escolhida e pasta dividida entre usuários, usuário do FTP que entra no painel e baixa os próprios arquivos, sessão dele acompanhando o cadastro e a variável que desliga a entrada, a entrada dele em cada modo de TLS, e o TLS por usuário: dispensa e volta pelo painel e pelo terminal, com o padrão desligado |
+| Segurança | 66 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, a opção de IP público (só com `sim`, "todos" sempre recusado, TLS obrigatório, valor inválido, alerta em execução), CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos, entrada que não revela nomes de administrador, senha atual em toda alteração de administrador, sessões do administrador alterado encerradas, arquivo de administradores só com hash, aba Arquivos sem sessão, fuga da pasta pela aba Arquivos, link simbólico não seguido, arquivo entregue só como anexo, limite de downloads ao mesmo tempo, criação de pasta sem sessão e sem token, nome de pasta que tenta sair da pasta dos dados, usuário preso à pasta escolhida, usuário do FTP sem alcance à administração do painel, preso à própria pasta no painel, entrada dele sem brecha (telas iguais na recusa, nome de administrador, servidor FTP parado, certificado trocado, bloqueio por tentativas), os limites de sessões e de downloads por usuário, e o TLS por usuário: sem TLS só entra quem foi dispensado, o FTP encerra se o `pure-authd` morre, as combinações recusadas na subida e quem pode alterar a lista |
 | Rede | 13 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host, rede pública no painel só com a opção |
 
 **Organização:** o [`tests/testar.sh`](../tests/testar.sh) prepara a instância de teste e carrega o [`tests/comum.sh`](../tests/comum.sh), com as funções de registro, de FTP, do painel e de gravação dos resultados. Os casos ficam em [`tests/etapas/`](../tests/etapas/), um arquivo por etapa, executados na ordem do nome: cada etapa parte do estado que a anterior deixou e não roda sozinha.
@@ -290,13 +295,14 @@ Roda a cada início do container. Não tem parâmetros: tudo vem das variáveis 
 1. Confere que `FTP_BIND_IP` e `FTP_PASSIVE_IP` são IPs privados, ou públicos de servidor com `REDE_PERMITIR_IP_PUBLICO=sim` ([`rede-privada.sh`](../scripts/rede-privada.sh)), lê a senha do segredo `/run/secrets/ftp_usuario_inicial_senha`, ajusta dono e modo de `/data`, `/auth` e `/etc/ssl/private` e cria ou atualiza o usuário inicial `FTP_USER` (recusa senha com menos de 12 caracteres).
 2. Gera um certificado autoassinado para `FTP_CERT_CN` se `DATA_DIR/certs` estiver vazia, e grava a parte pública dele em `/auth/ftp-cert.pem`.
 3. Executa o `pure-ftpd` com o modo de TLS, o `chroot`, os limites e a faixa passiva do `.env`. Com `FTP_TLS_MODE` em `0` ou `1`, grava antes um `AVISO` no log.
+4. Com `FTP_TLS_EXCECOES=sim`, sobe antes o `pure-authd`, que chama o [porteiro](#porteiro-tls) a cada entrada, e fica vigiando os dois processos: se um deles sair, encerra o container.
 
-**Resultado esperado:** a linha `FTP pronto em 2121/tcp; TLS=2; passivo=30000-30049` no log do container.
+**Resultado esperado:** a linha `FTP pronto em 2121/tcp; TLS=2; passivo=30000-30049` no log do container; com a exceção por usuário, `FTP pronto em 2121/tcp; TLS=2 com exceção por usuário; passivo=30000-30049`.
 
 <details>
 <summary>Detalhe técnico — processo 1 e mensagens de falha</summary>
 
-Com `init: true`, o processo 1 do container é o `tini`; o entrypoint é iniciado por ele e termina com `exec`, deixando o `pure-ftpd` no seu lugar.
+Com `init: true`, o processo 1 do container é o `tini`; o entrypoint é iniciado por ele e termina com `exec`, deixando o `pure-ftpd` no seu lugar. Com `FTP_TLS_EXCECOES=sim` não há `exec`: o entrypoint continua vivo, com o `pure-authd` e o `pure-ftpd` como filhos, repassa a eles o sinal de parada e, se um dos dois sair sozinho, encerra o outro e sai com código `1`.
 
 Quando uma validação falha, o script sai com `FALHA: <motivo>`:
 
@@ -313,8 +319,13 @@ Quando uma validação falha, o script sai com `FALHA: <motivo>`:
 | `FALHA: faixa passiva invalida` | início ou fim não numéricos |
 | `FALHA: faixa passiva fora dos limites` | abaixo de `1024`, acima de `65535` ou invertida |
 | `FALHA: FTP_TLS_MODE deve ser 0, 1, 2 ou 3` | valor fora da lista |
+| `FALHA: FTP_TLS_EXCECOES deve ser 'nao' ou 'sim'` | a exceção por usuário tem outro valor |
+| `FALHA: FTP_TLS_EXCECOES=sim exige FTP_TLS_MODE=2` | a exceção está ligada com o TLS em `0`, `1` ou `3` |
+| `FALHA: FTP_TLS_EXCECOES=sim não combina com REDE_PERMITIR_IP_PUBLICO=sim` | a exceção está ligada junto com a opção de IP público |
+| `FALHA: o pure-authd não abriu o soquete /run/pure-authd.sock: o FTP não sobe sem o porteiro do TLS` | com a exceção ligada, o `pure-authd` não iniciou em 10 segundos |
+| `FALHA: o pure-authd saiu: o container encerra para ninguém entrar sem a conferência do TLS por usuário` (ou `o pure-ftpd saiu`) | com a exceção ligada, um dos dois processos parou depois da subida; o Docker sobe o container de novo |
 
-Não é falha, e o container sobe: `AVISO: FTP_TLS_MODE=0, FTP sem TLS: senhas e arquivos trafegam em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada.` (ou `FTP_TLS_MODE=1, TLS opcional: ...`). O aviso se repete a cada subida enquanto o modo estiver ligado.
+Não é falha, e o container sobe: `AVISO: FTP_TLS_MODE=0, FTP sem TLS: senhas e arquivos trafegam em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada.` (ou `FTP_TLS_MODE=1, TLS opcional: ...`). O aviso se repete a cada subida enquanto o modo estiver ligado. Com `FTP_TLS_EXCECOES=sim`, o aviso é `AVISO: FTP_TLS_EXCECOES=sim: <n> usuário(s) marcado(s) no painel entram sem TLS, com senha e arquivos em texto puro. ...`.
 
 A correção de cada uma está em [Solução de problemas](solucao-de-problemas.md#o-container-nao-sobe). O modelo completo da subida está em [Arquitetura](arquitetura.md#subida).
 
@@ -331,9 +342,30 @@ A correção de cada uma está em [Solução de problemas](solucao-de-problemas.
 <details>
 <summary>Detalhe técnico — o que ele confere</summary>
 
-Abre a porta de controle (`127.0.0.1:2121`, de dentro do container), espera até 4 segundos pela saudação do servidor e encerra a conexão com `QUIT`. Considera saudável a saudação `220` (pronto) e também a `421` (limite de conexões atingido: o servidor está cheio, mas atendendo). Porta fechada, ou aberta sem saudação, conta como falha: depois de cinco falhas seguidas o Docker marca o container como `unhealthy`. O teste não faz login e não usa senha.
+Abre a porta de controle (`127.0.0.1:2121`, de dentro do container), espera até 4 segundos pela saudação do servidor e encerra a conexão com `QUIT`. Considera saudável a saudação `220` (pronto) e também a `421` (limite de conexões atingido: o servidor está cheio, mas atendendo). Porta fechada, ou aberta sem saudação, conta como falha: depois de cinco falhas seguidas o Docker marca o container como `unhealthy`. O teste não faz login e não usa senha. Com `FTP_TLS_EXCECOES=sim`, antes de abrir a porta ele exige o soquete `/run/pure-authd.sock`: sem o `pure-authd`, o FTP não conta como saudável.
 
 Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; echo $?` (`0` = atendendo).
+
+</details>
+
+---
+
+<a name="porteiro-tls"></a>
+
+## 🚪 `ftp/porteiro-tls.sh`
+
+É o porteiro do TLS por usuário, instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-porteiro-tls`. Não é chamado direto: com `FTP_TLS_EXCECOES=sim`, o `pure-authd` o executa a cada entrada, antes da conferência da senha. Com `nao`, não é usado.
+
+**Resultado esperado:** a sessão com TLS e a do usuário dispensado seguem para a conferência da senha; a sessão sem TLS de qualquer outro recebe `530`, e o log do container ganha a linha `porteiro: entrada sem TLS recusada: usuario=<nome> origem=<ip> (a senha enviada passou em texto puro: troque-a)`.
+
+<details>
+<summary>Detalhe técnico — o que ele responde</summary>
+
+- Recebe do `pure-authd`, em variáveis de ambiente, o nome (`AUTHD_ACCOUNT`), se a sessão tem TLS (`AUTHD_ENCRYPTED`) e o endereço de origem (`AUTHD_REMOTE_IP`). A senha também chega em variável e **não** é lida, gravada nem registrada.
+- Responde `auth_ok:0` quando a sessão tem TLS ou quando o nome, dentro da regra `^[a-z_][a-z0-9_-]{0,31}$`, está em uma linha inteira de `/auth/sem-tls.lista`. É a resposta "não é comigo": o `pure-ftpd` segue para o PureDB, que confere a senha.
+- Nos outros casos responde `auth_ok:-1`, a recusa definitiva: o cliente recebe `530` com a senha certa ou errada.
+- No registro da recusa, nome fora da regra vira `(nome fora da regra)` e origem fora do formato de endereço vira `?`: o que o cliente mandou não vai cru para o log. A linha sai pela saída de erro do processo 1 do container, porque o `pure-authd` fecha a do script.
+- Lista ausente ou ilegível conta como lista vazia: ninguém entra sem TLS.
 
 </details>
 
@@ -367,6 +399,7 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 | `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` | a opção tem outro valor |
 | `FALHA: PAINEL_REDES_PERMITIDAS está vazia` | a variável chegou vazia ao container |
 | `FALHA: PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'` | a entrada dos usuários do FTP tem outro valor |
+| `FALHA: FTP_TLS_EXCECOES deve ser 'nao' ou 'sim'`, `FALHA: FTP_TLS_EXCECOES=sim exige FTP_TLS_MODE=2` ou `FALHA: FTP_TLS_EXCECOES=sim não combina com REDE_PERMITIR_IP_PUBLICO=sim` | a exceção de TLS por usuário tem valor inválido ou está ligada em uma combinação recusada, a mesma conferência do container do FTP |
 | `FALHA: PAINEL_ADMIN_USER inválido: ...` | o nome do primeiro administrador tem maiúscula, espaço, mais de 32 caracteres ou caractere fora de `a-z`, `0-9`, `_` e `-` |
 | `FALHA: PAINEL_CERT_CN inválido` | nome com maiúscula, espaço ou caractere fora de `a-z`, `0-9`, `.` e `-` |
 | `FALHA: pastas /auth e /data ausentes` | o painel subiu sem as pastas do serviço `ftp` |
@@ -437,16 +470,17 @@ Instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user`
 <details>
 <summary>Detalhe técnico — o que ele faz dentro do container</summary>
 
-- Aceita `add|passwd|del|list [usuario] [pasta]`, com a pasta só no `add`, e valida o nome (`^[a-z_][a-z0-9_-]{0,31}$`).
+- Aceita `add|passwd|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta]`, com a pasta só no `add`, e valida o nome (`^[a-z_][a-z0-9_-]{0,31}$`).
 - A pasta, quando informada, tem até 4 níveis separados por `/`; cada nível casa com `[A-Za-z0-9_][A-Za-z0-9._-]{0,63}`. Fora disso, responde `Pasta invalida: ...` e sai com código `1`, antes de ler a senha.
 - Lê a senha do `stdin` e recusa menos de 12 caracteres com `Senha deve ter pelo menos 12 caracteres`.
 - `add` recusa nome que já existe (`Usuario ja existe`), confere a pasta nível por nível (link simbólico ou arquivo no caminho: `Pasta recusada: ...`), cria os níveis que faltam com dono `ftpdata` e modo `0750` e registra o usuário com `pure-pw useradd`, com a pasta como diretório do `chroot`. Sem a pasta, usa `/data/<usuario>`.
 - Se outro usuário tem a mesma pasta, uma de cima ou uma de dentro, o `add` conclui e escreve `Aviso: /data/<pasta> e dividida com o usuario <nome> ...`, uma linha por usuário.
 - `passwd` usa `pure-pw passwd`; `del` usa `pure-pw userdel`, **não** apaga a pasta e diz qual é ela.
+- `tls-dispensar` e `tls-exigir` põem e tiram o nome de `/auth/sem-tls.lista` (`0600`), um nome por linha, em ordem. Só aceitam usuário que existe: senão, `Usuario nao existe: <nome>` e código `1`. A lista é gravada em um arquivo ao lado e trocada de nome, para nunca ser lida pela metade, e a cada gravação saem dela os nomes que já não estão no cadastro. `del` tira o usuário da lista; `tls-lista` a mostra.
 - Depois de cada mudança, regenera o `pureftpd.pdb` com `pure-pw mkdb` e mantém os dois arquivos em `0600`.
 - Antes de alterar, pega a trava `/auth/.lock` (`flock`, espera até 30 segundos): o FTP, o `manage-user.sh` e o painel nunca gravam ao mesmo tempo.
 - `list` passa o arquivo pela variável `PURE_PASSWDFILE`, porque o `pure-pw list` não aceita `-f` logo depois da ação.
-- Uso inválido: mostra `Uso: ... add|passwd|del|list [usuario] [pasta]` e sai com código `2`.
+- Uso inválido: mostra `Uso: ... add|passwd|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta]` e sai com código `2`.
 
 </details>
 

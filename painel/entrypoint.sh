@@ -33,6 +33,14 @@ done
   || die "PAINEL_ADMIN_USER inválido: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres"
 [[ "${PAINEL_ACESSO_USUARIOS_FTP:-sim}" == sim || "${PAINEL_ACESSO_USUARIOS_FTP:-sim}" == nao ]] \
   || die "PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'"
+[[ "${FTP_TLS_EXCECOES:-nao}" == sim || "${FTP_TLS_EXCECOES:-nao}" == nao ]] \
+  || die "FTP_TLS_EXCECOES deve ser 'nao' ou 'sim'"
+if [[ "${FTP_TLS_EXCECOES:-nao}" == sim ]]; then
+  [[ "${FTP_TLS_MODE:-2}" == 2 ]] || die "FTP_TLS_EXCECOES=sim exige FTP_TLS_MODE=2; está ${FTP_TLS_MODE:-2}"
+  if ip_publico_permitido; then
+    die "FTP_TLS_EXCECOES=sim não combina com REDE_PERMITIR_IP_PUBLICO=sim"
+  fi
+fi
 cn_ip=false
 if [[ "$PAINEL_CERT_CN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   cn_ip=true

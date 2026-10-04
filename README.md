@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.15.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.16.0-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -34,7 +34,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.15.0</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.16.0</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -71,6 +71,8 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 > **Painel web:** só em rede interna, atrás de firewall, como o resto da stack. Ele recusa por código o endereço que não for privado. Como usar: [doc/painel.md](doc/painel.md).
 
 > ⚠️ **Equipamento antigo sem TLS:** para o equipamento que não tem suporte a TLS existe a opção `FTP_TLS_MODE=0` (ou `1`). Com ela, **senha e arquivos trafegam em texto puro**: use só em rede interna isolada, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Veja [doc/seguranca.md](doc/seguranca.md#ftp-sem-tls).
+>
+> Para dispensar do TLS **só os usuários dos equipamentos antigos**, mantendo os demais obrigados, use `FTP_TLS_EXCECOES=sim` e marque cada um na aba Usuários do painel: [TLS por usuário](doc/seguranca.md#tls-por-usuario).
 
 ---
 
@@ -217,7 +219,7 @@ flowchart LR
 | 1 | Equipamento de rede ➜ Pure-FTPd | O equipamento abre a conexão de controle na porta `21/tcp` do host, entregue ao container em `2121/tcp` |
 | 2 | Pure-FTPd ➜ pediu TLS? | No padrão (`FTP_TLS_MODE=2`), o servidor só aceita seguir se o cliente pedir `AUTH TLS`; o certificado `pure-ftpd.pem` é apresentado |
 | 3a | pediu TLS? ➜ usuário e senha conferem? | Sim: o cliente envia usuário e senha, já criptografados |
-| 3b | pediu TLS? ➜ conexão recusada | Não: no padrão, sessão em texto puro é recusada. Só entra sem TLS quem estiver em uma instalação com `FTP_TLS_MODE=0` ou `1`, opção para [equipamento antigo](doc/seguranca.md#ftp-sem-tls) |
+| 3b | pediu TLS? ➜ conexão recusada | Não: no padrão, sessão em texto puro é recusada. Só entra sem TLS o usuário dispensado por um administrador, com `FTP_TLS_EXCECOES=sim`, ou quem estiver em uma instalação com `FTP_TLS_MODE=0` ou `1`, opções para [equipamento antigo](doc/seguranca.md#ftp-sem-tls) |
 | 4 | usuário e senha conferem? ➜ PureDB | A conta é procurada no banco de usuários virtuais (`/auth/pureftpd.pdb`) |
 | 5a | usuário e senha conferem? ➜ sessão em chroot | Sim: a sessão abre presa na pasta do usuário |
 | 5b | usuário e senha conferem? ➜ conexão recusada | Não: `530 Login authentication failed` |
@@ -316,7 +318,7 @@ flowchart LR
 | 7 | sessão ➜ pedido legítimo? | Cada formulário enviado pelo administrador traz o token CSRF da sessão e a origem do próprio painel; na sessão do usuário do FTP, o único formulário é o de sair |
 | 8a | pedido legítimo? ➜ `allsafe-ftp-user` | Sim: o painel chama o comando, com a senha pela entrada padrão |
 | 8b | pedido legítimo? ➜ pedido recusado | Não: `403`, sem alterar nada |
-| 9 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez |
+| 9 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez; a dispensa do TLS de um usuário fica na `sem-tls.lista`, na mesma pasta |
 | 10 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
 | 11 | sessão ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta, pede um arquivo ou cria uma pasta; na tela Meus arquivos, o usuário do FTP abre uma pasta ou pede um arquivo. O caminho pedido é conferido parte por parte |
 | 12 | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | O painel abre cada parte sem seguir link simbólico: a partir da pasta dos dados, para o administrador, e a partir da pasta do cadastro, para o usuário do FTP |
@@ -533,7 +535,8 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 
 - Bind em `127.0.0.1` por padrão: abra só um IP privado dedicado e libere no firewall do host apenas as redes que enviam backup.
 - TLS **obrigatório** para entrar no padrão (`FTP_TLS_MODE=2`), `chroot` em todos, sem usuário anônimo, sem DNS reverso.
-- **Sem TLS só por escolha:** `FTP_TLS_MODE=0` ou `1` existe para equipamento antigo que não fala TLS. Senha e arquivos passam em texto puro, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Só em rede interna isolada. Veja [equipamento sem TLS](doc/seguranca.md#ftp-sem-tls).
+- **Sem TLS só para quem o administrador dispensar:** com `FTP_TLS_EXCECOES=sim`, o administrador marca no painel os usuários dos equipamentos antigos, um a um; os demais continuam obrigados a usar TLS. Veja [TLS por usuário](doc/seguranca.md#tls-por-usuario).
+- **Sem TLS para todos só por escolha:** `FTP_TLS_MODE=0` ou `1` existe para equipamento antigo que não fala TLS. Senha e arquivos passam em texto puro, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Só em rede interna isolada. Veja [equipamento sem TLS](doc/seguranca.md#ftp-sem-tls).
 - `read_only` no sistema de arquivos raiz, `cap_drop: ALL` (só as estritamente necessárias voltam), `no-new-privileges`, limites de CPU, memória, PIDs e `nofile`.
 - Senha em `.secrets/ftp-usuario-inicial-senha.txt` (mínimo de 12 caracteres, `0600`), fora da imagem e ignorada pelo Git. Veja [doc/segredos.md](doc/segredos.md).
 - nginx na frente do painel: é a única porta publicada, roda sem `root` e sem `capability`, aceita só as redes de `PAINEL_REDES_PERMITIDAS` e limita pedidos e conexões por endereço.
@@ -642,7 +645,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.15.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.16.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

@@ -153,6 +153,7 @@ Só o usuário inicial vem do `.env`. Os demais são criados com [`manage-user.s
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
 | `FTP_TLS_MODE` | Política de TLS do `pure-ftpd` (opção `-Y`) | `0`, `1`, `2` ou `3` (tabela abaixo) | `2` |
+| `FTP_TLS_EXCECOES` | TLS por usuário: com `sim`, os usuários que um administrador dispensar na aba Usuários do painel entram sem TLS, e os demais continuam obrigados a usar. Exige `FTP_TLS_MODE=2` e não liga junto com `REDE_PERMITIR_IP_PUBLICO=sim` | `nao` ou `sim` | `nao` |
 | `FTP_CERT_CN` | `CN` e `SAN` do certificado autoassinado gerado na primeira subida. Se for um IPv4, entra como `IP:`; senão, como `DNS:` | hostname ou IPv4 | `ftp.exemplo.com.br` no exemplo; `localhost` se a variável faltar |
 
 | Modo | Sessão sem TLS | Canal de dados sem criptografia | Quando usar |
@@ -164,7 +165,11 @@ Só o usuário inicial vem do `.env`. Os demais são criados com [`manage-user.s
 
 > ⚠️ **Modos `0` e `1`: FTP sem criptografia.** Existem só para equipamento antigo que não fala TLS. Neles, usuário, senha e arquivo passam em **texto puro** e podem ser lidos por quem estiver no mesmo caminho de rede. Use apenas em rede interna isolada, com o firewall liberando a porta só para esses equipamentos, com usuário e senha dedicados a eles, e volte para `2` assim que puder. Enquanto um desses modos estiver ligado, a stack avisa em três lugares: no fim do `./deploy.sh`, no registro do container do FTP e nas telas do painel. Leia antes [Segurança](seguranca.md#ftp-sem-tls).
 
+> ⚠️ **`FTP_TLS_EXCECOES=sim`: sem TLS só para quem o administrador dispensar.** O servidor continua exigindo TLS de todos, menos dos usuários que um administrador dispensar, um a um, na aba Usuários do painel ou com o `manage-user.sh`. O usuário dispensado manda senha e arquivo em **texto puro**, e as condições de uso são as mesmas dos modos `0` e `1`. Com `nao`, o padrão, ninguém entra sem TLS, mesmo que já tenha sido dispensado antes: a lista fica guardada e não vale. Leia antes [Segurança](seguranca.md#tls-por-usuario).
+
 Um valor fora de `0` a `3` é recusado pelo `deploy.sh` antes de qualquer alteração e, se chegar ao container, ele para com `FALHA: FTP_TLS_MODE deve ser 0, 1, 2 ou 3`. O certificado do FTP é gerado em qualquer modo: ao voltar para `2`, ele já está lá.
+
+A `FTP_TLS_EXCECOES` também é conferida antes de qualquer alteração, pelo `deploy.sh` e pelos containers do FTP e do painel: valor fora de `nao` e de `sim`, `sim` com `FTP_TLS_MODE` diferente de `2` e `sim` junto com `REDE_PERMITIR_IP_PUBLICO=sim` são recusados. Em `0` e `1` todos já entram sem TLS, e o `3` exige TLS também nos dados, o que o equipamento sem TLS não faz.
 
 > ⚠️ No modo `2`, o padrão, usuário e senha sempre trafegam criptografados, mas o conteúdo do arquivo só é criptografado se o cliente pedir proteção do canal de dados (`PROT P`). Para **obrigar** a criptografia do arquivo, use `FTP_TLS_MODE=3` e confira antes se os equipamentos suportam.
 

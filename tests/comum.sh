@@ -68,7 +68,7 @@ ids() { docker inspect -f '{{.Id}}' "$FTP" "$PAINEL" "$NGINX" 2>/dev/null | cut 
 somas() { sha256sum "$S"/*.txt 2>/dev/null | awk '{print $1}' | sha256sum | cut -c1-16; }
 outros() { docker ps -a --no-trunc --format '{{.ID}} {{.Names}}' | grep -v -E " $NOME(-|\$)" | awk '{print $1}' | sort; }
 usuarios_ftp() { docker exec "$FTP" cut -d: -f1 /auth/pureftpd.passwd 2>/dev/null | sort | tr '\n' ' '; }
-mu() { # <add|passwd|del|list> [usuário] [arquivo da senha] [pasta]: manage-user.sh na instância de teste
+mu() { # <add|passwd|del|list|tls-dispensar|tls-exigir|tls-lista> [usuário] [arquivo da senha] [pasta]: manage-user.sh na instância de teste
   if [[ -n "${3:-}" ]]; then
     { cat "$3"; echo; } | ENV_FILE="$ENVA" ./manage-user.sh "$1" "$2" ${4:+"$4"} > "$W/mu.log" 2>&1
   else
@@ -84,7 +84,7 @@ ftp_curl() {
   case "$modo" in
     tls) opcoes=(--ssl-reqd -k) ;;
     controle) opcoes=(--ftp-ssl-control -k) ;;
-    *) tempo=10 ;;
+    *) tempo="${ESPERA_PURO:-10}" ;;  # recusa de senha sem TLS passa pelo argon2id e pela espera do servidor
   esac
   ( umask 077; printf 'user = "%s:%s"\n' "$usuario" "$(tr -d '\r\n' < "$arquivo")" > "$W/curl.cfg" )
   curl -sS -v --max-time "$tempo" -K "$W/curl.cfg" "${opcoes[@]}" "$@" > "$W/curl.out" 2> "$W/curl.err"; codigo=$?
@@ -210,8 +210,8 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
   printf '%-9s %s → %s\n' "$tipo" "$resultado" "$arquivo"
 }
 declare -A ESPERADOS=(
-  [testes]="$(seq -s ' ' 1 30)"
-  [seguranca]="$(seq -s ' ' 1 63)"
+  [testes]="$(seq -s ' ' 1 32)"
+  [seguranca]="$(seq -s ' ' 1 66)"
   [rede]="$(seq -s ' ' 1 13)"
 )
 ARQUIVOS=()

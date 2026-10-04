@@ -30,7 +30,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [FTP sem TLS](#ftp-sem-tls) · [Antes de produção](#o-que-endurecer-antes-de-producao) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
+[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [FTP sem TLS](#ftp-sem-tls) · [TLS por usuário](#tls-por-usuario) · [Antes de produção](#o-que-endurecer-antes-de-producao) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
 
 </details>
 
@@ -139,9 +139,18 @@ O backup de um equipamento de rede costuma trazer senhas, comunidades SNMP e cha
 4. Cada equipamento antigo tem **usuário e senha só dele**, não usados em nenhum outro lugar. O `chroot` limita o estrago à pasta daquele usuário.
 5. Há data para voltar ao `2`: quando o equipamento for trocado ou atualizado, o modo volta e as senhas que passaram em texto puro são trocadas.
 
-Prefira, nesta ordem: uma **segunda instância** só para os equipamentos antigos, mantendo a principal em `2` ([Configuração](configuracao.md#pastas-e-nomes)); depois o modo `1`; por último o modo `0`.
+Há quatro caminhos para o equipamento que não fala TLS. Prefira de cima para baixo:
 
-Para ligar, edite `FTP_TLS_MODE` no `.env` e reaplique:
+| Caminho | Quem entra sem TLS | O que os demais arriscam |
+|---|---|---|
+| Segunda instância só para os equipamentos antigos, com a principal em `2`: [Configuração](configuracao.md#pastas-e-nomes) | Só os usuários da segunda instância | Nada: a principal recusa a sessão sem TLS antes de a senha ser enviada |
+| Exceção por usuário (`FTP_TLS_EXCECOES=sim`): [TLS por usuário](#tls-por-usuario) | Só os usuários que um administrador dispensar | Um equipamento de usuário não dispensado, configurado sem TLS por engano, manda a senha em texto puro antes de ser recusado; a recusa fica no registro |
+| `FTP_TLS_MODE=1` | Qualquer usuário cujo equipamento não peça TLS | Nada obriga ninguém a usar TLS |
+| `FTP_TLS_MODE=0` | Todos | Não há TLS para ninguém |
+
+A exceção por usuário é o caminho mais simples quando são poucos equipamentos antigos: fica tudo em uma instalação só, com um painel só.
+
+Para ligar o modo `1` ou o `0`, edite `FTP_TLS_MODE` no `.env` e reaplique:
 
 ```bash
 ./deploy.sh
@@ -179,6 +188,134 @@ Um valor fora de `0` a `3` é recusado duas vezes: pelo [`deploy.sh`](../deploy.
 
 ---
 
+<a name="tls-por-usuario"></a>
+
+## 🔓 TLS por usuário
+
+Com `FTP_TLS_EXCECOES=sim`, o servidor continua exigindo TLS de todos, menos dos usuários que um administrador dispensar, um a um. Serve para o servidor em que um ou dois equipamentos antigos não falam TLS e os demais falam. O padrão é `nao`: ninguém é dispensado.
+
+> ⚠️ **O usuário dispensado manda senha e arquivo em texto puro**, como nos modos `0` e `1`. Valem para ele as cinco condições de [FTP sem TLS](#ftp-sem-tls): equipamento que não fala TLS, rede interna isolada, firewall liberando só ele, usuário e senha só dele e data para acabar.
+
+1. No `.env`, mantenha `FTP_TLS_MODE=2` e `REDE_PERMITIR_IP_PUBLICO=nao` e defina `FTP_TLS_EXCECOES=sim`.
+2. Reaplique:
+
+   ```bash
+   ./deploy.sh
+   ```
+
+3. No painel, abra Usuários ➜ **Dispensar TLS** na linha do usuário do equipamento antigo e confirme. Pelo terminal, o mesmo:
+
+   ```bash
+   ./manage-user.sh tls-dispensar <usuario>
+   ```
+
+**Resultado esperado:** o resumo do `./deploy.sh` traz `TLS explícito obrigatório no login, com exceção por usuário` na linha do FTP; o usuário dispensado entra sem TLS na entrada seguinte, sem reiniciar nada; os demais, sem TLS, recebem `530` e continuam entrando com TLS.
+
+Para voltar a exigir o TLS de um usuário: Usuários ➜ **Exigir TLS**, ou `./manage-user.sh tls-exigir <usuario>`, e troque a senha dele, que passou em texto puro. Para desligar a exceção inteira: `FTP_TLS_EXCECOES=nao` e `./deploy.sh`.
+
+| Situação | O que acontece |
+|---|---|
+| Usuário dispensado, sem TLS | Entra, preso na pasta dele, como qualquer outro |
+| Usuário dispensado, com TLS | Entra: a dispensa permite a entrada sem TLS, não proíbe o TLS |
+| Usuário não dispensado, sem TLS | `530`, com a senha certa ou errada, e a recusa vai para o registro do container |
+| Usuário removido e criado de novo com o mesmo nome | Não herda a dispensa: volta a ser obrigado a usar TLS |
+| O processo que consulta a lista para de responder | O container do FTP encerra e o Docker o sobe de novo; enquanto isso, ninguém entra |
+| `FTP_TLS_EXCECOES` volta para `nao` | Ninguém entra sem TLS; a lista dos dispensados fica guardada e volta a valer se a opção for ligada de novo |
+
+> ⚠️ **Limite:** com a exceção ligada, o servidor só sabe quem é o usuário depois de receber o nome, então aceita o começo da conversa sem TLS de qualquer um. Um equipamento de usuário **não dispensado** que esteja configurado sem TLS manda a senha em texto puro antes de receber o `530`. A entrada é recusada e o registro traz o usuário e a origem: troque essa senha e corrija o equipamento. Com `nao`, o padrão, a sessão sem TLS é recusada antes de a senha ser enviada.
+
+Enquanto a exceção estiver ligada, ela aparece em:
+
+| Onde | O que aparece |
+|---|---|
+| Fim do `./deploy.sh` e do `./deploy.sh --check-only` | `AVISO: FTP_TLS_EXCECOES=sim: os usuários marcados na aba Usuários do painel entram SEM TLS, com senha e arquivos em texto puro` e as linhas seguintes |
+| Resumo do `./deploy.sh` | `com exceção por usuário` na linha do FTP |
+| Registro do container (`docker compose logs ftp`) | A cada subida, o `AVISO` com a quantidade de usuários dispensados; a cada recusa, `porteiro: entrada sem TLS recusada: usuario=<nome> origem=<ip> (a senha enviada passou em texto puro: troque-a)` |
+| Painel, aba Usuários | A coluna **TLS**, com `obrigatório` ou `sem TLS` em cada linha |
+| Painel, abas Visão geral e Segurança | Com pelo menos um usuário dispensado, a faixa de alerta no topo, com a quantidade e os nomes; na aba Segurança, o item `TLS do FTP` |
+| Painel, aba Atividade | `Usuário dispensado do TLS` e `Usuário volta a exigir TLS`, com o administrador que fez |
+
+<details>
+<summary>Fluxograma da entrada com a exceção ligada, com a sequência escrita — clique para expandir</summary>
+
+<!-- diagrama: diagramas/tls-por-usuario-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origem"]
+        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
+    end
+    subgraph ENTRADA["Entrada · FTP_TLS_EXCECOES=sim"]
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+        authd@{ shape: rect, label: "pure-authd<br>chama o porteiro" }
+        tls@{ shape: diam, label: "sessão<br>com TLS?" }
+        marcado@{ shape: diam, label: "usuário<br>dispensado?" }
+        lista@{ shape: doc, label: "sem-tls.lista<br>/auth, um nome por linha" }
+        registro@{ shape: docs, label: "registro do container<br>entrada sem TLS recusada" }
+    end
+    subgraph AUTH["Autenticação"]
+        login@{ shape: diam, label: "usuário e senha<br>conferem?" }
+        puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
+    end
+    subgraph RESULTADO["Resultado"]
+        sessao@{ shape: stadium, label: "sessão em chroot<br>presa na pasta" }
+        recusa@{ shape: stadium, label: "530<br>entrada recusada" }
+    end
+
+    equip -- "1 · conecta e envia usuário e senha, TCP 21" --> ftp
+    ftp -- "2 · pergunta antes de conferir a senha" --> authd
+    authd -- "3 · porteiro: a sessão tem TLS?" --> tls
+    tls -- "4a · sim: segue" --> login
+    tls -- "4b · não" --> marcado
+    marcado -- "5a · sim: segue" --> login
+    marcado -- "5b · não: recusa definitiva" --> recusa
+    login -- "6a · sim: abre a sessão" --> sessao
+    login -- "6b · não" --> recusa
+    marcado -. "lê" .-> lista
+    marcado -. "grava a recusa" .-> registro
+    login -. "consulta o usuário" .-> puredb
+```
+
+<sub>Nível 2 · Mapa · [fonte](diagramas/)</sub>
+
+| Nº | De ➜ Para | O que acontece |
+|---|---|---|
+| 1 | Equipamento de rede ➜ Pure-FTPd | O equipamento conecta na porta `21/tcp` e envia usuário e senha, com ou sem TLS |
+| 2 | Pure-FTPd ➜ pure-authd | Antes de conferir a senha, o servidor pergunta ao `pure-authd` se a entrada pode seguir |
+| 3 | pure-authd ➜ sessão com TLS? | O `pure-authd` chama o porteiro (`allsafe-ftp-porteiro-tls`), que olha se a sessão está criptografada |
+| 4a | sessão com TLS? ➜ usuário e senha conferem? | Sim: segue para a conferência da senha, qualquer que seja o usuário |
+| 4b | sessão com TLS? ➜ usuário dispensado? | Não: o porteiro procura o nome na lista dos dispensados |
+| 5a | usuário dispensado? ➜ usuário e senha conferem? | Sim: segue para a conferência da senha |
+| 5b | usuário dispensado? ➜ 530 | Não: recusa definitiva, com a senha certa ou errada |
+| 6a | usuário e senha conferem? ➜ sessão em chroot | Sim: a sessão abre, presa na pasta do usuário |
+| 6b | usuário e senha conferem? ➜ 530 | Não: `530 Login authentication failed` |
+
+**Apoio**
+
+| Quem | Usa | Como |
+|---|---|---|
+| usuário dispensado? | `sem-tls.lista` (`DATA_DIR/auth`) | lê a cada entrada |
+| usuário dispensado? | registro do container | grava a recusa, com o usuário e a origem, sem a senha |
+| usuário e senha conferem? | PureDB | consulta o usuário |
+
+</details>
+
+<details>
+<summary>Detalhe técnico — como a exceção é aplicada</summary>
+
+- **Dois processos:** com `sim`, o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) sobe o `pure-authd -s /run/pure-authd.sock -r /usr/local/sbin/allsafe-ftp-porteiro-tls` e o `pure-ftpd` com `-l extauth:/run/pure-authd.sock -l puredb:/auth/pureftpd.pdb -Y 1`. O `-Y 1` faz o servidor aceitar sessão com e sem TLS; quem decide a entrada sem TLS é o porteiro.
+- **O porteiro não confere senha:** o [`ftp/porteiro-tls.sh`](../ftp/porteiro-tls.sh) responde `auth_ok:0` ("não é comigo") quando a sessão tem TLS ou quando o nome está na lista, e o `pure-ftpd` segue para o PureDB, que confere a senha como sempre. Nos outros casos responde `auth_ok:-1`, a recusa definitiva. A senha chega a ele em variável de ambiente e não é lida, gravada nem registrada.
+- **A lista:** `/auth/sem-tls.lista` (`DATA_DIR/auth` no host), `0600`, do `root`, um nome por linha. Só o `allsafe-ftp-user` grava, com a mesma trava do cadastro de usuários e por troca de nome do arquivo, para o porteiro nunca ler a lista pela metade. É lida a cada entrada: a mudança vale na entrada seguinte, sem reiniciar.
+- **Falha fechada:** sem o `pure-authd`, o `pure-ftpd` cairia direto no PureDB e aceitaria todos sem TLS. Por isso o entrypoint vigia os dois processos: se um sair, escreve `FALHA: o pure-authd saiu: o container encerra para ninguém entrar sem a conferência do TLS por usuário` (ou `o pure-ftpd saiu`), encerra com código `1`, e o `restart: unless-stopped` sobe o container de novo, com os dois. O healthcheck só responde saudável com o soquete do `pure-authd` aberto.
+- **Combinações recusadas** pelo [`deploy.sh`](../deploy.sh) e pelos containers do FTP e do painel: valor fora de `nao` e de `sim`; `sim` com `FTP_TLS_MODE` diferente de `2`; `sim` com `REDE_PERMITIR_IP_PUBLICO=sim`.
+- **Quem altera a lista:** só um administrador, pelo painel, com token CSRF e origem conferidos, ou quem tem acesso ao Docker do servidor, pelo `manage-user.sh`. Para o usuário do FTP que entra no painel, a tela responde `404`. Com a exceção desligada, a tela também responde `404`.
+- O painel confere a senha do usuário do FTP em TLS, pela rede interna da stack, com ou sem a exceção: a dispensa não muda a [entrada dele no painel](painel.md#usuario-ftp).
+- As recusas, a queda do `pure-authd` e as combinações são conferidas pela [bateria de testes](scripts.md#testar).
+
+</details>
+
+---
+
 <a name="o-que-endurecer-antes-de-producao"></a>
 
 ## 🏭 Antes de produção
@@ -189,7 +326,7 @@ Um valor fora de `0` a `3` é recusado duas vezes: pelo [`deploy.sh`](../deploy.
 4. `fail2ban` no host lendo o log CLF do container (`docker logs allsafe-ftp`).
 5. Rever `FTP_MAX_CLIENTS` e a faixa passiva conforme o número real de equipamentos: [Perfis](perfis.md).
 6. Cópia de segurança agendada e levada para fora do servidor: [Backup e restauração](backup.md#automatica).
-7. Conferir que `FTP_TLS_MODE` está em `2` ou `3`. Se um equipamento antigo exigir `0` ou `1`, siga antes [FTP sem TLS](#ftp-sem-tls).
+7. Conferir que `FTP_TLS_MODE` está em `2` ou `3`. Se um equipamento antigo não falar TLS, siga antes [FTP sem TLS](#ftp-sem-tls) e prefira dispensar só o usuário dele: [TLS por usuário](#tls-por-usuario).
 8. Avaliar `FTP_TLS_MODE=3`, que obriga a criptografia também do arquivo: [Configuração](configuracao.md#tls).
 9. Considerar SFTP (`allsafe-sftp-stack`) onde o equipamento suportar: canal único, sem faixa passiva.
 
@@ -203,7 +340,7 @@ Um valor fora de `0` a `3` é recusado duas vezes: pelo [`deploy.sh`](../deploy.
 
 | Nº | Ameaça | Mitigação nesta stack |
 |---|---|---|
-| 1 | Captura de credenciais em trânsito | FTPS **obrigatório** no padrão (`FTP_TLS_MODE=2`): sem TLS não há login, então usuário e senha sempre trafegam criptografados. Os modos `0` e `1` abrem mão desta proteção: [FTP sem TLS](#ftp-sem-tls) |
+| 1 | Captura de credenciais em trânsito | FTPS **obrigatório** no padrão (`FTP_TLS_MODE=2`): sem TLS não há login, então usuário e senha sempre trafegam criptografados. Os modos `0` e `1` abrem mão desta proteção para todos, e a exceção por usuário, só para os usuários dispensados: [FTP sem TLS](#ftp-sem-tls) |
 | 2 | Exposição acidental na internet | Bind em `127.0.0.1` por padrão; produção usa **um IP privado dedicado**, com firewall no host e sem redirecionamento de porta da borda |
 | 3 | Fuga do diretório do usuário (_path traversal_) | `chroot` de todos (`-A`); cada usuário preso na pasta do cadastro, `/data/<usuario>` ou a pasta escolhida na criação |
 | 4 | Uso de contas do sistema para login | Usuários **virtuais** em PureDB e `-u 10000` (UID mínimo). Sem anônimo (`-E`) |
@@ -224,8 +361,11 @@ Um valor fora de `0` a `3` é recusado duas vezes: pelo [`deploy.sh`](../deploy.
 | 19 | Um equipamento alcançar o backup de outro por pasta dividida | O padrão é uma pasta por usuário. Pasta igual, ou uma dentro da outra, só existe por escolha de quem administra, com alerta no cadastro, a marca **dividida** na lista e a linha `Aviso:` no `manage-user.sh` |
 | 20 | Usuário do FTP alcançar a administração do painel ou os arquivos de outro usuário | A sessão dele tem tabela de rotas própria, só com a tela Meus arquivos, o download e a saída: tela e formulário de administração respondem `404` e ficam na auditoria (`recusa_papel`). A raiz dele é a pasta do cadastro, e o caminho pedido passa pelas mesmas conferências da aba Arquivos. A sessão acaba quando a senha ou a pasta dele muda, quando ele é removido e quando um administrador passa a ter o mesmo nome |
 | 21 | Adivinhação da senha de um usuário do FTP pela tela do painel | Quem confere a senha é o servidor FTP, que leva cerca de 3 segundos por tentativa e atrasa a recusa; cinco erros em 15 minutos bloqueiam o endereço (`429`); só entra quem está nas redes permitidas do painel; nome que também é de administrador só vale com a senha de administrador. `PAINEL_ACESSO_USUARIOS_FTP=nao` desliga esta entrada |
+| 22 | Entrada sem TLS de quem não foi dispensado, com a exceção por usuário ligada | A decisão vem antes da conferência da senha: sem TLS só segue o nome que está na lista gravada pelo administrador, e os demais recebem `530` com a senha certa ou errada, com a recusa no registro. Se o processo que consulta a lista parar, o container do FTP encerra em vez de aceitar todos. A opção só liga sobre `FTP_TLS_MODE=2`, nunca com endereço público aceito, e só um administrador altera a lista: [TLS por usuário](#tls-por-usuario) |
 
 > ⚠️ **Limite da ameaça nº 1:** no modo `2`, o conteúdo do arquivo só é criptografado se o cliente pedir proteção do canal de dados (`PROT P`). Um equipamento que negocia TLS no login e envia os dados sem proteção é aceito. Só o modo `3` recusa esse caso. A troca do padrão está registrada no plano do projeto.
+
+> ⚠️ **Limite da ameaça nº 22:** com a exceção ligada, o equipamento de um usuário não dispensado que esteja configurado sem TLS manda a senha em texto puro antes de ser recusado. A stack recusa a entrada e registra o usuário e a origem; a senha tem de ser trocada.
 
 **Fora de escopo:** proteção de rede (faça ACL no host ou na borda), limitação de tentativas de força bruta **no FTP** (use `fail2ban` no host lendo os logs CLF; o painel tem limite próprio) e antivírus de conteúdo.
 
@@ -269,7 +409,7 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 
 O que cada proteção significa na prática e o fluxograma da decisão: [Painel web](painel.md#protecoes).
 
-> Tudo acima foi conferido nos portões de validação das versões `0.3.0` (painel), `0.5.0` (nginx na frente), `0.12.0` (administradores), `0.13.0` (aba Arquivos), `0.14.0` (pastas) e `0.15.0` (entrada do usuário do FTP), em instância de teste. O firewall do host continua sendo de quem opera o servidor.
+> Tudo acima foi conferido nos portões de validação das versões `0.3.0` (painel), `0.5.0` (nginx na frente), `0.12.0` (administradores), `0.13.0` (aba Arquivos), `0.14.0` (pastas), `0.15.0` (entrada do usuário do FTP) e `0.16.0` (TLS por usuário), em instância de teste. O firewall do host continua sendo de quem opera o servidor.
 
 ---
 

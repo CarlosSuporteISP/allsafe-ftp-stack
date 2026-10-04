@@ -3,7 +3,7 @@ import html
 import time
 
 from config import CFG
-from estado import dias_restantes
+from estado import dias_restantes, sem_tls
 
 ABAS = (('/', '📊 Visão geral'), ('/usuarios', '👥 Usuários'), ('/arquivos', '📁 Arquivos'),
         ('/administradores', '🛡️ Administradores'), ('/seguranca', '🔐 Segurança'), ('/atividade', '📜 Atividade'))
@@ -29,7 +29,7 @@ def quando(instante):
 
 
 def alerta_tls():
-    """Aviso das telas enquanto o FTP aceita sessão sem criptografia (FTP_TLS_MODE 0 ou 1)."""
+    """Aviso das telas enquanto o FTP aceita sessão sem criptografia: FTP_TLS_MODE 0 ou 1, ou usuário dispensado do TLS."""
     resto = ('Use só para equipamento antigo sem suporte a TLS, em rede interna isolada, e volte para '
              '<code>FTP_TLS_MODE=2</code> assim que puder.</p>')
     if CFG['ftp_tls'] == '0':
@@ -38,6 +38,12 @@ def alerta_tls():
     if CFG['ftp_tls'] == '1':
         return ('<p class="aviso" role="alert">⚠️ O TLS do FTP está <strong>opcional</strong> (<code>FTP_TLS_MODE=1</code>): '
                 'quem entra sem TLS manda senha e arquivos em texto puro. ' + resto)
+    marcados = sem_tls() if CFG['tls_excecoes'] else []
+    if marcados:
+        return ('<p class="aviso" role="alert">⚠️ <strong>' + str(len(marcados)) + ' usuário(s) entram no FTP sem TLS</strong> ('
+                + e(', '.join(marcados)) + '): a senha e os arquivos deles trafegam em texto puro e podem ser lidos por quem '
+                'estiver na mesma rede. Use só para equipamento antigo sem suporte a TLS, em rede interna isolada, e volte a '
+                'exigir o TLS em <a href="/usuarios">Usuários</a> assim que puder.</p>')
     return ''
 
 

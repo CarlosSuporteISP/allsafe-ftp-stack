@@ -47,6 +47,9 @@ Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.m
 ./manage-user.sh passwd cliente01   # troca a senha (pede a nova)
 ./manage-user.sh list               # lista os usuários do PureDB
 ./manage-user.sh del cliente01      # remove o usuário e MANTÉM a pasta dele
+./manage-user.sh tls-dispensar olt-antiga   # deixa o usuário entrar sem TLS (só vale com FTP_TLS_EXCECOES=sim)
+./manage-user.sh tls-exigir olt-antiga      # volta a exigir o TLS dele
+./manage-user.sh tls-lista                  # lista quem está dispensado do TLS
 ```
 
 **Resultado esperado:** depois do `add`, o usuário aparece no `list` e já consegue entrar por FTPS; depois do `del`, some do `list` e a pasta continua no volume.
@@ -58,15 +61,18 @@ Regras:
 - Pasta: sem o terceiro parâmetro, é `/data/<usuario>`. Com ele, fica sempre dentro de `/data` (`DATA_DIR/dados` no host), com até 4 níveis separados por `/`; cada nível tem letras, números, `_`, `-` e ponto, não começa com ponto e vai até 64 caracteres. A pasta é criada se não existir. Pasta que passa por link simbólico ou por um arquivo é recusada, e nada é criado.
 - A pasta vale só no `add`, e usuário que já existe não muda de pasta: `add` de um nome existente responde `Usuario ja existe`.
 - `del` **não apaga arquivos** e responde com a pasta que ficou: remova-a à mão se quiser.
+- `tls-dispensar` e `tls-exigir` valem na entrada seguinte do usuário, sem reiniciar, e só para usuário que existe (`Usuario nao existe: <nome>`). A dispensa só tem efeito com `FTP_TLS_EXCECOES=sim`; com `nao`, fica guardada. O `del` tira o usuário da lista.
 
 > ⚠️ **Pasta dividida:** dois usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro. O `add` aceita e avisa, uma linha `Aviso:` por usuário que passa a dividir a pasta. Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.
+
+> ⚠️ **Dispensa do TLS:** o usuário dispensado manda senha e arquivo em texto puro. Só para equipamento antigo que não fala TLS, em rede interna isolada: [Segurança](seguranca.md#tls-por-usuario).
 
 > ⚠️ O usuário definido em `FTP_USER` é recriado ou atualizado a cada subida, com a senha de `.secrets/ftp-usuario-inicial-senha.txt`. Para renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo. Para trocar a senha dele, veja [Segredos](segredos.md#trocar-a-senha).
 
 <details>
 <summary>Detalhe técnico — onde a mudança é gravada</summary>
 
-O `manage-user.sh` encapsula o [`ftp/usuario.sh`](../ftp/usuario.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo.
+O `manage-user.sh` encapsula o [`ftp/usuario.sh`](../ftp/usuario.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo. A dispensa do TLS fica em `/auth/sem-tls.lista`, um nome por linha, lida pelo servidor a cada entrada.
 
 </details>
 
@@ -162,7 +168,7 @@ docker compose logs -f nginx        # subida do nginx e os pedidos que ele recus
 
 **Resultado esperado:** a linha `FTP pronto em 2121/tcp; ...` da subida e uma linha CLF por transferência; no painel, a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; ...`; no nginx, `nginx pronto em 8443/tcp (HTTPS), à frente do painel; ...`.
 
-O nginx registra só o que ele mesmo recusa, uma linha por pedido, no formato `ip método caminho código` (exemplo: `10.99.0.7 GET /entrar 403`). Com `FTP_TLS_MODE` em `0` ou `1`, o log do FTP traz a cada subida o `AVISO` de FTP sem criptografia: [Segurança](seguranca.md#ftp-sem-tls).
+O nginx registra só o que ele mesmo recusa, uma linha por pedido, no formato `ip método caminho código` (exemplo: `10.99.0.7 GET /entrar 403`). Com `FTP_TLS_MODE` em `0` ou `1`, o log do FTP traz a cada subida o `AVISO` de FTP sem criptografia: [Segurança](seguranca.md#ftp-sem-tls). Com `FTP_TLS_EXCECOES=sim`, traz o `AVISO` com a quantidade de usuários dispensados e uma linha `porteiro: entrada sem TLS recusada: usuario=<nome> origem=<ip>` para cada entrada sem TLS de quem não foi dispensado: [Segurança](seguranca.md#tls-por-usuario).
 
 O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos, arquivos baixados) fica no `auditoria.log`, visível na aba `📜 Atividade`: veja [Painel web](painel.md#auditoria).
 

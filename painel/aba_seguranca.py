@@ -2,7 +2,7 @@
 import os
 
 from config import ARQ_CERT, ARQ_CERT_FTP, CFG, FALHAS_MAX, PRIVADAS, endereco_privado
-from estado import certificado
+from estado import certificado, sem_tls
 from pagina import alerta_tls, aviso_rede, e, pagina, validade
 
 
@@ -13,6 +13,19 @@ def seguranca(pedido, sessao, consulta, formulario, token):
            '2': ('✅', 'obrigatório no login; os dados seguem o que o cliente pedir.'),
            '3': ('✅', 'obrigatório no login e nos dados.')}
     marca_tls, texto_tls = tls.get(CFG['ftp_tls'], ('⚠️', 'modo desconhecido'))
+    if CFG['tls_excecoes']:
+        marcados = sem_tls()
+        if marcados:
+            marca_tls = '⚠️'
+            texto_tls += (f' <strong>Exceção por usuário ligada</strong> (<code>FTP_TLS_EXCECOES=sim</code>): {len(marcados)} '
+                          f'usuário(s) entram sem TLS, com senha e arquivos em texto puro: {e(", ".join(marcados))}.')
+        else:
+            texto_tls += (' Exceção por usuário ligada (<code>FTP_TLS_EXCECOES=sim</code>), sem nenhum usuário dispensado: '
+                          'todos entram com TLS.')
+        texto_tls += (' Quem tenta entrar sem TLS sem estar dispensado é recusado, mas a senha já passou em texto puro: '
+                      'o log do FTP registra a tentativa.')
+    elif CFG['ftp_tls'] == '2':
+        texto_tls += ' Sem exceção por usuário (<code>FTP_TLS_EXCECOES=nao</code>).'
     cert_ftp, cert_painel = certificado(ARQ_CERT_FTP), certificado(ARQ_CERT)
     marca_ftp, validade_ftp = validade(cert_ftp)
     marca_painel, validade_painel = validade(cert_painel)

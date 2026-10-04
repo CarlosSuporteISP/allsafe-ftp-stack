@@ -1,0 +1,34 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origem"]
+        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
+    end
+    subgraph ENTRADA["Entrada · FTP_TLS_EXCECOES=sim"]
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+        authd@{ shape: rect, label: "pure-authd<br>chama o porteiro" }
+        tls@{ shape: diam, label: "sessão<br>com TLS?" }
+        marcado@{ shape: diam, label: "usuário<br>dispensado?" }
+        lista@{ shape: doc, label: "sem-tls.lista<br>/auth, um nome por linha" }
+        registro@{ shape: docs, label: "registro do container<br>entrada sem TLS recusada" }
+    end
+    subgraph AUTH["Autenticação"]
+        login@{ shape: diam, label: "usuário e senha<br>conferem?" }
+        puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
+    end
+    subgraph RESULTADO["Resultado"]
+        sessao@{ shape: stadium, label: "sessão em chroot<br>presa na pasta" }
+        recusa@{ shape: stadium, label: "530<br>entrada recusada" }
+    end
+
+    equip -- "1 · conecta e envia usuário e senha, TCP 21" --> ftp
+    ftp -- "2 · pergunta antes de conferir a senha" --> authd
+    authd -- "3 · porteiro: a sessão tem TLS?" --> tls
+    tls -- "4a · sim: segue" --> login
+    tls -- "4b · não" --> marcado
+    marcado -- "5a · sim: segue" --> login
+    marcado -- "5b · não: recusa definitiva" --> recusa
+    login -- "6a · sim: abre a sessão" --> sessao
+    login -- "6b · não" --> recusa
+    marcado -. "lê" .-> lista
+    marcado -. "grava a recusa" .-> registro
+    login -. "consulta o usuário" .-> puredb

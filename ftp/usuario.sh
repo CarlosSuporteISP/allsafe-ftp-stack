@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-usage() { echo "Uso: $0 add|passwd|del|list [usuario] [pasta]" >&2; exit 2; }
+usage() { echo "Uso: $0 add|passwd|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta]" >&2; exit 2; }
 action="${1:-}"
 user="${2:-}"
 pasta="${3:-$user}"
 passwd_file=/auth/pureftpd.passwd
+# Quem entra sem TLS quando FTP_TLS_EXCECOES=sim: um nome por linha. Quem lê é o porteiro do FTP.
+lista_tls=/auth/sem-tls.lista
 # Pasta do usuário, dentro de /data: até 4 níveis. Nenhum nível começa com ponto, então "." e ".." não passam.
 regra_pasta='^[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,3}$'
 [[ $# -le 2 || "$action" == add ]] || usage
@@ -47,6 +49,25 @@ preparar_pasta() {
   done
   chown ftpdata:ftpdata "$atual"
   chmod 0750 "$atual"
+}
+
+# Grava a lista de quem entra sem TLS, com ou sem o usuário. Vai para um arquivo ao lado e troca de nome,
+# para o porteiro nunca ler a lista pela metade.
+gravar_lista_tls() {
+  local modo="$1" nome
+  local novo="$lista_tls.novo"
+  : > "$novo"
+  chmod 0600 "$novo"
+  if [[ -f "$lista_tls" ]]; then
+    while IFS= read -r nome; do
+      [[ "$nome" =~ ^[a-z_][a-z0-9_-]{0,31}$ && "$nome" != "$user" ]] || continue
+      pasta_de "$nome" > /dev/null || continue  # conta que saiu do cadastro sai da lista
+      printf '%s\n' "$nome" >> "$novo"
+    done < "$lista_tls"
+  fi
+  [[ "$modo" != dispensar ]] || printf '%s\n' "$user" >> "$novo"
+  sort -u -o "$novo" "$novo"
+  mv -f "$novo" "$lista_tls"
 }
 
 # Quem mais alcança a pasta: usuário com a mesma, com uma acima ou com uma abaixo dela.
@@ -97,7 +118,25 @@ case "$action" in
     pure-pw userdel "$user" -f "$passwd_file"
     pure-pw mkdb /auth/pureftpd.pdb -f "$passwd_file"
     chmod 0600 "$passwd_file" /auth/pureftpd.pdb
+    # Um usuário novo com o mesmo nome não herda a dispensa do TLS.
+    [[ ! -f "$lista_tls" ]] || gravar_lista_tls exigir
     echo "Usuario removido; os dados em ${casa:-/data/$user} foram preservados."
+    ;;
+  tls-dispensar|tls-exigir)
+    [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || usage
+    travar
+    if ! { [[ -f "$passwd_file" ]] && pasta_de "$user" > /dev/null; }; then
+      echo "Usuario nao existe: $user" >&2; exit 1
+    fi
+    gravar_lista_tls "${action#tls-}"
+    if [[ "$action" == tls-dispensar ]]; then
+      echo "Usuario $user dispensado do TLS: vale na proxima entrada, com FTP_TLS_EXCECOES=sim."
+    else
+      echo "Usuario $user volta a ser obrigado a usar TLS: vale na proxima entrada."
+    fi
+    ;;
+  tls-lista)
+    [[ ! -f "$lista_tls" ]] || grep -E '^[a-z_][a-z0-9_-]{0,31}$' "$lista_tls" || true
     ;;
   *) usage ;;
 esac

@@ -4,13 +4,15 @@ import urllib.parse
 
 from auditoria import auditar, limpo
 from config import CFG, NOME, PASTA, SENHA_MAX, SENHA_MIN
-from estado import executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, uso_da_pasta, usuarios, vizinhos
+from estado import executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, sem_tls, uso_da_pasta, usuarios, vizinhos
 from pagina import e, pagina, quando, tamanho
 
 MENSAGENS = {
     'criado': '✅ Usuário criado.',
     'senha': '✅ Senha trocada.',
     'removido': '✅ Usuário removido. Os arquivos continuam na pasta.',
+    'tls_dispensado': '⚠️ Usuário dispensado do TLS: a senha e os arquivos dele passam em texto puro.',
+    'tls_exigido': '✅ O usuário volta a ser obrigado a usar TLS.',
 }
 
 
@@ -18,6 +20,8 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
     aviso = MENSAGENS.get(consulta.get('m', ''), '')
     linhas = []
     cadastro = usuarios()
+    excecoes = CFG['tls_excecoes']
+    marcados = sem_tls(cadastro) if excecoes else []
     for nome, pasta in cadastro.items():
         uso = uso_da_pasta(pasta)
         destino = urllib.parse.quote(nome)
@@ -37,19 +41,29 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
             acoes = (f'<a class="botao" href="/usuarios/senha?usuario={destino}">🔑 Trocar senha</a> '
                      f'<a class="botao perigo" href="/usuarios/remover?usuario={destino}">🗑️ Remover</a>')
             marca = ''
+        coluna_tls = ''
+        if excecoes:
+            if nome in marcados:
+                coluna_tls = '<td><span class="etiqueta">⚠️ sem TLS</span></td>'
+                acoes = f'<a class="botao" href="/usuarios/tls?usuario={destino}">🔒 Exigir TLS</a> ' + acoes
+            else:
+                coluna_tls = '<td>obrigatório</td>'
+                acoes = f'<a class="botao" href="/usuarios/tls?usuario={destino}">🔓 Dispensar TLS</a> ' + acoes
         linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}</td>'
                       f'<td>{celula}</td>'
                       f'<td>{e(tamanho(uso["bytes"]))}{mais}</td><td>{uso["arquivos"]}{mais}</td>'
-                      f'<td>{e(quando(uso["ultimo"]))}</td><td class="acoes">{acoes}</td></tr>')
-    corpo = ''.join(linhas) or '<tr><td colspan="6" class="suave">Nenhum usuário ainda.</td></tr>'
+                      f'<td>{e(quando(uso["ultimo"]))}</td>{coluna_tls}<td class="acoes">{acoes}</td></tr>')
+    corpo = ''.join(linhas) or f'<tr><td colspan="{7 if excecoes else 6}" class="suave">Nenhum usuário ainda.</td></tr>'
+    nota_tls = (' <span class="etiqueta">⚠️ sem TLS</span> marca quem o administrador dispensou do TLS '
+                '(<code>FTP_TLS_EXCECOES=sim</code>): a senha e os arquivos desse usuário trafegam em texto puro.') if excecoes else ''
     pedido.enviar(200, pagina('Usuários', f'''<h1>👥 Usuários</h1>
 {f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}
 <p><a class="botao principal" href="/usuarios/novo">➕ Novo usuário</a></p>
 <section class="cartao"><div class="rolagem"><table>
-<thead><tr><th>Usuário</th><th>Pasta no host</th><th>Uso</th><th>Arquivos</th><th>Último envio</th><th>Ações</th></tr></thead>
+<thead><tr><th>Usuário</th><th>Pasta no host</th><th>Uso</th><th>Arquivos</th><th>Último envio</th>{'<th>TLS</th>' if excecoes else ''}<th>Ações</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
 <p class="suave">Cada usuário fica preso na pasta dele. Pasta marcada como <span class="etiqueta">dividida</span> é alcançada por
-mais de um usuário: um lê, grava e apaga os arquivos do outro. A alteração vale no próximo login, sem reiniciar o FTP.</p></section>''',
+mais de um usuário: um lê, grava e apaga os arquivos do outro. A alteração vale no próximo login, sem reiniciar o FTP.{nota_tls}</p></section>''',
                             sessao, '/usuarios'))
 
 
@@ -216,3 +230,63 @@ def remover_usuario(pedido, sessao, consulta, formulario, token):
         return pedido.recusar(500, 'Não foi possível remover: ' + mensagem)
     auditar(pedido.ip, 'usuario_removido', f'admin={sessao["admin"]} usuario={nome}')
     return pedido.redirecionar('/usuarios?m=removido')
+
+
+def usuario_do_tls(pedido, sessao, nome):
+    """Confere o pedido de dispensa do TLS; responde com o erro e devolve False se não der para seguir.
+    Vale também para o usuário inicial: o que não se troca pelo painel é a senha dele, não a exigência do TLS."""
+    if not CFG['tls_excecoes']:
+        pedido.enviar(404, pagina('TLS por usuário desligado', '<section class="cartao"><h1>🔒 TLS por usuário desligado</h1>'
+                                '<p>Todos os usuários seguem o <code>FTP_TLS_MODE</code>. Para dispensar um equipamento sem suporte '
+                                'a TLS, quem administra o servidor liga <code>FTP_TLS_EXCECOES=sim</code> no <code>.env</code> '
+                                'e roda <code>./deploy.sh</code>.</p>'
+                                '<p><a href="/usuarios">Voltar para a lista</a></p></section>', sessao, '/usuarios'))
+        return False
+    if not NOME.fullmatch(nome) or nome not in usuarios():
+        pedido.enviar(404, pagina('Usuário não encontrado', '<section class="cartao"><h1>🔎 Usuário não encontrado</h1>'
+                                '<p><a href="/usuarios">Voltar para a lista</a></p></section>', sessao, '/usuarios'))
+        return False
+    return True
+
+
+def tela_tls(pedido, sessao, consulta, formulario=None, token=None):
+    nome = consulta.get('usuario', '')
+    if not usuario_do_tls(pedido, sessao, nome):
+        return
+    if nome in sem_tls():
+        titulo, marca, acao, botao, classe = 'Exigir TLS', '🔒', 'exigir', 'Sim, voltar a exigir o TLS', ''
+        texto = (f'<p>O usuário <strong>{e(nome)}</strong> entra hoje <strong>sem TLS</strong>. Ao voltar a exigir, o equipamento '
+                 'dele só entra com TLS (FTPS explícito): confira antes se ele já foi configurado para isso.</p>'
+                 '<p class="suave">A senha dele já trafegou em texto puro: troque-a depois de exigir o TLS.</p>')
+    else:
+        titulo, marca, acao, botao, classe = 'Dispensar TLS', '🔓', 'dispensar', 'Sim, deixar este usuário entrar sem TLS', ' class="perigo"'
+        texto = (f'<p>Deixar <strong>{e(nome)}</strong> entrar no FTP <strong>sem TLS</strong>?</p>'
+                 '<p class="aviso">⚠️ A senha e os arquivos deste usuário passam a trafegar em texto puro e podem ser lidos por quem '
+                 'estiver na mesma rede. Use só para equipamento antigo sem suporte a TLS, em rede interna isolada, com o '
+                 'firewall liberando só esse equipamento. Os outros usuários continuam obrigados a usar TLS.</p>'
+                 '<p class="suave">Com TLS este usuário continua entrando normalmente. Dê a ele uma pasta só dele e uma senha '
+                 'que não seja usada em mais nenhum lugar.</p>')
+    pedido.enviar(200, pagina(titulo, f'''<h1>{marca} {titulo}</h1>
+<section class="cartao estreito">{texto}
+<form method="post" action="/usuarios/tls">
+<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+<input type="hidden" name="usuario" value="{e(nome)}">
+<input type="hidden" name="acao" value="{acao}">
+<button{classe} type="submit">{botao}</button> <a class="botao" href="/usuarios">Cancelar</a>
+</form></section>''', sessao, '/usuarios'))
+
+
+def alterar_tls(pedido, sessao, consulta, formulario, token):
+    nome = formulario.get('usuario', '')
+    if not usuario_do_tls(pedido, sessao, nome):
+        return None
+    acao = formulario.get('acao', '')
+    if acao not in ('dispensar', 'exigir'):
+        return pedido.redirecionar('/usuarios/tls?usuario=' + urllib.parse.quote(nome))
+    feito, mensagem = executar_usuario('tls-' + acao, nome)
+    if not feito:
+        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=tls_{acao} usuario={nome}')
+        return pedido.recusar(500, 'Não foi possível alterar: ' + mensagem)
+    evento = 'tls_dispensado' if acao == 'dispensar' else 'tls_exigido'
+    auditar(pedido.ip, evento, f'admin={sessao["admin"]} usuario={nome}')
+    return pedido.redirecionar('/usuarios?m=' + evento)
