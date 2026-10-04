@@ -103,6 +103,9 @@ cd allsafe-ftp-stack
 
 **Um comando, sem perguntas.** Sem `.env`, o `deploy.sh` cria um a partir do exemplo, com tudo em `127.0.0.1`: só o próprio servidor acessa. Antes de agir ele confere o Docker, o Compose, se o servidor tem a CPU e a memória do perfil e se as portas estão livres. Pode ser rodado quantas vezes for preciso: o que já existe (senhas, dados, containers iguais) fica como está.
 
+<details>
+<summary>🔑 Senhas geradas e ajuste para a rede interna — clique para expandir</summary>
+
 O `deploy.sh` **gera uma senha forte** em `.secrets/ftp_password.txt` (`0600`) se o arquivo estiver vazio: guarde-a para o cliente FTP. Para usar uma senha própria, grave-a nesse arquivo antes de rodar.
 
 No fim, o script mostra os endereços do FTP e do painel (`Painel: https://<IP>:8443`) e **em que arquivo** está cada senha, sem mostrá-las. A senha inicial do painel está em `.secrets/painel_password.txt`; troque-a depois do primeiro acesso.
@@ -115,6 +118,8 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | `FTP_PUBLIC_IP` | o IP privado que o equipamento enxerga (normalmente o mesmo) |
 | `FTP_CERT_CN` | o hostname (ou IP) que vai no certificado |
 | `PAINEL_BIND_IP` | o IP **privado** por onde o painel será aberto; com `127.0.0.1` ele só abre no próprio servidor |
+
+</details>
 
 | Quero | Comando |
 |---|---|
@@ -135,6 +140,11 @@ Passo a passo comentado em [🚀 doc/instalacao.md](doc/instalacao.md).
 <a name="como-funciona"></a>
 
 ## 🔄 Como funciona
+
+O equipamento conecta na porta `21/tcp`, pede TLS, entra com usuário e senha, fica preso na própria pasta e envia o arquivo pelo modo passivo. O desenho da abertura mostra esse caminho; o fluxograma completo, com as recusas, e o do painel estão nos menus abaixo.
+
+<details>
+<summary>🔄 Fluxograma completo do FTP, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: doc/diagramas/funcionamento-fluxograma.mmd -->
 ```mermaid
@@ -196,9 +206,14 @@ flowchart LR
 | ⚙️ Pure-FTPd | 📄 certificado `pure-ftpd.pem` | apresenta ao cliente na negociação TLS |
 | ⚙️ Pure-FTPd | 📚 log CLF | grava cada transferência no `stdout` do container |
 
+</details>
+
 ### 🖥️ Painel web
 
 Como o nginx e o painel decidem se atendem um pedido, da abertura da página até o usuário pronto no FTP.
+
+<details>
+<summary>🖥️ Fluxograma do painel web, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: doc/diagramas/painel-fluxograma.mmd -->
 ```mermaid
@@ -271,11 +286,18 @@ flowchart LR
 | ❓ senha confere? | 🔑 hash da senha (`painel_password_hash`) | lê a cada entrada, somente leitura |
 | 🖥️ Painel web | 📚 `auditoria.log` | registra cada entrada, recusa e alteração |
 
+</details>
+
 ---
 
 <a name="arquitetura"></a>
 
 ## 🏗️ Arquitetura
+
+Três containers em uma rede própria: `ftp` (Pure-FTPd), `painel` (Python) e `nginx`, a única porta de entrada do painel. Os dados ficam no host, em `DATA_DIR`, e as senhas em `.secrets/`.
+
+<details>
+<summary>🏗️ Mapa da arquitetura, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: doc/diagramas/arquitetura-mapa.mmd -->
 ```mermaid
@@ -355,6 +377,11 @@ flowchart LR
 | 🖥️ Painel web | 💽 `DATA_DIR/dados` | cria a pasta do usuário |
 | ⚙️ Pure-FTPd | 📚 log CLF (`stdout`) | grava cada transferência |
 
+</details>
+
+<details>
+<summary>🧩 Peças, portas, pastas, imagens e entrypoints — clique para expandir</summary>
+
 | Peça | Papel | Porta | Dados em |
 |---|---|---|---|
 | ⚙️ Container `allsafe-ftp` (serviço `ftp`) | Pure-FTPd com FTPS, `chroot` e limites | `21/tcp` ➜ `2121/tcp` e a faixa passiva do perfil (`30000-30049/tcp` no `small`) | — |
@@ -374,6 +401,8 @@ flowchart LR
 - **Entrypoint do painel:** [`scripts/painel-entrypoint.sh`](scripts/painel-entrypoint.sh) confere a rede privada, gera o certificado do painel, prepara a pasta do nginx e executa o [`painel/servidor.py`](painel/servidor.py).
 - **Entrypoint do nginx:** [`scripts/nginx-entrypoint.sh`](scripts/nginx-entrypoint.sh) recusa rodar como `root`, confere a rede privada, monta a configuração a partir de [`nginx/nginx.conf.modelo`](nginx/nginx.conf.modelo) e executa o `nginx`.
 
+</details>
+
 Detalhe completo, com o modelo da subida, em [🏗️ doc/arquitetura.md](doc/arquitetura.md).
 
 ---
@@ -381,6 +410,11 @@ Detalhe completo, com o modelo da subida, em [🏗️ doc/arquitetura.md](doc/ar
 <a name="tecnologias"></a>
 
 ## 🛠️ Tecnologias
+
+Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python e Bash, com a versão real conferida no host onde a stack foi validada.
+
+<details>
+<summary>🛠️ Tecnologias, com nome e versão — clique para expandir</summary>
 
 | Tecnologia | Versão | Papel |
 |---|---|---|
@@ -395,11 +429,18 @@ Detalhe completo, com o modelo da subida, em [🏗️ doc/arquitetura.md](doc/ar
 | tini | 0.19.0 (`docker-init` do Docker Engine) | Processo 1 de cada container (`init: true`) |
 | Bash | 5.2 | Scripts do host e dos containers |
 
+</details>
+
 ---
 
 <a name="portas"></a>
 
 ## 🔌 Portas e binds
+
+FTP em `21/tcp` mais a faixa passiva do perfil; painel em `8443/tcp`, pelo nginx. Tudo em `127.0.0.1` até o `.env` indicar um IP privado.
+
+<details>
+<summary>🔌 Tabela de portas e binds — clique para expandir</summary>
 
 | Porta (host) | Protocolo | Bind padrão | Para que serve |
 |---|---|---|---|
@@ -409,6 +450,8 @@ Detalhe completo, com o modelo da subida, em [🏗️ doc/arquitetura.md](doc/ar
 
 A faixa passiva é 1:1 entre host e container. Ao mudar `FTP_PASSIVE_PORT_*`, alinhe a quantidade de portas ao `FTP_MAX_CLIENTS`. O container do painel não publica porta: fala só com o nginx, por um soquete Unix.
 
+</details>
+
 ---
 
 <a name="configuracao"></a>
@@ -417,6 +460,9 @@ A faixa passiva é 1:1 entre host e container. Ao mudar `FTP_PASSIVE_PORT_*`, al
 
 Toda a configuração vem do `.env`, criado a partir do [`.env.example`](.env.example). O `./deploy.sh --size <perfil>` **grava no `.env`** os valores de `profiles/<perfil>.env` e o nome do perfil em `FTP_PROFILE`, trocando só o dimensionamento (limites de sessão, faixa passiva, CPU, memória, PIDs e `nofile`).
 
+<details>
+<summary>🎚️ Os cinco perfis de capacidade — clique para expandir</summary>
+
 | Perfil | Host de referência | Sessões simultâneas | Quando usar |
 |---|---|---|---|
 | [`small`](profiles/small.env) | 2 vCPU · 2 GB | ~50 | padrão: cobre a maioria dos provedores |
@@ -424,6 +470,8 @@ Toda a configuração vem do `.env`, criado a partir do [`.env.example`](.env.ex
 | [`large`](profiles/large.env) | 8 vCPU · 8 GB | ~300 | mais de 200 equipamentos ou vários coletores concorrentes |
 | [`xlarge`](profiles/xlarge.env) | 16 vCPU · 16 GB | ~600 | operação grande, com várias regiões ou vários coletores no mesmo servidor |
 | [`extended`](profiles/extended.env) | 32 vCPU · 32 GB | ~1200 | o maior porte: servidor dedicado, milhares de equipamentos em janelas curtas |
+
+</details>
 
 Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewall do host ao trocar. O `deploy.sh` recusa o perfil que pede mais CPU ou memória do que o servidor tem. Todas as variáveis em [⚙️ doc/configuracao.md](doc/configuracao.md); a tabela completa dos perfis em [🎚️ doc/perfis.md](doc/perfis.md).
 
@@ -434,6 +482,9 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 ## 🔐 Segurança
 
 - 🧱 **Só rede privada:** IP privado, atrás de firewall, sem redirecionamento de porta da internet. Veja [🧱 rede privada e firewall](doc/seguranca.md#rede-privada).
+<details>
+<summary>🔐 Proteções aplicadas, uma a uma — clique para expandir</summary>
+
 - 🚪 Bind em `127.0.0.1` por padrão: abra só um IP privado dedicado e libere no firewall do host apenas as redes que enviam backup.
 - 🔒 TLS **obrigatório** para entrar no padrão (`FTP_TLS_MODE=2`), `chroot` em todos, sem usuário anônimo, sem DNS reverso.
 - 📟 **Sem TLS só por escolha:** `FTP_TLS_MODE=0` ou `1` existe para equipamento antigo que não fala TLS. Senha e arquivos passam em texto puro, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Só em rede interna isolada. Veja [📟 equipamento sem TLS](doc/seguranca.md#ftp-sem-tls).
@@ -442,6 +493,8 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 - 🚦 nginx na frente do painel: é a única porta publicada, roda sem `root` e sem `capability`, aceita só as redes de `PAINEL_REDES_PERMITIDAS` e limita pedidos e conexões por endereço.
 - 🖥️ Painel só por HTTPS e só de rede privada: senha guardada como hash `scrypt`, sessão de 15 minutos, bloqueio depois de cinco senhas erradas, proteção contra CSRF, sem JavaScript, sem acesso ao Docker e com registro de cada ação. Veja [🖥️ doc/painel.md](doc/painel.md#protecoes).
 - 📜 Logs rotacionados (`max-size: 10m`, `max-file: 3`).
+
+</details>
 
 Modelo de ameaça e o endurecimento linha a linha em [🔐 doc/seguranca.md](doc/seguranca.md).
 
@@ -463,6 +516,11 @@ Os testes automatizados de envio, download, `chroot` e recusa sem TLS ainda não
 <a name="arquivos"></a>
 
 ## 🗂️ Estrutura de arquivos
+
+Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`deploy.sh`, `manage-user.sh`); o resto está em `scripts/`, `painel/`, `nginx/`, `profiles/` e `doc/`.
+
+<details>
+<summary>🗂️ Arquivo por arquivo — clique para expandir</summary>
 
 | Caminho | O que é |
 |---|---|
@@ -488,6 +546,8 @@ Os testes automatizados de envio, download, `chroot` e recusa sem TLS ainda não
 | [`VERSION`](VERSION) | Versão atual, em um lugar só |
 | [`CHANGELOG.md`](CHANGELOG.md) | Histórico de mudanças por versão |
 | [`doc/`](doc/README.md) | Documentação e diagramas |
+
+</details>
 
 ---
 
@@ -553,7 +613,8 @@ A versão avança a cada publicação: `0.x` é a fase de construção, uma vers
 | **Carlos** (@CarlosSuporteISP) | Idealização e direção · projeto inicial, código e Docker (imagem, Compose, scripts e endurecimento), feitos à mão, sem IA | [github.com/CarlosSuporteISP](https://github.com/CarlosSuporteISP) |
 | **Claude** (Claude Code, Anthropic) | Evolução do projeto: melhorias, novas funcionalidades, documentação e plano | [claude.com/claude-code](https://claude.com/claude-code) |
 
-### Projetos oficiais usados
+<details>
+<summary>📦 Projetos oficiais usados — clique para expandir</summary>
 
 | Projeto | Uso aqui | Licença | Origem | Fonte |
 |---|---|---|---|---|
@@ -562,6 +623,8 @@ A versão avança a cada publicação: `0.x` é a fase de construção, uma vers
 | OpenSSL | TLS e geração do certificado | Apache-2.0 | [openssl.org](https://www.openssl.org) | [github.com/openssl/openssl](https://github.com/openssl/openssl) |
 | Docker Engine | Execução do container | Apache-2.0 | [docs.docker.com/engine](https://docs.docker.com/engine/) | [github.com/moby/moby](https://github.com/moby/moby) |
 | Docker Compose | Orquestração do serviço | Apache-2.0 | [docs.docker.com/compose](https://docs.docker.com/compose/) | [github.com/docker/compose](https://github.com/docker/compose) |
+
+</details>
 
 ---
 
