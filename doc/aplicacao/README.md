@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-Todas as telas do painel web, menu por menu, com a foto de cada uma e a explicação do que dá para fazer nela. As fotos são capturas reais da versão **1.0.0**, em tema escuro (o único do painel), com usuários de exemplo: `olt-centro`, `switch-core` e `roteador-borda`. Clique em qualquer foto para abri-la em tamanho real.
+Todas as telas do painel web, menu por menu, com a foto de cada uma e a explicação do que dá para fazer nela. As fotos são capturas reais da versão **0.8.0**, em tema escuro (o único do painel), com usuários de exemplo: `olt-centro`, `switch-core` e `roteador-borda`. Clique em qualquer foto para abri-la em tamanho real.
 
 O painel tem uma tela de entrada e quatro abas: Visão geral, Usuários, Segurança e Atividade. Como abrir, trocar a senha e o que protege o painel está em [Painel web](../painel.md).
 
@@ -25,7 +25,7 @@ O painel tem uma tela de entrada e quatro abas: Visão geral, Usuários, Seguran
 
 <a href="imagens/entrar.png"><img src="imagens/entrar.png" alt="Tela de entrada do painel, com o campo Senha do painel, o botão Entrar e o aviso de uso só em rede privada" width="100%"></a>
 
-<sub><b>v1.0.0</b> · tela de entrada · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · tela de entrada · captura de 2026-10-04</sub>
 
 **Para que serve:** conferir a senha de administrador antes de mostrar qualquer dado da stack.
 
@@ -44,7 +44,7 @@ O painel tem uma tela de entrada e quatro abas: Visão geral, Usuários, Seguran
 
 <a href="imagens/entrar-recusada.png"><img src="imagens/entrar-recusada.png" alt="Tela de entrada com a mensagem Não foi possível entrar acima do campo da senha" width="100%"></a>
 
-<sub><b>v1.0.0</b> · tela de entrada, senha recusada · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · tela de entrada, senha recusada · captura de 2026-10-04</sub>
 
 | Mensagem | Quando aparece | O que fazer |
 |---|---|---|
@@ -72,7 +72,7 @@ O painel tem uma tela de entrada e quatro abas: Visão geral, Usuários, Seguran
 
 <a href="imagens/visao-geral.png"><img src="imagens/visao-geral.png" alt="Aba Visão geral com os cartões Servidor FTP, Usuários, Espaço usado, Último envio e Certificado do FTP, e a tabela de dados para configurar o equipamento" width="100%"></a>
 
-<sub><b>v1.0.0</b> · menu Visão geral · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · menu Visão geral · captura de 2026-10-04</sub>
 
 **Para que serve:** ver de uma vez se o FTP está no ar e quais dados digitar no equipamento que vai mandar o backup.
 
@@ -109,7 +109,7 @@ Nada é alterado por esta aba.
 
 <a href="imagens/usuarios.png"><img src="imagens/usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista de usuários: pasta no host, uso, arquivos, último envio e as ações Trocar senha e Remover" width="100%"></a>
 
-<sub><b>v1.0.0</b> · menu Usuários · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · menu Usuários · captura de 2026-10-04</sub>
 
 **Para que serve:** criar a conta de cada equipamento, trocar a senha e remover a conta, sem linha de comando.
 
@@ -133,7 +133,7 @@ O usuário inicial não tem ações: a senha dele vem de `.secrets/ftp_password.
 
 <a href="imagens/usuarios-novo.png"><img src="imagens/usuarios-novo.png" alt="Formulário Novo usuário com os campos Nome do usuário, Senha e Repita a senha, e os botões Criar usuário e Cancelar" width="100%"></a>
 
-<sub><b>v1.0.0</b> · menu Usuários, formulário Novo usuário · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · menu Usuários, formulário Novo usuário · captura de 2026-10-04</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -152,7 +152,7 @@ O usuário inicial não tem ações: a senha dele vem de `.secrets/ftp_password.
 
 <a href="imagens/usuarios-novo-recusado.png"><img src="imagens/usuarios-novo-recusado.png" alt="Formulário Novo usuário com a mensagem As duas senhas não são iguais acima dos campos" width="100%"></a>
 
-<sub><b>v1.0.0</b> · menu Usuários, cadastro recusado · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · menu Usuários, cadastro recusado · captura de 2026-10-04</sub>
 
 O painel devolve o formulário com o motivo no topo e nada é criado.
 
@@ -172,7 +172,7 @@ O painel devolve o formulário com o motivo no topo e nada é criado.
 
 <a href="imagens/usuarios-senha-gerada.png"><img src="imagens/usuarios-senha-gerada.png" alt="Tela Usuário criado com a senha gerada pelo painel, aqui substituída por REDACTED, e o aviso de que ela não será mostrada de novo" width="100%"></a>
 
-<sub><b>v1.0.0</b> · menu Usuários, senha gerada · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · menu Usuários, senha gerada · captura de 2026-10-04</sub>
 
 Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca de senha. A senha é mostrada **uma única vez**: copie para o equipamento ou para o cofre de senhas antes de sair da tela. Na foto, o valor foi trocado por `<REDACTED>`.
 
@@ -185,7 +185,7 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 <a href="imagens/usuarios-trocar-senha.png"><img src="imagens/usuarios-trocar-senha.png" alt="Formulário Trocar senha do usuário switch-core, com os campos Senha e Repita a senha e os botões Trocar senha e Cancelar" width="100%"></a>
 
-<sub><b>v1.0.0</b> · menu Usuários, formulário Trocar senha · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · menu Usuários, formulário Trocar senha · captura de 2026-10-04</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -203,7 +203,7 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 <a href="imagens/usuarios-remover.png"><img src="imagens/usuarios-remover.png" alt="Tela Remover usuário pedindo confirmação, com o aviso de que os arquivos não são apagados e os botões Sim, remover o usuário e Cancelar" width="100%"></a>
 
-<sub><b>v1.0.0</b> · menu Usuários, confirmação de remoção · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · menu Usuários, confirmação de remoção · captura de 2026-10-04</sub>
 
 | Item da tela | O que faz |
 |---|---|
@@ -213,7 +213,7 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 <a href="imagens/usuarios-removido.png"><img src="imagens/usuarios-removido.png" alt="Aba Usuários depois da remoção, com a mensagem Usuário removido, os arquivos continuam na pasta" width="100%"></a>
 
-<sub><b>v1.0.0</b> · menu Usuários, depois da remoção · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · menu Usuários, depois da remoção · captura de 2026-10-04</sub>
 
 **Resultado esperado:** a lista volta com a mensagem `Usuário removido. Os arquivos continuam na pasta.` A pasta do usuário fica em `DATA_DIR/dados/<usuario>` até alguém apagá-la no servidor.
 
@@ -237,7 +237,7 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 <a href="imagens/seguranca.png"><img src="imagens/seguranca.png" alt="Aba Segurança com a conferência da instalação: endereços do FTP e do painel, modo TLS, impressão digital dos dois certificados, redes permitidas, regras da sessão e o lembrete do firewall" width="100%"></a>
 
-<sub><b>v1.0.0</b> · menu Segurança · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · menu Segurança · captura de 2026-10-04</sub>
 
 **Para que serve:** conferir, em uma tela, se a instalação está dentro do que a stack exige: rede privada, TLS, certificados válidos e painel isolado.
 
@@ -274,7 +274,7 @@ Nada é alterado por esta aba. As regras de firewall de exemplo estão em [Segur
 
 <a href="imagens/atividade.png"><img src="imagens/atividade.png" alt="Aba Atividade com os registros do painel: data, endereço de origem, o que aconteceu e o detalhe, como usuário criado e senha recusada" width="100%"></a>
 
-<sub><b>v1.0.0</b> · menu Atividade · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · menu Atividade · captura de 2026-10-04</sub>
 
 **Para que serve:** saber quem entrou no painel, de onde, e o que foi alterado.
 

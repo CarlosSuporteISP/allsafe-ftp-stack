@@ -4,8 +4,8 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.0.0-blue)
-![Status](https://img.shields.io/badge/status-est%C3%A1vel-brightgreen)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.8.0-blue)
+![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
 ![Debian](https://img.shields.io/badge/Debian-13_trixie-a81d33?logo=debian&logoColor=white)
@@ -17,7 +17,7 @@
 
 <a href="doc/imagens/painel-principal.png"><img src="doc/imagens/painel-principal.png" alt="Painel web da allsafe-ftp-stack na aba Visão geral: servidor FTP no ar, usuários, espaço usado, último envio, certificado e os dados para configurar o equipamento" width="100%"></a>
 
-<sub><b>v1.0.0</b> · painel web, aba Visão geral · captura de 2026-10-04</sub>
+<sub><b>v0.8.0</b> · painel web, aba Visão geral · captura de 2026-10-04</sub>
 
 <!-- diagrama: doc/diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -34,7 +34,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v1.0.0</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.8.0</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -606,7 +606,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**1.0.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.8.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

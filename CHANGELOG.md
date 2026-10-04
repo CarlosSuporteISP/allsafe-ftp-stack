@@ -8,9 +8,11 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
-## [1.0.0] - 2026-10-04
+## [0.8.0] - 2026-10-04
 
-Primeira versão pronta para produção: o painel passa a aceitar a entrada pelo navegador e a documentação ganha as fotos de todas as telas. **Uso só em rede privada, atrás de firewall.**
+O painel passa a aceitar a entrada pelo navegador e a documentação ganha as fotos de todas as telas. **Uso só em rede privada, atrás de firewall.**
+
+Esta versão foi publicada primeiro como `1.0.0` e renumerada para `0.8.0` no mesmo dia: a `1.0.0` fica reservada para a primeira versão pronta para produção. A tag e a Release `v1.0.0` deixaram de existir; o conteúdo é o mesmo.
 
 ### Adicionado
 
@@ -22,7 +24,6 @@ Primeira versão pronta para produção: o painel passa a aceitar a entrada pelo
 
 - **`Referrer-Policy`:** de `no-referrer` para `same-origin`, no painel e nas respostas do nginx. O endereço da página continua sem sair para outro site; só o próprio painel o recebe.
 - Lista de usuários do painel: o nome não quebra de linha e a coluna da pasta ganha a largura que sobrava na de ações.
-- Selo de status do README: de em desenvolvimento para estável.
 
 ### Corrigido
 
