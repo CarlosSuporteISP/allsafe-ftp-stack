@@ -180,7 +180,7 @@ Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](.
 
 ```bash
 ./deploy.sh --atualizar            # refaz as três imagens sem cache e recria os containers (dados preservados)
-./scripts/validate.sh --runtime    # confere 'running' e 'healthy'
+./scripts/validate.sh --runtime    # confere os três serviços 'running' e 'healthy'
 ```
 
 **Resultado esperado:** `Validacao FTP concluida.` e os usuários e arquivos intactos. As sessões abertas no painel são encerradas.

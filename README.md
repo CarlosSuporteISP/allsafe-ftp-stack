@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.5.4-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.6.0-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -30,7 +30,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.5.4</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.6.0</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -501,6 +501,9 @@ Modelo de ameaça e o endurecimento linha a linha em [doc/seguranca.md](doc/segu
 |---|---|---|
 | Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `painel/servidor.py OK`, `compose OK com <perfil>.env` para os cinco perfis e `Validacao FTP concluida.` |
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB |
+| Rodar a bateria completa: funcional, segurança e rede | `./scripts/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
+
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. Os detalhes estão em [Scripts](doc/scripts.md#testar).
 
 ---
 
@@ -531,6 +534,7 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`scripts/rede-privada.sh`](scripts/rede-privada.sh) | Funções que recusam IP e rede que não sejam privados |
 | [`scripts/ambiente.sh`](scripts/ambiente.sh) | Função que lê uma chave do `.env` sem executar o arquivo |
 | [`scripts/validate.sh`](scripts/validate.sh) | Checagem de sintaxe e Compose de todos os perfis e, com `--runtime`, dos três serviços no ar |
+| [`scripts/testar.sh`](scripts/testar.sh) | Bateria de testes funcional, de segurança e de rede, em instância de teste própria |
 | [`profiles/`](profiles/) | Perfis de capacidade (`--size small\|medium\|large\|xlarge\|extended`) |
 | [`.env.example`](.env.example) | Modelo de configuração, copiado para `.env` |
 | `.secrets/` | Senha do usuário inicial e senha do painel (arquivos `.txt` ignorados pelo Git) |
@@ -575,7 +579,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.5.4**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.6.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

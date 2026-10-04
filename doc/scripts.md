@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/validate.sh`](#validate) · [`scripts/entrypoint.sh`](#entrypoint) · [`scripts/painel-entrypoint.sh`](#painel-entrypoint) · [`scripts/nginx-entrypoint.sh`](#nginx-entrypoint) · [`scripts/nginx-saude.sh`](#nginx-saude) · [`scripts/ftp-user.sh`](#ftp-user) · [Scripts de apoio](#apoio)
+[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/validate.sh`](#validate) · [`scripts/testar.sh`](#testar) · [`scripts/entrypoint.sh`](#entrypoint) · [`scripts/painel-entrypoint.sh`](#painel-entrypoint) · [`scripts/nginx-entrypoint.sh`](#nginx-entrypoint) · [`scripts/nginx-saude.sh`](#nginx-saude) · [`scripts/ftp-user.sh`](#ftp-user) · [Scripts de apoio](#apoio)
 
 </details>
 
@@ -44,7 +44,8 @@ flowchart LR
 | [`deploy.sh`](../deploy.sh) | host | Instala, reaplica, atualiza ou remove a stack em um comando, sem perguntas |
 | [`manage-user.sh`](../manage-user.sh) | host | Atalho para criar, trocar senha, remover e listar usuários FTP |
 | [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | host | Troca a senha do painel, gravando só o hash |
-| [`scripts/validate.sh`](../scripts/validate.sh) | host | Checagem de sintaxe, do Compose de todos os perfis e, opcionalmente, do container no ar |
+| [`scripts/validate.sh`](../scripts/validate.sh) | host | Checagem de sintaxe, do Compose de todos os perfis e, opcionalmente, dos três serviços no ar |
+| [`scripts/testar.sh`](../scripts/testar.sh) | host | Bateria de testes funcional, de segurança e de rede, em instância de teste que o próprio script cria e remove |
 | [`scripts/entrypoint.sh`](../scripts/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado e executa o `pure-ftpd` |
 | [`scripts/painel-entrypoint.sh`](../scripts/painel-entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel, entrega a cópia dele ao nginx e executa o painel |
 | [`scripts/nginx-entrypoint.sh`](../scripts/nginx-entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
@@ -166,6 +167,66 @@ A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.
 | `--runtime` | tudo acima, mais: os serviços `ftp`, `painel` e `nginx` em `running` e `healthy`, e `pure-pw show` do usuário inicial, lido de `FTP_USER` no `.env` |
 
 O modo `--runtime` confere a instalação do `.env` desta pasta. Para conferir outra, aponte o arquivo dela: `ENV_FILE=<arquivo> ./scripts/validate.sh --runtime`. Sem o arquivo, o script para com `ERRO: ... não há instalação para conferir.`
+
+</details>
+
+---
+
+<a name="testar"></a>
+
+## 🧪 `scripts/testar.sh`
+
+Roda a bateria de testes da stack: funcional, de segurança e de rede. O script sobe uma instância de teste separada, testa, grava os resultados e remove tudo o que criou. A instalação desta pasta não é tocada e pode estar no ar ou não.
+
+```bash
+./scripts/testar.sh                        # sobe a instância de teste, testa, grava os resultados e remove
+./scripts/testar.sh --resultados <pasta>   # grava os resultados em outra pasta
+./scripts/testar.sh --manter               # deixa a instância de teste no ar para investigar
+./scripts/testar.sh --limpar               # só remove a instância de teste e a pasta dela
+```
+
+**Resultado esperado:** uma linha por caso, com `✅` ou `❌`, o resumo de cada bateria com o caminho do arquivo de resultado e, no fim, `Bateria aprovada: nenhum desvio.` A execução leva perto de cinco minutos.
+
+> ⚠️ A instância de teste também só sobe em IP privado: `TESTE_IP` fora das faixas privadas é recusado antes de qualquer container subir.
+
+| Saída | Significado |
+|---|---|
+| `0` | todos os casos passaram |
+| `1` | algum caso teve desvio; o arquivo de resultado diz qual e mostra a evidência |
+| `2` | uso errado ou requisito ausente no host |
+| `3` | um segredo apareceu em um arquivo de resultado; o arquivo é apagado |
+
+<details>
+<summary>Detalhe técnico — a instância de teste, as variáveis e o que cada bateria cobre</summary>
+
+**Requisitos no host:** `docker` com o plugin Compose, `curl` com suporte a FTPS, `openssl`, `ss` e `sha256sum`. O caso que confere os segredos fora do Git só roda se a pasta for um repositório Git.
+
+**A instância de teste** usa nomes, portas, sub-rede, dados e segredos próprios:
+
+| Item | Instância de teste | Variável para trocar |
+|---|---|---|
+| Containers e imagens | `allsafe-ftp-teste`, `allsafe-ftp-teste-painel`, `allsafe-ftp-teste-nginx` | — |
+| Endereço | `127.0.0.2` | `TESTE_IP` |
+| Porta do FTP | `2121` | `TESTE_FTP_PORT` |
+| Porta do painel | `8444` | `TESTE_PAINEL_PORT` |
+| Faixa passiva | `32000` a `32019` | `TESTE_PASSIVA_INICIO` |
+| Sub-rede Docker | `172.29.2.0/29` | `TESTE_SUBNET` |
+| Segunda instância, usada no caso das duas instâncias no mesmo host | `allsafe-ftp-teste-b`, portas seguintes, `172.29.3.0/29` | `TESTE_SUBNET_B` |
+| Pasta de trabalho, dados e segredos | `TEMP_DIR/testar` | `TEMP_DIR` |
+
+As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/testar` e somem com ela. O script recusa rodar se `TEMP_DIR/testar` já existir e não tiver sido criada por ele, e se o `.env` desta pasta usar `STACK_NAME=allsafe-ftp-teste`.
+
+**O que cada bateria cobre:**
+
+| Bateria | Casos | Exemplos |
+|---|---|---|
+| Funcional | 18 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda |
+| Segurança | 37 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, CSRF, `Origin` e `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs e na auditoria |
+| Rede | 12 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host |
+
+**Resultados:** três arquivos Markdown, um por bateria, com data, comando, versão, ambiente, a tabela dos casos com a evidência de cada um e os achados. Nenhuma senha, token, cookie ou hash é gravado: antes de terminar, o script procura nos três arquivos os segredos que usou e, se achar, apaga o arquivo e sai com `3`. Sem `--resultados`, eles vão para a pasta do plano, se ela existir, ou para `TEMP_DIR/resultados`.
+
+**Limpeza:** ao terminar, ou ao ser interrompido, o script remove os containers, a rede, as imagens e a pasta da instância de teste. Com `--manter`, nada é removido até o `--limpar`.
 
 </details>
 
@@ -321,8 +382,8 @@ Não são executados: outros scripts os carregam com `source`.
 
 | Script | Função | Quem usa |
 |---|---|---|
-| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | `ip_privado`, `cidr_privado` e `exigir_ip_privado`: aceitam só `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16` | `deploy.sh`, `entrypoint.sh`, `painel-entrypoint.sh` e `nginx-entrypoint.sh` |
-| [`scripts/ambiente.sh`](../scripts/ambiente.sh) | `env_valor <chave> [padrão]`: lê uma chave do `.env` sem executar o arquivo; a última ocorrência vale, como no Compose. `env_gravar <chave> <valor>`: troca a linha da chave ou acrescenta no fim, sem regravar quando o valor já é o pedido | `deploy.sh` e `painel-senha.sh` |
+| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | `ip_privado`, `cidr_privado` e `exigir_ip_privado`: aceitam só `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16` | `deploy.sh`, `testar.sh`, `entrypoint.sh`, `painel-entrypoint.sh` e `nginx-entrypoint.sh` |
+| [`scripts/ambiente.sh`](../scripts/ambiente.sh) | `env_valor <chave> [padrão]`: lê uma chave do `.env` sem executar o arquivo; a última ocorrência vale, como no Compose. `env_gravar <chave> <valor>`: troca a linha da chave ou acrescenta no fim, sem regravar quando o valor já é o pedido | `deploy.sh`, `manage-user.sh`, `painel-senha.sh`, `validate.sh` e `testar.sh` |
 
 ---
 

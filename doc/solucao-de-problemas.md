@@ -167,9 +167,10 @@ Se o equipamento não tiver mesmo como falar TLS (confira o manual e a versão d
 ./scripts/validate.sh                     # bash -n dos scripts e compose config
 ./scripts/validate.sh --runtime           # também exige os três serviços running e healthy
 docker compose exec ftp pidof pure-ftpd   # o que o healthcheck testa
+./scripts/testar.sh                       # bateria completa em instância de teste separada
 ```
 
-**Resultado esperado:** `Validacao FTP concluida.` e o número do processo do `pure-ftpd`.
+**Resultado esperado:** `Validacao FTP concluida.`, o número do processo do `pure-ftpd` e `Bateria aprovada: nenhum desvio.` A bateria não toca na instalação em uso; se ela passa e a sua instalação falha, a diferença está no `.env`, nos dados ou na rede do host. Veja [Scripts](scripts.md#testar).
 
 Ainda travado? Colete e analise:
 
