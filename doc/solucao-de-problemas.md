@@ -6,12 +6,21 @@
 
 Quando algo falha, quase sempre o próprio servidor já disse o motivo. O caminho é sempre o mesmo: ver se o container está de pé, ler a mensagem do log, achar a linha correspondente nas tabelas deste guia, aplicar a correção e conferir de novo.
 
-<a href="diagramas/diagnostico-diagrama.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/diagnostico-diagrama-escuro.svg">
-  <img src="diagramas/diagnostico-diagrama.svg" alt="Diagnóstico: o usuário vê o estado com docker compose ps, lê os logs, acha a causa nas tabelas deste guia e confere de novo com validate.sh" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/diagnostico-diagrama.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    usuario@{ shape: person, label: "👤 Usuário<br>viu o problema" }
+    estado@{ shape: console, label: "⌨️ docker compose ps<br>estado e saúde" }
+    logs@{ shape: docs, label: "📚 docker compose logs<br>mensagem FALHA" }
+    tabela@{ shape: doc, label: "🚨 tabelas deste guia<br>causa e correção" }
+    valida@{ shape: console, label: "🧪 validate.sh --runtime<br>confere de novo" }
+    fim@{ shape: stadium, label: "🏁 serviço saudável" }
 
-<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/diagnostico-diagrama.mmd) · [no computador](diagramas/visualizador.html#diagnostico-diagrama)</sub>
+    usuario --> estado --> logs --> tabela --> valida --> fim
+```
+
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência:** 👤 Usuário ➜ ⌨️ `docker compose ps` ➜ 📚 `docker compose logs` ➜ 🚨 tabelas deste guia ➜ 🧪 `validate.sh --runtime` ➜ 🏁 serviço saudável
 

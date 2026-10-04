@@ -6,12 +6,21 @@
 
 Este guia reúne as tarefas do dia a dia: criar a conta de um equipamento novo, trocar uma senha, instalar o certificado definitivo, guardar uma cópia dos arquivos, ler os registros e atualizar o servidor. Todos os comandos rodam na pasta raiz da stack.
 
-<a href="diagramas/usuarios-diagrama.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/usuarios-diagrama-escuro.svg">
-  <img src="diagramas/usuarios-diagrama.svg" alt="Gestão de usuários: o usuário roda o manage-user.sh, que chama o allsafe-ftp-user no container, grava a conta no PureDB e cria a pasta em /data" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/usuarios-diagrama.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    usuario@{ shape: person, label: "👤 Usuário" }
+    manage@{ shape: console, label: "⌨️ manage-user.sh<br>add, passwd, del, list" }
+    interno@{ shape: console, label: "⌨️ allsafe-ftp-user<br>dentro do container" }
+    puredb@{ shape: cyl, label: "🗄️ PureDB<br>contas virtuais" }
+    pasta@{ shape: lin-cyl, label: "💽 /data<br>pasta do usuário" }
+    fim@{ shape: stadium, label: "🏁 conta pronta" }
 
-<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/usuarios-diagrama.mmd) · [no computador](diagramas/visualizador.html#usuarios-diagrama)</sub>
+    usuario --> manage --> interno --> puredb --> pasta --> fim
+```
+
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência:** 👤 Usuário ➜ ⌨️ `manage-user.sh` ➜ ⌨️ `allsafe-ftp-user` ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 conta pronta
 

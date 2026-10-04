@@ -4,12 +4,35 @@ Levar a stack de FTP para backup de equipamentos ao padrão de engenharia e dar 
 
 ↩ [README do projeto](../../README.md) · [📚 Índice da documentação](../README.md) · [📄 PROGRESSO](PROGRESSO.md)
 
-<a href="diagramas/plano-geral-mapa.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/plano-geral-mapa-escuro.svg">
-  <img src="diagramas/plano-geral-mapa.svg" alt="Mapa do plano: fases 01 a 03 entregues e fases 04 a 09 encadeadas, cada uma liberada pelo portão da anterior" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/plano-geral-mapa.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início" }
+    feito@{ shape: subproc, label: "✅ 01 a 03 · Entregue<br>stack, perfis, documentação" }
+    subgraph EXEC["🧱 Fases a executar, uma emendada na outra"]
+        f4@{ shape: subproc, label: "💽 04 · Pastas fixas,<br>segredos e rede privada" }
+        f5@{ shape: subproc, label: "🖥️ 05 · Painel<br>web seguro" }
+        f6@{ shape: subproc, label: "🚀 06 · Instalação<br>em um comando" }
+        f7@{ shape: subproc, label: "🧪 07 · Testes<br>automatizados" }
+        f8@{ shape: subproc, label: "♻️ 08 · Backup<br>e restauração" }
+        f9@{ shape: subproc, label: "📖 09 · Documentação<br>final e capturas" }
+    end
+    fim@{ shape: stadium, label: "🏁 stack no ar<br>testada e documentada" }
+    volta@{ shape: rect, label: "↩️ corrigir ou<br>desfazer a fase" }
 
-<sub>📐 Nível 2 · Mapa · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/plano-geral-mapa.mmd) · [no computador](diagramas/visualizador.html#plano-geral-mapa)</sub>
+    inicio -- "1 · já existe" --> feito
+    feito -- "2 · commit e push do plano" --> f4
+    f4 -- "3 · ✅ portão 04" --> f5
+    f5 -- "4 · ✅ portão 05" --> f6
+    f6 -- "5 · ✅ portão 06" --> f7
+    f7 -- "6 · ✅ portão 07" --> f8
+    f8 -- "7 · ✅ portão 08" --> f9
+    f9 -- "8 · ✅ portão 09" --> fim
+    EXEC -- "❌ portão reprovado" --> volta
+```
+
+<sub>📐 Nível 2 · Mapa · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência**
 
@@ -34,7 +57,7 @@ Levar a stack de FTP para backup de equipamentos ao padrão de engenharia e dar 
 <details>
 <summary>🧭 Sumário — clique para expandir</summary>
 
-[🎯 Objetivo](#objetivo) · [📏 Tamanho](#tamanho) · [🧩 Situação atual (ANTES)](#situacao-atual) · [💡 Solução](#solucao) · [🏗️ Arquitetura (DEPOIS)](#arquitetura-depois) · [🧱 Rede privada e firewall](#rede-privada) · [🔑 Segredos](#segredos) · [🖥️ Painel web](#painel) · [🧱 Fases](#fases) · [🧪 Testes](#testes) · [🛠️ Tecnologias](#tecnologias) · [🔐 Segurança, ⚡ desempenho e 📈 crescimento](#seguranca-desempenho-crescimento) · [🚨 Riscos e rollback](#riscos-e-rollback) · [✅ Validação final](#validacao-final) · [🔧 Registro de mudanças](#registro-de-mudancas) · [📌 Pendências](#pendencias)
+[🎯 Objetivo](#objetivo) · [📏 Tamanho](#tamanho) · [🧩 Situação atual (ANTES)](#situacao-atual) · [💡 Solução](#solucao) · [🏗️ Arquitetura (DEPOIS)](#arquitetura-depois) · [🧱 Rede privada e firewall](#rede-privada) · [🔑 Segredos](#segredos) · [🖥️ Painel web](#painel) · [🧱 Fases](#fases) · [🧪 Testes](#testes) · [🏷️ Versões](#versoes) · [🛠️ Tecnologias](#tecnologias) · [🔐 Segurança, ⚡ desempenho e 📈 crescimento](#seguranca-desempenho-crescimento) · [🚨 Riscos e rollback](#riscos-e-rollback) · [✅ Validação final](#validacao-final) · [🔧 Registro de mudanças](#registro-de-mudancas) · [📌 Pendências](#pendencias)
 
 </details>
 
@@ -68,12 +91,41 @@ Consequência: as fases são **seções deste plano mestre**, sem plano filho, e
 
 ## 🧩 Situação atual (ANTES)
 
-<a href="diagramas/arquitetura-antes-mapa.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/arquitetura-antes-mapa-escuro.svg">
-  <img src="diagramas/arquitetura-antes-mapa.svg" alt="Arquitetura antes: deploy.sh em duas execuções, container de nome fixo, volumes nomeados, backup manual e logs coletados à mão" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/arquitetura-antes-mapa.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph USO["👤 Quem usa"]
+        operador@{ shape: person, label: "👤 Usuário<br>opera a stack" }
+        equip@{ shape: hex, label: "📡 Equipamento de rede<br>cliente FTP" }
+    end
+    subgraph HOST["🖥️ Host"]
+        deploy@{ shape: console, label: "⌨️ deploy.sh<br>para e pede edição do .env" }
+        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, nomes fixos" }
+        tmp@{ shape: doc, label: "🧹 /tmp<br>coleta de logs" }
+        bkp@{ shape: doc, label: "♻️ tar.gz manual<br>na pasta atual" }
+    end
+    subgraph VOLUMES["💽 Volumes nomeados · /var/lib/docker/volumes"]
+        vdata@{ shape: lin-cyl, label: "💽 allsafe-ftp-data<br>/data" }
+        vauth@{ shape: cyl, label: "🗄️ allsafe-ftp-auth<br>/auth, PureDB" }
+        vcerts@{ shape: lin-cyl, label: "💽 allsafe-ftp-certs<br>/etc/ssl/private" }
+    end
+    subgraph RESULTADO["🏁 Resultado"]
+        fim@{ shape: stadium, label: "🏁 backup guardado<br>sem teste automatizado" }
+    end
 
-<sub>📐 Nível 2 · Mapa · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/arquitetura-antes-mapa.mmd) · [no computador](diagramas/visualizador.html#arquitetura-antes-mapa)</sub>
+    operador -- "1 · ./deploy.sh, duas execuções" --> deploy
+    deploy -- "2 · docker compose up -d --build" --> ftp
+    equip -- "3 · FTPS, TCP 21 para 2121" --> ftp
+    ftp -- "4 · grava o arquivo" --> vdata
+    vdata -- "5 · arquivo no volume" --> fim
+    ftp -. "consulta os usuários" .-> vauth
+    ftp -. "lê o certificado" .-> vcerts
+    vdata -. "cópia manual com alpine tar" .-> bkp
+    ftp -. "logs coletados à mão" .-> tmp
+```
+
+<sub>📐 Nível 2 · Mapa · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência**
 
@@ -133,12 +185,55 @@ Sete decisões, cada uma com as alternativas comparadas. Prioridade: simplicidad
 
 ## 🏗️ Arquitetura (DEPOIS)
 
-<a href="diagramas/arquitetura-depois-mapa.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/arquitetura-depois-mapa-escuro.svg">
-  <img src="diagramas/arquitetura-depois-mapa.svg" alt="Arquitetura depois: usuário e equipamento passam pelo firewall do host, que libera só a rede interna para o Pure-FTPd e para o painel web; dados nas pastas fixas e senhas em .secrets" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/arquitetura-depois-mapa.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph USO["👤 Quem usa · só rede privada"]
+        operador@{ shape: person, label: "👤 Usuário<br>opera a stack" }
+        equip@{ shape: hex, label: "📡 Equipamento de rede<br>cliente FTP" }
+    end
+    subgraph BORDA["🧱 Proteção"]
+        fw@{ shape: hex, label: "🧱 Firewall do host<br>só origens internas" }
+    end
+    subgraph HOST["🖥️ Host · bind só em IP privado"]
+        deploy@{ shape: console, label: "⌨️ deploy.sh<br>um comando, espera healthy" }
+        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp · 21/tcp" }
+        painel@{ shape: rect, label: "🖥️ Painel web<br>allsafe-ftp-painel · 8443/tcp HTTPS" }
+        segredos@{ shape: doc, label: "🔑 .secrets/<br>senhas e hash, 0600" }
+    end
+    subgraph PASTAS["💽 Pastas fixas · /home/carlos/code"]
+        dados@{ shape: lin-cyl, label: "💽 data/allsafe-ftp-stack/dados<br>/data" }
+        auth@{ shape: cyl, label: "🗄️ data/allsafe-ftp-stack/auth<br>/auth, PureDB" }
+        certs@{ shape: lin-cyl, label: "💽 data/allsafe-ftp-stack/certs<br>certificado do FTP" }
+        pdados@{ shape: lin-cyl, label: "💽 data/allsafe-ftp-stack/painel<br>certificado e auditoria" }
+        bkp@{ shape: folder, label: "♻️ backups/allsafe-ftp-stack<br>cópias datadas" }
+        tmp@{ shape: folder, label: "🧹 tmp/allsafe-ftp-stack<br>instância de teste" }
+    end
+    subgraph RESULTADO["🏁 Resultado"]
+        fim@{ shape: stadium, label: "🏁 backup guardado<br>testado e restaurável" }
+    end
 
-<sub>📐 Nível 2 · Mapa · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/arquitetura-depois-mapa.mmd) · [no computador](diagramas/visualizador.html#arquitetura-depois-mapa)</sub>
+    operador -- "1 · ./deploy.sh, uma execução" --> deploy
+    deploy -- "2 · sobe os dois serviços e espera healthy" --> ftp
+    operador -- "3 · HTTPS com senha, pelo navegador" --> fw
+    equip -- "4 · FTPS, TCP 21" --> fw
+    fw -- "5 · libera só rede interna" --> ftp
+    fw -- "6 · libera só rede interna" --> painel
+    painel -- "7 · cria, troca senha e remove usuário" --> auth
+    ftp -- "8 · grava o arquivo" --> dados
+    dados -- "9 · arquivo na pasta fixa" --> fim
+    ftp -. "consulta os usuários" .-> auth
+    ftp -. "lê o certificado" .-> certs
+    ftp -. "lê a senha inicial" .-> segredos
+    painel -. "lê só o hash da senha" .-> segredos
+    painel -. "grava certificado e auditoria" .-> pdados
+    painel -. "lê o uso de cada pasta" .-> dados
+    deploy -. "backup.sh copia dados, auth e painel" .-> bkp
+    deploy -. "testar.sh sobe e remove a instância" .-> tmp
+```
+
+<sub>📐 Nível 2 · Mapa · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência**
 
@@ -272,12 +367,40 @@ Limite conhecido e aceito: o certificado é próprio, então o navegador avisa n
 
 Toda fase a executar segue o mesmo caminho:
 
-<a href="diagramas/fase-execucao-mapa.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/fase-execucao-mapa-escuro.svg">
-  <img src="diagramas/fase-execucao-mapa.svg" alt="Execução de uma fase: ler, executar, validar no portão, registrar, publicar e concluir; se o portão falhar, corrigir ou desfazer" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/fase-execucao-mapa.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph IA["🤖 IA"]
+        inicio@{ shape: stadium, label: "🚀 próximo passo<br>do PROGRESSO" }
+        ler@{ shape: rect, label: "📖 ler a seção da fase<br>e os arquivos citados" }
+        exec@{ shape: console, label: "⌨️ executar<br>os passos" }
+        portao@{ shape: diam, label: "✅ portão<br>passou?" }
+        corrige@{ shape: rect, label: "↩️ corrigir<br>ou desfazer" }
+        registra@{ shape: rect, label: "📝 registrar<br>o resultado" }
+        progresso@{ shape: doc, label: "📄 PROGRESSO.md" }
+        resultados@{ shape: docs, label: "🧪 resultados datados<br>testes, seguranca, rede" }
+        publica@{ shape: subproc, label: "🌿 commit,<br>push e PR" }
+    end
+    subgraph FIM["🏁 Resultado"]
+        fim@{ shape: stadium, label: "🏁 fase concluída<br>segue para a próxima" }
+        bloqueio@{ shape: person, label: "👤 Usuário recebe o<br>bloqueio e o que falta" }
+    end
 
-<sub>📐 Nível 2 · Mapa · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/fase-execucao-mapa.mmd) · [no computador](diagramas/visualizador.html#fase-execucao-mapa)</sub>
+    inicio -- "1 · abrir" --> ler
+    ler -- "2 · executar" --> exec
+    exec -- "3 · validar" --> portao
+    portao -- "4a · ✅ sim" --> registra
+    registra -- "5 · publicar" --> publica
+    publica -- "6 · concluir" --> fim
+    portao -- "4b · ❌ não" --> corrige
+    corrige -- "4c · corrigido: validar de novo" --> portao
+    corrige -- "4d · persistiu: parar" --> bloqueio
+    registra -. "grava status e data" .-> progresso
+    registra -. "salva a saída dos testes" .-> resultados
+```
+
+<sub>📐 Nível 2 · Mapa · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência**
 
@@ -306,12 +429,31 @@ Toda fase a executar segue o mesmo caminho:
 
 ### ✅ Fases 01 a 03 · Entregues
 
-<a href="diagramas/01-03-entregue-fluxograma.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/01-03-entregue-fluxograma-escuro.svg">
-  <img src="diagramas/01-03-entregue-fluxograma.svg" alt="Fluxograma das fases entregues: base da stack, perfis e operação, documentação e plano, cada uma com a sua validação" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/01-03-entregue-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início<br>projeto do usuário" }
+    f1@{ shape: subproc, label: "⚙️ 01 · Base da stack<br>Dockerfile, compose.yaml, entrypoint.sh" }
+    p1@{ shape: diam, label: "✅ validate.sh<br>passou?" }
+    f2@{ shape: subproc, label: "🎚️ 02 · Perfis e operação<br>profiles/, deploy.sh, manage-user.sh" }
+    p2@{ shape: diam, label: "✅ compose OK<br>nos três perfis?" }
+    f3@{ shape: subproc, label: "📖 03 · Documentação e plano<br>README, guias, diagramas" }
+    p3@{ shape: diam, label: "✅ links e validação<br>conferidos?" }
+    fim@{ shape: stadium, label: "🏁 fases 01 a 03<br>entregues" }
+    resultado@{ shape: docs, label: "🧪 testes/resultados<br>validação estática" }
 
-<sub>📐 Fluxograma · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/01-03-entregue-fluxograma.mmd) · [no computador](diagramas/visualizador.html#01-03-entregue-fluxograma)</sub>
+    inicio -- "1 · cria a stack à mão" --> f1
+    f1 -- "2 · valida" --> p1
+    p1 -- "3 · ✅ sim" --> f2
+    f2 -- "4 · valida" --> p2
+    p2 -- "5 · ✅ sim" --> f3
+    f3 -- "6 · valida" --> p3
+    p3 -- "7 · ✅ sim" --> fim
+    p3 -. "grava a saída" .-> resultado
+```
+
+<sub>📐 Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência**
 
@@ -373,12 +515,32 @@ As três são anteriores ao padrão atual de plano; ficam registradas com o que 
 
 **Objetivo:** tirar os dados dos volumes nomeados, tirar a senha do `.env`, permitir duas instâncias no mesmo host sem colisão de nomes e impedir, por código, que a stack escute em IP público.
 
-<a href="diagramas/04-pastas-segredos-rede-fluxograma.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/04-pastas-segredos-rede-fluxograma-escuro.svg">
-  <img src="diagramas/04-pastas-segredos-rede-fluxograma.svg" alt="Fluxograma da fase 04: variáveis de pasta no .env.example, senha em .secrets, bind mount no compose.yaml, validação de IP privado e portão" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/04-pastas-segredos-rede-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início<br>fase 04" }
+    env@{ shape: doc, label: "📄 .env.example<br>DATA_DIR, BACKUP_DIR, TEMP_DIR e nomes" }
+    segredos@{ shape: doc, label: "🔑 .secrets/<br>um arquivo por segredo" }
+    compose@{ shape: rect, label: "🐳 compose.yaml<br>bind mount e secrets" }
+    rede@{ shape: subproc, label: "🧱 scripts/rede-privada.sh<br>recusa IP público" }
+    portao@{ shape: diam, label: "✅ portão 04<br>passou?" }
+    fim@{ shape: stadium, label: "🏁 dados em pasta fixa<br>bind só em IP privado" }
+    volta@{ shape: rect, label: "↩️ corrigir ou<br>git revert" }
+    pastas@{ shape: lin-cyl, label: "💽 data/allsafe-ftp-stack<br>dados, auth, certs" }
 
-<sub>📐 Fluxograma · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/04-pastas-segredos-rede-fluxograma.mmd) · [no computador](diagramas/visualizador.html#04-pastas-segredos-rede-fluxograma)</sub>
+    inicio -- "1 · acrescenta as variáveis de pasta e de nome" --> env
+    env -- "2 · tira a senha do .env" --> segredos
+    segredos -- "3 · troca volume nomeado por bind mount" --> compose
+    compose -- "4 · valida os IPs de bind e o anunciado" --> rede
+    rede -- "5 · sobe uma instância de teste" --> portao
+    portao -- "6a · ✅ sim" --> fim
+    portao -- "6b · ❌ não" --> volta
+    volta -- "6c · valida de novo" --> portao
+    compose -. "grava em" .-> pastas
+```
+
+<sub>📐 Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência**
 
@@ -433,12 +595,34 @@ As três são anteriores ao padrão atual de plano; ficam registradas com o que 
 
 **Objetivo:** administrar a stack pelo navegador, em HTTPS, com senha, sem dar ao painel mais acesso do que ele precisa. O desenho está em [🖥️ Painel web](#painel).
 
-<a href="diagramas/05-painel-fluxograma.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/05-painel-fluxograma-escuro.svg">
-  <img src="diagramas/05-painel-fluxograma.svg" alt="Fluxograma da fase 05: servidor HTTPS em Python, alvo próprio no Dockerfile, serviço painel no compose.yaml, senha gerada pelo deploy.sh e portão" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/05-painel-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início<br>fase 05" }
+    codigo@{ shape: rect, label: "🖥️ painel/servidor.py<br>Python 3, sem dependência externa" }
+    imagem@{ shape: rect, label: "🐳 Dockerfile<br>alvo painel" }
+    servico@{ shape: rect, label: "🐳 compose.yaml<br>serviço painel, 8443/tcp" }
+    senha@{ shape: subproc, label: "🔑 deploy.sh<br>gera a senha e grava o hash" }
+    portao@{ shape: diam, label: "✅ portão 05<br>passou?" }
+    fim@{ shape: stadium, label: "🏁 painel no ar<br>HTTPS, só rede privada" }
+    volta@{ shape: rect, label: "↩️ corrigir ou<br>desligar o painel" }
+    hash@{ shape: doc, label: "🔑 .secrets/<br>painel_password_hash.txt" }
+    auth@{ shape: cyl, label: "🗄️ auth<br>PureDB" }
 
-<sub>📐 Fluxograma · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/05-painel-fluxograma.mmd) · [no computador](diagramas/visualizador.html#05-painel-fluxograma)</sub>
+    inicio -- "1 · escreve o servidor HTTPS e as telas" --> codigo
+    codigo -- "2 · empacota em alvo separado" --> imagem
+    imagem -- "3 · acrescenta o serviço endurecido" --> servico
+    servico -- "4 · cria a senha do painel" --> senha
+    senha -- "5 · sobe e testa login, CSRF e usuários" --> portao
+    portao -- "6a · ✅ sim" --> fim
+    portao -- "6b · ❌ não" --> volta
+    volta -- "6c · valida de novo" --> portao
+    senha -. "grava" .-> hash
+    servico -. "compartilha com o FTP" .-> auth
+```
+
+<sub>📐 Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência**
 
@@ -500,12 +684,32 @@ As três são anteriores ao padrão atual de plano; ficam registradas com o que 
 
 **Objetivo:** `./deploy.sh` instala do zero em uma execução, sem perguntas, e pode ser repetido sem efeito colateral.
 
-<a href="diagramas/06-instalacao-fluxograma.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/06-instalacao-fluxograma-escuro.svg">
-  <img src="diagramas/06-instalacao-fluxograma.svg" alt="Fluxograma da fase 06: o deploy.sh confere requisitos, prepara .env, segredos e pastas, sobe e espera healthy, ganha a opção de remoção e passa pelo portão" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/06-instalacao-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início<br>fase 06" }
+    requisitos@{ shape: subproc, label: "🔎 deploy.sh<br>confere Docker, portas e IP privado" }
+    prepara@{ shape: subproc, label: "🧰 deploy.sh<br>cria .env, segredos e pastas" }
+    sobe@{ shape: subproc, label: "🐳 deploy.sh<br>docker compose up e espera healthy" }
+    remover@{ shape: console, label: "⌨️ deploy.sh --remover<br>derruba, preserva os dados" }
+    portao@{ shape: diam, label: "✅ portão 06<br>passou?" }
+    fim@{ shape: stadium, label: "🏁 instalação<br>em um comando" }
+    volta@{ shape: rect, label: "↩️ corrigir ou<br>git revert" }
+    env@{ shape: doc, label: "📄 .env<br>com o perfil aplicado" }
 
-<sub>📐 Fluxograma · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/06-instalacao-fluxograma.mmd) · [no computador](diagramas/visualizador.html#06-instalacao-fluxograma)</sub>
+    inicio -- "1 · confere antes de agir" --> requisitos
+    requisitos -- "2 · prepara sem perguntar" --> prepara
+    prepara -- "3 · sobe e espera" --> sobe
+    sobe -- "4 · acrescenta a remoção" --> remover
+    remover -- "5 · instala do zero, duas vezes" --> portao
+    portao -- "6a · ✅ sim" --> fim
+    portao -- "6b · ❌ não" --> volta
+    volta -- "6c · valida de novo" --> portao
+    prepara -. "grava o perfil em" .-> env
+```
+
+<sub>📐 Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência**
 
@@ -558,12 +762,36 @@ As três são anteriores ao padrão atual de plano; ficam registradas com o que 
 
 **Objetivo:** provar por execução, com resultado datado, que a stack e o painel fazem o que a documentação diz.
 
-<a href="diagramas/07-testes-fluxograma.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/07-testes-fluxograma-escuro.svg">
-  <img src="diagramas/07-testes-fluxograma.svg" alt="Fluxograma da fase 07: o testar.sh sobe a instância isolada, roda os casos funcionais, de segurança e de rede, confere no portão e remove a instância" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/07-testes-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início<br>fase 07" }
+    instancia@{ shape: subproc, label: "🧪 scripts/testar.sh<br>sobe a instância isolada" }
+    funcional@{ shape: rect, label: "🧪 Funcionais<br>login, envio, download, usuários" }
+    seguranca@{ shape: rect, label: "🔐 Segurança<br>sem TLS, chroot, painel, IP público" }
+    rede@{ shape: rect, label: "🌐 Rede<br>bind, faixa passiva, limites" }
+    portao@{ shape: diam, label: "✅ portão 07<br>tudo aprovado?" }
+    limpa@{ shape: subproc, label: "🧹 scripts/testar.sh<br>remove a instância de teste" }
+    fim@{ shape: stadium, label: "🏁 stack provada<br>por execução" }
+    volta@{ shape: rect, label: "↩️ corrigir a stack<br>ou o teste" }
+    resultados@{ shape: docs, label: "🧪 resultados datados<br>testes, seguranca, rede" }
+    tmp@{ shape: folder, label: "🧹 tmp/allsafe-ftp-stack<br>dados da instância de teste" }
 
-<sub>📐 Fluxograma · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/07-testes-fluxograma.mmd) · [no computador](diagramas/visualizador.html#07-testes-fluxograma)</sub>
+    inicio -- "1 · sobe em portas e nomes próprios" --> instancia
+    instancia -- "2 · roda os casos funcionais" --> funcional
+    funcional -- "3 · roda os casos de segurança" --> seguranca
+    seguranca -- "4 · roda os casos de rede" --> rede
+    rede -- "5 · confere o resultado" --> portao
+    portao -- "6a · ✅ sim" --> limpa
+    limpa -- "7 · conclui" --> fim
+    portao -- "6b · ❌ não" --> volta
+    volta -- "6c · roda de novo" --> instancia
+    rede -. "grava a saída, sem segredo" .-> resultados
+    instancia -. "usa" .-> tmp
+```
+
+<sub>📐 Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência**
 
@@ -614,12 +842,32 @@ As três são anteriores ao padrão atual de plano; ficam registradas com o que 
 
 **Objetivo:** recuperar a stack inteira a partir de uma cópia.
 
-<a href="diagramas/08-backup-fluxograma.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/08-backup-fluxograma-escuro.svg">
-  <img src="diagramas/08-backup-fluxograma.svg" alt="Fluxograma da fase 08: script de backup, script de restauração, healthcheck pela porta de controle, teste do ciclo completo e portão que compara o sha256" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/08-backup-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início<br>fase 08" }
+    backup@{ shape: console, label: "♻️ scripts/backup.sh<br>copia dados, auth, certs e painel" }
+    restaurar@{ shape: console, label: "♻️ scripts/restaurar.sh<br>restaura uma cópia escolhida" }
+    saude@{ shape: rect, label: "🐳 compose.yaml<br>healthcheck pela porta de controle" }
+    ciclo@{ shape: subproc, label: "🧪 scripts/testar.sh<br>envia, copia, apaga, restaura, compara" }
+    portao@{ shape: diam, label: "✅ portão 08<br>sha256 igual?" }
+    fim@{ shape: stadium, label: "🏁 stack recuperável<br>a partir de uma cópia" }
+    volta@{ shape: rect, label: "↩️ corrigir ou<br>git revert" }
+    bkp@{ shape: folder, label: "♻️ backups/allsafe-ftp-stack<br>AAAAMMDD-HHMMSS" }
 
-<sub>📐 Fluxograma · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/08-backup-fluxograma.mmd) · [no computador](diagramas/visualizador.html#08-backup-fluxograma)</sub>
+    inicio -- "1 · escreve a cópia" --> backup
+    backup -- "2 · escreve a restauração" --> restaurar
+    restaurar -- "3 · troca o healthcheck" --> saude
+    saude -- "4 · testa o ciclo completo" --> ciclo
+    ciclo -- "5 · compara o arquivo" --> portao
+    portao -- "6a · ✅ sim" --> fim
+    portao -- "6b · ❌ não" --> volta
+    volta -- "6c · testa de novo" --> ciclo
+    backup -. "grava em" .-> bkp
+```
+
+<sub>📐 Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência**
 
@@ -669,12 +917,34 @@ As três são anteriores ao padrão atual de plano; ficam registradas com o que 
 
 **Objetivo:** subir a stack definitiva neste host e deixar a documentação igual ao sistema real, com as fotos do painel.
 
-<a href="diagramas/09-documentacao-fluxograma.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/09-documentacao-fluxograma-escuro.svg">
-  <img src="diagramas/09-documentacao-fluxograma.svg" alt="Fluxograma da fase 09: stack definitiva no ar, capturas com Playwright, guias reescritos, diagramas refeitos e portão que confere a documentação contra o sistema" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/09-documentacao-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início<br>fase 09" }
+    sobe@{ shape: subproc, label: "🐳 deploy.sh<br>stack definitiva no ar" }
+    capturas@{ shape: subproc, label: "📸 Playwright<br>captura cada aba e cada menu" }
+    guias@{ shape: docs, label: "📖 README e guias de doc/<br>painel, rede privada, backup" }
+    diagramas@{ shape: docs, label: "📐 diagramas<br>com zoom e movimento" }
+    portao@{ shape: diam, label: "✅ portão 09<br>doc igual ao sistema?" }
+    fim@{ shape: stadium, label: "🏁 plano concluído<br>pergunta do fim" }
+    volta@{ shape: rect, label: "↩️ corrigir<br>a documentação" }
+    abas@{ shape: folder, label: "📸 doc/imagens<br>principal e abas" }
+    menus@{ shape: folder, label: "🖥️ doc/aplicacao/imagens<br>menu por menu" }
 
-<sub>📐 Fluxograma · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/09-documentacao-fluxograma.mmd) · [no computador](diagramas/visualizador.html#09-documentacao-fluxograma)</sub>
+    inicio -- "1 · instala a stack definitiva" --> sobe
+    sobe -- "2 · fotografa o painel real" --> capturas
+    capturas -- "3 · reescreve os guias" --> guias
+    guias -- "4 · refaz os diagramas" --> diagramas
+    diagramas -- "5 · confere links, fotos e segredos" --> portao
+    portao -- "6a · ✅ sim" --> fim
+    portao -- "6b · ❌ não" --> volta
+    volta -- "6c · confere de novo" --> portao
+    capturas -. "grava" .-> abas
+    capturas -. "grava" .-> menus
+```
+
+<sub>📐 Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência**
 
@@ -826,6 +1096,8 @@ O plano só está concluído quando tudo abaixo for verdade:
 | 2026-10-04 | **Plano refeito:** painel web seguro entra no escopo (fase 05); a fase 04 passa a cobrir também segredos e rede privada; fases renumeradas até a 09; "produção" sai da fase de backup e vira a regra de rede privada | Ordem do usuário: interface web segura, uso só em IP privado atrás de firewall, executar o plano e a stack |
 | 2026-10-04 | Senhas saem do `.env` e ficam só em `.secrets/`; o painel guarda só o hash | Regra do usuário: `.env` só para variável ajustável; senha, token e chave sempre em `.secrets/`, cifrados sempre que possível |
 | 2026-10-04 | Diagramas com link para abrir com zoom e movimento; um fluxograma por fase; plano sem imagem da aplicação | Padrão de diagramas e de planos atualizado pelo usuário |
+| 2026-10-04 | Diagramas passam a entrar nos `.md` como bloco Mermaid, direto do `.mmd`, com fundo escuro e os controles de zoom do próprio diagrama; SVG só na pasta | Ordem do usuário: a imagem ficava com fundo branco e sem zoom nem movimento |
+| 2026-10-04 | A versão passa a avançar a cada publicação, com tag; sequência até a `1.0.0` registrada | Ordem do usuário: a versão tem de aparecer no repositório e subir a cada commit e push |
 
 Achados no código, com a fase que resolve cada um:
 
@@ -843,6 +1115,27 @@ Achados no código, com a fase que resolve cada um:
 
 ---
 
+<a name="versoes"></a>
+
+## 🏷️ Versões
+
+A versão avança **a cada publicação** (commit e push): o `VERSION`, o `CHANGELOG.md` e a tag `vX.Y.Z` mudam juntos. `0.x` é a construção; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`, em que correção vira `1.0.1`, novidade vira `1.1.0` e só uma quebra de compatibilidade abre a `2.0.0`.
+
+| Versão | O que entrega | Fase | Situação |
+|---|---|---|---|
+| `0.1.0` | Servidor FTP, perfis e operação pelo terminal | 01 a 03 | ✅ Publicada |
+| `0.1.1` | Documentação e plano refeitos; diagramas com fundo escuro, zoom e movimento | 03 | ✅ Publicada |
+| `0.2.0` | Pastas fixas, segredos só em `.secrets/` e recusa de IP público | 04 | ⏳ A fazer |
+| `0.3.0` | Painel web seguro | 05 | ⏳ A fazer |
+| `0.4.0` | Instalação em um comando | 06 | ⏳ A fazer |
+| `0.5.0` | Testes automatizados | 07 | ⏳ A fazer |
+| `0.6.0` | Backup e restauração | 08 | ⏳ A fazer |
+| **`1.0.0`** | **Pronta para produção em rede privada**: stack no ar, testada e documentada | 09 | ⏳ A fazer |
+
+Uma correção entre duas fases sobe o último número (`0.2.1`, por exemplo) e não muda a sequência. A tag é criada com `git`; a Release do GitHub é criada com o `gh`, que só as IAs usam e só com autorização do usuário.
+
+---
+
 <a name="pendencias"></a>
 
 ## 📌 Pendências
@@ -852,7 +1145,7 @@ Dependem do usuário e **não travam a execução**:
 | Nº | Pendência | O que fazer |
 |---|---|---|
 | 1 | Firewall do host | Aplicar as regras de exemplo de `doc/seguranca.md` na cadeia `DOCKER-USER`, quando a stack for aberta para a rede interna. O plano só documenta |
-| 2 | Versão, tag e release | A versão está em `0.1.0`, sem tag. O painel justifica `0.2.0`; avançar a versão e criar a tag só por ordem |
+| 2 | Release no GitHub | As tags são publicadas por `git`. A Release de cada tag depende do `gh` autenticado neste host: `gh release create vX.Y.Z --verify-tag --notes-from-tag` |
 | 3 | Licença | Não há arquivo `LICENSE`; a escolha é do usuário |
 | 4 | Descrição e tópicos do repositório | Aplicar o comando abaixo, com o `gh` autenticado |
 | 5 | Links externos | Confirmar os links dos projetos oficiais citados nos créditos do README |
