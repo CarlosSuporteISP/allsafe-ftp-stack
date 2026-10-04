@@ -1,6 +1,6 @@
 # ⌨️ Scripts — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
+↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -20,16 +20,16 @@ flowchart LR
     usuario --> host --> compose --> interno --> ftp --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
+<sub>Nível 1 · Diagrama · [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 👤 Usuário ➜ ⌨️ scripts do host (`deploy.sh`, `manage-user.sh`, `validate.sh`) ➜ 🐳 Docker Compose ➜ ⌨️ entrypoints e `allsafe-ftp-user` (nos containers) ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 serviço operando
+**Sequência:** Usuário ➜ scripts do host (`deploy.sh`, `manage-user.sh`, `validate.sh`) ➜ Docker Compose ➜ entrypoints e `allsafe-ftp-user` (nos containers) ➜ Pure-FTPd (`allsafe-ftp`) ➜ serviço operando
 
 ---
 
 <details>
-<summary>🧭 Sumário — clique para expandir</summary>
+<summary>Sumário — clique para expandir</summary>
 
-[📋 Visão geral](#visao-geral) · [🚀 `deploy.sh`](#deploy) · [👤 `manage-user.sh`](#manage-user) · [🔑 `scripts/painel-senha.sh`](#painel-senha) · [🧪 `scripts/validate.sh`](#validate) · [⚙️ `scripts/entrypoint.sh`](#entrypoint) · [🖥️ `scripts/painel-entrypoint.sh`](#painel-entrypoint) · [🚦 `scripts/nginx-entrypoint.sh`](#nginx-entrypoint) · [🩺 `scripts/nginx-saude.sh`](#nginx-saude) · [👥 `scripts/ftp-user.sh`](#ftp-user) · [🧩 Scripts de apoio](#apoio)
+[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/validate.sh`](#validate) · [`scripts/entrypoint.sh`](#entrypoint) · [`scripts/painel-entrypoint.sh`](#painel-entrypoint) · [`scripts/nginx-entrypoint.sh`](#nginx-entrypoint) · [`scripts/nginx-saude.sh`](#nginx-saude) · [`scripts/ftp-user.sh`](#ftp-user) · [Scripts de apoio](#apoio)
 
 </details>
 
@@ -77,18 +77,18 @@ Os scripts da pasta [`scripts/`](../scripts/) que rodam em container são copiad
 | `--sim` | Com `--apagar-dados`: dispensa a confirmação (obrigatório quando não há terminal) |
 | `-h`, `--help` | Mostra o uso |
 
-**Resultado esperado:** o comando só termina com `allsafe-ftp`, `allsafe-ftp-painel` e `allsafe-ftp-nginx` em `healthy` e fecha com `Pronto: FTP, painel e nginx no ar (healthy), perfil '<perfil>'.`, os endereços do FTP e do painel, o modo de TLS do FTP e o arquivo onde está cada senha (a senha em si nunca aparece). Com `FTP_TLS_MODE` em `0` ou `1`, a última coisa na tela é o `AVISO` de FTP sem criptografia: [🔐 Segurança](seguranca.md#ftp-sem-tls). Com `--remover`: `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` Com `--check-only`: `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.`
+**Resultado esperado:** o comando só termina com `allsafe-ftp`, `allsafe-ftp-painel` e `allsafe-ftp-nginx` em `healthy` e fecha com `Pronto: FTP, painel e nginx no ar (healthy), perfil '<perfil>'.`, os endereços do FTP e do painel, o modo de TLS do FTP e o arquivo onde está cada senha (a senha em si nunca aparece). Com `FTP_TLS_MODE` em `0` ou `1`, a última coisa na tela é o `AVISO` de FTP sem criptografia: [Segurança](seguranca.md#ftp-sem-tls). Com `--remover`: `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` Com `--check-only`: `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.`
 
 <details>
-<summary>🔬 Detalhe técnico — comportamento e códigos de saída</summary>
+<summary>Detalhe técnico — comportamento e códigos de saída</summary>
 
 - **Não faz pergunta.** A única confirmação é a do `--apagar-dados`, dispensada com `--sim`.
 - **Requisitos conferidos antes de agir:** `docker`, o plugin `docker compose`, o serviço do Docker respondendo e as portas livres (a do FTP, a do painel e a faixa passiva, no endereço de bind). As portas que a própria stack já publica não contam. Falhou: `ERRO: ...` e código `1`, sem subir nada.
-- **Recursos do servidor conferidos antes de gravar:** se o servidor tem menos CPUs que `FTP_CPU_LIMIT` ou menos memória que `FTP_MEMORY_LIMIT`, para com `ERRO: o perfil '<perfil>' pede ... e este servidor tem ...` e código `1`, sem criar nem regravar o `.env` e sem tocar nos containers: [🎚️ Perfis](perfis.md#o-servidor-aguenta).
+- **Recursos do servidor conferidos antes de gravar:** se o servidor tem menos CPUs que `FTP_CPU_LIMIT` ou menos memória que `FTP_MEMORY_LIMIT`, para com `ERRO: o perfil '<perfil>' pede ... e este servidor tem ...` e código `1`, sem criar nem regravar o `.env` e sem tocar nos containers: [Perfis](perfis.md#o-servidor-aguenta).
 - **`FTP_TLS_MODE` conferido antes de agir:** valor fora de `0` a `3` para com `ERRO: FTP_TLS_MODE deve ser 0 (sem TLS), 1 (opcional), 2 (obrigatório no login) ou 3 (obrigatório no login e nos dados)` e código `1`. Em `0` e `1` o deploy segue e avisa no fim.
 - Na primeira execução sem `.env`, copia o [`.env.example`](../.env.example), aplica `0600`, avisa `Criado .env a partir do .env.example: tudo em 127.0.0.1, só este servidor acessa.` e **segue**. Com `--check-only` nada é criado: a validação usa o `.env.example`.
 - **Idempotente:** rodado de novo sem mudança, não recria container, não troca senha e não regrava o `.env`.
-- Se `.secrets/ftp_password.txt` estiver vazio ou ausente, gera uma senha forte (`0600`): veja [🔑 Segredos](segredos.md).
+- Se `.secrets/ftp_password.txt` estiver vazio ou ausente, gera uma senha forte (`0600`): veja [Segredos](segredos.md).
 - Recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env`, e qualquer `FTP_BIND_IP`, `FTP_PUBLIC_IP`, `PAINEL_BIND_IP`, `PAINEL_REDES_PERMITIDAS` ou `PAINEL_CERT_CN` (em forma de IP) fora de rede privada.
 - Se `.secrets/painel_password_hash.txt` não existir, gera a senha inicial do painel em `.secrets/painel_password.txt` (`0600`) e grava o hash dela, chamando o `scripts/painel-senha.sh --inicial` depois de construir a imagem.
 - Opção desconhecida ou perfil inexistente: mensagem `Opção inválida: ...` ou `ERRO: perfil inexistente: ...` e código `64`.
@@ -114,7 +114,7 @@ Os scripts da pasta [`scripts/`](../scripts/) que rodam em container são copiad
 
 **Resultado esperado:** `add` e `passwd` terminam sem erro e o usuário aparece no `list`; `del` responde `Usuario removido; os dados em /data/<usuario> foram preservados.`
 
-A senha é lida do terminal e enviada pelo `stdin` para o container: não aparece na linha de comando nem no histórico. Regras e casos de uso em [🧰 Operação](operacao.md#usuarios).
+A senha é lida do terminal e enviada pelo `stdin` para o container: não aparece na linha de comando nem no histórico. Regras e casos de uso em [Operação](operacao.md#usuarios).
 
 ---
 
@@ -129,10 +129,10 @@ A senha é lida do terminal e enviada pelo `stdin` para o container: não aparec
 
 **Resultado esperado:** `Hash gravado em ./.secrets/painel_password_hash.txt; painel reiniciado e sessões abertas encerradas.`
 
-A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.secrets/painel_password.txt` da instalação é apagado. Quando usar: [🖥️ Painel web](painel.md#senha).
+A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.secrets/painel_password.txt` da instalação é apagado. Quando usar: [Painel web](painel.md#senha).
 
 <details>
-<summary>🔬 Detalhe técnico — como o hash é calculado</summary>
+<summary>Detalhe técnico — como o hash é calculado</summary>
 
 - Lê `SECRETS_DIR` e `PAINEL_IMAGE` do `.env` (ou do arquivo em `ENV_FILE`), sem executar o arquivo.
 - A senha também pode vir pela entrada padrão: `./scripts/painel-senha.sh < arquivo`.
@@ -158,7 +158,7 @@ A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.
 **Resultado esperado:** `painel/servidor.py OK`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Qualquer falha encerra com código diferente de zero.
 
 <details>
-<summary>🔬 Detalhe técnico — o que cada modo confere</summary>
+<summary>Detalhe técnico — o que cada modo confere</summary>
 
 | Modo | Confere |
 |---|---|
@@ -175,7 +175,7 @@ A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.
 
 ## ⚙️ `scripts/entrypoint.sh`
 
-Roda a cada início do container. Não tem parâmetros: tudo vem das variáveis de [⚙️ Configuração](configuracao.md).
+Roda a cada início do container. Não tem parâmetros: tudo vem das variáveis de [Configuração](configuracao.md).
 
 1. Confere que `FTP_BIND_IP` e `FTP_PUBLIC_IP` são IPs privados ([`rede-privada.sh`](../scripts/rede-privada.sh)), lê a senha do segredo `/run/secrets/ftp_password`, ajusta dono e modo de `/data`, `/auth` e `/etc/ssl/private` e cria ou atualiza o usuário inicial `FTP_USER` (recusa senha com menos de 12 caracteres).
 2. Gera um certificado autoassinado para `FTP_CERT_CN` se `DATA_DIR/certs` estiver vazia, e grava a parte pública dele em `/auth/ftp-cert.pem`.
@@ -184,7 +184,7 @@ Roda a cada início do container. Não tem parâmetros: tudo vem das variáveis 
 **Resultado esperado:** a linha `FTP pronto em 2121/tcp; TLS=2; passivo=30000-30049` no log do container.
 
 <details>
-<summary>🔬 Detalhe técnico — processo 1 e mensagens de falha</summary>
+<summary>Detalhe técnico — processo 1 e mensagens de falha</summary>
 
 Com `init: true`, o processo 1 do container é o `tini`; o entrypoint é iniciado por ele e termina com `exec`, deixando o `pure-ftpd` no seu lugar.
 
@@ -203,7 +203,7 @@ Quando uma validação falha, o script sai com `FALHA: <motivo>`:
 
 Não é falha, e o container sobe: `AVISO: FTP_TLS_MODE=0, FTP sem TLS: senhas e arquivos trafegam em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada.` (ou `FTP_TLS_MODE=1, TLS opcional: ...`). O aviso se repete a cada subida enquanto o modo estiver ligado.
 
-A correção de cada uma está em [🚨 Solução de problemas](solucao-de-problemas.md#o-container-nao-sobe). O modelo completo da subida está em [🏗️ Arquitetura](arquitetura.md#subida).
+A correção de cada uma está em [Solução de problemas](solucao-de-problemas.md#o-container-nao-sobe). O modelo completo da subida está em [Arquitetura](arquitetura.md#subida).
 
 </details>
 
@@ -213,7 +213,7 @@ A correção de cada uma está em [🚨 Solução de problemas](solucao-de-probl
 
 ## 🖥️ `scripts/painel-entrypoint.sh`
 
-Roda a cada início do container do painel. Não tem parâmetros: tudo vem das variáveis de [⚙️ Configuração](configuracao.md#painel).
+Roda a cada início do container do painel. Não tem parâmetros: tudo vem das variáveis de [Configuração](configuracao.md#painel).
 
 1. Recusa senha em variável e exige o segredo `/run/secrets/painel_password_hash`.
 2. Confere que `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e o `PAINEL_CERT_CN` (se for IP) são privados.
@@ -224,7 +224,7 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 **Resultado esperado:** a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; sessão de 15 min; redes permitidas: ...` no log do container.
 
 <details>
-<summary>🔬 Detalhe técnico — mensagens de falha</summary>
+<summary>Detalhe técnico — mensagens de falha</summary>
 
 | Mensagem | Quando |
 |---|---|
@@ -238,7 +238,7 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 | `FALHA: pasta /nginx ausente` | o painel subiu sem a pasta `DATA_DIR/nginx`, por onde o nginx o alcança: rode o `deploy.sh` |
 | `FALHA: não foi possível gerar o certificado do painel` | `DATA_DIR/painel` sem espaço ou sem permissão de escrita |
 
-O certificado é EC P-256, válido por 825 dias. O arquivo `painel-san.txt`, ao lado dele, marca que foi gerado pela stack: sem esse arquivo, o certificado é tratado como próprio e nunca é refeito. A cópia para `/nginx/tls` é refeita a cada subida (certificado `0644`, chave `0640`): é ela que o nginx apresenta ao navegador. Veja [🖥️ Painel web](painel.md#certificado).
+O certificado é EC P-256, válido por 825 dias. O arquivo `painel-san.txt`, ao lado dele, marca que foi gerado pela stack: sem esse arquivo, o certificado é tratado como próprio e nunca é refeito. A cópia para `/nginx/tls` é refeita a cada subida (certificado `0644`, chave `0640`): é ela que o nginx apresenta ao navegador. Veja [Painel web](painel.md#certificado).
 
 </details>
 
@@ -259,7 +259,7 @@ Roda a cada início do container do nginx, já como usuário sem privilégio (`1
 **Resultado esperado:** a linha `nginx pronto em 8443/tcp (HTTPS), à frente do painel; redes permitidas: ...` no log do container.
 
 <details>
-<summary>🔬 Detalhe técnico — mensagens de falha</summary>
+<summary>Detalhe técnico — mensagens de falha</summary>
 
 | Mensagem | Quando |
 |---|---|
@@ -283,7 +283,7 @@ A configuração gerada fica em `tmpfs` e some quando o container para: quem man
 É o healthcheck do container do nginx, instalado como `/usr/local/sbin/allsafe-nginx-saude`. Não é chamado direto: o Docker o executa em intervalos.
 
 <details>
-<summary>🔬 Detalhe técnico — o que ele confere</summary>
+<summary>Detalhe técnico — o que ele confere</summary>
 
 Abre uma conexão TLS de verdade em `127.0.0.1:8443`, de dentro do container, e pede `/saude`. Só considera saudável se a resposta for `HTTP/1.1 200` com o corpo `ok`. Como o pedido passa pelo nginx e chega ao painel pelo soquete, um único teste confere os dois. A cadeia do certificado não é conferida, para o teste valer também com certificado de uma autoridade interna.
 
@@ -298,7 +298,7 @@ Abre uma conexão TLS de verdade em `127.0.0.1:8443`, de dentro do container, e 
 Instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user`. Não é chamado diretamente: use o [`manage-user.sh`](../manage-user.sh) ou o [painel](painel.md#usuarios).
 
 <details>
-<summary>🔬 Detalhe técnico — o que ele faz dentro do container</summary>
+<summary>Detalhe técnico — o que ele faz dentro do container</summary>
 
 - Aceita `add|passwd|del|list [usuario]` e valida o nome (`^[a-z_][a-z0-9_-]{0,31}$`).
 - Lê a senha do `stdin` e recusa menos de 12 caracteres com `Senha deve ter pelo menos 12 caracteres`.
@@ -326,4 +326,4 @@ Não são executados: outros scripts os carregam com `source`.
 
 ---
 
-⬅️ [🔑 Segredos](segredos.md) · 🏠 [Documentação](README.md) · ➡️ [🧰 Operação](operacao.md)
+⬅️ [Segredos](segredos.md) · 🏠 [Documentação](README.md) · ➡️ [Operação](operacao.md)

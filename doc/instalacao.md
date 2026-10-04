@@ -1,6 +1,6 @@
 # 🚀 Instalação — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
+↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -19,16 +19,16 @@ flowchart LR
     usuario --> deploy --> stack --> valida --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
+<sub>Nível 1 · Diagrama · [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 👤 Usuário ➜ ⌨️ `deploy.sh` (cria o `.env`, gera as senhas e sobe) ➜ 🐳 Docker Compose (FTP, painel e nginx) ➜ 🧪 `validate.sh` ➜ 🏁 FTP e painel prontos
+**Sequência:** Usuário ➜ `deploy.sh` (cria o `.env`, gera as senhas e sobe) ➜ Docker Compose (FTP, painel e nginx) ➜ `validate.sh` ➜ FTP e painel prontos
 
 ---
 
 <details>
-<summary>🧭 Sumário — clique para expandir</summary>
+<summary>Sumário — clique para expandir</summary>
 
-[✅ Pré-requisitos](#pre-requisitos) · [1️⃣ Configuração base](#1-configuracao-base) · [2️⃣ Senha do usuário inicial](#2-senha-do-usuario-inicial) · [3️⃣ Subir a stack](#3-subir-a-stack) · [4️⃣ Validar](#4-validar) · [♻️ Como desfazer](#como-desfazer) · [⏭️ Próximos passos](#proximos-passos)
+[Pré-requisitos](#pre-requisitos) · [1️⃣ Configuração base](#1-configuracao-base) · [2️⃣ Senha do usuário inicial](#2-senha-do-usuario-inicial) · [3️⃣ Subir a stack](#3-subir-a-stack) · [4️⃣ Validar](#4-validar) · [Como desfazer](#como-desfazer) · [Próximos passos](#proximos-passos)
 
 </details>
 
@@ -40,12 +40,12 @@ flowchart LR
 
 | Item | Detalhe |
 |---|---|
-| 🐳 Docker Engine com Docker Compose v2 ou mais novo | `docker compose version` deve responder |
-| 🖥️ CPU e memória para o perfil | O `small` pede 1 CPU e 256 MB; o `extended`, 16 CPUs e 4 GB. O `deploy.sh` confere e recusa o perfil maior que o servidor: [🎚️ Perfis](perfis.md#o-servidor-aguenta) |
-| 🌐 Um IP dedicado para o FTP | Não compartilhe o IP com outros serviços; o modo passivo abre de 50 a 1600 portas, conforme o perfil |
-| 🔥 Firewall no host | Libere `21/tcp` e a faixa passiva do perfil (`30000-30049/tcp` no `small`) **só** para as redes de gerência dos equipamentos, e a porta do painel (`8443/tcp`) **só** para quem administra |
-| 🧱 Rede privada | A stack só aceita IP interno: veja [🔐 Segurança](seguranca.md#rede-privada) |
-| 🕰️ Relógio sincronizado | O certificado TLS depende de data e hora corretas (a stack `allsafe-ntp-nts-stack` cuida disso) |
+| Docker Engine com Docker Compose v2 ou mais novo | `docker compose version` deve responder |
+| CPU e memória para o perfil | O `small` pede 1 CPU e 256 MB; o `extended`, 16 CPUs e 4 GB. O `deploy.sh` confere e recusa o perfil maior que o servidor: [Perfis](perfis.md#o-servidor-aguenta) |
+| Um IP dedicado para o FTP | Não compartilhe o IP com outros serviços; o modo passivo abre de 50 a 1600 portas, conforme o perfil |
+| Firewall no host | Libere `21/tcp` e a faixa passiva do perfil (`30000-30049/tcp` no `small`) **só** para as redes de gerência dos equipamentos, e a porta do painel (`8443/tcp`) **só** para quem administra |
+| Rede privada | A stack só aceita IP interno: veja [Segurança](seguranca.md#rede-privada) |
+| Relógio sincronizado | O certificado TLS depende de data e hora corretas (a stack `allsafe-ntp-nts-stack` cuida disso) |
 
 ---
 
@@ -62,7 +62,7 @@ chmod 600 .env
 
 **Resultado esperado:** o arquivo `.env` passa a existir na raiz da stack.
 
-Cada variável está explicada em [⚙️ Configuração](configuracao.md). Os campos que **você precisa** rever:
+Cada variável está explicada em [Configuração](configuracao.md). Os campos que **você precisa** rever:
 
 | Variável | Troque para |
 |---|---|
@@ -72,7 +72,7 @@ Cada variável está explicada em [⚙️ Configuração](configuracao.md). Os c
 | `FTP_CERT_CN` | o hostname (exemplo: `ftp.exemplo.com.br`) ou IP que vai no certificado |
 | `FTP_USER` | nome do usuário inicial (padrão `transfer`). Regra: `^[a-z_][a-z0-9_-]{0,31}$` |
 
-> 💡 Pulou este passo? Ajuste o `.env` depois e rode `./deploy.sh` de novo: ele reaplica a configuração sem trocar senha nem apagar dado.
+> Pulou este passo? Ajuste o `.env` depois e rode `./deploy.sh` de novo: ele reaplica a configuração sem trocar senha nem apagar dado.
 
 ---
 
@@ -96,12 +96,12 @@ chmod 600 .secrets/ftp_password.txt
 ```
 
 <details>
-<summary>🔬 Detalhe técnico — regras da senha</summary>
+<summary>Detalhe técnico — regras da senha</summary>
 
 - A senha é gerada com `openssl rand -base64 36`; o `openssl` é exigido no host.
 - Mínimo de **12 caracteres**: o [`entrypoint.sh`](../scripts/entrypoint.sh) recusa senhas menores.
 - O arquivo chega ao container como o segredo `/run/secrets/ftp_password`, somente leitura; o serviço não vê o resto de `.secrets/`.
-- Arquivos `.txt` de `.secrets/` são ignorados pelo Git. Veja [🔑 Segredos](segredos.md).
+- Arquivos `.txt` de `.secrets/` são ignorados pelo Git. Veja [Segredos](segredos.md).
 - Senha no `.env` **não é aceita**: o `deploy.sh` recusa um `.env` com `FTP_PASSWORD` preenchido e o container recusa a variável.
 
 </details>
@@ -129,14 +129,14 @@ Remover: ./deploy.sh --remover  (os dados ficam em <DATA_DIR>)
 
 O resumo diz **onde** está cada senha e nunca a mostra. Na primeira vez aparecem também `Gerada uma senha forte em .secrets/ftp_password.txt (0600). Guarde-a para o cliente FTP.` e `Gerada uma senha forte para o painel em .secrets/painel_password.txt (0600).`
 
-Abra o endereço do painel no navegador e entre com a senha de `.secrets/painel_password.txt`. O primeiro acesso, o aviso de certificado e a troca da senha estão em [🖥️ Painel web](painel.md#abrir).
+Abra o endereço do painel no navegador e entre com a senha de `.secrets/painel_password.txt`. O primeiro acesso, o aviso de certificado e a troca da senha estão em [Painel web](painel.md#abrir).
 
-Qual perfil usar: [🎚️ Perfis](perfis.md). Nos perfis `xlarge` e `extended` a subida leva minutos, porque o Docker publica as portas passivas uma a uma: [⏱️ tempo de subida](perfis.md#tempo-de-subida).
+Qual perfil usar: [Perfis](perfis.md). Nos perfis `xlarge` e `extended` a subida leva minutos, porque o Docker publica as portas passivas uma a uma: [tempo de subida](perfis.md#tempo-de-subida).
 
-> ⚠️ **Equipamento antigo que não fala TLS?** O padrão exige TLS e recusa esse equipamento. Existe a opção `FTP_TLS_MODE=0` (ou `1`), que aceita FTP em texto puro e deixa senha e arquivo legíveis para quem estiver na mesma rede. Leia as condições antes de ligar: [🔐 Segurança](seguranca.md#ftp-sem-tls).
+> ⚠️ **Equipamento antigo que não fala TLS?** O padrão exige TLS e recusa esse equipamento. Existe a opção `FTP_TLS_MODE=0` (ou `1`), que aceita FTP em texto puro e deixa senha e arquivo legíveis para quem estiver na mesma rede. Leia as condições antes de ligar: [Segurança](seguranca.md#ftp-sem-tls).
 
 <details>
-<summary>🔬 Detalhe técnico — o que o <code>deploy.sh</code> e o entrypoint fazem</summary>
+<summary>Detalhe técnico — o que o <code>deploy.sh</code> e o entrypoint fazem</summary>
 
 O [`deploy.sh`](../deploy.sh), nesta ordem:
 
@@ -164,7 +164,7 @@ Na **primeira** subida o [`entrypoint.sh`](../scripts/entrypoint.sh):
 
 Com o FTP `healthy`, o painel inicia: gera o próprio certificado autoassinado (EC P-256, 825 dias) em `DATA_DIR/painel/tls`, entrega uma cópia ao nginx e abre o soquete Unix em `DATA_DIR/nginx`. Com o painel `healthy`, o nginx inicia e escuta em `:8443`.
 
-O modelo completo da subida está em [🏗️ Arquitetura](arquitetura.md#subida).
+O modelo completo da subida está em [Arquitetura](arquitetura.md#subida).
 
 </details>
 
@@ -190,7 +190,7 @@ lftp -u "$FTP_USER" -e 'set ssl:verify-certificate no; ls; bye' ftp://SEU_IP
 
 **Resultado esperado:** o `lftp` pede a senha e lista a pasta do usuário, vazia na primeira vez.
 
-> ⚠️ Como o certificado inicial é autoassinado, o cliente vai reclamar da validação até você instalar um certificado real. Veja [🧰 Operação](operacao.md#certificado-real-de-producao).
+> ⚠️ Como o certificado inicial é autoassinado, o cliente vai reclamar da validação até você instalar um certificado real. Veja [Operação](operacao.md#certificado-real-de-producao).
 
 ---
 
@@ -212,11 +212,11 @@ Os arquivos dos usuários, o PureDB e os certificados ficam em `DATA_DIR`, no ho
 
 ## ⏭️ Próximos passos
 
-- Trocar a senha inicial do painel: [🔑 Segredos](segredos.md#senha-do-painel).
-- Criar mais usuários: pelo [🖥️ painel](painel.md#usuarios) ou por [🧰 Operação](operacao.md#usuarios).
-- Colocar em produção: [🔐 Segurança](seguranca.md#o-que-endurecer-antes-de-producao) e o certificado real.
+- Trocar a senha inicial do painel: [Segredos](segredos.md#senha-do-painel).
+- Criar mais usuários: pelo [painel](painel.md#usuarios) ou por [Operação](operacao.md#usuarios).
+- Colocar em produção: [Segurança](seguranca.md#o-que-endurecer-antes-de-producao) e o certificado real.
 - Monitoramento: a stack `allsafe-zabbix-isp-stack` acompanha o container.
 
 ---
 
-⬅️ [README do projeto](../README.md) · 🏠 [Documentação](README.md) · ➡️ [⚙️ Configuração](configuracao.md)
+⬅️ [README do projeto](../README.md) · 🏠 [Documentação](README.md) · ➡️ [Configuração](configuracao.md)

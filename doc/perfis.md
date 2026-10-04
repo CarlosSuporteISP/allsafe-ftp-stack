@@ -1,6 +1,6 @@
 # 🎚️ Perfis de capacidade — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
+↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -20,16 +20,16 @@ flowchart LR
     perfil --> deploy --> env --> compose --> ftp --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
+<sub>Nível 1 · Diagrama · [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 🎚️ `profiles/medium.env` ➜ ⌨️ `deploy.sh --size medium` (grava os limites no `.env`) ➜ 📄 `.env` ➜ 🐳 Docker Compose ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 limites aplicados
+**Sequência:** `profiles/medium.env` ➜ `deploy.sh --size medium` (grava os limites no `.env`) ➜ `.env` ➜ Docker Compose ➜ Pure-FTPd (`allsafe-ftp`) ➜ limites aplicados
 
 ---
 
 <details>
-<summary>🧭 Sumário — clique para expandir</summary>
+<summary>Sumário — clique para expandir</summary>
 
-[🚀 Como usar](#como-usar) · [📐 Tabela de perfis](#tabela-de-perfis) · [🧮 O servidor aguenta?](#o-servidor-aguenta) · [🎛️ Campos dimensionados](#campos-dimensionados) · [⏱️ Tempo de subida](#tempo-de-subida) · [⚠️ Faixa passiva e firewall](#faixa-passiva-e-firewall)
+[Como usar](#como-usar) · [Tabela de perfis](#tabela-de-perfis) · [O servidor aguenta?](#o-servidor-aguenta) · [Campos dimensionados](#campos-dimensionados) · [Tempo de subida](#tempo-de-subida) · [Faixa passiva e firewall](#faixa-passiva-e-firewall)
 
 </details>
 
@@ -66,7 +66,7 @@ Passe o nome do perfil em `--size` para o [`deploy.sh`](../deploy.sh). Ele grava
 Os números são **pontos de partida**, não garantia de capacidade. FTP de backup raramente precisa de mais que `small`; suba de perfil só se vir `421 Too many connections` ou saturação de CPU ou memória do container. Os cinco perfis existem para a mesma stack servir em qualquer máquina, da VPS pequena ao servidor dedicado.
 
 <details>
-<summary>🔬 Detalhe técnico — os valores de cada perfil</summary>
+<summary>Detalhe técnico — os valores de cada perfil</summary>
 
 | Campo | `small` | `medium` | `large` | `xlarge` | `extended` |
 |---|---|---|---|---|---|
@@ -82,7 +82,7 @@ Os números são **pontos de partida**, não garantia de capacidade. FTP de back
 
 O `deploy.sh --size <perfil>` copia cada `CHAVE=VALOR` de `profiles/<perfil>.env` para o `.env` (troca a linha da chave ou acrescenta no fim) e grava `FTP_PROFILE=<perfil>`. O Compose lê só o `.env`: os limites valem também para um `docker compose up -d` direto. Trocar de perfil recria o container do FTP, porque a faixa de portas publicada muda; os dados ficam. Os perfis não mexem no painel nem no nginx: os limites deles são os mesmos em qualquer porte.
 
-> 📌 Instalou com `--size medium` ou `large` antes da versão `0.4.0`? Rode uma vez `./deploy.sh --size <perfil>` para gravar o perfil no `.env`.
+> Instalou com `--size medium` ou `large` antes da versão `0.4.0`? Rode uma vez `./deploy.sh --size <perfil>` para gravar o perfil no `.env`.
 
 </details>
 
@@ -125,7 +125,7 @@ Esse mínimo é só o que o container do FTP pode ocupar. O host de referência 
 | `FTP_PIDS_LIMIT` | `pids_limit` (barreira contra _fork bomb_) |
 | `FTP_NOFILE` | `ulimit nofile` (soft igual a hard) |
 
-Descrição completa de cada variável em [⚙️ Configuração](configuracao.md).
+Descrição completa de cada variável em [Configuração](configuracao.md).
 
 ---
 
@@ -159,8 +159,8 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS` (`small` 50 porta
 
 **Resultado esperado:** depois do `./deploy.sh --size <perfil>`, `docker compose ps` mostra a faixa nova publicada.
 
-> ⚠️ Não coloque IPs, credenciais ou particularidades de cliente nos arquivos de perfil: isso pertence ao `.env` e à pasta `.secrets/` locais. Veja [🔑 Segredos](segredos.md).
+> ⚠️ Não coloque IPs, credenciais ou particularidades de cliente nos arquivos de perfil: isso pertence ao `.env` e à pasta `.secrets/` locais. Veja [Segredos](segredos.md).
 
 ---
 
-⬅️ [⚙️ Configuração](configuracao.md) · 🏠 [Documentação](README.md) · ➡️ [🏗️ Arquitetura](arquitetura.md)
+⬅️ [Configuração](configuracao.md) · 🏠 [Documentação](README.md) · ➡️ [Arquitetura](arquitetura.md)

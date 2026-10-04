@@ -1,10 +1,10 @@
 # 🧰 Operação — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
+↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
-Este guia reúne as tarefas do dia a dia: criar a conta de um equipamento novo, trocar uma senha, instalar o certificado definitivo, guardar uma cópia dos arquivos, ler os registros e atualizar o servidor. As contas também podem ser administradas pelo navegador, no [🖥️ painel web](painel.md); aqui está o caminho pela linha de comando. Todos os comandos rodam na pasta raiz da stack.
+Este guia reúne as tarefas do dia a dia: criar a conta de um equipamento novo, trocar uma senha, instalar o certificado definitivo, guardar uma cópia dos arquivos, ler os registros e atualizar o servidor. As contas também podem ser administradas pelo navegador, no [painel web](painel.md); aqui está o caminho pela linha de comando. Todos os comandos rodam na pasta raiz da stack.
 
 <!-- diagrama: diagramas/usuarios-diagrama.mmd -->
 ```mermaid
@@ -20,16 +20,16 @@ flowchart LR
     usuario --> manage --> interno --> puredb --> pasta --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
+<sub>Nível 1 · Diagrama · [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 👤 Usuário ➜ ⌨️ `manage-user.sh` ➜ ⌨️ `allsafe-ftp-user` ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 conta pronta
+**Sequência:** Usuário ➜ `manage-user.sh` ➜ `allsafe-ftp-user` ➜ PureDB ➜ `/data` ➜ conta pronta
 
 ---
 
 <details>
-<summary>🧭 Sumário — clique para expandir</summary>
+<summary>Sumário — clique para expandir</summary>
 
-[👤 Usuários](#usuarios) · [🔏 Certificado real de produção](#certificado-real-de-producao) · [♻️ Backup dos volumes](#backup-dos-volumes) · [📜 Logs](#logs) · [⬆️ Atualização da imagem](#atualizacao-da-imagem) · [↩️ Voltar de versão](#voltar-de-versao) · [🔍 Inspeção rápida](#inspecao-rapida) · [⏹️ Parar e remover](#parar-remover)
+[Usuários](#usuarios) · [Certificado real de produção](#certificado-real-de-producao) · [Backup dos volumes](#backup-dos-volumes) · [Logs](#logs) · [Atualização da imagem](#atualizacao-da-imagem) · [↩️ Voltar de versão](#voltar-de-versao) · [Inspeção rápida](#inspecao-rapida) · [Parar e remover](#parar-remover)
 
 </details>
 
@@ -56,10 +56,10 @@ Regras:
 - Senha: mínimo de **12 caracteres** (recusada abaixo disso).
 - `del` **não apaga arquivos**: remova `/data/<usuario>` à mão se quiser.
 
-> ⚠️ O usuário definido em `FTP_USER` é recriado ou atualizado a cada subida, com a senha de `.secrets/ftp_password.txt`. Para renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo. Para trocar a senha dele, veja [🔑 Segredos](segredos.md#trocar-a-senha).
+> ⚠️ O usuário definido em `FTP_USER` é recriado ou atualizado a cada subida, com a senha de `.secrets/ftp_password.txt`. Para renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo. Para trocar a senha dele, veja [Segredos](segredos.md#trocar-a-senha).
 
 <details>
-<summary>🔬 Detalhe técnico — onde a mudança é gravada</summary>
+<summary>Detalhe técnico — onde a mudança é gravada</summary>
 
 O `manage-user.sh` encapsula o [`scripts/ftp-user.sh`](../scripts/ftp-user.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo.
 
@@ -166,9 +166,9 @@ docker compose logs -f nginx        # subida do nginx e os pedidos que ele recus
 
 **Resultado esperado:** a linha `FTP pronto em 2121/tcp; ...` da subida e uma linha CLF por transferência; no painel, a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; ...`; no nginx, `nginx pronto em 8443/tcp (HTTPS), à frente do painel; ...`.
 
-O nginx registra só o que ele mesmo recusa, uma linha por pedido, no formato `ip método caminho código` (exemplo: `10.99.0.7 GET /entrar 403`). Com `FTP_TLS_MODE` em `0` ou `1`, o log do FTP traz a cada subida o `AVISO` de FTP sem criptografia: [🔐 Segurança](seguranca.md#ftp-sem-tls).
+O nginx registra só o que ele mesmo recusa, uma linha por pedido, no formato `ip método caminho código` (exemplo: `10.99.0.7 GET /entrar 403`). Com `FTP_TLS_MODE` em `0` ou `1`, o log do FTP traz a cada subida o `AVISO` de FTP sem criptografia: [Segurança](seguranca.md#ftp-sem-tls).
 
-O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos) fica no `auditoria.log`, visível na aba `📜 Atividade`: veja [🖥️ Painel web](painel.md#auditoria).
+O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos) fica no `auditoria.log`, visível na aba `📜 Atividade`: veja [Painel web](painel.md#auditoria).
 
 Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](../compose.yaml)). Para o `fail2ban`, aponte o filtro para a saída de `docker logs allsafe-ftp`.
 
@@ -185,10 +185,10 @@ Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](.
 
 **Resultado esperado:** `Validacao FTP concluida.` e os usuários e arquivos intactos. As sessões abertas no painel são encerradas.
 
-> 📌 O `--atualizar` reinstala os pacotes com a versão atual do repositório Debian. O perfil em uso está no `.env` e continua valendo.
+> O `--atualizar` reinstala os pacotes com a versão atual do repositório Debian. O perfil em uso está no `.env` e continua valendo.
 
 <details>
-<summary>🔬 Detalhe técnico — base fixada por digest</summary>
+<summary>Detalhe técnico — base fixada por digest</summary>
 
 A base no [`Dockerfile`](../Dockerfile) está **fixada por digest**: um `docker compose build --pull` não troca a base sozinho. Para pegar uma base nova, atualize o digest do `FROM` e rode `./deploy.sh --atualizar`. Enquanto o `Dockerfile` não muda, um `docker compose build` comum reaproveita a camada de instalação dos pacotes; o `--atualizar` usa `build --no-cache`, que refaz essa camada e reinstala os pacotes na versão atual do repositório Debian. As três imagens (FTP, painel e nginx) saem da mesma base, `debian:trixie-slim` (Debian 13).
 
@@ -197,7 +197,7 @@ A base no [`Dockerfile`](../Dockerfile) está **fixada por digest**: um `docker 
 <a name="voltar-de-versao"></a>
 
 <details>
-<summary>🔬 Detalhe técnico — voltar para a versão anterior</summary>
+<summary>Detalhe técnico — voltar para a versão anterior</summary>
 
 Os dados, os usuários, as senhas e os certificados ficam em `DATA_DIR` e em `.secrets/`, fora do código: voltar de versão é trocar os arquivos do projeto e subir de novo. Remova **antes**, ainda com os arquivos da versão atual, porque só ela conhece todos os containers que criou:
 
@@ -248,4 +248,4 @@ docker compose stop                       # para sem remover
 
 ---
 
-⬅️ [⌨️ Scripts](scripts.md) · 🏠 [Documentação](README.md) · ➡️ [🖥️ Painel web](painel.md)
+⬅️ [Scripts](scripts.md) · 🏠 [Documentação](README.md) · ➡️ [Painel web](painel.md)

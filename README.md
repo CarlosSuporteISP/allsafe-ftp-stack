@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.5.2-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.5.3-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -28,22 +28,22 @@ flowchart LR
     equip --> ftp --> puredb --> dados --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](doc/diagramas/)</sub>
+<sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.5.2</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.5.3</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
-**🧭 Sequência:** 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 backup guardado
+**Sequência:** Equipamento de rede ➜ Pure-FTPd (`allsafe-ftp`) ➜ PureDB ➜ `/data` ➜ backup guardado
 
-> 🧱 **Uso só em rede privada.** Esta stack é para rede interna: escuta **apenas em IP privado** (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` ou `127.0.0.1`), **atrás de firewall**, e **nunca** deve ser publicada na internet nem receber redirecionamento de porta da borda. Detalhes em [🔐 doc/seguranca.md](doc/seguranca.md#rede-privada).
+> 🧱 **Uso só em rede privada.** Esta stack é para rede interna: escuta **apenas em IP privado** (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` ou `127.0.0.1`), **atrás de firewall**, e **nunca** deve ser publicada na internet nem receber redirecionamento de porta da borda. Detalhes em [doc/seguranca.md](doc/seguranca.md#rede-privada).
 
 ---
 
 <details>
-<summary>🧭 Sumário — clique para expandir</summary>
+<summary>Sumário — clique para expandir</summary>
 
-[💡 O que é](#o-que-e) · [✨ Destaques](#destaques) · [🚀 Instalação rápida](#instalacao) · [🔄 Como funciona](#como-funciona) · [🏗️ Arquitetura](#arquitetura) · [🛠️ Tecnologias](#tecnologias) · [🔌 Portas e binds](#portas) · [⚙️ Configuração](#configuracao) · [🔐 Segurança](#seguranca) · [🧪 Testes](#testes) · [🗂️ Estrutura de arquivos](#arquivos) · [📚 Documentação](#documentacao) · [🗺️ Plano](#plano) · [🏷️ Versão](#versao) · [🔗 Projetos relacionados](#relacionados) · [🤝 Créditos](#creditos) · [📄 Licença](#licenca)
+[O que é](#o-que-e) · [Destaques](#destaques) · [Instalação rápida](#instalacao) · [Como funciona](#como-funciona) · [Arquitetura](#arquitetura) · [Tecnologias](#tecnologias) · [Portas e binds](#portas) · [Configuração](#configuracao) · [Segurança](#seguranca) · [Testes](#testes) · [Estrutura de arquivos](#arquivos) · [Documentação](#documentacao) · [Plano](#plano) · [Versão](#versao) · [Projetos relacionados](#relacionados) · [Créditos](#creditos)
 
 </details>
 
@@ -59,16 +59,14 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 
 | | |
 |---|---|
-| 🎯 **Para quê** | Receber por FTPS o backup de configuração de equipamentos de rede |
-| 🛠️ **Tecnologias** | Docker Compose · Debian 13 · Pure-FTPd · PureDB · OpenSSL · nginx · Bash · Python |
-| 🔑 **Acesso** | Cliente FTP com **TLS explícito** (`AUTH TLS`) na porta `21/tcp`, modo passivo na faixa do perfil (`30000-30049/tcp` no `small`) · painel em `https://<IP privado>:8443`, pelo nginx |
-| ✅ **Requisitos** | Docker Engine com Docker Compose v2 ou mais novo · CPU e memória do perfil escolhido (2 vCPU e 2 GB no `small`) · um IP **privado** dedicado · firewall no host liberando só a rede interna |
+| **Para quê** | Receber por FTPS o backup de configuração de equipamentos de rede |
+| **Tecnologias** | Docker Compose · Debian 13 · Pure-FTPd · PureDB · OpenSSL · nginx · Bash · Python |
+| **Acesso** | Cliente FTP com **TLS explícito** (`AUTH TLS`) na porta `21/tcp`, modo passivo na faixa do perfil (`30000-30049/tcp` no `small`) · painel em `https://<IP privado>:8443`, pelo nginx |
+| **Requisitos** | Docker Engine com Docker Compose v2 ou mais novo · CPU e memória do perfil escolhido (2 vCPU e 2 GB no `small`) · um IP **privado** dedicado · firewall no host liberando só a rede interna |
 
-> 🖥️ **Painel web:** só em rede interna, atrás de firewall, como o resto da stack. Ele recusa por código o endereço que não for privado. Como usar: [🖥️ doc/painel.md](doc/painel.md).
+> **Painel web:** só em rede interna, atrás de firewall, como o resto da stack. Ele recusa por código o endereço que não for privado. Como usar: [doc/painel.md](doc/painel.md).
 
-> 📟 **Equipamento antigo sem TLS:** para o equipamento que não tem suporte a TLS existe a opção `FTP_TLS_MODE=0` (ou `1`). Com ela, **senha e arquivos trafegam em texto puro**: use só em rede interna isolada, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Veja [📟 doc/seguranca.md](doc/seguranca.md#ftp-sem-tls).
-
-> 📸 PENDENTE: capturas reais das telas do painel (uma por aba), a gerar com a instalação definitiva no ar.
+> ⚠️ **Equipamento antigo sem TLS:** para o equipamento que não tem suporte a TLS existe a opção `FTP_TLS_MODE=0` (ou `1`). Com ela, **senha e arquivos trafegam em texto puro**: use só em rede interna isolada, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Veja [doc/seguranca.md](doc/seguranca.md#ftp-sem-tls).
 
 ---
 
@@ -76,18 +74,18 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 
 ## ✨ Destaques
 
-| | Destaque | Na prática |
-|---|---|---|
-| 🔒 | **FTPS explícito obrigatório por padrão** | Sem `AUTH TLS` não há login: usuário e senha não passam em texto puro. O modo sem TLS, para equipamento antigo, é uma escolha explícita e avisada |
-| 🧍 | **Usuários virtuais em PureDB** | Não são contas do sistema; cada um fica preso (`chroot`) na própria pasta |
-| 🚪 | **Bind local por padrão** | Sobe em `127.0.0.1`; você abre só um IP **privado** dedicado, com firewall no host |
-| 🧱 | **Só rede privada** | Feita para rede interna, atrás de firewall; nunca publicada na internet |
-| 🖥️ | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão de 15 minutos, bloqueio depois de cinco senhas erradas e registro de cada ação |
-| 🚦 | **nginx na frente do painel** | Só o nginx publica a porta do painel: TLS 1.2 e 1.3, lista de redes permitidas, limite de pedidos e de conexões por endereço; o painel fica sem porta de rede |
-| 🛡️ | **Containers endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs; o nginx roda sem `root` e sem nenhuma `capability` |
-| 🔑 | **Segredos em arquivo** | As senhas ficam em `.secrets/`, nunca na imagem nem no `compose.yaml`; a do painel, só como hash |
-| 📜 | **Logs no `stdout`** | Formato CLF, rotacionados pelo Docker (10 MB × 3) |
-| 🎚️ | **Cinco perfis de capacidade** | `--size small`, `medium`, `large`, `xlarge` ou `extended` ajusta sessões, faixa passiva e recursos; o `deploy.sh` confere se o servidor tem a CPU e a memória do perfil |
+| Destaque | Na prática |
+|---|---|
+| **FTPS explícito obrigatório por padrão** | Sem `AUTH TLS` não há login: usuário e senha não passam em texto puro. O modo sem TLS, para equipamento antigo, é uma escolha explícita e avisada |
+| **Usuários virtuais em PureDB** | Não são contas do sistema; cada um fica preso (`chroot`) na própria pasta |
+| **Bind local por padrão** | Sobe em `127.0.0.1`; você abre só um IP **privado** dedicado, com firewall no host |
+| **Só rede privada** | Feita para rede interna, atrás de firewall; nunca publicada na internet |
+| **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão de 15 minutos, bloqueio depois de cinco senhas erradas e registro de cada ação |
+| **nginx na frente do painel** | Só o nginx publica a porta do painel: TLS 1.2 e 1.3, lista de redes permitidas, limite de pedidos e de conexões por endereço; o painel fica sem porta de rede |
+| **Containers endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs; o nginx roda sem `root` e sem nenhuma `capability` |
+| **Segredos em arquivo** | As senhas ficam em `.secrets/`, nunca na imagem nem no `compose.yaml`; a do painel, só como hash |
+| **Logs no `stdout`** | Formato CLF, rotacionados pelo Docker (10 MB × 3) |
+| **Cinco perfis de capacidade** | `--size small`, `medium`, `large`, `xlarge` ou `extended` ajusta sessões, faixa passiva e recursos; o `deploy.sh` confere se o servidor tem a CPU e a memória do perfil |
 
 ---
 
@@ -104,7 +102,7 @@ cd allsafe-ftp-stack
 **Um comando, sem perguntas.** Sem `.env`, o `deploy.sh` cria um a partir do exemplo, com tudo em `127.0.0.1`: só o próprio servidor acessa. Antes de agir ele confere o Docker, o Compose, se o servidor tem a CPU e a memória do perfil e se as portas estão livres. Pode ser rodado quantas vezes for preciso: o que já existe (senhas, dados, containers iguais) fica como está.
 
 <details>
-<summary>🔑 Senhas geradas e ajuste para a rede interna — clique para expandir</summary>
+<summary>Senhas geradas e ajuste para a rede interna — clique para expandir</summary>
 
 O `deploy.sh` **gera uma senha forte** em `.secrets/ftp_password.txt` (`0600`) se o arquivo estiver vazio: guarde-a para o cliente FTP. Para usar uma senha própria, grave-a nesse arquivo antes de rodar.
 
@@ -133,7 +131,7 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | Remover, mantendo os dados | `./deploy.sh --remover` |
 | Remover e apagar os dados | `./deploy.sh --remover --apagar-dados` (pede para digitar `apagar`) |
 
-Passo a passo comentado em [🚀 doc/instalacao.md](doc/instalacao.md).
+Passo a passo comentado em [doc/instalacao.md](doc/instalacao.md).
 
 ---
 
@@ -144,7 +142,7 @@ Passo a passo comentado em [🚀 doc/instalacao.md](doc/instalacao.md).
 O equipamento conecta na porta `21/tcp`, pede TLS, entra com usuário e senha, fica preso na própria pasta e envia o arquivo pelo modo passivo. O desenho da abertura mostra esse caminho; o fluxograma completo, com as recusas, e o do painel estão nos menus abaixo.
 
 <details>
-<summary>🔄 Fluxograma completo do FTP, com a sequência escrita — clique para expandir</summary>
+<summary>Fluxograma completo do FTP, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: doc/diagramas/funcionamento-fluxograma.mmd -->
 ```mermaid
@@ -185,35 +183,35 @@ flowchart LR
     ftp -. "grava cada transferência" .-> logs
 ```
 
-<sub>📐 Nível 2 · Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](doc/diagramas/)</sub>
+<sub>Nível 2 · Fluxograma · [fonte](doc/diagramas/)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
-| 1 | 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd | O equipamento abre a conexão de controle na porta `21/tcp` do host, entregue ao container em `2121/tcp` |
-| 2 | ⚙️ Pure-FTPd ➜ ❓ pediu TLS? | No padrão (`FTP_TLS_MODE=2`), o servidor só aceita seguir se o cliente pedir `AUTH TLS`; o certificado `pure-ftpd.pem` é apresentado |
-| 3a | ❓ pediu TLS? ➜ ❓ usuário e senha conferem? | ✅ Sim: o cliente envia usuário e senha, já criptografados |
-| 3b | ❓ pediu TLS? ➜ ⛔ conexão recusada | ❌ Não: no padrão, sessão em texto puro é recusada. Só entra sem TLS quem estiver em uma instalação com `FTP_TLS_MODE=0` ou `1`, opção para [equipamento antigo](doc/seguranca.md#ftp-sem-tls) |
-| 4 | ❓ usuário e senha conferem? ➜ 🗄️ PureDB | A conta é procurada no banco de usuários virtuais (`/auth/pureftpd.pdb`) |
-| 5a | ❓ usuário e senha conferem? ➜ 🔒 sessão em chroot | ✅ Sim: a sessão abre presa na pasta do usuário |
-| 5b | ❓ usuário e senha conferem? ➜ ⛔ conexão recusada | ❌ Não: `530 Login authentication failed` |
-| 6 | 🔒 sessão em chroot ➜ 💽 `/data` | O arquivo sobe pelo canal de dados em modo passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
-| 7 | 💽 `/data` ➜ 🏁 backup guardado | O arquivo fica gravado na pasta do usuário, dentro do volume |
+| 1 | Equipamento de rede ➜ Pure-FTPd | O equipamento abre a conexão de controle na porta `21/tcp` do host, entregue ao container em `2121/tcp` |
+| 2 | Pure-FTPd ➜ pediu TLS? | No padrão (`FTP_TLS_MODE=2`), o servidor só aceita seguir se o cliente pedir `AUTH TLS`; o certificado `pure-ftpd.pem` é apresentado |
+| 3a | pediu TLS? ➜ usuário e senha conferem? | Sim: o cliente envia usuário e senha, já criptografados |
+| 3b | pediu TLS? ➜ conexão recusada | Não: no padrão, sessão em texto puro é recusada. Só entra sem TLS quem estiver em uma instalação com `FTP_TLS_MODE=0` ou `1`, opção para [equipamento antigo](doc/seguranca.md#ftp-sem-tls) |
+| 4 | usuário e senha conferem? ➜ PureDB | A conta é procurada no banco de usuários virtuais (`/auth/pureftpd.pdb`) |
+| 5a | usuário e senha conferem? ➜ sessão em chroot | Sim: a sessão abre presa na pasta do usuário |
+| 5b | usuário e senha conferem? ➜ conexão recusada | Não: `530 Login authentication failed` |
+| 6 | sessão em chroot ➜ `/data` | O arquivo sobe pelo canal de dados em modo passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
+| 7 | `/data` ➜ backup guardado | O arquivo fica gravado na pasta do usuário, dentro do volume |
 
-**🧷 Apoio**
+**Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
-| ⚙️ Pure-FTPd | 📄 certificado `pure-ftpd.pem` | apresenta ao cliente na negociação TLS |
-| ⚙️ Pure-FTPd | 📚 log CLF | grava cada transferência no `stdout` do container |
+| Pure-FTPd | certificado `pure-ftpd.pem` | apresenta ao cliente na negociação TLS |
+| Pure-FTPd | log CLF | grava cada transferência no `stdout` do container |
 
 </details>
 
-### 🖥️ Painel web
+### Painel web
 
 Como o nginx e o painel decidem se atendem um pedido, da abertura da página até o usuário pronto no FTP.
 
 <details>
-<summary>🖥️ Fluxograma do painel web, com a sequência escrita — clique para expandir</summary>
+<summary>Fluxograma do painel web, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: doc/diagramas/painel-fluxograma.mmd -->
 ```mermaid
@@ -261,30 +259,30 @@ flowchart LR
     painel -. "registra cada ação" .-> auditoria
 ```
 
-<sub>📐 Nível 2 · Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](doc/diagramas/)</sub>
+<sub>Nível 2 · Fluxograma · [fonte](doc/diagramas/)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
-| 1 | 👤 Usuário ➜ 🚦 nginx | O navegador abre `https://<endereço>:8443`; só HTTPS, com TLS 1.2 ou 1.3 |
-| 2 | 🚦 nginx ➜ ❓ rede permitida e dentro do limite? | O endereço de origem é comparado com `PAINEL_REDES_PERMITIDAS`, e o pedido, com os limites de taxa, de conexões e de tamanho |
-| 3a | ❓ rede permitida e dentro do limite? ➜ 🖥️ Painel web | ✅ Sim: o nginx repassa o pedido pelo soquete Unix, com o endereço do cliente |
-| 3b | ❓ rede permitida e dentro do limite? ➜ ⛔ pedido recusado | ❌ Não: `403` para rede de fora, `429` para pedidos demais; o painel nem recebe o pedido |
-| 4 | 🖥️ Painel web ➜ ❓ senha confere? | O painel confere de novo a rede e o nome de host e mostra a tela de entrada |
-| 5 | ❓ senha confere? ➜ 🔑 hash da senha | A senha digitada é comparada com o hash `scrypt` de `/run/secrets/painel_password_hash` |
-| 6a | ❓ senha confere? ➜ 🔒 sessão | ✅ Sim: abre a sessão, com cookie e token CSRF |
-| 6b | ❓ senha confere? ➜ ⛔ pedido recusado | ❌ Não: `401`; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
-| 7 | 🔒 sessão ➜ ❓ pedido legítimo? | Cada formulário enviado traz o token CSRF da sessão e a origem do próprio painel |
-| 8a | ❓ pedido legítimo? ➜ ⚙️ `allsafe-ftp-user` | ✅ Sim: o painel chama o comando, com a senha pela entrada padrão |
-| 8b | ❓ pedido legítimo? ➜ ⛔ pedido recusado | ❌ Não: `403`, sem alterar nada |
-| 9 | ⚙️ `allsafe-ftp-user` ➜ 🗄️ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez |
-| 10 | 🗄️ PureDB ➜ 🏁 usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
+| 1 | Usuário ➜ nginx | O navegador abre `https://<endereço>:8443`; só HTTPS, com TLS 1.2 ou 1.3 |
+| 2 | nginx ➜ rede permitida e dentro do limite? | O endereço de origem é comparado com `PAINEL_REDES_PERMITIDAS`, e o pedido, com os limites de taxa, de conexões e de tamanho |
+| 3a | rede permitida e dentro do limite? ➜ Painel web | Sim: o nginx repassa o pedido pelo soquete Unix, com o endereço do cliente |
+| 3b | rede permitida e dentro do limite? ➜ pedido recusado | Não: `403` para rede de fora, `429` para pedidos demais; o painel nem recebe o pedido |
+| 4 | Painel web ➜ senha confere? | O painel confere de novo a rede e o nome de host e mostra a tela de entrada |
+| 5 | senha confere? ➜ hash da senha | A senha digitada é comparada com o hash `scrypt` de `/run/secrets/painel_password_hash` |
+| 6a | senha confere? ➜ sessão | Sim: abre a sessão, com cookie e token CSRF |
+| 6b | senha confere? ➜ pedido recusado | Não: `401`; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
+| 7 | sessão ➜ pedido legítimo? | Cada formulário enviado traz o token CSRF da sessão e a origem do próprio painel |
+| 8a | pedido legítimo? ➜ `allsafe-ftp-user` | Sim: o painel chama o comando, com a senha pela entrada padrão |
+| 8b | pedido legítimo? ➜ pedido recusado | Não: `403`, sem alterar nada |
+| 9 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez |
+| 10 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
 
-**🧷 Apoio**
+**Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
-| ❓ senha confere? | 🔑 hash da senha (`painel_password_hash`) | lê a cada entrada, somente leitura |
-| 🖥️ Painel web | 📚 `auditoria.log` | registra cada entrada, recusa e alteração |
+| senha confere? | hash da senha (`painel_password_hash`) | lê a cada entrada, somente leitura |
+| Painel web | `auditoria.log` | registra cada entrada, recusa e alteração |
 
 </details>
 
@@ -297,7 +295,7 @@ flowchart LR
 Três containers em uma rede própria: `ftp` (Pure-FTPd), `painel` (Python) e `nginx`, a única porta de entrada do painel. Os dados ficam no host, em `DATA_DIR`, e as senhas em `.secrets/`.
 
 <details>
-<summary>🏗️ Mapa da arquitetura, com a sequência escrita — clique para expandir</summary>
+<summary>Mapa da arquitetura, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: doc/diagramas/arquitetura-mapa.mmd -->
 ```mermaid
@@ -349,52 +347,52 @@ flowchart LR
     ftp -. "grava cada transferência" .-> logs
 ```
 
-<sub>📐 Nível 2 · Mapa · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](doc/diagramas/)</sub>
+<sub>Nível 2 · Mapa · [fonte](doc/diagramas/)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
-| 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | O usuário executa `./deploy.sh` no host |
-| 2 | ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd | O script valida a configuração, constrói as imagens (`docker compose build`), sobe os três containers (`up -d --wait`) e espera ficarem `healthy` |
-| 3 | 👤 Usuário ➜ 🚦 nginx | O usuário abre o painel por HTTPS em `8443/tcp`: quem atende é o nginx, que confere a rede de origem e a taxa de pedidos |
-| 4 | 🚦 nginx ➜ 🖥️ Painel web | O pedido aceito é repassado ao painel pelo soquete Unix, com o endereço do cliente |
-| 5 | 🖥️ Painel web ➜ 🗄️ `DATA_DIR/auth` | O painel cria, troca a senha ou remove o usuário no PureDB |
-| 6 | 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
-| 7 | ⚙️ Pure-FTPd ➜ 💽 `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
-| 8 | 💽 `DATA_DIR/dados` ➜ 🏁 backup guardado | O arquivo fica na pasta do usuário, no host |
+| 1 | Usuário ➜ `deploy.sh` | O usuário executa `./deploy.sh` no host |
+| 2 | `deploy.sh` ➜ Pure-FTPd | O script valida a configuração, constrói as imagens (`docker compose build`), sobe os três containers (`up -d --wait`) e espera ficarem `healthy` |
+| 3 | Usuário ➜ nginx | O usuário abre o painel por HTTPS em `8443/tcp`: quem atende é o nginx, que confere a rede de origem e a taxa de pedidos |
+| 4 | nginx ➜ Painel web | O pedido aceito é repassado ao painel pelo soquete Unix, com o endereço do cliente |
+| 5 | Painel web ➜ `DATA_DIR/auth` | O painel cria, troca a senha ou remove o usuário no PureDB |
+| 6 | Equipamento de rede ➜ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
+| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
+| 8 | `DATA_DIR/dados` ➜ backup guardado | O arquivo fica na pasta do usuário, no host |
 
-**🧷 Apoio**
+**Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
-| ⌨️ `deploy.sh` e `manage-user.sh` | 📄 `.env` | cria, lê e grava o perfil |
-| ⚙️ Pure-FTPd | 🔑 `.secrets` (`ftp_password.txt`) | lê a senha na subida, somente leitura |
-| 🖥️ Painel web | 🔑 `.secrets` (`painel_password_hash.txt`) | lê o hash a cada entrada, somente leitura |
-| ⚙️ Pure-FTPd | 🗄️ `DATA_DIR/auth` (PureDB) | consulta os usuários |
-| ⚙️ Pure-FTPd | 💽 `DATA_DIR/certs` | lê o certificado |
-| 🖥️ Painel web | 💽 `DATA_DIR/painel` | grava o certificado e a auditoria |
-| 🖥️ Painel web | 💽 `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
-| 🚦 nginx | 💽 `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
-| 🖥️ Painel web | 💽 `DATA_DIR/dados` | cria a pasta do usuário |
-| ⚙️ Pure-FTPd | 📚 log CLF (`stdout`) | grava cada transferência |
+| `deploy.sh` e `manage-user.sh` | `.env` | cria, lê e grava o perfil |
+| Pure-FTPd | `.secrets` (`ftp_password.txt`) | lê a senha na subida, somente leitura |
+| Painel web | `.secrets` (`painel_password_hash.txt`) | lê o hash a cada entrada, somente leitura |
+| Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
+| Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
+| Painel web | `DATA_DIR/painel` | grava o certificado e a auditoria |
+| Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
+| nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
+| Painel web | `DATA_DIR/dados` | cria a pasta do usuário |
+| Pure-FTPd | log CLF (`stdout`) | grava cada transferência |
 
 </details>
 
 <details>
-<summary>🧩 Peças, portas, pastas, imagens e entrypoints — clique para expandir</summary>
+<summary>Peças, portas, pastas, imagens e entrypoints — clique para expandir</summary>
 
 | Peça | Papel | Porta | Dados em |
 |---|---|---|---|
-| ⚙️ Container `allsafe-ftp` (serviço `ftp`) | Pure-FTPd com FTPS, `chroot` e limites | `21/tcp` ➜ `2121/tcp` e a faixa passiva do perfil (`30000-30049/tcp` no `small`) | — |
-| 🖥️ Container `allsafe-ftp-painel` (serviço `painel`) | Painel web que administra os usuários do FTP; atende só o nginx, por soquete Unix | nenhuma | — |
-| 🚦 Container `allsafe-ftp-nginx` (serviço `nginx`) | Frente web do painel: HTTPS, redes permitidas e limite de pedidos | `8443/tcp` ➜ `8443/tcp` | — |
-| 🗄️ Pasta `DATA_DIR/auth` | Banco PureDB dos usuários virtuais, dividido pelo FTP e pelo painel | — | `/auth` |
-| 💽 Pasta `DATA_DIR/dados` | Arquivos enviados, uma pasta por usuário | — | `/data` |
-| 💽 Pasta `DATA_DIR/certs` | Chave e certificado TLS do FTP (`pure-ftpd.pem`) | — | `/etc/ssl/private` |
-| 💽 Pasta `DATA_DIR/painel` | Certificado do painel e `auditoria.log` | — | `/painel` |
-| 💽 Pasta `DATA_DIR/nginx` | Soquete do painel e cópia do certificado, refeitos a cada subida; o nginx só lê | — | `/nginx` |
-| 🔑 Segredo `ftp_password` | Senha do usuário inicial (`.secrets/ftp_password.txt`), somente leitura | — | `/run/secrets/ftp_password` |
-| 🔑 Segredo `painel_password_hash` | Hash da senha do painel (`.secrets/painel_password_hash.txt`), somente leitura | — | `/run/secrets/painel_password_hash` |
-| 🌐 Rede `allsafe-ftp-network` | Bridge dedicada, sub-rede `172.29.1.0/29` | — | — |
+| Container `allsafe-ftp` (serviço `ftp`) | Pure-FTPd com FTPS, `chroot` e limites | `21/tcp` ➜ `2121/tcp` e a faixa passiva do perfil (`30000-30049/tcp` no `small`) | — |
+| Container `allsafe-ftp-painel` (serviço `painel`) | Painel web que administra os usuários do FTP; atende só o nginx, por soquete Unix | nenhuma | — |
+| Container `allsafe-ftp-nginx` (serviço `nginx`) | Frente web do painel: HTTPS, redes permitidas e limite de pedidos | `8443/tcp` ➜ `8443/tcp` | — |
+| Pasta `DATA_DIR/auth` | Banco PureDB dos usuários virtuais, dividido pelo FTP e pelo painel | — | `/auth` |
+| Pasta `DATA_DIR/dados` | Arquivos enviados, uma pasta por usuário | — | `/data` |
+| Pasta `DATA_DIR/certs` | Chave e certificado TLS do FTP (`pure-ftpd.pem`) | — | `/etc/ssl/private` |
+| Pasta `DATA_DIR/painel` | Certificado do painel e `auditoria.log` | — | `/painel` |
+| Pasta `DATA_DIR/nginx` | Soquete do painel e cópia do certificado, refeitos a cada subida; o nginx só lê | — | `/nginx` |
+| Segredo `ftp_password` | Senha do usuário inicial (`.secrets/ftp_password.txt`), somente leitura | — | `/run/secrets/ftp_password` |
+| Segredo `painel_password_hash` | Hash da senha do painel (`.secrets/painel_password_hash.txt`), somente leitura | — | `/run/secrets/painel_password_hash` |
+| Rede `allsafe-ftp-network` | Bridge dedicada, sub-rede `172.29.1.0/29` | — | — |
 
 - **Imagens:** [`Dockerfile`](Dockerfile) com três alvos sobre o mesmo `debian:trixie-slim` (Debian 13), fixado por digest: `ftp` (`pure-ftpd` e o usuário `ftpdata`, uid e gid **10000**), `painel` (o mesmo, com `python3`) e `nginx` (só `nginx` e `openssl`, com o usuário `frente`, uid e gid **10001**).
 - **Entrypoint do FTP:** [`scripts/entrypoint.sh`](scripts/entrypoint.sh) cria ou atualiza o usuário inicial, gera o certificado autoassinado na primeira subida e executa o `pure-ftpd`.
@@ -403,7 +401,7 @@ flowchart LR
 
 </details>
 
-Detalhe completo, com o modelo da subida, em [🏗️ doc/arquitetura.md](doc/arquitetura.md).
+Detalhe completo, com o modelo da subida, em [doc/arquitetura.md](doc/arquitetura.md).
 
 ---
 
@@ -414,7 +412,7 @@ Detalhe completo, com o modelo da subida, em [🏗️ doc/arquitetura.md](doc/ar
 Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python e Bash, com a versão real conferida no host onde a stack foi validada.
 
 <details>
-<summary>🛠️ Tecnologias, com nome e versão — clique para expandir</summary>
+<summary>Tecnologias, com nome e versão — clique para expandir</summary>
 
 | Tecnologia | Versão | Papel |
 |---|---|---|
@@ -440,7 +438,7 @@ Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python e Bash, com a vers�
 FTP em `21/tcp` mais a faixa passiva do perfil; painel em `8443/tcp`, pelo nginx. Tudo em `127.0.0.1` até o `.env` indicar um IP privado.
 
 <details>
-<summary>🔌 Tabela de portas e binds — clique para expandir</summary>
+<summary>Tabela de portas e binds — clique para expandir</summary>
 
 | Porta (host) | Protocolo | Bind padrão | Para que serve |
 |---|---|---|---|
@@ -461,7 +459,7 @@ A faixa passiva é 1:1 entre host e container. Ao mudar `FTP_PASSIVE_PORT_*`, al
 Toda a configuração vem do `.env`, criado a partir do [`.env.example`](.env.example). O `./deploy.sh --size <perfil>` **grava no `.env`** os valores de `profiles/<perfil>.env` e o nome do perfil em `FTP_PROFILE`, trocando só o dimensionamento (limites de sessão, faixa passiva, CPU, memória, PIDs e `nofile`).
 
 <details>
-<summary>🎚️ Os cinco perfis de capacidade — clique para expandir</summary>
+<summary>Os cinco perfis de capacidade — clique para expandir</summary>
 
 | Perfil | Host de referência | Sessões simultâneas | Quando usar |
 |---|---|---|---|
@@ -473,7 +471,7 @@ Toda a configuração vem do `.env`, criado a partir do [`.env.example`](.env.ex
 
 </details>
 
-Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewall do host ao trocar. O `deploy.sh` recusa o perfil que pede mais CPU ou memória do que o servidor tem. Todas as variáveis em [⚙️ doc/configuracao.md](doc/configuracao.md); a tabela completa dos perfis em [🎚️ doc/perfis.md](doc/perfis.md).
+Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewall do host ao trocar. O `deploy.sh` recusa o perfil que pede mais CPU ou memória do que o servidor tem. Todas as variáveis em [doc/configuracao.md](doc/configuracao.md); a tabela completa dos perfis em [doc/perfis.md](doc/perfis.md).
 
 ---
 
@@ -481,22 +479,22 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 
 ## 🔐 Segurança
 
-- 🧱 **Só rede privada:** IP privado, atrás de firewall, sem redirecionamento de porta da internet. Veja [🧱 rede privada e firewall](doc/seguranca.md#rede-privada).
+- **Só rede privada:** IP privado, atrás de firewall, sem redirecionamento de porta da internet. Veja [rede privada e firewall](doc/seguranca.md#rede-privada).
 <details>
-<summary>🔐 Proteções aplicadas, uma a uma — clique para expandir</summary>
+<summary>Proteções aplicadas, uma a uma — clique para expandir</summary>
 
-- 🚪 Bind em `127.0.0.1` por padrão: abra só um IP privado dedicado e libere no firewall do host apenas as redes que enviam backup.
-- 🔒 TLS **obrigatório** para entrar no padrão (`FTP_TLS_MODE=2`), `chroot` em todos, sem usuário anônimo, sem DNS reverso.
-- 📟 **Sem TLS só por escolha:** `FTP_TLS_MODE=0` ou `1` existe para equipamento antigo que não fala TLS. Senha e arquivos passam em texto puro, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Só em rede interna isolada. Veja [📟 equipamento sem TLS](doc/seguranca.md#ftp-sem-tls).
-- 🧱 `read_only` no sistema de arquivos raiz, `cap_drop: ALL` (só as estritamente necessárias voltam), `no-new-privileges`, limites de CPU, memória, PIDs e `nofile`.
-- 🔑 Senha em `.secrets/ftp_password.txt` (mínimo de 12 caracteres, `0600`), fora da imagem e ignorada pelo Git. Veja [🔑 doc/segredos.md](doc/segredos.md).
-- 🚦 nginx na frente do painel: é a única porta publicada, roda sem `root` e sem `capability`, aceita só as redes de `PAINEL_REDES_PERMITIDAS` e limita pedidos e conexões por endereço.
-- 🖥️ Painel só por HTTPS e só de rede privada: senha guardada como hash `scrypt`, sessão de 15 minutos, bloqueio depois de cinco senhas erradas, proteção contra CSRF, sem JavaScript, sem acesso ao Docker e com registro de cada ação. Veja [🖥️ doc/painel.md](doc/painel.md#protecoes).
-- 📜 Logs rotacionados (`max-size: 10m`, `max-file: 3`).
+- Bind em `127.0.0.1` por padrão: abra só um IP privado dedicado e libere no firewall do host apenas as redes que enviam backup.
+- TLS **obrigatório** para entrar no padrão (`FTP_TLS_MODE=2`), `chroot` em todos, sem usuário anônimo, sem DNS reverso.
+- **Sem TLS só por escolha:** `FTP_TLS_MODE=0` ou `1` existe para equipamento antigo que não fala TLS. Senha e arquivos passam em texto puro, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Só em rede interna isolada. Veja [equipamento sem TLS](doc/seguranca.md#ftp-sem-tls).
+- `read_only` no sistema de arquivos raiz, `cap_drop: ALL` (só as estritamente necessárias voltam), `no-new-privileges`, limites de CPU, memória, PIDs e `nofile`.
+- Senha em `.secrets/ftp_password.txt` (mínimo de 12 caracteres, `0600`), fora da imagem e ignorada pelo Git. Veja [doc/segredos.md](doc/segredos.md).
+- nginx na frente do painel: é a única porta publicada, roda sem `root` e sem `capability`, aceita só as redes de `PAINEL_REDES_PERMITIDAS` e limita pedidos e conexões por endereço.
+- Painel só por HTTPS e só de rede privada: senha guardada como hash `scrypt`, sessão de 15 minutos, bloqueio depois de cinco senhas erradas, proteção contra CSRF, sem JavaScript, sem acesso ao Docker e com registro de cada ação. Veja [doc/painel.md](doc/painel.md#protecoes).
+- Logs rotacionados (`max-size: 10m`, `max-file: 3`).
 
 </details>
 
-Modelo de ameaça e o endurecimento linha a linha em [🔐 doc/seguranca.md](doc/seguranca.md).
+Modelo de ameaça e o endurecimento linha a linha em [doc/seguranca.md](doc/seguranca.md).
 
 ---
 
@@ -509,8 +507,6 @@ Modelo de ameaça e o endurecimento linha a linha em [🔐 doc/seguranca.md](doc
 | Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `painel/servidor.py OK`, `compose OK com <perfil>.env` para os cinco perfis e `Validacao FTP concluida.` |
 | Conferir o container no ar | `./scripts/validate.sh --runtime` | o mesmo, exigindo o serviço `running`, `healthy` e o usuário inicial no PureDB |
 
-Os testes automatizados de envio, download, `chroot` e recusa sem TLS ainda não existem: estão previstos no [plano](#plano), onde ficam também os resultados datados.
-
 ---
 
 <a name="arquivos"></a>
@@ -520,7 +516,7 @@ Os testes automatizados de envio, download, `chroot` e recusa sem TLS ainda não
 Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`deploy.sh`, `manage-user.sh`); o resto está em `scripts/`, `painel/`, `nginx/`, `profiles/` e `doc/`.
 
 <details>
-<summary>🗂️ Arquivo por arquivo — clique para expandir</summary>
+<summary>Arquivo por arquivo — clique para expandir</summary>
 
 | Caminho | O que é |
 |---|---|
@@ -555,20 +551,20 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 
 ## 📚 Documentação
 
-Índice: [📚 doc/README.md](doc/README.md).
+Índice: [doc/README.md](doc/README.md).
 
 | Guia | Assunto |
 |---|---|
-| [🚀 Instalação](doc/instalacao.md) | Pré-requisitos e passo a passo comentado |
-| [⚙️ Configuração](doc/configuracao.md) | Todas as variáveis do `.env` |
-| [🎚️ Perfis](doc/perfis.md) | Perfis `small`, `medium`, `large`, `xlarge` e `extended`: dimensionamento e faixa passiva |
-| [🏗️ Arquitetura](doc/arquitetura.md) | Containers, entrypoints, volumes e opções do Pure-FTPd |
-| [🔐 Segurança](doc/seguranca.md) | Rede privada, modo sem TLS para equipamento antigo, modelo de ameaça e endurecimento aplicado |
-| [🔑 Segredos](doc/segredos.md) | O que fica em `.secrets/` e como trocar |
-| [⌨️ Scripts](doc/scripts.md) | O que cada script faz, parâmetros e saída esperada |
-| [🧰 Operação](doc/operacao.md) | Usuários, certificado real, backup, logs e atualização |
-| [🖥️ Painel web](doc/painel.md) | Abrir o painel, abas, usuários, senha, certificado, auditoria e proteções |
-| [🚨 Solução de problemas](doc/solucao-de-problemas.md) | Erros comuns e como diagnosticar |
+| [Instalação](doc/instalacao.md) | Pré-requisitos e passo a passo comentado |
+| [Configuração](doc/configuracao.md) | Todas as variáveis do `.env` |
+| [Perfis](doc/perfis.md) | Perfis `small`, `medium`, `large`, `xlarge` e `extended`: dimensionamento e faixa passiva |
+| [Arquitetura](doc/arquitetura.md) | Containers, entrypoints, volumes e opções do Pure-FTPd |
+| [Segurança](doc/seguranca.md) | Rede privada, modo sem TLS para equipamento antigo, modelo de ameaça e endurecimento aplicado |
+| [Segredos](doc/segredos.md) | O que fica em `.secrets/` e como trocar |
+| [Scripts](doc/scripts.md) | O que cada script faz, parâmetros e saída esperada |
+| [Operação](doc/operacao.md) | Usuários, certificado real, backup, logs e atualização |
+| [Painel web](doc/painel.md) | Abrir o painel, abas, usuários, senha, certificado, auditoria e proteções |
+| [Solução de problemas](doc/solucao-de-problemas.md) | Erros comuns e como diagnosticar |
 
 ---
 
@@ -578,15 +574,13 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 
 O plano de criação e mudança da stack (fases, testes, evidências e progresso) **não é publicado neste repositório**: fica na pasta local `doc/planos/` e em um repositório privado próprio, só do plano.
 
-**Status:** fases 01 a 07 ✅ concluídas, a última com o nginx na frente do painel, os cinco portes, a base Debian 13 e a opção sem TLS · fases seguintes 🔄 em execução: testes automatizados, backup e restauração, documentação final.
-
 ---
 
 <a name="versao"></a>
 
 ## 🏷️ Versão
 
-**0.5.2**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.5.3**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -614,7 +608,7 @@ A versão avança a cada publicação: `0.x` é a fase de construção, uma vers
 | **Claude** (Claude Code, Anthropic) | Evolução do projeto: melhorias, novas funcionalidades, documentação e plano | [claude.com/claude-code](https://claude.com/claude-code) |
 
 <details>
-<summary>📦 Projetos oficiais usados — clique para expandir</summary>
+<summary>Projetos oficiais usados — clique para expandir</summary>
 
 | Projeto | Uso aqui | Licença | Origem | Fonte |
 |---|---|---|---|---|
@@ -626,10 +620,3 @@ A versão avança a cada publicação: `0.x` é a fase de construção, uma vers
 
 </details>
 
----
-
-<a name="licenca"></a>
-
-## 📄 Licença
-
-Este repositório **ainda não tem arquivo de licença definido**. Os projetos de terceiros citados mantêm as licenças originais.

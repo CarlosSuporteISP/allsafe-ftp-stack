@@ -8,6 +8,20 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.5.3] - 2026-10-04
+
+Documentação mais limpa: menos emojis e sem avisos de coisa que falta. Nenhuma mudança no funcionamento da stack.
+
+### Alterado
+
+- **Emojis só no essencial:** ficam um por título de seção, os alertas de rede privada e de atenção, as marcas de estado, a seta das sequências e a navegação do rodapé. Saíram das tabelas, das listas, dos textos de link, dos menus recolhidos e das legendas dos diagramas. No README, de 270 para 59, dos quais 39 são a seta das sequências.
+- **Legenda dos diagramas mais curta:** nível, tipo e link da fonte.
+
+### Removido
+
+- **Avisos de falta:** as marcas de captura pendente, a frase sobre testes que ainda não existem, a linha de status do plano e a seção de licença sem licença definida. Cada item entra na documentação quando existir.
+- **Coluna de ícones** da tabela de destaques.
+
 ## [0.5.2] - 2026-10-04
 
 Página do repositório mais leve: só o principal fica aberto. Nenhuma mudança no funcionamento da stack.
@@ -37,7 +51,7 @@ nginx na frente do painel, cinco portes, base Debian 13 e opção de FTP sem TLS
 - **`FTP_TLS_MODE=0`, FTP sem TLS, só para equipamento antigo que não fala TLS.** Senhas e arquivos trafegam em texto puro: o `deploy.sh`, o registro do container e o painel (telas Visão geral e Segurança) avisam enquanto o modo `0` ou `1` estiver ligado. O padrão continua `2`, TLS obrigatório no login.
 - Variáveis `NGINX_IMAGE`, `NGINX_CONTAINER_NAME`, `NGINX_MEMORY_LIMIT`, `NGINX_CPU_LIMIT` e `NGINX_PIDS_LIMIT` no `.env.example`; pasta `DATA_DIR/nginx`, criada pelo `deploy.sh`.
 - `scripts/nginx-entrypoint.sh`, `scripts/nginx-saude.sh`, `nginx/nginx.conf.modelo` e as páginas de erro em `nginx/erro/`.
-- Seção sobre o FTP sem TLS em [🔐 Segurança](doc/seguranca.md#ftp-sem-tls), o porquê do nome `FTP_PUBLIC_IP` em [⚙️ Configuração](doc/configuracao.md#ftp-public-ip) e o serviço `nginx` em todos os guias e diagramas.
+- Seção sobre o FTP sem TLS em [Segurança](doc/seguranca.md#ftp-sem-tls), o porquê do nome `FTP_PUBLIC_IP` em [Configuração](doc/configuracao.md#ftp-public-ip) e o serviço `nginx` em todos os guias e diagramas.
 
 ### Alterado
 
@@ -87,7 +101,7 @@ Painel web seguro. **Uso só em rede privada, atrás de firewall**: o painel rec
 - Variáveis `PAINEL_IMAGE`, `PAINEL_CONTAINER_NAME`, `PAINEL_BIND_IP`, `PAINEL_PORT`, `PAINEL_REDES_PERMITIDAS`, `PAINEL_SESSAO_MINUTOS`, `PAINEL_CERT_CN`, `PAINEL_MEMORY_LIMIT`, `PAINEL_CPU_LIMIT` e `PAINEL_PIDS_LIMIT` no `.env.example`.
 - `scripts/painel-senha.sh`, que troca a senha do painel gravando só o hash; `scripts/painel-entrypoint.sh`; `scripts/ambiente.sh`, que lê uma chave do `.env` sem executar o arquivo.
 - Trava (`flock`) nas alterações de usuário: o `manage-user.sh` e o painel nunca gravam o PureDB ao mesmo tempo.
-- Guia [🖥️ Painel web](doc/painel.md), diagramas `painel-diagrama.mmd` e `painel-fluxograma.mmd`, e o painel nos guias de configuração, segredos, segurança, arquitetura, scripts, operação, instalação e solução de problemas.
+- Guia [Painel web](doc/painel.md), diagramas `painel-diagrama.mmd` e `painel-fluxograma.mmd`, e o painel nos guias de configuração, segredos, segurança, arquitetura, scripts, operação, instalação e solução de problemas.
 
 ### Alterado
 

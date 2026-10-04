@@ -1,6 +1,6 @@
 # ⚙️ Configuração — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
+↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -20,16 +20,16 @@ flowchart LR
     perfil --> deploy --> env --> compose --> ftp --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
+<sub>Nível 1 · Diagrama · [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 🎚️ `profiles/medium.env` ➜ ⌨️ `deploy.sh --size medium` (grava os limites no `.env`) ➜ 📄 `.env` ➜ 🐳 Docker Compose ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 limites aplicados
+**Sequência:** `profiles/medium.env` ➜ `deploy.sh --size medium` (grava os limites no `.env`) ➜ `.env` ➜ Docker Compose ➜ Pure-FTPd (`allsafe-ftp`) ➜ limites aplicados
 
 ---
 
 <details>
-<summary>🧭 Sumário — clique para expandir</summary>
+<summary>Sumário — clique para expandir</summary>
 
-[🧾 Exemplo mínimo de produção](#exemplo-minimo-de-producao) · [🌍 Geral](#geral) · [🔌 Rede e portas](#rede-e-portas) · [👤 Usuário inicial e senha](#usuario-inicial-e-senha) · [🔐 TLS](#tls) · [👥 Limites de sessão](#limites-de-sessao) · [🖥️ Painel web](#painel) · [🧱 Limites de recurso do container](#limites-de-recurso-do-container) · [🌐 Rede Docker](#rede-docker-sub-rede)
+[Exemplo mínimo de produção](#exemplo-minimo-de-producao) · [Geral](#geral) · [Rede e portas](#rede-e-portas) · [Usuário inicial e senha](#usuario-inicial-e-senha) · [TLS](#tls) · [Limites de sessão](#limites-de-sessao) · [Painel web](#painel) · [Limites de recurso do container](#limites-de-recurso-do-container) · [Rede Docker](#rede-docker-sub-rede)
 
 </details>
 
@@ -56,7 +56,7 @@ FTP_MAX_CLIENTS=50
 FTP_MAX_CLIENTS_PER_IP=8
 ```
 
-Nenhuma senha entra no `.env`: ela fica em `.secrets/ftp_password.txt` ([🔑 Segredos](segredos.md)).
+Nenhuma senha entra no `.env`: ela fica em `.secrets/ftp_password.txt` ([Segredos](segredos.md)).
 
 Depois de editar o `.env`, valide sem subir:
 
@@ -121,7 +121,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 
 <a name="ftp-public-ip"></a>
 
-> 📌 **Por que `FTP_PUBLIC_IP`, se nada aqui é público?** No modo passivo, o servidor diz ao cliente em qual IP e em qual porta abrir a conexão de dados. O Pure-FTPd, dentro do container, só conhece o endereço da rede Docker, que o equipamento não alcança; por isso a stack informa a ele qual endereço anunciar (opção `-P`). O nome vem do uso mais comum dessa opção, que é servidor atrás de NAT anunciando o endereço "de fora". Nesta stack, "de fora" é só fora do container: o valor é o IP **privado** do host pelo qual os equipamentos chegam, em geral o mesmo de `FTP_BIND_IP`. Só é diferente quando existe NAT interno entre o equipamento e o servidor. IP de internet é recusado.
+> **Por que `FTP_PUBLIC_IP`, se nada aqui é público?** No modo passivo, o servidor diz ao cliente em qual IP e em qual porta abrir a conexão de dados. O Pure-FTPd, dentro do container, só conhece o endereço da rede Docker, que o equipamento não alcança; por isso a stack informa a ele qual endereço anunciar (opção `-P`). O nome vem do uso mais comum dessa opção, que é servidor atrás de NAT anunciando o endereço "de fora". Nesta stack, "de fora" é só fora do container: o valor é o IP **privado** do host pelo qual os equipamentos chegam, em geral o mesmo de `FTP_BIND_IP`. Só é diferente quando existe NAT interno entre o equipamento e o servidor. IP de internet é recusado.
 
 ---
 
@@ -132,9 +132,9 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
 | `FTP_USER` | Nome do usuário virtual criado ou atualizado a cada subida | Regra `^[a-z_][a-z0-9_-]{0,31}$` | `transfer` |
-A **senha** do usuário inicial não é variável: fica em `SECRETS_DIR/ftp_password.txt`, criada pelo `deploy.sh`, e chega ao container como o segredo `/run/secrets/ftp_password`. Um `.env` com `FTP_PASSWORD` preenchido é recusado. Veja [🔑 Segredos](segredos.md).
+A **senha** do usuário inicial não é variável: fica em `SECRETS_DIR/ftp_password.txt`, criada pelo `deploy.sh`, e chega ao container como o segredo `/run/secrets/ftp_password`. Um `.env` com `FTP_PASSWORD` preenchido é recusado. Veja [Segredos](segredos.md).
 
-Só o usuário inicial vem do `.env`. Os demais são criados com [`manage-user.sh`](../manage-user.sh): veja [🧰 Operação](operacao.md#usuarios).
+Só o usuário inicial vem do `.env`. Os demais são criados com [`manage-user.sh`](../manage-user.sh): veja [Operação](operacao.md#usuarios).
 
 ---
 
@@ -149,18 +149,18 @@ Só o usuário inicial vem do `.env`. Os demais são criados com [`manage-user.s
 
 | Modo | Sessão sem TLS | Canal de dados sem criptografia | Quando usar |
 |---|---|---|---|
-| `0` | ⚠️ **é a única que existe**: o servidor não oferece TLS | ⚠️ sempre sem criptografia | só equipamento antigo sem suporte a TLS |
-| `1` | ⚠️ aceita (TLS opcional) | aceito | equipamentos antigos e novos no mesmo servidor |
+| `0` | **é a única que existe**: o servidor não oferece TLS | sempre sem criptografia | só equipamento antigo sem suporte a TLS |
+| `1` | aceita (TLS opcional) | aceito | equipamentos antigos e novos no mesmo servidor |
 | `2` | **recusada**: só entra quem negocia TLS | aceito, se o cliente pedir | **padrão** |
 | `3` | **recusada** | **recusado**: os dados também têm de ser criptografados | todos os equipamentos suportam `PROT P` |
 
-> ⚠️ **Modos `0` e `1`: FTP sem criptografia.** Existem só para equipamento antigo que não fala TLS. Neles, usuário, senha e arquivo passam em **texto puro** e podem ser lidos por quem estiver no mesmo caminho de rede. Use apenas em rede interna isolada, com o firewall liberando a porta só para esses equipamentos, com usuário e senha dedicados a eles, e volte para `2` assim que puder. Enquanto um desses modos estiver ligado, a stack avisa em três lugares: no fim do `./deploy.sh`, no registro do container do FTP e nas telas do painel. Leia antes [🔐 Segurança](seguranca.md#ftp-sem-tls).
+> ⚠️ **Modos `0` e `1`: FTP sem criptografia.** Existem só para equipamento antigo que não fala TLS. Neles, usuário, senha e arquivo passam em **texto puro** e podem ser lidos por quem estiver no mesmo caminho de rede. Use apenas em rede interna isolada, com o firewall liberando a porta só para esses equipamentos, com usuário e senha dedicados a eles, e volte para `2` assim que puder. Enquanto um desses modos estiver ligado, a stack avisa em três lugares: no fim do `./deploy.sh`, no registro do container do FTP e nas telas do painel. Leia antes [Segurança](seguranca.md#ftp-sem-tls).
 
 Um valor fora de `0` a `3` é recusado pelo `deploy.sh` antes de qualquer alteração e, se chegar ao container, ele para com `FALHA: FTP_TLS_MODE deve ser 0, 1, 2 ou 3`. O certificado do FTP é gerado em qualquer modo: ao voltar para `2`, ele já está lá.
 
 > ⚠️ No modo `2`, o padrão, usuário e senha sempre trafegam criptografados, mas o conteúdo do arquivo só é criptografado se o cliente pedir proteção do canal de dados (`PROT P`). Para **obrigar** a criptografia do arquivo, use `FTP_TLS_MODE=3` e confira antes se os equipamentos suportam.
 
-Trocar o certificado autoassinado por um real: [🧰 Operação](operacao.md#certificado-real-de-producao).
+Trocar o certificado autoassinado por um real: [Operação](operacao.md#certificado-real-de-producao).
 
 ---
 
@@ -195,7 +195,7 @@ Trocar o certificado autoassinado por um real: [🧰 Operação](operacao.md#cer
 
 > 🧱 **Rede privada:** o painel é só para rede interna, atrás de firewall. `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e um `PAINEL_CERT_CN` em forma de IP têm de ser privados: o [`deploy.sh`](../deploy.sh) e os containers do painel e do nginx param com `não é IP privado` ou `não é rede privada` para qualquer outro valor.
 
-A senha do painel **não** é variável: fica em `.secrets/`, como hash. O `deploy.sh` e o container recusam `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`. Veja [🔑 Segredos](segredos.md#senha-do-painel) e o guia [🖥️ Painel web](painel.md).
+A senha do painel **não** é variável: fica em `.secrets/`, como hash. O `deploy.sh` e o container recusam `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`. Veja [Segredos](segredos.md#senha-do-painel) e o guia [Painel web](painel.md).
 
 O navegador nunca fala direto com o painel: só o nginx publica porta, e ele repassa o pedido ao painel por um soquete dentro de `DATA_DIR/nginx`. O limite de pedidos por endereço e o tamanho máximo do pedido são fixos na configuração do nginx ([`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo)), sem variável. Os perfis de [`profiles/`](../profiles/) não mexem nas variáveis do painel nem nas do nginx.
 
@@ -213,7 +213,7 @@ O navegador nunca fala direto com o painel: só o nginx publica porta, e ele rep
 | `FTP_NOFILE` | `ulimit nofile` (soft igual a hard) | inteiro | `16384` |
 | `FTP_PROFILE` | Nome do perfil em uso. Só informa: quem grava é o `./deploy.sh --size` | `small`, `medium`, `large`, `xlarge`, `extended` | `small` |
 
-> 💡 Estes campos, mais `FTP_MAX_CLIENTS*` e a faixa passiva, são o que o `./deploy.sh --size <perfil>` grava a partir de [`profiles/`](../profiles/). Prefira `./deploy.sh --size medium` a editar os valores à mão: veja [🎚️ Perfis](perfis.md). O `deploy.sh` confere se o servidor tem as CPUs e a memória que `FTP_CPU_LIMIT` e `FTP_MEMORY_LIMIT` pedem e recusa o que não cabe.
+> Estes campos, mais `FTP_MAX_CLIENTS*` e a faixa passiva, são o que o `./deploy.sh --size <perfil>` grava a partir de [`profiles/`](../profiles/). Prefira `./deploy.sh --size medium` a editar os valores à mão: veja [Perfis](perfis.md). O `deploy.sh` confere se o servidor tem as CPUs e a memória que `FTP_CPU_LIMIT` e `FTP_MEMORY_LIMIT` pedem e recusa o que não cabe.
 
 ---
 
@@ -236,10 +236,10 @@ Numa instalação que já está rodando, a sub-rede nova só vale depois de recr
 
 **Resultado esperado:** `docker network inspect allsafe-ftp-network` mostra a sub-rede nova.
 
-> 📌 O perfil em uso está gravado no `.env`: o `deploy.sh` sem `--size` e o `docker compose up -d` aplicam os mesmos limites.
+> O perfil em uso está gravado no `.env`: o `deploy.sh` sem `--size` e o `docker compose up -d` aplicam os mesmos limites.
 
 <details>
-<summary>🔬 Detalhe técnico — o bloco de endereços das stacks AllSafe</summary>
+<summary>Detalhe técnico — o bloco de endereços das stacks AllSafe</summary>
 
 As stacks AllSafe reservam `172.29.1.0/24` para redes `/29` e `172.29.2.0/24` para redes `/28` e `/27`. Esta stack usa a primeira `/29` do bloco. O valor entra no [`compose.yaml`](../compose.yaml) como `subnet: ${FTP_SUBNET:-172.29.1.0/29}`.
 
@@ -247,4 +247,4 @@ As stacks AllSafe reservam `172.29.1.0/24` para redes `/29` e `172.29.2.0/24` pa
 
 ---
 
-⬅️ [🚀 Instalação](instalacao.md) · 🏠 [Documentação](README.md) · ➡️ [🎚️ Perfis](perfis.md)
+⬅️ [Instalação](instalacao.md) · 🏠 [Documentação](README.md) · ➡️ [Perfis](perfis.md)

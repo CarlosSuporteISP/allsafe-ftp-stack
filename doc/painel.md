@@ -1,6 +1,6 @@
 # 🖥️ Painel web — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
+↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -20,18 +20,18 @@ flowchart LR
     usuario --> nginx --> painel --> cmd --> puredb --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
+<sub>Nível 1 · Diagrama · [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 👤 Usuário (navegador na rede interna) ➜ 🚦 nginx (`allsafe-ftp-nginx`, HTTPS) ➜ 🖥️ Painel web (`allsafe-ftp-painel`) ➜ ⚙️ `allsafe-ftp-user` ➜ 🗄️ PureDB ➜ 🏁 usuário pronto no FTP
+**Sequência:** Usuário (navegador na rede interna) ➜ nginx (`allsafe-ftp-nginx`, HTTPS) ➜ Painel web (`allsafe-ftp-painel`) ➜ `allsafe-ftp-user` ➜ PureDB ➜ usuário pronto no FTP
 
-> 🧱 **Uso só em rede privada, atrás de firewall.** O painel administra as contas que guardam a configuração da sua rede. Ele escuta **apenas em IP privado**, recusa cliente de fora das redes internas e **nunca** deve ser publicado na internet nem receber redirecionamento de porta da borda. Quem precisa chegar de fora entra por VPN até a rede interna. Veja [🧱 rede privada e firewall](seguranca.md#rede-privada).
+> 🧱 **Uso só em rede privada, atrás de firewall.** O painel administra as contas que guardam a configuração da sua rede. Ele escuta **apenas em IP privado**, recusa cliente de fora das redes internas e **nunca** deve ser publicado na internet nem receber redirecionamento de porta da borda. Quem precisa chegar de fora entra por VPN até a rede interna. Veja [rede privada e firewall](seguranca.md#rede-privada).
 
 ---
 
 <details>
-<summary>🧭 Sumário — clique para expandir</summary>
+<summary>Sumário — clique para expandir</summary>
 
-[🚪 Abrir o painel](#abrir) · [🗂️ O que há em cada aba](#abas) · [👥 Usuários pelo painel](#usuarios) · [🔑 Senha do painel](#senha) · [🔏 Certificado do painel](#certificado) · [🌐 Abrir para a rede interna](#rede-interna) · [🔄 Como o painel decide](#como-decide) · [📜 Auditoria](#auditoria) · [🛡️ O que protege o painel](#protecoes)
+[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Senha do painel](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
 
 </details>
 
@@ -55,7 +55,7 @@ Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; só rede 
 cat .secrets/painel_password.txt
 ```
 
-**Resultado esperado:** a tela **📊 Visão geral**, com o FTP `🟢 No ar`.
+**Resultado esperado:** a tela **Visão geral**, com o FTP `🟢 No ar`.
 
 Impressão digital do certificado do painel, para comparar com a que o navegador mostra:
 
@@ -63,9 +63,7 @@ Impressão digital do certificado do painel, para comparar com a que o navegador
 docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -fingerprint -sha256
 ```
 
-> ⚠️ Troque a senha inicial depois do primeiro acesso: [🔑 Senha do painel](#senha). Nunca cole a senha em documento, captura de tela ou mensagem.
-
-> 📸 PENDENTE: capturas reais das telas do painel (uma por aba), a gerar com a instalação definitiva no ar.
+> ⚠️ Troque a senha inicial depois do primeiro acesso: [Senha do painel](#senha). Nunca cole a senha em documento, captura de tela ou mensagem.
 
 ---
 
@@ -75,14 +73,14 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 
 | Aba | O que mostra | O que dá para fazer |
 |---|---|---|
-| 📊 Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar |
-| 👥 Usuários | Um usuário por linha: pasta no host, espaço usado, quantidade de arquivos e último envio | Criar, trocar a senha e remover |
-| 🔐 Segurança | Conferência da instalação: endereços do FTP e do painel, modo TLS, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, isolamento do container e o lembrete do firewall | Só consultar |
-| 📜 Atividade | Os últimos 300 registros do painel: entradas, recusas e alterações de usuário, com data e endereço de origem | Só consultar |
+| Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar |
+| Usuários | Um usuário por linha: pasta no host, espaço usado, quantidade de arquivos e último envio | Criar, trocar a senha e remover |
+| Segurança | Conferência da instalação: endereços do FTP e do painel, modo TLS, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, isolamento do container e o lembrete do firewall | Só consultar |
+| Atividade | Os últimos 300 registros do painel: entradas, recusas e alterações de usuário, com data e endereço de origem | Só consultar |
 
 O botão **Sair**, no topo, encerra a sessão na hora.
 
-> ⚠️ Com `FTP_TLS_MODE` em `0` ou `1`, as abas 📊 Visão geral e 🔐 Segurança abrem com um alerta no topo: o FTP está aceitando senha e arquivo em texto puro. O alerta só some quando a variável volta para `2` ou `3`. Veja [🔐 Segurança](seguranca.md#ftp-sem-tls).
+> ⚠️ Com `FTP_TLS_MODE` em `0` ou `1`, as abas Visão geral e Segurança abrem com um alerta no topo: o FTP está aceitando senha e arquivo em texto puro. O alerta só some quando a variável volta para `2` ou `3`. Veja [Segurança](seguranca.md#ftp-sem-tls).
 
 ---
 
@@ -92,9 +90,9 @@ O botão **Sair**, no topo, encerra a sessão na hora.
 
 | Quero | Onde | O que acontece |
 |---|---|---|
-| Criar um usuário | 👥 Usuários ➜ **Novo usuário** | Cria a conta e a pasta `DATA_DIR/dados/<usuario>`. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
-| Trocar a senha | 👥 Usuários ➜ **Trocar senha** | A senha antiga deixa de valer no próximo login |
-| Remover um usuário | 👥 Usuários ➜ **Remover** | Pede confirmação. A conta some; **os arquivos da pasta são preservados** |
+| Criar um usuário | Usuários ➜ **Novo usuário** | Cria a conta e a pasta `DATA_DIR/dados/<usuario>`. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
+| Trocar a senha | Usuários ➜ **Trocar senha** | A senha antiga deixa de valer no próximo login |
+| Remover um usuário | Usuários ➜ **Remover** | Pede confirmação. A conta some; **os arquivos da pasta são preservados** |
 
 **Resultado esperado:** o usuário criado entra por FTPS logo em seguida, sem reiniciar o FTP.
 
@@ -102,9 +100,9 @@ Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
 
 - Nome com letras minúsculas, números, `_` e `-`, começando por letra ou `_`, até 32 caracteres.
 - Senha com no mínimo 12 caracteres.
-- O **usuário inicial** (`FTP_USER`) não é alterado pelo painel: a senha dele vem de `.secrets/ftp_password.txt` e é reaplicada a cada subida do FTP. Veja [🔑 Segredos](segredos.md#trocar-a-senha).
+- O **usuário inicial** (`FTP_USER`) não é alterado pelo painel: a senha dele vem de `.secrets/ftp_password.txt` e é reaplicada a cada subida do FTP. Veja [Segredos](segredos.md#trocar-a-senha).
 
-A linha de comando continua valendo: painel e `manage-user.sh` alteram as mesmas contas. Veja [🧰 Operação](operacao.md#usuarios).
+A linha de comando continua valendo: painel e `manage-user.sh` alteram as mesmas contas. Veja [Operação](operacao.md#usuarios).
 
 ---
 
@@ -125,7 +123,7 @@ O painel tem **uma** senha de administrador. Só o hash dela fica guardado, em `
 Hash gravado em ./.secrets/painel_password_hash.txt; painel reiniciado e sessões abertas encerradas.
 ```
 
-Depois da troca, a senha antiga é recusada, quem estava dentro do painel volta para a tela de entrada e o arquivo `.secrets/painel_password.txt` (a senha inicial em texto) é apagado. Detalhe em [🔑 Segredos](segredos.md#senha-do-painel).
+Depois da troca, a senha antiga é recusada, quem estava dentro do painel volta para a tela de entrada e o arquivo `.secrets/painel_password.txt` (a senha inicial em texto) é apagado. Detalhe em [Segredos](segredos.md#senha-do-painel).
 
 > ⚠️ Perdeu a senha? Rode `./scripts/painel-senha.sh` de novo no servidor: quem tem acesso ao host define uma nova. Não existe recuperação pelo navegador.
 
@@ -146,7 +144,7 @@ rm "$DATA_DIR/painel/tls/painel-san.txt"      # sem este arquivo, a stack não r
 docker compose restart painel
 ```
 
-**Resultado esperado:** o navegador abre o painel sem aviso e a aba 🔐 Segurança mostra a validade e a impressão digital do certificado novo. O reinício do painel leva o certificado para o nginx e reinicia o nginx junto: o painel fica alguns segundos fora do ar.
+**Resultado esperado:** o navegador abre o painel sem aviso e a aba Segurança mostra a validade e a impressão digital do certificado novo. O reinício do painel leva o certificado para o nginx e reinicia o nginx junto: o painel fica alguns segundos fora do ar.
 
 `DATA_DIR/painel` pertence ao `root`: rode os comandos com `sudo`, trocando `$DATA_DIR` pelo valor do seu `.env`.
 
@@ -164,14 +162,14 @@ Por padrão o painel só responde no próprio servidor. Para abrir pela rede de 
 | `PAINEL_REDES_PERMITIDAS` | só as redes internas de onde o painel é administrado, por exemplo `10.10.0.0/24` |
 | `PAINEL_CERT_CN` | o nome interno pelo qual o painel é aberto, se houver (o `PAINEL_BIND_IP` já entra no certificado) |
 
-Depois, **libere a porta do painel no firewall do host só para a rede de gerência**: [🧱 rede privada e firewall](seguranca.md#rede-privada).
+Depois, **libere a porta do painel no firewall do host só para a rede de gerência**: [rede privada e firewall](seguranca.md#rede-privada).
 
 **Resultado esperado:** de uma máquina da rede de gerência, `https://<PAINEL_BIND_IP>:8443` abre a tela de entrada; de qualquer outra rede, a porta não responde.
 
-Todas as variáveis em [⚙️ Configuração](configuracao.md#painel).
+Todas as variáveis em [Configuração](configuracao.md#painel).
 
 <details>
-<summary>🔬 Detalhe técnico — o endereço que o painel enxerga</summary>
+<summary>Detalhe técnico — o endereço que o painel enxerga</summary>
 
 O nginx fica atrás do NAT do Docker. Um cliente da rede interna chega com o próprio IP; já um acesso feito **do próprio servidor** chega com o IP do gateway da rede do Compose (`172.29.1.1` na sub-rede padrão `172.29.1.0/29`). Os dois casos estão cobertos pela lista padrão de `PAINEL_REDES_PERMITIDAS`. Ao restringir a lista a uma rede só, inclua a sub-rede do Compose (`FTP_SUBNET`) se quiser continuar abrindo o painel de dentro do servidor.
 
@@ -190,7 +188,7 @@ A lista é aplicada duas vezes: pelo nginx, antes de o pedido chegar ao painel, 
 Cada pedido passa por três conferências antes de mudar alguma coisa: a rede de origem (nginx), a senha e o token do formulário (painel).
 
 <details>
-<summary>🔄 Fluxograma do painel, com a sequência escrita — clique para expandir</summary>
+<summary>Fluxograma do painel, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: diagramas/painel-fluxograma.mmd -->
 ```mermaid
@@ -238,30 +236,30 @@ flowchart LR
     painel -. "registra cada ação" .-> auditoria
 ```
 
-<sub>📐 Nível 2 · Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
+<sub>Nível 2 · Fluxograma · [fonte](diagramas/)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
-| 1 | 👤 Usuário ➜ 🚦 nginx | O navegador abre `https://<endereço>:8443`; só HTTPS, com TLS 1.2 ou 1.3 |
-| 2 | 🚦 nginx ➜ ❓ rede permitida e dentro do limite? | O endereço de origem é comparado com `PAINEL_REDES_PERMITIDAS`, e o pedido, com os limites de taxa, de conexões e de tamanho |
-| 3a | ❓ rede permitida e dentro do limite? ➜ 🖥️ Painel web | ✅ Sim: o nginx repassa o pedido pelo soquete Unix, com o endereço do cliente |
-| 3b | ❓ rede permitida e dentro do limite? ➜ ⛔ pedido recusado | ❌ Não: `403` para rede de fora, `429` para pedidos demais; o painel nem recebe o pedido |
-| 4 | 🖥️ Painel web ➜ ❓ senha confere? | O painel confere de novo a rede e o nome de host e mostra a tela de entrada |
-| 5 | ❓ senha confere? ➜ 🔑 hash da senha | A senha digitada é comparada com o hash `scrypt` de `/run/secrets/painel_password_hash` |
-| 6a | ❓ senha confere? ➜ 🔒 sessão | ✅ Sim: abre a sessão, com cookie e token CSRF |
-| 6b | ❓ senha confere? ➜ ⛔ pedido recusado | ❌ Não: `401`; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
-| 7 | 🔒 sessão ➜ ❓ pedido legítimo? | Cada formulário enviado traz o token CSRF da sessão e a origem do próprio painel |
-| 8a | ❓ pedido legítimo? ➜ ⚙️ `allsafe-ftp-user` | ✅ Sim: o painel chama o comando, com a senha pela entrada padrão |
-| 8b | ❓ pedido legítimo? ➜ ⛔ pedido recusado | ❌ Não: `403`, sem alterar nada |
-| 9 | ⚙️ `allsafe-ftp-user` ➜ 🗄️ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez |
-| 10 | 🗄️ PureDB ➜ 🏁 usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
+| 1 | Usuário ➜ nginx | O navegador abre `https://<endereço>:8443`; só HTTPS, com TLS 1.2 ou 1.3 |
+| 2 | nginx ➜ rede permitida e dentro do limite? | O endereço de origem é comparado com `PAINEL_REDES_PERMITIDAS`, e o pedido, com os limites de taxa, de conexões e de tamanho |
+| 3a | rede permitida e dentro do limite? ➜ Painel web | Sim: o nginx repassa o pedido pelo soquete Unix, com o endereço do cliente |
+| 3b | rede permitida e dentro do limite? ➜ pedido recusado | Não: `403` para rede de fora, `429` para pedidos demais; o painel nem recebe o pedido |
+| 4 | Painel web ➜ senha confere? | O painel confere de novo a rede e o nome de host e mostra a tela de entrada |
+| 5 | senha confere? ➜ hash da senha | A senha digitada é comparada com o hash `scrypt` de `/run/secrets/painel_password_hash` |
+| 6a | senha confere? ➜ sessão | Sim: abre a sessão, com cookie e token CSRF |
+| 6b | senha confere? ➜ pedido recusado | Não: `401`; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
+| 7 | sessão ➜ pedido legítimo? | Cada formulário enviado traz o token CSRF da sessão e a origem do próprio painel |
+| 8a | pedido legítimo? ➜ `allsafe-ftp-user` | Sim: o painel chama o comando, com a senha pela entrada padrão |
+| 8b | pedido legítimo? ➜ pedido recusado | Não: `403`, sem alterar nada |
+| 9 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez |
+| 10 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
 
-**🧷 Apoio**
+**Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
-| ❓ senha confere? | 🔑 hash da senha (`painel_password_hash`) | lê a cada entrada, somente leitura |
-| 🖥️ Painel web | 📚 `auditoria.log` | registra cada entrada, recusa e alteração |
+| senha confere? | hash da senha (`painel_password_hash`) | lê a cada entrada, somente leitura |
+| Painel web | `auditoria.log` | registra cada entrada, recusa e alteração |
 
 </details>
 
@@ -271,7 +269,7 @@ flowchart LR
 
 ## 📜 Auditoria
 
-Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `root`) e aparece na aba 📜 Atividade.
+Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `root`) e aparece na aba Atividade.
 
 ```text
 2026-10-04T08:33:49-0300 ip=172.29.1.1 evento=usuario_criado usuario=equip01 credencial=informada
@@ -289,7 +287,7 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 
 Quem está fora das redes permitidas é barrado antes, pelo nginx: essa recusa fica no log dele (`docker compose logs nginx`), não aqui. O `recusa_rede` só aparece se um pedido assim chegar ao painel.
 
-Senha, token e cookie **nunca** são gravados. As transferências dos equipamentos não ficam aqui: estão no log do FTP, em [🧰 Operação](operacao.md#logs).
+Senha, token e cookie **nunca** são gravados. As transferências dos equipamentos não ficam aqui: estão no log do FTP, em [Operação](operacao.md#logs).
 
 ---
 
@@ -310,12 +308,12 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 | Containers | Raiz somente leitura, `cap_drop: ALL`, `no-new-privileges`, sem socket do Docker, limites de CPU, memória e processos; o nginx roda sem root e sem nenhuma capability |
 
 <details>
-<summary>🔬 Detalhe técnico — implementação</summary>
+<summary>Detalhe técnico — implementação</summary>
 
 - **Código:** [`painel/servidor.py`](../painel/servidor.py), só com a biblioteca padrão do Python 3.13 do Debian 13; a aparência está em [`painel/estilo.css`](../painel/estilo.css). Não há JavaScript, fonte nem imagem externa.
 - **Imagem:** alvo `painel` do [`Dockerfile`](../Dockerfile), sobre a mesma base do FTP (traz o `pure-pw` e o `allsafe-ftp-user`). Imagem `PAINEL_IMAGE`, container `PAINEL_CONTAINER_NAME`.
 - **Entrada do container:** [`scripts/painel-entrypoint.sh`](../scripts/painel-entrypoint.sh) recusa senha em variável, confere IP e redes privados, ajusta dono e modo de `/painel`, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
-- **Frente web:** alvo `nginx` do [`Dockerfile`](../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo). O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [🔐 Segurança](seguranca.md#painel).
+- **Frente web:** alvo `nginx` do [`Dockerfile`](../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo). O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [Segurança](seguranca.md#painel).
 - **Hash da senha:** `scrypt` com `N=2^15`, `r=8`, `p=1` e sal de 16 bytes, no formato `scrypt$15$8$1$<sal>$<resumo>`. É lido de `/run/secrets/painel_password_hash` a cada entrada e comparado em tempo constante.
 - **Sessão:** o token do cookie tem 256 bits aleatórios e o servidor guarda só o resumo SHA-256 dele, em memória. Reiniciar o painel encerra todas as sessões e zera a contagem de erros de entrada.
 - **Tela de entrada:** o formulário leva um token assinado (HMAC) com validade curta, para a entrada também não aceitar pedido forjado por outro site.
@@ -323,10 +321,10 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 - **Usuários do FTP:** o painel monta as mesmas pastas `DATA_DIR/auth` e `DATA_DIR/dados` do serviço `ftp` e chama o mesmo `allsafe-ftp-user`, com `flock` em `/auth/.lock`. Por isso não precisa do socket do Docker.
 - **Capabilities devolvidas:** `CHOWN`, `DAC_OVERRIDE` e `FOWNER`, para criar a pasta do usuário com o dono `ftpdata` e gravar em `/auth`. Nenhuma de rede.
 - **Saúde:** `python3 /opt/painel/servidor.py --saude` pede `/saude` pelo soquete Unix. O healthcheck do nginx faz o mesmo pedido por TLS, em `127.0.0.1:8443`, e confere o caminho inteiro.
-- **Limites:** `PAINEL_MEMORY_LIMIT`, `PAINEL_CPU_LIMIT` e `PAINEL_PIDS_LIMIT`, em [⚙️ Configuração](configuracao.md#painel).
+- **Limites:** `PAINEL_MEMORY_LIMIT`, `PAINEL_CPU_LIMIT` e `PAINEL_PIDS_LIMIT`, em [Configuração](configuracao.md#painel).
 
 </details>
 
 ---
 
-⬅️ [🧰 Operação](operacao.md) · 🏠 [Documentação](README.md) · ➡️ [🚨 Solução de problemas](solucao-de-problemas.md)
+⬅️ [Operação](operacao.md) · 🏠 [Documentação](README.md) · ➡️ [Solução de problemas](solucao-de-problemas.md)

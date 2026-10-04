@@ -1,6 +1,6 @@
 # 🔑 Segredos — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
+↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -20,16 +20,16 @@ flowchart LR
     deploy --> arquivo --> montagem --> entry --> puredb --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
+<sub>Nível 1 · Diagrama · [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** ⌨️ `deploy.sh` ➜ 🔑 `.secrets/ftp_password.txt` ➜ 🐳 `/run/secrets/ftp_password` (somente leitura) ➜ ⚙️ entrypoint ➜ 🗄️ PureDB (guarda só o hash) ➜ 🏁 senha fora da imagem
+**Sequência:** `deploy.sh` ➜ `.secrets/ftp_password.txt` ➜ `/run/secrets/ftp_password` (somente leitura) ➜ entrypoint ➜ PureDB (guarda só o hash) ➜ senha fora da imagem
 
 ---
 
 <details>
-<summary>🧭 Sumário — clique para expandir</summary>
+<summary>Sumário — clique para expandir</summary>
 
-[📂 O que fica em `.secrets/`](#o-que-fica) · [🔁 Trocar a senha do usuário inicial](#trocar-a-senha) · [🖥️ Senha do painel](#senha-do-painel) · [✍️ Usar uma senha própria](#senha-propria) · [🧾 O que mais é sensível](#o-que-mais-e-sensivel)
+[O que fica em `.secrets/`](#o-que-fica) · [Trocar a senha do usuário inicial](#trocar-a-senha) · [Senha do painel](#senha-do-painel) · [Usar uma senha própria](#senha-propria) · [O que mais é sensível](#o-que-mais-e-sensivel)
 
 </details>
 
@@ -71,7 +71,7 @@ docker compose restart ftp
 
 **Resultado esperado:** o container volta a `healthy` e o login antigo passa a ser recusado com `530 Login authentication failed`.
 
-A senha do usuário inicial é **reaplicada a cada subida** a partir deste arquivo. Trocar com `./manage-user.sh passwd` sem atualizar o arquivo faz a senha antiga voltar no próximo reinício. Para os demais usuários, a troca é só pelo `manage-user.sh`: veja [🧰 Operação](operacao.md#usuarios).
+A senha do usuário inicial é **reaplicada a cada subida** a partir deste arquivo. Trocar com `./manage-user.sh passwd` sem atualizar o arquivo faz a senha antiga voltar no próximo reinício. Para os demais usuários, a troca é só pelo `manage-user.sh`: veja [Operação](operacao.md#usuarios).
 
 ---
 
@@ -88,7 +88,7 @@ O painel tem uma senha só, de administrador. Troque a senha inicial logo depois
 
 **Resultado esperado:** `Hash gravado em ./.secrets/painel_password_hash.txt; painel reiniciado e sessões abertas encerradas.` O arquivo `painel_password.txt` deixa de existir.
 
-A senha nova tem de ter no mínimo 12 caracteres e **não fica gravada em lugar nenhum**: guarde-a no seu cofre de senhas. Se for perdida, rode o mesmo script de novo. Uso do painel: [🖥️ Painel web](painel.md).
+A senha nova tem de ter no mínimo 12 caracteres e **não fica gravada em lugar nenhum**: guarde-a no seu cofre de senhas. Se for perdida, rode o mesmo script de novo. Uso do painel: [Painel web](painel.md).
 
 ---
 
@@ -122,7 +122,7 @@ chmod 600 .secrets/ftp_password.txt
 | Arquivos de backup dos volumes | onde você os guardar | fora da árvore do projeto |
 
 <details>
-<summary>🔬 Detalhe técnico — geração, montagem e descarte</summary>
+<summary>Detalhe técnico — geração, montagem e descarte</summary>
 
 - **Geração:** `openssl rand -base64 36` (48 caracteres). O script aplica `umask 077`, `chmod 0700` na pasta e `chmod 0600` no arquivo, e nunca regrava um segredo que já existe.
 - **Montagem:** o [`compose.yaml`](../compose.yaml) declara o segredo `ftp_password` (`SECRETS_DIR/ftp_password.txt`) e o entrega **só** ao serviço `ftp`, em `/run/secrets/ftp_password`, somente leitura. A pasta `.secrets/` inteira não é montada.
@@ -137,4 +137,4 @@ chmod 600 .secrets/ftp_password.txt
 
 ---
 
-⬅️ [🔐 Segurança](seguranca.md) · 🏠 [Documentação](README.md) · ➡️ [⌨️ Scripts](scripts.md)
+⬅️ [Segurança](seguranca.md) · 🏠 [Documentação](README.md) · ➡️ [Scripts](scripts.md)

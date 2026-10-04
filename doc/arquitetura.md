@@ -1,6 +1,6 @@
 # 🏗️ Arquitetura — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
+↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -19,16 +19,16 @@ flowchart LR
     equip --> ftp --> puredb --> dados --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
+<sub>Nível 1 · Diagrama · [fonte](diagramas/)</sub>
 
-**🧭 Sequência:** 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 backup guardado
+**Sequência:** Equipamento de rede ➜ Pure-FTPd (`allsafe-ftp`) ➜ PureDB ➜ `/data` ➜ backup guardado
 
 ---
 
 <details>
-<summary>🧭 Sumário — clique para expandir</summary>
+<summary>Sumário — clique para expandir</summary>
 
-[🗺️ Mapa da arquitetura](#mapa) · [🧩 Componentes](#componentes) · [💽 Volumes](#volumes) · [🌐 Rede](#rede) · [🔄 Modelo da subida](#subida) · [🚩 Opções do `pure-ftpd`](#flags-do-pure-ftpd) · [🩺 Healthcheck](#healthcheck) · [🧱 Endurecimento](#endurecimento-resumo)
+[Mapa da arquitetura](#mapa) · [Componentes](#componentes) · [Volumes](#volumes) · [Rede](#rede) · [Modelo da subida](#subida) · [Opções do `pure-ftpd`](#flags-do-pure-ftpd) · [Healthcheck](#healthcheck) · [Endurecimento](#endurecimento-resumo)
 
 </details>
 
@@ -41,7 +41,7 @@ flowchart LR
 Os três containers, as pastas do host e quem fala com quem, na ordem em que as coisas acontecem.
 
 <details>
-<summary>🗺️ Mapa da arquitetura, com a sequência escrita — clique para expandir</summary>
+<summary>Mapa da arquitetura, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: diagramas/arquitetura-mapa.mmd -->
 ```mermaid
@@ -93,33 +93,33 @@ flowchart LR
     ftp -. "grava cada transferência" .-> logs
 ```
 
-<sub>📐 Nível 2 · Mapa · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
+<sub>Nível 2 · Mapa · [fonte](diagramas/)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
-| 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | O usuário executa `./deploy.sh` no host |
-| 2 | ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd | O script valida a configuração, constrói as imagens (`docker compose build`), sobe os três containers (`up -d --wait`) e espera ficarem `healthy` |
-| 3 | 👤 Usuário ➜ 🚦 nginx | O usuário abre o painel por HTTPS em `8443/tcp`: quem atende é o nginx, que confere a rede de origem e a taxa de pedidos |
-| 4 | 🚦 nginx ➜ 🖥️ Painel web | O pedido aceito é repassado ao painel pelo soquete Unix, com o endereço do cliente |
-| 5 | 🖥️ Painel web ➜ 🗄️ `DATA_DIR/auth` | O painel cria, troca a senha ou remove o usuário no PureDB |
-| 6 | 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
-| 7 | ⚙️ Pure-FTPd ➜ 💽 `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
-| 8 | 💽 `DATA_DIR/dados` ➜ 🏁 backup guardado | O arquivo fica na pasta do usuário, no host |
+| 1 | Usuário ➜ `deploy.sh` | O usuário executa `./deploy.sh` no host |
+| 2 | `deploy.sh` ➜ Pure-FTPd | O script valida a configuração, constrói as imagens (`docker compose build`), sobe os três containers (`up -d --wait`) e espera ficarem `healthy` |
+| 3 | Usuário ➜ nginx | O usuário abre o painel por HTTPS em `8443/tcp`: quem atende é o nginx, que confere a rede de origem e a taxa de pedidos |
+| 4 | nginx ➜ Painel web | O pedido aceito é repassado ao painel pelo soquete Unix, com o endereço do cliente |
+| 5 | Painel web ➜ `DATA_DIR/auth` | O painel cria, troca a senha ou remove o usuário no PureDB |
+| 6 | Equipamento de rede ➜ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
+| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
+| 8 | `DATA_DIR/dados` ➜ backup guardado | O arquivo fica na pasta do usuário, no host |
 
-**🧷 Apoio**
+**Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
-| ⌨️ `deploy.sh` e `manage-user.sh` | 📄 `.env` | cria, lê e grava o perfil |
-| ⚙️ Pure-FTPd | 🔑 `.secrets` (`ftp_password.txt`) | lê a senha na subida, somente leitura |
-| 🖥️ Painel web | 🔑 `.secrets` (`painel_password_hash.txt`) | lê o hash a cada entrada, somente leitura |
-| ⚙️ Pure-FTPd | 🗄️ `DATA_DIR/auth` (PureDB) | consulta os usuários |
-| ⚙️ Pure-FTPd | 💽 `DATA_DIR/certs` | lê o certificado |
-| 🖥️ Painel web | 💽 `DATA_DIR/painel` | grava o certificado e a auditoria |
-| 🖥️ Painel web | 💽 `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
-| 🚦 nginx | 💽 `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
-| 🖥️ Painel web | 💽 `DATA_DIR/dados` | cria a pasta do usuário |
-| ⚙️ Pure-FTPd | 📚 log CLF (`stdout`) | grava cada transferência |
+| `deploy.sh` e `manage-user.sh` | `.env` | cria, lê e grava o perfil |
+| Pure-FTPd | `.secrets` (`ftp_password.txt`) | lê a senha na subida, somente leitura |
+| Painel web | `.secrets` (`painel_password_hash.txt`) | lê o hash a cada entrada, somente leitura |
+| Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
+| Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
+| Painel web | `DATA_DIR/painel` | grava o certificado e a auditoria |
+| Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
+| nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
+| Painel web | `DATA_DIR/dados` | cria a pasta do usuário |
+| Pure-FTPd | log CLF (`stdout`) | grava cada transferência |
 
 </details>
 
@@ -143,7 +143,7 @@ flowchart LR
 | Frente web | [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo) e as páginas de erro de [`nginx/erro/`](../nginx/erro/) | nginx sem root: fecha o HTTPS, recusa quem está fora das redes permitidas, limita taxa de pedidos, conexões e tamanho do pedido e repassa o resto ao painel |
 | Entrypoint do nginx | [`scripts/nginx-entrypoint.sh`](../scripts/nginx-entrypoint.sh), instalado como `/usr/local/sbin/allsafe-nginx-entrypoint` | Confere a rede privada, gera a configuração a partir do modelo e faz `exec` do `nginx` |
 
-O que cada script faz, com parâmetros e saída: [⌨️ Scripts](scripts.md). Uso e proteções do painel: [🖥️ Painel web](painel.md).
+O que cada script faz, com parâmetros e saída: [Scripts](scripts.md). Uso e proteções do painel: [Painel web](painel.md).
 
 ---
 
@@ -170,7 +170,7 @@ Cada serviço vê um único arquivo de `.secrets/`, e o `nginx` não vê nenhum.
 ## 🌐 Rede
 
 - Rede bridge dedicada `allsafe-ftp-network`, sub-rede `172.29.1.0/29` (variável `FTP_SUBNET`), com os três containers.
-- Publicações no host (veja [⚙️ Configuração](configuracao.md#rede-e-portas) e [🖥️ Painel web](configuracao.md#painel)):
+- Publicações no host (veja [Configuração](configuracao.md#rede-e-portas) e [Painel web](configuracao.md#painel)):
 
 | Publicação | Para quê |
 |---|---|
@@ -192,7 +192,7 @@ Cada serviço vê um único arquivo de `.secrets/`, e o `nginx` não vê nenhum.
 O que acontece entre o `./deploy.sh` e o container `healthy`.
 
 <details>
-<summary>🔄 Modelo da subida, com a sequência escrita — clique para expandir</summary>
+<summary>Modelo da subida, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: diagramas/subida-modelo.mmd -->
 ```mermaid
@@ -246,42 +246,42 @@ flowchart LR
     pure -. "consulta" .-> puredb
 ```
 
-<sub>📐 Nível 3 · Modelo · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
+<sub>Nível 3 · Modelo · [fonte](diagramas/)</sub>
 
 | Nº | De ➜ Para | O que acontece | Protocolo e porta | Regra |
 |---|---|---|---|---|
-| 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | Executa `./deploy.sh` | — | Sem `.env`, o script cria um a partir do exemplo e segue; antes de agir confere Docker, Compose e portas livres |
-| 2 | ⌨️ `deploy.sh` ➜ 🐳 Docker Compose | Roda `docker compose build` e `up -d --wait` com o `.env` | — | Antes roda `config --quiet`; configuração inválida não sobe |
-| 3 | 🐳 Docker Compose ➜ ⚙️ entrypoint | Inicia o container `allsafe-ftp` | — | Raiz somente leitura, `tini` como processo 1 |
-| 4 | ⚙️ entrypoint ➜ ❓ variáveis válidas? | Confere usuário, senha, faixa passiva e modo TLS | — | Nome `^[a-z_][a-z0-9_-]{0,31}$`, senha de 12 ou mais, faixa entre `1024` e `65535`, TLS de `0` a `3` |
-| 5a | ❓ variáveis válidas? ➜ 👥 `pure-pw` | ✅ Sim: cria (`useradd`) ou atualiza (`usermod`) o usuário inicial | — | Usuário virtual com uid e gid `ftpdata`, home `/data/<usuario>` |
-| 5b | ❓ variáveis válidas? ➜ ⛔ FALHA no log | ❌ Não: o entrypoint sai com `FALHA: <motivo>` | — | O container reinicia em laço até a correção |
-| 6 | 👥 `pure-pw` ➜ ❓ certificado existe? | Compila o banco com `pure-pw mkdb` e segue | — | `pureftpd.passwd` e `pureftpd.pdb` ficam `0600` |
-| 7a | ❓ certificado existe? ➜ ⚙️ `pure-ftpd` | ✅ Sim: reutiliza o `pure-ftpd.pem` | — | O certificado existente nunca é sobrescrito |
-| 7b | ❓ certificado existe? ➜ 🔏 `openssl` | ❌ Não: gera um autoassinado | — | RSA 3072, SHA-256, 825 dias, SAN `IP:` ou `DNS:` conforme `FTP_CERT_CN` |
-| 8 | 🔏 `openssl` ➜ ⚙️ `pure-ftpd` | Certificado pronto, `0600` | — | As variáveis de senha são apagadas (`unset`) antes do `exec` |
-| 9 | ⚙️ `pure-ftpd` ➜ 🩺 healthcheck | Processo conferido a cada 20 s | TCP `2121` e a faixa passiva | `start_period` de 20 s, 5 tentativas |
-| 10 | 🩺 healthcheck ➜ 🏁 FTP pronto | Processo vivo: container `healthy` | — | Confere só o processo, não o login |
+| 1 | Usuário ➜ `deploy.sh` | Executa `./deploy.sh` | — | Sem `.env`, o script cria um a partir do exemplo e segue; antes de agir confere Docker, Compose e portas livres |
+| 2 | `deploy.sh` ➜ Docker Compose | Roda `docker compose build` e `up -d --wait` com o `.env` | — | Antes roda `config --quiet`; configuração inválida não sobe |
+| 3 | Docker Compose ➜ entrypoint | Inicia o container `allsafe-ftp` | — | Raiz somente leitura, `tini` como processo 1 |
+| 4 | entrypoint ➜ variáveis válidas? | Confere usuário, senha, faixa passiva e modo TLS | — | Nome `^[a-z_][a-z0-9_-]{0,31}$`, senha de 12 ou mais, faixa entre `1024` e `65535`, TLS de `0` a `3` |
+| 5a | variáveis válidas? ➜ `pure-pw` | Sim: cria (`useradd`) ou atualiza (`usermod`) o usuário inicial | — | Usuário virtual com uid e gid `ftpdata`, home `/data/<usuario>` |
+| 5b | variáveis válidas? ➜ FALHA no log | Não: o entrypoint sai com `FALHA: <motivo>` | — | O container reinicia em laço até a correção |
+| 6 | `pure-pw` ➜ certificado existe? | Compila o banco com `pure-pw mkdb` e segue | — | `pureftpd.passwd` e `pureftpd.pdb` ficam `0600` |
+| 7a | certificado existe? ➜ `pure-ftpd` | Sim: reutiliza o `pure-ftpd.pem` | — | O certificado existente nunca é sobrescrito |
+| 7b | certificado existe? ➜ `openssl` | Não: gera um autoassinado | — | RSA 3072, SHA-256, 825 dias, SAN `IP:` ou `DNS:` conforme `FTP_CERT_CN` |
+| 8 | `openssl` ➜ `pure-ftpd` | Certificado pronto, `0600` | — | As variáveis de senha são apagadas (`unset`) antes do `exec` |
+| 9 | `pure-ftpd` ➜ healthcheck | Processo conferido a cada 20 s | TCP `2121` e a faixa passiva | `start_period` de 20 s, 5 tentativas |
+| 10 | healthcheck ➜ FTP pronto | Processo vivo: container `healthy` | — | Confere só o processo, não o login |
 
-**🧷 Apoio**
+**Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
-| ⌨️ `deploy.sh` | 🔑 `.secrets/ftp_password.txt` | gera a senha se o arquivo estiver vazio, `0600` |
-| 🐳 Docker Compose | 📄 `.env` | lê |
-| ⚙️ entrypoint | 🔑 `.secrets/ftp_password.txt` | lê, somente leitura |
-| ⚙️ entrypoint | 💽 `/data` | cria a pasta do usuário |
-| 👥 `pure-pw` | 🗄️ PureDB (`/auth/pureftpd.pdb`) | grava |
-| 🔏 `openssl` | 📄 `pure-ftpd.pem` | grava |
-| ⚙️ `pure-ftpd` | 📄 `pure-ftpd.pem` | lê |
-| ⚙️ `pure-ftpd` | 🗄️ PureDB | consulta |
+| `deploy.sh` | `.secrets/ftp_password.txt` | gera a senha se o arquivo estiver vazio, `0600` |
+| Docker Compose | `.env` | lê |
+| entrypoint | `.secrets/ftp_password.txt` | lê, somente leitura |
+| entrypoint | `/data` | cria a pasta do usuário |
+| `pure-pw` | PureDB (`/auth/pureftpd.pdb`) | grava |
+| `openssl` | `pure-ftpd.pem` | grava |
+| `pure-ftpd` | `pure-ftpd.pem` | lê |
+| `pure-ftpd` | PureDB | consulta |
 
 </details>
 
-Nas subidas seguintes o usuário inicial é **atualizado** (`usermod`) e o certificado existente é **mantido**. Com o FTP `healthy`, o Compose inicia o painel e, com o painel `healthy`, o nginx: o que cada entrypoint confere está em [⌨️ Scripts](scripts.md#painel-entrypoint), nas seções do painel e do [nginx](scripts.md#nginx-entrypoint). Nos modos `0` e `1` de `FTP_TLS_MODE`, o entrypoint do FTP grava um `AVISO` no log antes de subir: [🔐 Segurança](seguranca.md#ftp-sem-tls).
+Nas subidas seguintes o usuário inicial é **atualizado** (`usermod`) e o certificado existente é **mantido**. Com o FTP `healthy`, o Compose inicia o painel e, com o painel `healthy`, o nginx: o que cada entrypoint confere está em [Scripts](scripts.md#painel-entrypoint), nas seções do painel e do [nginx](scripts.md#nginx-entrypoint). Nos modos `0` e `1` de `FTP_TLS_MODE`, o entrypoint do FTP grava um `AVISO` no log antes de subir: [Segurança](seguranca.md#ftp-sem-tls).
 
 <details>
-<summary>🔬 Detalhe técnico — quem é o processo 1</summary>
+<summary>Detalhe técnico — quem é o processo 1</summary>
 
 Com `init: true` no [`compose.yaml`](../compose.yaml), o processo 1 do container é o `tini` (`docker-init`). Ele inicia o entrypoint, que termina com `exec /usr/sbin/pure-ftpd`: o `pure-ftpd` toma o lugar do entrypoint e fica como filho direto do `tini`, que repassa os sinais e recolhe processos órfãos.
 
@@ -314,7 +314,7 @@ Linha final do [`entrypoint.sh`](../scripts/entrypoint.sh):
 | `-p INICIO:FIM` | Faixa de portas passivas |
 | `-P <ip>` | IP anunciado no `PASV` (`FTP_PUBLIC_IP`) |
 | `-S 0.0.0.0,2121` | Escuta na porta 2121 (não privilegiada) |
-| `-Y <modo>` | Política TLS (`FTP_TLS_MODE`): veja [⚙️ Configuração](configuracao.md#tls) |
+| `-Y <modo>` | Política TLS (`FTP_TLS_MODE`): veja [Configuração](configuracao.md#tls) |
 | `-O clf:/dev/stdout` | Log de acesso em formato CLF no `stdout` |
 
 ---
@@ -328,7 +328,7 @@ test: ["CMD-SHELL", "pidof pure-ftpd >/dev/null"]
 interval: 20s   timeout: 5s   retries: 5   start_period: 20s
 ```
 
-Verifica apenas que o processo está vivo. Para uma checagem funcional (o usuário existe no PureDB), use `./scripts/validate.sh --runtime`: veja [⌨️ Scripts](scripts.md#validate).
+Verifica apenas que o processo está vivo. Para uma checagem funcional (o usuário existe no PureDB), use `./scripts/validate.sh --runtime`: veja [Scripts](scripts.md#validate).
 
 O painel tem o dele, que pede `/saude` pelo soquete Unix, do jeito que o nginx faz:
 
@@ -361,8 +361,8 @@ interval: 20s   timeout: 8s   retries: 5   start_period: 20s
 | Limites de recurso | `pids_limit`, `mem_limit`, `cpus`, `ulimits.nofile` |
 | Log com rotação | `logging: local`, 10 MB × 3 |
 
-Justificativa de cada diretiva e de cada `cap_add`: [🔐 Segurança](seguranca.md#hardening-do-compose-yaml-linha-a-linha).
+Justificativa de cada diretiva e de cada `cap_add`: [Segurança](seguranca.md#hardening-do-compose-yaml-linha-a-linha).
 
 ---
 
-⬅️ [🎚️ Perfis](perfis.md) · 🏠 [Documentação](README.md) · ➡️ [🔐 Segurança](seguranca.md)
+⬅️ [Perfis](perfis.md) · 🏠 [Documentação](README.md) · ➡️ [Segurança](seguranca.md)
