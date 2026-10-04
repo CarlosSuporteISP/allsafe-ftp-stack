@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.5.3-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.5.4-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -30,7 +30,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.5.3</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.5.4</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -294,9 +294,6 @@ flowchart LR
 
 Três containers em uma rede própria: `ftp` (Pure-FTPd), `painel` (Python) e `nginx`, a única porta de entrada do painel. Os dados ficam no host, em `DATA_DIR`, e as senhas em `.secrets/`.
 
-<details>
-<summary>Mapa da arquitetura, com a sequência escrita — clique para expandir</summary>
-
 <!-- diagrama: doc/diagramas/arquitetura-mapa.mmd -->
 ```mermaid
 %%{init: {"theme": "dark"}}%%
@@ -374,8 +371,6 @@ flowchart LR
 | nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
 | Painel web | `DATA_DIR/dados` | cria a pasta do usuário |
 | Pure-FTPd | log CLF (`stdout`) | grava cada transferência |
-
-</details>
 
 <details>
 <summary>Peças, portas, pastas, imagens e entrypoints — clique para expandir</summary>
@@ -580,7 +575,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.5.3**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.5.4**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

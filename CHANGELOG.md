@@ -8,6 +8,14 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.5.4] - 2026-10-04
+
+Mapa da arquitetura aberto no README. Nenhuma mudança no funcionamento da stack.
+
+### Alterado
+
+- **Dois diagramas abertos no README:** o da abertura e o mapa da arquitetura, que saiu do menu recolhido e aparece direto na seção Arquitetura, com a sequência escrita. Os fluxogramas completos do FTP e do painel e as tabelas continuam em menus recolhidos.
+
 ## [0.5.3] - 2026-10-04
 
 Documentação mais limpa: menos emojis e sem avisos de coisa que falta. Nenhuma mudança no funcionamento da stack.
