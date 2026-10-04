@@ -38,6 +38,8 @@ O usuário mandou executar o plano inteiro, uma fase emendada na outra, sem perg
 Ordens do usuário que valem para todas as fases:
 
 - Commit e push **deste plano antes de executar**, e de novo ao final.
+- **Cada publicação avança a versão** (`VERSION`, `CHANGELOG.md`, selo do README) e ganha a tag `vX.Y.Z`: fase 04 = `0.2.0`, 05 = `0.3.0`, 06 = `0.4.0`, 07 = `0.5.0`, 08 = `0.6.0`, 09 = `1.0.0`.
+- Diagrama novo ou alterado: editar o `.mmd` e rodar o `renderizar.sh`, que atualiza os blocos Mermaid dos `.md`.
 - A stack é só para **IP privado, interno, atrás de firewall**: avisar na documentação e recusar por código.
 - O painel web tem de ser **seguro**.
 - `.env` só com variável ajustável; senha, token, chave e identificador de integração só em `.secrets/`.
@@ -76,7 +78,8 @@ Não leia nem exponha o `.env` e o conteúdo de `.secrets/`.
 | Testes com `curl --ssl-reqd` a partir do host, em instância isolada | Já instalado; testa a porta publicada sem tocar na instância definitiva |
 | Firewall do host: só documentar | É sistema fora do projeto |
 | Créditos: usuário, Claude e projetos oficiais | Determinação do usuário |
-| Versão em `0.1.0`, sem tag | Versão, tag e release só por ordem |
+| A versão avança a cada publicação, com tag: `0.1.1` agora, uma versão por fase e `1.0.0` na fase 09 | Ordem do usuário; a sequência está no [plano mestre](README.md#versoes) |
+| Diagramas nos `.md` como bloco Mermaid, direto do `.mmd`, com fundo escuro; SVG só na pasta | Ordem do usuário: zoom e movimento no próprio diagrama |
 
 ---
 
@@ -84,7 +87,7 @@ Não leia nem exponha o `.env` e o conteúdo de `.secrets/`.
 
 | Problema | Situação |
 |---|---|
-| `gh` não autenticado neste host | O PR é aberto pelo usuário, pelo link de comparação; descrição e tópicos ficam em Pendências |
+| `gh` não autenticado neste host | O PR é aberto pelo usuário, pelo link de comparação; Release, descrição e tópicos ficam em Pendências |
 | `lftp` e `shellcheck` ausentes | Não são obrigatórios; os testes usam `curl` |
 
 ---
@@ -109,7 +112,7 @@ Nada no ar ainda. A partir da fase 06: `./deploy.sh --remover` derruba e preserv
 
 - Aplicar as regras de firewall no host, quando abrir a stack para a rede interna.
 - Aceitar o PR da branch `feat/painel-web-e-pastas-fixas`.
-- Versão, tag e release.
+- Release no GitHub de cada tag (depende do `gh` autenticado).
 - Licença.
 - Descrição e tópicos do repositório (`gh repo edit`, no plano mestre).
 - Envio ao remoto `empresa`.

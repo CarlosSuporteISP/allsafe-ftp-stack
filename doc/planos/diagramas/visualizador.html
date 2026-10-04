@@ -3,13 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Visualizador de diagramas</title>
-<!-- Gerado por /home/carlos/code/padrao-diagramas/renderizar.sh. Não edite à mão: a lista de diagramas é reescrita a cada renderização. -->
+<title>Visualizador de diagramas e imagens</title>
+<!-- Gerado por /home/carlos/code/padrao-diagramas/renderizar.sh. Não edite à mão: a lista é reescrita a cada renderização. -->
 <style>
-:root { --fundo: #ffffff; --painel: #f6f8fa; --borda: #d0d7de; --texto: #1f2328; --apagado: #57606a; --botao: #ffffff; --sobre: #eaeef2; }
-@media (prefers-color-scheme: dark) {
-  :root { --fundo: #0d1117; --painel: #161b22; --borda: #30363d; --texto: #e6edf3; --apagado: #8b949e; --botao: #21262d; --sobre: #30363d; }
-}
+/* Fundo escuro é o padrão; o botão de tema troca para o claro. */
+:root { --fundo: #0d1117; --painel: #161b22; --borda: #30363d; --texto: #e6edf3; --apagado: #8b949e; --botao: #21262d; --sobre: #30363d; }
+:root[data-tema="claro"] { --fundo: #ffffff; --painel: #f6f8fa; --borda: #d0d7de; --texto: #1f2328; --apagado: #57606a; --botao: #ffffff; --sobre: #eaeef2; }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--fundo); color: var(--texto); font: 14px/1.4 Arial, Helvetica, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
@@ -35,12 +34,13 @@ button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke
 </head>
 <body>
 <header>
-  <strong>📐 Diagramas</strong>
-  <select id="lista" aria-label="Escolher o diagrama"></select>
-  <span class="dica">roda do mouse aproxima · arrastar move · teclas + − 0 e setas</span>
+  <strong>🔍 Visualizador</strong>
+  <select id="lista" aria-label="Escolher o diagrama ou a imagem"></select>
+  <span class="dica">roda do mouse aproxima · arrastar move · teclas + − 0, setas e T</span>
+  <button id="tema" title="Trocar entre fundo escuro e claro (T)" aria-label="Trocar entre fundo escuro e claro"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></button>
   <button id="fechar" title="Fechar (Esc)" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 </header>
-<main id="palco" aria-label="Área do diagrama">
+<main id="palco" aria-label="Área do diagrama ou da imagem">
   <img id="desenho" alt="" draggable="false">
   <div id="zoom" aria-live="polite">100%</div>
   <div id="controles" role="group" aria-label="Aproximar, afastar e mover">
@@ -52,7 +52,7 @@ button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke
     <button id="baixo" title="Mover para baixo (↓)" aria-label="Mover para baixo"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
     <button id="menos" title="Afastar (−)" aria-label="Afastar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5M8 11h6"/></svg></button>
   </div>
-  <p id="vazio" hidden>Nenhum diagrama nesta pasta.</p>
+  <p id="vazio" hidden>Nenhum diagrama nem imagem nesta pasta.</p>
 </main>
 <script>
 const DIAGRAMAS = /*LISTA*/["01-03-entregue-fluxograma", "04-pastas-segredos-rede-fluxograma", "05-painel-fluxograma", "06-instalacao-fluxograma", "07-testes-fluxograma", "08-backup-fluxograma", "09-documentacao-fluxograma", "arquitetura-antes-mapa", "arquitetura-depois-mapa", "fase-execucao-mapa", "plano-geral-mapa"];
@@ -60,7 +60,8 @@ const palco = document.getElementById("palco");
 const desenho = document.getElementById("desenho");
 const lista = document.getElementById("lista");
 const rotuloZoom = document.getElementById("zoom");
-const escuro = matchMedia("(prefers-color-scheme: dark)");
+const IMAGEM = /\.(png|jpe?g|webp|gif)$/i; // item com extensão é imagem; sem extensão é diagrama (<nome>.svg)
+let claro = false;
 const MINIMO = 0.1, MAXIMO = 12, PASSO = 1.25, ANDAR = 80;
 let base = 1, escala = 1, x = 0, y = 0, razao = 0.5;
 
@@ -93,17 +94,19 @@ function abrir(nome) {
   if (!DIAGRAMAS.includes(nome)) nome = DIAGRAMAS[0];
   if (!nome) { document.getElementById("vazio").hidden = false; document.getElementById("controles").hidden = true; return; }
   lista.value = nome;
-  document.title = nome + " · visualizador de diagramas";
-  desenho.alt = "Diagrama " + nome;
+  const imagem = IMAGEM.test(nome);
+  document.title = nome + " · visualizador";
+  desenho.alt = (imagem ? "Imagem " : "Diagrama ") + nome;
+  document.documentElement.dataset.tema = claro ? "claro" : "escuro";
   desenho.onload = () => { razao = desenho.naturalHeight / desenho.naturalWidth || 0.5; ajustar(); };
-  desenho.src = nome + (escuro.matches ? "-escuro" : "") + ".svg";
+  desenho.src = imagem ? nome : nome + (claro ? "-claro" : "") + ".svg";
   if (decodeURIComponent(location.hash.slice(1)) !== nome) history.replaceState(null, "", "#" + nome);
 }
 
 for (const nome of DIAGRAMAS) lista.add(new Option(nome, nome));
 lista.onchange = () => abrir(lista.value);
 addEventListener("hashchange", () => abrir(decodeURIComponent(location.hash.slice(1))));
-escuro.addEventListener("change", () => abrir(lista.value));
+document.getElementById("tema").onclick = () => { claro = !claro; abrir(lista.value); };
 addEventListener("resize", ajustar);
 
 document.getElementById("mais").onclick = () => zoom(PASSO);
@@ -153,6 +156,7 @@ addEventListener("keydown", (e) => {
     "+": () => zoom(PASSO), "=": () => zoom(PASSO), "-": () => zoom(1 / PASSO), "0": ajustar,
     ArrowUp: () => mover(0, ANDAR), ArrowDown: () => mover(0, -ANDAR),
     ArrowLeft: () => mover(ANDAR, 0), ArrowRight: () => mover(-ANDAR, 0),
+    t: () => document.getElementById("tema").click(), T: () => document.getElementById("tema").click(),
     Escape: () => document.getElementById("fechar").click(),
   };
   if (acoes[e.key]) { e.preventDefault(); acoes[e.key](); }

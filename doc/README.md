@@ -6,12 +6,20 @@
 
 Esta pasta explica a stack **como ela é hoje**: como instalar, configurar, operar e consertar o servidor FTP que recebe o backup dos equipamentos de rede. Cada guia começa com um resumo para quem nunca viu o projeto e guarda o detalhe técnico em menus recolhidos. O que ainda vai mudar fica no plano, não aqui.
 
-<a href="diagramas/visao-geral-diagrama.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/visao-geral-diagrama-escuro.svg">
-  <img src="diagramas/visao-geral-diagrama.svg" alt="Visão geral: o equipamento de rede envia o backup ao Pure-FTPd, que confere o usuário no PureDB e grava o arquivo em /data" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/visao-geral-diagrama.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    equip@{ shape: hex, label: "📡 Equipamento de rede<br>envia o backup" }
+    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, FTPS" }
+    puredb@{ shape: cyl, label: "🗄️ PureDB<br>usuários virtuais" }
+    dados@{ shape: lin-cyl, label: "💽 /data<br>uma pasta por usuário" }
+    fim@{ shape: stadium, label: "🏁 backup guardado" }
 
-<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/visao-geral-diagrama.mmd) · [no computador](diagramas/visualizador.html#visao-geral-diagrama)</sub>
+    equip --> ftp --> puredb --> dados --> fim
+```
+
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência:** 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 backup guardado
 
@@ -79,7 +87,7 @@ Esta pasta explica a stack **como ela é hoje**: como instalar, configurar, oper
 
 ## 📐 Diagramas
 
-Fonte em `.mmd` e imagem em SVG, clara e escura, na pasta [`diagramas/`](diagramas/). Todo diagrama **abre com zoom e movimento**: no GitHub, clicando na imagem (abre o `.mmd`); no computador, pelo [`visualizador.html`](diagramas/visualizador.html) da pasta. Para gerar de novo depois de editar uma fonte:
+Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com os **controles de aproximar e mover** no canto do próprio diagrama. Na pasta [`diagramas/`](diagramas/) ficam o fonte, a imagem SVG escura (`<nome>.svg`), a de fundo branco (`<nome>-claro.svg`) e o [`visualizador.html`](diagramas/visualizador.html), que abre qualquer uma delas no computador, também com zoom e movimento. Para gerar de novo depois de editar uma fonte:
 
 ```bash
 /home/carlos/code/padrao-diagramas/renderizar.sh doc/diagramas doc/planos/diagramas

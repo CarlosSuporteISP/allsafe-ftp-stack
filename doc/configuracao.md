@@ -6,12 +6,20 @@
 
 Tudo o que muda de uma instalação para outra fica em um arquivo só, o `.env`: o IP, a porta, o nome do usuário e os limites. O porte do servidor vem de um segundo arquivo, o perfil, que só troca os números de capacidade. O Docker Compose junta os dois e aplica ao servidor FTP.
 
-<a href="diagramas/configuracao-diagrama.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/configuracao-diagrama-escuro.svg">
-  <img src="diagramas/configuracao-diagrama.svg" alt="Configuração: o .env traz os valores do ambiente, o perfil sobrescreve os limites, o Docker Compose junta os dois e aplica ao Pure-FTPd" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/configuracao-diagrama.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    env@{ shape: doc, label: "📄 .env<br>valores do ambiente" }
+    perfil@{ shape: doc, label: "🎚️ profiles/small.env<br>limites do perfil" }
+    compose@{ shape: rect, label: "🐳 Docker Compose<br>junta os dois" }
+    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
+    fim@{ shape: stadium, label: "🏁 limites aplicados" }
 
-<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/configuracao-diagrama.mmd) · [no computador](diagramas/visualizador.html#configuracao-diagrama)</sub>
+    env --> perfil --> compose --> ftp --> fim
+```
+
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência:** 📄 `.env` ➜ 🎚️ `profiles/small.env` ➜ 🐳 Docker Compose ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 limites aplicados
 

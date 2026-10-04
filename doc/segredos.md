@@ -6,12 +6,21 @@
 
 A senha do usuário inicial do FTP mora em um arquivo só, dentro da pasta `.secrets/`, que nunca vai para o Git nem para dentro da imagem. O script de instalação cria essa senha sozinho na primeira vez. O servidor lê o arquivo ao subir e guarda apenas o hash dela.
 
-<a href="diagramas/segredos-diagrama.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/segredos-diagrama-escuro.svg">
-  <img src="diagramas/segredos-diagrama.svg" alt="Caminho da senha: o deploy.sh gera o arquivo em .secrets, o container o monta somente leitura, o entrypoint lê e o PureDB guarda só o hash" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/segredos-diagrama.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    deploy@{ shape: console, label: "⌨️ deploy.sh<br>gera a senha" }
+    arquivo@{ shape: doc, label: "🔑 .secrets/ftp_password.txt<br>0600, fora do Git" }
+    montagem@{ shape: rect, label: "🐳 /run/.secrets<br>só leitura" }
+    entry@{ shape: rect, label: "⚙️ entrypoint<br>lê e apaga da memória" }
+    puredb@{ shape: cyl, label: "🗄️ PureDB<br>guarda só o hash" }
+    fim@{ shape: stadium, label: "🏁 senha fora da imagem" }
 
-<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/segredos-diagrama.mmd) · [no computador](diagramas/visualizador.html#segredos-diagrama)</sub>
+    deploy --> arquivo --> montagem --> entry --> puredb --> fim
+```
+
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência:** ⌨️ `deploy.sh` ➜ 🔑 `.secrets/ftp_password.txt` ➜ 🐳 `/run/.secrets` (somente leitura) ➜ ⚙️ entrypoint ➜ 🗄️ PureDB (guarda só o hash) ➜ 🏁 senha fora da imagem
 

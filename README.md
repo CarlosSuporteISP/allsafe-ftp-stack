@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com usuários virtuais, chroot e FTPS obrigatório para backup de equipamentos.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.1.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.1.1-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -13,16 +13,24 @@
 ![OpenSSL](https://img.shields.io/badge/OpenSSL-3.0-721412?logo=openssl&logoColor=white)
 ![Bash](https://img.shields.io/badge/Bash-5.2-4eaa25?logo=gnubash&logoColor=white)
 
-<a href="doc/diagramas/visao-geral-diagrama.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="doc/diagramas/visao-geral-diagrama-escuro.svg">
-  <img src="doc/diagramas/visao-geral-diagrama.svg" alt="Visão geral: o equipamento de rede envia o backup ao Pure-FTPd, que confere o usuário no PureDB e grava o arquivo em /data" width="100%">
-</picture></a>
+<!-- diagrama: doc/diagramas/visao-geral-diagrama.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    equip@{ shape: hex, label: "📡 Equipamento de rede<br>envia o backup" }
+    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, FTPS" }
+    puredb@{ shape: cyl, label: "🗄️ PureDB<br>usuários virtuais" }
+    dados@{ shape: lin-cyl, label: "💽 /data<br>uma pasta por usuário" }
+    fim@{ shape: stadium, label: "🏁 backup guardado" }
 
-<sub><b>v0.1.0</b> · visão geral da stack · 2026-10-04</sub>
+    equip --> ftp --> puredb --> dados --> fim
+```
+
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](doc/diagramas/)</sub>
+
+<sub><b>v0.1.1</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
-
-<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](doc/diagramas/visao-geral-diagrama.mmd) · [no computador](doc/diagramas/visualizador.html#visao-geral-diagrama)</sub>
 
 **🧭 Sequência:** 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 backup guardado
 
@@ -117,12 +125,46 @@ Passo a passo comentado em [🚀 doc/instalacao.md](doc/instalacao.md).
 
 ## 🔄 Como funciona
 
-<a href="doc/diagramas/funcionamento-fluxograma.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="doc/diagramas/funcionamento-fluxograma-escuro.svg">
-  <img src="doc/diagramas/funcionamento-fluxograma.svg" alt="Fluxograma de um envio de backup: conexão, exigência de TLS, conferência de usuário e senha no PureDB, sessão em chroot, gravação em /data e recusa quando falta TLS ou a senha não confere" width="100%">
-</picture></a>
+<!-- diagrama: doc/diagramas/funcionamento-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["📡 Origem"]
+        equip@{ shape: hex, label: "📡 Equipamento de rede<br>cliente FTP" }
+    end
+    subgraph ENTRADA["🚪 Entrada"]
+        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
+        tls@{ shape: diam, label: "❓ pediu<br>TLS?" }
+        cert@{ shape: doc, label: "📄 certificado<br>pure-ftpd.pem" }
+        logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
+    end
+    subgraph AUTH["🔐 Autenticação"]
+        login@{ shape: diam, label: "❓ usuário e senha<br>conferem?" }
+        puredb@{ shape: cyl, label: "🗄️ PureDB<br>usuários virtuais" }
+    end
+    subgraph DADOS["💽 Dados"]
+        sessao@{ shape: rect, label: "🔒 sessão em chroot<br>presa na pasta" }
+        dados@{ shape: lin-cyl, label: "💽 /data<br>pasta do usuário" }
+    end
+    subgraph RESULTADO["🏁 Resultado"]
+        fim@{ shape: stadium, label: "🏁 backup guardado" }
+        recusa@{ shape: stadium, label: "⛔ conexão recusada" }
+    end
 
-<sub>📐 Nível 2 · Fluxograma · 🔍 abrir com zoom e movimento: [no GitHub](doc/diagramas/funcionamento-fluxograma.mmd) · [no computador](doc/diagramas/visualizador.html#funcionamento-fluxograma)</sub>
+    equip -- "1 · conecta, TCP 21" --> ftp
+    ftp -- "2 · exige AUTH TLS" --> tls
+    tls -- "3a · ✅ sim: usuário e senha" --> login
+    tls -- "3b · ❌ não" --> recusa
+    login -. "4 · consulta o usuário" .-> puredb
+    login -- "5a · ✅ sim: abre a sessão" --> sessao
+    login -- "5b · ❌ não" --> recusa
+    sessao -- "6 · envia o arquivo, TCP 30000 a 30049" --> dados
+    dados -- "7 · arquivo gravado" --> fim
+    ftp -. "apresenta" .-> cert
+    ftp -. "grava cada transferência" .-> logs
+```
+
+<sub>📐 Nível 2 · Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](doc/diagramas/)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
@@ -149,12 +191,45 @@ Passo a passo comentado em [🚀 doc/instalacao.md](doc/instalacao.md).
 
 ## 🏗️ Arquitetura
 
-<a href="doc/diagramas/arquitetura-mapa.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="doc/diagramas/arquitetura-mapa-escuro.svg">
-  <img src="doc/diagramas/arquitetura-mapa.svg" alt="Mapa da arquitetura: usuário e scripts no host, container allsafe-ftp na rede allsafe-ftp-network, três volumes e o arquivo de senha montado somente leitura" width="100%">
-</picture></a>
+<!-- diagrama: doc/diagramas/arquitetura-mapa.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph USO["👤 Quem usa"]
+        operador@{ shape: person, label: "👤 Usuário<br>opera a stack" }
+        equip@{ shape: hex, label: "📡 Equipamento de rede<br>cliente FTP" }
+    end
+    subgraph HOST["🖥️ Host"]
+        scripts@{ shape: console, label: "⌨️ deploy.sh<br>manage-user.sh" }
+        env@{ shape: doc, label: "📄 .env<br>e perfil" }
+        segredo@{ shape: doc, label: "🔑 .secrets<br>ftp_password.txt" }
+    end
+    subgraph CONTAINER["🐳 Container allsafe-ftp · rede allsafe-ftp-network"]
+        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>2121/tcp" }
+        logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
+    end
+    subgraph VOLUMES["💽 Volumes"]
+        vcerts@{ shape: lin-cyl, label: "💽 allsafe-ftp-certs<br>/etc/ssl/private" }
+        vauth@{ shape: cyl, label: "🗄️ allsafe-ftp-auth<br>/auth, PureDB" }
+        vdata@{ shape: lin-cyl, label: "💽 allsafe-ftp-data<br>/data" }
+    end
+    subgraph RESULTADO["🏁 Resultado"]
+        fim@{ shape: stadium, label: "🏁 backup guardado" }
+    end
 
-<sub>📐 Nível 2 · Mapa · 🔍 abrir com zoom e movimento: [no GitHub](doc/diagramas/arquitetura-mapa.mmd) · [no computador](doc/diagramas/visualizador.html#arquitetura-mapa)</sub>
+    operador -- "1 · ./deploy.sh --size small" --> scripts
+    scripts -- "2 · docker compose up -d --build" --> ftp
+    equip -- "3 · FTPS, TCP 21 para 2121" --> ftp
+    ftp -- "4 · grava o arquivo, passivo 30000 a 30049" --> vdata
+    vdata -- "5 · arquivo no volume" --> fim
+    scripts -. "lê" .-> env
+    ftp -. "lê na subida, só leitura" .-> segredo
+    ftp -. "consulta os usuários" .-> vauth
+    ftp -. "lê o certificado" .-> vcerts
+    ftp -. "grava cada transferência" .-> logs
+```
+
+<sub>📐 Nível 2 · Mapa · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](doc/diagramas/)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
@@ -310,7 +385,9 @@ O que já foi feito e o que falta fazer está em [🗺️ doc/planos/README.md](
 
 ## 🏷️ Versão
 
-**0.1.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Ainda não há tag nem release publicada.
+**0.1.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` no repositório.
+
+A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. A sequência completa está no [🗺️ plano mestre](doc/planos/README.md#versoes).
 
 ---
 

@@ -6,12 +6,21 @@
 
 Você copia o arquivo de configuração, informa o IP do servidor, roda um script e o servidor FTP sobe sozinho, já com senha forte e conexão criptografada. No fim, um segundo script confere se está tudo no ar. Leva poucos minutos e dá para desfazer sem perder os arquivos.
 
-<a href="diagramas/instalacao-diagrama.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/instalacao-diagrama-escuro.svg">
-  <img src="diagramas/instalacao-diagrama.svg" alt="Instalação: o usuário ajusta o .env, roda o deploy.sh, o Pure-FTPd sobe e o validate.sh confere a subida" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/instalacao-diagrama.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    usuario@{ shape: person, label: "👤 Usuário" }
+    env@{ shape: doc, label: "📄 .env<br>IP, porta e usuário" }
+    deploy@{ shape: console, label: "⌨️ deploy.sh<br>gera a senha e sobe" }
+    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
+    valida@{ shape: console, label: "🧪 validate.sh<br>confere a subida" }
+    fim@{ shape: stadium, label: "🏁 FTP pronto" }
 
-<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/instalacao-diagrama.mmd) · [no computador](diagramas/visualizador.html#instalacao-diagrama)</sub>
+    usuario --> env --> deploy --> ftp --> valida --> fim
+```
+
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência:** 👤 Usuário ➜ 📄 `.env` ➜ ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🧪 `validate.sh` ➜ 🏁 FTP pronto
 

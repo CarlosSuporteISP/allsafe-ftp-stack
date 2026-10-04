@@ -6,12 +6,22 @@
 
 O backup de um equipamento de rede traz senhas e a configuração inteira da rede, então o caminho até o servidor é protegido em camadas: a porta só escuta no IP escolhido, a conexão tem de ser criptografada, cada usuário fica preso na própria pasta e o container roda com o mínimo de permissões. Se uma camada falhar, as outras continuam valendo.
 
-<a href="diagramas/seguranca-diagrama.mmd"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="diagramas/seguranca-diagrama-escuro.svg">
-  <img src="diagramas/seguranca-diagrama.svg" alt="Camadas de segurança: bind e firewall, FTPS obrigatório, PureDB com senha de 12 ou mais caracteres, chroot e container endurecido" width="100%">
-</picture></a>
+<!-- diagrama: diagramas/seguranca-diagrama.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    equip@{ shape: hex, label: "📡 Equipamento de rede" }
+    bind@{ shape: rect, label: "🚪 Bind e firewall<br>127.0.0.1 por padrão" }
+    tls@{ shape: rect, label: "🔐 FTPS obrigatório<br>AUTH TLS" }
+    puredb@{ shape: cyl, label: "🗄️ PureDB<br>senha de 12 ou mais" }
+    chroot@{ shape: rect, label: "🔒 chroot<br>pasta do usuário" }
+    container@{ shape: rect, label: "🐳 Container endurecido<br>raiz somente leitura" }
+    fim@{ shape: stadium, label: "🏁 backup protegido" }
 
-<sub>📐 Nível 1 · Diagrama · 🔍 abrir com zoom e movimento: [no GitHub](diagramas/seguranca-diagrama.mmd) · [no computador](diagramas/visualizador.html#seguranca-diagrama)</sub>
+    equip --> bind --> tls --> puredb --> chroot --> container --> fim
+```
+
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
 **🧭 Sequência:** 📡 Equipamento de rede ➜ 🚪 Bind e firewall ➜ 🔐 FTPS obrigatório ➜ 🗄️ PureDB (senha de 12 ou mais) ➜ 🔒 chroot ➜ 🐳 Container endurecido ➜ 🏁 backup protegido
 
