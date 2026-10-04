@@ -2,6 +2,7 @@
 
 Toda função recebe (pedido, sessao, consulta, formulario, token); `pedido` é o tratador de atendimento.py."""
 import aba_administradores
+import aba_arquivos
 import aba_atividade
 import aba_seguranca
 import aba_usuarios
@@ -17,6 +18,8 @@ ROTAS = {
     ('POST', '/usuarios/senha'): aba_usuarios.trocar_senha,
     ('GET', '/usuarios/remover'): aba_usuarios.tela_remover,
     ('POST', '/usuarios/remover'): aba_usuarios.remover_usuario,
+    ('GET', '/arquivos'): aba_arquivos.lista_arquivos,
+    ('GET', '/arquivos/baixar'): aba_arquivos.baixar,
     ('GET', '/administradores'): aba_administradores.lista,
     ('GET', '/administradores/novo'): aba_administradores.tela_novo,
     ('POST', '/administradores/novo'): aba_administradores.criar,

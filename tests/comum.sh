@@ -210,8 +210,8 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
   printf '%-9s %s → %s\n' "$tipo" "$resultado" "$arquivo"
 }
 declare -A ESPERADOS=(
-  [testes]="$(seq -s ' ' 1 23)"
-  [seguranca]="$(seq -s ' ' 1 51)"
+  [testes]="$(seq -s ' ' 1 25)"
+  [seguranca]="$(seq -s ' ' 1 56)"
   [rede]="$(seq -s ' ' 1 13)"
 )
 ARQUIVOS=()
@@ -230,9 +230,9 @@ encerrar() { # grava os três arquivos, confere que nenhum segredo entrou e sai
   LIMPEZA+=" · outros containers do host: $(printf '%s\n' "$OUTROS_ANTES" | grep -c .), $([[ "$OUTROS_ANTES" == "$(outros)" ]] && echo 'os mesmos antes e depois' || echo 'a lista MUDOU durante a bateria')"
   echo
   gravar testes funcional "🧪 Resultado — bateria funcional" "Testes funcionais" \
-    "Validação estática e em execução, instalação em um comando, login, envio e download por FTPS, ciclo de usuário pelo terminal e pelo painel, reinício, healthcheck do FTP, backup e restauração, abas do painel, atividade e saída, arquivos estáticos pelo nginx, conversão dos nomes antigos, administradores pelo painel e recuperação do acesso pelo host"
+    "Validação estática e em execução, instalação em um comando, login, envio e download por FTPS, ciclo de usuário pelo terminal e pelo painel, reinício, healthcheck do FTP, backup e restauração, abas do painel, atividade e saída, arquivos estáticos pelo nginx, conversão dos nomes antigos, administradores pelo painel, recuperação do acesso pelo host e a aba Arquivos (navegação e download pelo navegador, com nome acentuado e arquivo grande)"
   gravar seguranca seguranca "🔐 Resultado — bateria de segurança" "Testes de segurança" \
-    "Recusas do FTP (sem TLS, anônimo, fuga da pasta, outro usuário, \`SITE CHMOD\`), modos de TLS, containers endurecidos, segredos fora da imagem, do Git, do \`.env\` e das variáveis, recusa de IP e rede públicos, a opção \`REDE_PERMITIR_IP_PUBLICO\` (o que passa, o que continua recusado e o alerta), o painel (sessão, CSRF, origem, cabeçalhos, TLS, limite de tentativas, auditoria) e os administradores (entrada sem revelar nomes, senha atual em toda alteração, sessões encerradas, arquivo só com hash, própria conta, nome inválido)"
+    "Recusas do FTP (sem TLS, anônimo, fuga da pasta, outro usuário, \`SITE CHMOD\`), modos de TLS, containers endurecidos, segredos fora da imagem, do Git, do \`.env\` e das variáveis, recusa de IP e rede públicos, a opção \`REDE_PERMITIR_IP_PUBLICO\` (o que passa, o que continua recusado e o alerta), o painel (sessão, CSRF, origem, cabeçalhos, TLS, limite de tentativas, auditoria) e os administradores (entrada sem revelar nomes, senha atual em toda alteração, sessões encerradas, arquivo só com hash, própria conta, nome inválido) e a aba Arquivos (sem sessão, fuga da pasta, link simbólico, entrega só como anexo e limite de downloads ao mesmo tempo)"
   gravar rede rede "🌐 Resultado — bateria de rede" "Testes de rede" \
     "Endereços e portas publicados, faixa passiva, endereço anunciado, limite de sessões por IP, sub-rede Docker, troca de perfil, duas instâncias no mesmo host, painel só em HTTPS e rede pública liberada no nginx só com a opção ligada"
   for arquivo in "${ARQUIVOS[@]}"; do

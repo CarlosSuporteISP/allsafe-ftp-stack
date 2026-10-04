@@ -12,6 +12,8 @@ EVENTOS = {
     'senha_trocada': '🔑 Senha trocada',
     'usuario_removido': '🗑️ Usuário removido',
     'falha_comando': '⚠️ Alteração não concluída',
+    'arquivo_baixado': '⬇️ Arquivo baixado',
+    'arquivo_interrompido': '⚠️ Download interrompido',
     'admin_inicial_criado': '🛡️ Administrador inicial criado',
     'admin_criado': '🛡️ Administrador criado',
     'admin_senha_trocada': '🔑 Senha de administrador trocada',
@@ -23,6 +25,7 @@ EVENTOS = {
     'recusa_origem': '⛔ Envio de outra origem',
     'recusa_host': '⛔ Endereço não aceito',
     'recusa_rede': '⛔ Cliente fora das redes permitidas',
+    'recusa_caminho': '⛔ Caminho de arquivo recusado',
 }
 
 

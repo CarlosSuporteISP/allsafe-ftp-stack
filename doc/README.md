@@ -51,7 +51,7 @@ flowchart LR
 | 7 | [Scripts](scripts.md) | O que cada script faz, parâmetros e saída esperada |
 | 8 | [Operação](operacao.md) | Usuários, certificado real, logs e atualização da imagem |
 | 9 | [Backup e restauração](backup.md) | Cópia de segurança em um comando, restauração conferida e reversível, o que guardar à parte, outro servidor e cópia agendada |
-| 10 | [Painel web](painel.md) | Abrir o painel, o que há em cada aba, usuários pelo navegador, senha, certificado, auditoria e proteções |
+| 10 | [Painel web](painel.md) | Abrir o painel, o que há em cada aba, usuários pelo navegador, download dos arquivos, senha, certificado, auditoria e proteções |
 | 11 | [Fotos da aplicação](aplicacao/README.md) | Todas as telas do painel, menu por menu: a foto, para que serve, como chegar e o que há em cada uma |
 | 12 | [Solução de problemas](solucao-de-problemas.md) | Sintoma, causa, como verificar e correção |
 
@@ -65,6 +65,7 @@ flowchart LR
 |---|---|
 | Primeira vez | [Instalação](instalacao.md) ➜ [Painel web](painel.md) ➜ [Configuração](configuracao.md) ➜ [Perfis](perfis.md) |
 | Criar a conta de um equipamento | [Painel web](painel.md#usuarios) ou [Operação](operacao.md#usuarios) |
+| Baixar um backup que um equipamento enviou | [Arquivos e download](painel.md#arquivos) |
 | Ver as telas do painel antes de instalar | [Fotos da aplicação](aplicacao/README.md) |
 | Antes de produção | [Rede privada e firewall](seguranca.md#rede-privada) ➜ [Segurança](seguranca.md) ➜ [Operação](operacao.md#certificado-real-de-producao) ➜ [Backup e restauração](backup.md#automatica) |
 | Equipamento antigo que não fala TLS | [Equipamento sem TLS](seguranca.md#ftp-sem-tls) ➜ [Configuração](configuracao.md#tls) ➜ [Solução de problemas](solucao-de-problemas.md#ftp-sem-tls) |

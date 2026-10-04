@@ -5,8 +5,8 @@ import time
 from config import CFG
 from estado import dias_restantes
 
-ABAS = (('/', '📊 Visão geral'), ('/usuarios', '👥 Usuários'), ('/administradores', '🛡️ Administradores'),
-        ('/seguranca', '🔐 Segurança'), ('/atividade', '📜 Atividade'))
+ABAS = (('/', '📊 Visão geral'), ('/usuarios', '👥 Usuários'), ('/arquivos', '📁 Arquivos'),
+        ('/administradores', '🛡️ Administradores'), ('/seguranca', '🔐 Segurança'), ('/atividade', '📜 Atividade'))
 ICONE = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" rx="3" fill="#0d1117"/>'
          '<path d="M3 5h10v2H3zm0 4h10v2H3z" fill="#58a6ff"/></svg>')
 

@@ -133,6 +133,8 @@ td:first-child strong { white-space: nowrap; }
 .conferencia .marca { width: 1%; font-size: 1.1rem; }
 .digital { font-size: 0.75rem; }
 
+.trilha { overflow-wrap: anywhere; }
+
 .etiqueta {
   margin-left: 6px;
   padding: 1px 8px;

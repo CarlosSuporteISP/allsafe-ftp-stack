@@ -8,6 +8,28 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.13.0] - 2026-10-04
+
+Os backups recebidos passam a ser consultados e baixados pelo navegador, na aba nova Arquivos do painel. O painel só lê: enviar, renomear e apagar continuam sendo feitos por FTP. **Por padrão, uso só em rede privada, atrás de firewall.**
+
+### Adicionado
+
+- **Aba Arquivos:** as pastas de `DATA_DIR/dados`, uma por usuário do FTP, com nome, tamanho e data de cada arquivo, navegação por subpasta e o caminho no alto da lista. Guia em [Arquivos e download](doc/painel.md#arquivos).
+- **Download pelo navegador:** o botão **Baixar** entrega o arquivo com o nome original, em blocos, sem carregá-lo na memória e sem limite de tamanho. O arquivo sai sempre como anexo (`application/octet-stream` e `Content-Disposition: attachment`, com o nome nas formas da RFC 6266 e da RFC 8187): o navegador salva, nunca abre.
+- **Só dentro da pasta dos dados:** o caminho é conferido parte por parte e aberto só para leitura, sem seguir link simbólico. Caminho com `..`, absoluto ou com byte nulo recebe `400`; link simbólico, `403`; link simbólico e arquivo especial aparecem na lista sem botão.
+- **Limite de downloads:** até 8 ao mesmo tempo, somando todos os administradores; o nono recebe `503` com `Retry-After`, e as outras telas continuam respondendo.
+- **Auditoria:** eventos `arquivo_baixado`, `arquivo_interrompido` e `recusa_caminho`, com o administrador, o caminho e os bytes entregues, visíveis na aba Atividade.
+- Na aba Usuários, a coluna **Pasta no host** abre a pasta do usuário na aba Arquivos.
+- Bateria de testes: dois casos funcionais (download pelo painel; subpasta, nome com acento e arquivo de 40 MiB) e cinco de segurança (aba Arquivos sem sessão, fuga da pasta, link simbólico, arquivo só como anexo e limite de downloads ao mesmo tempo).
+
+### Alterado
+
+- [`nginx/nginx.conf.modelo`](nginx/nginx.conf.modelo): o nginx repassa a resposta do painel no ritmo do navegador, sem arquivo temporário (`proxy_max_temp_file_size 0`), para o download não depender do `/tmp` do container.
+
+### Atualização a partir da 0.12.x
+
+Rode `./deploy.sh`. Não há variável nova nem mudança nos dados: a aba Arquivos aparece para todos os administradores.
+
 ## [0.12.0] - 2026-10-04
 
 O painel deixa de ter uma senha só: cada administrador entra com o próprio usuário e a própria senha, e os administradores são criados, alterados e removidos pelo próprio painel. Quem atualiza continua entrando com a senha que já usava, agora com o usuário `admin`. **Por padrão, uso só em rede privada, atrás de firewall.**

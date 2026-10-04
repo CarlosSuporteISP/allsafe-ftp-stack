@@ -19,16 +19,17 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
     linhas = []
     for nome in usuarios():
         uso = uso_da_pasta(nome)
+        destino = urllib.parse.quote(nome)
         mais = ' ou mais' if uso['parcial'] else ''
         if nome == CFG['ftp_usuario']:
             acoes = '<span class="suave">usuário inicial: a senha vem de <code>.secrets/ftp-usuario-inicial-senha.txt</code></span>'
             marca = ' <span class="etiqueta">inicial</span>'
         else:
-            destino = urllib.parse.quote(nome)
             acoes = (f'<a class="botao" href="/usuarios/senha?usuario={destino}">🔑 Trocar senha</a> '
                      f'<a class="botao perigo" href="/usuarios/remover?usuario={destino}">🗑️ Remover</a>')
             marca = ''
-        linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}</td><td><code>{e(CFG["pasta_host"])}/{e(nome)}</code></td>'
+        linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}</td>'
+                      f'<td><a href="/arquivos?pasta={destino}" title="Abrir na aba Arquivos"><code>{e(CFG["pasta_host"])}/{e(nome)}</code></a></td>'
                       f'<td>{e(tamanho(uso["bytes"]))}{mais}</td><td>{uso["arquivos"]}{mais}</td>'
                       f'<td>{e(quando(uso["ultimo"]))}</td><td class="acoes">{acoes}</td></tr>')
     corpo = ''.join(linhas) or '<tr><td colspan="6" class="suave">Nenhum usuário ainda.</td></tr>'

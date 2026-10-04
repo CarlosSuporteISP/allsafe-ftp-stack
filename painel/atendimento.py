@@ -11,7 +11,7 @@ import urllib.parse
 
 import entrada
 from auditoria import auditar, limpo
-from config import CFG, CONEXOES_MAX, CORPO_MAX, GID_NGINX, TEMPO_CONEXAO, privado
+from config import BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, GID_NGINX, TEMPO_CONEXAO, privado
 from pagina import ICONE, e, pagina
 from rotas import ROTAS
 from sessao import buscar_sessao
@@ -111,6 +111,28 @@ class Painel(http.server.BaseHTTPRequestHandler):
         self.wfile.write(dados)
         if self.caminho != '/saude':
             print(f'{self.ip} {self.command} {limpo(self.caminho)} {codigo}', flush=True)
+
+    def enviar_arquivo(self, arquivo, total, extras=()):
+        """Entrega um arquivo já aberto, em blocos, sem carregá-lo na memória. Devolve quantos bytes saíram."""
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/octet-stream')
+        self.send_header('Content-Length', str(total))
+        self.send_header('Accept-Ranges', 'none')
+        for nome, valor in extras:
+            self.send_header(nome, valor)
+        self.end_headers()
+        enviados = 0
+        try:
+            while enviados < total:
+                bloco = arquivo.read(min(BLOCO_ARQUIVO, total - enviados))
+                if not bloco:
+                    break
+                self.wfile.write(bloco)
+                enviados += len(bloco)
+        except OSError:  # quem baixava fechou a conexão, ou o arquivo deixou de ser lido
+            pass
+        print(f'{self.ip} {self.command} {limpo(self.caminho)} 200 {enviados}/{total} bytes', flush=True)
+        return enviados
 
     def redirecionar(self, destino, extras=()):
         self.enviar(303, '', extras=(('Location', destino),) + tuple(extras))

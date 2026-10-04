@@ -31,7 +31,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
+[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Arquivos e download](#arquivos) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
 
 </details>
 
@@ -74,10 +74,11 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 | Aba | O que mostra | O que dá para fazer |
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar |
-| Usuários | Um usuário por linha: pasta no host, espaço usado, quantidade de arquivos e último envio | Criar, trocar a senha e remover |
+| Usuários | Um usuário por linha: pasta no host, espaço usado, quantidade de arquivos e último envio | Criar, trocar a senha, remover e abrir a pasta do usuário na aba Arquivos |
+| Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas e baixar um arquivo pelo navegador |
 | Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
 | Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, isolamento do container e o lembrete do firewall | Só consultar |
-| Atividade | Os últimos 300 registros do painel: entradas, recusas e alterações de usuário e de administrador, com data, endereço de origem e o administrador que fez | Só consultar |
+| Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads e alterações de usuário e de administrador, com data, endereço de origem e o administrador que fez | Só consultar |
 
 No topo ficam o nome do administrador da sessão e o botão **Sair**, que encerra a sessão na hora.
 
@@ -108,6 +109,49 @@ Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
 - O **usuário inicial** (`FTP_USER`) não é alterado pelo painel: a senha dele vem de `.secrets/ftp-usuario-inicial-senha.txt` e é reaplicada a cada subida do FTP. Veja [Segredos](segredos.md#trocar-a-senha).
 
 A linha de comando continua valendo: painel e `manage-user.sh` alteram as mesmas contas. Veja [Operação](operacao.md#usuarios).
+
+---
+
+<a name="arquivos"></a>
+
+## 📁 Arquivos e download
+
+A aba Arquivos mostra as pastas de `DATA_DIR/dados`, uma por usuário do FTP, e entrega pelo navegador qualquer arquivo que um equipamento enviou. O painel **só lê**: enviar, renomear e apagar continuam sendo feitos por FTP.
+
+1. Abra a aba **Arquivos**. O primeiro nível tem uma pasta por usuário. Na aba Usuários, o endereço da coluna **Pasta no host** abre direto a pasta daquele usuário.
+2. Clique no nome de uma pasta para entrar. O caminho no alto da lista mostra onde você está e volta a qualquer nível.
+3. Clique em **Baixar** na linha do arquivo. O navegador salva o arquivo com o nome original.
+
+**Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Atividade ganha a linha `Arquivo baixado`, com o administrador, o caminho e o tamanho.
+
+| Na lista | O que aparece | O que dá para fazer |
+|---|---|---|
+| Pasta | Nome e data da última alteração | Entrar |
+| Arquivo | Nome, tamanho e data da última alteração | Baixar |
+| Item marcado `link simbólico` ou `arquivo especial` | Nome e data | Nada: o painel não abre |
+
+Limites:
+
+- Até **8 downloads ao mesmo tempo**, somando todos os administradores. O nono recebe a tela `Muitos downloads ao mesmo tempo` (`503`): espere um terminar e repita.
+- A lista mostra até **2000 itens** por pasta, com um aviso quando há mais. Pasta maior que isso é consultada por FTP.
+- O download **não é retomado**: se a conexão cair, começa de novo.
+- Conexão que recebe menos de cerca de 4 KiB por segundo é cortada, e o download aparece na aba Atividade como `Download interrompido`.
+
+<details>
+<summary>Detalhe técnico — como o painel abre e entrega o arquivo</summary>
+
+- **Rotas:** `GET /arquivos?pasta=<caminho>` lista e `GET /arquivos/baixar?arquivo=<caminho>` entrega. As duas exigem sessão; sem ela, o pedido vai para a tela de entrada. Não existe rota de envio, de troca de nome nem de remoção.
+- **Caminho:** sempre relativo a `DATA_DIR/dados` (`/data` no container). Caminho com parte `..`, `.` ou vazia, com byte nulo, com parte de mais de 255 bytes ou com mais de 4096 caracteres recebe `400` e o evento `recusa_caminho`.
+- **Abertura:** o painel abre a pasta dos dados e depois cada parte do caminho em relação à anterior, só para leitura e sem seguir link simbólico (`O_RDONLY`, `O_NOFOLLOW`). O que foi conferido é o mesmo que fica aberto: trocar uma pasta por um link no meio do pedido não muda o que é lido. Link simbólico em qualquer nível, mesmo apontando para dentro da própria pasta, recebe `403` e o evento `recusa_caminho`.
+- **Só arquivo comum:** FIFO, soquete e dispositivo aparecem na lista como `arquivo especial`, sem botão, e o pedido direto recebe `404`.
+- **Entrega:** `Content-Type: application/octet-stream` e `Content-Disposition: attachment`, com o nome em duas formas (RFC 6266 e RFC 8187): reduzido a ASCII e inteiro, em UTF-8. Com o `nosniff` e a `Content-Security-Policy` de toda resposta, o navegador salva o arquivo e nunca o abre, mesmo que seja uma página HTML.
+- **Memória e disco:** o arquivo sai em blocos de 64 KiB, sem ser carregado na memória. O nginx repassa no ritmo do navegador, sem gravar arquivo temporário (`proxy_max_temp_file_size 0`), então o tamanho do arquivo não é limitado pelo `/tmp` do container.
+- **Sem retomada:** a resposta leva `Accept-Ranges: none` e o painel ignora o cabeçalho `Range`.
+- **Ritmo mínimo:** cada bloco tem 15 segundos para sair; passado isso, o painel fecha a conexão e libera a vaga do download.
+- **Nome fora do UTF-8:** aparece na lista com o sinal de substituição no lugar do byte inválido, e é baixado do mesmo jeito.
+- **Auditoria:** `arquivo_baixado` e `arquivo_interrompido` registram o administrador, o caminho e os bytes entregues; o conteúdo do arquivo nunca é registrado.
+
+</details>
 
 ---
 
@@ -230,7 +274,7 @@ A lista é aplicada duas vezes: pelo nginx, antes de o pedido chegar ao painel, 
 
 ## 🔄 Como o painel decide
 
-Cada pedido passa por três conferências antes de mudar alguma coisa: a rede de origem (nginx), o usuário e a senha, e o token do formulário (painel).
+Cada pedido passa por três conferências antes de mudar alguma coisa: a rede de origem (nginx), o usuário e a senha, e o token do formulário (painel). O download de um arquivo passa pelas duas primeiras e pela conferência do caminho pedido.
 
 <details>
 <summary>Fluxograma do painel, com a sequência escrita — clique para expandir</summary>
@@ -260,8 +304,13 @@ flowchart LR
         puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
         auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
     end
+    subgraph ARQUIVOS["Arquivos"]
+        caminho@{ shape: diam, label: "caminho dentro<br>da pasta dos dados?" }
+        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>uma pasta por usuário" }
+    end
     subgraph RESULTADO["Resultado"]
         fim@{ shape: stadium, label: "usuário pronto no FTP" }
+        baixado@{ shape: stadium, label: "arquivo baixado" }
         recusa@{ shape: stadium, label: "pedido recusado" }
     end
 
@@ -278,6 +327,10 @@ flowchart LR
     pedido -- "8b · não: sem token CSRF ou de outra origem" --> recusa
     cmd -- "9 · grava o usuário" --> puredb
     puredb -- "10 · vale no próximo login, sem reiniciar o FTP" --> fim
+    sessao -- "11 · abre a aba Arquivos e pede um arquivo" --> caminho
+    caminho -. "12 · abre só para leitura, sem seguir link simbólico" .-> dados
+    caminho -- "13a · sim: entrega como anexo" --> baixado
+    caminho -- "13b · não: 400, 403 ou 404" --> recusa
     painel -. "registra cada ação" .-> auditoria
 ```
 
@@ -298,12 +351,17 @@ flowchart LR
 | 8b | pedido legítimo? ➜ pedido recusado | Não: `403`, sem alterar nada |
 | 9 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez |
 | 10 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
+| 11 | sessão ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta ou pede um arquivo; o caminho pedido é conferido parte por parte |
+| 12 | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | O painel abre cada parte só para leitura, a partir da pasta dos dados, sem seguir link simbólico |
+| 13a | caminho dentro da pasta dos dados? ➜ arquivo baixado | Sim: o arquivo sai como anexo, em blocos, e o download fica na auditoria |
+| 13b | caminho dentro da pasta dos dados? ➜ pedido recusado | Não: `400` para caminho que tenta sair da pasta, `403` para link simbólico, `404` para o que não existe |
 
 **Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
 | usuário e senha conferem? | administradores (`DATA_DIR/painel/administradores`) | lê a cada entrada |
+| caminho dentro da pasta dos dados? | `DATA_DIR/dados` | lê a pasta e o arquivo pedidos, só para leitura |
 | Painel web | `auditoria.log` | registra cada entrada, recusa e alteração |
 
 </details>
@@ -328,16 +386,18 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `entrada_ok` · `entrada_falha` · `entrada_bloqueada` | Entrada aceita, com o administrador · usuário ou senha errados, sem o nome digitado · endereço bloqueado por excesso de erros |
 | `saida` | Alguém clicou em **Sair** |
 | `usuario_criado` · `senha_trocada` · `usuario_removido` | Alteração de usuário do FTP, com o administrador que fez |
+| `arquivo_baixado` · `arquivo_interrompido` | Download pela aba Arquivos, completo · cortado antes do fim; com o administrador, o caminho e os bytes entregues |
 | `admin_inicial_criado` | Primeira subida: o painel criou o administrador de `PAINEL_ADMIN_USER` |
 | `admin_criado` · `admin_senha_trocada` · `admin_renomeado` · `admin_removido` | Alteração de administrador pelo painel, com quem fez e quem foi alterado |
 | `admin_senha_atual_recusada` | Alteração de administrador recusada: a senha atual de quem pediu não conferiu |
 | `admin_definido_no_host` | O `scripts/painel-senha.sh` criou um administrador ou trocou a senha dele |
 | `falha_comando` | O `allsafe-ftp-user` devolveu erro |
 | `recusa_csrf` · `recusa_origem` · `recusa_host` · `recusa_rede` | Pedido recusado: sem token, de outra origem, com nome de host inválido ou de rede não permitida |
+| `recusa_caminho` | Aba Arquivos: caminho que tenta sair da pasta dos dados ou que passa por link simbólico |
 
 Quem está fora das redes permitidas é barrado antes, pelo nginx: essa recusa fica no log dele (`docker compose logs nginx`), não aqui. O `recusa_rede` só aparece se um pedido assim chegar ao painel.
 
-Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada recusada também não: é comum a senha cair nesse campo por engano. As transferências dos equipamentos não ficam aqui: estão no log do FTP, em [Operação](operacao.md#logs).
+Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada recusada também não: é comum a senha cair nesse campo por engano. O conteúdo dos arquivos baixados também não. As transferências dos equipamentos não ficam aqui: estão no log do FTP, em [Operação](operacao.md#logs).
 
 ---
 
@@ -354,6 +414,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 | Entrada | Usuário e senha por administrador; senha de no mínimo 12 caracteres, guardada só como hash `scrypt`; a recusa não diz se o erro foi no usuário ou na senha; cinco erros bloqueiam o endereço por 15 minutos |
 | Administradores | Toda alteração de administrador pede a senha atual de quem está alterando; o administrador alterado tem as sessões encerradas; ninguém remove a própria conta |
 | Sessão | Cookie `__Host-sessao` com `Secure`, `HttpOnly` e `SameSite=Strict`, presa ao endereço de origem; encerra com 15 minutos sem uso e, de qualquer forma, em 8 horas |
+| Arquivos | A aba Arquivos só lê, e só dentro de `DATA_DIR/dados`: caminho que tenta sair da pasta é recusado, link simbólico não é seguido, o arquivo sai sempre como anexo e no máximo 8 downloads correm ao mesmo tempo |
 | Formulários | Token CSRF por sessão e conferência de `Origin`: o envio tem de partir do próprio painel; corpo limitado a 8 KiB |
 | Navegador | `Content-Security-Policy` sem script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS e `no-store`; a página não carrega nada de fora |
 | Containers | Raiz somente leitura, `cap_drop: ALL`, `no-new-privileges`, sem socket do Docker, limites de CPU, memória e processos; o nginx roda sem root e sem nenhuma capability |
@@ -371,6 +432,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 - **Origem do envio:** todo `POST` tem de trazer `Origin` igual ao endereço do painel (`https://` mais o `Host`). A política `Referrer-Policy: same-origin` faz o navegador mandar a origem real no envio que parte do próprio painel e `Origin: null` no que parte de outro endereço; `null` e origem de fora recebem `403` e o evento `recusa_origem`.
 - **Nome de host:** o cabeçalho `Host` tem de ser um IP privado, `localhost` ou o `PAINEL_CERT_CN`; outro nome recebe `400`. Com `REDE_PERMITIR_IP_PUBLICO=sim`, qualquer endereço IPv4 é aceito no lugar do nome.
 - **Usuários do FTP:** o painel monta as mesmas pastas `DATA_DIR/auth` e `DATA_DIR/dados` do serviço `ftp` e chama o mesmo `allsafe-ftp-user`, com `flock` em `/auth/.lock`. Por isso não precisa do socket do Docker.
+- **Arquivos:** a aba Arquivos lê a mesma pasta `DATA_DIR/dados`, sempre com abertura só para leitura. Detalhe em [Arquivos e download](#arquivos).
 - **Capabilities devolvidas:** `CHOWN`, `DAC_OVERRIDE` e `FOWNER`, para criar a pasta do usuário com o dono `ftpdata` e gravar em `/auth`. Nenhuma de rede.
 - **Saúde:** `python3 /opt/painel/servidor.py --saude` pede `/saude` pelo soquete Unix. O healthcheck do nginx faz o mesmo pedido por TLS, em `127.0.0.1:8443`, e confere o caminho inteiro.
 - **Limites:** `PAINEL_MEMORY_LIMIT`, `PAINEL_CPU_LIMIT` e `PAINEL_PIDS_LIMIT`, em [Configuração](configuracao.md#painel).
@@ -394,11 +456,12 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`auditoria.py`](../painel/auditoria.py) | Gravação e leitura do `auditoria.log` |
 | [`estado.py`](../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados) e a chamada do `allsafe-ftp-user` |
 | [`pagina.py`](../painel/pagina.py) | Moldura das telas e os textos que mais de uma aba usa |
-| [`atendimento.py`](../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF) e roteamento |
+| [`atendimento.py`](../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF), roteamento e a entrega de arquivo em blocos |
 | [`rotas.py`](../painel/rotas.py) | Tabela de método e caminho para a função que responde |
 | [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, e saída |
 | [`aba_visao_geral.py`](../painel/aba_visao_geral.py) | Aba Visão geral |
 | [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação, troca de senha e remoção |
+| [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários e download, só para leitura |
 | [`aba_administradores.py`](../painel/aba_administradores.py) | Aba Administradores: lista, criação, troca de senha, troca de nome e remoção |
 | [`aba_seguranca.py`](../painel/aba_seguranca.py) | Aba Segurança |
 | [`aba_atividade.py`](../painel/aba_atividade.py) | Aba Atividade |

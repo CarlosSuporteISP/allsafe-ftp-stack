@@ -110,6 +110,9 @@ http {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For "";
             proxy_set_header Forwarded "";
+            # Download de arquivo pela aba Arquivos: sem arquivo temporário (o /tmp/nginx é pequeno e fica na
+            # memória). O nginx lê do painel no ritmo em que o navegador recebe.
+            proxy_max_temp_file_size 0;
             proxy_connect_timeout 5s;
             proxy_send_timeout 15s;
             proxy_read_timeout 30s;

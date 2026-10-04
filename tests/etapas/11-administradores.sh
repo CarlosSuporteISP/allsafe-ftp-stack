@@ -159,6 +159,3 @@ auditoria; n_depois="$(eventos admin_senha_atual_recusada)"; b_depois="$(eventos
 [[ "$r_a" == "403 " && "$r_b" == "403 " && "$r_c" == "403 " && "$r_d" == "403 " && "$e_suporte_fim" == 303 && "$r_e" == "403 " && "$r_f" == "429 " \
   && "$antes" == "$(admins)" && "$soma_antes" == "$(soma_admins)" && "$n_depois" == $((n_antes + 5)) && "$b_depois" == $((b_antes + 1)) ]]
 caso $? seguranca 47 "Alteração só com a senha atual" "com sessão e token válidos · criar com a senha atual errada: $r_a· trocar a senha de outro sem o campo: $r_b· trocar o nome com ela errada: $r_c· remover com ela errada: $r_d· o alvo continua entrando: $e_suporte_fim · 5ª recusa do endereço: $r_e· em seguida, a senha atual certa: $r_f(bloqueado pelo limite de tentativas) · administradores $([[ "$antes" == "$(admins)" ]] && echo inalterados || echo ALTERADOS), arquivo $([[ "$soma_antes" == "$(soma_admins)" ]] && echo idêntico || echo DIFERENTE) · admin_senha_atual_recusada na auditoria: $n_antes → $n_depois · entrada_bloqueada: $b_antes → $b_depois"
-
-# Com --manter, a instância fica no ar: o reinício tira o bloqueio que o caso acima deixou no endereço.
-if [[ "$manter" == true ]]; then dc restart painel > /dev/null 2>&1; painel_de_pe; fi

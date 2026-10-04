@@ -110,6 +110,8 @@ Um comando guarda os arquivos dos equipamentos, os usuários, os certificados e 
 
 O que entra na cópia, como desfazer uma restauração, como restaurar em outro servidor e como agendar a cópia estão em [Backup e restauração](backup.md).
 
+Para pegar **um arquivo só**, enviado por um equipamento, use a aba Arquivos do painel: [Arquivos e download](painel.md#arquivos). No host, o mesmo arquivo está em `DATA_DIR/dados/<usuario>/`.
+
 > ⚠️ A cópia contém o hash das senhas e as chaves privadas dos certificados: trate como dado sensível e leve-a também para fora do servidor. O `.env` e os arquivos de `.secrets/` não entram na cópia: guarde-os à parte, em um cofre de senhas.
 
 ---
@@ -157,7 +159,7 @@ docker compose logs -f nginx        # subida do nginx e os pedidos que ele recus
 
 O nginx registra só o que ele mesmo recusa, uma linha por pedido, no formato `ip método caminho código` (exemplo: `10.99.0.7 GET /entrar 403`). Com `FTP_TLS_MODE` em `0` ou `1`, o log do FTP traz a cada subida o `AVISO` de FTP sem criptografia: [Segurança](seguranca.md#ftp-sem-tls).
 
-O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos) fica no `auditoria.log`, visível na aba `📜 Atividade`: veja [Painel web](painel.md#auditoria).
+O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos, arquivos baixados) fica no `auditoria.log`, visível na aba `📜 Atividade`: veja [Painel web](painel.md#auditoria).
 
 Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](../compose.yaml)). Para o `fail2ban`, aponte o filtro para a saída de `docker logs allsafe-ftp`.
 

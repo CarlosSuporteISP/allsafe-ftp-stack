@@ -21,8 +21,13 @@ flowchart LR
         puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
         auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
     end
+    subgraph ARQUIVOS["Arquivos"]
+        caminho@{ shape: diam, label: "caminho dentro<br>da pasta dos dados?" }
+        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>uma pasta por usuário" }
+    end
     subgraph RESULTADO["Resultado"]
         fim@{ shape: stadium, label: "usuário pronto no FTP" }
+        baixado@{ shape: stadium, label: "arquivo baixado" }
         recusa@{ shape: stadium, label: "pedido recusado" }
     end
 
@@ -39,4 +44,8 @@ flowchart LR
     pedido -- "8b · não: sem token CSRF ou de outra origem" --> recusa
     cmd -- "9 · grava o usuário" --> puredb
     puredb -- "10 · vale no próximo login, sem reiniciar o FTP" --> fim
+    sessao -- "11 · abre a aba Arquivos e pede um arquivo" --> caminho
+    caminho -. "12 · abre só para leitura, sem seguir link simbólico" .-> dados
+    caminho -- "13a · sim: entrega como anexo" --> baixado
+    caminho -- "13b · não: 400, 403 ou 404" --> recusa
     painel -. "registra cada ação" .-> auditoria
