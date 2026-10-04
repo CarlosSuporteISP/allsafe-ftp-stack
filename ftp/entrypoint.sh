@@ -20,14 +20,19 @@ FTP_MAX_CLIENTS="${FTP_MAX_CLIENTS:-50}"
 FTP_MAX_CLIENTS_PER_IP="${FTP_MAX_CLIENTS_PER_IP:-8}"
 password="$(tr -d '\r\n' < "$secret_file")"
 
-exigir_ip_privado FTP_BIND_IP "$FTP_BIND_IP" || exit 1
-exigir_ip_privado FTP_PASSIVE_IP "$FTP_PASSIVE_IP" || exit 1
+conferir_opcao_ip_publico
+exigir_ip FTP_BIND_IP "$FTP_BIND_IP" || exit 1
+exigir_ip FTP_PASSIVE_IP "$FTP_PASSIVE_IP" || exit 1
 
 [[ "$FTP_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || die "FTP_USER invalido"
 [[ ${#password} -ge 12 ]] || die "a senha FTP deve ter pelo menos 12 caracteres"
 [[ "$FTP_PASSIVE_PORT_START" =~ ^[0-9]+$ && "$FTP_PASSIVE_PORT_END" =~ ^[0-9]+$ ]] || die "faixa passiva invalida"
 (( FTP_PASSIVE_PORT_START >= 1024 && FTP_PASSIVE_PORT_END <= 65535 && FTP_PASSIVE_PORT_START <= FTP_PASSIVE_PORT_END )) || die "faixa passiva fora dos limites"
 [[ "$FTP_TLS_MODE" =~ ^[0123]$ ]] || die "FTP_TLS_MODE deve ser 0, 1, 2 ou 3"
+# Com IP público aceito, senha em texto puro não passa: o TLS tem de ser obrigatório.
+if ip_publico_permitido && (( FTP_TLS_MODE < 2 )); then
+  die "REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3; está $FTP_TLS_MODE (FTP sem TLS na internet entrega a senha a quem escuta)"
+fi
 
 # As pastas vêm do host por bind mount: o dono e o modo são normalizados a cada subida.
 chown root:root /data /auth /etc/ssl/private
@@ -75,6 +80,7 @@ case "$FTP_TLS_MODE" in
   0) echo "AVISO: FTP_TLS_MODE=0, FTP sem TLS: senhas e arquivos trafegam em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada." >&2 ;;
   1) echo "AVISO: FTP_TLS_MODE=1, TLS opcional: quem entra sem TLS manda senha e arquivos em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada." >&2 ;;
 esac
+aviso_ip_publico >&2
 echo "FTP pronto em 2121/tcp; TLS=${FTP_TLS_MODE}; passivo=${FTP_PASSIVE_PORT_START}-${FTP_PASSIVE_PORT_END}"
 exec /usr/sbin/pure-ftpd \
   -A -E -H -j -R \

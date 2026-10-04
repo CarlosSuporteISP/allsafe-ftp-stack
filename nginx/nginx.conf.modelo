@@ -1,4 +1,4 @@
-# Modelo da configuração do nginx da allsafe-ftp-stack. SÓ PARA REDE PRIVADA, atrás de firewall.
+# Modelo da configuração do nginx da allsafe-ftp-stack. Por padrão, só para rede privada, atrás de firewall.
 # O nginx é a única porta publicada do painel: fecha o HTTPS, limita redes e taxa, serve os arquivos
 # estáticos e repassa o resto ao painel por soquete Unix. A entrada do container (nginx/entrypoint.sh) troca a
 # linha que contém só o marcador das redes pelas redes de PAINEL_REDES_PERMITIDAS e grava o resultado em /run/nginx/nginx.conf.

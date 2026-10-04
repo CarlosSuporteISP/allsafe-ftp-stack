@@ -1,4 +1,5 @@
-# SÓ PARA REDE PRIVADA: publique apenas em IP interno, atrás de firewall. Nunca exponha à internet.
+# Por padrão, só para rede privada: publique em IP interno, atrás de firewall. IP público só com
+# REDE_PERMITIR_IP_PUBLICO=sim no .env, lido o alerta do .env.example.
 name: ${STACK_NAME:-allsafe-ftp-stack}
 
 services:
@@ -15,6 +16,7 @@ services:
     environment:
       TZ: ${TZ:-America/Sao_Paulo}
       FTP_USER: ${FTP_USER:-transfer}
+      REDE_PERMITIR_IP_PUBLICO: ${REDE_PERMITIR_IP_PUBLICO:-nao}
       FTP_BIND_IP: ${FTP_BIND_IP:-127.0.0.1}
       FTP_PASSIVE_IP: ${FTP_PASSIVE_IP:?defina FTP_PASSIVE_IP no .env (a antiga FTP_PUBLIC_IP mudou de nome; ./deploy.sh converte sozinho)}
       FTP_PASSIVE_PORT_START: ${FTP_PASSIVE_PORT_START:-30000}
@@ -108,6 +110,7 @@ services:
         condition: service_healthy
     environment:
       TZ: ${TZ:-America/Sao_Paulo}
+      REDE_PERMITIR_IP_PUBLICO: ${REDE_PERMITIR_IP_PUBLICO:-nao}
       PAINEL_BIND_IP: ${PAINEL_BIND_IP:-127.0.0.1}
       PAINEL_PORT: ${PAINEL_PORT:-8443}
       PAINEL_REDES_PERMITIDAS: ${PAINEL_REDES_PERMITIDAS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
@@ -198,6 +201,7 @@ services:
         restart: true
     environment:
       TZ: ${TZ:-America/Sao_Paulo}
+      REDE_PERMITIR_IP_PUBLICO: ${REDE_PERMITIR_IP_PUBLICO:-nao}
       PAINEL_REDES_PERMITIDAS: ${PAINEL_REDES_PERMITIDAS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
     ports:
       - "${PAINEL_BIND_IP:-127.0.0.1}:${PAINEL_PORT:-8443}:8443/tcp"

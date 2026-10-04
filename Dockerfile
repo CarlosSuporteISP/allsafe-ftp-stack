@@ -7,7 +7,7 @@ ARG DEBIAN=debian:trixie-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e4363
 FROM ${DEBIAN} AS nginx
 
 LABEL org.opencontainers.image.title="AllSafe FTP - nginx" \
-      org.opencontainers.image.description="Frente web do painel da allsafe-ftp-stack: HTTPS, so para rede privada" \
+      org.opencontainers.image.description="Frente web do painel da allsafe-ftp-stack: HTTPS, redes permitidas e arquivos estaticos" \
       org.opencontainers.image.vendor="AllSafe"
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -57,7 +57,7 @@ COPY --chmod=0755 ftp/usuario.sh /usr/local/sbin/allsafe-ftp-user
 FROM base AS painel
 
 LABEL org.opencontainers.image.title="AllSafe FTP - painel" \
-      org.opencontainers.image.description="Painel web da allsafe-ftp-stack: atras do nginx, so para rede privada" \
+      org.opencontainers.image.description="Painel web da allsafe-ftp-stack: atras do nginx, sem porta de rede" \
       org.opencontainers.image.vendor="AllSafe"
 
 # Só a biblioteca padrão do Python; a raiz do container é somente leitura, então nada de .pyc.
@@ -79,7 +79,7 @@ ENTRYPOINT ["/usr/local/sbin/allsafe-painel-entrypoint"]
 FROM base AS ftp
 
 LABEL org.opencontainers.image.title="AllSafe FTP" \
-      org.opencontainers.image.description="Pure-FTPd isolado com usuarios virtuais, so para rede privada" \
+      org.opencontainers.image.description="Pure-FTPd isolado com usuarios virtuais presos a propria pasta" \
       org.opencontainers.image.vendor="AllSafe"
 
 COPY --chmod=0755 ftp/entrypoint.sh /usr/local/sbin/allsafe-ftp-entrypoint

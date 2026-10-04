@@ -44,7 +44,7 @@ flowchart LR
 | CPU e memória para o perfil | O `small` pede 1 CPU e 256 MB; o `extended`, 16 CPUs e 4 GB. O `deploy.sh` confere e recusa o perfil maior que o servidor: [Perfis](perfis.md#o-servidor-aguenta) |
 | Um IP dedicado para o FTP | Não compartilhe o IP com outros serviços; o modo passivo abre de 50 a 1600 portas, conforme o perfil |
 | Firewall no host | Libere `21/tcp` e a faixa passiva do perfil (`30000-30049/tcp` no `small`) **só** para as redes de gerência dos equipamentos, e a porta do painel (`8443/tcp`) **só** para quem administra |
-| Rede privada | A stack só aceita IP interno: veja [Segurança](seguranca.md#rede-privada) |
+| Rede privada | Por padrão a stack só aceita IP interno: veja [Segurança](seguranca.md#rede-privada). Endereço público depende de uma opção com alerta: [IP público](seguranca.md#ip-publico) |
 | Relógio sincronizado | O certificado TLS depende de data e hora corretas (a stack `allsafe-ntp-nts-stack` cuida disso) |
 
 ---
@@ -122,7 +122,7 @@ chmod 600 .secrets/ftp-usuario-inicial-senha.txt
 Pronto: FTP, painel e nginx no ar (healthy), perfil 'small'.
 FTP:    127.0.0.1:21, TLS explícito obrigatório no login, modo passivo 30000-30049
         usuário 'transfer', senha no arquivo ./.secrets/ftp-usuario-inicial-senha.txt
-Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; só rede privada, atrás de firewall)
+Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede privada, atrás de firewall)
         senha inicial no arquivo ./.secrets/painel-admin-inicial-senha.txt; troque com ./scripts/painel-senha.sh
 Segredos: ./.secrets/LEIAME.txt diz para que serve cada arquivo.
 Remover: ./deploy.sh --remover  (os dados ficam em <DATA_DIR>)
@@ -144,7 +144,7 @@ O [`deploy.sh`](../deploy.sh), nesta ordem:
 1. confere os requisitos: `docker`, o plugin `docker compose` e o serviço do Docker respondendo;
 2. confere que o servidor tem as CPUs e a memória que o perfil pede; se não tiver, para sem alterar nada;
 3. cria o `.env` a partir do exemplo (`0600`) se ele não existir, e segue; em instalação com os nomes antigos, troca `FTP_PUBLIC_IP` por `FTP_PASSIVE_IP` no `.env`, depois de copiá-lo para `BACKUP_DIR`, e dá o nome novo aos arquivos de `.secrets/`;
-4. recusa senha no `.env`, endereço ou rede fora de IP privado e `FTP_TLS_MODE` fora de `0` a `3`;
+4. recusa senha no `.env`, endereço ou rede fora de IP privado (a não ser com `REDE_PERMITIR_IP_PUBLICO=sim`) e `FTP_TLS_MODE` fora de `0` a `3`;
 5. com `--size`, grava no `.env` os valores de `profiles/<perfil>.env` e o nome do perfil em `FTP_PROFILE`; sem `--size`, o `.env` fica como está;
 6. confere que a porta do FTP, a do painel e a faixa passiva estão livres no host (as que a própria stack já publica não contam); porta ocupada para o comando com `ERRO: porta já em uso por outro programa: ...`;
 7. cria as pastas `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` em `DATA_DIR` gera a senha em `.secrets/ftp-usuario-inicial-senha.txt` se o arquivo estiver vazio e grava o `.secrets/LEIAME.txt`;

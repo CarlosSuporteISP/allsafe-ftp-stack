@@ -8,6 +8,24 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.11.0] - 2026-10-04
+
+A stack ganha uma opção para aceitar endereço público, desligada por padrão e acompanhada de alerta. Quem não ligar a opção não percebe diferença. **Por padrão, uso só em rede privada, atrás de firewall.**
+
+### Adicionado
+
+- **`REDE_PERMITIR_IP_PUBLICO`** (`nao` ou `sim`, padrão `nao`) no [`.env.example`](.env.example), com o alerta nos comentários da variável: [IP público](doc/seguranca.md#ip-publico). Com `sim`, `FTP_BIND_IP`, `FTP_PASSIVE_IP`, `PAINEL_BIND_IP` e `PAINEL_CERT_CN` aceitam IPv4 público de servidor e `PAINEL_REDES_PERMITIDAS` aceita rede pública de `/8` a `/32`.
+- **Alerta em execução:** com a opção ligada, o `deploy.sh` (também no `--check-only`), o registro dos três containers e o painel (tela de entrada, rodapé e a linha **Endereço público** da aba Segurança) avisam que a stack aceita endereço público e que a proteção passa a ser o firewall do servidor.
+- **Travas que continuam com a opção ligada:** `0.0.0.0`, multicast e endereços reservados são recusados; rede mais larga que `/8`, como `0.0.0.0/0`, é recusada; `FTP_TLS_MODE` em `0` ou `1` é recusado; valor diferente de `nao` e de `sim` para tudo antes de qualquer outra conferência.
+- Bateria de testes: seis casos de segurança (funções da opção, IP público só com a opção, "todos" sempre recusado, TLS obrigatório, valor inválido e alerta em execução) e um de rede (rede pública no painel só com a opção). A opção é testada com endereços de documentação, sem publicar porta fora do IP de teste.
+
+### Alterado
+
+- As mensagens de recusa dizem que a rede privada é o padrão e apontam a opção: `Por padrão esta stack é só para rede interna` e `IP público só com REDE_PERMITIR_IP_PUBLICO=sim, e com firewall`.
+- O resumo do `./deploy.sh --check-only` e a linha do painel ao final do `deploy.sh` trazem `rede privada` ou `endereço público aceito`, conforme a opção.
+- A tela de entrada do painel mostra o mesmo aviso de rede das outras telas.
+- [`scripts/rede-privada.sh`](scripts/rede-privada.sh): `exigir_ip` e `exigir_rede` no lugar de `exigir_ip_privado`, mais `conferir_opcao_ip_publico` e `aviso_ip_publico`, usadas pelo `deploy.sh` e pelos três entrypoints.
+
 ## [0.10.1] - 2026-10-04
 
 O [`.env.example`](.env.example) passa a explicar cada variável. Nenhum valor, nome ou comportamento muda. **Uso só em rede privada, atrás de firewall.**

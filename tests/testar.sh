@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Bateria de testes da stack: funcional, segurança e rede. Roda em uma instância isolada, que o
 # próprio script cria e remove: nomes, portas, sub-rede, dados e segredos separados da instalação
-# desta pasta, que não é tocada. SÓ PARA REDE PRIVADA: a instância de teste só sobe em IP privado.
-# As funções ficam em tests/comum.sh e os casos, em tests/etapas/.
+# desta pasta, que não é tocada. A instância de teste só sobe em IP privado, inclusive nos casos que
+# ligam REDE_PERMITIR_IP_PUBLICO. As funções ficam em tests/comum.sh e os casos, em tests/etapas/.
 # Nenhuma senha, token, cookie ou hash é impresso nem gravado nos resultados.
 set -uo pipefail
 trap '' PIPE

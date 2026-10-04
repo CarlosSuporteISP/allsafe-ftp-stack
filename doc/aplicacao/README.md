@@ -8,7 +8,7 @@ Todas as telas do painel web, menu por menu, com a foto de cada uma e a explica�
 
 O painel tem uma tela de entrada e quatro abas: Visão geral, Usuários, Segurança e Atividade. Como abrir, trocar a senha e o que protege o painel está em [Painel web](../painel.md).
 
-> 🧱 **Uso só em rede privada:** o painel abre apenas em IP privado, atrás de firewall, nunca na internet. Veja [Segurança](../seguranca.md#rede-privada).
+> 🧱 **Uso só em rede privada:** por padrão, o painel abre apenas em IP privado, atrás de firewall, fora da internet. Veja [Segurança](../seguranca.md#rede-privada).
 
 <details>
 <summary>Sumário — clique para expandir</summary>
@@ -35,7 +35,7 @@ O painel tem uma tela de entrada e quatro abas: Visão geral, Usuários, Seguran
 |---|---|
 | **Senha do painel** | Recebe a senha de administrador. A da primeira instalação está em `.secrets/painel-admin-inicial-senha.txt` |
 | **Entrar** | Confere a senha e abre a aba Visão geral |
-| Aviso de rede privada | Lembra que o painel é só para rede interna, atrás de firewall |
+| Aviso de rede privada | Lembra que o painel é só para rede interna, atrás de firewall; com `REDE_PERMITIR_IP_PUBLICO=sim`, vira o alerta de endereço público aceito |
 
 <details>
 <summary>Entrar ➜ senha recusada — clique para expandir</summary>
@@ -245,11 +245,12 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 | Item da tela | O que mostra |
 |---|---|
-| Endereço do FTP · IP anunciado no modo passivo | Onde o FTP escuta e o IP que ele informa ao cliente; os dois têm de ser privados |
+| Endereço público | Se a stack recusa endereço público (o padrão) ou se ele foi aceito com `REDE_PERMITIR_IP_PUBLICO=sim` |
+| Endereço do FTP · IP anunciado no modo passivo | Onde o FTP escuta e o IP que ele informa ao cliente, com a indicação de privado ou público |
 | TLS do FTP | O modo em uso (`FTP_TLS_MODE`) |
 | Certificado do FTP · Certificado do painel | Validade e impressão digital SHA-256, para comparar com a que o cliente FTP e o navegador mostram |
 | Endereço do painel · Frente web | Onde o nginx publica o painel e como ele repassa os pedidos |
-| Quem pode abrir o painel | As redes de `PAINEL_REDES_PERMITIDAS` |
+| Quem pode abrir o painel | As redes de `PAINEL_REDES_PERMITIDAS`; rede pública na lista aparece destacada |
 | Sessão | Tempo sem uso, tempo máximo e bloqueio por senha errada |
 | Container do painel | Raiz somente leitura e sem acesso ao Docker do host |
 | Firewall do host | Lembrete: o painel não enxerga o firewall; a conferência é de quem administra o servidor |
@@ -261,7 +262,7 @@ Nada é alterado por esta aba. As regras de firewall de exemplo estão em [Segur
 
 - Rota `GET /seguranca`.
 - As impressões digitais são calculadas dos arquivos `DATA_DIR/certs` (FTP) e `DATA_DIR/painel/tls` (painel), os mesmos que os serviços usam.
-- As linhas com endereço e rede vêm do `.env`; a stack recusa subir com valor que não seja privado, então um valor público nunca chega a aparecer aqui.
+- As linhas com endereço e rede vêm do `.env`. Por padrão a stack recusa subir com valor que não seja privado; com `REDE_PERMITIR_IP_PUBLICO=sim`, o endereço e a rede públicos aparecem com a marca de atenção: [Segurança](../seguranca.md#ip-publico).
 - A última linha não tem marca de conferido de propósito: nenhum container da stack lê as regras de firewall do host.
 
 </details>

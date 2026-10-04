@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Entrada do container do painel. SÓ PARA REDE PRIVADA: recusa endereço e rede que não sejam internos.
+# Entrada do container do painel. Por padrão, só para rede privada: recusa endereço e rede que não
+# sejam internos, a não ser que quem instalou tenha ligado REDE_PERMITIR_IP_PUBLICO.
 set -Eeuo pipefail
 
 die() { echo "FALHA: $*" >&2; exit 1; }
@@ -17,19 +18,20 @@ PAINEL_BIND_IP="${PAINEL_BIND_IP:-127.0.0.1}"
 PAINEL_REDES_PERMITIDAS="${PAINEL_REDES_PERMITIDAS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
 PAINEL_CERT_CN="${PAINEL_CERT_CN:-}"
 
-exigir_ip_privado PAINEL_BIND_IP "$PAINEL_BIND_IP" || exit 1
+conferir_opcao_ip_publico
+exigir_ip PAINEL_BIND_IP "$PAINEL_BIND_IP" || exit 1
 IFS=',' read -r -a redes <<< "$PAINEL_REDES_PERMITIDAS"
 [[ ${#redes[@]} -gt 0 ]] || die "PAINEL_REDES_PERMITIDAS está vazia"
 for rede in "${redes[@]}"; do
   rede="${rede// /}"
-  cidr_privado "$rede" || die "PAINEL_REDES_PERMITIDAS: '$rede' não é rede privada. Esta stack é só para rede interna."
+  exigir_rede PAINEL_REDES_PERMITIDAS "$rede" || exit 1
 done
 [[ -z "$PAINEL_CERT_CN" || "$PAINEL_CERT_CN" =~ ^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$ ]] \
-  || die "PAINEL_CERT_CN inválido: use um nome interno em minúsculas ou um IP privado"
+  || die "PAINEL_CERT_CN inválido: use um nome em minúsculas ou um endereço IPv4"
 cn_ip=false
 if [[ "$PAINEL_CERT_CN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   cn_ip=true
-  exigir_ip_privado PAINEL_CERT_CN "$PAINEL_CERT_CN" || exit 1
+  exigir_ip PAINEL_CERT_CN "$PAINEL_CERT_CN" || exit 1
 fi
 
 [[ -d /auth && -d /data ]] || die "pastas /auth e /data ausentes: o painel usa as mesmas do serviço ftp"
@@ -86,5 +88,7 @@ install -d -o root -g "$gid_nginx" -m 0750 /nginx/tls
 install -o root -g "$gid_nginx" -m 0644 "$certificado" /nginx/tls/painel-cert.pem
 install -o root -g "$gid_nginx" -m 0640 "$chave" /nginx/tls/painel-key.pem
 rm -f /nginx/painel.sock
+
+aviso_ip_publico >&2
 
 exec python3 /opt/painel/servidor.py

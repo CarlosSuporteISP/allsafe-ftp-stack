@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.10.1-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.11.0-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -34,13 +34,13 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.10.1</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.11.0</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
 **Sequência:** Equipamento de rede ➜ Pure-FTPd (`allsafe-ftp`) ➜ PureDB ➜ `/data` ➜ backup guardado
 
-> 🧱 **Uso só em rede privada.** Esta stack é para rede interna: escuta **apenas em IP privado** (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` ou `127.0.0.1`), **atrás de firewall**, e **nunca** deve ser publicada na internet nem receber redirecionamento de porta da borda. Detalhes em [doc/seguranca.md](doc/seguranca.md#rede-privada).
+> 🧱 **Uso só em rede privada.** Por padrão, esta stack é para rede interna: escuta **apenas em IP privado** (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` ou `127.0.0.1`), **atrás de firewall**, e não deve ser publicada na internet nem receber redirecionamento de porta da borda. Endereço público só entra por escolha de quem instala, com `REDE_PERMITIR_IP_PUBLICO=sim` e firewall no servidor: leia antes o [alerta](doc/seguranca.md#ip-publico). Detalhes em [doc/seguranca.md](doc/seguranca.md#rede-privada).
 
 ---
 
@@ -83,7 +83,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **FTPS explícito obrigatório por padrão** | Sem `AUTH TLS` não há login: usuário e senha não passam em texto puro. O modo sem TLS, para equipamento antigo, é uma escolha explícita e avisada |
 | **Usuários virtuais em PureDB** | Não são contas do sistema; cada um fica preso (`chroot`) na própria pasta |
 | **Bind local por padrão** | Sobe em `127.0.0.1`; você abre só um IP **privado** dedicado, com firewall no host |
-| **Só rede privada** | Feita para rede interna, atrás de firewall; nunca publicada na internet |
+| **Rede privada por padrão** | Feita para rede interna, atrás de firewall; endereço público só por uma opção explícita, com alerta |
 | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão de 15 minutos, bloqueio depois de cinco senhas erradas e registro de cada ação |
 | **nginx na frente do painel** | Só o nginx publica a porta do painel: TLS 1.2 e 1.3, lista de redes permitidas, limite de pedidos e de conexões por endereço; o painel fica sem porta de rede |
 | **Containers endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs; o nginx roda sem `root` e sem nenhuma `capability` |
@@ -133,7 +133,7 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 
 | Variável | Troque para |
 |---|---|
-| `FTP_BIND_IP` | o IP **privado** do servidor na rede interna (nunca `0.0.0.0` nem IP público) |
+| `FTP_BIND_IP` | o IP **privado** do servidor na rede interna (`0.0.0.0` é sempre recusado; IP público, só com a [opção própria](doc/seguranca.md#ip-publico)) |
 | `FTP_PASSIVE_IP` | o IP privado que o equipamento enxerga (normalmente o mesmo) |
 | `FTP_CERT_CN` | o hostname (ou IP) que vai no certificado |
 | `PAINEL_BIND_IP` | o IP **privado** por onde o painel será aberto; com `127.0.0.1` ele só abre no próprio servidor |
@@ -496,7 +496,8 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 
 ## 🔐 Segurança
 
-- **Só rede privada:** IP privado, atrás de firewall, sem redirecionamento de porta da internet. Veja [rede privada e firewall](doc/seguranca.md#rede-privada).
+- **Rede privada por padrão:** IP privado, atrás de firewall, sem redirecionamento de porta da internet. Veja [rede privada e firewall](doc/seguranca.md#rede-privada).
+- **IP público só por escolha:** `REDE_PERMITIR_IP_PUBLICO=sim` aceita endereço público e exige TLS obrigatório; a stack alerta disso no `deploy.sh`, no registro dos containers e no painel. Só com firewall no servidor. Veja [IP público](doc/seguranca.md#ip-publico).
 <details>
 <summary>Proteções aplicadas, uma a uma — clique para expandir</summary>
 
@@ -556,7 +557,7 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`nginx/saude.sh`](nginx/saude.sh) | Healthcheck do nginx: pede `/saude` por HTTPS, de ponta a ponta |
 | [`web/estilo.css`](web/estilo.css) | Aparência do painel, entregue direto pelo nginx |
 | [`scripts/painel-senha.sh`](scripts/painel-senha.sh) | Troca a senha do painel, gravando só o hash |
-| [`scripts/rede-privada.sh`](scripts/rede-privada.sh) | Funções que recusam IP e rede que não sejam privados |
+| [`scripts/rede-privada.sh`](scripts/rede-privada.sh) | Funções que recusam IP e rede que não sejam privados e que tratam a opção de IP público |
 | [`scripts/ambiente.sh`](scripts/ambiente.sh) | Função que lê uma chave do `.env` sem executar o arquivo |
 | [`scripts/backup.sh`](scripts/backup.sh) | Grava a cópia de segurança dos dados, dos usuários, dos certificados e da auditoria em `BACKUP_DIR` |
 | [`scripts/restaurar.sh`](scripts/restaurar.sh) | Devolve a stack ao estado de uma cópia, guardando antes o estado atual |
@@ -610,7 +611,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.10.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.11.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

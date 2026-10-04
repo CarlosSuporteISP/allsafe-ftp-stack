@@ -22,6 +22,43 @@ par 20 "Rede permitida pública no painel" painel PAINEL_REDES_PERMITIDAS=0.0.0.
 [[ "$ev" != *'NÃO RECUSOU'* ]] || { falhas=$((falhas + 1)); sed -i -e '/^20\t/s/\t✅\t/\t❌\t/' "$W/casos-seguranca.tsv"; }
 ev=""
 
+# IP público: só com REDE_PERMITIR_IP_PUBLICO=sim. Endereços de documentação (RFC 5737), que não existem
+# neste host: a conferência é do deploy.sh --check-only e da entrada de cada container, sem publicar nada.
+P=REDE_PERMITIR_IP_PUBLICO=sim
+publicos=(FTP_BIND_IP=203.0.113.10 FTP_PASSIVE_IP=203.0.113.10 PAINEL_BIND_IP=203.0.113.10 PAINEL_CERT_CN=203.0.113.10 PAINEL_REDES_PERMITIDAS=127.0.0.0/8,198.51.100.0/24)
+sem="$(recusa_deploy "${publicos[@]}")"; dica="$(grep -c 'IP público só com REDE_PERMITIR_IP_PUBLICO=sim, e com firewall' "$W/recusa.log")"
+com="$(aceite_deploy "$P" "${publicos[@]}")"
+recusou "$sem" 'não é IP privado' && [[ "$dica" == 1 && "$com" == "saída 0 · OK:"*"endereço público aceito"*"alerta de IP público: 1 · instância intacta" ]]
+caso $? seguranca 41 "IP público só com a opção ligada" "bind do FTP, IP anunciado, bind e certificado do painel em 203.0.113.10 e rede 198.51.100.0/24 · sem a opção: $sem, a recusa cita a opção e o firewall: $([[ "$dica" == 1 ]] && echo sim || echo NÃO) · com REDE_PERMITIR_IP_PUBLICO=sim: $com"
+
+ev=""; ok=0
+for item in 'ftp FTP_BIND_IP=0.0.0.0 endereco' 'painel PAINEL_BIND_IP=0.0.0.0 endereco' 'ftp FTP_PASSIVE_IP=224.0.0.1 endereco' \
+            'painel PAINEL_REDES_PERMITIDAS=0.0.0.0/0 rede' 'nginx PAINEL_REDES_PERMITIDAS=0.0.0.0/0 rede' 'painel PAINEL_REDES_PERMITIDAS=8.0.0.0/7 rede'; do
+  read -r servico troca tipo <<< "$item"
+  if [[ "$tipo" == rede ]]; then texto='não é uma rede IPv4 aceita'; else texto='não é um endereço IPv4 de servidor'; fi
+  d="$(recusa_deploy "$P" "$troca")"; k="$(recusa_container "$servico" "$P" "$troca")"
+  recusou "$d" "$texto" && [[ "$k" == "saída 1 · "*"$texto"* ]] || ok=1
+  ev+="$troca: deploy.sh ${d%% · *}, container do $servico ${k%% · *}; "
+done
+caso $ok seguranca 42 "Com a opção ligada, 'todos' continua recusado" "$ev mensagens: 'não é um endereço IPv4 de servidor' e 'não é uma rede IPv4 aceita' (saída 1 = recusado)"
+
+ev=""; ok=0
+for modo in 0 1; do
+  d="$(recusa_deploy "$P" "FTP_TLS_MODE=$modo")"; k="$(recusa_container ftp "$P" "FTP_TLS_MODE=$modo")"
+  recusou "$d" 'exige FTP_TLS_MODE=2 ou 3' && [[ "$k" == "saída 1 · "*'exige FTP_TLS_MODE=2 ou 3'* ]] || ok=1
+  ev+="FTP_TLS_MODE=$modo: deploy.sh ${d%% · *}, container do ftp ${k%% · *}; "
+done
+caso $ok seguranca 43 "IP público exige TLS obrigatório" "$ev mensagem: REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3"
+
+ev=""; ok=0; texto="deve ser 'nao' ou 'sim'"
+d="$(recusa_deploy REDE_PERMITIR_IP_PUBLICO=talvez)"; recusou "$d" "$texto" || ok=1; ev+="deploy.sh: ${d%% · instância*}; "
+for servico in ftp painel nginx; do
+  k="$(recusa_container "$servico" REDE_PERMITIR_IP_PUBLICO=talvez)"
+  [[ "$k" == "saída 1 · "*"$texto"* ]] || ok=1
+  ev+="container do $servico: ${k%% · *}; "
+done
+caso $ok seguranca 44 "Valor inválido da opção de IP público" "REDE_PERMITIR_IP_PUBLICO=talvez · $ev nenhum dos quatro trata o valor como 'sim'"
+
 chaves='^[A-Za-z0-9_]*(PASSWORD|PASSWD|SECRET|TOKEN|HASH|API_KEY|PRIVATE_KEY)[A-Za-z0-9_]*=.+'
 caminhos='^[A-Za-z0-9_]*_(DIR|FILE|PATH)='   # caminho de onde o segredo mora não é segredo
 n_env="$(grep -i -E "$chaves" "$ENVA" | grep -c -v -E "$caminhos")"; n_exemplo="$(grep -i -E "$chaves" .env.example | grep -c -v -E "$caminhos")"; n_valor="$(segredos_em "$ENVA")"

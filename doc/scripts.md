@@ -54,7 +54,7 @@ flowchart LR
 | [`nginx/entrypoint.sh`](../nginx/entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
 | [`nginx/saude.sh`](../nginx/saude.sh) | container do nginx | Healthcheck: pede `/saude` ao painel passando pelo nginx |
 | [`ftp/usuario.sh`](../ftp/usuario.sh) | containers do FTP e do painel | Gestão de usuários no PureDB, chamada pelo `manage-user.sh` e pelo painel |
-| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | host e containers | Funções que conferem se um IP ou uma rede é privado; carregado pelos outros scripts |
+| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | host e containers | Funções que conferem se um IP ou uma rede é privado e que tratam a opção de IP público; carregado pelos outros scripts |
 | [`scripts/ambiente.sh`](../scripts/ambiente.sh) | host | Função que lê uma chave do `.env` sem executar o arquivo; carregado pelos outros scripts |
 
 A pasta [`scripts/`](../scripts/) tem só o que roda no servidor. O que roda em container fica na pasta do serviço ([`ftp/`](../ftp/), [`painel/`](../painel/) e [`nginx/`](../nginx/)) e é copiado para a imagem pelo [`Dockerfile`](../Dockerfile). A bateria de testes fica em [`tests/`](../tests/).
@@ -75,13 +75,13 @@ A pasta [`scripts/`](../scripts/) tem só o que roda no servidor. O que roda em 
 | sem opção | Instala ou reaplica: cria o `.env`, as pastas e as senhas que faltarem, sobe os containers e espera ficarem `healthy` |
 | `--size` | Grava no `.env` os limites de `profiles/<perfil>.env` e o nome em `FTP_PROFILE`, depois de conferir que o servidor aguenta o perfil. Sem a opção, o `.env` fica como está |
 | `--atualizar` | Reconstrói as três imagens sem cache, com os pacotes atuais do Debian, e recria os containers |
-| `--check-only` | Só valida o perfil, a rede privada, os recursos do servidor e o Compose; não cria nem sobe nada |
+| `--check-only` | Só valida o perfil, os endereços e as redes, os recursos do servidor e o Compose; não cria nem sobe nada |
 | `--remover` | Derruba os containers e a rede; dados, segredos, `.env` e imagens ficam |
 | `--apagar-dados` | Com `--remover`: apaga também `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` de `DATA_DIR`, depois de pedir para digitar `apagar` |
 | `--sim` | Com `--apagar-dados`: dispensa a confirmação (obrigatório quando não há terminal) |
 | `-h`, `--help` | Mostra o uso |
 
-**Resultado esperado:** o comando só termina com `allsafe-ftp`, `allsafe-ftp-painel` e `allsafe-ftp-nginx` em `healthy` e fecha com `Pronto: FTP, painel e nginx no ar (healthy), perfil '<perfil>'.`, os endereços do FTP e do painel, o modo de TLS do FTP e o arquivo onde está cada senha (a senha em si nunca aparece). Com `FTP_TLS_MODE` em `0` ou `1`, a última coisa na tela é o `AVISO` de FTP sem criptografia: [Segurança](seguranca.md#ftp-sem-tls). Com `--remover`: `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` Com `--check-only`: `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.`
+**Resultado esperado:** o comando só termina com `allsafe-ftp`, `allsafe-ftp-painel` e `allsafe-ftp-nginx` em `healthy` e fecha com `Pronto: FTP, painel e nginx no ar (healthy), perfil '<perfil>'.`, os endereços do FTP e do painel, o modo de TLS do FTP e o arquivo onde está cada senha (a senha em si nunca aparece). Com `FTP_TLS_MODE` em `0` ou `1`, a última coisa na tela é o `AVISO` de FTP sem criptografia: [Segurança](seguranca.md#ftp-sem-tls). Com `--remover`: `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` Com `--check-only`: `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.` Com `REDE_PERMITIR_IP_PUBLICO=sim`, o resumo traz `endereço público aceito` no lugar de `rede privada` e a última coisa na tela é o `ALERTA` de endereço público: [Segurança](seguranca.md#ip-publico).
 
 <details>
 <summary>Detalhe técnico — comportamento e códigos de saída</summary>
@@ -96,7 +96,8 @@ A pasta [`scripts/`](../scripts/) tem só o que roda no servidor. O que roda em 
 - **Converte os nomes antigos, os segredos:** em instalação feita até a `0.9.0`, dá o nome novo aos três arquivos de `.secrets/` com `mv`, sem ler nem copiar o conteúdo, e avisa `Convertido: <antigo> virou <novo>.` para cada um. Se o antigo e o novo existirem, vale o novo e sai um `AVISO`. Com `--check-only`, só avisa. Tabela dos nomes: [Segredos](segredos.md#nomes-antigos).
 - Se `.secrets/ftp-usuario-inicial-senha.txt` estiver vazio ou ausente, gera uma senha forte (`0600`): veja [Segredos](segredos.md).
 - Grava o `.secrets/LEIAME.txt` (`0600`), que diz para que serve cada arquivo da pasta e não guarda segredo, e fecha o resumo com `Segredos: .../LEIAME.txt diz para que serve cada arquivo.`
-- Recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env`, e qualquer `FTP_BIND_IP`, `FTP_PASSIVE_IP`, `PAINEL_BIND_IP`, `PAINEL_REDES_PERMITIDAS` ou `PAINEL_CERT_CN` (em forma de IP) fora de rede privada.
+- Recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env` e, por padrão, qualquer `FTP_BIND_IP`, `FTP_PASSIVE_IP`, `PAINEL_BIND_IP`, `PAINEL_REDES_PERMITIDAS` ou `PAINEL_CERT_CN` (em forma de IP) fora de rede privada.
+- **Opção de IP público:** `REDE_PERMITIR_IP_PUBLICO` diferente de `nao` e de `sim` para com `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` e código `1`. Com `sim`, aceita IPv4 público de servidor e rede de `/8` a `/32`, continua recusando `0.0.0.0` e rede mais larga, exige `FTP_TLS_MODE` em `2` ou `3` (`ERRO: REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3`) e mostra o `ALERTA` ao final, também no `--check-only`.
 - Se `.secrets/painel-admin-inicial-senha-hash.txt` não existir, gera a senha inicial do painel em `.secrets/painel-admin-inicial-senha.txt` (`0600`) e grava o hash dela, chamando o `scripts/painel-senha.sh --inicial` depois de construir a imagem.
 - Opção desconhecida ou perfil inexistente: mensagem `Opção inválida: ...` ou `ERRO: perfil inexistente: ...` e código `64`.
 - O Compose é sempre chamado só com `--env-file .env`. O perfil não é um segundo arquivo na subida: `--size` grava os valores dele no `.env`, por isso um `docker compose up -d` direto mantém os mesmos limites.
@@ -225,7 +226,7 @@ Roda a bateria de testes da stack: funcional, de segurança e de rede. O script 
 
 **Resultado esperado:** uma linha por caso, com `✅` ou `❌`, o resumo de cada bateria com o caminho do arquivo de resultado e, no fim, `Bateria aprovada: nenhum desvio.` A execução leva perto de cinco minutos.
 
-> ⚠️ A instância de teste também só sobe em IP privado: `TESTE_IP` fora das faixas privadas é recusado antes de qualquer container subir.
+> ⚠️ A instância de teste só sobe em IP privado: `TESTE_IP` fora das faixas privadas é recusado antes de qualquer container subir. A opção de IP público é testada com endereços de documentação (`203.0.113.0/24` e `198.51.100.0/24`), sem publicar porta fora do IP de teste.
 
 | Saída | Significado |
 |---|---|
@@ -259,8 +260,8 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 | Bateria | Casos | Exemplos |
 |---|---|---|
 | Funcional | 21 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh` |
-| Segurança | 39 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos |
-| Rede | 12 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host |
+| Segurança | 45 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, a opção de IP público (só com `sim`, "todos" sempre recusado, TLS obrigatório, valor inválido, alerta em execução), CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos |
+| Rede | 13 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host, rede pública no painel só com a opção |
 
 **Organização:** o [`tests/testar.sh`](../tests/testar.sh) prepara a instância de teste e carrega o [`tests/comum.sh`](../tests/comum.sh), com as funções de registro, de FTP, do painel e de gravação dos resultados. Os casos ficam em [`tests/etapas/`](../tests/etapas/), um arquivo por etapa, executados na ordem do nome: cada etapa parte do estado que a anterior deixou e não roda sozinha.
 
@@ -278,7 +279,7 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 
 Roda a cada início do container. Não tem parâmetros: tudo vem das variáveis de [Configuração](configuracao.md).
 
-1. Confere que `FTP_BIND_IP` e `FTP_PASSIVE_IP` são IPs privados ([`rede-privada.sh`](../scripts/rede-privada.sh)), lê a senha do segredo `/run/secrets/ftp_usuario_inicial_senha`, ajusta dono e modo de `/data`, `/auth` e `/etc/ssl/private` e cria ou atualiza o usuário inicial `FTP_USER` (recusa senha com menos de 12 caracteres).
+1. Confere que `FTP_BIND_IP` e `FTP_PASSIVE_IP` são IPs privados, ou públicos de servidor com `REDE_PERMITIR_IP_PUBLICO=sim` ([`rede-privada.sh`](../scripts/rede-privada.sh)), lê a senha do segredo `/run/secrets/ftp_usuario_inicial_senha`, ajusta dono e modo de `/data`, `/auth` e `/etc/ssl/private` e cria ou atualiza o usuário inicial `FTP_USER` (recusa senha com menos de 12 caracteres).
 2. Gera um certificado autoassinado para `FTP_CERT_CN` se `DATA_DIR/certs` estiver vazia, e grava a parte pública dele em `/auth/ftp-cert.pem`.
 3. Executa o `pure-ftpd` com o modo de TLS, o `chroot`, os limites e a faixa passiva do `.env`. Com `FTP_TLS_MODE` em `0` ou `1`, grava antes um `AVISO` no log.
 
@@ -295,7 +296,10 @@ Quando uma validação falha, o script sai com `FALHA: <motivo>`:
 |---|---|
 | `FALHA: segredo /run/secrets/ftp_usuario_inicial_senha ausente` | `.secrets/ftp-usuario-inicial-senha.txt` não existe: rode o `deploy.sh` |
 | `FALHA: FTP_PASSWORD não é aceita` | há senha em variável de ambiente; ela só é lida do segredo |
-| `FALHA: FTP_BIND_IP=… não é IP privado` (ou `FTP_PASSIVE_IP`) | o endereço está fora das faixas privadas; o container reinicia em laço até a correção |
+| `FALHA: FTP_BIND_IP=… não é IP privado` (ou `FTP_PASSIVE_IP`) | o endereço está fora das faixas privadas e a opção de IP público está em `nao`; o container reinicia em laço até a correção |
+| `FALHA: FTP_BIND_IP=… não é um endereço IPv4 de servidor` (ou `FTP_PASSIVE_IP`) | com a opção em `sim`, o valor é `0.0.0.0`, multicast ou reservado |
+| `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` | a opção tem outro valor |
+| `FALHA: REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3` | a opção está ligada com o TLS do FTP em `0` ou `1` |
 | `FALHA: FTP_USER invalido` | o nome não segue `^[a-z_][a-z0-9_-]{0,31}$` |
 | `FALHA: a senha FTP deve ter pelo menos 12 caracteres` | senha curta ou arquivo vazio |
 | `FALHA: faixa passiva invalida` | início ou fim não numéricos |
@@ -334,7 +338,7 @@ Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; 
 Roda a cada início do container do painel. Não tem parâmetros: tudo vem das variáveis de [Configuração](configuracao.md#painel).
 
 1. Recusa senha em variável e exige o segredo `/run/secrets/painel_admin_inicial_senha_hash`.
-2. Confere que `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e o `PAINEL_CERT_CN` (se for IP) são privados.
+2. Confere que `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e o `PAINEL_CERT_CN` (se for IP) são privados, ou públicos aceitos com `REDE_PERMITIR_IP_PUBLICO=sim`.
 3. Ajusta dono e modo de `/painel` (`0700`, do `root`) e gera o certificado autoassinado do painel quando ele falta, quando os endereços mudam ou quando faltam menos de 30 dias para vencer.
 4. Prepara a pasta `/nginx` (`0750`, grupo `10001`, o do nginx): copia o certificado e a chave para `/nginx/tls` e apaga o soquete da subida anterior.
 5. Executa o servidor [`painel/servidor.py`](../painel/servidor.py), que abre o soquete `/nginx/painel.sock`. O painel não abre porta de rede.
@@ -348,8 +352,11 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 |---|---|
 | `FALHA: PAINEL_PASSWORD não é aceita` (ou `PAINEL_PASSWORD_HASH`) | há senha ou hash em variável de ambiente; o painel só lê o segredo |
 | `FALHA: segredo /run/secrets/painel_admin_inicial_senha_hash ausente` | `.secrets/painel-admin-inicial-senha-hash.txt` não existe: rode o `deploy.sh` |
-| `FALHA: PAINEL_BIND_IP=… não é IP privado` (ou `PAINEL_CERT_CN`) | endereço fora das faixas privadas |
-| `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é rede privada` | a lista tem rede pública ou `0.0.0.0/0` |
+| `FALHA: PAINEL_BIND_IP=… não é IP privado` (ou `PAINEL_CERT_CN`) | endereço fora das faixas privadas, com a opção de IP público em `nao` |
+| `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é rede privada` | a lista tem rede pública ou `0.0.0.0/0`, com a opção de IP público em `nao` |
+| `FALHA: PAINEL_BIND_IP=… não é um endereço IPv4 de servidor` (ou `PAINEL_CERT_CN`) | com a opção em `sim`, o valor é `0.0.0.0`, multicast ou reservado |
+| `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é uma rede IPv4 aceita` | com a opção em `sim`, a rede é mais larga que `/8`, como `0.0.0.0/0` |
+| `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` | a opção tem outro valor |
 | `FALHA: PAINEL_REDES_PERMITIDAS está vazia` | a variável chegou vazia ao container |
 | `FALHA: PAINEL_CERT_CN inválido` | nome com maiúscula, espaço ou caractere fora de `a-z`, `0-9`, `.` e `-` |
 | `FALHA: pastas /auth e /data ausentes` | o painel subiu sem as pastas do serviço `ftp` |
@@ -369,7 +376,7 @@ O certificado é EC P-256, válido por 825 dias. O arquivo `painel-san.txt`, ao 
 Roda a cada início do container do nginx, já como usuário sem privilégio (`10001`). Não tem parâmetros: recebe só `TZ` e `PAINEL_REDES_PERMITIDAS`.
 
 1. Recusa rodar como root.
-2. Confere que cada rede de `PAINEL_REDES_PERMITIDAS` é privada.
+2. Confere que cada rede de `PAINEL_REDES_PERMITIDAS` é privada, ou pública aceita com `REDE_PERMITIR_IP_PUBLICO=sim`.
 3. Espera até 30 segundos pelo soquete do painel (`/nginx/painel.sock`) e pela cópia do certificado (`/nginx/tls`).
 4. Gera a configuração em `/run/nginx/nginx.conf` a partir de [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo), trocando o marcador das redes por uma linha `allow` para cada rede permitida.
 5. Testa a configuração e executa o `nginx`.
@@ -383,7 +390,9 @@ Roda a cada início do container do nginx, já como usuário sem privilégio (`1
 |---|---|
 | `FALHA: o nginx desta stack não roda como root: confira 'user' no compose.yaml` | o serviço foi alterado para subir como root |
 | `FALHA: PAINEL_REDES_PERMITIDAS está vazia` | a variável chegou vazia ao container |
-| `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é rede privada. Esta stack é só para rede interna.` | a lista tem rede pública ou `0.0.0.0/0` |
+| `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é rede privada. Por padrão esta stack é só para rede interna.` | a lista tem rede pública ou `0.0.0.0/0`, com a opção de IP público em `nao` |
+| `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é uma rede IPv4 aceita` | com a opção em `sim`, a rede é mais larga que `/8`, como `0.0.0.0/0` |
+| `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` | a opção tem outro valor |
 | `FALHA: soquete do painel ausente em /nginx/painel.sock: o serviço painel está no ar?` | o painel não subiu ou `DATA_DIR/nginx` não está montada nos dois containers |
 | `FALHA: certificado do painel ausente ou ilegível em /nginx/tls` | o painel não copiou o certificado, ou a permissão da pasta foi alterada à mão |
 | `FALHA: configuração do nginx recusada` | o modelo foi editado e ficou inválido; o erro do `nginx -t` aparece logo acima |
@@ -439,7 +448,7 @@ Não são executados: outros scripts os carregam com `source`.
 
 | Script | Função | Quem usa |
 |---|---|---|
-| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | `ip_privado`, `cidr_privado` e `exigir_ip_privado`: aceitam só `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16` | `deploy.sh`, `tests/testar.sh`, `ftp/entrypoint.sh`, `painel/entrypoint.sh` e `nginx/entrypoint.sh` |
+| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | `ip_privado` e `cidr_privado` aceitam só `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16`; `ip_utilizavel` e `cidr_utilizavel` dizem o que passa com a opção de IP público (IPv4 de `1` a `223` no primeiro octeto, rede de `/8` a `/32`); `exigir_ip` e `exigir_rede` aplicam a regra e escrevem a `FALHA`; `conferir_opcao_ip_publico` recusa valor fora de `nao` e `sim`; `aviso_ip_publico` escreve o `ALERTA` | `deploy.sh`, `tests/testar.sh`, `ftp/entrypoint.sh`, `painel/entrypoint.sh` e `nginx/entrypoint.sh` |
 | [`scripts/ambiente.sh`](../scripts/ambiente.sh) | `env_valor <chave> [padrão]`: lê uma chave do `.env` sem executar o arquivo; a última ocorrência vale, como no Compose. `env_gravar <chave> <valor>`: troca a linha da chave ou acrescenta no fim, sem regravar quando o valor já é o pedido | `deploy.sh`, `manage-user.sh`, `painel-senha.sh`, `backup.sh`, `restaurar.sh`, `validate.sh` e `testar.sh` |
 
 ---

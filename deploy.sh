@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Instala, reaplica, atualiza ou remove a stack em um comando, sem perguntas.
-# SÓ PARA REDE PRIVADA: recusa bind e IP anunciado fora de IP privado.
+# Por padrão, só para rede privada: recusa bind e IP anunciado fora de IP privado. IP público só
+# passa com REDE_PERMITIR_IP_PUBLICO=sim no .env, por escolha de quem instala.
 set -Eeuo pipefail
 root_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "$root_dir"
@@ -213,12 +214,15 @@ if [[ "$remover" == true ]]; then
   exit 0
 fi
 
-exigir_ip_privado FTP_BIND_IP "$(env_valor FTP_BIND_IP 127.0.0.1)" || exit 1
-exigir_ip_privado FTP_PASSIVE_IP "${FTP_PASSIVE_IP:-$(env_valor FTP_PASSIVE_IP 127.0.0.1)}" || exit 1
-exigir_ip_privado PAINEL_BIND_IP "$(env_valor PAINEL_BIND_IP 127.0.0.1)" || exit 1
+# Rede: privada por padrão. As funções de scripts/rede-privada.sh leem esta escolha.
+REDE_PERMITIR_IP_PUBLICO="$(env_valor REDE_PERMITIR_IP_PUBLICO nao)"
+conferir_opcao_ip_publico
+exigir_ip FTP_BIND_IP "$(env_valor FTP_BIND_IP 127.0.0.1)" || exit 1
+exigir_ip FTP_PASSIVE_IP "${FTP_PASSIVE_IP:-$(env_valor FTP_PASSIVE_IP 127.0.0.1)}" || exit 1
+exigir_ip PAINEL_BIND_IP "$(env_valor PAINEL_BIND_IP 127.0.0.1)" || exit 1
 IFS=',' read -r -a redes_painel <<< "$(env_valor PAINEL_REDES_PERMITIDAS 127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16)"
 for rede in "${redes_painel[@]}"; do
-  cidr_privado "${rede// /}" || die "PAINEL_REDES_PERMITIDAS: '${rede// /}' não é rede privada. Esta stack é só para rede interna."
+  exigir_rede PAINEL_REDES_PERMITIDAS "${rede// /}" || exit 1
 done
 # TLS do FTP: 0 e 1 deixam passar senha em texto puro e só existem para equipamento antigo.
 tls_modo="$(env_valor FTP_TLS_MODE 2)"
@@ -229,6 +233,10 @@ case "$tls_modo" in
   3) tls_texto="TLS explícito obrigatório no login e nos dados" ;;
   *) die "FTP_TLS_MODE deve ser 0 (sem TLS), 1 (opcional), 2 (obrigatório no login) ou 3 (obrigatório no login e nos dados); em $env_file está '$tls_modo'." ;;
 esac
+# Com IP público aceito, senha em texto puro não passa: o TLS tem de ser obrigatório.
+if ip_publico_permitido && (( tls_modo < 2 )); then
+  die "REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3; em $env_file está '$tls_modo'. FTP sem TLS na internet entrega a senha a quem escuta."
+fi
 aviso_tls() {
   case "$tls_modo" in
     0) echo "AVISO: FTP_TLS_MODE=0: o FTP está SEM criptografia. Senhas e arquivos passam em texto puro e podem ser" ;;
@@ -240,8 +248,9 @@ aviso_tls() {
 }
 painel_cn="$(env_valor PAINEL_CERT_CN)"
 if [[ "$painel_cn" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  exigir_ip_privado PAINEL_CERT_CN "$painel_cn" || exit 1
+  exigir_ip PAINEL_CERT_CN "$painel_cn" || exit 1
 fi
+if ip_publico_permitido; then rede_texto="endereço público aceito"; else rede_texto="rede privada"; fi
 
 if [[ "$check_only" == true ]]; then
   if [[ -n "$size" ]]; then
@@ -249,8 +258,9 @@ if [[ "$check_only" == true ]]; then
   else
     compose config --quiet
   fi
-  echo "OK: perfil '$perfil_nome', rede privada, recursos do servidor e compose validados; nada foi alterado."
+  echo "OK: perfil '$perfil_nome', $rede_texto, recursos do servidor e compose validados; nada foi alterado."
   aviso_tls
+  aviso_ip_publico
   exit 0
 fi
 
@@ -375,7 +385,7 @@ echo
 echo "Pronto: FTP, painel e nginx no ar (healthy), perfil '$(env_valor FTP_PROFILE small)'."
 echo "FTP:    $ftp_ip:$(env_valor FTP_PORT 21), $tls_texto, modo passivo $(env_valor FTP_PASSIVE_PORT_START 30000)-$(env_valor FTP_PASSIVE_PORT_END 30049)"
 echo "        usuário '$(env_valor FTP_USER transfer)', senha no arquivo $secret_file"
-echo "Painel: https://$(env_valor PAINEL_BIND_IP 127.0.0.1):$(env_valor PAINEL_PORT 8443)  (pelo nginx; certificado autoassinado; só rede privada, atrás de firewall)"
+echo "Painel: https://$(env_valor PAINEL_BIND_IP 127.0.0.1):$(env_valor PAINEL_PORT 8443)  (pelo nginx; certificado autoassinado; $rede_texto, atrás de firewall)"
 if [[ -s "$painel_senha" ]]; then
   echo "        senha inicial no arquivo $painel_senha; troque com ./scripts/painel-senha.sh"
 else
@@ -384,3 +394,4 @@ fi
 echo "Segredos: $secrets_dir/LEIAME.txt diz para que serve cada arquivo."
 echo "Remover: ./deploy.sh --remover  (os dados ficam em $data_dir)"
 aviso_tls
+aviso_ip_publico

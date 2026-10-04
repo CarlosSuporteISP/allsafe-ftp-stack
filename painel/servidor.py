@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Painel web da allsafe-ftp-stack. SÓ PARA REDE PRIVADA, atrás de firewall.
+"""Painel web da allsafe-ftp-stack. Por padrão, só para rede privada, atrás de firewall.
 
 O navegador fala HTTPS com o nginx, que é a única porta publicada; o painel não escuta na rede:
 atende só o soquete Unix que o nginx abre e recebe dele o endereço real do cliente. Uma senha de
@@ -147,14 +147,22 @@ def senha_confere(senha):
 
 def configuracao():
     amb = os.environ.get
+    if amb('REDE_PERMITIR_IP_PUBLICO', 'nao') not in ('nao', 'sim'):
+        falha("REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'")
+    publico = amb('REDE_PERMITIR_IP_PUBLICO', 'nao') == 'sim'
     redes = []
     for texto in amb('PAINEL_REDES_PERMITIDAS', '127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16').split(','):
         try:
             rede = ipaddress.ip_network(texto.strip())
         except ValueError:
             falha(f'PAINEL_REDES_PERMITIDAS: "{texto.strip()}" não é uma rede válida')
-        if rede.version != 4 or not any(rede.subnet_of(p) for p in PRIVADAS):
-            falha(f'PAINEL_REDES_PERMITIDAS: {rede} não é rede privada. Esta stack é só para rede interna.')
+        if rede.version != 4:
+            falha(f'PAINEL_REDES_PERMITIDAS: {rede} não é uma rede IPv4')
+        if not any(rede.subnet_of(p) for p in PRIVADAS):
+            if not publico:
+                falha(f'PAINEL_REDES_PERMITIDAS: {rede} não é rede privada. Rede pública só com REDE_PERMITIR_IP_PUBLICO=sim.')
+            if rede.prefixlen < 8 or not 1 <= int(rede.network_address) >> 24 <= 223:
+                falha(f'PAINEL_REDES_PERMITIDAS: {rede} não é uma rede aceita (prefixo de /8 a /32; "todo mundo" é recusado)')
         redes.append(rede)
     minutos = amb('PAINEL_SESSAO_MINUTOS', '15')
     if not (minutos.isdigit() and 1 <= int(minutos) <= 120):
@@ -165,6 +173,7 @@ def configuracao():
     except OSError:
         versao = '?'
     return {
+        'ip_publico': publico,
         'redes': redes,
         'inatividade': int(minutos) * 60,
         'cert_cn': amb('PAINEL_CERT_CN', '').strip().lower(),
@@ -588,7 +597,8 @@ class Painel(http.server.BaseHTTPRequestHandler):
             ip = ipaddress.ip_address(nome)
         except ValueError:
             return False
-        return ip.version == 4 and any(ip in rede for rede in PRIVADAS)
+        # Endereço IP no lugar do nome não serve a ataque de troca de DNS: com IP público aceito, vale qualquer IPv4.
+        return ip.version == 4 and (CFG['ip_publico'] or privado(ip))
 
     def origem_valida(self):
         esperado = 'https://' + self.headers.get('Host', '')
@@ -697,7 +707,7 @@ class Painel(http.server.BaseHTTPRequestHandler):
 <input id="senha" name="senha" type="password" required autofocus autocomplete="current-password" maxlength="256">
 <button type="submit">Entrar</button>
 </form>
-<p class="aviso">🧱 Uso só em rede privada, atrás de firewall. Nunca publique este painel na internet.</p>
+{aviso_rede()}
 </section>'''))
 
     def entrar(self, metodo, formulario):
@@ -937,34 +947,50 @@ continuam em <code>{e(CFG['pasta_host'])}/{e(nome)}</code>.</p>
         redes = ', '.join(str(rede) for rede in CFG['redes'])
 
         def local(ip):
-            return 'só o próprio host alcança' if ip.startswith('127.') else 'alcançável pela rede interna deste endereço'
+            if ip.startswith('127.'):
+                return 'IP privado, só o próprio host alcança'
+            if endereco_privado(ip):
+                return 'IP privado, alcançável pela rede interna deste endereço'
+            return '<strong>IP público</strong>: alcançável pela internet se o firewall não barrar'
+
+        def marca_ip(ip):
+            return '✅' if endereco_privado(ip) else '⚠️'
+        redes_publicas = [str(rede) for rede in CFG['redes'] if not any(rede.subnet_of(p) for p in PRIVADAS)]
 
         def linha(marca, item, situacao):
             return f'<tr><td class="marca">{marca}</td><th scope="row">{item}</th><td>{situacao}</td></tr>'
         itens = [
-            linha('✅', 'Endereço do FTP', f'<code>{e(CFG["ftp_bind"])}:{e(CFG["ftp_porta"])}</code> — IP privado, {local(CFG["ftp_bind"])}.'),
-            linha('✅', 'IP anunciado no modo passivo', f'<code>{e(CFG["ftp_anunciado"])}</code> — IP privado.'),
+            linha('⚠️' if CFG['ip_publico'] else '✅', 'Endereço público',
+                  ('<strong>Aceito</strong> (<code>REDE_PERMITIR_IP_PUBLICO=sim</code>): a proteção contra a internet passa a ser o '
+                   'firewall do servidor, o TLS obrigatório e as senhas geradas.') if CFG['ip_publico']
+                  else 'Recusado por código (<code>REDE_PERMITIR_IP_PUBLICO=nao</code>): FTP e painel só escutam em IP privado.'),
+            linha(marca_ip(CFG['ftp_bind']), 'Endereço do FTP', f'<code>{e(CFG["ftp_bind"])}:{e(CFG["ftp_porta"])}</code> — {local(CFG["ftp_bind"])}.'),
+            linha(marca_ip(CFG['ftp_anunciado']), 'IP anunciado no modo passivo', f'<code>{e(CFG["ftp_anunciado"])}</code> — '
+                  + ('IP privado.' if endereco_privado(CFG['ftp_anunciado']) else '<strong>IP público</strong>.')),
             linha(marca_tls, 'TLS do FTP', f'Modo <code>{e(CFG["ftp_tls"])}</code>: {texto_tls}'),
             linha(marca_ftp, 'Certificado do FTP', f'{e(validade_ftp)}<br><span class="suave">SHA-256</span> '
                   f'<code class="digital">{e(cert_ftp["digital"] if cert_ftp else "—")}</code>'),
-            linha('✅', 'Endereço do painel', f'<code>{e(CFG["painel_bind"])}:{e(CFG["painel_porta"])}</code> — só HTTPS, '
+            linha(marca_ip(CFG['painel_bind']), 'Endereço do painel', f'<code>{e(CFG["painel_bind"])}:{e(CFG["painel_porta"])}</code> — só HTTPS, '
                   f'{local(CFG["painel_bind"])}.'),
             linha('✅', 'Frente web', 'O navegador fala com o nginx, a única porta publicada do painel: ele fecha o HTTPS, '
                   'limita redes e taxa de pedidos e repassa por soquete Unix. O painel não escuta em porta de rede.'),
             linha(marca_painel, 'Certificado do painel', f'{e(validade_painel)}<br><span class="suave">SHA-256</span> '
                   f'<code class="digital">{e(cert_painel["digital"] if cert_painel else "—")}</code>'),
-            linha('✅', 'Quem pode abrir o painel', f'Clientes de <code>{e(redes)}</code>; os demais são recusados pelo nginx, antes de chegar ao painel.'),
+            linha('⚠️' if redes_publicas else '✅', 'Quem pode abrir o painel',
+                  f'Clientes de <code>{e(redes)}</code>; os demais são recusados pelo nginx, antes de chegar ao painel.'
+                  + (f' <strong>Rede pública na lista: {e(", ".join(redes_publicas))}.</strong>' if redes_publicas else '')),
             linha('✅', 'Sessão', f'Encerra com {CFG["inatividade"] // 60} minutos sem uso e, de qualquer forma, em 8 horas. '
                   f'{FALHAS_MAX} senhas erradas bloqueiam o endereço por 15 minutos.'),
             linha('✅' if somente_leitura else '⚠️', 'Container do painel',
                   ('Raiz somente leitura' if somente_leitura else 'Raiz gravável: confira o <code>read_only</code>')
                   + (' e sem acesso ao Docker do host.' if sem_docker else '. <strong>Há um socket do Docker montado: remova.</strong>')),
             linha('🧱', 'Firewall do host', 'O painel não enxerga o firewall. Confira você: as portas do FTP e do painel devem '
-                  'estar liberadas só para as redes internas que precisam, na cadeia <code>DOCKER-USER</code>, e nenhuma delas '
-                  'pode ser redirecionada da internet.'),
+                  'estar liberadas só para os endereços que precisam, na cadeia <code>DOCKER-USER</code>'
+                  + ('. <strong>Com endereço público aceito, é o firewall que separa a stack da internet.</strong>' if CFG['ip_publico']
+                     else ', e nenhuma delas pode ser redirecionada da internet.')),
         ]
         self.enviar(200, pagina('Segurança', f'''<h1>🔐 Segurança</h1>
-<p class="aviso">🧱 Esta stack é só para rede privada, atrás de firewall. FTP e painel recusam, por código, escutar em IP público.</p>
+{aviso_rede()}
 {alerta_tls()}
 <section class="cartao"><div class="rolagem"><table class="conferencia"><tbody>{''.join(itens)}</tbody></table></div></section>
 <p class="suave">Confira a impressão digital com a que o navegador e o cliente FTP mostram antes de aceitar o certificado.</p>''',
@@ -1009,6 +1035,25 @@ ICONE = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect widt
          '<path d="M3 5h10v2H3zm0 4h10v2H3z" fill="#58a6ff"/></svg>')
 
 
+def privado(ip):
+    return ip.version == 4 and any(ip in rede for rede in PRIVADAS)
+
+
+def endereco_privado(texto):
+    try:
+        return privado(ipaddress.ip_address(texto))
+    except ValueError:
+        return False
+
+
+def aviso_rede():
+    if CFG.get('ip_publico'):
+        return ('<p class="aviso">⚠️ Endereço público aceito (<code>REDE_PERMITIR_IP_PUBLICO=sim</code>). FTP e painel na internet '
+                'são alvo de varredura e de tentativa de senha o tempo todo: mantenha o firewall do servidor liberando só os '
+                'endereços dos equipamentos e de quem administra.</p>')
+    return '<p class="aviso">🧱 Uso só em rede privada, atrás de firewall. FTP e painel recusam, por código, escutar em IP público.</p>'
+
+
 def pagina(titulo, miolo, sessao=None, ativa=''):
     menu = ''
     if sessao:
@@ -1031,7 +1076,7 @@ def pagina(titulo, miolo, sessao=None, ativa=''):
 <main>
 {miolo}
 </main>
-<footer>allsafe-ftp-stack v{e(CFG.get('versao', '?'))} · 🧱 só para rede privada, atrás de firewall</footer>
+<footer>allsafe-ftp-stack v{e(CFG.get('versao', '?'))} · {'⚠️ endereço público aceito: confira o firewall' if CFG.get('ip_publico') else '🧱 só para rede privada, atrás de firewall'}</footer>
 </body>
 </html>
 '''

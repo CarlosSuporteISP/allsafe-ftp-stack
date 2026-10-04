@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Entrada do container do nginx, a frente web do painel. SÓ PARA REDE PRIVADA.
+# Entrada do container do nginx, a frente web do painel. Por padrão, só para rede privada.
 # Roda sem root: gera a configuração em /run/nginx a partir do modelo e das redes permitidas.
 set -Eeuo pipefail
 
@@ -15,13 +15,14 @@ chave=/nginx/tls/painel-key.pem
 
 [[ "$(id -u)" != 0 ]] || die "o nginx desta stack não roda como root: confira 'user' no compose.yaml"
 
+conferir_opcao_ip_publico
 PAINEL_REDES_PERMITIDAS="${PAINEL_REDES_PERMITIDAS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
 IFS=',' read -r -a redes <<< "$PAINEL_REDES_PERMITIDAS"
 [[ ${#redes[@]} -gt 0 ]] || die "PAINEL_REDES_PERMITIDAS está vazia"
 regras=$'        allow 127.0.0.1;\n'
 for rede in "${redes[@]}"; do
   rede="${rede// /}"
-  cidr_privado "$rede" || die "PAINEL_REDES_PERMITIDAS: '$rede' não é rede privada. Esta stack é só para rede interna."
+  exigir_rede PAINEL_REDES_PERMITIDAS "$rede" || exit 1
   regras+="        allow ${rede};"$'\n'
 done
 
@@ -43,5 +44,6 @@ while IFS= read -r linha; do
 done < "$modelo" > "$configuracao"
 
 nginx -e stderr -q -t -c "$configuracao" || die "configuração do nginx recusada"
+aviso_ip_publico >&2
 echo "nginx pronto em 8443/tcp (HTTPS), à frente do painel; redes permitidas: ${PAINEL_REDES_PERMITIDAS}"
 exec nginx -e stderr -c "$configuracao"

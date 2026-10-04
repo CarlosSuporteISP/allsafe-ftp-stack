@@ -24,7 +24,7 @@ flowchart LR
 
 **Sequência:** Usuário (navegador na rede interna) ➜ nginx (`allsafe-ftp-nginx`, HTTPS) ➜ Painel web (`allsafe-ftp-painel`) ➜ `allsafe-ftp-user` ➜ PureDB ➜ usuário pronto no FTP
 
-> 🧱 **Uso só em rede privada, atrás de firewall.** O painel administra as contas que guardam a configuração da sua rede. Ele escuta **apenas em IP privado**, recusa cliente de fora das redes internas e **nunca** deve ser publicado na internet nem receber redirecionamento de porta da borda. Quem precisa chegar de fora entra por VPN até a rede interna. Veja [rede privada e firewall](seguranca.md#rede-privada).
+> 🧱 **Uso só em rede privada, atrás de firewall.** O painel administra as contas que guardam a configuração da sua rede. Por padrão, ele escuta **apenas em IP privado**, recusa cliente de fora das redes internas e não deve ser publicado na internet nem receber redirecionamento de porta da borda. Quem precisa chegar de fora entra por VPN até a rede interna. Veja [rede privada e firewall](seguranca.md#rede-privada); endereço público só com a opção descrita em [IP público](seguranca.md#ip-publico).
 
 ---
 
@@ -44,7 +44,7 @@ flowchart LR
 O `./deploy.sh` sobe o painel junto com o FTP e mostra o endereço no fim:
 
 ```text
-Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; só rede privada, atrás de firewall)
+Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede privada, atrás de firewall)
 ```
 
 1. Abra o endereço no navegador. Na instalação padrão, só o próprio servidor alcança (`127.0.0.1`).
@@ -75,7 +75,7 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar |
 | Usuários | Um usuário por linha: pasta no host, espaço usado, quantidade de arquivos e último envio | Criar, trocar a senha e remover |
-| Segurança | Conferência da instalação: endereços do FTP e do painel, modo TLS, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, isolamento do container e o lembrete do firewall | Só consultar |
+| Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, isolamento do container e o lembrete do firewall | Só consultar |
 | Atividade | Os últimos 300 registros do painel: entradas, recusas e alterações de usuário, com data e endereço de origem | Só consultar |
 
 O botão **Sair**, no topo, encerra a sessão na hora.
@@ -162,7 +162,7 @@ Por padrão o painel só responde no próprio servidor. Para abrir pela rede de 
 
 | Variável | Troque para |
 |---|---|
-| `PAINEL_BIND_IP` | o IP **privado** do servidor na rede de gerência (nunca `0.0.0.0` nem IP público) |
+| `PAINEL_BIND_IP` | o IP **privado** do servidor na rede de gerência (`0.0.0.0` é sempre recusado; IP público, só com a [opção própria](seguranca.md#ip-publico)) |
 | `PAINEL_REDES_PERMITIDAS` | só as redes internas de onde o painel é administrado, por exemplo `10.10.0.0/24` |
 | `PAINEL_CERT_CN` | o nome interno pelo qual o painel é aberto, se houver (o `PAINEL_BIND_IP` já entra no certificado) |
 
@@ -302,7 +302,7 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 | Camada | Proteção |
 |---|---|
 | Frente web | O nginx é a única porta publicada do painel; o painel atende só por soquete Unix e não escuta em porta de rede |
-| Rede | Bind só em IP privado; `PAINEL_REDES_PERMITIDAS` só com redes privadas, aplicada pelo nginx e conferida de novo pelo painel; `deploy.sh` e os dois containers recusam o resto |
+| Rede | Por padrão, bind só em IP privado e `PAINEL_REDES_PERMITIDAS` só com redes privadas, aplicada pelo nginx e conferida de novo pelo painel; `deploy.sh` e os dois containers recusam o resto. Com `REDE_PERMITIR_IP_PUBLICO=sim`, o painel mostra o alerta na entrada, no rodapé e na aba Segurança |
 | Transporte | Só HTTPS, TLS 1.2 ou 1.3; HTTP puro recebe `400` |
 | Volume de pedidos | No nginx, por endereço: 20 pedidos por segundo (rajada de 40), 16 conexões e 16 KiB por pedido; o que passa disso recebe `429` ou `413` |
 | Entrada | Senha de no mínimo 12 caracteres, guardada como hash `scrypt`; cinco erros bloqueiam o endereço por 15 minutos |
@@ -322,7 +322,7 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 - **Sessão:** o token do cookie tem 256 bits aleatórios e o servidor guarda só o resumo SHA-256 dele, em memória. Reiniciar o painel encerra todas as sessões e zera a contagem de erros de entrada.
 - **Tela de entrada:** o formulário leva um token assinado (HMAC) com validade curta, para a entrada também não aceitar pedido forjado por outro site.
 - **Origem do envio:** todo `POST` tem de trazer `Origin` igual ao endereço do painel (`https://` mais o `Host`). A política `Referrer-Policy: same-origin` faz o navegador mandar a origem real no envio que parte do próprio painel e `Origin: null` no que parte de outro endereço; `null` e origem de fora recebem `403` e o evento `recusa_origem`.
-- **Nome de host:** o cabeçalho `Host` tem de ser um IP privado, `localhost` ou o `PAINEL_CERT_CN`; outro nome recebe `400`.
+- **Nome de host:** o cabeçalho `Host` tem de ser um IP privado, `localhost` ou o `PAINEL_CERT_CN`; outro nome recebe `400`. Com `REDE_PERMITIR_IP_PUBLICO=sim`, qualquer endereço IPv4 é aceito no lugar do nome.
 - **Usuários do FTP:** o painel monta as mesmas pastas `DATA_DIR/auth` e `DATA_DIR/dados` do serviço `ftp` e chama o mesmo `allsafe-ftp-user`, com `flock` em `/auth/.lock`. Por isso não precisa do socket do Docker.
 - **Capabilities devolvidas:** `CHOWN`, `DAC_OVERRIDE` e `FOWNER`, para criar a pasta do usuário com o dono `ftpdata` e gravar em `/auth`. Nenhuma de rede.
 - **Saúde:** `python3 /opt/painel/servidor.py --saude` pede `/saude` pelo soquete Unix. O healthcheck do nginx faz o mesmo pedido por TLS, em `127.0.0.1:8443`, e confere o caminho inteiro.

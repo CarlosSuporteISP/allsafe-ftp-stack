@@ -109,13 +109,18 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
-| `FTP_BIND_IP` | IP do **host** onde a porta de controle e a faixa passiva escutam | **Só IP privado** do host; `0.0.0.0` e IP público são recusados | `127.0.0.1` |
+| `REDE_PERMITIR_IP_PUBLICO` | Aceitar endereço público no FTP e no painel. Leia o [alerta](#rede-permitir-ip-publico) antes de ligar | `nao` ou `sim` | `nao` |
+| `FTP_BIND_IP` | IP do **host** onde a porta de controle e a faixa passiva escutam | IP privado do host; `0.0.0.0` é sempre recusado; IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.1` |
 | `FTP_PORT` | Porta de controle publicada no host (mapeada para `2121` no container) | `1` a `65535` | `21` |
-| `FTP_PASSIVE_IP` | IP que o servidor **anuncia** ao cliente no modo passivo (resposta `PASV`): o IP **interno** pelo qual os equipamentos chegam ao servidor (nota abaixo) | **Só IP privado**, alcançável pelo cliente | `127.0.0.1` |
+| `FTP_PASSIVE_IP` | IP que o servidor **anuncia** ao cliente no modo passivo (resposta `PASV`): o IP **interno** pelo qual os equipamentos chegam ao servidor (nota abaixo) | IP privado, alcançável pelo cliente; IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.1` |
 | `FTP_PASSIVE_PORT_START` | Início da faixa de portas de dados (modo passivo) | `1024` a `65535`, menor ou igual ao fim | `30000` |
 | `FTP_PASSIVE_PORT_END` | Fim da faixa passiva. Número de portas maior ou igual a `FTP_MAX_CLIENTS` | `1024` a `65535`, maior ou igual ao início | `30049` |
 
-> 🧱 **Rede privada:** só são aceitos `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16`. O [`deploy.sh`](../deploy.sh) e o container param com `não é IP privado` para qualquer outro valor ([`scripts/rede-privada.sh`](../scripts/rede-privada.sh)).
+> 🧱 **Rede privada:** por padrão só são aceitos `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16`. O [`deploy.sh`](../deploy.sh) e o container param com `não é IP privado` para qualquer outro valor ([`scripts/rede-privada.sh`](../scripts/rede-privada.sh)).
+
+<a name="rede-permitir-ip-publico"></a>
+
+> ⚠️ **Alerta — `REDE_PERMITIR_IP_PUBLICO=sim` põe o FTP e o painel na internet.** Servidor exposto é varrido e recebe tentativa de senha o tempo todo. Ligue só com firewall no servidor liberando as portas apenas para os endereços dos equipamentos e de quem administra, com `FTP_TLS_MODE` em `2` ou `3` (com a opção, `0` e `1` são recusados), senhas geradas e `PAINEL_REDES_PERMITIDAS` reduzida. Mesmo com `sim`, `0.0.0.0` e rede mais larga que `/8` continuam recusados. Sem firewall, o risco é de quem ligou a opção. O passo a passo está em [Segurança](seguranca.md#ip-publico).
 
 > ⚠️ A faixa passiva é publicada **1:1** (mesma porta no host e no container). Ao ampliá-la, ajuste também o firewall do host.
 
@@ -184,11 +189,11 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
-| `PAINEL_BIND_IP` | IP do **host** onde o nginx publica o painel | **Só IP privado** do host; `0.0.0.0` e IP público são recusados | `127.0.0.1` |
+| `PAINEL_BIND_IP` | IP do **host** onde o nginx publica o painel | IP privado do host; `0.0.0.0` é sempre recusado; IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.1` |
 | `PAINEL_PORT` | Porta HTTPS do painel publicada no host pelo nginx (mapeada para `8443` no container do nginx) | `1` a `65535` | `8443` |
-| `PAINEL_REDES_PERMITIDAS` | Redes de onde o painel aceita cliente. Quem está fora recebe `403` do nginx, antes de chegar ao painel; o painel confere de novo | Lista de redes **privadas** separadas por vírgula, em notação CIDR | `127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
+| `PAINEL_REDES_PERMITIDAS` | Redes de onde o painel aceita cliente. Quem está fora recebe `403` do nginx, antes de chegar ao painel; o painel confere de novo | Lista de redes **privadas** separadas por vírgula, em notação CIDR; rede pública (de `/8` a `/32`), só com `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
 | `PAINEL_SESSAO_MINUTOS` | Minutos sem uso até a sessão encerrar (o teto de 8 horas não muda) | `1` a `120` | `15` |
-| `PAINEL_CERT_CN` | Nome interno ou IP privado a mais no certificado autoassinado do painel | Nome em minúsculas ou IP **privado**; vazio para nenhum | vazio |
+| `PAINEL_CERT_CN` | Nome interno ou IP privado a mais no certificado autoassinado do painel | Nome em minúsculas ou IP **privado** (IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim`); vazio para nenhum | vazio |
 | `PAINEL_MEMORY_LIMIT` | `mem_limit` do painel | exemplo: `192M` | `192M` |
 | `PAINEL_CPU_LIMIT` | `cpus` do painel | exemplo: `0.5` | `0.5` |
 | `PAINEL_PIDS_LIMIT` | `pids_limit` do painel | inteiro | `64` |
@@ -196,7 +201,7 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 | `NGINX_CPU_LIMIT` | `cpus` do nginx | exemplo: `0.5` | `0.5` |
 | `NGINX_PIDS_LIMIT` | `pids_limit` do nginx | inteiro | `32` |
 
-> 🧱 **Rede privada:** o painel é só para rede interna, atrás de firewall. `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e um `PAINEL_CERT_CN` em forma de IP têm de ser privados: o [`deploy.sh`](../deploy.sh) e os containers do painel e do nginx param com `não é IP privado` ou `não é rede privada` para qualquer outro valor.
+> 🧱 **Rede privada:** por padrão o painel é só para rede interna, atrás de firewall. `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e um `PAINEL_CERT_CN` em forma de IP têm de ser privados: o [`deploy.sh`](../deploy.sh) e os containers do painel e do nginx param com `não é IP privado` ou `não é rede privada` para qualquer outro valor. Endereço e rede públicos só passam com a opção [`REDE_PERMITIR_IP_PUBLICO`](#rede-permitir-ip-publico).
 
 A senha do painel **não** é variável: fica em `.secrets/`, como hash. O `deploy.sh` e o container recusam `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`. Veja [Segredos](segredos.md#senha-do-painel) e o guia [Painel web](painel.md).
 

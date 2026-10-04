@@ -139,6 +139,11 @@ recusa_deploy() { # <CHAVE=valor>... → "código · mensagem · estado da inst�
   conferir_deploy "$@"; codigo=$?
   echo "saída $codigo · $(grep -E -m1 '^(ERRO|FALHA)' "$W/recusa.log") · instância $([[ "$antes" == "$(ids)" ]] && echo intacta || echo ALTERADA)"
 }
+aceite_deploy() { # <CHAVE=valor>... → "código · linha de aprovação · alertas de IP público · estado da instância"
+  local antes codigo; antes="$(ids)"
+  conferir_deploy "$@"; codigo=$?
+  echo "saída $codigo · $(grep -m1 '^OK:' "$W/recusa.log") · alerta de IP público: $(grep -c '^ALERTA: REDE_PERMITIR_IP_PUBLICO=sim' "$W/recusa.log") · instância $([[ "$antes" == "$(ids)" ]] && echo intacta || echo ALTERADA)"
+}
 recusa_container() { # <ftp|painel|nginx> <CHAVE=valor>... → "código · mensagem"
   local codigo servico="$1" par; local -a opcoes=() variaveis=()
   shift
@@ -195,8 +200,8 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
 }
 declare -A ESPERADOS=(
   [testes]="$(seq -s ' ' 1 21)"
-  [seguranca]="$(seq -s ' ' 1 39)"
-  [rede]="$(seq -s ' ' 1 12)"
+  [seguranca]="$(seq -s ' ' 1 45)"
+  [rede]="$(seq -s ' ' 1 13)"
 )
 ARQUIVOS=()
 LIMPEZA="instância mantida no ar (--manter)"
@@ -216,9 +221,9 @@ encerrar() { # grava os três arquivos, confere que nenhum segredo entrou e sai
   gravar testes funcional "🧪 Resultado — bateria funcional" "Testes funcionais" \
     "Validação estática e em execução, instalação em um comando, login, envio e download por FTPS, ciclo de usuário pelo terminal e pelo painel, reinício, healthcheck do FTP, backup e restauração, abas do painel, atividade e saída, arquivos estáticos pelo nginx e conversão dos nomes antigos"
   gravar seguranca seguranca "🔐 Resultado — bateria de segurança" "Testes de segurança" \
-    "Recusas do FTP (sem TLS, anônimo, fuga da pasta, outro usuário, \`SITE CHMOD\`), modos de TLS, containers endurecidos, segredos fora da imagem, do Git, do \`.env\` e das variáveis, recusa de IP e rede públicos, e o painel (sessão, CSRF, origem, cabeçalhos, TLS, limite de tentativas, auditoria)"
+    "Recusas do FTP (sem TLS, anônimo, fuga da pasta, outro usuário, \`SITE CHMOD\`), modos de TLS, containers endurecidos, segredos fora da imagem, do Git, do \`.env\` e das variáveis, recusa de IP e rede públicos, a opção \`REDE_PERMITIR_IP_PUBLICO\` (o que passa, o que continua recusado e o alerta), e o painel (sessão, CSRF, origem, cabeçalhos, TLS, limite de tentativas, auditoria)"
   gravar rede rede "🌐 Resultado — bateria de rede" "Testes de rede" \
-    "Endereços e portas publicados, faixa passiva, endereço anunciado, limite de sessões por IP, sub-rede Docker, troca de perfil, duas instâncias no mesmo host e painel só em HTTPS"
+    "Endereços e portas publicados, faixa passiva, endereço anunciado, limite de sessões por IP, sub-rede Docker, troca de perfil, duas instâncias no mesmo host, painel só em HTTPS e rede pública liberada no nginx só com a opção ligada"
   for arquivo in "${ARQUIVOS[@]}"; do
     [[ "$(segredos_em "$arquivo")" == 0 ]] || { vazou=1; rm -f "$arquivo"; }
   done
