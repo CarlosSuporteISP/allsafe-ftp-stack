@@ -5,15 +5,22 @@ cd "$root_dir"
 action="${1:-}"
 user="${2:-}"
 case "$action" in
+  list|del|add|passwd) ;;
+  *) echo "Uso: $0 add|passwd|del|list [usuario]" >&2; exit 2 ;;
+esac
+# Instalação a operar: a do .env desta pasta ou a do arquivo apontado por ENV_FILE.
+env_file="${ENV_FILE:-.env}"
+[[ -f "$env_file" ]] || { echo "ERRO: $env_file não existe: rode ./deploy.sh antes." >&2; exit 1; }
+compose() { docker compose --env-file "$env_file" "$@"; }
+case "$action" in
   list|del)
-    docker compose exec -T ftp allsafe-ftp-user "$action" "$user"
+    compose exec -T ftp allsafe-ftp-user "$action" "$user"
     ;;
   add|passwd)
     read -r -s -p "Senha para $user: " password
     echo
-    printf '%s\n' "$password" | docker compose exec -T ftp allsafe-ftp-user "$action" "$user"
+    printf '%s\n' "$password" | compose exec -T ftp allsafe-ftp-user "$action" "$user"
     unset password
     ;;
-  *) echo "Uso: $0 add|passwd|del|list [usuario]" >&2; exit 2 ;;
 esac
 
