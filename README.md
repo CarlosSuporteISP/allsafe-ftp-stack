@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com usuários virtuais, chroot e FTPS obrigatório para backup de equipamentos.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.2.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.2.1-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -26,9 +26,9 @@ flowchart LR
     equip --> ftp --> puredb --> dados --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](doc/diagramas/)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.2.0</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.2.1</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -164,7 +164,7 @@ flowchart LR
     ftp -. "grava cada transferência" .-> logs
 ```
 
-<sub>📐 Nível 2 · Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](doc/diagramas/)</sub>
+<sub>📐 Nível 2 · Fluxograma · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](doc/diagramas/)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
@@ -229,7 +229,7 @@ flowchart LR
     ftp -. "grava cada transferência" .-> logs
 ```
 
-<sub>📐 Nível 2 · Mapa · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](doc/diagramas/)</sub>
+<sub>📐 Nível 2 · Mapa · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](doc/diagramas/)</sub>
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
@@ -375,7 +375,7 @@ Os testes automatizados de envio, download, `chroot` e recusa sem TLS ainda não
 
 ## 🗺️ Plano
 
-O que já foi feito e o que falta fazer está em [🗺️ doc/planos/README.md](doc/planos/README.md).
+O plano de criação e mudança da stack (fases, testes, evidências e progresso) **não é publicado neste repositório**: fica na pasta local `doc/planos/` e em um repositório privado próprio, só do plano.
 
 **Status:** fases 01 a 03 ✅ concluídas · fases 04 a 09 🔄 em execução: pastas fixas, segredos e rede privada, painel web seguro, instalação em um comando, testes automatizados, backup e restauração, documentação final.
 
@@ -385,9 +385,9 @@ O que já foi feito e o que falta fazer está em [🗺️ doc/planos/README.md](
 
 ## 🏷️ Versão
 
-**0.2.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.2.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
-A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. A sequência completa está no [🗺️ plano mestre](doc/planos/README.md#versoes).
+A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 

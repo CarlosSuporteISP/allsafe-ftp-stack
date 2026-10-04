@@ -19,7 +19,7 @@ flowchart LR
     equip --> ftp --> puredb --> dados --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
 
 **🧭 Sequência:** 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 backup guardado
 
@@ -87,10 +87,10 @@ flowchart LR
 
 ## 📐 Diagramas
 
-Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com os **controles de aproximar e mover** no canto do próprio diagrama. Na pasta [`diagramas/`](diagramas/) ficam o fonte, a imagem SVG escura (`<nome>.svg`), a de fundo branco (`<nome>-claro.svg`) e o [`visualizador.html`](diagramas/visualizador.html), que abre qualquer uma delas no computador, também com zoom e movimento. Para gerar de novo depois de editar uma fonte:
+Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com os **controles de aproximar e mover** no canto do próprio diagrama. Na pasta [`diagramas/`](diagramas/) fica o fonte de cada um e o [`visualizador.html`](diagramas/visualizador.html). As imagens SVG (escura, `<nome>.svg`, e de fundo branco, `<nome>-claro.svg`) **não vão para o repositório**: são geradas no computador, ficam só na pasta local e o visualizador abre qualquer uma delas, também com zoom e movimento. Para gerar depois de clonar ou de editar uma fonte:
 
 ```bash
-/home/carlos/code/padrao-diagramas/renderizar.sh doc/diagramas doc/planos/diagramas
+/home/carlos/code/padrao-diagramas/renderizar.sh doc/diagramas
 ```
 
 | Diagrama | Nível | Onde aparece |
@@ -113,7 +113,7 @@ Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com o
 
 ## 🗺️ Plano
 
-A criação da stack, o que já foi entregue e as fases em execução (pastas fixas, segredos, rede privada, painel web seguro, instalação em um comando, testes e backup) estão no plano mestre: [🗺️ planos/README.md](planos/README.md).
+O plano de criação e mudança da stack (fases, testes, evidências e progresso) **não é publicado neste repositório**: fica na pasta local `doc/planos/` e em um repositório privado próprio, só do plano.
 
 ---
 

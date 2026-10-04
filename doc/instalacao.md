@@ -20,7 +20,7 @@ flowchart LR
     usuario --> env --> deploy --> ftp --> valida --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
 
 **🧭 Sequência:** 👤 Usuário ➜ 📄 `.env` ➜ ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🧪 `validate.sh` ➜ 🏁 FTP pronto
 

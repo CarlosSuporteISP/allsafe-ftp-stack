@@ -20,7 +20,7 @@ flowchart LR
     usuario --> manage --> interno --> puredb --> pasta --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
 
 **🧭 Sequência:** 👤 Usuário ➜ ⌨️ `manage-user.sh` ➜ ⌨️ `allsafe-ftp-user` ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 conta pronta
 

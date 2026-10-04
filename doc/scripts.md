@@ -20,7 +20,7 @@ flowchart LR
     usuario --> host --> compose --> interno --> ftp --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
 
 **🧭 Sequência:** 👤 Usuário ➜ ⌨️ scripts do host (`deploy.sh`, `manage-user.sh`, `validate.sh`) ➜ 🐳 Docker Compose ➜ ⌨️ entrypoint e `allsafe-ftp-user` ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🏁 serviço operando
 

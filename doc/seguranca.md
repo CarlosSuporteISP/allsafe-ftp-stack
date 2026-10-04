@@ -21,7 +21,7 @@ flowchart LR
     equip --> bind --> tls --> puredb --> chroot --> container --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
 
 **🧭 Sequência:** 📡 Equipamento de rede ➜ 🚪 Bind e firewall ➜ 🔐 FTPS obrigatório ➜ 🗄️ PureDB (senha de 12 ou mais) ➜ 🔒 chroot ➜ 🐳 Container endurecido ➜ 🏁 backup protegido
 
@@ -65,7 +65,7 @@ iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdst
 
 > 📌 O exemplo **não foi aplicado nem testado neste projeto**: o firewall do host é de quem opera o servidor. Teste em janela de manutenção e torne a regra persistente com a ferramenta da sua distribuição.
 
-A recusa de IP público por código (no `deploy.sh` e no container) está no [plano](planos/README.md).
+Além do firewall, o `deploy.sh` e o container **recusam por código** bind e IP anunciado fora de IP privado: veja [🌐 Rede e portas](configuracao.md#rede-e-portas).
 
 </details>
 

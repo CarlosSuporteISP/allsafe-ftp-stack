@@ -2,3 +2,7 @@
 .secrets/*
 !.secrets/.gitkeep
 *.pdf
+# Gerados no computador: os .md mostram o diagrama direto do .mmd
+*.svg
+# O plano fica na pasta local e em repositório privado próprio
+doc/planos/

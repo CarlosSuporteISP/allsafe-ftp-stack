@@ -20,7 +20,7 @@ flowchart LR
     usuario --> estado --> logs --> tabela --> valida --> fim
 ```
 
-<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
+<sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte](diagramas/)</sub>
 
 **🧭 Sequência:** 👤 Usuário ➜ ⌨️ `docker compose ps` ➜ 📚 `docker compose logs` ➜ 🚨 tabelas deste guia ➜ 🧪 `validate.sh --runtime` ➜ 🏁 serviço saudável
 
@@ -137,4 +137,4 @@ docker inspect allsafe-ftp > "$TEMP_DIR/allsafe-ftp.inspect.json"
 
 ---
 
-⬅️ [🧰 Operação](operacao.md) · 🏠 [Documentação](README.md) · ➡️ [🗺️ Plano](planos/README.md)
+⬅️ [🧰 Operação](operacao.md) · 🏠 [Documentação](README.md)
