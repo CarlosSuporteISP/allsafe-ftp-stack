@@ -144,8 +144,8 @@ recusa_container() { # <ftp|painel|nginx> <CHAVE=valor>... → "código · mensa
   shift
   for par in "$@"; do variaveis+=(-e "$par"); done
   case "$servico" in
-    ftp) opcoes=(-v "$S/ftp_password.txt:/run/secrets/ftp_password:ro" "$IMG_FTP") ;;
-    painel) opcoes=(-v "$S/painel_password_hash.txt:/run/secrets/painel_password_hash:ro" "$IMG_PAINEL") ;;
+    ftp) opcoes=(-v "$S/ftp-usuario-inicial-senha.txt:/run/secrets/ftp_usuario_inicial_senha:ro" "$IMG_FTP") ;;
+    painel) opcoes=(-v "$S/painel-admin-inicial-senha-hash.txt:/run/secrets/painel_admin_inicial_senha_hash:ro" "$IMG_PAINEL") ;;
     nginx) opcoes=(--user 10001:10001 --tmpfs /run/nginx:uid=10001,gid=10001 "$IMG_NGINX") ;;
   esac
   timeout 60 docker run --rm --name "$NOME-recusa" --network none --read-only "${variaveis[@]}" "${opcoes[@]}" > "$W/recusa.log" 2>&1; codigo=$?
@@ -195,7 +195,7 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
 }
 declare -A ESPERADOS=(
   [testes]="$(seq -s ' ' 1 21)"
-  [seguranca]="$(seq -s ' ' 1 38)"
+  [seguranca]="$(seq -s ' ' 1 39)"
   [rede]="$(seq -s ' ' 1 12)"
 )
 ARQUIVOS=()
@@ -214,7 +214,7 @@ encerrar() { # grava os três arquivos, confere que nenhum segredo entrou e sai
   LIMPEZA+=" · outros containers do host: $(printf '%s\n' "$OUTROS_ANTES" | grep -c .), $([[ "$OUTROS_ANTES" == "$(outros)" ]] && echo 'os mesmos antes e depois' || echo 'a lista MUDOU durante a bateria')"
   echo
   gravar testes funcional "🧪 Resultado — bateria funcional" "Testes funcionais" \
-    "Validação estática e em execução, instalação em um comando, login, envio e download por FTPS, ciclo de usuário pelo terminal e pelo painel, reinício, healthcheck do FTP, backup e restauração, abas do painel, atividade e saída, arquivos estáticos pelo nginx e conversão do nome antigo da variável"
+    "Validação estática e em execução, instalação em um comando, login, envio e download por FTPS, ciclo de usuário pelo terminal e pelo painel, reinício, healthcheck do FTP, backup e restauração, abas do painel, atividade e saída, arquivos estáticos pelo nginx e conversão dos nomes antigos"
   gravar seguranca seguranca "🔐 Resultado — bateria de segurança" "Testes de segurança" \
     "Recusas do FTP (sem TLS, anônimo, fuga da pasta, outro usuário, \`SITE CHMOD\`), modos de TLS, containers endurecidos, segredos fora da imagem, do Git, do \`.env\` e das variáveis, recusa de IP e rede públicos, e o painel (sessão, CSRF, origem, cabeçalhos, TLS, limite de tentativas, auditoria)"
   gravar rede rede "🌐 Resultado — bateria de rede" "Testes de rede" \

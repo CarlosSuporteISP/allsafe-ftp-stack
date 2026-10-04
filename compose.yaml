@@ -43,7 +43,7 @@ services:
         bind:
           create_host_path: false
     secrets:
-      - ftp_password
+      - ftp_usuario_inicial_senha
     read_only: true
     tmpfs:
       - /run:rw,noexec,nosuid,nodev,size=8m,mode=0755
@@ -144,7 +144,7 @@ services:
         bind:
           create_host_path: false
     secrets:
-      - painel_password_hash
+      - painel_admin_inicial_senha_hash
     read_only: true
     tmpfs:
       - /run:rw,noexec,nosuid,nodev,size=8m,mode=0755
@@ -237,11 +237,12 @@ services:
     networks:
       - ftp
 
+# Um arquivo por segredo, com nome que diz para que serve (o LEIAME.txt da pasta explica cada um).
 secrets:
-  ftp_password:
-    file: ${SECRETS_DIR:-./.secrets}/ftp_password.txt
-  painel_password_hash:
-    file: ${SECRETS_DIR:-./.secrets}/painel_password_hash.txt
+  ftp_usuario_inicial_senha:
+    file: ${SECRETS_DIR:-./.secrets}/ftp-usuario-inicial-senha.txt
+  painel_admin_inicial_senha_hash:
+    file: ${SECRETS_DIR:-./.secrets}/painel-admin-inicial-senha-hash.txt
 
 networks:
   ftp:

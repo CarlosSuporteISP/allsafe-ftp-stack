@@ -128,7 +128,7 @@ Desfazer: ./scripts/restaurar.sh allsafe-ftp-stack-AAAAMMDD-HHMMSS-antes-da-rest
 O que muda depois de restaurar:
 
 - Usuários criados depois da cópia deixam de existir; os removidos depois dela voltam.
-- Cada usuário volta com a senha que tinha na cópia. A exceção é o usuário inicial (`FTP_USER`), que continua com a senha de `.secrets/ftp_password.txt`.
+- Cada usuário volta com a senha que tinha na cópia. A exceção é o usuário inicial (`FTP_USER`), que continua com a senha de `.secrets/ftp-usuario-inicial-senha.txt`.
 - A senha do painel continua a atual: ela não faz parte da cópia.
 - Se a stack estava parada, continua parada: `Restaurado. A stack estava parada e continua parada: suba com ./deploy.sh`.
 
@@ -192,8 +192,8 @@ A cópia não leva o `.env` nem a pasta `.secrets/`, para que um arquivo de back
 | O que guardar | Para que serve na volta |
 |---|---|
 | `.env` | Endereços, portas, perfil e limites da instalação |
-| `.secrets/ftp_password.txt` | Senha do usuário inicial do FTP |
-| `.secrets/painel_password_hash.txt` | Hash da senha do painel |
+| `.secrets/ftp-usuario-inicial-senha.txt` | Senha do usuário inicial do FTP |
+| `.secrets/painel-admin-inicial-senha-hash.txt` | Hash da senha do painel |
 
 Sem eles, a stack volta do mesmo jeito: o `./deploy.sh` cria um `.env` novo e senhas novas. Nesse caso, o usuário inicial passa a ter a senha nova, que precisa ser configurada no equipamento que o usa, e o painel abre com a senha inicial nova. Os demais usuários não são afetados: a senha deles está na cópia. Detalhes de cada arquivo em [Segredos](segredos.md).
 

@@ -204,7 +204,7 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 | Só rede interna | O nginx recusa o cliente fora de `PAINEL_REDES_PERMITIDAS` com `403`, antes de chegar ao painel; o painel confere de novo e recusa com `400` o pedido com `Host` que não seja IP privado, `localhost` ou o `PAINEL_CERT_CN` |
 | Só HTTPS | TLS 1.2 ou 1.3. HTTP puro na porta do painel recebe `400` (`pedido não aceito`), sem nenhuma tela |
 | Limite de pedidos | 20 pedidos por segundo por endereço, com rajada de 40, e 16 conexões por endereço; acima disso, `429`. Pedido maior que 16 KiB recebe `413` |
-| Uma senha, só como hash | `scrypt` em `.secrets/painel_password_hash.txt`; o container nunca vê a senha em texto |
+| Uma senha, só como hash | `scrypt` em `.secrets/painel-admin-inicial-senha-hash.txt`; o container nunca vê a senha em texto |
 | Limite de tentativas de senha | Cinco senhas erradas em 15 minutos bloqueiam o endereço do cliente |
 | Sessão curta | 15 minutos sem uso (`PAINEL_SESSAO_MINUTOS`) e teto de 8 horas; presa ao endereço do cliente; encerrada em `🚪 Sair` e quando o painel reinicia |
 | Formulário protegido | Token CSRF por sessão e conferência do `Origin` em todo envio; `Referrer-Policy: same-origin` para o navegador informar a origem só ao próprio painel |
@@ -303,8 +303,8 @@ O nginx registra só o que ele mesmo recusa, no formato `ip método caminho cód
 
 ## 🔑 Gestão de segredos
 
-- Senha do usuário inicial: `.secrets/ftp_password.txt`, `chmod 600`, entregue **só** ao serviço `ftp` como o segredo `/run/secrets/ftp_password`, somente leitura. O `.env` não guarda senha. Veja [Segredos](segredos.md).
-- Senha do painel: só o hash `scrypt`, em `.secrets/painel_password_hash.txt`, entregue **só** ao serviço `painel` como `/run/secrets/painel_password_hash`. A senha inicial em texto (`painel_password.txt`) fica no host e é apagada na primeira troca.
+- Senha do usuário inicial: `.secrets/ftp-usuario-inicial-senha.txt`, `chmod 600`, entregue **só** ao serviço `ftp` como o segredo `/run/secrets/ftp_usuario_inicial_senha`, somente leitura. O `.env` não guarda senha. Veja [Segredos](segredos.md).
+- Senha do painel: só o hash `scrypt`, em `.secrets/painel-admin-inicial-senha-hash.txt`, entregue **só** ao serviço `painel` como `/run/secrets/painel_admin_inicial_senha_hash`. A senha inicial em texto (`painel-admin-inicial-senha.txt`) fica no host e é apagada na primeira troca.
 - Chave do certificado do painel: gerada em `DATA_DIR/painel/tls` e copiada a cada subida para `DATA_DIR/nginx/tls`, que o nginx monta somente leitura (chave `0640`, grupo `10001`; pasta `0750`). Veja [Segredos](segredos.md).
 - [`.gitignore`](../.gitignore): `.env` e `.secrets/*.txt` (mantém só `.secrets/.gitkeep`, para a pasta existir no clone).
 - [`.dockerignore`](../.dockerignore): `.env`, `.env.example`, `.git`, `.gitignore`, `.secrets`, `doc`, `profiles`, `README.md`, `deploy.sh` e `manage-user.sh`. `*.pdf` também fica fora. Chegam ao build o `Dockerfile`, o `compose.yaml`, o `CHANGELOG.md`, o `VERSION` e as pastas `scripts/`, `painel/` e `nginx/`, e o `Dockerfile` copia só os scripts, o painel, a configuração do nginx e o `VERSION`; nada de segredo entra na imagem.

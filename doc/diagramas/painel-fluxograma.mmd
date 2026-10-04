@@ -10,7 +10,7 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         senha@{ shape: diam, label: "senha<br>confere?" }
-        hash@{ shape: doc, label: "hash da senha<br>painel_password_hash" }
+        hash@{ shape: doc, label: "hash da senha<br>painel_admin_inicial_senha_hash" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 15 min<br>cookie e token CSRF" }

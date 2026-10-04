@@ -1,8 +1,8 @@
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     deploy@{ shape: console, label: "deploy.sh<br>gera a senha" }
-    arquivo@{ shape: doc, label: ".secrets/ftp_password.txt<br>0600, fora do Git" }
-    montagem@{ shape: rect, label: "/run/secrets/ftp_password<br>só leitura" }
+    arquivo@{ shape: doc, label: ".secrets/ftp-usuario-inicial-senha.txt<br>0600, fora do Git" }
+    montagem@{ shape: rect, label: "/run/secrets/ftp_usuario_inicial_senha<br>só leitura" }
     entry@{ shape: rect, label: "entrypoint<br>lê e apaga da memória" }
     puredb@{ shape: cyl, label: "PureDB<br>guarda só o hash" }
     fim@{ shape: stadium, label: "senha fora da imagem" }

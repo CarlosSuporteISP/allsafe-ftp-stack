@@ -112,7 +112,7 @@ fi
 for chave in FTP_PASSWORD FTP_PASSWORD_FILE; do
   if [[ -n "$(env_valor "$chave")" ]]; then
     echo "ERRO: $env_file ainda traz $chave. Senha não fica mais no .env." >&2
-    echo "      Migração: grave a senha em .secrets/ftp_password.txt (modo 0600), apague as linhas" >&2
+    echo "      Migração: grave a senha em .secrets/ftp-usuario-inicial-senha.txt (modo 0600), apague as linhas" >&2
     echo "      FTP_PASSWORD e FTP_PASSWORD_FILE do .env e rode ./deploy.sh de novo. Guia: doc/segredos.md" >&2
     exit 1
   fi
@@ -125,31 +125,52 @@ data_dir="$(env_valor DATA_DIR)"
 secrets_dir="$(env_valor SECRETS_DIR ./.secrets)"
 [[ "$data_dir" == /* ]] || die "DATA_DIR tem de ser um caminho absoluto em $env_file (veja o .env.example)"
 
-# Nome antigo, de instalação feita até a 0.8.2: a variável FTP_PUBLIC_IP. É convertida aqui, sem
-# perguntas: o .env é copiado antes para BACKUP_DIR. Com --check-only nada é alterado.
+# Nomes antigos, de instalação feita até a 0.9.0: a variável FTP_PUBLIC_IP e os três arquivos de
+# segredo. São convertidos aqui, sem perguntas: o .env é copiado antes para BACKUP_DIR e os arquivos
+# de segredo só mudam de nome (o conteúdo não é lido nem copiado). Com --check-only nada é alterado.
+segredos_renomeados=(
+  "ftp_password.txt:ftp-usuario-inicial-senha.txt"
+  "painel_password.txt:painel-admin-inicial-senha.txt"
+  "painel_password_hash.txt:painel-admin-inicial-senha-hash.txt"
+)
 env_antigo=false
 grep -q '^[[:space:]]*FTP_PUBLIC_IP=' "$env_file" && env_antigo=true
-if [[ "$env_antigo" == true ]]; then
+segredos_antigos=()
+for par in "${segredos_renomeados[@]}"; do
+  [[ -e "$secrets_dir/${par%%:*}" ]] && segredos_antigos+=("$par")
+done
+if [[ "$env_antigo" == true || ${#segredos_antigos[@]} -gt 0 ]]; then
   if [[ "$check_only" == true ]]; then
-    echo "AVISO: esta instalação usa nomes antigos (FTP_PUBLIC_IP no .env)."
+    echo "AVISO: esta instalação usa nomes antigos (FTP_PUBLIC_IP no .env ou arquivos *_password*.txt em $secrets_dir)."
     echo "       O ./deploy.sh sem --check-only converte sozinho; aqui nada é alterado."
     # A validação segue com o valor que a conversão gravaria.
-    [[ -n "$(env_valor FTP_PASSIVE_IP)" ]] || export FTP_PASSIVE_IP="$(env_valor FTP_PUBLIC_IP 127.0.0.1)"
+    [[ "$env_antigo" == false || -n "$(env_valor FTP_PASSIVE_IP)" ]] || export FTP_PASSIVE_IP="$(env_valor FTP_PUBLIC_IP 127.0.0.1)"
   else
-    backup_dir="$(env_valor BACKUP_DIR)"
-    [[ "$backup_dir" == /* ]] || die "BACKUP_DIR tem de ser um caminho absoluto em $env_file: é para lá que vai a cópia do .env antes da conversão dos nomes."
-    copia_env="${backup_dir%/}/$(date +%Y%m%d-%H%M%S)-antes-da-migracao-de-nomes"
-    ( umask 077; mkdir -p "$copia_env" && cp -p -- "$env_file" "$copia_env/env" ) \
-      || die "não foi possível copiar $env_file para $copia_env; nada foi convertido."
-    anunciado="$(env_valor FTP_PASSIVE_IP "$(env_valor FTP_PUBLIC_IP 127.0.0.1)")"
-    # Gravado no mesmo arquivo, que mantém dono e modo: a linha antiga dá lugar à nova, no mesmo ponto.
-    novo_env="$(VALOR="$anunciado" awk '
-      /^[[:space:]]*FTP_PASSIVE_IP=/ { next }
-      /^[[:space:]]*FTP_PUBLIC_IP=/ { if (!feito) { print "FTP_PASSIVE_IP=" ENVIRON["VALOR"]; feito = 1 }; next }
-      { print }' "$env_file")"
-    printf '%s\n' "$novo_env" > "$env_file"
-    unset novo_env
-    echo "Convertido: FTP_PUBLIC_IP virou FTP_PASSIVE_IP em $env_file (cópia do anterior em $copia_env/env)."
+    if [[ "$env_antigo" == true ]]; then
+      backup_dir="$(env_valor BACKUP_DIR)"
+      [[ "$backup_dir" == /* ]] || die "BACKUP_DIR tem de ser um caminho absoluto em $env_file: é para lá que vai a cópia do .env antes da conversão dos nomes."
+      copia_env="${backup_dir%/}/$(date +%Y%m%d-%H%M%S)-antes-da-migracao-de-nomes"
+      ( umask 077; mkdir -p "$copia_env" && cp -p -- "$env_file" "$copia_env/env" ) \
+        || die "não foi possível copiar $env_file para $copia_env; nada foi convertido."
+      anunciado="$(env_valor FTP_PASSIVE_IP "$(env_valor FTP_PUBLIC_IP 127.0.0.1)")"
+      # Gravado no mesmo arquivo, que mantém dono e modo: a linha antiga dá lugar à nova, no mesmo ponto.
+      novo_env="$(VALOR="$anunciado" awk '
+        /^[[:space:]]*FTP_PASSIVE_IP=/ { next }
+        /^[[:space:]]*FTP_PUBLIC_IP=/ { if (!feito) { print "FTP_PASSIVE_IP=" ENVIRON["VALOR"]; feito = 1 }; next }
+        { print }' "$env_file")"
+      printf '%s\n' "$novo_env" > "$env_file"
+      unset novo_env
+      echo "Convertido: FTP_PUBLIC_IP virou FTP_PASSIVE_IP em $env_file (cópia do anterior em $copia_env/env)."
+    fi
+    for par in "${segredos_antigos[@]}"; do
+      antigo="$secrets_dir/${par%%:*}"; novo="$secrets_dir/${par##*:}"
+      if [[ -e "$novo" ]]; then
+        echo "AVISO: $antigo e $novo existem: vale o novo. Confira e apague o antigo."
+      else
+        mv -- "$antigo" "$novo" || die "não foi possível renomear $antigo"
+        echo "Convertido: $antigo virou $novo."
+      fi
+    done
   fi
 fi
 
@@ -283,13 +304,36 @@ mkdir -p "$data_dir/dados" "$data_dir/auth" "$data_dir/certs" "$data_dir/painel"
 umask 077
 mkdir -p "$secrets_dir"
 chmod 0700 "$secrets_dir"
-secret_file="$secrets_dir/ftp_password.txt"
+secret_file="$secrets_dir/ftp-usuario-inicial-senha.txt"
 if [[ ! -s "$secret_file" ]]; then
   command -v openssl >/dev/null 2>&1 || die "openssl não encontrado no host (necessário para gerar a senha)"
   openssl rand -base64 36 > "$secret_file"
   echo "Gerada uma senha forte em $secret_file (0600). Guarde-a para o cliente FTP."
 fi
 chmod 0600 "$secret_file"
+
+# Guia da pasta de segredos: diz para que serve cada arquivo. Não guarda segredo nenhum.
+cat > "$secrets_dir/LEIAME.txt" <<'LEIAME'
+Segredos da allsafe-ftp-stack. Um arquivo por segredo, modo 0600, fora do Git e das imagens.
+Este LEIAME não guarda segredo: só explica para que serve cada arquivo.
+
+ftp-usuario-inicial-senha.txt
+  Senha do usuário inicial do FTP (o nome dele é FTP_USER, no .env). É a que vai no equipamento
+  ou no cliente FTP. Trocar: grave a senha nova neste arquivo (12 caracteres ou mais) e rode
+  docker compose restart ftp. Ela é reaplicada a cada subida; o painel não altera este usuário.
+
+painel-admin-inicial-senha.txt
+  Senha inicial do painel web, em texto, gerada na instalação. Serve para a primeira entrada.
+  É apagada quando a senha é trocada com ./scripts/painel-senha.sh.
+
+painel-admin-inicial-senha-hash.txt
+  Hash scrypt da senha do painel: é o que o container do painel recebe para conferir a entrada.
+  Não é a senha e não entra no campo de senha. Gravado por ./scripts/painel-senha.sh.
+
+Perdeu a senha do painel: ./scripts/painel-senha.sh --gerar
+Estes arquivos não entram na cópia do ./scripts/backup.sh: guarde-os no seu cofre de senhas.
+LEIAME
+chmod 0600 "$secrets_dir/LEIAME.txt"
 
 compose config --quiet
 if [[ "$atualizar" == true ]]; then
@@ -300,9 +344,9 @@ else
 fi
 
 # Senha do painel: gerada forte na primeira execução. O container recebe só o hash scrypt;
-# a senha em texto fica em painel_password.txt, só no host, até ser trocada por scripts/painel-senha.sh.
-painel_hash="$secrets_dir/painel_password_hash.txt"
-painel_senha="$secrets_dir/painel_password.txt"
+# a senha em texto fica em painel-admin-inicial-senha.txt, só no host, até ser trocada por scripts/painel-senha.sh.
+painel_hash="$secrets_dir/painel-admin-inicial-senha-hash.txt"
+painel_senha="$secrets_dir/painel-admin-inicial-senha.txt"
 if [[ ! -s "$painel_hash" ]]; then
   if [[ ! -s "$painel_senha" ]]; then
     command -v openssl >/dev/null 2>&1 || die "openssl não encontrado no host (necessário para gerar a senha)"
@@ -337,5 +381,6 @@ if [[ -s "$painel_senha" ]]; then
 else
   echo "        senha: a que foi definida com ./scripts/painel-senha.sh"
 fi
+echo "Segredos: $secrets_dir/LEIAME.txt diz para que serve cada arquivo."
 echo "Remover: ./deploy.sh --remover  (os dados ficam em $data_dir)"
 aviso_tls

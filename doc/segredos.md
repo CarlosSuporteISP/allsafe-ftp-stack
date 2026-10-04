@@ -4,15 +4,15 @@
 
 ## 💡 Em poucas palavras
 
-As senhas da stack moram na pasta `.secrets/`, que nunca vai para o Git nem para dentro da imagem. São duas: a do usuário inicial do FTP e a do painel web. O script de instalação cria as duas sozinho na primeira vez. O servidor FTP lê a dele ao subir e guarda apenas o hash; o painel recebe **só o hash** da dele, nunca a senha.
+As senhas da stack moram na pasta `.secrets/`, que nunca vai para o Git nem para dentro da imagem. São duas: a do usuário inicial do FTP e a do painel web. O script de instalação cria as duas sozinho na primeira vez, cada uma em um arquivo cujo nome diz o que ele guarda, e deixa na pasta um `LEIAME.txt` que explica um por um. O servidor FTP lê a dele ao subir e guarda apenas o hash; o painel recebe **só o hash** da dele, nunca a senha.
 
 <!-- diagrama: diagramas/segredos-diagrama.mmd -->
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     deploy@{ shape: console, label: "deploy.sh<br>gera a senha" }
-    arquivo@{ shape: doc, label: ".secrets/ftp_password.txt<br>0600, fora do Git" }
-    montagem@{ shape: rect, label: "/run/secrets/ftp_password<br>só leitura" }
+    arquivo@{ shape: doc, label: ".secrets/ftp-usuario-inicial-senha.txt<br>0600, fora do Git" }
+    montagem@{ shape: rect, label: "/run/secrets/ftp_usuario_inicial_senha<br>só leitura" }
     entry@{ shape: rect, label: "entrypoint<br>lê e apaga da memória" }
     puredb@{ shape: cyl, label: "PureDB<br>guarda só o hash" }
     fim@{ shape: stadium, label: "senha fora da imagem" }
@@ -22,14 +22,14 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](diagramas/)</sub>
 
-**Sequência:** `deploy.sh` ➜ `.secrets/ftp_password.txt` ➜ `/run/secrets/ftp_password` (somente leitura) ➜ entrypoint ➜ PureDB (guarda só o hash) ➜ senha fora da imagem
+**Sequência:** `deploy.sh` ➜ `.secrets/ftp-usuario-inicial-senha.txt` ➜ `/run/secrets/ftp_usuario_inicial_senha` (somente leitura) ➜ entrypoint ➜ PureDB (guarda só o hash) ➜ senha fora da imagem
 
 ---
 
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[O que fica em `.secrets/`](#o-que-fica) · [Trocar a senha do usuário inicial](#trocar-a-senha) · [Senha do painel](#senha-do-painel) · [Usar uma senha própria](#senha-propria) · [O que mais é sensível](#o-que-mais-e-sensivel)
+[O que fica em `.secrets/`](#o-que-fica) · [Trocar a senha do usuário inicial](#trocar-a-senha) · [Senha do painel](#senha-do-painel) · [Usar uma senha própria](#senha-propria) · [Instalação com os nomes antigos](#nomes-antigos) · [O que mais é sensível](#o-que-mais-e-sensivel)
 
 </details>
 
@@ -41,16 +41,19 @@ flowchart LR
 
 | Arquivo | Quem gera | Você preenche? | Para quê |
 |---|---|---|---|
-| `ftp_password.txt` | [`deploy.sh`](../deploy.sh), na primeira execução, se o arquivo não existir ou estiver vazio | Só se quiser uma senha própria | Senha do usuário inicial (`FTP_USER`) |
-| `painel_password.txt` | [`deploy.sh`](../deploy.sh), na primeira execução | Não | Senha **inicial** do painel, em texto. Fica só no host e é apagada na primeira troca |
-| `painel_password_hash.txt` | [`deploy.sh`](../deploy.sh) e [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | Não | Hash `scrypt` da senha do painel. É o único arquivo que o painel enxerga |
+| `ftp-usuario-inicial-senha.txt` | [`deploy.sh`](../deploy.sh), na primeira execução, se o arquivo não existir ou estiver vazio | Só se quiser uma senha própria | Senha do usuário inicial (`FTP_USER`) |
+| `painel-admin-inicial-senha.txt` | [`deploy.sh`](../deploy.sh), na primeira execução | Não | Senha **inicial** do painel, em texto. Fica só no host e é apagada na primeira troca |
+| `painel-admin-inicial-senha-hash.txt` | [`deploy.sh`](../deploy.sh) e [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | Não | Hash `scrypt` da senha do painel. É o único arquivo que o painel enxerga |
+| `LEIAME.txt` | [`deploy.sh`](../deploy.sh), a cada execução | Não | Diz para que serve cada arquivo da pasta. Não guarda segredo nenhum |
 | `.gitkeep` | já vem no repositório | Não | Mantém a pasta no clone |
+
+O nome de cada arquivo segue a mesma ordem: **de quem é** a senha (`ftp-usuario-inicial`, `painel-admin-inicial`) e **o que** está gravado (`senha` em texto ou `senha-hash`).
 
 Ver as senhas geradas, para configurar o equipamento e para entrar no painel pela primeira vez:
 
 ```bash
-cat .secrets/ftp_password.txt       # usuário inicial do FTP
-cat .secrets/painel_password.txt    # painel, até a primeira troca
+cat .secrets/ftp-usuario-inicial-senha.txt       # usuário inicial do FTP
+cat .secrets/painel-admin-inicial-senha.txt    # painel, até a primeira troca
 ```
 
 **Resultado esperado:** em cada comando, uma linha com a senha, de 48 caracteres.
@@ -64,8 +67,8 @@ cat .secrets/painel_password.txt    # painel, até a primeira troca
 ## 🔁 Trocar a senha do usuário inicial
 
 ```bash
-printf '%s' 'nova-senha-de-12-ou-mais' > .secrets/ftp_password.txt
-chmod 600 .secrets/ftp_password.txt
+printf '%s' 'nova-senha-de-12-ou-mais' > .secrets/ftp-usuario-inicial-senha.txt
+chmod 600 .secrets/ftp-usuario-inicial-senha.txt
 docker compose restart ftp
 ```
 
@@ -86,7 +89,7 @@ O painel tem uma senha só, de administrador. Troque a senha inicial logo depois
 ./scripts/painel-senha.sh --gerar    # ou: cria uma senha forte e mostra uma única vez
 ```
 
-**Resultado esperado:** `Hash gravado em ./.secrets/painel_password_hash.txt; painel reiniciado e sessões abertas encerradas.` O arquivo `painel_password.txt` deixa de existir.
+**Resultado esperado:** `Hash gravado em ./.secrets/painel-admin-inicial-senha-hash.txt; painel reiniciado e sessões abertas encerradas.` O arquivo `painel-admin-inicial-senha.txt` deixa de existir.
 
 A senha nova tem de ter no mínimo 12 caracteres e **não fica gravada em lugar nenhum**: guarde-a no seu cofre de senhas. Se for perdida, rode o mesmo script de novo. Uso do painel: [Painel web](painel.md).
 
@@ -99,11 +102,33 @@ A senha nova tem de ter no mínimo 12 caracteres e **não fica gravada em lugar 
 Grave-a **antes** do primeiro deploy, com no mínimo 12 caracteres:
 
 ```bash
-printf '%s' 'uma-senha-forte-de-12+-caracteres' > .secrets/ftp_password.txt
-chmod 600 .secrets/ftp_password.txt
+printf '%s' 'uma-senha-forte-de-12+-caracteres' > .secrets/ftp-usuario-inicial-senha.txt
+chmod 600 .secrets/ftp-usuario-inicial-senha.txt
 ```
 
 **Resultado esperado:** o `deploy.sh` não gera senha nova e não mostra a mensagem `Gerada uma senha forte em ...`.
+
+---
+
+<a name="nomes-antigos"></a>
+
+## 🔀 Instalação com os nomes antigos
+
+Até a versão `0.9.0` os arquivos tinham outros nomes. O `./deploy.sh` reconhece os antigos e **só troca o nome**, sem ler, copiar nem alterar o conteúdo: as senhas continuam as mesmas.
+
+| Nome até a `0.9.0` | Nome a partir da `0.10.0` |
+|---|---|
+| `ftp_password.txt` | `ftp-usuario-inicial-senha.txt` |
+| `painel_password.txt` | `painel-admin-inicial-senha.txt` |
+| `painel_password_hash.txt` | `painel-admin-inicial-senha-hash.txt` |
+
+```bash
+./deploy.sh
+```
+
+**Resultado esperado:** uma linha `Convertido: <nome antigo> virou <nome novo>.` para cada arquivo que existia, e os três containers `healthy` no fim. Vindo da `0.9.0`, os containers do FTP e do painel são recriados uma vez, porque o nome do segredo dentro deles também mudou, e o do nginx continua o mesmo; vindo de versão anterior, os três são recriados, porque as imagens mudam. Dados, usuários e senhas ficam como estavam.
+
+Com `./deploy.sh --check-only` nada é alterado: sai só o aviso `AVISO: esta instalação usa nomes antigos`. Se o arquivo antigo e o novo existirem ao mesmo tempo, vale o novo e o script avisa para conferir e apagar o antigo.
 
 ---
 
@@ -125,12 +150,13 @@ chmod 600 .secrets/ftp_password.txt
 <summary>Detalhe técnico — geração, montagem e descarte</summary>
 
 - **Geração:** `openssl rand -base64 36` (48 caracteres). O script aplica `umask 077`, `chmod 0700` na pasta e `chmod 0600` no arquivo, e nunca regrava um segredo que já existe.
-- **Montagem:** o [`compose.yaml`](../compose.yaml) declara o segredo `ftp_password` (`SECRETS_DIR/ftp_password.txt`) e o entrega **só** ao serviço `ftp`, em `/run/secrets/ftp_password`, somente leitura. A pasta `.secrets/` inteira não é montada.
+- **Montagem:** o [`compose.yaml`](../compose.yaml) declara o segredo `ftp_usuario_inicial_senha` (`SECRETS_DIR/ftp-usuario-inicial-senha.txt`) e o entrega **só** ao serviço `ftp`, em `/run/secrets/ftp_usuario_inicial_senha`, somente leitura. A pasta `.secrets/` inteira não é montada.
 - **Sem senha em variável:** o `.env` guarda só o que se ajusta. O `deploy.sh` recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env` e os containers recusam essas variáveis.
 - **Leitura:** o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) lê o arquivo sem as quebras de linha, valida o mínimo de 12 caracteres e entrega a senha ao `pure-pw` pelo `stdin`.
 - **Descarte:** antes do `exec` do `pure-ftpd`, o entrypoint faz `unset` da variável interna da senha.
-- **Painel:** o hash é `scrypt` (N=2^15, r=8, p=1, sal aleatório de 16 bytes), calculado dentro da imagem do painel, em um container descartável sem rede. O segredo `painel_password_hash` chega **só** ao serviço `painel`, em `/run/secrets/painel_password_hash`, somente leitura, e é lido a cada tentativa de entrada. O `painel_password.txt` nunca é montado em container.
-- **Git:** o [`.gitignore`](../.gitignore) ignora `.env` e `.secrets/*.txt`, mantendo só o `.gitkeep`.
+- **Painel:** o hash é `scrypt` (N=2^15, r=8, p=1, sal aleatório de 16 bytes), calculado dentro da imagem do painel, em um container descartável sem rede. O segredo `painel_admin_inicial_senha_hash` chega **só** ao serviço `painel`, em `/run/secrets/painel_admin_inicial_senha_hash`, somente leitura, e é lido a cada tentativa de entrada. O `painel-admin-inicial-senha.txt` nunca é montado em container.
+- **Git:** o [`.gitignore`](../.gitignore) ignora `.env` e tudo o que está em `.secrets/`, mantendo só o `.gitkeep`.
+- **`LEIAME.txt`:** regravado pelo `deploy.sh` a cada execução, com modo `0600`. Traz só o nome e a função de cada arquivo; nunca é montado em container.
 - **Imagem:** o [`.dockerignore`](../.dockerignore) deixa `.env` e `.secrets` fora do contexto de build.
 
 </details>

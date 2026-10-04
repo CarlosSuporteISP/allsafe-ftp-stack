@@ -92,10 +92,12 @@ A pasta [`scripts/`](../scripts/) tem só o que roda no servidor. O que roda em 
 - **`FTP_TLS_MODE` conferido antes de agir:** valor fora de `0` a `3` para com `ERRO: FTP_TLS_MODE deve ser 0 (sem TLS), 1 (opcional), 2 (obrigatório no login) ou 3 (obrigatório no login e nos dados)` e código `1`. Em `0` e `1` o deploy segue e avisa no fim.
 - Na primeira execução sem `.env`, copia o [`.env.example`](../.env.example), aplica `0600`, avisa `Criado .env a partir do .env.example: tudo em 127.0.0.1, só este servidor acessa.` e **segue**. Com `--check-only` nada é criado: a validação usa o `.env.example`.
 - **Idempotente:** rodado de novo sem mudança, não recria container, não troca senha e não regrava o `.env`.
-- **Converte o nome antigo da variável:** em `.env` de instalação anterior à `0.9.0`, troca `FTP_PUBLIC_IP` por `FTP_PASSIVE_IP`, no mesmo ponto do arquivo e com o mesmo valor, depois de copiar o `.env` para `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env` (`0600`), e avisa `Convertido: FTP_PUBLIC_IP virou FTP_PASSIVE_IP`. A troca do nome, sozinha, não recria container; na atualização a partir de uma versão anterior, os três são recriados uma vez, porque as imagens mudam, e usuários, senhas e arquivos ficam como estavam. Com `--check-only`, só avisa `AVISO: esta instalação usa nomes antigos` e não altera nada.
-- Se `.secrets/ftp_password.txt` estiver vazio ou ausente, gera uma senha forte (`0600`): veja [Segredos](segredos.md).
+- **Converte os nomes antigos, a variável:** em `.env` de instalação anterior à `0.9.0`, troca `FTP_PUBLIC_IP` por `FTP_PASSIVE_IP`, no mesmo ponto do arquivo e com o mesmo valor, depois de copiar o `.env` para `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env` (`0600`), e avisa `Convertido: FTP_PUBLIC_IP virou FTP_PASSIVE_IP`. A troca do nome, sozinha, não recria container; na atualização a partir de uma versão anterior, os três são recriados uma vez, porque as imagens mudam, e usuários, senhas e arquivos ficam como estavam. Com `--check-only`, só avisa `AVISO: esta instalação usa nomes antigos` e não altera nada.
+- **Converte os nomes antigos, os segredos:** em instalação feita até a `0.9.0`, dá o nome novo aos três arquivos de `.secrets/` com `mv`, sem ler nem copiar o conteúdo, e avisa `Convertido: <antigo> virou <novo>.` para cada um. Se o antigo e o novo existirem, vale o novo e sai um `AVISO`. Com `--check-only`, só avisa. Tabela dos nomes: [Segredos](segredos.md#nomes-antigos).
+- Se `.secrets/ftp-usuario-inicial-senha.txt` estiver vazio ou ausente, gera uma senha forte (`0600`): veja [Segredos](segredos.md).
+- Grava o `.secrets/LEIAME.txt` (`0600`), que diz para que serve cada arquivo da pasta e não guarda segredo, e fecha o resumo com `Segredos: .../LEIAME.txt diz para que serve cada arquivo.`
 - Recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env`, e qualquer `FTP_BIND_IP`, `FTP_PASSIVE_IP`, `PAINEL_BIND_IP`, `PAINEL_REDES_PERMITIDAS` ou `PAINEL_CERT_CN` (em forma de IP) fora de rede privada.
-- Se `.secrets/painel_password_hash.txt` não existir, gera a senha inicial do painel em `.secrets/painel_password.txt` (`0600`) e grava o hash dela, chamando o `scripts/painel-senha.sh --inicial` depois de construir a imagem.
+- Se `.secrets/painel-admin-inicial-senha-hash.txt` não existir, gera a senha inicial do painel em `.secrets/painel-admin-inicial-senha.txt` (`0600`) e grava o hash dela, chamando o `scripts/painel-senha.sh --inicial` depois de construir a imagem.
 - Opção desconhecida ou perfil inexistente: mensagem `Opção inválida: ...` ou `ERRO: perfil inexistente: ...` e código `64`.
 - O Compose é sempre chamado só com `--env-file .env`. O perfil não é um segundo arquivo na subida: `--size` grava os valores dele no `.env`, por isso um `docker compose up -d` direto mantém os mesmos limites.
 - Combinação inválida (`--remover` com `--size`, `--apagar-dados` sem `--remover`, `--sim` sem `--apagar-dados`): `Opção inválida: ...`, o uso e código `64`.
@@ -132,9 +134,9 @@ A senha é lida do terminal e enviada pelo `stdin` para o container: não aparec
 ./scripts/painel-senha.sh --gerar    # cria uma senha forte e mostra uma única vez
 ```
 
-**Resultado esperado:** `Hash gravado em ./.secrets/painel_password_hash.txt; painel reiniciado e sessões abertas encerradas.`
+**Resultado esperado:** `Hash gravado em ./.secrets/painel-admin-inicial-senha-hash.txt; painel reiniciado e sessões abertas encerradas.`
 
-A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.secrets/painel_password.txt` da instalação é apagado. Quando usar: [Painel web](painel.md#senha).
+A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.secrets/painel-admin-inicial-senha.txt` da instalação é apagado. Quando usar: [Painel web](painel.md#senha).
 
 <details>
 <summary>Detalhe técnico — como o hash é calculado</summary>
@@ -144,7 +146,7 @@ A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.
 - O hash `scrypt` é calculado **dentro da imagem do painel**, em um container descartável sem rede, com a raiz somente leitura e sem capabilities (`docker run --rm -i --network none --read-only --cap-drop ALL`). O host não precisa de Python.
 - O hash é gravado por cima do mesmo arquivo: o segredo é um _bind mount_ de arquivo, e trocar o arquivo por outro faria o container continuar vendo o antigo.
 - Depois de gravar, reinicia o serviço `painel` (encerra as sessões). Se o painel não estiver rodando, o hash vale na próxima subida.
-- `--inicial` é de uso do `deploy.sh`: não reinicia nada e mantém o `painel_password.txt`.
+- `--inicial` é de uso do `deploy.sh`: não reinicia nada e mantém o `painel-admin-inicial-senha.txt`.
 - Opção desconhecida: código `64`. Falta do `.env` ou da imagem: `ERRO: ... rode ./deploy.sh primeiro`, código `1`.
 
 </details>
@@ -257,7 +259,7 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 | Bateria | Casos | Exemplos |
 |---|---|---|
 | Funcional | 21 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh` |
-| Segurança | 38 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs e na auditoria |
+| Segurança | 39 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos |
 | Rede | 12 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host |
 
 **Organização:** o [`tests/testar.sh`](../tests/testar.sh) prepara a instância de teste e carrega o [`tests/comum.sh`](../tests/comum.sh), com as funções de registro, de FTP, do painel e de gravação dos resultados. Os casos ficam em [`tests/etapas/`](../tests/etapas/), um arquivo por etapa, executados na ordem do nome: cada etapa parte do estado que a anterior deixou e não roda sozinha.
@@ -276,7 +278,7 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 
 Roda a cada início do container. Não tem parâmetros: tudo vem das variáveis de [Configuração](configuracao.md).
 
-1. Confere que `FTP_BIND_IP` e `FTP_PASSIVE_IP` são IPs privados ([`rede-privada.sh`](../scripts/rede-privada.sh)), lê a senha do segredo `/run/secrets/ftp_password`, ajusta dono e modo de `/data`, `/auth` e `/etc/ssl/private` e cria ou atualiza o usuário inicial `FTP_USER` (recusa senha com menos de 12 caracteres).
+1. Confere que `FTP_BIND_IP` e `FTP_PASSIVE_IP` são IPs privados ([`rede-privada.sh`](../scripts/rede-privada.sh)), lê a senha do segredo `/run/secrets/ftp_usuario_inicial_senha`, ajusta dono e modo de `/data`, `/auth` e `/etc/ssl/private` e cria ou atualiza o usuário inicial `FTP_USER` (recusa senha com menos de 12 caracteres).
 2. Gera um certificado autoassinado para `FTP_CERT_CN` se `DATA_DIR/certs` estiver vazia, e grava a parte pública dele em `/auth/ftp-cert.pem`.
 3. Executa o `pure-ftpd` com o modo de TLS, o `chroot`, os limites e a faixa passiva do `.env`. Com `FTP_TLS_MODE` em `0` ou `1`, grava antes um `AVISO` no log.
 
@@ -291,8 +293,8 @@ Quando uma validação falha, o script sai com `FALHA: <motivo>`:
 
 | Mensagem | Quando |
 |---|---|
-| `FALHA: segredo /run/secrets/ftp_password ausente` | `.secrets/ftp_password.txt` não existe: rode o `deploy.sh` |
-| `FALHA: FTP_PASSWORD não é mais aceita` | há senha em variável de ambiente; ela só é lida do segredo |
+| `FALHA: segredo /run/secrets/ftp_usuario_inicial_senha ausente` | `.secrets/ftp-usuario-inicial-senha.txt` não existe: rode o `deploy.sh` |
+| `FALHA: FTP_PASSWORD não é aceita` | há senha em variável de ambiente; ela só é lida do segredo |
 | `FALHA: FTP_BIND_IP=… não é IP privado` (ou `FTP_PASSIVE_IP`) | o endereço está fora das faixas privadas; o container reinicia em laço até a correção |
 | `FALHA: FTP_USER invalido` | o nome não segue `^[a-z_][a-z0-9_-]{0,31}$` |
 | `FALHA: a senha FTP deve ter pelo menos 12 caracteres` | senha curta ou arquivo vazio |
@@ -331,7 +333,7 @@ Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; 
 
 Roda a cada início do container do painel. Não tem parâmetros: tudo vem das variáveis de [Configuração](configuracao.md#painel).
 
-1. Recusa senha em variável e exige o segredo `/run/secrets/painel_password_hash`.
+1. Recusa senha em variável e exige o segredo `/run/secrets/painel_admin_inicial_senha_hash`.
 2. Confere que `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e o `PAINEL_CERT_CN` (se for IP) são privados.
 3. Ajusta dono e modo de `/painel` (`0700`, do `root`) e gera o certificado autoassinado do painel quando ele falta, quando os endereços mudam ou quando faltam menos de 30 dias para vencer.
 4. Prepara a pasta `/nginx` (`0750`, grupo `10001`, o do nginx): copia o certificado e a chave para `/nginx/tls` e apaga o soquete da subida anterior.
@@ -345,7 +347,7 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 | Mensagem | Quando |
 |---|---|
 | `FALHA: PAINEL_PASSWORD não é aceita` (ou `PAINEL_PASSWORD_HASH`) | há senha ou hash em variável de ambiente; o painel só lê o segredo |
-| `FALHA: segredo /run/secrets/painel_password_hash ausente` | `.secrets/painel_password_hash.txt` não existe: rode o `deploy.sh` |
+| `FALHA: segredo /run/secrets/painel_admin_inicial_senha_hash ausente` | `.secrets/painel-admin-inicial-senha-hash.txt` não existe: rode o `deploy.sh` |
 | `FALHA: PAINEL_BIND_IP=… não é IP privado` (ou `PAINEL_CERT_CN`) | endereço fora das faixas privadas |
 | `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é rede privada` | a lista tem rede pública ou `0.0.0.0/0` |
 | `FALHA: PAINEL_REDES_PERMITIDAS está vazia` | a variável chegou vazia ao container |

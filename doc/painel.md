@@ -49,10 +49,10 @@ Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; só rede 
 
 1. Abra o endereço no navegador. Na instalação padrão, só o próprio servidor alcança (`127.0.0.1`).
 2. O navegador avisa que o certificado é autoassinado: confira a impressão digital (comando abaixo) antes de aceitar.
-3. Digite a senha de administrador. Na primeira instalação ela está em `.secrets/painel_password.txt`:
+3. Digite a senha de administrador. Na primeira instalação ela está em `.secrets/painel-admin-inicial-senha.txt`:
 
 ```bash
-cat .secrets/painel_password.txt
+cat .secrets/painel-admin-inicial-senha.txt
 ```
 
 **Resultado esperado:** a tela **Visão geral**, com o FTP `🟢 No ar`.
@@ -104,7 +104,7 @@ Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
 
 - Nome com letras minúsculas, números, `_` e `-`, começando por letra ou `_`, até 32 caracteres.
 - Senha com no mínimo 12 caracteres.
-- O **usuário inicial** (`FTP_USER`) não é alterado pelo painel: a senha dele vem de `.secrets/ftp_password.txt` e é reaplicada a cada subida do FTP. Veja [Segredos](segredos.md#trocar-a-senha).
+- O **usuário inicial** (`FTP_USER`) não é alterado pelo painel: a senha dele vem de `.secrets/ftp-usuario-inicial-senha.txt` e é reaplicada a cada subida do FTP. Veja [Segredos](segredos.md#trocar-a-senha).
 
 A linha de comando continua valendo: painel e `manage-user.sh` alteram as mesmas contas. Veja [Operação](operacao.md#usuarios).
 
@@ -114,7 +114,7 @@ A linha de comando continua valendo: painel e `manage-user.sh` alteram as mesmas
 
 ## 🔑 Senha do painel
 
-O painel tem **uma** senha de administrador. Só o hash dela fica guardado, em `.secrets/painel_password_hash.txt`.
+O painel tem **uma** senha de administrador. Só o hash dela fica guardado, em `.secrets/painel-admin-inicial-senha-hash.txt`.
 
 | Quero | Comando |
 |---|---|
@@ -124,10 +124,10 @@ O painel tem **uma** senha de administrador. Só o hash dela fica guardado, em `
 **Resultado esperado:**
 
 ```text
-Hash gravado em ./.secrets/painel_password_hash.txt; painel reiniciado e sessões abertas encerradas.
+Hash gravado em ./.secrets/painel-admin-inicial-senha-hash.txt; painel reiniciado e sessões abertas encerradas.
 ```
 
-Depois da troca, a senha antiga é recusada, quem estava dentro do painel volta para a tela de entrada e o arquivo `.secrets/painel_password.txt` (a senha inicial em texto) é apagado. Detalhe em [Segredos](segredos.md#senha-do-painel).
+Depois da troca, a senha antiga é recusada, quem estava dentro do painel volta para a tela de entrada e o arquivo `.secrets/painel-admin-inicial-senha.txt` (a senha inicial em texto) é apagado. Detalhe em [Segredos](segredos.md#senha-do-painel).
 
 > ⚠️ Perdeu a senha? Rode `./scripts/painel-senha.sh` de novo no servidor: quem tem acesso ao host define uma nova. Não existe recuperação pelo navegador.
 
@@ -208,7 +208,7 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         senha@{ shape: diam, label: "senha<br>confere?" }
-        hash@{ shape: doc, label: "hash da senha<br>painel_password_hash" }
+        hash@{ shape: doc, label: "hash da senha<br>painel_admin_inicial_senha_hash" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 15 min<br>cookie e token CSRF" }
@@ -249,7 +249,7 @@ flowchart LR
 | 3a | rede permitida e dentro do limite? ➜ Painel web | Sim: o nginx repassa o pedido pelo soquete Unix, com o endereço do cliente |
 | 3b | rede permitida e dentro do limite? ➜ pedido recusado | Não: `403` para rede de fora, `429` para pedidos demais; o painel nem recebe o pedido |
 | 4 | Painel web ➜ senha confere? | O painel confere de novo a rede e o nome de host e mostra a tela de entrada |
-| 5 | senha confere? ➜ hash da senha | A senha digitada é comparada com o hash `scrypt` de `/run/secrets/painel_password_hash` |
+| 5 | senha confere? ➜ hash da senha | A senha digitada é comparada com o hash `scrypt` de `/run/secrets/painel_admin_inicial_senha_hash` |
 | 6a | senha confere? ➜ sessão | Sim: abre a sessão, com cookie e token CSRF |
 | 6b | senha confere? ➜ pedido recusado | Não: `401`; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
 | 7 | sessão ➜ pedido legítimo? | Cada formulário enviado traz o token CSRF da sessão e a origem do próprio painel |
@@ -262,7 +262,7 @@ flowchart LR
 
 | Quem | Usa | Como |
 |---|---|---|
-| senha confere? | hash da senha (`painel_password_hash`) | lê a cada entrada, somente leitura |
+| senha confere? | hash da senha (`painel_admin_inicial_senha_hash`) | lê a cada entrada, somente leitura |
 | Painel web | `auditoria.log` | registra cada entrada, recusa e alteração |
 
 </details>
@@ -318,7 +318,7 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 - **Imagem:** alvo `painel` do [`Dockerfile`](../Dockerfile), sobre a mesma base do FTP (traz o `pure-pw` e o `allsafe-ftp-user`). Imagem `PAINEL_IMAGE`, container `PAINEL_CONTAINER_NAME`.
 - **Entrada do container:** [`painel/entrypoint.sh`](../painel/entrypoint.sh) recusa senha em variável, confere IP e redes privados, ajusta dono e modo de `/painel`, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
 - **Frente web:** alvo `nginx` do [`Dockerfile`](../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo). O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [Segurança](seguranca.md#painel).
-- **Hash da senha:** `scrypt` com `N=2^15`, `r=8`, `p=1` e sal de 16 bytes, no formato `scrypt$15$8$1$<sal>$<resumo>`. É lido de `/run/secrets/painel_password_hash` a cada entrada e comparado em tempo constante.
+- **Hash da senha:** `scrypt` com `N=2^15`, `r=8`, `p=1` e sal de 16 bytes, no formato `scrypt$15$8$1$<sal>$<resumo>`. É lido de `/run/secrets/painel_admin_inicial_senha_hash` a cada entrada e comparado em tempo constante.
 - **Sessão:** o token do cookie tem 256 bits aleatórios e o servidor guarda só o resumo SHA-256 dele, em memória. Reiniciar o painel encerra todas as sessões e zera a contagem de erros de entrada.
 - **Tela de entrada:** o formulário leva um token assinado (HMAC) com validade curta, para a entrada também não aceitar pedido forjado por outro site.
 - **Origem do envio:** todo `POST` tem de trazer `Origin` igual ao endereço do painel (`https://` mais o `Host`). A política `Referrer-Policy: same-origin` faz o navegador mandar a origem real no envio que parte do próprio painel e `Origin: null` no que parte de outro endereço; `null` e origem de fora recebem `403` e o evento `recusa_origem`.

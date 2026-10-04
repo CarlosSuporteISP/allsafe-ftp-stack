@@ -56,7 +56,7 @@ FTP_MAX_CLIENTS=50
 FTP_MAX_CLIENTS_PER_IP=8
 ```
 
-Nenhuma senha entra no `.env`: ela fica em `.secrets/ftp_password.txt` ([Segredos](segredos.md)).
+Nenhuma senha entra no `.env`: ela fica em `.secrets/ftp-usuario-inicial-senha.txt` ([Segredos](segredos.md)).
 
 Depois de editar o `.env`, valide sem subir:
 
@@ -124,7 +124,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 
 > **Para que serve `FTP_PASSIVE_IP`?** No modo passivo, o servidor diz ao cliente em qual IP e em qual porta abrir a conexão de dados. O Pure-FTPd, dentro do container, só conhece o endereço da rede Docker, que o equipamento não alcança; por isso a stack informa a ele qual endereço anunciar (opção `-P`). O valor é o IP **privado** do host pelo qual os equipamentos chegam, em geral o mesmo de `FTP_BIND_IP`. Só é diferente quando existe NAT interno entre o equipamento e o servidor. IP de internet é recusado.
 
-> **Instalação anterior à `0.9.0`:** a variável se chamava `FTP_PUBLIC_IP`. O `./deploy.sh` troca o nome sozinho, mantém o valor e guarda o `.env` de antes em `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env`. Até ele rodar, os comandos que chamam o Compose param com `defina FTP_PASSIVE_IP no .env`.
+> **Instalação anterior à `0.9.0`:** a variável se chamava `FTP_PUBLIC_IP`. O `./deploy.sh` troca o nome sozinho, mantém o valor e guarda o `.env` de antes em `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env`. Até ele rodar, os comandos que chamam o Compose param com `defina FTP_PASSIVE_IP no .env`. Os arquivos de `.secrets/` também mudaram de nome, na `0.10.0`, e são convertidos na mesma execução: [Segredos](segredos.md#nomes-antigos).
 
 ---
 
@@ -135,7 +135,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
 | `FTP_USER` | Nome do usuário virtual criado ou atualizado a cada subida | Regra `^[a-z_][a-z0-9_-]{0,31}$` | `transfer` |
-A **senha** do usuário inicial não é variável: fica em `SECRETS_DIR/ftp_password.txt`, criada pelo `deploy.sh`, e chega ao container como o segredo `/run/secrets/ftp_password`. Um `.env` com `FTP_PASSWORD` preenchido é recusado. Veja [Segredos](segredos.md).
+A **senha** do usuário inicial não é variável: fica em `SECRETS_DIR/ftp-usuario-inicial-senha.txt`, criada pelo `deploy.sh`, e chega ao container como o segredo `/run/secrets/ftp_usuario_inicial_senha`. Um `.env` com `FTP_PASSWORD` preenchido é recusado. Veja [Segredos](segredos.md).
 
 Só o usuário inicial vem do `.env`. Os demais são criados com [`manage-user.sh`](../manage-user.sh): veja [Operação](operacao.md#usuarios).
 

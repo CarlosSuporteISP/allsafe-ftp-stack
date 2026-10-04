@@ -34,7 +34,7 @@ import urllib.parse
 ARQ_SOQUETE = '/nginx/painel.sock'
 GID_NGINX = 10001
 RAIZ = os.path.dirname(os.path.abspath(__file__))
-ARQ_HASH = '/run/secrets/painel_password_hash'
+ARQ_HASH = '/run/secrets/painel_admin_inicial_senha_hash'
 ARQ_CERT = '/painel/tls/painel-cert.pem'
 ARQ_AUDITORIA = '/painel/auditoria.log'
 ARQ_USUARIOS = '/auth/pureftpd.passwd'
@@ -770,7 +770,7 @@ class Painel(http.server.BaseHTTPRequestHandler):
             uso = uso_da_pasta(nome)
             mais = ' ou mais' if uso['parcial'] else ''
             if nome == CFG['ftp_usuario']:
-                acoes = '<span class="suave">usuário inicial: a senha vem de <code>.secrets/ftp_password.txt</code></span>'
+                acoes = '<span class="suave">usuário inicial: a senha vem de <code>.secrets/ftp-usuario-inicial-senha.txt</code></span>'
                 marca = ' <span class="etiqueta">inicial</span>'
             else:
                 destino = urllib.parse.quote(nome)
@@ -856,7 +856,7 @@ e não fica guardada em lugar nenhum além do hash do FTP.</p>
             return False
         if nome == CFG['ftp_usuario']:
             self.enviar(409, pagina('Usuário inicial', '<section class="cartao"><h1>🔑 Usuário inicial</h1>'
-                                    '<p>A senha deste usuário vem do arquivo <code>.secrets/ftp_password.txt</code> e é '
+                                    '<p>A senha deste usuário vem do arquivo <code>.secrets/ftp-usuario-inicial-senha.txt</code> e é '
                                     'reaplicada a cada subida do FTP. Troque por lá: o guia de segredos mostra como.</p>'
                                     '<p><a href="/usuarios">Voltar para a lista</a></p></section>', sessao, '/usuarios'))
             return False

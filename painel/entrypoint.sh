@@ -7,11 +7,11 @@ die() { echo "FALHA: $*" >&2; exit 1; }
 source /usr/local/lib/allsafe/rede-privada.sh
 
 # A senha do painel chega só como hash, pelo segredo montado pelo Compose.
-secret_file=/run/secrets/painel_password_hash
+secret_file=/run/secrets/painel_admin_inicial_senha_hash
 for variavel in PAINEL_PASSWORD PAINEL_PASSWORD_HASH; do
   [[ -z "${!variavel:-}" ]] || die "$variavel não é aceita: a senha do painel fica em .secrets/, nunca em variável"
 done
-[[ -r "$secret_file" ]] || die "segredo $secret_file ausente: rode ./deploy.sh, que cria .secrets/painel_password_hash.txt"
+[[ -r "$secret_file" ]] || die "segredo $secret_file ausente: rode ./deploy.sh, que cria .secrets/painel-admin-inicial-senha-hash.txt"
 
 PAINEL_BIND_IP="${PAINEL_BIND_IP:-127.0.0.1}"
 PAINEL_REDES_PERMITIDAS="${PAINEL_REDES_PERMITIDAS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"

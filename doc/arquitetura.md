@@ -111,8 +111,8 @@ flowchart LR
 | Quem | Usa | Como |
 |---|---|---|
 | `deploy.sh` e `manage-user.sh` | `.env` | cria, lê e grava o perfil |
-| Pure-FTPd | `.secrets` (`ftp_password.txt`) | lê a senha na subida, somente leitura |
-| Painel web | `.secrets` (`painel_password_hash.txt`) | lê o hash a cada entrada, somente leitura |
+| Pure-FTPd | `.secrets` (`ftp-usuario-inicial-senha.txt`) | lê a senha na subida, somente leitura |
+| Painel web | `.secrets` (`painel-admin-inicial-senha-hash.txt`) | lê o hash a cada entrada, somente leitura |
 | Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
 | Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
 | Painel web | `DATA_DIR/painel` | grava o certificado e a auditoria |
@@ -159,8 +159,8 @@ O que cada script faz, com parâmetros e saída: [Scripts](scripts.md). Uso e pr
 | `DATA_DIR/certs` | `/etc/ssl/private` | só `ftp` | `pure-ftpd.pem`: chave e certificado concatenados, `0600` |
 | `DATA_DIR/painel` | `/painel` | só `painel` | `tls/painel-cert.pem`, `tls/painel-key.pem` (`0600`) e `auditoria.log` (`0600`); pasta `0700` |
 | `DATA_DIR/nginx` | `/nginx` | `painel` (grava) e `nginx` (somente leitura) | `painel.sock`, o soquete Unix do painel, e `tls/`, a cópia do certificado e da chave (`0640`) para o nginx; pasta `0750`, do grupo `10001`. Refeita a cada subida |
-| segredo `ftp_password` (`SECRETS_DIR/ftp_password.txt`) | `/run/secrets/ftp_password` (somente leitura) | só `ftp` | Senha do usuário inicial |
-| segredo `painel_password_hash` (`SECRETS_DIR/painel_password_hash.txt`) | `/run/secrets/painel_password_hash` (somente leitura) | só `painel` | Hash `scrypt` da senha do painel |
+| segredo `ftp_usuario_inicial_senha` (`SECRETS_DIR/ftp-usuario-inicial-senha.txt`) | `/run/secrets/ftp_usuario_inicial_senha` (somente leitura) | só `ftp` | Senha do usuário inicial |
+| segredo `painel_admin_inicial_senha_hash` (`SECRETS_DIR/painel-admin-inicial-senha-hash.txt`) | `/run/secrets/painel_admin_inicial_senha_hash` (somente leitura) | só `painel` | Hash `scrypt` da senha do painel |
 
 Cada serviço vê um único arquivo de `.secrets/`, e o `nginx` não vê nenhum. Além disso, o `ftp` e o `painel` têm dois `tmpfs`, `/run` (8 MiB) e `/tmp` (16 MiB), e o `nginx` tem `/run/nginx` (1 MiB) e `/tmp/nginx` (16 MiB), do usuário `10001`. Todos `noexec,nosuid,nodev`.
 
@@ -205,7 +205,7 @@ flowchart LR
     end
     subgraph HOST["Host"]
         env@{ shape: doc, label: ".env<br>configuração e limites" }
-        segredo@{ shape: doc, label: ".secrets<br>ftp_password.txt" }
+        segredo@{ shape: doc, label: ".secrets<br>ftp-usuario-inicial-senha.txt" }
         compose@{ shape: rect, label: "Docker Compose<br>compose.yaml" }
     end
     subgraph CONTAINER["Container allsafe-ftp · raiz somente leitura"]
@@ -268,9 +268,9 @@ flowchart LR
 
 | Quem | Usa | Como |
 |---|---|---|
-| `deploy.sh` | `.secrets/ftp_password.txt` | gera a senha se o arquivo estiver vazio, `0600` |
+| `deploy.sh` | `.secrets/ftp-usuario-inicial-senha.txt` | gera a senha se o arquivo estiver vazio, `0600` |
 | Docker Compose | `.env` | lê |
-| entrypoint | `.secrets/ftp_password.txt` | lê, somente leitura |
+| entrypoint | `.secrets/ftp-usuario-inicial-senha.txt` | lê, somente leitura |
 | entrypoint | `/data` | cria a pasta do usuário |
 | `pure-pw` | PureDB (`/auth/pureftpd.pdb`) | grava |
 | `openssl` | `pure-ftpd.pem` | grava |

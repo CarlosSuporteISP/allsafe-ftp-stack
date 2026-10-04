@@ -80,10 +80,10 @@ Cada variável está explicada em [Configuração](configuracao.md). Os campos q
 
 ## 2️⃣ Senha do usuário inicial
 
-Nada a fazer aqui na primeira vez: o [`deploy.sh`](../deploy.sh) **gera uma senha forte** em `.secrets/ftp_password.txt`, com permissão `0600`, se o arquivo estiver vazio ou ausente. Anote-a para configurar o cliente FTP:
+Nada a fazer aqui na primeira vez: o [`deploy.sh`](../deploy.sh) **gera uma senha forte** em `.secrets/ftp-usuario-inicial-senha.txt`, com permissão `0600`, se o arquivo estiver vazio ou ausente. Anote-a para configurar o cliente FTP:
 
 ```bash
-cat .secrets/ftp_password.txt      # depois do primeiro deploy
+cat .secrets/ftp-usuario-inicial-senha.txt      # depois do primeiro deploy
 ```
 
 **Resultado esperado:** uma linha com a senha gerada, de cerca de 48 caracteres.
@@ -91,8 +91,8 @@ cat .secrets/ftp_password.txt      # depois do primeiro deploy
 Para usar uma senha própria, grave-a **antes** de rodar o `deploy.sh`:
 
 ```bash
-printf '%s' 'uma-senha-forte-de-12+-caracteres' > .secrets/ftp_password.txt
-chmod 600 .secrets/ftp_password.txt
+printf '%s' 'uma-senha-forte-de-12+-caracteres' > .secrets/ftp-usuario-inicial-senha.txt
+chmod 600 .secrets/ftp-usuario-inicial-senha.txt
 ```
 
 <details>
@@ -100,7 +100,7 @@ chmod 600 .secrets/ftp_password.txt
 
 - A senha é gerada com `openssl rand -base64 36`; o `openssl` é exigido no host.
 - Mínimo de **12 caracteres**: o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) recusa senhas menores.
-- O arquivo chega ao container como o segredo `/run/secrets/ftp_password`, somente leitura; o serviço não vê o resto de `.secrets/`.
+- O arquivo chega ao container como o segredo `/run/secrets/ftp_usuario_inicial_senha`, somente leitura; o serviço não vê o resto de `.secrets/`.
 - Arquivos `.txt` de `.secrets/` são ignorados pelo Git. Veja [Segredos](segredos.md).
 - Senha no `.env` **não é aceita**: o `deploy.sh` recusa um `.env` com `FTP_PASSWORD` preenchido e o container recusa a variável.
 
@@ -121,15 +121,16 @@ chmod 600 .secrets/ftp_password.txt
 ```text
 Pronto: FTP, painel e nginx no ar (healthy), perfil 'small'.
 FTP:    127.0.0.1:21, TLS explícito obrigatório no login, modo passivo 30000-30049
-        usuário 'transfer', senha no arquivo ./.secrets/ftp_password.txt
+        usuário 'transfer', senha no arquivo ./.secrets/ftp-usuario-inicial-senha.txt
 Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; só rede privada, atrás de firewall)
-        senha inicial no arquivo ./.secrets/painel_password.txt; troque com ./scripts/painel-senha.sh
+        senha inicial no arquivo ./.secrets/painel-admin-inicial-senha.txt; troque com ./scripts/painel-senha.sh
+Segredos: ./.secrets/LEIAME.txt diz para que serve cada arquivo.
 Remover: ./deploy.sh --remover  (os dados ficam em <DATA_DIR>)
 ```
 
-O resumo diz **onde** está cada senha e nunca a mostra. Na primeira vez aparecem também `Gerada uma senha forte em .secrets/ftp_password.txt (0600). Guarde-a para o cliente FTP.` e `Gerada uma senha forte para o painel em .secrets/painel_password.txt (0600).`
+O resumo diz **onde** está cada senha e nunca a mostra. O `LEIAME.txt` da pasta `.secrets/` explica para que serve cada arquivo dela. Na primeira vez aparecem também `Gerada uma senha forte em .secrets/ftp-usuario-inicial-senha.txt (0600). Guarde-a para o cliente FTP.` e `Gerada uma senha forte para o painel em .secrets/painel-admin-inicial-senha.txt (0600).`
 
-Abra o endereço do painel no navegador e entre com a senha de `.secrets/painel_password.txt`. O primeiro acesso, o aviso de certificado e a troca da senha estão em [Painel web](painel.md#abrir).
+Abra o endereço do painel no navegador e entre com a senha de `.secrets/painel-admin-inicial-senha.txt`. O primeiro acesso, o aviso de certificado e a troca da senha estão em [Painel web](painel.md#abrir).
 
 Qual perfil usar: [Perfis](perfis.md). Nos perfis `xlarge` e `extended` a subida leva minutos, porque o Docker publica as portas passivas uma a uma: [tempo de subida](perfis.md#tempo-de-subida).
 
@@ -142,11 +143,11 @@ O [`deploy.sh`](../deploy.sh), nesta ordem:
 
 1. confere os requisitos: `docker`, o plugin `docker compose` e o serviço do Docker respondendo;
 2. confere que o servidor tem as CPUs e a memória que o perfil pede; se não tiver, para sem alterar nada;
-3. cria o `.env` a partir do exemplo (`0600`) se ele não existir, e segue; em `.env` de instalação anterior à `0.9.0`, troca `FTP_PUBLIC_IP` por `FTP_PASSIVE_IP`, depois de copiar o arquivo para `BACKUP_DIR`;
+3. cria o `.env` a partir do exemplo (`0600`) se ele não existir, e segue; em instalação com os nomes antigos, troca `FTP_PUBLIC_IP` por `FTP_PASSIVE_IP` no `.env`, depois de copiá-lo para `BACKUP_DIR`, e dá o nome novo aos arquivos de `.secrets/`;
 4. recusa senha no `.env`, endereço ou rede fora de IP privado e `FTP_TLS_MODE` fora de `0` a `3`;
 5. com `--size`, grava no `.env` os valores de `profiles/<perfil>.env` e o nome do perfil em `FTP_PROFILE`; sem `--size`, o `.env` fica como está;
 6. confere que a porta do FTP, a do painel e a faixa passiva estão livres no host (as que a própria stack já publica não contam); porta ocupada para o comando com `ERRO: porta já em uso por outro programa: ...`;
-7. cria as pastas `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` em `DATA_DIR` e gera a senha em `.secrets/ftp_password.txt` se o arquivo estiver vazio;
+7. cria as pastas `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` em `DATA_DIR` gera a senha em `.secrets/ftp-usuario-inicial-senha.txt` se o arquivo estiver vazio e grava o `.secrets/LEIAME.txt`;
 8. roda `docker compose --env-file .env config --quiet`, que falha cedo se a configuração estiver inválida;
 9. `docker compose build`, que constrói as três imagens (com `--atualizar`, `build --no-cache`);
 10. gera a senha inicial do painel e grava o hash dela, se ainda não houver hash;

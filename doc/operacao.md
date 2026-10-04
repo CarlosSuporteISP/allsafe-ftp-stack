@@ -56,7 +56,7 @@ Regras:
 - Senha: mínimo de **12 caracteres** (recusada abaixo disso).
 - `del` **não apaga arquivos**: remova `/data/<usuario>` à mão se quiser.
 
-> ⚠️ O usuário definido em `FTP_USER` é recriado ou atualizado a cada subida, com a senha de `.secrets/ftp_password.txt`. Para renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo. Para trocar a senha dele, veja [Segredos](segredos.md#trocar-a-senha).
+> ⚠️ O usuário definido em `FTP_USER` é recriado ou atualizado a cada subida, com a senha de `.secrets/ftp-usuario-inicial-senha.txt`. Para renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo. Para trocar a senha dele, veja [Segredos](segredos.md#trocar-a-senha).
 
 <details>
 <summary>Detalhe técnico — onde a mudança é gravada</summary>
@@ -125,7 +125,7 @@ docker compose down                       # 1. para a stack antiga (sem -v)
 git pull                                  # 2. traz a versão nova
 # 3. no .env: acrescente as chaves novas do .env.example (DATA_DIR, BACKUP_DIR, TEMP_DIR, SECRETS_DIR,
 #    STACK_NAME, FTP_CONTAINER_NAME, FTP_NETWORK_NAME) e apague FTP_PASSWORD e FTP_PASSWORD_FILE.
-#    Se a senha estava no .env, grave-a em .secrets/ftp_password.txt (chmod 600).
+#    Se a senha estava no .env, grave-a em .secrets/ftp-usuario-inicial-senha.txt (chmod 600).
 DATA_DIR=/home/carlos/code/data/allsafe-ftp-stack   # o DATA_DIR do seu .env
 mkdir -p "$DATA_DIR"/{dados,auth,certs}
 docker build -q -t allsafe-ftp:local .    # 4. imagem nova, usada para copiar

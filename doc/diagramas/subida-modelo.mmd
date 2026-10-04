@@ -6,7 +6,7 @@ flowchart LR
     end
     subgraph HOST["Host"]
         env@{ shape: doc, label: ".env<br>configuração e limites" }
-        segredo@{ shape: doc, label: ".secrets<br>ftp_password.txt" }
+        segredo@{ shape: doc, label: ".secrets<br>ftp-usuario-inicial-senha.txt" }
         compose@{ shape: rect, label: "Docker Compose<br>compose.yaml" }
     end
     subgraph CONTAINER["Container allsafe-ftp · raiz somente leitura"]

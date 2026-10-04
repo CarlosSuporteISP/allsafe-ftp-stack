@@ -4,7 +4,7 @@
 
 d="$(recusa_deploy FTP_PASSWORD=valor-de-exemplo-sem-uso)"; migracao="$(grep -c 'Migração' "$W/recusa.log")"
 k="$(recusa_container ftp FTP_PASSWORD=valor-de-exemplo-sem-uso)"
-recusou "$d" 'ainda traz FTP_PASSWORD' && [[ "$migracao" -ge 1 && "$k" != "saída 0 "* && "$k" == *'não é mais aceita'* ]]
+recusou "$d" 'ainda traz FTP_PASSWORD' && [[ "$migracao" -ge 1 && "$k" != "saída 0 "* && "$k" == *'não é aceita'* ]]
 caso $? seguranca 15 ".env antigo com senha" "deploy.sh: $d, explica a migração: $([[ "$migracao" -ge 1 ]] && echo sim || echo NÃO) · container: $k"
 ev=""
 par() { # <nº> <nome> <serviço do container> <CHAVE=valor> <texto esperado>
@@ -32,12 +32,12 @@ if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
   no_indice="$(git ls-files -- .env .secrets | grep -c -v -x -e '.secrets/.gitkeep' -e '.secrets/README.md')"
   no_historico="$(git log --all --diff-filter=A --name-only --format= -- .env .secrets 2>/dev/null | grep -v -x -e '.secrets/.gitkeep' -e '.secrets/README.md' -e '' | sort -u | wc -l)"
   ignorados=0
-  for arquivo in .env .secrets/ftp_password.txt .secrets/painel_password.txt .secrets/painel_password_hash.txt; do
+  for arquivo in .env .secrets/ftp-usuario-inicial-senha.txt .secrets/painel-admin-inicial-senha.txt .secrets/painel-admin-inicial-senha-hash.txt .secrets/LEIAME.txt; do
     git check-ignore -q "$arquivo" || ignorados=1
   done
   no_git="$(git grep -c -I -F -f "$W/proibidos" 2>/dev/null | wc -l)"
   [[ "$no_indice" == 0 && "$no_historico" == 0 && "$ignorados" == 0 && "$no_git" == 0 ]]
-  caso $? seguranca 10 "Segredo fora do Git" "git ls-files com .env ou arquivo de .secrets além do .gitkeep e do README.md: $no_indice · no histórico (git log --all): $no_historico · .env e os três segredos ignorados pelo .gitignore: $([[ "$ignorados" == 0 ]] && echo sim || echo NÃO) · arquivos versionados com um segredo desta bateria: $no_git"
+  caso $? seguranca 10 "Segredo fora do Git" "git ls-files com .env ou arquivo de .secrets além do .gitkeep e do README.md: $no_indice · no histórico (git log --all): $no_historico · .env, os três segredos e o LEIAME.txt ignorados pelo .gitignore: $([[ "$ignorados" == 0 ]] && echo sim || echo NÃO) · arquivos versionados com um segredo desta bateria: $no_git"
 else
   fora seguranca 10 "Segredo fora do Git" "a pasta não é um repositório Git"
 fi

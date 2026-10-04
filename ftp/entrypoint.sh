@@ -6,9 +6,9 @@ die() { echo "FALHA: $*" >&2; exit 1; }
 source /usr/local/lib/allsafe/rede-privada.sh
 
 # A senha vem só do segredo montado pelo Compose; variável de ambiente com senha é recusada.
-secret_file=/run/secrets/ftp_password
-[[ -z "${FTP_PASSWORD:-}" ]] || die "FTP_PASSWORD não é mais aceita: grave a senha em .secrets/ftp_password.txt"
-[[ -r "$secret_file" ]] || die "segredo $secret_file ausente: rode ./deploy.sh, que cria .secrets/ftp_password.txt"
+secret_file=/run/secrets/ftp_usuario_inicial_senha
+[[ -z "${FTP_PASSWORD:-}" ]] || die "FTP_PASSWORD não é aceita: a senha fica em .secrets/ftp-usuario-inicial-senha.txt"
+[[ -r "$secret_file" ]] || die "segredo $secret_file ausente: rode ./deploy.sh, que cria .secrets/ftp-usuario-inicial-senha.txt"
 
 FTP_USER="${FTP_USER:-transfer}"
 FTP_BIND_IP="${FTP_BIND_IP:-127.0.0.1}"

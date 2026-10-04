@@ -8,6 +8,32 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.10.0] - 2026-10-04
+
+Os arquivos de `.secrets/` passam a dizer no nome o que guardam, e a pasta ganha um `LEIAME.txt` que explica cada um. As senhas não mudam. **Uso só em rede privada, atrás de firewall.**
+
+### Alterado
+
+- **Nomes dos arquivos de segredo:** [Segredos](doc/segredos.md#o-que-fica).
+
+  | Antes | Agora | O que guarda |
+  |---|---|---|
+  | `ftp_password.txt` | `ftp-usuario-inicial-senha.txt` | Senha do usuário inicial do FTP |
+  | `painel_password.txt` | `painel-admin-inicial-senha.txt` | Senha inicial do painel, em texto |
+  | `painel_password_hash.txt` | `painel-admin-inicial-senha-hash.txt` | Hash da senha do painel |
+
+- Os segredos do [`compose.yaml`](compose.yaml) acompanham: `ftp_usuario_inicial_senha` e `painel_admin_inicial_senha_hash`, em `/run/secrets/` de cada container.
+
+### Adicionado
+
+- **`.secrets/LEIAME.txt`**, gravado pelo [`deploy.sh`](deploy.sh) com modo `0600`: diz para que serve cada arquivo da pasta e não guarda segredo nenhum. O resumo do `deploy.sh` aponta para ele.
+- **Conversão automática dos arquivos no `deploy.sh`:** os três arquivos antigos só mudam de nome, sem que o conteúdo seja lido ou copiado. Com `--check-only`, só avisa. Se o antigo e o novo existirem, vale o novo.
+- Um caso na bateria de segurança, que passa a 39: o `LEIAME.txt` existe, tem modo `0600`, explica os três arquivos e não traz senha nem hash. O caso da conversão na bateria funcional passa a cobrir também os três arquivos.
+
+### Ao atualizar
+
+Rode `./deploy.sh` uma vez: ele dá o nome novo aos arquivos e recria os containers do FTP e do painel, porque o nome do segredo dentro deles mudou. Dados, usuários e senhas ficam como estavam: [Segredos](doc/segredos.md#nomes-antigos).
+
 ## [0.9.0] - 2026-10-04
 
 A variável do IP anunciado no modo passivo muda de nome: `FTP_PUBLIC_IP` vira `FTP_PASSIVE_IP`. O valor e o comportamento são os mesmos; o nome antigo sugeria IP de internet, e a stack só aceita IP privado. **Uso só em rede privada, atrás de firewall.**

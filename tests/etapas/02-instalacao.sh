@@ -9,16 +9,24 @@ if [[ "$r" != 0 ]]; then
   tail -5 "$W/deploy.log" | limpo >&2
   encerrar
 fi
-for arquivo in "$S"/*.txt; do proibir "$(head -1 "$arquivo")"; done
-tr -d '\r\n' < "$S/ftp_password.txt" > "$W/inicial.senha"
-tr -d '\r\n' < "$S/painel_password.txt" > "$W/painel.senha"
+# Os três segredos têm "senha" no nome; o LEIAME.txt da pasta não é segredo e fica fora desta lista.
+for arquivo in "$S"/*-senha*.txt; do proibir "$(head -1 "$arquivo")"; done
+tr -d '\r\n' < "$S/ftp-usuario-inicial-senha.txt" > "$W/inicial.senha"
+tr -d '\r\n' < "$S/painel-admin-inicial-senha.txt" > "$W/painel.senha"
 printf 'senha-errada-de-teste' > "$W/errada.senha"; printf 'teste@exemplo.com.br' > "$W/anonimo.senha"
 for n in 1 2 3 4 5 6; do nova_senha "$W/u$n.senha"; done
 ev10="1ª execução: saída 0 em $duracao s, sem terminal · criados: $(grep -c -E '^(Criado|Gerada)' "$W/deploy.log") (o .env e duas senhas) · saúde: $(saude "$FTP" "$PAINEL" "$NGINX")· senhas na saída: $(segredos_em "$W/deploy.log")"
 ok10=1; [[ "$(saude "$FTP" "$PAINEL" "$NGINX")" == "healthy healthy healthy " && "$(segredos_em "$W/deploy.log")" == 0 ]] || ok10=0
 
 modos="$(stat -c '%a' "$S" "$S"/*.txt | tr '\n' ' ')"
-[[ "$modos" == "700 600 600 600 " ]]; caso $? seguranca 14 "Permissão dos segredos" "pasta e arquivos (ftp_password, painel_password, painel_password_hash): $modos"
+nomes="$(find "$S" -maxdepth 1 -type f -printf '%f\n' | sort | tr '\n' ' ')"
+[[ "$modos" == "700 600 600 600 600 " && "$nomes" == "LEIAME.txt ftp-usuario-inicial-senha.txt painel-admin-inicial-senha-hash.txt painel-admin-inicial-senha.txt " ]]
+caso $? seguranca 14 "Permissão dos segredos" "pasta e arquivos: $modos· arquivos: $nomes"
+
+citados=0; for nome in ftp-usuario-inicial-senha.txt painel-admin-inicial-senha.txt painel-admin-inicial-senha-hash.txt; do grep -q -x -F "$nome" "$S/LEIAME.txt" && citados=$((citados + 1)); done
+no_leiame="$(segredos_em "$S/LEIAME.txt")"
+[[ "$citados" == 3 && "$no_leiame" == 0 && "$(stat -c '%a' "$S/LEIAME.txt")" == 600 ]] && grep -q 'LEIAME.txt diz para que serve cada arquivo' "$W/deploy.log"
+caso $? seguranca 39 "Guia da pasta de segredos" "LEIAME.txt: modo $(stat -c '%a' "$S/LEIAME.txt"), $(grep -c . "$S/LEIAME.txt") linhas, explica $citados dos 3 arquivos · senhas ou hash dentro dele: $no_leiame · citado na saída do deploy.sh: $(grep -c 'LEIAME.txt diz para que serve' "$W/deploy.log")"
 
 ENV_FILE="$ENVA" ./scripts/validate.sh --runtime > "$W/runtime.log" 2>&1; r=$?
 [[ "$r" == 0 && "$(grep -c 'running, healthy' "$W/runtime.log")" == 3 ]] && grep -q "presente no PureDB" "$W/runtime.log"
@@ -68,7 +76,7 @@ caso $? seguranca 12 "Nenhuma senha em variável de ambiente" "$(grep -c . "$W/v
 
 s_ftp="$(docker exec "$FTP" ls /run/secrets 2>/dev/null | tr '\n' ' ')"; s_painel="$(docker exec "$PAINEL" ls /run/secrets 2>/dev/null | tr '\n' ' ')"
 s_nginx="$(docker exec "$NGINX" ls /run/secrets 2>/dev/null | tr '\n' ' ')"
-[[ "$s_ftp" == "ftp_password " && "$s_painel" == "painel_password_hash " && -z "$s_nginx" ]]
+[[ "$s_ftp" == "ftp_usuario_inicial_senha " && "$s_painel" == "painel_admin_inicial_senha_hash " && -z "$s_nginx" ]]
 caso $? seguranca 13 "Cada serviço vê só o próprio segredo" "ftp: ${s_ftp:-nenhum }· painel: ${s_painel:-nenhum }· nginx: ${s_nginx:-nenhum}"
 
 ev=""; ok=0

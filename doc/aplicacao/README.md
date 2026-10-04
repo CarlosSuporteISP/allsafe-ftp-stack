@@ -33,7 +33,7 @@ O painel tem uma tela de entrada e quatro abas: Visão geral, Usuários, Seguran
 
 | Item da tela | O que faz |
 |---|---|
-| **Senha do painel** | Recebe a senha de administrador. A da primeira instalação está em `.secrets/painel_password.txt` |
+| **Senha do painel** | Recebe a senha de administrador. A da primeira instalação está em `.secrets/painel-admin-inicial-senha.txt` |
 | **Entrar** | Confere a senha e abre a aba Visão geral |
 | Aviso de rede privada | Lembra que o painel é só para rede interna, atrás de firewall |
 
@@ -57,7 +57,7 @@ O painel tem uma tela de entrada e quatro abas: Visão geral, Usuários, Seguran
 <details>
 <summary>Detalhe técnico — entrada e sessão</summary>
 
-- Rota `GET /entrar` mostra o formulário; `POST /entrar` confere a senha contra o hash `scrypt` de `/run/secrets/painel_password_hash`.
+- Rota `GET /entrar` mostra o formulário; `POST /entrar` confere a senha contra o hash `scrypt` de `/run/secrets/painel_admin_inicial_senha_hash`.
 - Resposta `401` para senha errada, `429` para endereço bloqueado e `400` para formulário expirado. Cada caso grava `entrada_falha` ou `entrada_bloqueada` na [auditoria](../painel.md#auditoria).
 - A sessão fica no cookie `__Host-sessao` (`Secure`, `HttpOnly`, `SameSite=Strict`) e encerra com 15 minutos sem uso ou em 8 horas.
 - O envio só é aceito quando parte do próprio painel: o cabeçalho `Origin` tem de ser o endereço do painel. Detalhes em [Painel web](../painel.md#protecoes).
@@ -124,7 +124,7 @@ Nada é alterado por esta aba.
 | **Trocar senha** | Abre o formulário de troca de senha daquele usuário |
 | **Remover** | Abre a confirmação de remoção daquele usuário |
 
-O usuário inicial não tem ações: a senha dele vem de `.secrets/ftp_password.txt`. Veja [Segredos](../segredos.md#trocar-a-senha).
+O usuário inicial não tem ações: a senha dele vem de `.secrets/ftp-usuario-inicial-senha.txt`. Veja [Segredos](../segredos.md#trocar-a-senha).
 
 <details>
 <summary>Usuários ➜ Novo usuário — clique para expandir</summary>

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Troca a senha do painel. Grava só o hash scrypt em SECRETS_DIR/painel_password_hash.txt;
+# Troca a senha do painel. Grava só o hash scrypt em SECRETS_DIR/painel-admin-inicial-senha-hash.txt;
 # a senha em texto não é guardada. O hash é calculado dentro da imagem do painel, sem rede,
 # para o host não precisar de Python.
 set -Eeuo pipefail
@@ -23,7 +23,7 @@ die() { echo "ERRO: $*" >&2; exit 1; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --gerar) gerar=true; shift ;;
-    --inicial) inicial=true; shift ;;  # uso do deploy.sh: não reinicia e mantém painel_password.txt
+    --inicial) inicial=true; shift ;;  # uso do deploy.sh: não reinicia e mantém a senha inicial em texto
     -h|--help) usage; exit 0 ;;
     *) echo "Opção inválida: $1" >&2; usage >&2; exit 64 ;;
   esac
@@ -32,7 +32,7 @@ done
 
 secrets_dir="$(env_valor SECRETS_DIR ./.secrets)"
 imagem="$(env_valor PAINEL_IMAGE allsafe-ftp-painel:local)"
-hash_file="$secrets_dir/painel_password_hash.txt"
+hash_file="$secrets_dir/painel-admin-inicial-senha-hash.txt"
 docker image inspect "$imagem" >/dev/null 2>&1 || die "imagem $imagem não encontrada: rode ./deploy.sh primeiro"
 
 if [[ "$gerar" == true ]]; then
@@ -68,7 +68,7 @@ unset senha
 
 if [[ "$inicial" == false ]]; then
   # A senha inicial em texto deixou de valer: o arquivo é removido para não confundir.
-  rm -f "$secrets_dir/painel_password.txt"
+  rm -f "$secrets_dir/painel-admin-inicial-senha.txt"
   if [[ -n "$(docker compose --env-file "$env_file" ps -q painel 2>/dev/null)" ]]; then
     docker compose --env-file "$env_file" restart painel >/dev/null
     echo "Hash gravado em $hash_file; painel reiniciado e sessões abertas encerradas."
