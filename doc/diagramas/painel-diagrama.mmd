@@ -1,10 +1,10 @@
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    usuario@{ shape: person, label: "👤 Usuário<br>navegador na rede interna" }
-    nginx@{ shape: rect, label: "🚦 nginx<br>allsafe-ftp-nginx, HTTPS" }
-    painel@{ shape: rect, label: "🖥️ Painel web<br>allsafe-ftp-painel" }
-    cmd@{ shape: rect, label: "⚙️ allsafe-ftp-user<br>cria, troca a senha, remove" }
-    puredb@{ shape: cyl, label: "🗄️ PureDB<br>usuários virtuais" }
-    fim@{ shape: stadium, label: "🏁 usuário pronto no FTP" }
+    usuario@{ shape: person, label: "Usuário<br>navegador na rede interna" }
+    nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
+    painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel" }
+    cmd@{ shape: rect, label: "allsafe-ftp-user<br>cria, troca a senha, remove" }
+    puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
+    fim@{ shape: stadium, label: "usuário pronto no FTP" }
 
     usuario --> nginx --> painel --> cmd --> puredb --> fim

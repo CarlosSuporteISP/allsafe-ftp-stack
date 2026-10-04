@@ -10,11 +10,11 @@ Esta pasta explica a stack **como ela é hoje**: como instalar, configurar, oper
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    equip@{ shape: hex, label: "📡 Equipamento de rede<br>envia o backup" }
-    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, FTPS" }
-    puredb@{ shape: cyl, label: "🗄️ PureDB<br>usuários virtuais" }
-    dados@{ shape: lin-cyl, label: "💽 /data<br>uma pasta por usuário" }
-    fim@{ shape: stadium, label: "🏁 backup guardado" }
+    equip@{ shape: hex, label: "Equipamento de rede<br>envia o backup" }
+    ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, FTPS" }
+    puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
+    dados@{ shape: lin-cyl, label: "/data<br>uma pasta por usuário" }
+    fim@{ shape: stadium, label: "backup guardado" }
 
     equip --> ftp --> puredb --> dados --> fim
 ```

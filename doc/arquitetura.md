@@ -10,11 +10,11 @@ A stack tem três containers: o servidor FTP, o painel web que administra os usu
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    equip@{ shape: hex, label: "📡 Equipamento de rede<br>envia o backup" }
-    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, FTPS" }
-    puredb@{ shape: cyl, label: "🗄️ PureDB<br>usuários virtuais" }
-    dados@{ shape: lin-cyl, label: "💽 /data<br>uma pasta por usuário" }
-    fim@{ shape: stadium, label: "🏁 backup guardado" }
+    equip@{ shape: hex, label: "Equipamento de rede<br>envia o backup" }
+    ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, FTPS" }
+    puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
+    dados@{ shape: lin-cyl, label: "/data<br>uma pasta por usuário" }
+    fim@{ shape: stadium, label: "backup guardado" }
 
     equip --> ftp --> puredb --> dados --> fim
 ```
@@ -42,30 +42,30 @@ flowchart LR
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph USO["👤 Quem usa"]
-        operador@{ shape: person, label: "👤 Usuário<br>opera a stack" }
-        equip@{ shape: hex, label: "📡 Equipamento de rede<br>cliente FTP" }
+    subgraph USO["Quem usa"]
+        operador@{ shape: person, label: "Usuário<br>opera a stack" }
+        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
     end
-    subgraph HOST["🖥️ Host"]
-        scripts@{ shape: console, label: "⌨️ deploy.sh<br>manage-user.sh" }
-        env@{ shape: doc, label: "📄 .env<br>configuração e limites" }
-        segredo@{ shape: doc, label: "🔑 .secrets<br>senha do FTP, hash do painel" }
+    subgraph HOST["Host"]
+        scripts@{ shape: console, label: "deploy.sh<br>manage-user.sh" }
+        env@{ shape: doc, label: ".env<br>configuração e limites" }
+        segredo@{ shape: doc, label: ".secrets<br>senha do FTP, hash do painel" }
     end
-    subgraph CONTAINERS["🐳 Containers · rede allsafe-ftp-network"]
-        nginx@{ shape: rect, label: "🚦 nginx<br>allsafe-ftp-nginx, 8443/tcp" }
-        painel@{ shape: rect, label: "🖥️ Painel web<br>allsafe-ftp-painel, soquete Unix" }
-        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
-        logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
+    subgraph CONTAINERS["Containers · rede allsafe-ftp-network"]
+        nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
+        painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
+        logs@{ shape: docs, label: "log CLF<br>stdout" }
     end
-    subgraph VOLUMES["💽 Volumes"]
-        vnginx@{ shape: lin-cyl, label: "💽 DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
-        vpainel@{ shape: lin-cyl, label: "💽 DATA_DIR/painel<br>/painel, certificado e auditoria" }
-        vauth@{ shape: cyl, label: "🗄️ DATA_DIR/auth<br>/auth, PureDB" }
-        vcerts@{ shape: lin-cyl, label: "💽 DATA_DIR/certs<br>/etc/ssl/private" }
-        vdata@{ shape: lin-cyl, label: "💽 DATA_DIR/dados<br>/data" }
+    subgraph VOLUMES["Volumes"]
+        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
+        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>/painel, certificado e auditoria" }
+        vauth@{ shape: cyl, label: "DATA_DIR/auth<br>/auth, PureDB" }
+        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>/etc/ssl/private" }
+        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>/data" }
     end
-    subgraph RESULTADO["🏁 Resultado"]
-        fim@{ shape: stadium, label: "🏁 backup guardado" }
+    subgraph RESULTADO["Resultado"]
+        fim@{ shape: stadium, label: "backup guardado" }
     end
 
     operador -- "1 · ./deploy.sh" --> scripts
@@ -188,41 +188,41 @@ O que acontece entre o `./deploy.sh` e o container `healthy`.
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph OPERACAO["👤 Operação"]
-        operador@{ shape: person, label: "👤 Usuário" }
-        deploy@{ shape: console, label: "⌨️ deploy.sh<br>instala em um comando" }
+    subgraph OPERACAO["Operação"]
+        operador@{ shape: person, label: "Usuário" }
+        deploy@{ shape: console, label: "deploy.sh<br>instala em um comando" }
     end
-    subgraph HOST["🖥️ Host"]
-        env@{ shape: doc, label: "📄 .env<br>configuração e limites" }
-        segredo@{ shape: doc, label: "🔑 .secrets<br>ftp_password.txt" }
-        compose@{ shape: rect, label: "🐳 Docker Compose<br>compose.yaml" }
+    subgraph HOST["Host"]
+        env@{ shape: doc, label: ".env<br>configuração e limites" }
+        segredo@{ shape: doc, label: ".secrets<br>ftp_password.txt" }
+        compose@{ shape: rect, label: "Docker Compose<br>compose.yaml" }
     end
-    subgraph CONTAINER["🐳 Container allsafe-ftp · raiz somente leitura"]
-        entry@{ shape: rect, label: "⚙️ entrypoint<br>allsafe-ftp-entrypoint" }
-        valida@{ shape: diam, label: "❓ variáveis<br>válidas?" }
-        pw@{ shape: rect, label: "👥 pure-pw<br>cria ou atualiza o usuário" }
-        puredb@{ shape: cyl, label: "🗄️ PureDB<br>/auth/pureftpd.pdb" }
-        dados@{ shape: lin-cyl, label: "💽 /data<br>pasta do usuário" }
-        certq@{ shape: diam, label: "❓ certificado<br>existe?" }
-        gera@{ shape: rect, label: "🔏 openssl<br>autoassinado, 825 dias" }
-        cert@{ shape: doc, label: "📄 pure-ftpd.pem<br>/etc/ssl/private" }
-        pure@{ shape: rect, label: "⚙️ pure-ftpd<br>0.0.0.0, 2121" }
-        saude@{ shape: rect, label: "🩺 healthcheck<br>pidof pure-ftpd" }
+    subgraph CONTAINER["Container allsafe-ftp · raiz somente leitura"]
+        entry@{ shape: rect, label: "entrypoint<br>allsafe-ftp-entrypoint" }
+        valida@{ shape: diam, label: "variáveis<br>válidas?" }
+        pw@{ shape: rect, label: "pure-pw<br>cria ou atualiza o usuário" }
+        puredb@{ shape: cyl, label: "PureDB<br>/auth/pureftpd.pdb" }
+        dados@{ shape: lin-cyl, label: "/data<br>pasta do usuário" }
+        certq@{ shape: diam, label: "certificado<br>existe?" }
+        gera@{ shape: rect, label: "openssl<br>autoassinado, 825 dias" }
+        cert@{ shape: doc, label: "pure-ftpd.pem<br>/etc/ssl/private" }
+        pure@{ shape: rect, label: "pure-ftpd<br>0.0.0.0, 2121" }
+        saude@{ shape: rect, label: "healthcheck<br>pidof pure-ftpd" }
     end
-    subgraph RESULTADO["🏁 Resultado"]
-        pronto@{ shape: stadium, label: "🏁 FTP pronto<br>healthy" }
-        falha@{ shape: stadium, label: "⛔ FALHA no log<br>container não sobe" }
+    subgraph RESULTADO["Resultado"]
+        pronto@{ shape: stadium, label: "FTP pronto<br>healthy" }
+        falha@{ shape: stadium, label: "FALHA no log<br>container não sobe" }
     end
 
     operador -- "1 · executa" --> deploy
     deploy -- "2 · docker compose build e up -d --wait" --> compose
     compose -- "3 · inicia o container" --> entry
     entry -- "4 · confere usuário, senha, faixa e TLS" --> valida
-    valida -- "5a · ✅ sim" --> pw
-    valida -- "5b · ❌ não" --> falha
+    valida -- "5a · sim" --> pw
+    valida -- "5b · não" --> falha
     pw -- "6 · banco compilado" --> certq
-    certq -- "7a · ✅ sim: reutiliza" --> pure
-    certq -- "7b · ❌ não" --> gera
+    certq -- "7a · sim: reutiliza" --> pure
+    certq -- "7b · não" --> gera
     gera -- "8 · certificado pronto" --> pure
     pure -- "9 · conferido a cada 20 s" --> saude
     saude -- "10 · processo vivo" --> pronto

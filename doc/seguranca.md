@@ -10,13 +10,13 @@ O backup de um equipamento de rede traz senhas e a configuração inteira da red
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    equip@{ shape: hex, label: "📡 Equipamento de rede" }
-    bind@{ shape: rect, label: "🚪 Bind e firewall<br>127.0.0.1 por padrão" }
-    tls@{ shape: rect, label: "🔐 FTPS obrigatório no padrão<br>AUTH TLS, FTP_TLS_MODE=2" }
-    puredb@{ shape: cyl, label: "🗄️ PureDB<br>senha de 12 ou mais" }
-    chroot@{ shape: rect, label: "🔒 chroot<br>pasta do usuário" }
-    container@{ shape: rect, label: "🐳 Container endurecido<br>raiz somente leitura" }
-    fim@{ shape: stadium, label: "🏁 backup protegido" }
+    equip@{ shape: hex, label: "Equipamento de rede" }
+    bind@{ shape: rect, label: "Bind e firewall<br>127.0.0.1 por padrão" }
+    tls@{ shape: rect, label: "FTPS obrigatório no padrão<br>AUTH TLS, FTP_TLS_MODE=2" }
+    puredb@{ shape: cyl, label: "PureDB<br>senha de 12 ou mais" }
+    chroot@{ shape: rect, label: "chroot<br>pasta do usuário" }
+    container@{ shape: rect, label: "Container endurecido<br>raiz somente leitura" }
+    fim@{ shape: stadium, label: "backup protegido" }
 
     equip --> bind --> tls --> puredb --> chroot --> container --> fim
 ```

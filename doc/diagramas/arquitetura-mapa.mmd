@@ -1,29 +1,29 @@
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph USO["👤 Quem usa"]
-        operador@{ shape: person, label: "👤 Usuário<br>opera a stack" }
-        equip@{ shape: hex, label: "📡 Equipamento de rede<br>cliente FTP" }
+    subgraph USO["Quem usa"]
+        operador@{ shape: person, label: "Usuário<br>opera a stack" }
+        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
     end
-    subgraph HOST["🖥️ Host"]
-        scripts@{ shape: console, label: "⌨️ deploy.sh<br>manage-user.sh" }
-        env@{ shape: doc, label: "📄 .env<br>configuração e limites" }
-        segredo@{ shape: doc, label: "🔑 .secrets<br>senha do FTP, hash do painel" }
+    subgraph HOST["Host"]
+        scripts@{ shape: console, label: "deploy.sh<br>manage-user.sh" }
+        env@{ shape: doc, label: ".env<br>configuração e limites" }
+        segredo@{ shape: doc, label: ".secrets<br>senha do FTP, hash do painel" }
     end
-    subgraph CONTAINERS["🐳 Containers · rede allsafe-ftp-network"]
-        nginx@{ shape: rect, label: "🚦 nginx<br>allsafe-ftp-nginx, 8443/tcp" }
-        painel@{ shape: rect, label: "🖥️ Painel web<br>allsafe-ftp-painel, soquete Unix" }
-        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
-        logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
+    subgraph CONTAINERS["Containers · rede allsafe-ftp-network"]
+        nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
+        painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
+        logs@{ shape: docs, label: "log CLF<br>stdout" }
     end
-    subgraph VOLUMES["💽 Volumes"]
-        vnginx@{ shape: lin-cyl, label: "💽 DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
-        vpainel@{ shape: lin-cyl, label: "💽 DATA_DIR/painel<br>/painel, certificado e auditoria" }
-        vauth@{ shape: cyl, label: "🗄️ DATA_DIR/auth<br>/auth, PureDB" }
-        vcerts@{ shape: lin-cyl, label: "💽 DATA_DIR/certs<br>/etc/ssl/private" }
-        vdata@{ shape: lin-cyl, label: "💽 DATA_DIR/dados<br>/data" }
+    subgraph VOLUMES["Volumes"]
+        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
+        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>/painel, certificado e auditoria" }
+        vauth@{ shape: cyl, label: "DATA_DIR/auth<br>/auth, PureDB" }
+        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>/etc/ssl/private" }
+        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>/data" }
     end
-    subgraph RESULTADO["🏁 Resultado"]
-        fim@{ shape: stadium, label: "🏁 backup guardado" }
+    subgraph RESULTADO["Resultado"]
+        fim@{ shape: stadium, label: "backup guardado" }
     end
 
     operador -- "1 · ./deploy.sh" --> scripts

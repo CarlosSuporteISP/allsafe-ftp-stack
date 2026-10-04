@@ -1,42 +1,42 @@
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph QUEM["👤 Quem usa"]
-        usuario@{ shape: person, label: "👤 Usuário<br>navegador na rede interna" }
+    subgraph QUEM["Quem usa"]
+        usuario@{ shape: person, label: "Usuário<br>navegador na rede interna" }
     end
-    subgraph FRENTE["🚦 Frente web"]
-        nginx@{ shape: rect, label: "🚦 nginx<br>allsafe-ftp-nginx, HTTPS" }
-        rede@{ shape: diam, label: "❓ rede permitida<br>e dentro do limite?" }
+    subgraph FRENTE["Frente web"]
+        nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
+        rede@{ shape: diam, label: "rede permitida<br>e dentro do limite?" }
     end
-    subgraph ENTRADA["🚪 Entrada"]
-        painel@{ shape: rect, label: "🖥️ Painel web<br>allsafe-ftp-painel, soquete Unix" }
-        senha@{ shape: diam, label: "❓ senha<br>confere?" }
-        hash@{ shape: doc, label: "🔑 hash da senha<br>painel_password_hash" }
+    subgraph ENTRADA["Entrada"]
+        painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
+        senha@{ shape: diam, label: "senha<br>confere?" }
+        hash@{ shape: doc, label: "hash da senha<br>painel_password_hash" }
     end
-    subgraph SESSAO["🔒 Sessão"]
-        sessao@{ shape: rect, label: "🔒 sessão de 15 min<br>cookie e token CSRF" }
-        pedido@{ shape: diam, label: "❓ pedido<br>legítimo?" }
+    subgraph SESSAO["Sessão"]
+        sessao@{ shape: rect, label: "sessão de 15 min<br>cookie e token CSRF" }
+        pedido@{ shape: diam, label: "pedido<br>legítimo?" }
     end
-    subgraph USUARIOS["👥 Usuários do FTP"]
-        cmd@{ shape: rect, label: "⚙️ allsafe-ftp-user<br>pure-pw" }
-        puredb@{ shape: cyl, label: "🗄️ PureDB<br>DATA_DIR/auth" }
-        auditoria@{ shape: docs, label: "📚 auditoria.log<br>DATA_DIR/painel" }
+    subgraph USUARIOS["Usuários do FTP"]
+        cmd@{ shape: rect, label: "allsafe-ftp-user<br>pure-pw" }
+        puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
+        auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
     end
-    subgraph RESULTADO["🏁 Resultado"]
-        fim@{ shape: stadium, label: "🏁 usuário pronto no FTP" }
-        recusa@{ shape: stadium, label: "⛔ pedido recusado" }
+    subgraph RESULTADO["Resultado"]
+        fim@{ shape: stadium, label: "usuário pronto no FTP" }
+        recusa@{ shape: stadium, label: "pedido recusado" }
     end
 
     usuario -- "1 · abre https, TCP 8443" --> nginx
     nginx -- "2 · confere a origem e a taxa de pedidos" --> rede
-    rede -- "3a · ✅ sim: repassa pelo soquete Unix" --> painel
-    rede -- "3b · ❌ não: 403 ou 429" --> recusa
+    rede -- "3a · sim: repassa pelo soquete Unix" --> painel
+    rede -- "3b · não: 403 ou 429" --> recusa
     painel -- "4 · pede a senha" --> senha
     senha -. "5 · compara com o hash" .-> hash
-    senha -- "6a · ✅ sim: abre a sessão" --> sessao
-    senha -- "6b · ❌ não: 5 erros bloqueiam o endereço" --> recusa
+    senha -- "6a · sim: abre a sessão" --> sessao
+    senha -- "6b · não: 5 erros bloqueiam o endereço" --> recusa
     sessao -- "7 · envia o formulário" --> pedido
-    pedido -- "8a · ✅ sim: executa" --> cmd
-    pedido -- "8b · ❌ não: sem token CSRF ou de outra origem" --> recusa
+    pedido -- "8a · sim: executa" --> cmd
+    pedido -- "8b · não: sem token CSRF ou de outra origem" --> recusa
     cmd -- "9 · grava o usuário" --> puredb
     puredb -- "10 · vale no próximo login, sem reiniciar o FTP" --> fim
     painel -. "registra cada ação" .-> auditoria

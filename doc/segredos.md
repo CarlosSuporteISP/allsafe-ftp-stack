@@ -10,12 +10,12 @@ As senhas da stack moram na pasta `.secrets/`, que nunca vai para o Git nem para
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    deploy@{ shape: console, label: "⌨️ deploy.sh<br>gera a senha" }
-    arquivo@{ shape: doc, label: "🔑 .secrets/ftp_password.txt<br>0600, fora do Git" }
-    montagem@{ shape: rect, label: "🐳 /run/secrets/ftp_password<br>só leitura" }
-    entry@{ shape: rect, label: "⚙️ entrypoint<br>lê e apaga da memória" }
-    puredb@{ shape: cyl, label: "🗄️ PureDB<br>guarda só o hash" }
-    fim@{ shape: stadium, label: "🏁 senha fora da imagem" }
+    deploy@{ shape: console, label: "deploy.sh<br>gera a senha" }
+    arquivo@{ shape: doc, label: ".secrets/ftp_password.txt<br>0600, fora do Git" }
+    montagem@{ shape: rect, label: "/run/secrets/ftp_password<br>só leitura" }
+    entry@{ shape: rect, label: "entrypoint<br>lê e apaga da memória" }
+    puredb@{ shape: cyl, label: "PureDB<br>guarda só o hash" }
+    fim@{ shape: stadium, label: "senha fora da imagem" }
 
     deploy --> arquivo --> montagem --> entry --> puredb --> fim
 ```

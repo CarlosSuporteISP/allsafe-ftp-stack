@@ -10,12 +10,12 @@ Este guia reúne as tarefas do dia a dia: criar a conta de um equipamento novo, 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    usuario@{ shape: person, label: "👤 Usuário" }
-    manage@{ shape: console, label: "⌨️ manage-user.sh<br>add, passwd, del, list" }
-    interno@{ shape: console, label: "⌨️ allsafe-ftp-user<br>dentro do container" }
-    puredb@{ shape: cyl, label: "🗄️ PureDB<br>contas virtuais" }
-    pasta@{ shape: lin-cyl, label: "💽 /data<br>pasta do usuário" }
-    fim@{ shape: stadium, label: "🏁 conta pronta" }
+    usuario@{ shape: person, label: "Usuário" }
+    manage@{ shape: console, label: "manage-user.sh<br>add, passwd, del, list" }
+    interno@{ shape: console, label: "allsafe-ftp-user<br>dentro do container" }
+    puredb@{ shape: cyl, label: "PureDB<br>contas virtuais" }
+    pasta@{ shape: lin-cyl, label: "/data<br>pasta do usuário" }
+    fim@{ shape: stadium, label: "conta pronta" }
 
     usuario --> manage --> interno --> puredb --> pasta --> fim
 ```

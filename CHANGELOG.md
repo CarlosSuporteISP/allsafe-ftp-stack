@@ -8,6 +8,14 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.5.1] - 2026-10-04
+
+Diagramas mais leves para abrir no repositório. Nenhuma mudança no funcionamento da stack.
+
+### Alterado
+
+- **Diagramas sem emoji:** os 13 arquivos `.mmd` de `doc/diagramas/` e os blocos de diagrama dos guias e do README perderam os emojis dos nós, dos grupos e das setas; ficam a forma de cada nó, o nome real e a função. Os emojis continuam no texto da documentação e nas tabelas de sequência e de apoio, logo abaixo de cada diagrama.
+
 ## [0.5.0] - 2026-10-04
 
 nginx na frente do painel, cinco portes, base Debian 13 e opção de FTP sem TLS para equipamento antigo. **Uso só em rede privada, atrás de firewall.**

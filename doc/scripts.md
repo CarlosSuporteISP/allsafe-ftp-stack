@@ -10,12 +10,12 @@ Os scripts da stack são de dois tipos. Quatro você roda no host: um sobe o ser
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    usuario@{ shape: person, label: "👤 Usuário" }
-    host@{ shape: console, label: "⌨️ deploy.sh, manage-user.sh<br>e validate.sh, no host" }
-    compose@{ shape: rect, label: "🐳 Docker Compose" }
-    interno@{ shape: console, label: "⌨️ entrypoints e allsafe-ftp-user<br>dentro dos containers" }
-    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
-    fim@{ shape: stadium, label: "🏁 serviço operando" }
+    usuario@{ shape: person, label: "Usuário" }
+    host@{ shape: console, label: "deploy.sh, manage-user.sh<br>e validate.sh, no host" }
+    compose@{ shape: rect, label: "Docker Compose" }
+    interno@{ shape: console, label: "entrypoints e allsafe-ftp-user<br>dentro dos containers" }
+    ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+    fim@{ shape: stadium, label: "serviço operando" }
 
     usuario --> host --> compose --> interno --> ftp --> fim
 ```

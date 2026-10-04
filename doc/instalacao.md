@@ -10,11 +10,11 @@ Você roda um comando e o servidor FTP sobe sozinho, já com senha forte e conex
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    usuario@{ shape: person, label: "👤 Usuário" }
-    deploy@{ shape: console, label: "⌨️ deploy.sh<br>cria o .env, gera as senhas e sobe" }
-    stack@{ shape: rect, label: "🐳 Docker Compose<br>FTP, painel e nginx" }
-    valida@{ shape: console, label: "🧪 validate.sh<br>confere a subida" }
-    fim@{ shape: stadium, label: "🏁 FTP e painel prontos" }
+    usuario@{ shape: person, label: "Usuário" }
+    deploy@{ shape: console, label: "deploy.sh<br>cria o .env, gera as senhas e sobe" }
+    stack@{ shape: rect, label: "Docker Compose<br>FTP, painel e nginx" }
+    valida@{ shape: console, label: "validate.sh<br>confere a subida" }
+    fim@{ shape: stadium, label: "FTP e painel prontos" }
 
     usuario --> deploy --> stack --> valida --> fim
 ```

@@ -10,12 +10,12 @@ Um perfil é um tamanho pronto de servidor. São cinco, do pequeno ao estendido:
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    perfil@{ shape: doc, label: "🎚️ profiles/medium.env<br>limites do perfil" }
-    deploy@{ shape: console, label: "⌨️ deploy.sh --size medium<br>grava os limites no .env" }
-    env@{ shape: doc, label: "📄 .env<br>ambiente e limites" }
-    compose@{ shape: rect, label: "🐳 Docker Compose<br>lê só o .env" }
-    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
-    fim@{ shape: stadium, label: "🏁 limites aplicados" }
+    perfil@{ shape: doc, label: "profiles/medium.env<br>limites do perfil" }
+    deploy@{ shape: console, label: "deploy.sh --size medium<br>grava os limites no .env" }
+    env@{ shape: doc, label: ".env<br>ambiente e limites" }
+    compose@{ shape: rect, label: "Docker Compose<br>lê só o .env" }
+    ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+    fim@{ shape: stadium, label: "limites aplicados" }
 
     perfil --> deploy --> env --> compose --> ftp --> fim
 ```

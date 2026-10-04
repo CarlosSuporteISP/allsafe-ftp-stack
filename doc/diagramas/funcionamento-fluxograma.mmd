@@ -1,34 +1,34 @@
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph ORIGEM["📡 Origem"]
-        equip@{ shape: hex, label: "📡 Equipamento de rede<br>cliente FTP" }
+    subgraph ORIGEM["Origem"]
+        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
     end
-    subgraph ENTRADA["🚪 Entrada"]
-        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
-        tls@{ shape: diam, label: "❓ pediu<br>TLS?" }
-        cert@{ shape: doc, label: "📄 certificado<br>pure-ftpd.pem" }
-        logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
+    subgraph ENTRADA["Entrada"]
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+        tls@{ shape: diam, label: "pediu<br>TLS?" }
+        cert@{ shape: doc, label: "certificado<br>pure-ftpd.pem" }
+        logs@{ shape: docs, label: "log CLF<br>stdout" }
     end
-    subgraph AUTH["🔐 Autenticação"]
-        login@{ shape: diam, label: "❓ usuário e senha<br>conferem?" }
-        puredb@{ shape: cyl, label: "🗄️ PureDB<br>usuários virtuais" }
+    subgraph AUTH["Autenticação"]
+        login@{ shape: diam, label: "usuário e senha<br>conferem?" }
+        puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
     end
-    subgraph DADOS["💽 Dados"]
-        sessao@{ shape: rect, label: "🔒 sessão em chroot<br>presa na pasta" }
-        dados@{ shape: lin-cyl, label: "💽 /data<br>pasta do usuário" }
+    subgraph DADOS["Dados"]
+        sessao@{ shape: rect, label: "sessão em chroot<br>presa na pasta" }
+        dados@{ shape: lin-cyl, label: "/data<br>pasta do usuário" }
     end
-    subgraph RESULTADO["🏁 Resultado"]
-        fim@{ shape: stadium, label: "🏁 backup guardado" }
-        recusa@{ shape: stadium, label: "⛔ conexão recusada" }
+    subgraph RESULTADO["Resultado"]
+        fim@{ shape: stadium, label: "backup guardado" }
+        recusa@{ shape: stadium, label: "conexão recusada" }
     end
 
     equip -- "1 · conecta, TCP 21" --> ftp
     ftp -- "2 · exige AUTH TLS, no padrão" --> tls
-    tls -- "3a · ✅ sim: usuário e senha" --> login
-    tls -- "3b · ❌ não: recusado no padrão" --> recusa
+    tls -- "3a · sim: usuário e senha" --> login
+    tls -- "3b · não: recusado no padrão" --> recusa
     login -. "4 · consulta o usuário" .-> puredb
-    login -- "5a · ✅ sim: abre a sessão" --> sessao
-    login -- "5b · ❌ não" --> recusa
+    login -- "5a · sim: abre a sessão" --> sessao
+    login -- "5b · não" --> recusa
     sessao -- "6 · envia o arquivo, faixa passiva do perfil" --> dados
     dados -- "7 · arquivo gravado" --> fim
     ftp -. "apresenta" .-> cert
