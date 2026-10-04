@@ -81,6 +81,7 @@ LABEL org.opencontainers.image.title="AllSafe FTP" \
       org.opencontainers.image.vendor="AllSafe"
 
 COPY --chmod=0755 scripts/entrypoint.sh /usr/local/sbin/allsafe-ftp-entrypoint
+COPY --chmod=0755 scripts/ftp-saude.sh /usr/local/sbin/allsafe-ftp-saude
 
 EXPOSE 2121 30000-30049
 

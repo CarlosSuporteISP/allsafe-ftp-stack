@@ -327,4 +327,4 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 
 ---
 
-⬅️ [Operação](operacao.md) · 🏠 [Documentação](README.md) · ➡️ [Solução de problemas](solucao-de-problemas.md)
+⬅️ [Backup e restauração](backup.md) · 🏠 [Documentação](README.md) · ➡️ [Solução de problemas](solucao-de-problemas.md)

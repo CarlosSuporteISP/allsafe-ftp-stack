@@ -217,7 +217,7 @@ flowchart LR
         gera@{ shape: rect, label: "openssl<br>autoassinado, 825 dias" }
         cert@{ shape: doc, label: "pure-ftpd.pem<br>/etc/ssl/private" }
         pure@{ shape: rect, label: "pure-ftpd<br>0.0.0.0, 2121" }
-        saude@{ shape: rect, label: "healthcheck<br>pidof pure-ftpd" }
+        saude@{ shape: rect, label: "healthcheck<br>saudação na porta 2121" }
     end
     subgraph RESULTADO["Resultado"]
         pronto@{ shape: stadium, label: "FTP pronto<br>healthy" }
@@ -235,7 +235,7 @@ flowchart LR
     certq -- "7b · não" --> gera
     gera -- "8 · certificado pronto" --> pure
     pure -- "9 · conferido a cada 20 s" --> saude
-    saude -- "10 · processo vivo" --> pronto
+    saude -- "10 · servidor atende" --> pronto
     deploy -. "gera a senha se vazio, 0600" .-> segredo
     compose -. "lê" .-> env
     entry -. "lê, só leitura" .-> segredo
@@ -260,8 +260,8 @@ flowchart LR
 | 7a | certificado existe? ➜ `pure-ftpd` | Sim: reutiliza o `pure-ftpd.pem` | — | O certificado existente nunca é sobrescrito |
 | 7b | certificado existe? ➜ `openssl` | Não: gera um autoassinado | — | RSA 3072, SHA-256, 825 dias, SAN `IP:` ou `DNS:` conforme `FTP_CERT_CN` |
 | 8 | `openssl` ➜ `pure-ftpd` | Certificado pronto, `0600` | — | As variáveis de senha são apagadas (`unset`) antes do `exec` |
-| 9 | `pure-ftpd` ➜ healthcheck | Processo conferido a cada 20 s | TCP `2121` e a faixa passiva | `start_period` de 20 s, 5 tentativas |
-| 10 | healthcheck ➜ FTP pronto | Processo vivo: container `healthy` | — | Confere só o processo, não o login |
+| 9 | `pure-ftpd` ➜ healthcheck | Porta de controle conferida a cada 20 s | TCP `2121` | `start_period` de 20 s, 5 tentativas |
+| 10 | healthcheck ➜ FTP pronto | Saudação recebida: container `healthy` | — | Confere que o servidor atende, sem fazer login |
 
 **Apoio**
 
@@ -324,11 +324,11 @@ Linha final do [`entrypoint.sh`](../scripts/entrypoint.sh):
 ## 🩺 Healthcheck
 
 ```yaml
-test: ["CMD-SHELL", "pidof pure-ftpd >/dev/null"]
-interval: 20s   timeout: 5s   retries: 5   start_period: 20s
+test: ["CMD", "/usr/local/sbin/allsafe-ftp-saude"]
+interval: 20s   timeout: 6s   retries: 5   start_period: 20s
 ```
 
-Verifica apenas que o processo está vivo. Para uma checagem funcional (o usuário existe no PureDB), use `./scripts/validate.sh --runtime`: veja [Scripts](scripts.md#validate).
+Abre a porta de controle (`2121`), de dentro do container, e espera a saudação do servidor: um `pure-ftpd` vivo que não atende deixa de contar como saudável, e o container passa a `unhealthy` depois de cinco verificações seguidas sem resposta. Servidor no limite de conexões (`421`) conta como atendendo. O teste não faz login: veja [`scripts/ftp-saude.sh`](scripts.md#ftp-saude). Para conferir também o usuário no PureDB, use `./scripts/validate.sh --runtime`: veja [Scripts](scripts.md#validate).
 
 O painel tem o dele, que pede `/saude` pelo soquete Unix, do jeito que o nginx faz:
 

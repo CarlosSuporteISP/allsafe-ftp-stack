@@ -143,7 +143,7 @@ Um valor fora de `0` a `3` é recusado duas vezes: pelo [`deploy.sh`](../deploy.
 3. **Painel:** trocar a senha inicial ([Segredos](segredos.md#senha-do-painel)), reduzir `PAINEL_REDES_PERMITIDAS` à rede de administração e liberar a porta do painel no firewall só para ela. Em `PAINEL_BIND_IP=127.0.0.1` o painel só abre no próprio servidor.
 4. `fail2ban` no host lendo o log CLF do container (`docker logs allsafe-ftp`).
 5. Rever `FTP_MAX_CLIENTS` e a faixa passiva conforme o número real de equipamentos: [Perfis](perfis.md).
-6. Backup de `DATA_DIR/dados` e `DATA_DIR/auth`: [Operação](operacao.md#backup-dos-volumes).
+6. Cópia de segurança agendada e levada para fora do servidor: [Backup e restauração](backup.md#automatica).
 7. Conferir que `FTP_TLS_MODE` está em `2` ou `3`. Se um equipamento antigo exigir `0` ou `1`, siga antes [FTP sem TLS](#ftp-sem-tls).
 8. Avaliar `FTP_TLS_MODE=3`, que obriga a criptografia também do arquivo: [Configuração](configuracao.md#tls).
 9. Considerar SFTP (`allsafe-sftp-stack`) onde o equipamento suportar: canal único, sem faixa passiva.
@@ -254,7 +254,7 @@ O `pure-ftpd` sobe como `root`, aplica `chroot` e **troca** para um usuário sem
 | `SETUID` e `SETGID` | Descer para o uid e gid do usuário virtual |
 | `CHOWN` e `FOWNER` | Ajustar dono e permissão dos diretórios criados (`-j`) |
 | `DAC_OVERRIDE` e `DAC_READ_SEARCH` | Ler e gravar nos diretórios dos usuários independentemente do bit de permissão |
-| `NET_BIND_SERVICE` | Reservada; o serviço escuta em `2121` (não privilegiada), mas a capability cobre cenários com o FTP interno em porta abaixo de `1024` |
+| `NET_BIND_SERVICE` | Exigida pelo `pure-ftpd` na partida, mesmo com o serviço em `2121` (porta não privilegiada): sem ela o servidor encerra e o container não sobe |
 | `SYS_NICE` | Prioridade de I/O das transferências |
 | `AUDIT_WRITE` | Registro de login (PAM e utmp) sem erro |
 

@@ -19,7 +19,7 @@ flowchart LR
         gera@{ shape: rect, label: "openssl<br>autoassinado, 825 dias" }
         cert@{ shape: doc, label: "pure-ftpd.pem<br>/etc/ssl/private" }
         pure@{ shape: rect, label: "pure-ftpd<br>0.0.0.0, 2121" }
-        saude@{ shape: rect, label: "healthcheck<br>pidof pure-ftpd" }
+        saude@{ shape: rect, label: "healthcheck<br>saudação na porta 2121" }
     end
     subgraph RESULTADO["Resultado"]
         pronto@{ shape: stadium, label: "FTP pronto<br>healthy" }
@@ -37,7 +37,7 @@ flowchart LR
     certq -- "7b · não" --> gera
     gera -- "8 · certificado pronto" --> pure
     pure -- "9 · conferido a cada 20 s" --> saude
-    saude -- "10 · processo vivo" --> pronto
+    saude -- "10 · servidor atende" --> pronto
     deploy -. "gera a senha se vazio, 0600" .-> segredo
     compose -. "lê" .-> env
     entry -. "lê, só leitura" .-> segredo

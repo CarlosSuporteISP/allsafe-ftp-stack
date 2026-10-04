@@ -49,9 +49,10 @@ flowchart LR
 | 5 | [Segurança](seguranca.md) | Rede privada e firewall, o modo sem TLS para equipamento antigo, modelo de ameaça, superfície exposta, proteções do painel e do nginx e o endurecimento do Compose linha a linha |
 | 6 | [Segredos](segredos.md) | O que fica em `.secrets/`, quem gera cada arquivo e como trocar as senhas do FTP e do painel |
 | 7 | [Scripts](scripts.md) | O que cada script faz, parâmetros e saída esperada |
-| 8 | [Operação](operacao.md) | Usuários, certificado real, backup dos volumes, logs e atualização da imagem |
-| 9 | [Painel web](painel.md) | Abrir o painel, o que há em cada aba, usuários pelo navegador, senha, certificado, auditoria e proteções |
-| 10 | [Solução de problemas](solucao-de-problemas.md) | Sintoma, causa, como verificar e correção |
+| 8 | [Operação](operacao.md) | Usuários, certificado real, logs e atualização da imagem |
+| 9 | [Backup e restauração](backup.md) | Cópia de segurança em um comando, restauração conferida e reversível, o que guardar à parte, outro servidor e cópia agendada |
+| 10 | [Painel web](painel.md) | Abrir o painel, o que há em cada aba, usuários pelo navegador, senha, certificado, auditoria e proteções |
+| 11 | [Solução de problemas](solucao-de-problemas.md) | Sintoma, causa, como verificar e correção |
 
 ---
 
@@ -63,8 +64,9 @@ flowchart LR
 |---|---|
 | Primeira vez | [Instalação](instalacao.md) ➜ [Painel web](painel.md) ➜ [Configuração](configuracao.md) ➜ [Perfis](perfis.md) |
 | Criar a conta de um equipamento | [Painel web](painel.md#usuarios) ou [Operação](operacao.md#usuarios) |
-| Antes de produção | [Rede privada e firewall](seguranca.md#rede-privada) ➜ [Segurança](seguranca.md) ➜ [Operação](operacao.md#certificado-real-de-producao) |
+| Antes de produção | [Rede privada e firewall](seguranca.md#rede-privada) ➜ [Segurança](seguranca.md) ➜ [Operação](operacao.md#certificado-real-de-producao) ➜ [Backup e restauração](backup.md#automatica) |
 | Equipamento antigo que não fala TLS | [Equipamento sem TLS](seguranca.md#ftp-sem-tls) ➜ [Configuração](configuracao.md#tls) ➜ [Solução de problemas](solucao-de-problemas.md#ftp-sem-tls) |
+| Guardar ou recuperar os dados | [Backup e restauração](backup.md) |
 | Algo quebrou | [Solução de problemas](solucao-de-problemas.md) |
 
 ---
@@ -85,7 +87,7 @@ flowchart LR
 | Configuração | `.env`, na pasta do projeto | variáveis de ambiente |
 | Logs | driver `local` do Docker, 10 MB × 3 | `stdout` |
 
-`DATA_DIR` é uma pasta do host definida no `.env` (padrão `/home/carlos/code/data/allsafe-ftp-stack`). As cópias vão para `BACKUP_DIR` e os temporários para `TEMP_DIR`: veja [Configuração](configuracao.md#pastas-e-nomes). A stack não cria volume nomeado.
+`DATA_DIR` é uma pasta do host definida no `.env` (padrão `/home/carlos/code/data/allsafe-ftp-stack`). As cópias de segurança vão para `BACKUP_DIR` ([Backup e restauração](backup.md)) e os temporários para `TEMP_DIR`: veja [Configuração](configuracao.md#pastas-e-nomes). A stack não cria volume nomeado.
 
 ---
 
@@ -111,6 +113,7 @@ Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com o
 | [segredos-diagrama.mmd](diagramas/segredos-diagrama.mmd) | 1 | [Segredos](segredos.md) |
 | [scripts-diagrama.mmd](diagramas/scripts-diagrama.mmd) | 1 | [Scripts](scripts.md) |
 | [usuarios-diagrama.mmd](diagramas/usuarios-diagrama.mmd) | 1 | [Operação](operacao.md) |
+| [backup-diagrama.mmd](diagramas/backup-diagrama.mmd) | 1 | [Backup e restauração](backup.md) |
 | [painel-diagrama.mmd](diagramas/painel-diagrama.mmd) | 1 | [Painel web](painel.md) |
 | [painel-fluxograma.mmd](diagramas/painel-fluxograma.mmd) | 2 | [README do projeto](../README.md#como-funciona) e [Painel web](painel.md#como-decide) |
 | [diagnostico-diagrama.mmd](diagramas/diagnostico-diagrama.mmd) | 1 | [Solução de problemas](solucao-de-problemas.md) |

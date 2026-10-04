@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Usuários](#usuarios) · [Certificado real de produção](#certificado-real-de-producao) · [Backup dos volumes](#backup-dos-volumes) · [Logs](#logs) · [Atualização da imagem](#atualizacao-da-imagem) · [↩️ Voltar de versão](#voltar-de-versao) · [Inspeção rápida](#inspecao-rapida) · [Parar e remover](#parar-remover)
+[Usuários](#usuarios) · [Certificado real de produção](#certificado-real-de-producao) · [Backup dos dados](#backup-dos-volumes) · [Logs](#logs) · [Atualização da imagem](#atualizacao-da-imagem) · [↩️ Voltar de versão](#voltar-de-versao) · [Inspeção rápida](#inspecao-rapida) · [Parar e remover](#parar-remover)
 
 </details>
 
@@ -98,30 +98,19 @@ docker compose restart ftp
 
 ## ♻️ Backup dos dados
 
-Pastas a salvar: `DATA_DIR/dados` (arquivos) e `DATA_DIR/auth` (PureDB). A `DATA_DIR/certs` é reconstruível se você tiver o PEM guardado em outro lugar. A `DATA_DIR/painel` guarda o certificado do painel, que é refeito sozinho, e o `auditoria.log`: para manter o histórico, acrescente `painel` ao fim do comando. A `DATA_DIR/nginx` não entra na cópia: o soquete e a cópia do certificado que ficam nela são refeitos a cada subida. A leitura é feita por um container, porque `auth/` pertence ao `root`.
+Um comando guarda os arquivos dos equipamentos, os usuários, os certificados e a auditoria do painel em um arquivo de `BACKUP_DIR`; outro devolve a stack ao estado de uma cópia:
 
 ```bash
-DATA_DIR=/home/carlos/code/data/allsafe-ftp-stack      # o DATA_DIR do seu .env
-BACKUP_DIR=/home/carlos/code/backups/allsafe-ftp-stack # o BACKUP_DIR do seu .env
-mkdir -p "$BACKUP_DIR"
-docker run --rm --network none -v "$DATA_DIR":/origem:ro -v "$BACKUP_DIR":/destino \
-  --entrypoint tar allsafe-ftp:local czf "/destino/$(date +%Y%m%d-%H%M%S)-dados-auth.tar.gz" -C /origem dados auth
+./scripts/backup.sh                                              # grava a cópia, com a stack no ar
+./scripts/backup.sh --listar                                     # mostra as cópias que existem
+./scripts/restaurar.sh allsafe-ftp-stack-AAAAMMDD-HHMMSS.tar.gz  # volta ao estado da cópia
 ```
 
-**Resultado esperado:** um arquivo `AAAAMMDD-HHMMSS-dados-auth.tar.gz` em `BACKUP_DIR`.
+**Resultado esperado:** `Cópia gravada: <BACKUP_DIR>/allsafe-ftp-stack-AAAAMMDD-HHMMSS.tar.gz (...)` no primeiro comando e, na restauração, `Restaurado e no ar (healthy).`
 
-Restauração, com a stack parada:
+O que entra na cópia, como desfazer uma restauração, como restaurar em outro servidor e como agendar a cópia estão em [Backup e restauração](backup.md).
 
-```bash
-docker compose down
-docker run --rm --network none -v "$DATA_DIR":/destino -v "$BACKUP_DIR":/origem:ro \
-  --entrypoint tar allsafe-ftp:local xzf /origem/AAAAMMDD-HHMMSS-dados-auth.tar.gz -C /destino
-docker compose up -d
-```
-
-**Resultado esperado:** o container volta a `healthy` e os arquivos reaparecem na pasta do usuário.
-
-> ⚠️ A cópia **não** entra no repositório. Ela contém o hash das senhas (`auth/`): trate como dado sensível. Os arquivos de `.secrets/` não entram na cópia: guarde-os à parte, em um cofre de senhas.
+> ⚠️ A cópia contém o hash das senhas e as chaves privadas dos certificados: trate como dado sensível e leve-a também para fora do servidor. O `.env` e os arquivos de `.secrets/` não entram na cópia: guarde-os à parte, em um cofre de senhas.
 
 ---
 
@@ -248,4 +237,4 @@ docker compose stop                       # para sem remover
 
 ---
 
-⬅️ [Scripts](scripts.md) · 🏠 [Documentação](README.md) · ➡️ [Painel web](painel.md)
+⬅️ [Scripts](scripts.md) · 🏠 [Documentação](README.md) · ➡️ [Backup e restauração](backup.md)

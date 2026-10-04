@@ -44,7 +44,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-for programa in docker curl openssl ss sha256sum; do
+for programa in docker curl openssl ss sha256sum tar; do
   command -v "$programa" >/dev/null 2>&1 || die "$programa não encontrado no host."
 done
 docker compose version >/dev/null 2>&1 || die "plugin Docker Compose não encontrado."
@@ -157,7 +157,8 @@ proibir() { # <valor>: segredo que não pode aparecer em resultado, log nem audi
   [[ ${#valor} -ge 12 ]] && printf '%s\n' "$valor" >> "$W/proibidos"
   return 0
 }
-segredos_em() { grep -c -a -F -f "$W/proibidos" "$1" 2>/dev/null || true; }
+# Lista ainda vazia (bateria parou antes de existir segredo): o grep não imprime contagem, então a resposta é 0.
+segredos_em() { [[ -s "$W/proibidos" ]] || { echo 0; return 0; }; grep -c -a -F -f "$W/proibidos" "$1" 2>/dev/null || true; }
 
 # ------------------------------------------------------------------ auxiliares
 dc() { docker compose --env-file "$ENVA" "$@"; }
@@ -295,7 +296,7 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
   printf '%-9s %s → %s\n' "$tipo" "$resultado" "$arquivo"
 }
 declare -A ESPERADOS=(
-  [testes]="$(seq -s ' ' 1 18)"
+  [testes]="$(seq -s ' ' 1 19)"
   [seguranca]="$(seq -s ' ' 1 37)"
   [rede]="$(seq -s ' ' 1 12)"
 )
@@ -315,7 +316,7 @@ encerrar() { # grava os três arquivos, confere que nenhum segredo entrou e sai
   LIMPEZA+=" · outros containers do host: $(printf '%s\n' "$OUTROS_ANTES" | grep -c .), $([[ "$OUTROS_ANTES" == "$(outros)" ]] && echo 'os mesmos antes e depois' || echo 'a lista MUDOU durante a bateria')"
   echo
   gravar testes funcional "🧪 Resultado — bateria funcional" "Testes funcionais" \
-    "Validação estática e em execução, instalação em um comando, login, envio e download por FTPS, ciclo de usuário pelo terminal e pelo painel, reinício, abas do painel, atividade e saída"
+    "Validação estática e em execução, instalação em um comando, login, envio e download por FTPS, ciclo de usuário pelo terminal e pelo painel, reinício, healthcheck do FTP, backup e restauração, abas do painel, atividade e saída"
   gravar seguranca seguranca "🔐 Resultado — bateria de segurança" "Testes de segurança" \
     "Recusas do FTP (sem TLS, anônimo, fuga da pasta, outro usuário, \`SITE CHMOD\`), modos de TLS, containers endurecidos, segredos fora da imagem, do Git, do \`.env\` e das variáveis, recusa de IP e rede públicos, e o painel (sessão, CSRF, origem, cabeçalhos, TLS, limite de tentativas, auditoria)"
   gravar rede rede "🌐 Resultado — bateria de rede" "Testes de rede" \
@@ -346,6 +347,7 @@ preparar() { # <arquivo> <sufixo> <porta FTP> <porta do painel> <início da faix
   gravar_env "$1" FTP_NETWORK_NAME "$NOME$2-network"
   gravar_env "$1" DATA_DIR "$T/dados$2"
   gravar_env "$1" SECRETS_DIR "$T/segredos$2"
+  gravar_env "$1" BACKUP_DIR "$T/copias$2"
   gravar_env "$1" FTP_BIND_IP "$IP"
   gravar_env "$1" FTP_PUBLIC_IP "$IP"
   gravar_env "$1" FTP_PORT "$3"
@@ -716,6 +718,18 @@ de_volta="$(entrar "$J" "$W/painel.senha")"; proibir "$(awk '$6 == "__Host-sessa
 caso $? testes 8 "Reinício" "docker compose restart ftp: saída $r, saúde $(saude "$FTP")· usuário criado antes: login e download $r_l, arquivo $(cmp -s "$W/envio.bin" "$W/reinicio.bin" && echo idêntico || echo DIFERENTE) · usuário inicial: $r_i · painel reiniciado em seguida: saúde $(saude "$PAINEL" "$NGINX")· entrada $de_volta"
 achado seguranca "O limite de tentativas do painel fica na memória do processo" "Depois das 6 tentativas o endereço fica bloqueado por 15 minutos; reiniciar o painel zera a contagem (entrada com a senha certa: $de_volta). Quem reinicia o container já tem acesso ao host"
 
+# Healthcheck do FTP: mede a porta de controle. Com o servidor suspenso, o processo existe e a saúde falha.
+h_cfg="$(docker inspect -f '{{json .Config.Healthcheck.Test}}' "$FTP" 2>/dev/null)"
+docker exec "$FTP" /usr/local/sbin/allsafe-ftp-saude > /dev/null 2>&1; h_antes=$?
+docker exec "$FTP" sh -c 'kill -STOP $(pidof pure-ftpd)' > /dev/null 2>&1
+docker exec "$FTP" /usr/local/sbin/allsafe-ftp-saude > /dev/null 2>&1; h_parado=$?
+docker exec "$FTP" pidof pure-ftpd > /dev/null 2>&1; h_processo=$?
+docker exec "$FTP" sh -c 'kill -CONT $(pidof pure-ftpd)' > /dev/null 2>&1
+docker exec "$FTP" /usr/local/sbin/allsafe-ftp-saude > /dev/null 2>&1; h_depois=$?
+r="$(ftp_curl tls "$USUARIO" "$W/inicial.senha" "$F/")"
+[[ "$h_cfg" == *allsafe-ftp-saude* && "$h_antes" == 0 && "$h_parado" != 0 && "$h_processo" == 0 && "$h_depois" == 0 && "$r" == 0 ]]
+caso $? testes 19 "Healthcheck do FTP" "teste configurado: $h_cfg · servidor atendendo: saída $h_antes · servidor suspenso (kill -STOP), processo presente (pidof: $h_processo): saída $h_parado · retomado: saída $h_depois, login $r"
+
 # ================================================================== G · TLS obrigatório também nos dados
 gravar_env "$ENVA" FTP_TLS_MODE 3; dep; r=$?
 m3_claro="$(ftp_curl controle "$USUARIO" "$W/inicial.senha" -o "$W/claro3.bin" "$F/backup.cfg")"; m3_resp="$(resposta '(150|226|4|5)')"
@@ -758,10 +772,35 @@ ENV_FILE="$ENVB" ./deploy.sh --remover --apagar-dados --sim < /dev/null >> "$W/d
   && "$painel_b" == 200 && "$sub_b" == "$SUBREDE_B" && "$r_rm" == 0 && "$a_ids" == "$(ids)" && "$(saude "$FTP" "$PAINEL" "$NGINX")" == "healthy healthy healthy " ]]
 caso $? rede 8 "Duas instâncias no mesmo host" "segunda instância ($NOME-b, portas $((FTP_PORTA + 1)) e $((PAINEL_PORTA + 1)), sub-rede $sub_b): deploy.sh saída $r, saúde $saude_b· primeira: saúde $saude_a· login na segunda com a senha dela: $r_b, com a senha da primeira: $r_cruzado · usuário criado na primeira: login nela $r_a, na segunda $r_ab · painel da segunda: $painel_b · remoção da segunda: saída $r_rm, primeira com os mesmos containers: $([[ "$a_ids" == "$(ids)" ]] && echo sim || echo NÃO) (67 = login recusado)"
 
-# ================================================================== I · fora desta bateria, resultados e remoção
-if [[ -x scripts/backup.sh && -x scripts/restaurar.sh ]]; then
-  fora testes 9 "Backup e restauração" "coberto pelo teste próprio do backup"
-else
-  fora testes 9 "Backup e restauração" "sem script de backup nesta versão"
-fi
+# ================================================================== I · backup e restauração
+copias="$T/copias"
+r_e="$(ftp_curl tls equip09 "$W/u6.senha" -T "$W/envio.bin" "$F/copia.cfg")"
+ENV_FILE="$ENVA" ./scripts/backup.sh < /dev/null > "$W/backup.log" 2>&1; r_bk=$?
+copia="$(sed -n 's/^Cópia gravada: \(.*\.tar\.gz\) (.*/\1/p' "$W/backup.log")"
+modos="$(stat -c '%a' "$copias" "$copia" "$copia.sha256" 2>/dev/null | tr '\n' ' ')"
+tar -tzf "$copia" > "$W/copia.lista" 2>/dev/null
+de_fora="$(grep -c -v -E '^(dados|auth|certs|painel)(/|$)' "$W/copia.lista" || true)"
+senhas="$(tar -xzOf "$copia" 2>/dev/null | grep -c -a -F -f "$W/proibidos" || true)"
+# Depois da cópia: o arquivo é apagado, o usuário é removido e entra um usuário que a cópia não tem.
+r_dele="$(ftp_curl tls equip09 "$W/u6.senha" -Q "DELE copia.cfg" "$F/")"
+mu del equip09; r_del=$?
+nova_senha "$W/u9.senha"; mu add equip10 "$W/u9.senha"
+r_sem="$(ftp_curl tls equip09 "$W/u6.senha" "$F/")"; r_novo="$(ftp_curl tls equip10 "$W/u9.senha" "$F/")"
+# Cópia adulterada: recusada pela soma antes de qualquer alteração.
+{ cat "$copia"; printf 'x'; } > "$copias/adulterada.tar.gz" 2>/dev/null
+sed "s|$(basename "$copia")|adulterada.tar.gz|" "$copia.sha256" > "$copias/adulterada.tar.gz.sha256" 2>/dev/null
+a_ids="$(ids)"
+ENV_FILE="$ENVA" ./scripts/restaurar.sh adulterada.tar.gz --sim < /dev/null > "$W/restaurar-ruim.log" 2>&1; r_ruim=$?
+intacta="$([[ "$a_ids" == "$(ids)" && "$(saude "$FTP" "$PAINEL" "$NGINX")" == "healthy healthy healthy " && " $(usuarios_ftp)" == *" equip10 "* ]] && echo 'instância intacta' || echo 'instância ALTERADA')"
+ENV_FILE="$ENVA" ./scripts/restaurar.sh "$(basename "$copia")" --sim < /dev/null > "$W/restaurar.log" 2>&1; r_rs=$?
+saude_rs="$(saude "$FTP" "$PAINEL" "$NGINX")"
+r_l="$(ftp_curl tls equip09 "$W/u6.senha" -o "$W/copia.bin" "$F/copia.cfg")"; volta="$(sha256sum < "$W/copia.bin" 2>/dev/null | cut -c1-64)"
+r_10="$(ftp_curl tls equip10 "$W/u9.senha" "$F/")"; r_i="$(ftp_curl tls "$USUARIO" "$W/inicial.senha" "$F/")"
+de_volta="$(entrar "$J" "$W/painel.senha")"; proibir "$(awk '$6 == "__Host-sessao" {print $7}' "$J")"
+anteriores="$(find "$copias" -maxdepth 1 -name '*-antes-da-restauracao.tar.gz' 2>/dev/null | wc -l)"
+[[ "$r_e" == 0 && "$r_bk" == 0 && -s "$copia" && "$modos" == "700 600 600 " && "$de_fora" == 0 && "$senhas" == 0 \
+  && "$r_dele" == 0 && "$r_del" == 0 && "$r_sem" == 67 && "$r_novo" == 0 && "$r_ruim" == 1 && "$intacta" == 'instância intacta' \
+  && "$r_rs" == 0 && "$saude_rs" == "healthy healthy healthy " && "$r_l" == 0 && "$volta" == "$soma" && "$r_10" == 67 && "$r_i" == 0 \
+  && "$de_volta" == 303 && "$anteriores" == 1 ]]
+caso $? testes 9 "Backup e restauração" "backup.sh: saída $r_bk, $(basename "${copia:-ausente}"), $(grep -c . "$W/copia.lista") itens, modos da pasta, da cópia e da soma: $modos· itens fora de dados, auth, certs e painel: $de_fora · senhas em texto na cópia: $senhas · depois da cópia: arquivo apagado ($r_dele), usuário removido ($r_del, login $r_sem), usuário novo (login $r_novo) · cópia adulterada: saída $r_ruim, $(grep -o 'a soma sha256[^:]*não confere' "$W/restaurar-ruim.log" | sed 's| de .* não| não|' | head -1), $intacta · restaurar.sh: saída $r_rs, saúde $saude_rs· usuário da cópia: login e download $r_l, sha256 $([[ "$volta" == "$soma" ]] && echo idêntico || echo DIFERENTE) · usuário criado depois da cópia: $r_10 (67 = recusado) · usuário inicial: $r_i · painel: $de_volta · estado anterior guardado: $anteriores cópia"
 encerrar

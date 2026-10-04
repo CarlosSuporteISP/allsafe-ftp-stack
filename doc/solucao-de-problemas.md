@@ -67,6 +67,7 @@ Os três entrypoints abortam com `FALHA: <motivo>` e o container reinicia em la�
 | `FALHA: FTP_BIND_IP=… não é IP privado` (ou `FTP_PUBLIC_IP`) | Endereço fora de `127/8`, `10/8`, `172.16/12` e `192.168/16`; o container reinicia em laço | `grep -E "FTP_(BIND|PUBLIC)_IP" .env` | Use o IP **interno** do servidor. A stack não aceita `0.0.0.0` nem IP público: veja [Segurança](seguranca.md#rede-privada) |
 | `ERRO: .env ainda traz FTP_PASSWORD` (no `deploy.sh`) | `.env` de uma versão anterior, com senha | `grep -c "^FTP_PASSWORD" .env` | Grave a senha em `.secrets/ftp_password.txt` (`chmod 600`) e apague `FTP_PASSWORD` e `FTP_PASSWORD_FILE` do `.env` |
 | `bind source path does not exist` ao subir | Pasta de `DATA_DIR` ausente (o Compose não cria) | `ls "$DATA_DIR"` | Rode `./deploy.sh`, que cria `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` |
+| `allsafe-ftp` em `unhealthy`, com o container rodando e sem `FALHA` no log | O `pure-ftpd` está vivo, mas não responde na porta de controle. O Docker só sinaliza: não reinicia o container sozinho | `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; echo $?` (`0` = atendendo) | `docker compose restart ftp`. Se voltar a acontecer, colete os registros: [Ferramentas de validação](#ferramentas-de-validacao) |
 | `FALHA: a senha FTP deve ter pelo menos 12 caracteres` | Senha curta, ou arquivo vazio ou só com linha em branco | `wc -c .secrets/ftp_password.txt` | Regrave: `printf '%s' 'senha-com-12+' > .secrets/ftp_password.txt` |
 | `FALHA: FTP_USER invalido` | Nome fora de `^[a-z_][a-z0-9_-]{0,31}$` | `grep '^FTP_USER=' .env` | Use minúsculas, sem espaço nem acento; comece com letra ou `_` |
 | `FALHA: faixa passiva invalida` ou `fora dos limites` | `FTP_PASSIVE_PORT_START` ou `FTP_PASSIVE_PORT_END` não numéricos, abaixo de `1024`, acima de `65535` ou invertidos | `grep PASSIVE .env profiles/*.env` | Corrija no `.env`; mantenha o início menor ou igual ao fim |
@@ -166,11 +167,11 @@ Se o equipamento não tiver mesmo como falar TLS (confira o manual e a versão d
 ```bash
 ./scripts/validate.sh                     # bash -n dos scripts e compose config
 ./scripts/validate.sh --runtime           # também exige os três serviços running e healthy
-docker compose exec ftp pidof pure-ftpd   # o que o healthcheck testa
+docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude && echo atendendo   # o que o healthcheck testa
 ./scripts/testar.sh                       # bateria completa em instância de teste separada
 ```
 
-**Resultado esperado:** `Validacao FTP concluida.`, o número do processo do `pure-ftpd` e `Bateria aprovada: nenhum desvio.` A bateria não toca na instalação em uso; se ela passa e a sua instalação falha, a diferença está no `.env`, nos dados ou na rede do host. Veja [Scripts](scripts.md#testar).
+**Resultado esperado:** `Validacao FTP concluida.`, `atendendo` e `Bateria aprovada: nenhum desvio.` A bateria não toca na instalação em uso; se ela passa e a sua instalação falha, a diferença está no `.env`, nos dados ou na rede do host. Veja [Scripts](scripts.md#testar).
 
 Ainda travado? Colete e analise:
 

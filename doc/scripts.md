@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-Os scripts da stack são de dois tipos. Quatro você roda no host: um sobe o servidor, outro cuida dos usuários, outro troca a senha do painel e o último confere se está tudo certo. Os demais ficam dentro dos containers do FTP, do painel e do nginx e são chamados sozinhos; você não os executa direto.
+Os scripts da stack são de dois tipos. Os que você roda no host sobem o servidor, cuidam dos usuários, trocam a senha do painel, fazem e restauram a cópia de segurança e conferem se está tudo certo. Os demais ficam dentro dos containers do FTP, do painel e do nginx e são chamados sozinhos; você não os executa direto.
 
 <!-- diagrama: diagramas/scripts-diagrama.mmd -->
 ```mermaid
@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/validate.sh`](#validate) · [`scripts/testar.sh`](#testar) · [`scripts/entrypoint.sh`](#entrypoint) · [`scripts/painel-entrypoint.sh`](#painel-entrypoint) · [`scripts/nginx-entrypoint.sh`](#nginx-entrypoint) · [`scripts/nginx-saude.sh`](#nginx-saude) · [`scripts/ftp-user.sh`](#ftp-user) · [Scripts de apoio](#apoio)
+[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`scripts/testar.sh`](#testar) · [`scripts/entrypoint.sh`](#entrypoint) · [`scripts/ftp-saude.sh`](#ftp-saude) · [`scripts/painel-entrypoint.sh`](#painel-entrypoint) · [`scripts/nginx-entrypoint.sh`](#nginx-entrypoint) · [`scripts/nginx-saude.sh`](#nginx-saude) · [`scripts/ftp-user.sh`](#ftp-user) · [Scripts de apoio](#apoio)
 
 </details>
 
@@ -44,9 +44,12 @@ flowchart LR
 | [`deploy.sh`](../deploy.sh) | host | Instala, reaplica, atualiza ou remove a stack em um comando, sem perguntas |
 | [`manage-user.sh`](../manage-user.sh) | host | Atalho para criar, trocar senha, remover e listar usuários FTP |
 | [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | host | Troca a senha do painel, gravando só o hash |
+| [`scripts/backup.sh`](../scripts/backup.sh) | host | Grava a cópia de segurança de `dados/`, `auth/`, `certs/` e `painel/` em `BACKUP_DIR` |
+| [`scripts/restaurar.sh`](../scripts/restaurar.sh) | host | Devolve a stack ao estado de uma cópia, guardando antes o estado atual |
 | [`scripts/validate.sh`](../scripts/validate.sh) | host | Checagem de sintaxe, do Compose de todos os perfis e, opcionalmente, dos três serviços no ar |
 | [`scripts/testar.sh`](../scripts/testar.sh) | host | Bateria de testes funcional, de segurança e de rede, em instância de teste que o próprio script cria e remove |
 | [`scripts/entrypoint.sh`](../scripts/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado e executa o `pure-ftpd` |
+| [`scripts/ftp-saude.sh`](../scripts/ftp-saude.sh) | container | Healthcheck: abre a porta de controle e espera a saudação do servidor |
 | [`scripts/painel-entrypoint.sh`](../scripts/painel-entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel, entrega a cópia dele ao nginx e executa o painel |
 | [`scripts/nginx-entrypoint.sh`](../scripts/nginx-entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
 | [`scripts/nginx-saude.sh`](../scripts/nginx-saude.sh) | container do nginx | Healthcheck: pede `/saude` ao painel passando pelo nginx |
@@ -147,6 +150,38 @@ A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.
 
 ---
 
+<a name="backup"></a>
+
+## ♻️ `scripts/backup.sh`
+
+```bash
+./scripts/backup.sh                    # grava a cópia de dados/, auth/, certs/ e painel/ em BACKUP_DIR
+./scripts/backup.sh --rotulo <texto>   # o mesmo, com o texto no nome do arquivo
+./scripts/backup.sh --listar           # mostra as cópias que existem
+```
+
+**Resultado esperado:** `Cópia gravada: <BACKUP_DIR>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz (<tamanho>, <n> itens)`, o lembrete de que o `.env` e os segredos ficam fora da cópia e o comando para restaurá-la.
+
+A stack pode ficar no ar. A cópia sai com modo `0600` e com a soma `.sha256` ao lado; a leitura é feita por um container sem rede, com `DATA_DIR` só para leitura. Uso, conteúdo da cópia e códigos de saída: [Backup e restauração](backup.md#fazer).
+
+---
+
+<a name="restaurar"></a>
+
+## 🔁 `scripts/restaurar.sh`
+
+```bash
+./scripts/restaurar.sh <cópia>          # pede para digitar 'restaurar'
+./scripts/restaurar.sh <cópia> --sim    # sem pergunta (obrigatório quando não há terminal)
+./scripts/restaurar.sh --listar         # mostra as cópias que existem
+```
+
+**Resultado esperado:** `Restaurado e no ar (healthy).` e, na última linha, o comando para desfazer.
+
+Confere a cópia antes de alterar qualquer coisa, para a stack, guarda o estado atual em um arquivo com `antes-da-restauracao` no nome, troca o conteúdo e sobe de novo. `<cópia>` é o nome de um arquivo de `BACKUP_DIR` ou um caminho. Passos, recusas e códigos de saída: [Backup e restauração](backup.md#restaurar).
+
+---
+
 <a name="validate"></a>
 
 ## 🧪 `scripts/validate.sh`
@@ -199,7 +234,7 @@ Roda a bateria de testes da stack: funcional, de segurança e de rede. O script 
 <details>
 <summary>Detalhe técnico — a instância de teste, as variáveis e o que cada bateria cobre</summary>
 
-**Requisitos no host:** `docker` com o plugin Compose, `curl` com suporte a FTPS, `openssl`, `ss` e `sha256sum`. O caso que confere os segredos fora do Git só roda se a pasta for um repositório Git.
+**Requisitos no host:** `docker` com o plugin Compose, `curl` com suporte a FTPS, `openssl`, `ss`, `tar` e `sha256sum`. O caso que confere os segredos fora do Git só roda se a pasta for um repositório Git.
 
 **A instância de teste** usa nomes, portas, sub-rede, dados e segredos próprios:
 
@@ -212,7 +247,7 @@ Roda a bateria de testes da stack: funcional, de segurança e de rede. O script 
 | Faixa passiva | `32000` a `32019` | `TESTE_PASSIVA_INICIO` |
 | Sub-rede Docker | `172.29.2.0/29` | `TESTE_SUBNET` |
 | Segunda instância, usada no caso das duas instâncias no mesmo host | `allsafe-ftp-teste-b`, portas seguintes, `172.29.3.0/29` | `TESTE_SUBNET_B` |
-| Pasta de trabalho, dados e segredos | `TEMP_DIR/testar` | `TEMP_DIR` |
+| Pasta de trabalho, dados, segredos e cópias de segurança | `TEMP_DIR/testar` | `TEMP_DIR` |
 
 As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/testar` e somem com ela. O script recusa rodar se `TEMP_DIR/testar` já existir e não tiver sido criada por ele, e se o `.env` desta pasta usar `STACK_NAME=allsafe-ftp-teste`.
 
@@ -220,7 +255,7 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 
 | Bateria | Casos | Exemplos |
 |---|---|---|
-| Funcional | 18 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda |
+| Funcional | 19 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração |
 | Segurança | 37 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, CSRF, `Origin` e `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs e na auditoria |
 | Rede | 12 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host |
 
@@ -265,6 +300,23 @@ Quando uma validação falha, o script sai com `FALHA: <motivo>`:
 Não é falha, e o container sobe: `AVISO: FTP_TLS_MODE=0, FTP sem TLS: senhas e arquivos trafegam em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada.` (ou `FTP_TLS_MODE=1, TLS opcional: ...`). O aviso se repete a cada subida enquanto o modo estiver ligado.
 
 A correção de cada uma está em [Solução de problemas](solucao-de-problemas.md#o-container-nao-sobe). O modelo completo da subida está em [Arquitetura](arquitetura.md#subida).
+
+</details>
+
+---
+
+<a name="ftp-saude"></a>
+
+## 🩺 `scripts/ftp-saude.sh`
+
+É o healthcheck do container do FTP, instalado como `/usr/local/sbin/allsafe-ftp-saude`. Não é chamado direto: o Docker o executa a cada 20 segundos.
+
+<details>
+<summary>Detalhe técnico — o que ele confere</summary>
+
+Abre a porta de controle (`127.0.0.1:2121`, de dentro do container), espera até 4 segundos pela saudação do servidor e encerra a conexão com `QUIT`. Considera saudável a saudação `220` (pronto) e também a `421` (limite de conexões atingido: o servidor está cheio, mas atendendo). Porta fechada, ou aberta sem saudação, conta como falha: depois de cinco falhas seguidas o Docker marca o container como `unhealthy`. O teste não faz login e não usa senha.
+
+Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; echo $?` (`0` = atendendo).
 
 </details>
 
@@ -383,7 +435,7 @@ Não são executados: outros scripts os carregam com `source`.
 | Script | Função | Quem usa |
 |---|---|---|
 | [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | `ip_privado`, `cidr_privado` e `exigir_ip_privado`: aceitam só `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16` | `deploy.sh`, `testar.sh`, `entrypoint.sh`, `painel-entrypoint.sh` e `nginx-entrypoint.sh` |
-| [`scripts/ambiente.sh`](../scripts/ambiente.sh) | `env_valor <chave> [padrão]`: lê uma chave do `.env` sem executar o arquivo; a última ocorrência vale, como no Compose. `env_gravar <chave> <valor>`: troca a linha da chave ou acrescenta no fim, sem regravar quando o valor já é o pedido | `deploy.sh`, `manage-user.sh`, `painel-senha.sh`, `validate.sh` e `testar.sh` |
+| [`scripts/ambiente.sh`](../scripts/ambiente.sh) | `env_valor <chave> [padrão]`: lê uma chave do `.env` sem executar o arquivo; a última ocorrência vale, como no Compose. `env_gravar <chave> <valor>`: troca a linha da chave ou acrescenta no fim, sem regravar quando o valor já é o pedido | `deploy.sh`, `manage-user.sh`, `painel-senha.sh`, `backup.sh`, `restaurar.sh`, `validate.sh` e `testar.sh` |
 
 ---
 
