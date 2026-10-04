@@ -1,0 +1,28 @@
+flowchart LR
+    subgraph IA["🤖 IA"]
+        inicio@{ shape: stadium, label: "🚀 próximo passo<br>do PROGRESSO" }
+        ler@{ shape: rect, label: "📖 ler a seção da fase<br>e os arquivos citados" }
+        exec@{ shape: console, label: "⌨️ executar<br>os passos" }
+        portao@{ shape: diam, label: "✅ portão<br>passou?" }
+        corrige@{ shape: rect, label: "↩️ corrigir<br>ou desfazer" }
+        registra@{ shape: rect, label: "📝 registrar<br>o resultado" }
+        progresso@{ shape: doc, label: "📄 PROGRESSO.md" }
+        resultados@{ shape: docs, label: "🧪 resultados datados<br>testes, seguranca, rede" }
+        publica@{ shape: subproc, label: "🌿 commit,<br>push e PR" }
+    end
+    subgraph FIM["🏁 Resultado"]
+        fim@{ shape: stadium, label: "🏁 fase concluída<br>segue para a próxima" }
+        bloqueio@{ shape: person, label: "👤 Usuário recebe o<br>bloqueio e o que falta" }
+    end
+
+    inicio -- "1 · abrir" --> ler
+    ler -- "2 · executar" --> exec
+    exec -- "3 · validar" --> portao
+    portao -- "4a · ✅ sim" --> registra
+    registra -- "5 · publicar" --> publica
+    publica -- "6 · concluir" --> fim
+    portao -- "4b · ❌ não" --> corrige
+    corrige -- "4c · corrigido: validar de novo" --> portao
+    corrige -- "4d · persistiu: parar" --> bloqueio
+    registra -. "grava status e data" .-> progresso
+    registra -. "salva a saída dos testes" .-> resultados

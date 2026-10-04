@@ -1,0 +1,8 @@
+flowchart LR
+    env@{ shape: doc, label: "📄 .env<br>valores do ambiente" }
+    perfil@{ shape: doc, label: "🎚️ profiles/small.env<br>limites do perfil" }
+    compose@{ shape: rect, label: "🐳 Docker Compose<br>junta os dois" }
+    ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp" }
+    fim@{ shape: stadium, label: "🏁 limites aplicados" }
+
+    env --> perfil --> compose --> ftp --> fim

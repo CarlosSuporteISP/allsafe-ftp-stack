@@ -1,0 +1,31 @@
+flowchart LR
+    subgraph USO["👤 Quem usa"]
+        operador@{ shape: person, label: "👤 Usuário<br>opera a stack" }
+        equip@{ shape: hex, label: "📡 Equipamento de rede<br>cliente FTP" }
+    end
+    subgraph HOST["🖥️ Host"]
+        deploy@{ shape: console, label: "⌨️ deploy.sh<br>um comando, espera healthy" }
+        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, nome configurável" }
+        testar@{ shape: console, label: "🧪 scripts/testar.sh<br>instância isolada" }
+        backup@{ shape: console, label: "♻️ scripts/backup.sh<br>e restaurar.sh" }
+    end
+    subgraph PASTAS["💽 Pastas fixas · /home/carlos/code"]
+        dados@{ shape: lin-cyl, label: "💽 data/allsafe-ftp-stack/dados<br>/data" }
+        auth@{ shape: cyl, label: "🗄️ data/allsafe-ftp-stack/auth<br>/auth, PureDB" }
+        certs@{ shape: lin-cyl, label: "💽 data/allsafe-ftp-stack/certs<br>/etc/ssl/private" }
+        bkp@{ shape: folder, label: "♻️ backups/allsafe-ftp-stack<br>cópias datadas" }
+        tmp@{ shape: folder, label: "🧹 tmp/allsafe-ftp-stack<br>testes e coletas" }
+    end
+    subgraph RESULTADO["🏁 Resultado"]
+        fim@{ shape: stadium, label: "🏁 backup guardado<br>testado e restaurável" }
+    end
+
+    operador -- "1 · ./deploy.sh, uma execução" --> deploy
+    deploy -- "2 · sobe e espera healthy" --> ftp
+    equip -- "3 · FTPS, TCP 21 para 2121" --> ftp
+    ftp -- "4 · grava o arquivo" --> dados
+    dados -- "5 · arquivo na pasta fixa" --> fim
+    ftp -. "consulta os usuários" .-> auth
+    ftp -. "lê o certificado" .-> certs
+    backup -. "copia dados e auth" .-> bkp
+    testar -. "sobe e remove a instância de teste" .-> tmp

@@ -1,15 +1,26 @@
-# 🛠️ Operação — allsafe-ftp-stack
+# 🧰 Operação — allsafe-ftp-stack
 
 ↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
 
-Tarefas do dia a dia. Todos os comandos rodam na raiz da stack.
+## 💡 Em poucas palavras
+
+Este guia reúne as tarefas do dia a dia: criar a conta de um equipamento novo, trocar uma senha, instalar o certificado definitivo, guardar uma cópia dos arquivos, ler os registros e atualizar o servidor. Todos os comandos rodam na pasta raiz da stack.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="diagramas/usuarios-diagrama-escuro.svg">
+  <img src="diagramas/usuarios-diagrama.svg" alt="Gestão de usuários: o usuário roda o manage-user.sh, que chama o allsafe-ftp-user no container, grava a conta no PureDB e cria a pasta em /data" width="100%">
+</picture>
+
+<sub>📐 Nível 1 · Diagrama · fonte: [usuarios-diagrama.mmd](diagramas/usuarios-diagrama.mmd)</sub>
+
+**🧭 Sequência:** 👤 Usuário ➜ ⌨️ `manage-user.sh` ➜ ⌨️ `allsafe-ftp-user` ➜ 🗄️ PureDB ➜ 💽 `/data` ➜ 🏁 conta pronta
 
 ---
 
 <details>
 <summary>🧭 Sumário — clique para expandir</summary>
 
-[👤 Usuários](#usuarios) · [🔏 Certificado real de produção](#certificado-real-de-producao) · [♻️ Backup dos volumes](#backup-dos-volumes) · [📜 Logs](#logs) · [⬆️ Atualização da imagem](#atualizacao-da-imagem) · [🔍 Inspeção rápida](#inspecao-rapida) · [⏹️ Parar / remover](#parar-remover)
+[👤 Usuários](#usuarios) · [🔏 Certificado real de produção](#certificado-real-de-producao) · [♻️ Backup dos volumes](#backup-dos-volumes) · [📜 Logs](#logs) · [⬆️ Atualização da imagem](#atualizacao-da-imagem) · [🔍 Inspeção rápida](#inspecao-rapida) · [⏹️ Parar e remover](#parar-remover)
 
 </details>
 
@@ -19,26 +30,31 @@ Tarefas do dia a dia. Todos os comandos rodam na raiz da stack.
 
 ## 👤 Usuários
 
-Gestão pelo host com [`manage-user.sh`](../manage-user.sh) (encapsula o
-[`scripts/ftp-user.sh`](../scripts/ftp-user.sh) dentro do container):
+Gestão pelo host com [`manage-user.sh`](../manage-user.sh):
 
 ```bash
 ./manage-user.sh add cliente01      # cria o usuário e /data/cliente01 (pede a senha)
 ./manage-user.sh passwd cliente01   # troca a senha (pede a nova)
 ./manage-user.sh list               # lista os usuários do PureDB
-./manage-user.sh del cliente01      # remove o usuário — MANTÉM /data/cliente01
+./manage-user.sh del cliente01      # remove o usuário e MANTÉM /data/cliente01
 ```
+
+**Resultado esperado:** depois do `add`, o usuário aparece no `list` e já consegue entrar por FTPS; depois do `del`, some do `list` e a pasta continua no volume.
 
 Regras:
 
 - Nome do usuário: `^[a-z_][a-z0-9_-]{0,31}$`.
-- Senha: mínimo **12 caracteres** (recusada abaixo disso).
-- `del` **não apaga arquivos** — remova `/data/<user>` à mão se quiser.
-- As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em
-  `/auth/pureftpd.pdb` (volume `allsafe-ftp-auth`).
+- Senha: mínimo de **12 caracteres** (recusada abaixo disso).
+- `del` **não apaga arquivos**: remova `/data/<usuario>` à mão se quiser.
 
-> O usuário definido em `FTP_USER` é recriado/atualizado a cada `up`. Para
-> renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo.
+> ⚠️ O usuário definido em `FTP_USER` é recriado ou atualizado a cada subida, com a senha de `.secrets/ftp_password.txt`. Para renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo. Para trocar a senha dele, veja [🔑 Segredos](segredos.md#trocar-a-senha).
+
+<details>
+<summary>🔬 Detalhe técnico — onde a mudança é gravada</summary>
+
+O `manage-user.sh` encapsula o [`scripts/ftp-user.sh`](../scripts/ftp-user.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (volume `allsafe-ftp-auth`). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login.
+
+</details>
 
 ---
 
@@ -46,10 +62,10 @@ Regras:
 
 ## 🔏 Certificado real de produção
 
-O certificado inicial é **autoassinado** (gerado na 1ª subida). Para um real:
+O certificado inicial é **autoassinado**, gerado na primeira subida. Para instalar um real:
 
 ```bash
-# 1. Concatene chave + cadeia completa em um único PEM (chave primeiro)
+# 1. Concatene chave e cadeia completa em um único PEM (chave primeiro)
 cat privkey.pem fullchain.pem > pure-ftpd.pem
 chmod 600 pure-ftpd.pem
 
@@ -60,9 +76,12 @@ docker compose cp pure-ftpd.pem ftp:/etc/ssl/private/pure-ftpd.pem
 docker compose restart ftp
 ```
 
-- O arquivo precisa conter **chave + certificado (+ intermediárias)** no mesmo PEM, `0600`.
-- O `entrypoint.sh` só gera o autoassinado **se o arquivo não existir** — o seu não será sobrescrito.
-- Renovação: repita os passos 1–3 (ex.: via `cron` no host puxando do seu ACME).
+**Resultado esperado:** o cliente conecta sem aviso de certificado e o container volta a `healthy`.
+
+- O arquivo precisa conter **chave, certificado e intermediárias** no mesmo PEM, `0600`.
+- O [`entrypoint.sh`](../scripts/entrypoint.sh) só gera o autoassinado **se o arquivo não existir**: o seu não será sobrescrito.
+- Renovação: repita os passos 1 a 3 (por exemplo, por `cron` no host, puxando do seu cliente ACME).
+- Apague a cópia local do `pure-ftpd.pem` depois de instalar: ela contém a chave privada.
 
 ---
 
@@ -70,25 +89,30 @@ docker compose restart ftp
 
 ## ♻️ Backup dos volumes
 
-Volumes a salvar: `allsafe-ftp-data` (arquivos) e `allsafe-ftp-auth` (PureDB).
-O `allsafe-ftp-certs` é reconstruível se você tiver o PEM guardado em outro lugar.
+Volumes a salvar: `allsafe-ftp-data` (arquivos) e `allsafe-ftp-auth` (PureDB). O `allsafe-ftp-certs` é reconstruível se você tiver o PEM guardado em outro lugar.
 
 ```bash
-# Backup (tar.gz de cada volume)
+# Backup: um tar.gz de cada volume
 for v in allsafe-ftp-data allsafe-ftp-auth; do
   docker run --rm -v "$v":/src:ro -v "$PWD":/dst alpine \
     tar czf "/dst/$v-$(date +%Y%m%d).tar.gz" -C /src .
 done
+```
 
-# Restauração (com a stack parada)
+**Resultado esperado:** dois arquivos `allsafe-ftp-data-AAAAMMDD.tar.gz` e `allsafe-ftp-auth-AAAAMMDD.tar.gz` na pasta atual.
+
+Restauração, com a stack parada:
+
+```bash
 docker compose down
 docker run --rm -v allsafe-ftp-data:/dst -v "$PWD":/src alpine \
   sh -c 'cd /dst && tar xzf /src/allsafe-ftp-data-AAAAMMDD.tar.gz'
 docker compose up -d
 ```
 
-> Os arquivos de backup gerados aqui **não** entram no repositório — guarde-os
-> fora da árvore do projeto.
+**Resultado esperado:** o container volta a `healthy` e os arquivos reaparecem na pasta do usuário.
+
+> ⚠️ Os arquivos de backup gerados aqui **não** entram no repositório: guarde-os fora da árvore do projeto. O `allsafe-ftp-auth` contém o hash das senhas; trate a cópia como dado sensível.
 
 ---
 
@@ -97,12 +121,13 @@ docker compose up -d
 ## 📜 Logs
 
 ```bash
-docker compose logs -f ftp          # segue o log (acesso em formato CLF + mensagens do entrypoint)
+docker compose logs -f ftp          # segue o log (acesso em formato CLF e mensagens do entrypoint)
 docker compose logs --since 1h ftp  # última hora
 ```
 
-Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (ver [`compose.yaml`](../compose.yaml)).
-Para `fail2ban`, aponte o filtro para a saída de `docker logs allsafe-ftp`.
+**Resultado esperado:** a linha `FTP pronto em 2121/tcp; ...` da subida e uma linha CLF por transferência.
+
+Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](../compose.yaml)). Para o `fail2ban`, aponte o filtro para a saída de `docker logs allsafe-ftp`.
 
 ---
 
@@ -111,13 +136,21 @@ Para `fail2ban`, aponte o filtro para a saída de `docker logs allsafe-ftp`.
 ## ⬆️ Atualização da imagem
 
 ```bash
-docker compose build --pull        # rebase na base Debian mais recente
-docker compose up -d               # recria o container (volumes preservados)
-./scripts/validate.sh --runtime    # confere 'running' + 'healthy'
+docker compose build --pull        # refaz a imagem
+./deploy.sh --size small           # recria o container com o mesmo perfil (volumes preservados)
+./scripts/validate.sh --runtime    # confere 'running' e 'healthy'
 ```
 
-A base no [`Dockerfile`](../Dockerfile) está **pinada por digest** — para pegar
-uma base nova, atualize o digest do `FROM` e refaça o build.
+**Resultado esperado:** `Validacao FTP concluida.` e os usuários e arquivos intactos.
+
+> ⚠️ Recrie o container sempre pelo `deploy.sh` com o **mesmo perfil** da instalação. Um `docker compose up -d` puro lê só o `.env` e devolve os limites e a faixa passiva aos valores dele.
+
+<details>
+<summary>🔬 Detalhe técnico — base fixada por digest</summary>
+
+A base no [`Dockerfile`](../Dockerfile) está **fixada por digest**: o `--pull` não troca a base sozinho. Para pegar uma base nova, atualize o digest do `FROM` e refaça o build. Enquanto o `Dockerfile` não muda, o Docker reaproveita a camada de instalação dos pacotes; para reinstalá-los com a versão atual do repositório Debian, acrescente `--no-cache` ao build.
+
+</details>
 
 ---
 
@@ -132,14 +165,24 @@ docker compose exec ftp pure-pw list -f /auth/pureftpd.passwd
 docker compose exec ftp pure-pw show transfer -f /auth/pureftpd.passwd
 ```
 
+**Resultado esperado:** `running`, `healthy`, a lista de usuários e os dados do usuário `transfer` (pasta, uid e gid; a senha aparece só como hash).
+
 ---
 
 <a name="parar-remover"></a>
 
-## ⏹️ Parar / remover
+## ⏹️ Parar e remover
 
 ```bash
 docker compose stop      # para sem remover
-docker compose down      # remove container e rede, mantém volumes
+docker compose down      # remove o container e a rede, mantém os volumes
 docker compose down -v   # remove TAMBÉM os volumes (apaga tudo)
 ```
+
+**Resultado esperado:** `docker compose ps` vazio; com `-v`, `docker volume ls` não lista mais os três volumes `allsafe-ftp-*`.
+
+> ⚠️ `docker compose down -v` apaga os arquivos recebidos, os usuários e o certificado. Faça o [backup](#backup-dos-volumes) antes.
+
+---
+
+⬅️ [⌨️ Scripts](scripts.md) · 🏠 [Documentação](README.md) · ➡️ [🚨 Solução de problemas](solucao-de-problemas.md)

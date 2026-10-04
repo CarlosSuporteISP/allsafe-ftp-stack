@@ -1,0 +1,29 @@
+flowchart LR
+    subgraph USO["👤 Quem usa"]
+        operador@{ shape: person, label: "👤 Usuário<br>opera a stack" }
+        equip@{ shape: hex, label: "📡 Equipamento de rede<br>cliente FTP" }
+    end
+    subgraph HOST["🖥️ Host"]
+        deploy@{ shape: console, label: "⌨️ deploy.sh<br>para e pede edição do .env" }
+        ftp@{ shape: rect, label: "⚙️ Pure-FTPd<br>allsafe-ftp, nomes fixos" }
+        tmp@{ shape: doc, label: "🧹 /tmp<br>coleta de logs" }
+        bkp@{ shape: doc, label: "♻️ tar.gz manual<br>na pasta atual" }
+    end
+    subgraph VOLUMES["💽 Volumes nomeados · /var/lib/docker/volumes"]
+        vdata@{ shape: lin-cyl, label: "💽 allsafe-ftp-data<br>/data" }
+        vauth@{ shape: cyl, label: "🗄️ allsafe-ftp-auth<br>/auth, PureDB" }
+        vcerts@{ shape: lin-cyl, label: "💽 allsafe-ftp-certs<br>/etc/ssl/private" }
+    end
+    subgraph RESULTADO["🏁 Resultado"]
+        fim@{ shape: stadium, label: "🏁 backup guardado<br>sem teste automatizado" }
+    end
+
+    operador -- "1 · ./deploy.sh, duas execuções" --> deploy
+    deploy -- "2 · docker compose up -d --build" --> ftp
+    equip -- "3 · FTPS, TCP 21 para 2121" --> ftp
+    ftp -- "4 · grava o arquivo" --> vdata
+    vdata -- "5 · arquivo no volume" --> fim
+    ftp -. "consulta os usuários" .-> vauth
+    ftp -. "lê o certificado" .-> vcerts
+    vdata -. "cópia manual com alpine tar" .-> bkp
+    ftp -. "logs coletados à mão" .-> tmp

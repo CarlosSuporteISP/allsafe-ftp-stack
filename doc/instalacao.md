@@ -2,8 +2,18 @@
 
 ↩ [README do projeto](../README.md) · [📚 Índice da documentação](README.md)
 
-Guia passo a passo. Para a versão curta, veja a seção
-[🚀 Instalação rápida](../README.md#instalacao) do `README.md`.
+## 💡 Em poucas palavras
+
+Você copia o arquivo de configuração, informa o IP do servidor, roda um script e o servidor FTP sobe sozinho, já com senha forte e conexão criptografada. No fim, um segundo script confere se está tudo no ar. Leva poucos minutos e dá para desfazer sem perder os arquivos.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="diagramas/instalacao-diagrama-escuro.svg">
+  <img src="diagramas/instalacao-diagrama.svg" alt="Instalação: o usuário ajusta o .env, roda o deploy.sh, o Pure-FTPd sobe e o validate.sh confere a subida" width="100%">
+</picture>
+
+<sub>📐 Nível 1 · Diagrama · fonte: [instalacao-diagrama.mmd](diagramas/instalacao-diagrama.mmd)</sub>
+
+**🧭 Sequência:** 👤 Usuário ➜ 📄 `.env` ➜ ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd (`allsafe-ftp`) ➜ 🧪 `validate.sh` ➜ 🏁 FTP pronto
 
 ---
 
@@ -22,10 +32,10 @@ Guia passo a passo. Para a versão curta, veja a seção
 
 | Item | Detalhe |
 |---|---|
-| 🐳 Docker Engine + Compose v2 | `docker compose version` deve responder. |
-| 🌐 Um IP dedicado para o FTP | Não compartilhe o IP com outros serviços; o modo passivo abre 50 portas. |
-| 🔥 Firewall no host | Libere `21/tcp` e `30000-30049/tcp` **só** para as redes de gerência dos equipamentos. |
-| 🕰️ Relógio sincronizado | O certificado TLS depende de data/hora corretas (veja `../../08-time/allsafe-ntp-nts-stack/`). |
+| 🐳 Docker Engine com Docker Compose v2 ou mais novo | `docker compose version` deve responder |
+| 🌐 Um IP dedicado para o FTP | Não compartilhe o IP com outros serviços; o modo passivo abre 50 portas |
+| 🔥 Firewall no host | Libere `21/tcp` e `30000-30049/tcp` **só** para as redes de gerência dos equipamentos |
+| 🕰️ Relógio sincronizado | O certificado TLS depende de data e hora corretas (a stack `allsafe-ntp-nts-stack` cuida disso) |
 
 ---
 
@@ -37,15 +47,18 @@ Guia passo a passo. Para a versão curta, veja a seção
 cp .env.example .env
 ```
 
-Isto cria o [`.env`](../.env.example). Cada variável está explicada em
-[`configuracao.md`](configuracao.md). Os campos que **você precisa** rever:
+**Resultado esperado:** o arquivo `.env` passa a existir na raiz da stack.
+
+Cada variável está explicada em [⚙️ Configuração](configuracao.md). Os campos que **você precisa** rever:
 
 | Variável | Troque para |
 |---|---|
-| `FTP_BIND_IP` | o IP dedicado do servidor (em produção, **nunca** `127.0.0.1`). |
-| `FTP_PUBLIC_IP` | o IP que o cliente enxerga — igual ao `FTP_BIND_IP`, ou o IP público se houver NAT 1:1. |
-| `FTP_CERT_CN` | o hostname (ex.: `ftp.exemplo.com.br`) ou IP que vai no certificado. |
-| `FTP_USER` | nome do usuário inicial (padrão `transfer`). Regra: `^[a-z_][a-z0-9_-]{0,31}$`. |
+| `FTP_BIND_IP` | o IP dedicado do servidor (em produção, **nunca** `127.0.0.1`) |
+| `FTP_PUBLIC_IP` | o IP que o cliente enxerga: igual ao `FTP_BIND_IP`, ou o IP público se houver NAT 1:1 |
+| `FTP_CERT_CN` | o hostname (exemplo: `ftp.exemplo.com.br`) ou IP que vai no certificado |
+| `FTP_USER` | nome do usuário inicial (padrão `transfer`). Regra: `^[a-z_][a-z0-9_-]{0,31}$` |
+
+> 💡 Se você pular este passo, a primeira execução do `deploy.sh` cria o `.env` a partir do exemplo e para, com a mensagem `Edite <pasta>/.env e execute novamente.`
 
 ---
 
@@ -53,13 +66,13 @@ Isto cria o [`.env`](../.env.example). Cada variável está explicada em
 
 ## 2️⃣ Senha do usuário inicial
 
-Nada a fazer aqui na primeira vez: o [`deploy.sh`](../deploy.sh) **gera uma senha
-forte** (`openssl rand -base64 36`) em `.secrets/ftp_password.txt` com permissão
-`0600` se o arquivo estiver vazio/ausente. Anote-a para configurar o cliente FTP:
+Nada a fazer aqui na primeira vez: o [`deploy.sh`](../deploy.sh) **gera uma senha forte** em `.secrets/ftp_password.txt`, com permissão `0600`, se o arquivo estiver vazio ou ausente. Anote-a para configurar o cliente FTP:
 
 ```bash
-cat .secrets/ftp_password.txt      # após o primeiro deploy
+cat .secrets/ftp_password.txt      # depois do primeiro deploy
 ```
+
+**Resultado esperado:** uma linha com a senha gerada, de cerca de 48 caracteres.
 
 Para usar uma senha própria, grave-a **antes** de rodar o `deploy.sh`:
 
@@ -68,10 +81,16 @@ printf '%s' 'uma-senha-forte-de-12+-caracteres' > .secrets/ftp_password.txt
 chmod 600 .secrets/ftp_password.txt
 ```
 
-- Mínimo **12 caracteres** — o [`entrypoint.sh`](../scripts/entrypoint.sh) recusa senhas menores (a gerada tem ~48).
-- O arquivo é montado somente-leitura em `/run/.secrets/ftp_password.txt` (via `FTP_PASSWORD_FILE`).
-- Arquivos `.txt` de [`.secrets/`](segredos.md) são ignorados pelo Git.
+<details>
+<summary>🔬 Detalhe técnico — regras da senha e alternativa pelo <code>.env</code></summary>
+
+- A senha é gerada com `openssl rand -base64 36`; sem `openssl` no host, o script lê 48 caracteres de `/dev/urandom`.
+- Mínimo de **12 caracteres**: o [`entrypoint.sh`](../scripts/entrypoint.sh) recusa senhas menores.
+- O arquivo é montado somente leitura em `/run/.secrets/ftp_password.txt` (variável `FTP_PASSWORD_FILE`).
+- Arquivos `.txt` de `.secrets/` são ignorados pelo Git. Veja [🔑 Segredos](segredos.md).
 - Alternativa (não recomendada): definir `FTP_PASSWORD` direto no `.env` e deixar `FTP_PASSWORD_FILE` vazio.
+
+</details>
 
 ---
 
@@ -83,23 +102,32 @@ chmod 600 .secrets/ftp_password.txt
 ./deploy.sh --size small     # ou: medium | large (padrão: small)
 ```
 
-O [`deploy.sh`](../deploy.sh):
+**Resultado esperado:** a tabela do `docker compose ps` com o container `allsafe-ftp` em `health: starting` e, segundos depois, `healthy`. Na primeira vez aparece também `Gerada uma senha forte em .secrets/ftp_password.txt (0600). Guarde-a para o cliente FTP.`
 
-1. resolve o perfil `--size` e carrega [`profiles/<perfil>.env`](../profiles/) por cima do `.env`;
+Qual perfil usar: [🎚️ Perfis](perfis.md).
+
+<details>
+<summary>🔬 Detalhe técnico — o que o <code>deploy.sh</code> e o entrypoint fazem</summary>
+
+O [`deploy.sh`](../deploy.sh), nesta ordem:
+
+1. resolve o perfil de `--size` e confere que `profiles/<perfil>.env` existe;
 2. cria o `.env` a partir do exemplo se ele não existir (e para, pedindo revisão);
-3. roda `docker compose config --quiet` (falha cedo se o `.env` estiver inválido) — com `--check-only` para por aqui;
-4. `docker compose up -d --build`;
-5. `docker compose ps`.
-
-Qual perfil usar: [`perfis.md`](perfis.md).
+3. gera a senha em `.secrets/ftp_password.txt` se o arquivo estiver vazio;
+4. roda `docker compose --env-file .env --env-file profiles/<perfil>.env config --quiet`, que falha cedo se a configuração estiver inválida; com `--check-only` para por aqui, com `OK: perfil '<perfil>' e compose validados; nada foi alterado.`;
+5. `docker compose up -d --build`;
+6. `docker compose ps`.
 
 Na **primeira** subida o [`entrypoint.sh`](../scripts/entrypoint.sh):
 
 - cria `/data/$FTP_USER` com dono `ftpdata`;
 - grava o usuário no PureDB (`/auth/pureftpd.pdb`);
-- gera um **certificado autoassinado** RSA 3072 (825 dias) em
-  `/etc/ssl/private/pure-ftpd.pem`, com SAN de acordo com `FTP_CERT_CN` (IP ou DNS);
+- gera um **certificado autoassinado** RSA 3072, válido por 825 dias, em `/etc/ssl/private/pure-ftpd.pem`, com SAN de acordo com `FTP_CERT_CN` (IP ou DNS);
 - executa o `pure-ftpd` escutando em `:2121`.
+
+O modelo completo da subida está em [🏗️ Arquitetura](arquitetura.md#subida).
+
+</details>
 
 ---
 
@@ -108,20 +136,22 @@ Na **primeira** subida o [`entrypoint.sh`](../scripts/entrypoint.sh):
 ## 4️⃣ Validar
 
 ```bash
-./scripts/validate.sh            # sintaxe dos scripts + compose (sem subir nada)
-./scripts/validate.sh --runtime  # exige container 'running' e healthcheck 'healthy'
+./scripts/validate.sh            # sintaxe dos scripts e Compose de todos os perfis, sem subir nada
+./scripts/validate.sh --runtime  # exige o container 'running', 'healthy' e o usuário no PureDB
 ```
+
+**Resultado esperado:** `compose OK com large.env`, `compose OK com medium.env`, `compose OK com small.env` e, no fim, `Validacao FTP concluida.`
 
 Teste manual com um cliente (FTP **explícito** sobre TLS, modo passivo):
 
 ```bash
-# lftp respeita FTPS explícito por padrão
+# o lftp usa FTPS explícito por padrão
 lftp -u "$FTP_USER" -e 'set ssl:verify-certificate no; ls; bye' ftp://SEU_IP
 ```
 
-> ⚠️ Como o certificado inicial é autoassinado, o cliente vai reclamar da
-> validação até você instalar um certificado real — veja
-> [`operacao.md`](operacao.md#certificado-real-de-producao).
+**Resultado esperado:** o `lftp` pede a senha e lista a pasta do usuário, vazia na primeira vez.
+
+> ⚠️ Como o certificado inicial é autoassinado, o cliente vai reclamar da validação até você instalar um certificado real. Veja [🧰 Operação](operacao.md#certificado-real-de-producao).
 
 ---
 
@@ -134,8 +164,9 @@ docker compose down             # remove o container, mantém os volumes
 docker compose down -v          # remove TAMBÉM os volumes (apaga dados, PureDB e certificado)
 ```
 
-Os arquivos dos usuários ficam no volume `allsafe-ftp-data`; enquanto você não
-usar `-v`, nada é perdido.
+**Resultado esperado:** `docker compose ps` não lista mais o `allsafe-ftp`.
+
+Os arquivos dos usuários ficam no volume `allsafe-ftp-data`; enquanto você não usar `-v`, nada é perdido.
 
 ---
 
@@ -143,6 +174,10 @@ usar `-v`, nada é perdido.
 
 ## ⏭️ Próximos passos
 
-- Criar mais usuários: [`operacao.md`](operacao.md#usuarios).
-- Colocar em produção: [`seguranca.md`](seguranca.md) + certificado real.
+- Criar mais usuários: [🧰 Operação](operacao.md#usuarios).
+- Colocar em produção: [🔐 Segurança](seguranca.md) e o certificado real.
 - Monitoramento: a stack `allsafe-zabbix-isp-stack` acompanha o container.
+
+---
+
+⬅️ [README do projeto](../README.md) · 🏠 [Documentação](README.md) · ➡️ [⚙️ Configuração](configuracao.md)

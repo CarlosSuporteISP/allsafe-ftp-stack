@@ -1,0 +1,28 @@
+flowchart LR
+    inicio@{ shape: stadium, label: "🚀 início" }
+    feito@{ shape: subproc, label: "✅ 01 a 03 · Entregue<br>stack, perfis, documentação" }
+    f4@{ shape: subproc, label: "💽 04 · Pastas fixas<br>e instância isolada" }
+    p4@{ shape: diam, label: "✅ portão<br>04" }
+    f5@{ shape: subproc, label: "🚀 05 · Instalação<br>em um comando" }
+    p5@{ shape: diam, label: "✅ portão<br>05" }
+    f6@{ shape: subproc, label: "🧪 06 · Testes<br>automatizados" }
+    p6@{ shape: diam, label: "✅ portão<br>06" }
+    f7@{ shape: subproc, label: "♻️ 07 · Backup<br>e produção" }
+    p7@{ shape: diam, label: "✅ portão<br>07" }
+    fim@{ shape: stadium, label: "🏁 stack no padrão" }
+    volta@{ shape: rect, label: "↩️ corrigir ou<br>desfazer a fase" }
+
+    inicio -- "1 · já existe" --> feito
+    feito -- "2 · ordem do usuário" --> f4
+    f4 -- "3 · validar" --> p4
+    p4 -- "4 · ✅ passou" --> f5
+    f5 -- "5 · validar" --> p5
+    p5 -- "6 · ✅ passou" --> f6
+    f6 -- "7 · validar" --> p6
+    p6 -- "8 · ✅ passou" --> f7
+    f7 -- "9 · validar" --> p7
+    p7 -- "10 · ✅ passou" --> fim
+    p4 -- "❌ falhou" --> volta
+    p5 -- "❌ falhou" --> volta
+    p6 -- "❌ falhou" --> volta
+    p7 -- "❌ falhou" --> volta
