@@ -195,14 +195,14 @@ Confere a cópia antes de alterar qualquer coisa, para a stack, guarda o estado 
 ./scripts/validate.sh --runtime  # também exige os três serviços running e healthy e o usuário no PureDB
 ```
 
-**Resultado esperado:** `painel/servidor.py OK`, `.env.example OK: <n> variáveis, todas comentadas e no guia de configuração`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Com `--runtime`, também `servico ftp: running, healthy`, o mesmo para `painel` e `nginx`, e `usuario inicial '<usuário>' presente no PureDB`. Qualquer falha encerra com código diferente de zero.
+**Resultado esperado:** `painel OK: <n> módulos Python`, `.env.example OK: <n> variáveis, todas comentadas e no guia de configuração`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Com `--runtime`, também `servico ftp: running, healthy`, o mesmo para `painel` e `nginx`, e `usuario inicial '<usuário>' presente no PureDB`. Qualquer falha encerra com código diferente de zero.
 
 <details>
 <summary>Detalhe técnico — o que cada modo confere</summary>
 
 | Modo | Confere |
 |---|---|
-| sem parâmetro | `bash -n` em `deploy.sh`, `manage-user.sh` e nos scripts de `scripts/`, `ftp/`, `painel/`, `nginx/` e `tests/`; a sintaxe de `painel/servidor.py`, se o host tiver `python3`; no `.env.example`, que cada variável tem comentário na linha de cima e está em [Configuração](configuracao.md); `docker compose config --quiet` com `.env.example` e cada arquivo de `profiles/` |
+| sem parâmetro | `bash -n` em `deploy.sh`, `manage-user.sh` e nos scripts de `scripts/`, `ftp/`, `painel/`, `nginx/` e `tests/`; se o host tiver `python3`, a sintaxe de cada módulo de `painel/` e que todo nome usado em cada um está definido ou importado nele, sem importar nem gravar nada; no `.env.example`, que cada variável tem comentário na linha de cima e está em [Configuração](configuracao.md); `docker compose config --quiet` com `.env.example` e cada arquivo de `profiles/` |
 | `--runtime` | tudo acima, mais: os serviços `ftp`, `painel` e `nginx` em `running` e `healthy`, e `pure-pw show` do usuário inicial, lido de `FTP_USER` no `.env` |
 
 O modo `--runtime` confere a instalação do `.env` desta pasta. Para conferir outra, aponte o arquivo dela: `ENV_FILE=<arquivo> ./scripts/validate.sh --runtime`. Sem o arquivo, o script para com `ERRO: ... não há instalação para conferir.`
@@ -341,7 +341,7 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 2. Confere que `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e o `PAINEL_CERT_CN` (se for IP) são privados, ou públicos aceitos com `REDE_PERMITIR_IP_PUBLICO=sim`.
 3. Ajusta dono e modo de `/painel` (`0700`, do `root`) e gera o certificado autoassinado do painel quando ele falta, quando os endereços mudam ou quando faltam menos de 30 dias para vencer.
 4. Prepara a pasta `/nginx` (`0750`, grupo `10001`, o do nginx): copia o certificado e a chave para `/nginx/tls` e apaga o soquete da subida anterior.
-5. Executa o servidor [`painel/servidor.py`](../painel/servidor.py), que abre o soquete `/nginx/painel.sock`. O painel não abre porta de rede.
+5. Executa o servidor [`painel/servidor.py`](../painel/servidor.py), o ponto de entrada dos [módulos do painel](painel.md#modulos), que abre o soquete `/nginx/painel.sock`. O painel não abre porta de rede.
 
 **Resultado esperado:** a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; sessão de 15 min; redes permitidas: ...` no log do container.
 

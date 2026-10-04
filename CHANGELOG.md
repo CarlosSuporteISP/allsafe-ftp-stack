@@ -8,6 +8,16 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.11.1] - 2026-10-04
+
+O código do painel, que era um arquivo só, passa a ser dividido em módulos, um assunto por arquivo. Nada muda para quem usa: as mesmas telas, as mesmas respostas, a mesma auditoria. **Por padrão, uso só em rede privada, atrás de firewall.**
+
+### Alterado
+
+- **Painel em módulos:** o `painel/servidor.py` fica como ponto de entrada (servidor e modos `--hash` e `--saude`) e o restante vai para treze módulos ao lado dele: configuração, senha, sessão, auditoria, estado da stack, moldura das telas, atendimento, rotas, entrada e uma aba por arquivo. Lista em [Painel web](doc/painel.md#modulos). Os caminhos usados pelo `compose.yaml`, pelo entrypoint e pelo `scripts/painel-senha.sh` são os mesmos.
+- [`Dockerfile`](Dockerfile): o alvo `painel` copia todos os módulos de `painel/` para `/opt/painel`.
+- [`scripts/validate.sh`](scripts/validate.sh): confere a sintaxe de cada módulo do painel e que todo nome usado em cada um está definido ou importado nele; a linha de resultado passa a ser `painel OK: <n> módulos Python`.
+
 ## [0.11.0] - 2026-10-04
 
 A stack ganha uma opção para aceitar endereço público, desligada por padrão e acompanhada de alerta. Quem não ligar a opção não percebe diferença. **Por padrão, uso só em rede privada, atrás de firewall.**

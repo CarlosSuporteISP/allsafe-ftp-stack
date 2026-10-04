@@ -69,7 +69,8 @@ RUN apt-get update \
     && mkdir -p /painel /nginx /opt/painel \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --chmod=0644 painel/servidor.py VERSION /opt/painel/
+# Os módulos do painel ficam lado a lado: o servidor.py é o ponto de entrada e importa os demais.
+COPY --chmod=0644 painel/*.py VERSION /opt/painel/
 COPY --chmod=0755 painel/entrypoint.sh /usr/local/sbin/allsafe-painel-entrypoint
 
 # Sem EXPOSE: o painel não escuta em porta de rede, só no soquete Unix que o nginx abre.

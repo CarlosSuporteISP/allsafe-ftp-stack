@@ -314,7 +314,7 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 <details>
 <summary>Detalhe técnico — implementação</summary>
 
-- **Código:** [`painel/servidor.py`](../painel/servidor.py), só com a biblioteca padrão do Python 3.13 do Debian 13; a aparência está em [`web/estilo.css`](../web/estilo.css), que o nginx entrega direto, sem passar pelo painel. Não há JavaScript, fonte nem imagem externa.
+- **Código:** os módulos de [`painel/`](../painel/), só com a biblioteca padrão do Python 3.13 do Debian 13, listados [logo abaixo](#modulos); a aparência está em [`web/estilo.css`](../web/estilo.css), que o nginx entrega direto, sem passar pelo painel. Não há JavaScript, fonte nem imagem externa.
 - **Imagem:** alvo `painel` do [`Dockerfile`](../Dockerfile), sobre a mesma base do FTP (traz o `pure-pw` e o `allsafe-ftp-user`). Imagem `PAINEL_IMAGE`, container `PAINEL_CONTAINER_NAME`.
 - **Entrada do container:** [`painel/entrypoint.sh`](../painel/entrypoint.sh) recusa senha em variável, confere IP e redes privados, ajusta dono e modo de `/painel`, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
 - **Frente web:** alvo `nginx` do [`Dockerfile`](../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo). O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [Segurança](seguranca.md#painel).
@@ -327,6 +327,34 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 - **Capabilities devolvidas:** `CHOWN`, `DAC_OVERRIDE` e `FOWNER`, para criar a pasta do usuário com o dono `ftpdata` e gravar em `/auth`. Nenhuma de rede.
 - **Saúde:** `python3 /opt/painel/servidor.py --saude` pede `/saude` pelo soquete Unix. O healthcheck do nginx faz o mesmo pedido por TLS, em `127.0.0.1:8443`, e confere o caminho inteiro.
 - **Limites:** `PAINEL_MEMORY_LIMIT`, `PAINEL_CPU_LIMIT` e `PAINEL_PIDS_LIMIT`, em [Configuração](configuracao.md#painel).
+
+</details>
+
+<a name="modulos"></a>
+
+<details>
+<summary>Detalhe técnico — módulos do código</summary>
+
+O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro para `/opt/painel` na imagem. O ponto de entrada é o `servidor.py`; os outros são importados por ele.
+
+| Módulo | O que tem |
+|---|---|
+| [`servidor.py`](../painel/servidor.py) | Ponto de entrada: sobe o servidor e atende os modos `--hash` e `--saude` |
+| [`config.py`](../painel/config.py) | Caminhos, limites e a leitura das variáveis do container, com as recusas de rede e de sessão |
+| [`senha.py`](../painel/senha.py) | Hash `scrypt` da senha do painel e a conferência em tempo constante |
+| [`sessao.py`](../painel/sessao.py) | Sessões em memória, limite de tentativas de entrada e token do formulário de entrada |
+| [`auditoria.py`](../painel/auditoria.py) | Gravação e leitura do `auditoria.log` |
+| [`estado.py`](../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados) e a chamada do `allsafe-ftp-user` |
+| [`pagina.py`](../painel/pagina.py) | Moldura das telas e os textos que mais de uma aba usa |
+| [`atendimento.py`](../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF) e roteamento |
+| [`rotas.py`](../painel/rotas.py) | Tabela de método e caminho para a função que responde |
+| [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada e saída |
+| [`aba_visao_geral.py`](../painel/aba_visao_geral.py) | Aba Visão geral |
+| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação, troca de senha e remoção |
+| [`aba_seguranca.py`](../painel/aba_seguranca.py) | Aba Segurança |
+| [`aba_atividade.py`](../painel/aba_atividade.py) | Aba Atividade |
+
+Os módulos não gravam nada na imagem: a raiz do container é somente leitura e o Python roda sem gerar `.pyc`. O `./scripts/validate.sh` confere a sintaxe de todos e que nenhum usa nome que não definiu nem importou.
 
 </details>
 

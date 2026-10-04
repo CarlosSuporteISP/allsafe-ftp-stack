@@ -3,10 +3,29 @@ set -Eeuo pipefail
 root_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root_dir"
 for script in deploy.sh manage-user.sh scripts/*.sh ftp/*.sh painel/*.sh nginx/*.sh tests/*.sh tests/etapas/*.sh; do bash -n "$script"; done
-# O host não precisa de Python; se tiver, confere a sintaxe do painel sem gravar nada.
+# O host não precisa de Python; se tiver, confere os módulos do painel sem importar nem gravar nada:
+# a sintaxe de cada um e que todo nome usado está definido ou importado nele (import esquecido).
 if command -v python3 >/dev/null 2>&1; then
-  python3 -c 'import ast, sys; ast.parse(open(sys.argv[1], encoding="utf-8").read(), sys.argv[1])' painel/servidor.py
-  echo "painel/servidor.py OK"
+  python3 - painel/*.py <<'PY'
+import builtins, dis, sys
+falha = 0
+for arquivo in sys.argv[1:]:
+    codigo = compile(open(arquivo, encoding='utf-8').read(), arquivo, 'exec')
+    pilha, definidos, usados = [codigo], set(dir(builtins)) | {'__file__', '__name__'}, set()
+    while pilha:
+        atual = pilha.pop()
+        pilha += [c for c in atual.co_consts if hasattr(c, 'co_code')]
+        for i in dis.get_instructions(atual):
+            if i.opname == 'STORE_NAME':
+                definidos.add(i.argval)
+            elif i.opname in ('LOAD_GLOBAL', 'LOAD_NAME'):
+                usados.add(i.argval)
+    for nome in sorted(usados - definidos):
+        print(f'ERRO: {arquivo} usa "{nome}", que não está definido nem importado', file=sys.stderr)
+        falha = 1
+sys.exit(falha)
+PY
+  echo "painel OK: $(find painel -maxdepth 1 -name '*.py' | wc -l) módulos Python"
 fi
 # Toda variável do .env.example tem comentário na linha de cima e está explicada no guia de configuração.
 awk -v guia=doc/configuracao.md '

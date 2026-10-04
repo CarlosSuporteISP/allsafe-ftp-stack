@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.11.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.11.1-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -34,7 +34,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.11.0</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.11.1</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -413,7 +413,7 @@ flowchart LR
 
 - **Imagens:** [`Dockerfile`](Dockerfile) com três alvos sobre o mesmo `debian:trixie-slim` (Debian 13), fixado por digest: `ftp` (`pure-ftpd` e o usuário `ftpdata`, uid e gid **10000**), `painel` (o mesmo, com `python3`) e `nginx` (só `nginx` e `openssl`, com o usuário `frente`, uid e gid **10001**).
 - **Entrypoint do FTP:** [`ftp/entrypoint.sh`](ftp/entrypoint.sh) cria ou atualiza o usuário inicial, gera o certificado autoassinado na primeira subida e executa o `pure-ftpd`.
-- **Entrypoint do painel:** [`painel/entrypoint.sh`](painel/entrypoint.sh) confere a rede privada, gera o certificado do painel, prepara a pasta do nginx e executa o [`painel/servidor.py`](painel/servidor.py).
+- **Entrypoint do painel:** [`painel/entrypoint.sh`](painel/entrypoint.sh) confere a rede privada, gera o certificado do painel, prepara a pasta do nginx e executa o [`painel/servidor.py`](painel/servidor.py), o ponto de entrada dos módulos do painel.
 - **Entrypoint do nginx:** [`nginx/entrypoint.sh`](nginx/entrypoint.sh) recusa rodar como `root`, confere a rede privada, monta a configuração a partir de [`nginx/nginx.conf.modelo`](nginx/nginx.conf.modelo) e executa o `nginx`, que também entrega os arquivos estáticos de [`web/`](web/).
 
 </details>
@@ -522,7 +522,7 @@ Modelo de ameaça e o endurecimento linha a linha em [doc/seguranca.md](doc/segu
 
 | Quero | Comando | Resultado esperado |
 |---|---|---|
-| Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `painel/servidor.py OK`, `compose OK com <perfil>.env` para os cinco perfis e `Validacao FTP concluida.` |
+| Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `painel OK: <n> módulos Python`, `compose OK com <perfil>.env` para os cinco perfis e `Validacao FTP concluida.` |
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
@@ -548,7 +548,8 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`ftp/entrypoint.sh`](ftp/entrypoint.sh) | Prepara o usuário inicial e o certificado e executa o `pure-ftpd` |
 | [`ftp/saude.sh`](ftp/saude.sh) | Healthcheck do FTP: abre a porta de controle e espera a saudação do servidor |
 | [`ftp/usuario.sh`](ftp/usuario.sh) | Gestão de usuários **dentro** dos containers (chamado pelo `manage-user.sh` e pelo painel) |
-| [`painel/servidor.py`](painel/servidor.py) | Painel web: servidor em Python, só com a biblioteca padrão, atrás do nginx |
+| [`painel/servidor.py`](painel/servidor.py) | Painel web, em Python só com a biblioteca padrão, atrás do nginx: ponto de entrada, com os modos `--hash` e `--saude` |
+| [`painel/`](painel/), demais arquivos `.py` | Os outros módulos do painel, um assunto por arquivo: configuração, senha, sessão, auditoria, estado da stack, atendimento, rotas e uma aba por arquivo. Lista em [Painel web](doc/painel.md#modulos) |
 | [`painel/entrypoint.sh`](painel/entrypoint.sh) | Confere a rede privada, gera o certificado do painel e executa o servidor |
 | [`nginx/nginx.conf.modelo`](nginx/nginx.conf.modelo) | Modelo da configuração do nginx: HTTPS, redes permitidas, limites e repasse ao painel |
 | [`nginx/cabecalhos.conf`](nginx/cabecalhos.conf) | Cabeçalhos de segurança das respostas que o próprio nginx dá (páginas de erro e arquivos estáticos) |
@@ -611,7 +612,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.11.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.11.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

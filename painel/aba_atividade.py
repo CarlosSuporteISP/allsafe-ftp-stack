@@ -1,0 +1,39 @@
+"""Aba Atividade: os últimos registros da auditoria."""
+from auditoria import ler_auditoria
+from pagina import e, pagina
+
+EVENTOS = {
+    'painel_iniciado': '🚀 Painel iniciado',
+    'entrada_ok': '✅ Entrada',
+    'entrada_falha': '❌ Senha recusada',
+    'entrada_bloqueada': '⛔ Entrada bloqueada pelo limite de tentativas',
+    'saida': '🚪 Saída',
+    'usuario_criado': '👤 Usuário criado',
+    'senha_trocada': '🔑 Senha trocada',
+    'usuario_removido': '🗑️ Usuário removido',
+    'falha_comando': '⚠️ Alteração não concluída',
+    'recusa_csrf': '⛔ Envio sem token válido',
+    'recusa_origem': '⛔ Envio de outra origem',
+    'recusa_host': '⛔ Endereço não aceito',
+    'recusa_rede': '⛔ Cliente fora das redes permitidas',
+}
+
+
+def atividade(pedido, sessao, consulta, formulario, token):
+    linhas = []
+    for texto in ler_auditoria():
+        campos = texto.split(' ')
+        if len(campos) < 3:
+            continue
+        momento = campos[0][:19].replace('T', ' ')
+        ip = campos[1].partition('=')[2]
+        evento = campos[2].partition('=')[2]
+        linhas.append(f'<tr><td>{e(momento)}</td><td><code>{e(ip)}</code></td><td>{e(EVENTOS.get(evento, evento))}</td>'
+                      f'<td>{e(" ".join(campos[3:]))}</td></tr>')
+    corpo = ''.join(linhas) or '<tr><td colspan="4" class="suave">Nada registrado ainda.</td></tr>'
+    pedido.enviar(200, pagina('Atividade', f'''<h1>📜 Atividade</h1>
+<section class="cartao"><div class="rolagem"><table>
+<thead><tr><th>Quando</th><th>De onde</th><th>O que aconteceu</th><th>Detalhe</th></tr></thead>
+<tbody>{corpo}</tbody></table></div>
+<p class="suave">Últimos 300 registros do painel, do mais novo para o mais antigo. Senha e token nunca são gravados.
+As transferências dos equipamentos ficam no log do serviço FTP.</p></section>''', sessao, '/atividade'))
