@@ -8,6 +8,23 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.9.0] - 2026-10-04
+
+A variável do IP anunciado no modo passivo muda de nome: `FTP_PUBLIC_IP` vira `FTP_PASSIVE_IP`. O valor e o comportamento são os mesmos; o nome antigo sugeria IP de internet, e a stack só aceita IP privado. **Uso só em rede privada, atrás de firewall.**
+
+### Alterado
+
+- **`FTP_PUBLIC_IP` vira `FTP_PASSIVE_IP`** no [`.env.example`](.env.example), no [`compose.yaml`](compose.yaml), no FTP e no painel. É o IP que o servidor informa ao cliente no modo passivo: [Configuração](doc/configuracao.md#ftp-passive-ip).
+
+### Adicionado
+
+- **Conversão automática no [`deploy.sh`](deploy.sh):** em `.env` de instalação anterior, troca o nome da variável no mesmo ponto do arquivo, com o mesmo valor, e guarda o `.env` de antes em `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env`. A troca do nome, sozinha, não recria container; na atualização a partir de uma versão anterior, os três são recriados uma vez, porque as imagens mudam, e usuários, senhas e arquivos ficam como estavam. Com `--check-only`, só avisa.
+- Um caso na bateria funcional, que passa a 21: instalação com o nome antigo, convertida pelo `deploy.sh` sem perder o valor, a senha nem os containers.
+
+### Ao atualizar
+
+Rode `./deploy.sh` uma vez. Até ele rodar, os comandos que chamam o Compose param com `defina FTP_PASSIVE_IP no .env`.
+
 ## [0.8.2] - 2026-10-04
 
 As imagens do FTP e do painel deixam de levar dois pacotes que nada na stack usava. Nada muda para quem usa. **Uso só em rede privada, atrás de firewall.**

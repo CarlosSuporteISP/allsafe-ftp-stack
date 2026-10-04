@@ -14,7 +14,7 @@ par() { # <nº> <nome> <serviço do container> <CHAVE=valor> <texto esperado>
 }
 par 16 "Bind do FTP em todas as interfaces" ftp FTP_BIND_IP=0.0.0.0 'não é IP privado'
 par 17 "Bind do FTP em IP público" ftp FTP_BIND_IP=8.8.8.8 'não é IP privado'
-par 18 "IP anunciado público" ftp FTP_PUBLIC_IP=8.8.8.8 'não é IP privado'
+par 18 "IP anunciado público" ftp FTP_PASSIVE_IP=8.8.8.8 'não é IP privado'
 par 19 "Bind do painel fora de IP privado" painel PAINEL_BIND_IP=0.0.0.0 'não é IP privado'
 ev=" · container do nginx: $(recusa_container nginx PAINEL_REDES_PERMITIDAS=0.0.0.0/0)"
 [[ "$ev" == *'saída 1 '*'não é rede privada'* ]] || ev+=" (NÃO RECUSOU)"

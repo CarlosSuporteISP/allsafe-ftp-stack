@@ -155,7 +155,7 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS` (`small` 50 porta
 
 1. libere a nova faixa, de `30000` até o fim do perfil, em TCP, no firewall do host, só para as sub-redes de gerência;
 2. se houver NAT, garanta o mapeamento **1:1** da faixa inteira;
-3. mantenha `FTP_PUBLIC_IP` com o IP que o cliente realmente alcança.
+3. mantenha `FTP_PASSIVE_IP` com o IP que o cliente realmente alcança.
 
 **Resultado esperado:** depois do `./deploy.sh --size <perfil>`, `docker compose ps` mostra a faixa nova publicada.
 

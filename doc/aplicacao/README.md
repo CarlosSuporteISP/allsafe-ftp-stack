@@ -97,7 +97,7 @@ Nada é alterado por esta aba.
 - Rota `GET /`.
 - `No ar` é a resposta da porta de controle do serviço `ftp`, pela rede interna da stack (`ftp:2121`).
 - Usuários vêm do PureDB (`DATA_DIR/auth`); espaço, quantidade de arquivos e último envio são lidos de `DATA_DIR/dados`.
-- Servidor, porta e faixa passiva são os valores de `FTP_PUBLIC_IP`, `FTP_PORT` e `FTP_PASSIVE_PORT_*` do `.env`: veja [Configuração](../configuracao.md).
+- Servidor, porta e faixa passiva são os valores de `FTP_PASSIVE_IP`, `FTP_PORT` e `FTP_PASSIVE_PORT_*` do `.env`: veja [Configuração](../configuracao.md).
 
 </details>
 

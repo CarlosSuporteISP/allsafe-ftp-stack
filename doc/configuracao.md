@@ -45,7 +45,7 @@ Todas as variáveis vivem no `.env`, copiado de [`.env.example`](../.env.example
 TZ=America/Sao_Paulo
 DATA_DIR=/home/carlos/code/data/allsafe-ftp-stack
 FTP_BIND_IP=192.168.10.20
-FTP_PUBLIC_IP=192.168.10.20
+FTP_PASSIVE_IP=192.168.10.20
 FTP_PORT=21
 FTP_PASSIVE_PORT_START=30000
 FTP_PASSIVE_PORT_END=30049
@@ -111,7 +111,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 |---|---|---|---|
 | `FTP_BIND_IP` | IP do **host** onde a porta de controle e a faixa passiva escutam | **Só IP privado** do host; `0.0.0.0` e IP público são recusados | `127.0.0.1` |
 | `FTP_PORT` | Porta de controle publicada no host (mapeada para `2121` no container) | `1` a `65535` | `21` |
-| `FTP_PUBLIC_IP` | IP que o servidor **anuncia** ao cliente no modo passivo (resposta `PASV`): o IP **interno** pelo qual os equipamentos chegam ao servidor. Apesar do nome, não é IP de internet (nota abaixo) | **Só IP privado**, alcançável pelo cliente | `127.0.0.1` |
+| `FTP_PASSIVE_IP` | IP que o servidor **anuncia** ao cliente no modo passivo (resposta `PASV`): o IP **interno** pelo qual os equipamentos chegam ao servidor (nota abaixo) | **Só IP privado**, alcançável pelo cliente | `127.0.0.1` |
 | `FTP_PASSIVE_PORT_START` | Início da faixa de portas de dados (modo passivo) | `1024` a `65535`, menor ou igual ao fim | `30000` |
 | `FTP_PASSIVE_PORT_END` | Fim da faixa passiva. Número de portas maior ou igual a `FTP_MAX_CLIENTS` | `1024` a `65535`, maior ou igual ao início | `30049` |
 
@@ -119,9 +119,12 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 
 > ⚠️ A faixa passiva é publicada **1:1** (mesma porta no host e no container). Ao ampliá-la, ajuste também o firewall do host.
 
+<a name="ftp-passive-ip"></a>
 <a name="ftp-public-ip"></a>
 
-> **Por que `FTP_PUBLIC_IP`, se nada aqui é público?** No modo passivo, o servidor diz ao cliente em qual IP e em qual porta abrir a conexão de dados. O Pure-FTPd, dentro do container, só conhece o endereço da rede Docker, que o equipamento não alcança; por isso a stack informa a ele qual endereço anunciar (opção `-P`). O nome vem do uso mais comum dessa opção, que é servidor atrás de NAT anunciando o endereço "de fora". Nesta stack, "de fora" é só fora do container: o valor é o IP **privado** do host pelo qual os equipamentos chegam, em geral o mesmo de `FTP_BIND_IP`. Só é diferente quando existe NAT interno entre o equipamento e o servidor. IP de internet é recusado.
+> **Para que serve `FTP_PASSIVE_IP`?** No modo passivo, o servidor diz ao cliente em qual IP e em qual porta abrir a conexão de dados. O Pure-FTPd, dentro do container, só conhece o endereço da rede Docker, que o equipamento não alcança; por isso a stack informa a ele qual endereço anunciar (opção `-P`). O valor é o IP **privado** do host pelo qual os equipamentos chegam, em geral o mesmo de `FTP_BIND_IP`. Só é diferente quando existe NAT interno entre o equipamento e o servidor. IP de internet é recusado.
+
+> **Instalação anterior à `0.9.0`:** a variável se chamava `FTP_PUBLIC_IP`. O `./deploy.sh` troca o nome sozinho, mantém o valor e guarda o `.env` de antes em `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env`. Até ele rodar, os comandos que chamam o Compose param com `defina FTP_PASSIVE_IP no .env`.
 
 ---
 

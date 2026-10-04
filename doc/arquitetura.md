@@ -313,7 +313,7 @@ Linha final do [`ftp/entrypoint.sh`](../ftp/entrypoint.sh):
 | `-U 133:022` | `umask`: 133 para arquivos, 022 para diretórios |
 | `-l puredb:/auth/pureftpd.pdb` | Backend de autenticação |
 | `-p INICIO:FIM` | Faixa de portas passivas |
-| `-P <ip>` | IP anunciado no `PASV` (`FTP_PUBLIC_IP`) |
+| `-P <ip>` | IP anunciado no `PASV` (`FTP_PASSIVE_IP`) |
 | `-S 0.0.0.0,2121` | Escuta na porta 2121 (não privilegiada) |
 | `-Y <modo>` | Política TLS (`FTP_TLS_MODE`): veja [Configuração](configuracao.md#tls) |
 | `-O clf:/dev/stdout` | Log de acesso em formato CLF no `stdout` |

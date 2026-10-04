@@ -194,7 +194,7 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
   printf '%-9s %s → %s\n' "$tipo" "$resultado" "$arquivo"
 }
 declare -A ESPERADOS=(
-  [testes]="$(seq -s ' ' 1 20)"
+  [testes]="$(seq -s ' ' 1 21)"
   [seguranca]="$(seq -s ' ' 1 38)"
   [rede]="$(seq -s ' ' 1 12)"
 )
@@ -214,7 +214,7 @@ encerrar() { # grava os três arquivos, confere que nenhum segredo entrou e sai
   LIMPEZA+=" · outros containers do host: $(printf '%s\n' "$OUTROS_ANTES" | grep -c .), $([[ "$OUTROS_ANTES" == "$(outros)" ]] && echo 'os mesmos antes e depois' || echo 'a lista MUDOU durante a bateria')"
   echo
   gravar testes funcional "🧪 Resultado — bateria funcional" "Testes funcionais" \
-    "Validação estática e em execução, instalação em um comando, login, envio e download por FTPS, ciclo de usuário pelo terminal e pelo painel, reinício, healthcheck do FTP, backup e restauração, abas do painel, atividade e saída e arquivos estáticos pelo nginx"
+    "Validação estática e em execução, instalação em um comando, login, envio e download por FTPS, ciclo de usuário pelo terminal e pelo painel, reinício, healthcheck do FTP, backup e restauração, abas do painel, atividade e saída, arquivos estáticos pelo nginx e conversão do nome antigo da variável"
   gravar seguranca seguranca "🔐 Resultado — bateria de segurança" "Testes de segurança" \
     "Recusas do FTP (sem TLS, anônimo, fuga da pasta, outro usuário, \`SITE CHMOD\`), modos de TLS, containers endurecidos, segredos fora da imagem, do Git, do \`.env\` e das variáveis, recusa de IP e rede públicos, e o painel (sessão, CSRF, origem, cabeçalhos, TLS, limite de tentativas, auditoria)"
   gravar rede rede "🌐 Resultado — bateria de rede" "Testes de rede" \
@@ -246,7 +246,7 @@ preparar() { # <arquivo> <sufixo> <porta FTP> <porta do painel> <início da faix
   gravar_env "$1" SECRETS_DIR "$T/segredos$2"
   gravar_env "$1" BACKUP_DIR "$T/copias$2"
   gravar_env "$1" FTP_BIND_IP "$IP"
-  gravar_env "$1" FTP_PUBLIC_IP "$IP"
+  gravar_env "$1" FTP_PASSIVE_IP "$IP"
   gravar_env "$1" FTP_PORT "$3"
   gravar_env "$1" PAINEL_BIND_IP "$IP"
   gravar_env "$1" PAINEL_PORT "$4"

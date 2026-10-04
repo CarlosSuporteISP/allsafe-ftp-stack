@@ -14,7 +14,7 @@ if [[ "$pasv" =~ \(([0-9]+),([0-9]+),([0-9]+),([0-9]+),([0-9]+),([0-9]+)\) ]]; t
   anunciado="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}.${BASH_REMATCH[4]}"; porta_dados=$(( BASH_REMATCH[5] * 256 + BASH_REMATCH[6] ))
 fi
 [[ "$anunciado" == "$IP" && "$porta_dados" -ge "$PASSIVA" && "$porta_dados" -lt $((PASSIVA + 20)) ]]
-caso $? rede 4 "Endereço anunciado" "resposta do PASV: ${pasv:-ausente} · endereço $anunciado (FTP_PUBLIC_IP=$IP) · porta $porta_dados, dentro da faixa $PASSIVA-$((PASSIVA + 19))"
+caso $? rede 4 "Endereço anunciado" "resposta do PASV: ${pasv:-ausente} · endereço $anunciado (FTP_PASSIVE_IP=$IP) · porta $porta_dados, dentro da faixa $PASSIVA-$((PASSIVA + 19))"
 r2="$(ftp_curl tls "$USUARIO" "$W/inicial.senha" --disable-epsv "$F/")"
 [[ "$r" == 0 && "$r2" == 0 ]] && grep -q 'backup\.cfg' "$W/curl.out"
 caso $? rede 3 "Transferência em modo passivo" "envio com PASV: saída $r · listagem com PASV: saída $r2, arquivo enviado $(grep -q 'backup\.cfg' "$W/curl.out" && echo presente || echo AUSENTE) na listagem"

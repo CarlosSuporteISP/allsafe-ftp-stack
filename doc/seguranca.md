@@ -44,7 +44,7 @@ flowchart LR
 
 | Regra | O que fazer |
 |---|---|
-| IP privado | `FTP_BIND_IP`, `FTP_PUBLIC_IP` e `PAINEL_BIND_IP` só em `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` ou `127.0.0.1`. Nunca `0.0.0.0`, nunca IP público |
+| IP privado | `FTP_BIND_IP`, `FTP_PASSIVE_IP` e `PAINEL_BIND_IP` só em `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` ou `127.0.0.1`. Nunca `0.0.0.0`, nunca IP público |
 | Firewall do host | Liberar a porta de controle e a faixa passiva **só** para as redes internas que enviam backup, e a porta do painel **só** para as máquinas de quem administra; o resto é descartado |
 | Redes do painel | `PAINEL_REDES_PERMITIDAS` reduzida à rede de administração; a lista só aceita rede privada |
 | Firewall de borda | Nenhum redirecionamento de porta da internet para este host |

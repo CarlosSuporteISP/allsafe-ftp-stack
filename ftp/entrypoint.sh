@@ -12,7 +12,7 @@ secret_file=/run/secrets/ftp_password
 
 FTP_USER="${FTP_USER:-transfer}"
 FTP_BIND_IP="${FTP_BIND_IP:-127.0.0.1}"
-FTP_PUBLIC_IP="${FTP_PUBLIC_IP:-127.0.0.1}"
+FTP_PASSIVE_IP="${FTP_PASSIVE_IP:-127.0.0.1}"
 FTP_PASSIVE_PORT_START="${FTP_PASSIVE_PORT_START:-30000}"
 FTP_PASSIVE_PORT_END="${FTP_PASSIVE_PORT_END:-30049}"
 FTP_TLS_MODE="${FTP_TLS_MODE:-2}"
@@ -21,7 +21,7 @@ FTP_MAX_CLIENTS_PER_IP="${FTP_MAX_CLIENTS_PER_IP:-8}"
 password="$(tr -d '\r\n' < "$secret_file")"
 
 exigir_ip_privado FTP_BIND_IP "$FTP_BIND_IP" || exit 1
-exigir_ip_privado FTP_PUBLIC_IP "$FTP_PUBLIC_IP" || exit 1
+exigir_ip_privado FTP_PASSIVE_IP "$FTP_PASSIVE_IP" || exit 1
 
 [[ "$FTP_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || die "FTP_USER invalido"
 [[ ${#password} -ge 12 ]] || die "a senha FTP deve ter pelo menos 12 caracteres"
@@ -82,5 +82,5 @@ exec /usr/sbin/pure-ftpd \
   -I 15 -L 10000:8 -u 10000 -U 133:022 \
   -l "puredb:/auth/pureftpd.pdb" \
   -p "${FTP_PASSIVE_PORT_START}:${FTP_PASSIVE_PORT_END}" \
-  -P "$FTP_PUBLIC_IP" -S "0.0.0.0,2121" -Y "$FTP_TLS_MODE" \
+  -P "$FTP_PASSIVE_IP" -S "0.0.0.0,2121" -Y "$FTP_TLS_MODE" \
   -O clf:/dev/stdout

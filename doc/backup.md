@@ -219,7 +219,7 @@ Sem eles, a stack volta do mesmo jeito: o `./deploy.sh` cria um `.env` novo e se
 
 **Resultado esperado:** `Restaurado e no ar (healthy).`, com os usuários e os arquivos da cópia.
 
-Se o endereço do servidor mudou, ajuste `FTP_BIND_IP`, `FTP_PUBLIC_IP` e `PAINEL_BIND_IP` no `.env` antes do `./deploy.sh`: veja [Configuração](configuracao.md). O certificado do painel é refeito sozinho quando os endereços mudam; o do FTP volta o da cópia.
+Se o endereço do servidor mudou, ajuste `FTP_BIND_IP`, `FTP_PASSIVE_IP` e `PAINEL_BIND_IP` no `.env` antes do `./deploy.sh`: veja [Configuração](configuracao.md). O certificado do painel é refeito sozinho quando os endereços mudam; o do FTP volta o da cópia.
 
 ---
 

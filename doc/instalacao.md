@@ -67,7 +67,7 @@ Cada variável está explicada em [Configuração](configuracao.md). Os campos q
 | Variável | Troque para |
 |---|---|
 | `FTP_BIND_IP` | o IP **privado** dedicado do servidor (com `127.0.0.1` só o próprio servidor alcança o FTP) |
-| `FTP_PUBLIC_IP` | o IP que o cliente enxerga; normalmente igual ao `FTP_BIND_IP`. Também tem de ser privado |
+| `FTP_PASSIVE_IP` | o IP que o cliente enxerga; normalmente igual ao `FTP_BIND_IP`. Também tem de ser privado |
 | `PAINEL_BIND_IP` | o IP **privado** por onde o painel será aberto; com `127.0.0.1` ele só abre no próprio servidor |
 | `FTP_CERT_CN` | o hostname (exemplo: `ftp.exemplo.com.br`) ou IP que vai no certificado |
 | `FTP_USER` | nome do usuário inicial (padrão `transfer`). Regra: `^[a-z_][a-z0-9_-]{0,31}$` |
@@ -142,7 +142,7 @@ O [`deploy.sh`](../deploy.sh), nesta ordem:
 
 1. confere os requisitos: `docker`, o plugin `docker compose` e o serviço do Docker respondendo;
 2. confere que o servidor tem as CPUs e a memória que o perfil pede; se não tiver, para sem alterar nada;
-3. cria o `.env` a partir do exemplo (`0600`) se ele não existir, e segue;
+3. cria o `.env` a partir do exemplo (`0600`) se ele não existir, e segue; em `.env` de instalação anterior à `0.9.0`, troca `FTP_PUBLIC_IP` por `FTP_PASSIVE_IP`, depois de copiar o arquivo para `BACKUP_DIR`;
 4. recusa senha no `.env`, endereço ou rede fora de IP privado e `FTP_TLS_MODE` fora de `0` a `3`;
 5. com `--size`, grava no `.env` os valores de `profiles/<perfil>.env` e o nome do perfil em `FTP_PROFILE`; sem `--size`, o `.env` fica como está;
 6. confere que a porta do FTP, a do painel e a faixa passiva estão livres no host (as que a própria stack já publica não contam); porta ocupada para o comando com `ERRO: porta já em uso por outro programa: ...`;

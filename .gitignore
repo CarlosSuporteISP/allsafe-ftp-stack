@@ -1,6 +1,8 @@
 .env
 .secrets/*
 !.secrets/.gitkeep
+# Gerado pelo Python ao conferir a sintaxe
+__pycache__/
 *.pdf
 # Gerados no computador: os .md mostram o diagrama direto do .mmd
 *.svg

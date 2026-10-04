@@ -125,6 +125,34 @@ data_dir="$(env_valor DATA_DIR)"
 secrets_dir="$(env_valor SECRETS_DIR ./.secrets)"
 [[ "$data_dir" == /* ]] || die "DATA_DIR tem de ser um caminho absoluto em $env_file (veja o .env.example)"
 
+# Nome antigo, de instalação feita até a 0.8.2: a variável FTP_PUBLIC_IP. É convertida aqui, sem
+# perguntas: o .env é copiado antes para BACKUP_DIR. Com --check-only nada é alterado.
+env_antigo=false
+grep -q '^[[:space:]]*FTP_PUBLIC_IP=' "$env_file" && env_antigo=true
+if [[ "$env_antigo" == true ]]; then
+  if [[ "$check_only" == true ]]; then
+    echo "AVISO: esta instalação usa nomes antigos (FTP_PUBLIC_IP no .env)."
+    echo "       O ./deploy.sh sem --check-only converte sozinho; aqui nada é alterado."
+    # A validação segue com o valor que a conversão gravaria.
+    [[ -n "$(env_valor FTP_PASSIVE_IP)" ]] || export FTP_PASSIVE_IP="$(env_valor FTP_PUBLIC_IP 127.0.0.1)"
+  else
+    backup_dir="$(env_valor BACKUP_DIR)"
+    [[ "$backup_dir" == /* ]] || die "BACKUP_DIR tem de ser um caminho absoluto em $env_file: é para lá que vai a cópia do .env antes da conversão dos nomes."
+    copia_env="${backup_dir%/}/$(date +%Y%m%d-%H%M%S)-antes-da-migracao-de-nomes"
+    ( umask 077; mkdir -p "$copia_env" && cp -p -- "$env_file" "$copia_env/env" ) \
+      || die "não foi possível copiar $env_file para $copia_env; nada foi convertido."
+    anunciado="$(env_valor FTP_PASSIVE_IP "$(env_valor FTP_PUBLIC_IP 127.0.0.1)")"
+    # Gravado no mesmo arquivo, que mantém dono e modo: a linha antiga dá lugar à nova, no mesmo ponto.
+    novo_env="$(VALOR="$anunciado" awk '
+      /^[[:space:]]*FTP_PASSIVE_IP=/ { next }
+      /^[[:space:]]*FTP_PUBLIC_IP=/ { if (!feito) { print "FTP_PASSIVE_IP=" ENVIRON["VALOR"]; feito = 1 }; next }
+      { print }' "$env_file")"
+    printf '%s\n' "$novo_env" > "$env_file"
+    unset novo_env
+    echo "Convertido: FTP_PUBLIC_IP virou FTP_PASSIVE_IP em $env_file (cópia do anterior em $copia_env/env)."
+  fi
+fi
+
 compose() { docker compose --env-file "$env_file" "$@"; }
 
 if [[ "$remover" == true ]]; then
@@ -165,7 +193,7 @@ if [[ "$remover" == true ]]; then
 fi
 
 exigir_ip_privado FTP_BIND_IP "$(env_valor FTP_BIND_IP 127.0.0.1)" || exit 1
-exigir_ip_privado FTP_PUBLIC_IP "$(env_valor FTP_PUBLIC_IP 127.0.0.1)" || exit 1
+exigir_ip_privado FTP_PASSIVE_IP "${FTP_PASSIVE_IP:-$(env_valor FTP_PASSIVE_IP 127.0.0.1)}" || exit 1
 exigir_ip_privado PAINEL_BIND_IP "$(env_valor PAINEL_BIND_IP 127.0.0.1)" || exit 1
 IFS=',' read -r -a redes_painel <<< "$(env_valor PAINEL_REDES_PERMITIDAS 127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16)"
 for rede in "${redes_painel[@]}"; do

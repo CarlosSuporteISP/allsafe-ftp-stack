@@ -16,7 +16,7 @@ services:
       TZ: ${TZ:-America/Sao_Paulo}
       FTP_USER: ${FTP_USER:-transfer}
       FTP_BIND_IP: ${FTP_BIND_IP:-127.0.0.1}
-      FTP_PUBLIC_IP: ${FTP_PUBLIC_IP:-127.0.0.1}
+      FTP_PASSIVE_IP: ${FTP_PASSIVE_IP:?defina FTP_PASSIVE_IP no .env (a antiga FTP_PUBLIC_IP mudou de nome; ./deploy.sh converte sozinho)}
       FTP_PASSIVE_PORT_START: ${FTP_PASSIVE_PORT_START:-30000}
       FTP_PASSIVE_PORT_END: ${FTP_PASSIVE_PORT_END:-30049}
       FTP_MAX_CLIENTS: ${FTP_MAX_CLIENTS:-50}
@@ -118,7 +118,7 @@ services:
       FTP_USER: ${FTP_USER:-transfer}
       FTP_BIND_IP: ${FTP_BIND_IP:-127.0.0.1}
       FTP_PORT: ${FTP_PORT:-21}
-      FTP_PUBLIC_IP: ${FTP_PUBLIC_IP:-127.0.0.1}
+      FTP_PASSIVE_IP: ${FTP_PASSIVE_IP}
       FTP_TLS_MODE: ${FTP_TLS_MODE:-2}
       FTP_PASSIVE_PORT_START: ${FTP_PASSIVE_PORT_START:-30000}
       FTP_PASSIVE_PORT_END: ${FTP_PASSIVE_PORT_END:-30049}

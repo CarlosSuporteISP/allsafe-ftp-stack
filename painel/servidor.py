@@ -174,7 +174,7 @@ def configuracao():
         'ftp_usuario': amb('FTP_USER', 'transfer'),
         'ftp_bind': amb('FTP_BIND_IP', '127.0.0.1'),
         'ftp_porta': amb('FTP_PORT', '21'),
-        'ftp_anunciado': amb('FTP_PUBLIC_IP', '127.0.0.1'),
+        'ftp_anunciado': amb('FTP_PASSIVE_IP', '127.0.0.1'),
         'ftp_tls': amb('FTP_TLS_MODE', '2'),
         'ftp_passiva': f"{amb('FTP_PASSIVE_PORT_START', '30000')}–{amb('FTP_PASSIVE_PORT_END', '30049')}",
         'pasta_host': amb('PAINEL_PASTA_DADOS', 'DATA_DIR/dados').rstrip('/'),
