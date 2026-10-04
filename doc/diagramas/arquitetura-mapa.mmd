@@ -42,5 +42,5 @@ flowchart LR
     painel -. "grava certificado, administradores e auditoria" .-> vpainel
     painel -. "cria o soquete e copia o certificado" .-> vnginx
     nginx -. "lê, só leitura" .-> vnginx
-    painel -. "cria a pasta do usuário e lê os arquivos para o download" .-> vdata
+    painel -. "cria pastas e lê os arquivos para o download" .-> vdata
     ftp -. "grava cada transferência" .-> logs

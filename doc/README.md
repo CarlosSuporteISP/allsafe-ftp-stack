@@ -66,6 +66,7 @@ flowchart LR
 | Primeira vez | [Instalação](instalacao.md) ➜ [Painel web](painel.md) ➜ [Configuração](configuracao.md) ➜ [Perfis](perfis.md) |
 | Criar a conta de um equipamento | [Painel web](painel.md#usuarios) ou [Operação](operacao.md#usuarios) |
 | Baixar um backup que um equipamento enviou | [Arquivos e download](painel.md#arquivos) |
+| Criar uma pasta ou escolher a pasta de um usuário | [Usuários pelo painel](painel.md#usuarios) ➜ [Arquivos e download](painel.md#arquivos) |
 | Ver as telas do painel antes de instalar | [Fotos da aplicação](aplicacao/README.md) |
 | Antes de produção | [Rede privada e firewall](seguranca.md#rede-privada) ➜ [Segurança](seguranca.md) ➜ [Operação](operacao.md#certificado-real-de-producao) ➜ [Backup e restauração](backup.md#automatica) |
 | Equipamento antigo que não fala TLS | [Equipamento sem TLS](seguranca.md#ftp-sem-tls) ➜ [Configuração](configuracao.md#tls) ➜ [Solução de problemas](solucao-de-problemas.md#ftp-sem-tls) |

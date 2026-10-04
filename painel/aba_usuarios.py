@@ -2,9 +2,9 @@
 import secrets
 import urllib.parse
 
-from auditoria import auditar
-from config import CFG, NOME, SENHA_MAX, SENHA_MIN
-from estado import executar_usuario, uso_da_pasta, usuarios
+from auditoria import auditar, limpo
+from config import CFG, NOME, PASTA, SENHA_MAX, SENHA_MIN
+from estado import executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, uso_da_pasta, usuarios, vizinhos
 from pagina import e, pagina, quando, tamanho
 
 MENSAGENS = {
@@ -17,9 +17,18 @@ MENSAGENS = {
 def lista_usuarios(pedido, sessao, consulta, formulario, token):
     aviso = MENSAGENS.get(consulta.get('m', ''), '')
     linhas = []
-    for nome in usuarios():
-        uso = uso_da_pasta(nome)
+    cadastro = usuarios()
+    for nome, pasta in cadastro.items():
+        uso = uso_da_pasta(pasta)
         destino = urllib.parse.quote(nome)
+        if pasta:
+            celula = (f'<a href="/arquivos?pasta={urllib.parse.quote(pasta, safe="/")}" title="Abrir na aba Arquivos">'
+                      f'<code>{e(CFG["pasta_host"])}/{e(pasta)}</code></a>')
+            outros = vizinhos(cadastro, nome)
+            if outros:
+                celula += f' <span class="etiqueta" title="Também alcançada por: {e(", ".join(outros))}">dividida</span>'
+        else:
+            celula = '<span class="suave">fora da pasta dos dados</span>'
         mais = ' ou mais' if uso['parcial'] else ''
         if nome == CFG['ftp_usuario']:
             acoes = '<span class="suave">usuário inicial: a senha vem de <code>.secrets/ftp-usuario-inicial-senha.txt</code></span>'
@@ -29,7 +38,7 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
                      f'<a class="botao perigo" href="/usuarios/remover?usuario={destino}">🗑️ Remover</a>')
             marca = ''
         linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}</td>'
-                      f'<td><a href="/arquivos?pasta={destino}" title="Abrir na aba Arquivos"><code>{e(CFG["pasta_host"])}/{e(nome)}</code></a></td>'
+                      f'<td>{celula}</td>'
                       f'<td>{e(tamanho(uso["bytes"]))}{mais}</td><td>{uso["arquivos"]}{mais}</td>'
                       f'<td>{e(quando(uso["ultimo"]))}</td><td class="acoes">{acoes}</td></tr>')
     corpo = ''.join(linhas) or '<tr><td colspan="6" class="suave">Nenhum usuário ainda.</td></tr>'
@@ -39,7 +48,8 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
 <section class="cartao"><div class="rolagem"><table>
 <thead><tr><th>Usuário</th><th>Pasta no host</th><th>Uso</th><th>Arquivos</th><th>Último envio</th><th>Ações</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
-<p class="suave">Cada usuário fica preso na própria pasta. A alteração vale no próximo login, sem reiniciar o FTP.</p></section>''',
+<p class="suave">Cada usuário fica preso na pasta dele. Pasta marcada como <span class="etiqueta">dividida</span> é alcançada por
+mais de um usuário: um lê, grava e apaga os arquivos do outro. A alteração vale no próximo login, sem reiniciar o FTP.</p></section>''',
                             sessao, '/usuarios'))
 
 
@@ -74,7 +84,10 @@ e não fica guardada em lugar nenhum além do hash do FTP.</p>
 <p><a class="botao principal" href="/usuarios">Já copiei: voltar para a lista</a></p></section>''', sessao, '/usuarios'))
 
 
-def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='', codigo=200, nome=''):
+def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='', codigo=200, nome='', pasta=''):
+    if not pasta and consulta and PASTA.fullmatch(consulta.get('pasta', '')):
+        pasta = consulta['pasta']  # vindo da aba Arquivos: novo usuário nesta pasta
+    sugestoes = ''.join(f'<option value="{e(item)}">' for item in pastas_do_primeiro_nivel())
     pedido.enviar(codigo, pagina('Novo usuário', f'''<h1>➕ Novo usuário</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <form method="post" action="/usuarios/novo" autocomplete="off">
@@ -82,6 +95,14 @@ def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='
 <label for="usuario">Nome do usuário</label>
 <input id="usuario" name="usuario" required maxlength="32" pattern="[a-z_][a-z0-9_\\-]*" value="{e(nome)}" autocapitalize="none" spellcheck="false">
 <p class="suave">Letras minúsculas, números, <code>_</code> e <code>-</code>; começa com letra ou <code>_</code>; até 32 caracteres.</p>
+<label for="pasta">Pasta <span class="suave">(deixe em branco para usar o nome do usuário)</span></label>
+<input id="pasta" name="pasta" maxlength="259" list="pastas" value="{e(pasta)}" autocapitalize="none" spellcheck="false"
+ pattern="[A-Za-z0-9_][A-Za-z0-9._\\-]{{0,63}}(/[A-Za-z0-9_][A-Za-z0-9._\\-]{{0,63}}){{0,3}}">
+<datalist id="pastas">{sugestoes}</datalist>
+<p class="suave">Fica dentro de <code>{e(CFG['pasta_host'])}</code> e é criada se não existir. Até 4 níveis separados por <code>/</code>;
+letras, números, <code>_</code>, <code>-</code> e ponto; nenhum nível começa com ponto.</p>
+<p class="aviso">⚠️ Usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro.
+Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.</p>
 {campos_de_senha()}
 <button type="submit">Criar usuário</button> <a class="botao" href="/usuarios">Cancelar</a>
 </form></section>''', sessao, '/usuarios'))
@@ -91,16 +112,23 @@ def criar_usuario(pedido, sessao, consulta, formulario, token):
     nome = formulario.get('usuario', '').strip()
     if not NOME.fullmatch(nome):
         return tela_novo(pedido, sessao, erro='Nome inválido. Veja a regra abaixo do campo.', codigo=400)
+    informada = formulario.get('pasta', '').strip()
+    pasta = informada or nome
     if nome in usuarios():
-        return tela_novo(pedido, sessao, erro='Já existe um usuário com este nome.', codigo=409, nome=nome)
+        return tela_novo(pedido, sessao, erro='Já existe um usuário com este nome.', codigo=409, nome=nome, pasta=informada)
+    impedimento = impedimento_da_pasta(pasta) if PASTA.fullmatch(pasta) else 'Pasta inválida. Veja a regra abaixo do campo.'
+    if impedimento:
+        auditar(pedido.ip, 'recusa_caminho', f'admin={sessao["admin"]} caminho={limpo(pasta, 120)}')
+        return tela_novo(pedido, sessao, erro=impedimento, codigo=400, nome=nome)
     senha, gerada, erro = senha_do_formulario(formulario)
     if erro:
-        return tela_novo(pedido, sessao, erro=erro, codigo=400, nome=nome)
-    feito, mensagem = executar_usuario('add', nome, senha)
+        return tela_novo(pedido, sessao, erro=erro, codigo=400, nome=nome, pasta=informada)
+    feito, mensagem = executar_usuario('add', nome, senha, pasta)
     if not feito:
         auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=criar usuario={nome}')
-        return tela_novo(pedido, sessao, erro='Não foi possível criar: ' + mensagem, codigo=500, nome=nome)
-    auditar(pedido.ip, 'usuario_criado', f'admin={sessao["admin"]} usuario={nome} credencial={"gerada" if gerada else "informada"}')
+        return tela_novo(pedido, sessao, erro='Não foi possível criar: ' + mensagem, codigo=500, nome=nome, pasta=informada)
+    auditar(pedido.ip, 'usuario_criado',
+            f'admin={sessao["admin"]} usuario={nome} credencial={"gerada" if gerada else "informada"} pasta={pasta}')
     if gerada:
         return tela_senha_gerada(pedido, sessao, nome, senha, '✅ Usuário criado')
     return pedido.redirecionar('/usuarios?m=criado')
@@ -157,12 +185,17 @@ def tela_remover(pedido, sessao, consulta, formulario=None, token=None):
     nome = consulta.get('usuario', '')
     if not usuario_alteravel(pedido, sessao, nome):
         return
-    uso = uso_da_pasta(nome)
+    cadastro = usuarios()
+    pasta = cadastro.get(nome)
+    uso = uso_da_pasta(pasta)
+    onde = f"<code>{e(CFG['pasta_host'])}/{e(pasta)}</code>" if pasta else 'na pasta dele'
+    outros = vizinhos(cadastro, nome)
+    dividida = f'<p class="suave">Esta pasta também é alcançada por: <strong>{e(", ".join(outros))}</strong>.</p>' if outros else ''
     pedido.enviar(200, pagina('Remover usuário', f'''<h1>🗑️ Remover usuário</h1>
 <section class="cartao estreito">
 <p>Remover <strong>{e(nome)}</strong>? O login deixa de funcionar na hora.</p>
 <p class="aviso">📁 Os arquivos <strong>não são apagados</strong>: {uso['arquivos']} arquivo(s), {e(tamanho(uso['bytes']))},
-continuam em <code>{e(CFG['pasta_host'])}/{e(nome)}</code>.</p>
+continuam em {onde}.</p>{dividida}
 <form method="post" action="/usuarios/remover">
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
 <input type="hidden" name="usuario" value="{e(nome)}">

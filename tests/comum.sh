@@ -68,9 +68,9 @@ ids() { docker inspect -f '{{.Id}}' "$FTP" "$PAINEL" "$NGINX" 2>/dev/null | cut 
 somas() { sha256sum "$S"/*.txt 2>/dev/null | awk '{print $1}' | sha256sum | cut -c1-16; }
 outros() { docker ps -a --no-trunc --format '{{.ID}} {{.Names}}' | grep -v -E " $NOME(-|\$)" | awk '{print $1}' | sort; }
 usuarios_ftp() { docker exec "$FTP" cut -d: -f1 /auth/pureftpd.passwd 2>/dev/null | sort | tr '\n' ' '; }
-mu() { # <add|passwd|del|list> [usuário] [arquivo da senha]: manage-user.sh na instância de teste
+mu() { # <add|passwd|del|list> [usuário] [arquivo da senha] [pasta]: manage-user.sh na instância de teste
   if [[ -n "${3:-}" ]]; then
-    { cat "$3"; echo; } | ENV_FILE="$ENVA" ./manage-user.sh "$1" "$2" > "$W/mu.log" 2>&1
+    { cat "$3"; echo; } | ENV_FILE="$ENVA" ./manage-user.sh "$1" "$2" ${4:+"$4"} > "$W/mu.log" 2>&1
   else
     ENV_FILE="$ENVA" ./manage-user.sh "$1" "${2:-}" < /dev/null > "$W/mu.log" 2>&1
   fi
@@ -210,8 +210,8 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
   printf '%-9s %s → %s\n' "$tipo" "$resultado" "$arquivo"
 }
 declare -A ESPERADOS=(
-  [testes]="$(seq -s ' ' 1 25)"
-  [seguranca]="$(seq -s ' ' 1 56)"
+  [testes]="$(seq -s ' ' 1 27)"
+  [seguranca]="$(seq -s ' ' 1 59)"
   [rede]="$(seq -s ' ' 1 13)"
 )
 ARQUIVOS=()

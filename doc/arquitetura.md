@@ -89,7 +89,7 @@ flowchart LR
     painel -. "grava certificado, administradores e auditoria" .-> vpainel
     painel -. "cria o soquete e copia o certificado" .-> vnginx
     nginx -. "lê, só leitura" .-> vnginx
-    painel -. "cria a pasta do usuário e lê os arquivos para o download" .-> vdata
+    painel -. "cria pastas e lê os arquivos para o download" .-> vdata
     ftp -. "grava cada transferência" .-> logs
 ```
 
@@ -118,7 +118,7 @@ flowchart LR
 | Painel web | `DATA_DIR/painel` | grava o certificado, os administradores e a auditoria |
 | Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
 | nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
-| Painel web | `DATA_DIR/dados` | cria a pasta do usuário e lê os arquivos para o download |
+| Painel web | `DATA_DIR/dados` | cria pastas e lê os arquivos para o download |
 | Pure-FTPd | log CLF (`stdout`) | grava cada transferência |
 
 </details>
@@ -154,7 +154,7 @@ O que cada script faz, com parâmetros e saída: [Scripts](scripts.md). Uso e pr
 
 | Pasta no host | Monta em | Quem monta | Guarda |
 |---|---|---|---|
-| `DATA_DIR/dados` | `/data` | `ftp` e `painel` | Arquivos dos usuários: um diretório `chroot` por usuário (`/data/<usuario>`). O `ftp` grava; o `painel` cria a pasta de cada usuário e, na aba Arquivos, só lê |
+| `DATA_DIR/dados` | `/data` | `ftp` e `painel` | Arquivos dos usuários: cada usuário preso (`chroot`) na pasta do cadastro, `/data/<usuario>` ou a pasta escolhida na criação. O `ftp` grava; o `painel` cria a pasta de cada usuário e, na aba Arquivos, lê e cria pasta vazia |
 | `DATA_DIR/auth` | `/auth` | `ftp` e `painel` | Base **PureDB**: `pureftpd.passwd` (texto, com o hash das senhas) e `pureftpd.pdb` (compilada), ambos `0600`; `ftp-cert.pem`, cópia do certificado do FTP **sem a chave**; `.lock`, a trava das alterações |
 | `DATA_DIR/certs` | `/etc/ssl/private` | só `ftp` | `pure-ftpd.pem`: chave e certificado concatenados, `0600` |
 | `DATA_DIR/painel` | `/painel` | só `painel` | `tls/painel-cert.pem`, `tls/painel-key.pem` (`0600`), `administradores` (`0600`, o nome e o hash `scrypt` da senha de cada administrador) e `auditoria.log` (`0600`); pasta `0700` |

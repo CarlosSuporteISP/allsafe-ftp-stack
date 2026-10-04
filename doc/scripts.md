@@ -117,11 +117,12 @@ A pasta [`scripts/`](../scripts/) tem só o que roda no servidor. O que roda em 
 ```bash
 ./manage-user.sh list                 # lista os usuários do PureDB
 ./manage-user.sh add backup-olt       # pede a senha (mínimo de 12 caracteres) sem ecoar
+./manage-user.sh add olt01 clientes/olt-01   # o mesmo, com a pasta escolhida dentro de /data
 ./manage-user.sh passwd backup-olt    # troca a senha
 ./manage-user.sh del backup-olt       # remove o usuário (os arquivos ficam em /data)
 ```
 
-**Resultado esperado:** `add` e `passwd` terminam sem erro e o usuário aparece no `list`; `del` responde `Usuario removido; os dados em /data/<usuario> foram preservados.`
+**Resultado esperado:** `add` e `passwd` terminam sem erro e o usuário aparece no `list`; `del` responde `Usuario removido; os dados em /data/<pasta> foram preservados.`, com a pasta real do usuário. O `add` com uma pasta que outro usuário já alcança termina sem erro e mostra uma linha `Aviso:` por usuário.
 
 A senha é lida do terminal e enviada pelo `stdin` para o container: não aparece na linha de comando nem no histórico. O script opera a instalação do `.env` desta pasta; para operar outra, aponte o arquivo dela: `ENV_FILE=<arquivo> ./manage-user.sh list`. Regras e casos de uso em [Operação](operacao.md#usuarios).
 
@@ -265,8 +266,8 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 
 | Bateria | Casos | Exemplos |
 |---|---|---|
-| Funcional | 25 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh`, administradores pelo painel, recuperação do acesso pelo host, download pelo painel (arquivo pequeno, subpasta, nome com acento e arquivo de 40 MiB, com a soma conferida) |
-| Segurança | 56 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, a opção de IP público (só com `sim`, "todos" sempre recusado, TLS obrigatório, valor inválido, alerta em execução), CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos, entrada que não revela nomes de administrador, senha atual em toda alteração de administrador, sessões do administrador alterado encerradas, arquivo de administradores só com hash, aba Arquivos sem sessão, fuga da pasta pela aba Arquivos, link simbólico não seguido, arquivo entregue só como anexo, limite de downloads ao mesmo tempo |
+| Funcional | 27 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh`, administradores pelo painel, recuperação do acesso pelo host, download pelo painel (arquivo pequeno, subpasta, nome com acento e arquivo de 40 MiB, com a soma conferida), pasta criada pelo painel, usuário com pasta escolhida e pasta dividida entre usuários |
+| Segurança | 59 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, a opção de IP público (só com `sim`, "todos" sempre recusado, TLS obrigatório, valor inválido, alerta em execução), CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos, entrada que não revela nomes de administrador, senha atual em toda alteração de administrador, sessões do administrador alterado encerradas, arquivo de administradores só com hash, aba Arquivos sem sessão, fuga da pasta pela aba Arquivos, link simbólico não seguido, arquivo entregue só como anexo, limite de downloads ao mesmo tempo, criação de pasta sem sessão e sem token, nome de pasta que tenta sair da pasta dos dados, usuário preso à pasta escolhida |
 | Rede | 13 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host, rede pública no painel só com a opção |
 
 **Organização:** o [`tests/testar.sh`](../tests/testar.sh) prepara a instância de teste e carrega o [`tests/comum.sh`](../tests/comum.sh), com as funções de registro, de FTP, do painel e de gravação dos resultados. Os casos ficam em [`tests/etapas/`](../tests/etapas/), um arquivo por etapa, executados na ordem do nome: cada etapa parte do estado que a anterior deixou e não roda sozinha.
@@ -434,14 +435,16 @@ Instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user`
 <details>
 <summary>Detalhe técnico — o que ele faz dentro do container</summary>
 
-- Aceita `add|passwd|del|list [usuario]` e valida o nome (`^[a-z_][a-z0-9_-]{0,31}$`).
+- Aceita `add|passwd|del|list [usuario] [pasta]`, com a pasta só no `add`, e valida o nome (`^[a-z_][a-z0-9_-]{0,31}$`).
+- A pasta, quando informada, tem até 4 níveis separados por `/`; cada nível casa com `[A-Za-z0-9_][A-Za-z0-9._-]{0,63}`. Fora disso, responde `Pasta invalida: ...` e sai com código `1`, antes de ler a senha.
 - Lê a senha do `stdin` e recusa menos de 12 caracteres com `Senha deve ter pelo menos 12 caracteres`.
-- `add` cria `/data/<usuario>` com dono `ftpdata` e modo `0750` e registra o usuário com `pure-pw useradd`.
-- `passwd` usa `pure-pw passwd`; `del` usa `pure-pw userdel` e **não** apaga a pasta.
+- `add` recusa nome que já existe (`Usuario ja existe`), confere a pasta nível por nível (link simbólico ou arquivo no caminho: `Pasta recusada: ...`), cria os níveis que faltam com dono `ftpdata` e modo `0750` e registra o usuário com `pure-pw useradd`, com a pasta como diretório do `chroot`. Sem a pasta, usa `/data/<usuario>`.
+- Se outro usuário tem a mesma pasta, uma de cima ou uma de dentro, o `add` conclui e escreve `Aviso: /data/<pasta> e dividida com o usuario <nome> ...`, uma linha por usuário.
+- `passwd` usa `pure-pw passwd`; `del` usa `pure-pw userdel`, **não** apaga a pasta e diz qual é ela.
 - Depois de cada mudança, regenera o `pureftpd.pdb` com `pure-pw mkdb` e mantém os dois arquivos em `0600`.
 - Antes de alterar, pega a trava `/auth/.lock` (`flock`, espera até 30 segundos): o FTP, o `manage-user.sh` e o painel nunca gravam ao mesmo tempo.
 - `list` passa o arquivo pela variável `PURE_PASSWDFILE`, porque o `pure-pw list` não aceita `-f` logo depois da ação.
-- Uso inválido: mostra `Uso: ... add|passwd|del|list [usuario]` e sai com código `2`.
+- Uso inválido: mostra `Uso: ... add|passwd|del|list [usuario] [pasta]` e sai com código `2`.
 
 </details>
 

@@ -43,9 +43,10 @@ Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.m
 
 ```bash
 ./manage-user.sh add cliente01      # cria o usuário e /data/cliente01 (pede a senha)
+./manage-user.sh add olt01 clientes/olt-01   # cria o usuário na pasta escolhida, /data/clientes/olt-01
 ./manage-user.sh passwd cliente01   # troca a senha (pede a nova)
 ./manage-user.sh list               # lista os usuários do PureDB
-./manage-user.sh del cliente01      # remove o usuário e MANTÉM /data/cliente01
+./manage-user.sh del cliente01      # remove o usuário e MANTÉM a pasta dele
 ```
 
 **Resultado esperado:** depois do `add`, o usuário aparece no `list` e já consegue entrar por FTPS; depois do `del`, some do `list` e a pasta continua no volume.
@@ -54,7 +55,11 @@ Regras:
 
 - Nome do usuário: `^[a-z_][a-z0-9_-]{0,31}$`.
 - Senha: mínimo de **12 caracteres** (recusada abaixo disso).
-- `del` **não apaga arquivos**: remova `/data/<usuario>` à mão se quiser.
+- Pasta: sem o terceiro parâmetro, é `/data/<usuario>`. Com ele, fica sempre dentro de `/data` (`DATA_DIR/dados` no host), com até 4 níveis separados por `/`; cada nível tem letras, números, `_`, `-` e ponto, não começa com ponto e vai até 64 caracteres. A pasta é criada se não existir. Pasta que passa por link simbólico ou por um arquivo é recusada, e nada é criado.
+- A pasta vale só no `add`, e usuário que já existe não muda de pasta: `add` de um nome existente responde `Usuario ja existe`.
+- `del` **não apaga arquivos** e responde com a pasta que ficou: remova-a à mão se quiser.
+
+> ⚠️ **Pasta dividida:** dois usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro. O `add` aceita e avisa, uma linha `Aviso:` por usuário que passa a dividir a pasta. Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.
 
 > ⚠️ O usuário definido em `FTP_USER` é recriado ou atualizado a cada subida, com a senha de `.secrets/ftp-usuario-inicial-senha.txt`. Para renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo. Para trocar a senha dele, veja [Segredos](segredos.md#trocar-a-senha).
 
@@ -110,7 +115,7 @@ Um comando guarda os arquivos dos equipamentos, os usuários, os certificados e 
 
 O que entra na cópia, como desfazer uma restauração, como restaurar em outro servidor e como agendar a cópia estão em [Backup e restauração](backup.md).
 
-Para pegar **um arquivo só**, enviado por um equipamento, use a aba Arquivos do painel: [Arquivos e download](painel.md#arquivos). No host, o mesmo arquivo está em `DATA_DIR/dados/<usuario>/`.
+Para pegar **um arquivo só**, enviado por um equipamento, use a aba Arquivos do painel: [Arquivos e download](painel.md#arquivos). No host, o mesmo arquivo está na pasta do usuário, dentro de `DATA_DIR/dados`: a aba Usuários mostra o caminho de cada um.
 
 > ⚠️ A cópia contém o hash das senhas e as chaves privadas dos certificados: trate como dado sensível e leve-a também para fora do servidor. O `.env` e os arquivos de `.secrets/` não entram na cópia: guarde-os à parte, em um cofre de senhas.
 
@@ -138,7 +143,7 @@ done
 ./deploy.sh                               # 5. sobe com as pastas novas
 ```
 
-**Resultado esperado:** container `healthy`, os usuários entram com a mesma senha e os arquivos aparecem em `DATA_DIR/dados/<usuario>`.
+**Resultado esperado:** container `healthy`, os usuários entram com a mesma senha e os arquivos aparecem na pasta de cada usuário, dentro de `DATA_DIR/dados`.
 
 Só depois de conferir, e por decisão sua, apague os volumes antigos: `docker volume rm allsafe-ftp-data allsafe-ftp-auth allsafe-ftp-certs`.
 

@@ -19,6 +19,11 @@ PASTA_DADOS = '/data'
 
 # Mesma regra de nome do allsafe-ftp-user; aqui ela só antecipa a mensagem de erro. Vale também para administrador.
 NOME = re.compile(r'[a-z_][a-z0-9_-]{0,31}')
+# Pasta de um usuário, dentro da pasta dos dados: até 4 níveis. Nenhum nível começa com ponto, então `.` e `..`
+# não passam. É a mesma regra do allsafe-ftp-user, que é quem decide; aqui ela antecipa a mensagem de erro.
+NIVEL = re.compile(r'[A-Za-z0-9_][A-Za-z0-9._-]{0,63}')
+PASTA = re.compile(r'[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(?:/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,3}')
+DONO_DADOS = 'ftpdata'      # usuário do sistema dono das pastas e dos arquivos do FTP
 PRIVADAS = [ipaddress.ip_network(r) for r in ('127.0.0.0/8', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16')]
 
 CORPO_MAX = 8192            # bytes de um envio de formulário

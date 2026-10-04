@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.13.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.14.0-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -34,7 +34,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.13.0</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.14.0</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -57,7 +57,7 @@ flowchart LR
 
 ## 💡 O que é
 
-Um servidor de arquivos para onde roteadores, switches, OLTs e outros equipamentos de rede mandam a cópia de segurança da própria configuração. Cada equipamento entra com usuário e senha, só enxerga a própria pasta e, no padrão, só consegue entrar por conexão criptografada. As contas dos equipamentos são criadas pelo navegador, em um **painel web seguro**, ou pela linha de comando. No mesmo painel, os backups recebidos são consultados e **baixados pelo navegador**.
+Um servidor de arquivos para onde roteadores, switches, OLTs e outros equipamentos de rede mandam a cópia de segurança da própria configuração. Cada equipamento entra com usuário e senha, só enxerga a própria pasta e, no padrão, só consegue entrar por conexão criptografada. As contas dos equipamentos são criadas pelo navegador, em um **painel web seguro**, ou pela linha de comando. No mesmo painel, os backups recebidos são consultados e **baixados pelo navegador**, e cada equipamento pode ter a pasta escolhida por quem administra.
 
 São **três containers**: o servidor FTP, o painel e o **nginx**, a única porta de entrada do painel. O FTP usa o banco local **PureDB** em vez de PostgreSQL: menos memória, menos superfície de ataque e autenticação sem latência de rede. O painel é pequeno de propósito: administradores com usuário e senha, sem JavaScript, sem acesso ao Docker e sem porta de rede própria; quem fala HTTPS com o navegador é o nginx, que confere a rede de origem e o volume de pedidos antes de repassar. Nos três, o sistema de arquivos raiz é somente leitura, as `capabilities` são mínimas e os segredos ficam fora da imagem e do Git.
 
@@ -151,6 +151,7 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | Recuperar o acesso ao painel | `./scripts/painel-senha.sh --gerar` (outro administrador: `--usuario NOME`) |
 | Criar um usuário | pelo painel, aba `👥 Usuários`, ou `./manage-user.sh add backup-olt` |
 | Baixar um backup recebido | pelo painel, aba Arquivos, botão **Baixar** na linha do arquivo |
+| Criar uma pasta e prender um usuário a ela | pelo painel, aba Arquivos, **Nova pasta** e **Novo usuário nesta pasta**, ou `./manage-user.sh add olt01 clientes/olt-01` |
 | Guardar uma cópia de segurança | `./scripts/backup.sh`; para voltar a ela, `./scripts/restaurar.sh <cópia>` |
 | Ver o estado | `docker compose ps` |
 | Remover, mantendo os dados | `./deploy.sh --remover` |
@@ -265,11 +266,12 @@ flowchart LR
     end
     subgraph ARQUIVOS["Arquivos"]
         caminho@{ shape: diam, label: "caminho dentro<br>da pasta dos dados?" }
-        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>uma pasta por usuário" }
+        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>pastas dos usuários" }
     end
     subgraph RESULTADO["Resultado"]
         fim@{ shape: stadium, label: "usuário pronto no FTP" }
         baixado@{ shape: stadium, label: "arquivo baixado" }
+        criada@{ shape: stadium, label: "pasta criada" }
         recusa@{ shape: stadium, label: "pedido recusado" }
     end
 
@@ -286,10 +288,12 @@ flowchart LR
     pedido -- "8b · não: sem token CSRF ou de outra origem" --> recusa
     cmd -- "9 · grava o usuário" --> puredb
     puredb -- "10 · vale no próximo login, sem reiniciar o FTP" --> fim
-    sessao -- "11 · abre a aba Arquivos e pede um arquivo" --> caminho
-    caminho -. "12 · abre só para leitura, sem seguir link simbólico" .-> dados
-    caminho -- "13a · sim: entrega como anexo" --> baixado
-    caminho -- "13b · não: 400, 403 ou 404" --> recusa
+    sessao -- "11 · na aba Arquivos, pede um arquivo ou cria uma pasta" --> caminho
+    caminho -. "12 · abre parte por parte, sem seguir link simbólico" .-> dados
+    caminho -- "13a · sim, arquivo: entrega como anexo" --> baixado
+    caminho -- "13b · sim, pasta nova: cria vazia" --> criada
+    caminho -- "13c · não: 400, 403, 404 ou 409" --> recusa
+    cmd -. "cria a pasta do usuário, se faltar" .-> dados
     painel -. "registra cada ação" .-> auditoria
 ```
 
@@ -310,17 +314,19 @@ flowchart LR
 | 8b | pedido legítimo? ➜ pedido recusado | Não: `403`, sem alterar nada |
 | 9 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez |
 | 10 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
-| 11 | sessão ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta ou pede um arquivo; o caminho pedido é conferido parte por parte |
-| 12 | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | O painel abre cada parte só para leitura, a partir da pasta dos dados, sem seguir link simbólico |
-| 13a | caminho dentro da pasta dos dados? ➜ arquivo baixado | Sim: o arquivo sai como anexo, em blocos, e o download fica na auditoria |
-| 13b | caminho dentro da pasta dos dados? ➜ pedido recusado | Não: `400` para caminho que tenta sair da pasta, `403` para link simbólico, `404` para o que não existe |
+| 11 | sessão ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta, pede um arquivo ou cria uma pasta; o caminho pedido é conferido parte por parte |
+| 12 | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | O painel abre cada parte a partir da pasta dos dados, sem seguir link simbólico |
+| 13a | caminho dentro da pasta dos dados? ➜ arquivo baixado | Sim, arquivo: sai como anexo, em blocos, e o download fica na auditoria |
+| 13b | caminho dentro da pasta dos dados? ➜ pasta criada | Sim, pasta nova: nasce vazia, do usuário `ftpdata`, e fica na auditoria |
+| 13c | caminho dentro da pasta dos dados? ➜ pedido recusado | Não: `400` para caminho ou nome que tenta sair da pasta, `403` para link simbólico, `404` para o que não existe, `409` para nome já usado |
 
 **Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
 | usuário e senha conferem? | administradores (`DATA_DIR/painel/administradores`) | lê a cada entrada |
-| caminho dentro da pasta dos dados? | `DATA_DIR/dados` | lê a pasta e o arquivo pedidos, só para leitura |
+| caminho dentro da pasta dos dados? | `DATA_DIR/dados` | lê a pasta e o arquivo pedidos; grava só a pasta nova, vazia |
+| `allsafe-ftp-user` | `DATA_DIR/dados` | cria a pasta do usuário novo, se ela ainda não existe |
 | Painel web | `auditoria.log` | registra cada entrada, recusa e alteração |
 
 </details>
@@ -379,7 +385,7 @@ flowchart LR
     painel -. "grava certificado, administradores e auditoria" .-> vpainel
     painel -. "cria o soquete e copia o certificado" .-> vnginx
     nginx -. "lê, só leitura" .-> vnginx
-    painel -. "cria a pasta do usuário e lê os arquivos para o download" .-> vdata
+    painel -. "cria pastas e lê os arquivos para o download" .-> vdata
     ftp -. "grava cada transferência" .-> logs
 ```
 
@@ -408,7 +414,7 @@ flowchart LR
 | Painel web | `DATA_DIR/painel` | grava o certificado, os administradores e a auditoria |
 | Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
 | nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
-| Painel web | `DATA_DIR/dados` | cria a pasta do usuário e lê os arquivos para o download |
+| Painel web | `DATA_DIR/dados` | cria pastas e lê os arquivos para o download |
 | Pure-FTPd | log CLF (`stdout`) | grava cada transferência |
 
 <details>
@@ -561,7 +567,7 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`compose.yaml`](compose.yaml) | Definição dos serviços `ftp`, `painel` e `nginx`, volumes, rede, limites e healthchecks |
 | [`Dockerfile`](Dockerfile) | Imagens sobre o Debian 13 slim: alvos `ftp` e `painel`, com Pure-FTPd e o usuário `ftpdata`, e alvo `nginx` |
 | [`deploy.sh`](deploy.sh) | Instala, reaplica, atualiza ou remove a stack em um comando |
-| [`manage-user.sh`](manage-user.sh) | Atalho do host para `add`, `passwd`, `del` e `list` de usuários |
+| [`manage-user.sh`](manage-user.sh) | Atalho do host para `add` (com a pasta, se quiser), `passwd`, `del` e `list` de usuários |
 | [`ftp/entrypoint.sh`](ftp/entrypoint.sh) | Prepara o usuário inicial e o certificado e executa o `pure-ftpd` |
 | [`ftp/saude.sh`](ftp/saude.sh) | Healthcheck do FTP: abre a porta de controle e espera a saudação do servidor |
 | [`ftp/usuario.sh`](ftp/usuario.sh) | Gestão de usuários **dentro** dos containers (chamado pelo `manage-user.sh` e pelo painel) |
@@ -629,7 +635,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.13.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.14.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

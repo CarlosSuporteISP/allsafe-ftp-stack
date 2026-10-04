@@ -8,6 +8,29 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.14.0] - 2026-10-04
+
+Quem administra passa a escolher a pasta de cada usuário do FTP e a criar pastas pelo navegador. Sem escolha, nada muda: a pasta continua sendo a do nome do usuário. **Por padrão, uso só em rede privada, atrás de firewall.**
+
+### Adicionado
+
+- **Pasta escolhida por usuário:** o cadastro de usuário, no painel, ganhou o campo **Pasta**, e o [`manage-user.sh`](manage-user.sh), um terceiro parâmetro: `./manage-user.sh add olt01 clientes/olt-01`. A pasta fica sempre dentro de `DATA_DIR/dados`, com até 4 níveis, e é criada se não existir. Em branco, continua sendo a do nome do usuário. Guia em [Usuários pelo painel](doc/painel.md#usuarios).
+- **Nova pasta na aba Arquivos:** o formulário **Nova pasta** cria uma pasta vazia dentro da que está aberta, com o dono e a permissão que o FTP usa; o botão **Novo usuário nesta pasta** abre o cadastro com a pasta preenchida. O painel continua sem enviar, renomear e apagar. Guia em [Arquivos e download](doc/painel.md#arquivos).
+- **Pasta dividida avisada:** dois usuários com a mesma pasta, ou com uma dentro da outra, alcançam os arquivos um do outro. O painel aceita e avisa: alerta no cadastro, a marca **dividida** na lista, com o nome de quem mais alcança a pasta, e o mesmo aviso na tela de remoção. Na linha de comando, o `add` escreve uma linha `Aviso:` por usuário.
+- **Só dentro da pasta dos dados:** pasta com `..`, barra no início, nível começando por ponto ou caractere fora da regra é recusada (`400`), no painel e na linha de comando; pasta que passa por link simbólico ou por um arquivo também. A pasta nova é criada em relação à pasta já aberta, sem seguir link; nome já usado recebe `409`.
+- **Auditoria:** evento `pasta_criada`, com o administrador e o caminho, e a pasta no evento `usuario_criado`.
+- Bateria de testes: dois casos funcionais (pasta criada pelo painel; pasta escolhida e pasta dividida) e três de segurança (criar pasta sem sessão e sem token, nome de pasta que tenta sair, usuário preso à pasta escolhida).
+
+### Alterado
+
+- A aba Usuários mostra a pasta real de cada usuário, lida do cadastro, e a aba Visão geral soma o espaço sem contar duas vezes a pasta dividida.
+- `./manage-user.sh del` responde com a pasta real do usuário removido.
+- `./manage-user.sh add` de um nome que já existe responde `Usuario ja existe`, sem criar pasta e sem alterar o usuário; a senha é trocada com `passwd`.
+
+### Atualização a partir da 0.13.x
+
+Rode `./deploy.sh`. Não há variável nova nem mudança nos dados: os usuários que já existem continuam na pasta deles.
+
 ## [0.13.0] - 2026-10-04
 
 Os backups recebidos passam a ser consultados e baixados pelo navegador, na aba nova Arquivos do painel. O painel só lê: enviar, renomear e apagar continuam sendo feitos por FTP. **Por padrão, uso só em rede privada, atrás de firewall.**

@@ -2,11 +2,12 @@
 import datetime
 import os
 import socket
+import stat
 import subprocess
 import threading
 import time
 
-from config import ARQ_USUARIOS, CFG, CMD_USUARIO, NOME, PASTA_DADOS
+from config import ARQ_USUARIOS, CFG, CMD_USUARIO, NIVEL, NOME, PASTA_DADOS
 
 TRAVA_CACHE = threading.Lock()
 CACHE = {}
@@ -29,28 +30,89 @@ def limpar_cache():
         CACHE.clear()
 
 
+def pasta_do_cadastro(casa):
+    """Pasta do usuário como está no cadastro (/data/<pasta>/./), relativa à pasta dos dados.
+    Devolve None se o cadastro aponta para a própria pasta dos dados ou para fora dela."""
+    casa = casa.removesuffix('/./').rstrip('/')
+    if not casa.startswith(PASTA_DADOS + '/'):
+        return None
+    pasta = casa[len(PASTA_DADOS) + 1:]
+    if any(parte in ('', '.', '..') for parte in pasta.split('/')):
+        return None
+    return pasta
+
+
 def usuarios():
-    """Nome e pasta de cada usuário. O hash da senha, que está no mesmo arquivo, nunca sai daqui."""
-    lista = []
+    """Nome ➜ pasta de cada usuário, em ordem de nome. O hash da senha, que está no mesmo arquivo, nunca sai daqui."""
+    cadastro = {}
     try:
         with open(ARQ_USUARIOS, encoding='utf-8', errors='replace') as arq:
             for linha in arq:
                 campos = linha.rstrip('\n').split(':')
                 if len(campos) > 5 and NOME.fullmatch(campos[0]):
-                    lista.append(campos[0])
+                    cadastro[campos[0]] = pasta_do_cadastro(campos[5])
     except OSError:
         pass
-    return sorted(lista)
+    return dict(sorted(cadastro.items()))
 
 
-def uso_da_pasta(nome):
-    """Tamanho, quantidade e data do arquivo mais novo de /data/<nome>, com limite de tempo e de itens."""
+def vizinhos(cadastro, nome):
+    """Outros usuários que alcançam a pasta deste: quem tem a mesma, uma acima ou uma abaixo dela."""
+    pasta = cadastro.get(nome)
+    if not pasta:
+        return []
+    return [outro for outro, dele in cadastro.items()
+            if outro != nome and dele and (dele == pasta or dele.startswith(pasta + '/') or pasta.startswith(dele + '/'))]
+
+
+def pastas_distintas(cadastro):
+    """Pastas dos usuários sem repetição e sem a que fica dentro de outra, para a soma não contar duas vezes."""
+    unicas = sorted({pasta for pasta in cadastro.values() if pasta})
+    return [pasta for pasta in unicas if not any(pasta.startswith(outra + '/') for outra in unicas)]
+
+
+def impedimento_da_pasta(pasta):
+    """Confere, nível por nível, se a pasta pode ser a de um usuário. Devolve '' ou o motivo da recusa.
+    Quem decide é o allsafe-ftp-user, com a mesma conferência; esta antecipa a resposta na tela."""
+    atual = PASTA_DADOS
+    for nivel in pasta.split('/'):
+        atual = os.path.join(atual, nivel)
+        try:
+            modo = os.lstat(atual).st_mode
+        except FileNotFoundError:
+            return ''
+        except OSError:
+            return 'Não foi possível conferir a pasta.'
+        if stat.S_ISLNK(modo):
+            return 'A pasta passa por um link simbólico, que não é aceito.'
+        if not stat.S_ISDIR(modo):
+            return 'Já existe um arquivo com este nome no caminho da pasta.'
+    return ''
+
+
+def pastas_do_primeiro_nivel(limite=200):
+    """Pastas que já existem logo abaixo da pasta dos dados, para sugerir no formulário de usuário novo."""
+    nomes = []
+    try:
+        with os.scandir(PASTA_DADOS) as itens:
+            for item in itens:
+                if NIVEL.fullmatch(item.name) and item.is_dir(follow_symlinks=False):
+                    nomes.append(item.name)
+                    if len(nomes) >= limite:
+                        break
+    except OSError:
+        pass
+    return sorted(nomes)
+
+
+def uso_da_pasta(pasta):
+    """Tamanho, quantidade e data do arquivo mais novo de /data/<pasta>, com limite de tempo e de itens."""
     def medir():
         total = arquivos = 0
         ultimo = 0.0
         parcial = False
         prazo = time.monotonic() + 2
-        pilha = [os.path.join(PASTA_DADOS, nome)]
+        pilha = [os.path.join(PASTA_DADOS, pasta)] if pasta else []
         while pilha:
             try:
                 with os.scandir(pilha.pop()) as itens:
@@ -72,7 +134,7 @@ def uso_da_pasta(nome):
             except OSError:
                 continue
         return {'bytes': total, 'arquivos': arquivos, 'ultimo': ultimo, 'parcial': parcial}
-    return com_cache(('uso', nome), 60, medir)
+    return com_cache(('uso', pasta), 60, medir)
 
 
 def ftp_no_ar():
@@ -120,11 +182,11 @@ def dias_restantes(info):
     return (info['vence'] - datetime.datetime.now(datetime.timezone.utc)).days
 
 
-def executar_usuario(acao, nome, senha=None):
+def executar_usuario(acao, nome, senha=None, pasta=None):
     """Chama o allsafe-ftp-user, o mesmo do serviço ftp. A senha vai pela entrada padrão."""
     try:
         resultado = subprocess.run(
-            [CMD_USUARIO, acao, nome], input=None if senha is None else senha + '\n',
+            [CMD_USUARIO, acao, nome] + ([pasta] if pasta else []), input=None if senha is None else senha + '\n',
             capture_output=True, text=True, timeout=30,
             env={'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LC_ALL': 'C'})
     except (OSError, subprocess.SubprocessError):

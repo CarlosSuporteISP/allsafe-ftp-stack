@@ -13,6 +13,7 @@ EVENTOS = {
     'usuario_removido': '🗑️ Usuário removido',
     'falha_comando': '⚠️ Alteração não concluída',
     'arquivo_baixado': '⬇️ Arquivo baixado',
+    'pasta_criada': '📁 Pasta criada',
     'arquivo_interrompido': '⚠️ Download interrompido',
     'admin_inicial_criado': '🛡️ Administrador inicial criado',
     'admin_criado': '🛡️ Administrador criado',

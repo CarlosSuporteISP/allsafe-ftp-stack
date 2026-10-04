@@ -2,13 +2,13 @@
 import shutil
 
 from config import ARQ_CERT_FTP, CFG, PASTA_DADOS
-from estado import certificado, ftp_no_ar, uso_da_pasta, usuarios
+from estado import certificado, ftp_no_ar, pastas_distintas, uso_da_pasta, usuarios
 from pagina import alerta_tls, e, pagina, quando, tamanho, validade
 
 
 def visao_geral(pedido, sessao, consulta, formulario, token):
     nomes = usuarios()
-    usos = [uso_da_pasta(nome) for nome in nomes]
+    usos = [uso_da_pasta(pasta) for pasta in pastas_distintas(nomes)]
     total = sum(u['bytes'] for u in usos)
     ultimo = max((u['ultimo'] for u in usos), default=0)
     no_ar = ftp_no_ar()

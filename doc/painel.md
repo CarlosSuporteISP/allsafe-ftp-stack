@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-O painel é uma página, aberta pelo navegador **de dentro da rede interna**, para criar, trocar a senha e remover os usuários do FTP sem usar a linha de comando. Cada administrador entra com o próprio usuário e a própria senha, só por HTTPS. Quem atende o navegador é o nginx, a porta de entrada: ele barra quem está fora da rede interna e só então passa o pedido ao painel. O que é feito no painel vale no FTP na hora, sem reiniciar nada.
+O painel é uma página, aberta pelo navegador **de dentro da rede interna**, para criar, trocar a senha e remover os usuários do FTP, escolher a pasta de cada um, criar pastas e baixar os backups recebidos, sem usar a linha de comando. Cada administrador entra com o próprio usuário e a própria senha, só por HTTPS. Quem atende o navegador é o nginx, a porta de entrada: ele barra quem está fora da rede interna e só então passa o pedido ao painel. O que é feito no painel vale no FTP na hora, sem reiniciar nada.
 
 <!-- diagrama: diagramas/painel-diagrama.mmd -->
 ```mermaid
@@ -74,11 +74,11 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 | Aba | O que mostra | O que dá para fazer |
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar |
-| Usuários | Um usuário por linha: pasta no host, espaço usado, quantidade de arquivos e último envio | Criar, trocar a senha, remover e abrir a pasta do usuário na aba Arquivos |
-| Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas e baixar um arquivo pelo navegador |
+| Usuários | Um usuário por linha: pasta no host, com a marca **dividida** quando outro usuário também a alcança, espaço usado, quantidade de arquivos e último envio | Criar, escolhendo a pasta, trocar a senha, remover e abrir a pasta do usuário na aba Arquivos |
+| Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
 | Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
 | Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, isolamento do container e o lembrete do firewall | Só consultar |
-| Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads e alterações de usuário e de administrador, com data, endereço de origem e o administrador que fez | Só consultar |
+| Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads, pastas criadas e alterações de usuário e de administrador, com data, endereço de origem e o administrador que fez | Só consultar |
 
 No topo ficam o nome do administrador da sessão e o botão **Sair**, que encerra a sessão na hora.
 
@@ -94,7 +94,7 @@ A foto de cada tela, com a explicação item por item, está em [Fotos da aplica
 
 | Quero | Onde | O que acontece |
 |---|---|---|
-| Criar um usuário | Usuários ➜ **Novo usuário** | Cria a conta e a pasta `DATA_DIR/dados/<usuario>`. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
+| Criar um usuário | Usuários ➜ **Novo usuário** | Cria a conta e a pasta dela: `DATA_DIR/dados/<usuario>` com o campo **Pasta** em branco, ou a pasta escolhida. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
 | Trocar a senha | Usuários ➜ **Trocar senha** | A senha antiga deixa de valer no próximo login |
 | Remover um usuário | Usuários ➜ **Remover** | Pede confirmação. A conta some; **os arquivos da pasta são preservados** |
 
@@ -106,7 +106,12 @@ Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
 
 - Nome com letras minúsculas, números, `_` e `-`, começando por letra ou `_`, até 32 caracteres.
 - Senha com no mínimo 12 caracteres.
+- Pasta: em branco, é o nome do usuário. Escolhida, fica sempre dentro de `DATA_DIR/dados`, com até 4 níveis separados por `/` (`clientes/olt-01`); cada nível tem letras, números, `_`, `-` e ponto, não começa com ponto e vai até 64 caracteres. A pasta é criada se não existir, e o campo sugere as que já existem no primeiro nível.
+- Pasta que passa por link simbólico, ou por um nome que já é de um arquivo, é recusada.
+- A pasta é escolhida na criação e não muda depois. Para trocar, remova o usuário e crie de novo com a pasta nova: os arquivos continuam onde estavam.
 - O **usuário inicial** (`FTP_USER`) não é alterado pelo painel: a senha dele vem de `.secrets/ftp-usuario-inicial-senha.txt` e é reaplicada a cada subida do FTP. Veja [Segredos](segredos.md#trocar-a-senha).
+
+> ⚠️ **Pasta dividida:** dois usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro. O painel aceita, porque serve para uma conta de consulta na pasta de cima, e avisa: a lista marca a pasta com **dividida** e mostra quem mais a alcança, e a tela de remoção repete o aviso. Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.
 
 A linha de comando continua valendo: painel e `manage-user.sh` alteram as mesmas contas. Veja [Operação](operacao.md#usuarios).
 
@@ -116,40 +121,44 @@ A linha de comando continua valendo: painel e `manage-user.sh` alteram as mesmas
 
 ## 📁 Arquivos e download
 
-A aba Arquivos mostra as pastas de `DATA_DIR/dados`, uma por usuário do FTP, e entrega pelo navegador qualquer arquivo que um equipamento enviou. O painel **só lê**: enviar, renomear e apagar continuam sendo feitos por FTP.
+A aba Arquivos mostra as pastas de `DATA_DIR/dados`, entrega pelo navegador qualquer arquivo que um equipamento enviou e cria pasta. A **pasta vazia** é a única coisa que o painel grava ali: enviar, renomear e apagar continuam sendo feitos por FTP.
 
-1. Abra a aba **Arquivos**. O primeiro nível tem uma pasta por usuário. Na aba Usuários, o endereço da coluna **Pasta no host** abre direto a pasta daquele usuário.
+1. Abra a aba **Arquivos**. O primeiro nível tem as pastas dos usuários e as criadas pelo painel. Na aba Usuários, o endereço da coluna **Pasta no host** abre direto a pasta daquele usuário.
 2. Clique no nome de uma pasta para entrar. O caminho no alto da lista mostra onde você está e volta a qualquer nível.
 3. Clique em **Baixar** na linha do arquivo. O navegador salva o arquivo com o nome original.
+4. Para criar uma pasta, entre na pasta onde ela vai ficar, escreva o nome em **Nova pasta** e clique em **Criar pasta**.
+5. Para prender um usuário a uma pasta, entre nela e clique em **Novo usuário nesta pasta**: o cadastro abre com o campo **Pasta** preenchido.
 
-**Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Atividade ganha a linha `Arquivo baixado`, com o administrador, o caminho e o tamanho.
+**Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Atividade ganha a linha `Arquivo baixado`, com o administrador, o caminho e o tamanho. A pasta criada aparece na lista com o aviso `Pasta criada.`, vazia, já com o dono e a permissão que o FTP usa, e fica na aba Atividade como `Pasta criada`.
 
 | Na lista | O que aparece | O que dá para fazer |
 |---|---|---|
-| Pasta | Nome e data da última alteração | Entrar |
+| Pasta | Nome e data da última alteração; dentro dela, a linha `Pasta do usuário do FTP` diz de quem é | Entrar |
 | Arquivo | Nome, tamanho e data da última alteração | Baixar |
 | Item marcado `link simbólico` ou `arquivo especial` | Nome e data | Nada: o painel não abre |
 
 Limites:
 
+- O nome da pasta nova tem letras, números, `_`, `-` e ponto, não começa com ponto e vai até 64 caracteres. Uma pasta por vez: para criar `clientes/olt-01`, crie `clientes`, entre nela e crie `olt-01`.
 - Até **8 downloads ao mesmo tempo**, somando todos os administradores. O nono recebe a tela `Muitos downloads ao mesmo tempo` (`503`): espere um terminar e repita.
 - A lista mostra até **2000 itens** por pasta, com um aviso quando há mais. Pasta maior que isso é consultada por FTP.
 - O download **não é retomado**: se a conexão cair, começa de novo.
 - Conexão que recebe menos de cerca de 4 KiB por segundo é cortada, e o download aparece na aba Atividade como `Download interrompido`.
 
 <details>
-<summary>Detalhe técnico — como o painel abre e entrega o arquivo</summary>
+<summary>Detalhe técnico — como o painel abre, entrega o arquivo e cria a pasta</summary>
 
-- **Rotas:** `GET /arquivos?pasta=<caminho>` lista e `GET /arquivos/baixar?arquivo=<caminho>` entrega. As duas exigem sessão; sem ela, o pedido vai para a tela de entrada. Não existe rota de envio, de troca de nome nem de remoção.
+- **Rotas:** `GET /arquivos?pasta=<caminho>` lista e `GET /arquivos/baixar?arquivo=<caminho>` entrega. `POST /arquivos/pasta` cria uma pasta, com os campos `pasta` (onde) e `nome` e o token CSRF. As três exigem sessão; sem ela, o pedido vai para a tela de entrada. Não existe rota de envio, de troca de nome nem de remoção.
 - **Caminho:** sempre relativo a `DATA_DIR/dados` (`/data` no container). Caminho com parte `..`, `.` ou vazia, com byte nulo, com parte de mais de 255 bytes ou com mais de 4096 caracteres recebe `400` e o evento `recusa_caminho`.
 - **Abertura:** o painel abre a pasta dos dados e depois cada parte do caminho em relação à anterior, só para leitura e sem seguir link simbólico (`O_RDONLY`, `O_NOFOLLOW`). O que foi conferido é o mesmo que fica aberto: trocar uma pasta por um link no meio do pedido não muda o que é lido. Link simbólico em qualquer nível, mesmo apontando para dentro da própria pasta, recebe `403` e o evento `recusa_caminho`.
+- **Pasta nova:** a pasta de destino é aberta do mesmo jeito que na listagem, e a nova é criada em relação a ela (`mkdir` pelo descritor da pasta aberta), com dono `ftpdata` e modo `0750`, os mesmos das pastas criadas pelo FTP. Nome fora da regra, com `/`, `..` ou byte nulo, recebe `400` e o evento `recusa_caminho`; destino que passa por link simbólico, `403`; destino que não existe, `404`; nome já usado por pasta, arquivo ou link, `409`. O painel não cria nada além da pasta vazia.
 - **Só arquivo comum:** FIFO, soquete e dispositivo aparecem na lista como `arquivo especial`, sem botão, e o pedido direto recebe `404`.
 - **Entrega:** `Content-Type: application/octet-stream` e `Content-Disposition: attachment`, com o nome em duas formas (RFC 6266 e RFC 8187): reduzido a ASCII e inteiro, em UTF-8. Com o `nosniff` e a `Content-Security-Policy` de toda resposta, o navegador salva o arquivo e nunca o abre, mesmo que seja uma página HTML.
 - **Memória e disco:** o arquivo sai em blocos de 64 KiB, sem ser carregado na memória. O nginx repassa no ritmo do navegador, sem gravar arquivo temporário (`proxy_max_temp_file_size 0`), então o tamanho do arquivo não é limitado pelo `/tmp` do container.
 - **Sem retomada:** a resposta leva `Accept-Ranges: none` e o painel ignora o cabeçalho `Range`.
 - **Ritmo mínimo:** cada bloco tem 15 segundos para sair; passado isso, o painel fecha a conexão e libera a vaga do download.
 - **Nome fora do UTF-8:** aparece na lista com o sinal de substituição no lugar do byte inválido, e é baixado do mesmo jeito.
-- **Auditoria:** `arquivo_baixado` e `arquivo_interrompido` registram o administrador, o caminho e os bytes entregues; o conteúdo do arquivo nunca é registrado.
+- **Auditoria:** `pasta_criada` registra o administrador e o caminho; `arquivo_baixado` e `arquivo_interrompido` registram o administrador, o caminho e os bytes entregues; o conteúdo do arquivo nunca é registrado.
 
 </details>
 
@@ -306,11 +315,12 @@ flowchart LR
     end
     subgraph ARQUIVOS["Arquivos"]
         caminho@{ shape: diam, label: "caminho dentro<br>da pasta dos dados?" }
-        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>uma pasta por usuário" }
+        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>pastas dos usuários" }
     end
     subgraph RESULTADO["Resultado"]
         fim@{ shape: stadium, label: "usuário pronto no FTP" }
         baixado@{ shape: stadium, label: "arquivo baixado" }
+        criada@{ shape: stadium, label: "pasta criada" }
         recusa@{ shape: stadium, label: "pedido recusado" }
     end
 
@@ -327,10 +337,12 @@ flowchart LR
     pedido -- "8b · não: sem token CSRF ou de outra origem" --> recusa
     cmd -- "9 · grava o usuário" --> puredb
     puredb -- "10 · vale no próximo login, sem reiniciar o FTP" --> fim
-    sessao -- "11 · abre a aba Arquivos e pede um arquivo" --> caminho
-    caminho -. "12 · abre só para leitura, sem seguir link simbólico" .-> dados
-    caminho -- "13a · sim: entrega como anexo" --> baixado
-    caminho -- "13b · não: 400, 403 ou 404" --> recusa
+    sessao -- "11 · na aba Arquivos, pede um arquivo ou cria uma pasta" --> caminho
+    caminho -. "12 · abre parte por parte, sem seguir link simbólico" .-> dados
+    caminho -- "13a · sim, arquivo: entrega como anexo" --> baixado
+    caminho -- "13b · sim, pasta nova: cria vazia" --> criada
+    caminho -- "13c · não: 400, 403, 404 ou 409" --> recusa
+    cmd -. "cria a pasta do usuário, se faltar" .-> dados
     painel -. "registra cada ação" .-> auditoria
 ```
 
@@ -351,17 +363,19 @@ flowchart LR
 | 8b | pedido legítimo? ➜ pedido recusado | Não: `403`, sem alterar nada |
 | 9 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez |
 | 10 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
-| 11 | sessão ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta ou pede um arquivo; o caminho pedido é conferido parte por parte |
-| 12 | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | O painel abre cada parte só para leitura, a partir da pasta dos dados, sem seguir link simbólico |
-| 13a | caminho dentro da pasta dos dados? ➜ arquivo baixado | Sim: o arquivo sai como anexo, em blocos, e o download fica na auditoria |
-| 13b | caminho dentro da pasta dos dados? ➜ pedido recusado | Não: `400` para caminho que tenta sair da pasta, `403` para link simbólico, `404` para o que não existe |
+| 11 | sessão ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta, pede um arquivo ou cria uma pasta; o caminho pedido é conferido parte por parte |
+| 12 | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | O painel abre cada parte a partir da pasta dos dados, sem seguir link simbólico |
+| 13a | caminho dentro da pasta dos dados? ➜ arquivo baixado | Sim, arquivo: sai como anexo, em blocos, e o download fica na auditoria |
+| 13b | caminho dentro da pasta dos dados? ➜ pasta criada | Sim, pasta nova: nasce vazia, do usuário `ftpdata`, e fica na auditoria |
+| 13c | caminho dentro da pasta dos dados? ➜ pedido recusado | Não: `400` para caminho ou nome que tenta sair da pasta, `403` para link simbólico, `404` para o que não existe, `409` para nome já usado |
 
 **Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
 | usuário e senha conferem? | administradores (`DATA_DIR/painel/administradores`) | lê a cada entrada |
-| caminho dentro da pasta dos dados? | `DATA_DIR/dados` | lê a pasta e o arquivo pedidos, só para leitura |
+| caminho dentro da pasta dos dados? | `DATA_DIR/dados` | lê a pasta e o arquivo pedidos; grava só a pasta nova, vazia |
+| `allsafe-ftp-user` | `DATA_DIR/dados` | cria a pasta do usuário novo, se ela ainda não existe |
 | Painel web | `auditoria.log` | registra cada entrada, recusa e alteração |
 
 </details>
@@ -375,7 +389,7 @@ flowchart LR
 Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `root`) e aparece na aba Atividade.
 
 ```text
-2026-10-04T08:33:49-0300 ip=172.29.1.1 evento=usuario_criado admin=admin usuario=equip01 credencial=informada
+2026-10-04T08:33:49-0300 ip=172.29.1.1 evento=usuario_criado admin=admin usuario=equip01 credencial=informada pasta=equip01
 2026-10-04T08:33:47-0300 ip=172.29.1.1 evento=entrada_ok admin=admin
 2026-10-04T08:33:46-0300 ip=172.29.1.1 evento=entrada_falha
 ```
@@ -385,7 +399,8 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `painel_iniciado` | O painel subiu |
 | `entrada_ok` · `entrada_falha` · `entrada_bloqueada` | Entrada aceita, com o administrador · usuário ou senha errados, sem o nome digitado · endereço bloqueado por excesso de erros |
 | `saida` | Alguém clicou em **Sair** |
-| `usuario_criado` · `senha_trocada` · `usuario_removido` | Alteração de usuário do FTP, com o administrador que fez |
+| `usuario_criado` · `senha_trocada` · `usuario_removido` | Alteração de usuário do FTP, com o administrador que fez; a criação leva também a pasta do usuário |
+| `pasta_criada` | Pasta criada pela aba Arquivos, com o administrador e o caminho |
 | `arquivo_baixado` · `arquivo_interrompido` | Download pela aba Arquivos, completo · cortado antes do fim; com o administrador, o caminho e os bytes entregues |
 | `admin_inicial_criado` | Primeira subida: o painel criou o administrador de `PAINEL_ADMIN_USER` |
 | `admin_criado` · `admin_senha_trocada` · `admin_renomeado` · `admin_removido` | Alteração de administrador pelo painel, com quem fez e quem foi alterado |
@@ -393,7 +408,7 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `admin_definido_no_host` | O `scripts/painel-senha.sh` criou um administrador ou trocou a senha dele |
 | `falha_comando` | O `allsafe-ftp-user` devolveu erro |
 | `recusa_csrf` · `recusa_origem` · `recusa_host` · `recusa_rede` | Pedido recusado: sem token, de outra origem, com nome de host inválido ou de rede não permitida |
-| `recusa_caminho` | Aba Arquivos: caminho que tenta sair da pasta dos dados ou que passa por link simbólico |
+| `recusa_caminho` | Abas Arquivos e Usuários: caminho ou nome de pasta que tenta sair da pasta dos dados ou que passa por link simbólico |
 
 Quem está fora das redes permitidas é barrado antes, pelo nginx: essa recusa fica no log dele (`docker compose logs nginx`), não aqui. O `recusa_rede` só aparece se um pedido assim chegar ao painel.
 
@@ -414,7 +429,8 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 | Entrada | Usuário e senha por administrador; senha de no mínimo 12 caracteres, guardada só como hash `scrypt`; a recusa não diz se o erro foi no usuário ou na senha; cinco erros bloqueiam o endereço por 15 minutos |
 | Administradores | Toda alteração de administrador pede a senha atual de quem está alterando; o administrador alterado tem as sessões encerradas; ninguém remove a própria conta |
 | Sessão | Cookie `__Host-sessao` com `Secure`, `HttpOnly` e `SameSite=Strict`, presa ao endereço de origem; encerra com 15 minutos sem uso e, de qualquer forma, em 8 horas |
-| Arquivos | A aba Arquivos só lê, e só dentro de `DATA_DIR/dados`: caminho que tenta sair da pasta é recusado, link simbólico não é seguido, o arquivo sai sempre como anexo e no máximo 8 downloads correm ao mesmo tempo |
+| Arquivos | A aba Arquivos lê e cria pasta vazia, e só dentro de `DATA_DIR/dados`: caminho que tenta sair da pasta é recusado, link simbólico não é seguido, o arquivo sai sempre como anexo e no máximo 8 downloads correm ao mesmo tempo; o painel não envia, não renomeia e não apaga |
+| Pastas dos usuários | Cada usuário do FTP fica preso (`chroot`) na pasta do cadastro; a pasta escolhida não sai de `DATA_DIR/dados` nem passa por link simbólico; pasta alcançada por mais de um usuário aparece marcada como **dividida** |
 | Formulários | Token CSRF por sessão e conferência de `Origin`: o envio tem de partir do próprio painel; corpo limitado a 8 KiB |
 | Navegador | `Content-Security-Policy` sem script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS e `no-store`; a página não carrega nada de fora |
 | Containers | Raiz somente leitura, `cap_drop: ALL`, `no-new-privileges`, sem socket do Docker, limites de CPU, memória e processos; o nginx roda sem root e sem nenhuma capability |
@@ -432,8 +448,8 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 - **Origem do envio:** todo `POST` tem de trazer `Origin` igual ao endereço do painel (`https://` mais o `Host`). A política `Referrer-Policy: same-origin` faz o navegador mandar a origem real no envio que parte do próprio painel e `Origin: null` no que parte de outro endereço; `null` e origem de fora recebem `403` e o evento `recusa_origem`.
 - **Nome de host:** o cabeçalho `Host` tem de ser um IP privado, `localhost` ou o `PAINEL_CERT_CN`; outro nome recebe `400`. Com `REDE_PERMITIR_IP_PUBLICO=sim`, qualquer endereço IPv4 é aceito no lugar do nome.
 - **Usuários do FTP:** o painel monta as mesmas pastas `DATA_DIR/auth` e `DATA_DIR/dados` do serviço `ftp` e chama o mesmo `allsafe-ftp-user`, com `flock` em `/auth/.lock`. Por isso não precisa do socket do Docker.
-- **Arquivos:** a aba Arquivos lê a mesma pasta `DATA_DIR/dados`, sempre com abertura só para leitura. Detalhe em [Arquivos e download](#arquivos).
-- **Capabilities devolvidas:** `CHOWN`, `DAC_OVERRIDE` e `FOWNER`, para criar a pasta do usuário com o dono `ftpdata` e gravar em `/auth`. Nenhuma de rede.
+- **Arquivos:** a aba Arquivos lê a mesma pasta `DATA_DIR/dados`, sempre com abertura só para leitura; a única gravação é a pasta vazia de `POST /arquivos/pasta`. Detalhe em [Arquivos e download](#arquivos).
+- **Capabilities devolvidas:** `CHOWN`, `DAC_OVERRIDE` e `FOWNER`, para criar as pastas com o dono `ftpdata` e gravar em `/auth`. Nenhuma de rede.
 - **Saúde:** `python3 /opt/painel/servidor.py --saude` pede `/saude` pelo soquete Unix. O healthcheck do nginx faz o mesmo pedido por TLS, em `127.0.0.1:8443`, e confere o caminho inteiro.
 - **Limites:** `PAINEL_MEMORY_LIMIT`, `PAINEL_CPU_LIMIT` e `PAINEL_PIDS_LIMIT`, em [Configuração](configuracao.md#painel).
 
@@ -460,8 +476,8 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`rotas.py`](../painel/rotas.py) | Tabela de método e caminho para a função que responde |
 | [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, e saída |
 | [`aba_visao_geral.py`](../painel/aba_visao_geral.py) | Aba Visão geral |
-| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação, troca de senha e remoção |
-| [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários e download, só para leitura |
+| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação com a pasta escolhida, troca de senha e remoção |
+| [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download e criação de pasta vazia |
 | [`aba_administradores.py`](../painel/aba_administradores.py) | Aba Administradores: lista, criação, troca de senha, troca de nome e remoção |
 | [`aba_seguranca.py`](../painel/aba_seguranca.py) | Aba Segurança |
 | [`aba_atividade.py`](../painel/aba_atividade.py) | Aba Atividade |

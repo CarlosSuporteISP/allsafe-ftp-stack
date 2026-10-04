@@ -20,6 +20,7 @@ ROTAS = {
     ('POST', '/usuarios/remover'): aba_usuarios.remover_usuario,
     ('GET', '/arquivos'): aba_arquivos.lista_arquivos,
     ('GET', '/arquivos/baixar'): aba_arquivos.baixar,
+    ('POST', '/arquivos/pasta'): aba_arquivos.criar_pasta,
     ('GET', '/administradores'): aba_administradores.lista,
     ('GET', '/administradores/novo'): aba_administradores.tela_novo,
     ('POST', '/administradores/novo'): aba_administradores.criar,
