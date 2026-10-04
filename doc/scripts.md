@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`scripts/testar.sh`](#testar) · [`scripts/entrypoint.sh`](#entrypoint) · [`scripts/ftp-saude.sh`](#ftp-saude) · [`scripts/painel-entrypoint.sh`](#painel-entrypoint) · [`scripts/nginx-entrypoint.sh`](#nginx-entrypoint) · [`scripts/nginx-saude.sh`](#nginx-saude) · [`scripts/ftp-user.sh`](#ftp-user) · [Scripts de apoio](#apoio)
+[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`tests/testar.sh`](#testar) · [`ftp/entrypoint.sh`](#entrypoint) · [`ftp/saude.sh`](#ftp-saude) · [`painel/entrypoint.sh`](#painel-entrypoint) · [`nginx/entrypoint.sh`](#nginx-entrypoint) · [`nginx/saude.sh`](#nginx-saude) · [`ftp/usuario.sh`](#ftp-user) · [Scripts de apoio](#apoio)
 
 </details>
 
@@ -47,17 +47,17 @@ flowchart LR
 | [`scripts/backup.sh`](../scripts/backup.sh) | host | Grava a cópia de segurança de `dados/`, `auth/`, `certs/` e `painel/` em `BACKUP_DIR` |
 | [`scripts/restaurar.sh`](../scripts/restaurar.sh) | host | Devolve a stack ao estado de uma cópia, guardando antes o estado atual |
 | [`scripts/validate.sh`](../scripts/validate.sh) | host | Checagem de sintaxe, do Compose de todos os perfis e, opcionalmente, dos três serviços no ar |
-| [`scripts/testar.sh`](../scripts/testar.sh) | host | Bateria de testes funcional, de segurança e de rede, em instância de teste que o próprio script cria e remove |
-| [`scripts/entrypoint.sh`](../scripts/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado e executa o `pure-ftpd` |
-| [`scripts/ftp-saude.sh`](../scripts/ftp-saude.sh) | container | Healthcheck: abre a porta de controle e espera a saudação do servidor |
-| [`scripts/painel-entrypoint.sh`](../scripts/painel-entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel, entrega a cópia dele ao nginx e executa o painel |
-| [`scripts/nginx-entrypoint.sh`](../scripts/nginx-entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
-| [`scripts/nginx-saude.sh`](../scripts/nginx-saude.sh) | container do nginx | Healthcheck: pede `/saude` ao painel passando pelo nginx |
-| [`scripts/ftp-user.sh`](../scripts/ftp-user.sh) | containers do FTP e do painel | Gestão de usuários no PureDB, chamada pelo `manage-user.sh` e pelo painel |
+| [`tests/testar.sh`](../tests/testar.sh) | host | Bateria de testes funcional, de segurança e de rede, em instância de teste que o próprio script cria e remove |
+| [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado e executa o `pure-ftpd` |
+| [`ftp/saude.sh`](../ftp/saude.sh) | container | Healthcheck: abre a porta de controle e espera a saudação do servidor |
+| [`painel/entrypoint.sh`](../painel/entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel, entrega a cópia dele ao nginx e executa o painel |
+| [`nginx/entrypoint.sh`](../nginx/entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
+| [`nginx/saude.sh`](../nginx/saude.sh) | container do nginx | Healthcheck: pede `/saude` ao painel passando pelo nginx |
+| [`ftp/usuario.sh`](../ftp/usuario.sh) | containers do FTP e do painel | Gestão de usuários no PureDB, chamada pelo `manage-user.sh` e pelo painel |
 | [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | host e containers | Funções que conferem se um IP ou uma rede é privado; carregado pelos outros scripts |
 | [`scripts/ambiente.sh`](../scripts/ambiente.sh) | host | Função que lê uma chave do `.env` sem executar o arquivo; carregado pelos outros scripts |
 
-Os scripts da pasta [`scripts/`](../scripts/) que rodam em container são copiados para a imagem pelo [`Dockerfile`](../Dockerfile).
+A pasta [`scripts/`](../scripts/) tem só o que roda no servidor. O que roda em container fica na pasta do serviço ([`ftp/`](../ftp/), [`painel/`](../painel/) e [`nginx/`](../nginx/)) e é copiado para a imagem pelo [`Dockerfile`](../Dockerfile). A bateria de testes fica em [`tests/`](../tests/).
 
 ---
 
@@ -209,15 +209,15 @@ O modo `--runtime` confere a instalação do `.env` desta pasta. Para conferir o
 
 <a name="testar"></a>
 
-## 🧪 `scripts/testar.sh`
+## 🧪 `tests/testar.sh`
 
 Roda a bateria de testes da stack: funcional, de segurança e de rede. O script sobe uma instância de teste separada, testa, grava os resultados e remove tudo o que criou. A instalação desta pasta não é tocada e pode estar no ar ou não.
 
 ```bash
-./scripts/testar.sh                        # sobe a instância de teste, testa, grava os resultados e remove
-./scripts/testar.sh --resultados <pasta>   # grava os resultados em outra pasta
-./scripts/testar.sh --manter               # deixa a instância de teste no ar para investigar
-./scripts/testar.sh --limpar               # só remove a instância de teste e a pasta dela
+./tests/testar.sh                        # sobe a instância de teste, testa, grava os resultados e remove
+./tests/testar.sh --resultados <pasta>   # grava os resultados em outra pasta
+./tests/testar.sh --manter               # deixa a instância de teste no ar para investigar
+./tests/testar.sh --limpar               # só remove a instância de teste e a pasta dela
 ```
 
 **Resultado esperado:** uma linha por caso, com `✅` ou `❌`, o resumo de cada bateria com o caminho do arquivo de resultado e, no fim, `Bateria aprovada: nenhum desvio.` A execução leva perto de cinco minutos.
@@ -255,9 +255,11 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 
 | Bateria | Casos | Exemplos |
 |---|---|---|
-| Funcional | 19 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração |
+| Funcional | 20 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx |
 | Segurança | 38 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs e na auditoria |
 | Rede | 12 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host |
+
+**Organização:** o [`tests/testar.sh`](../tests/testar.sh) prepara a instância de teste e carrega o [`tests/comum.sh`](../tests/comum.sh), com as funções de registro, de FTP, do painel e de gravação dos resultados. Os casos ficam em [`tests/etapas/`](../tests/etapas/), um arquivo por etapa, executados na ordem do nome: cada etapa parte do estado que a anterior deixou e não roda sozinha.
 
 **Resultados:** três arquivos Markdown, um por bateria, com data, comando, versão, ambiente, a tabela dos casos com a evidência de cada um e os achados. Nenhuma senha, token, cookie ou hash é gravado: antes de terminar, o script procura nos três arquivos os segredos que usou e, se achar, apaga o arquivo e sai com `3`. Sem `--resultados`, eles vão para a pasta do plano, se ela existir, ou para `TEMP_DIR/resultados`.
 
@@ -269,7 +271,7 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 
 <a name="entrypoint"></a>
 
-## ⚙️ `scripts/entrypoint.sh`
+## ⚙️ `ftp/entrypoint.sh`
 
 Roda a cada início do container. Não tem parâmetros: tudo vem das variáveis de [Configuração](configuracao.md).
 
@@ -307,7 +309,7 @@ A correção de cada uma está em [Solução de problemas](solucao-de-problemas.
 
 <a name="ftp-saude"></a>
 
-## 🩺 `scripts/ftp-saude.sh`
+## 🩺 `ftp/saude.sh`
 
 É o healthcheck do container do FTP, instalado como `/usr/local/sbin/allsafe-ftp-saude`. Não é chamado direto: o Docker o executa a cada 20 segundos.
 
@@ -324,7 +326,7 @@ Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; 
 
 <a name="painel-entrypoint"></a>
 
-## 🖥️ `scripts/painel-entrypoint.sh`
+## 🖥️ `painel/entrypoint.sh`
 
 Roda a cada início do container do painel. Não tem parâmetros: tudo vem das variáveis de [Configuração](configuracao.md#painel).
 
@@ -359,7 +361,7 @@ O certificado é EC P-256, válido por 825 dias. O arquivo `painel-san.txt`, ao 
 
 <a name="nginx-entrypoint"></a>
 
-## 🚦 `scripts/nginx-entrypoint.sh`
+## 🚦 `nginx/entrypoint.sh`
 
 Roda a cada início do container do nginx, já como usuário sem privilégio (`10001`). Não tem parâmetros: recebe só `TZ` e `PAINEL_REDES_PERMITIDAS`.
 
@@ -391,7 +393,7 @@ A configuração gerada fica em `tmpfs` e some quando o container para: quem man
 
 <a name="nginx-saude"></a>
 
-## 🩺 `scripts/nginx-saude.sh`
+## 🩺 `nginx/saude.sh`
 
 É o healthcheck do container do nginx, instalado como `/usr/local/sbin/allsafe-nginx-saude`. Não é chamado direto: o Docker o executa em intervalos.
 
@@ -406,7 +408,7 @@ Abre uma conexão TLS de verdade em `127.0.0.1:8443`, de dentro do container, e 
 
 <a name="ftp-user"></a>
 
-## 👥 `scripts/ftp-user.sh`
+## 👥 `ftp/usuario.sh`
 
 Instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user`. Não é chamado diretamente: use o [`manage-user.sh`](../manage-user.sh) ou o [painel](painel.md#usuarios).
 
@@ -434,7 +436,7 @@ Não são executados: outros scripts os carregam com `source`.
 
 | Script | Função | Quem usa |
 |---|---|---|
-| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | `ip_privado`, `cidr_privado` e `exigir_ip_privado`: aceitam só `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16` | `deploy.sh`, `testar.sh`, `entrypoint.sh`, `painel-entrypoint.sh` e `nginx-entrypoint.sh` |
+| [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | `ip_privado`, `cidr_privado` e `exigir_ip_privado`: aceitam só `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16` | `deploy.sh`, `tests/testar.sh`, `ftp/entrypoint.sh`, `painel/entrypoint.sh` e `nginx/entrypoint.sh` |
 | [`scripts/ambiente.sh`](../scripts/ambiente.sh) | `env_valor <chave> [padrão]`: lê uma chave do `.env` sem executar o arquivo; a última ocorrência vale, como no Compose. `env_gravar <chave> <valor>`: troca a linha da chave ou acrescenta no fim, sem regravar quando o valor já é o pedido | `deploy.sh`, `manage-user.sh`, `painel-senha.sh`, `backup.sh`, `restaurar.sh`, `validate.sh` e `testar.sh` |
 
 ---

@@ -179,7 +179,8 @@ services:
       - ftp
 
   # Frente web do painel: a única porta publicada dele. Fecha o HTTPS, só atende as redes
-  # permitidas, limita a taxa de pedidos e repassa ao painel pelo soquete Unix. Sem root.
+  # permitidas, limita a taxa de pedidos, serve os arquivos estáticos (web/) e repassa o resto ao
+  # painel pelo soquete Unix. Sem root.
   nginx:
     image: ${NGINX_IMAGE:-allsafe-ftp-nginx:local}
     build:

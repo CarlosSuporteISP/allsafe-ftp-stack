@@ -17,16 +17,18 @@ RUN apt-get update \
     && groupadd --gid 10001 frente \
     && useradd --uid 10001 --gid frente --home-dir /nonexistent \
        --shell /usr/sbin/nologin --no-create-home frente \
-    && mkdir -p /usr/local/lib/allsafe /etc/allsafe-nginx /usr/share/allsafe-nginx/_erro \
+    && mkdir -p /usr/local/lib/allsafe /etc/allsafe-nginx /usr/share/allsafe-nginx/_erro /usr/share/allsafe-nginx/web \
     && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled /etc/nginx/sites-available /var/www/html
 
 # As pastas de destino já existem (0755): o --chmod de um COPY vale também para a pasta que ele cria,
 # e uma pasta 0644 não é atravessada por quem não é root.
 COPY --chmod=0644 scripts/rede-privada.sh /usr/local/lib/allsafe/rede-privada.sh
-COPY --chmod=0644 nginx/nginx.conf.modelo /etc/allsafe-nginx/nginx.conf.modelo
+COPY --chmod=0644 nginx/nginx.conf.modelo nginx/cabecalhos.conf /etc/allsafe-nginx/
 COPY --chmod=0644 nginx/erro/pedido.txt nginx/erro/rede.txt nginx/erro/taxa.txt nginx/erro/painel.txt /usr/share/allsafe-nginx/_erro/
-COPY --chmod=0755 scripts/nginx-entrypoint.sh /usr/local/sbin/allsafe-nginx-entrypoint
-COPY --chmod=0755 scripts/nginx-saude.sh /usr/local/sbin/allsafe-nginx-saude
+# Arquivos estáticos do painel (pasta web/): quem serve é o nginx, sem passar pelo painel.
+COPY --chmod=0644 web/estilo.css /usr/share/allsafe-nginx/web/
+COPY --chmod=0755 nginx/entrypoint.sh /usr/local/sbin/allsafe-nginx-entrypoint
+COPY --chmod=0755 nginx/saude.sh /usr/local/sbin/allsafe-nginx-saude
 
 USER 10001:10001
 
@@ -49,7 +51,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chmod=0644 scripts/rede-privada.sh /usr/local/lib/allsafe/rede-privada.sh
-COPY --chmod=0755 scripts/ftp-user.sh /usr/local/sbin/allsafe-ftp-user
+COPY --chmod=0755 ftp/usuario.sh /usr/local/sbin/allsafe-ftp-user
 
 
 FROM base AS painel
@@ -67,8 +69,8 @@ RUN apt-get update \
     && mkdir -p /painel /nginx /opt/painel \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --chmod=0644 painel/servidor.py painel/estilo.css VERSION /opt/painel/
-COPY --chmod=0755 scripts/painel-entrypoint.sh /usr/local/sbin/allsafe-painel-entrypoint
+COPY --chmod=0644 painel/servidor.py VERSION /opt/painel/
+COPY --chmod=0755 painel/entrypoint.sh /usr/local/sbin/allsafe-painel-entrypoint
 
 # Sem EXPOSE: o painel não escuta em porta de rede, só no soquete Unix que o nginx abre.
 ENTRYPOINT ["/usr/local/sbin/allsafe-painel-entrypoint"]
@@ -80,8 +82,8 @@ LABEL org.opencontainers.image.title="AllSafe FTP" \
       org.opencontainers.image.description="Pure-FTPd isolado com usuarios virtuais, so para rede privada" \
       org.opencontainers.image.vendor="AllSafe"
 
-COPY --chmod=0755 scripts/entrypoint.sh /usr/local/sbin/allsafe-ftp-entrypoint
-COPY --chmod=0755 scripts/ftp-saude.sh /usr/local/sbin/allsafe-ftp-saude
+COPY --chmod=0755 ftp/entrypoint.sh /usr/local/sbin/allsafe-ftp-entrypoint
+COPY --chmod=0755 ftp/saude.sh /usr/local/sbin/allsafe-ftp-saude
 
 EXPOSE 2121 30000-30049
 

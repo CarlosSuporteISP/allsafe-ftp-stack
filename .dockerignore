@@ -5,6 +5,7 @@
 .secrets
 doc
 profiles
+tests
 README.md
 deploy.sh
 manage-user.sh

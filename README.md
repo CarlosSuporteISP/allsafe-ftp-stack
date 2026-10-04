@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.8.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.8.1-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -34,7 +34,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.8.0</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.8.1</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -401,7 +401,7 @@ flowchart LR
 |---|---|---|---|
 | Container `allsafe-ftp` (serviço `ftp`) | Pure-FTPd com FTPS, `chroot` e limites | `21/tcp` ➜ `2121/tcp` e a faixa passiva do perfil (`30000-30049/tcp` no `small`) | — |
 | Container `allsafe-ftp-painel` (serviço `painel`) | Painel web que administra os usuários do FTP; atende só o nginx, por soquete Unix | nenhuma | — |
-| Container `allsafe-ftp-nginx` (serviço `nginx`) | Frente web do painel: HTTPS, redes permitidas e limite de pedidos | `8443/tcp` ➜ `8443/tcp` | — |
+| Container `allsafe-ftp-nginx` (serviço `nginx`) | Frente web do painel: HTTPS, redes permitidas, limite de pedidos e arquivos estáticos | `8443/tcp` ➜ `8443/tcp` | — |
 | Pasta `DATA_DIR/auth` | Banco PureDB dos usuários virtuais, dividido pelo FTP e pelo painel | — | `/auth` |
 | Pasta `DATA_DIR/dados` | Arquivos enviados, uma pasta por usuário | — | `/data` |
 | Pasta `DATA_DIR/certs` | Chave e certificado TLS do FTP (`pure-ftpd.pem`) | — | `/etc/ssl/private` |
@@ -412,9 +412,9 @@ flowchart LR
 | Rede `allsafe-ftp-network` | Bridge dedicada, sub-rede `172.29.1.0/29` | — | — |
 
 - **Imagens:** [`Dockerfile`](Dockerfile) com três alvos sobre o mesmo `debian:trixie-slim` (Debian 13), fixado por digest: `ftp` (`pure-ftpd` e o usuário `ftpdata`, uid e gid **10000**), `painel` (o mesmo, com `python3`) e `nginx` (só `nginx` e `openssl`, com o usuário `frente`, uid e gid **10001**).
-- **Entrypoint do FTP:** [`scripts/entrypoint.sh`](scripts/entrypoint.sh) cria ou atualiza o usuário inicial, gera o certificado autoassinado na primeira subida e executa o `pure-ftpd`.
-- **Entrypoint do painel:** [`scripts/painel-entrypoint.sh`](scripts/painel-entrypoint.sh) confere a rede privada, gera o certificado do painel, prepara a pasta do nginx e executa o [`painel/servidor.py`](painel/servidor.py).
-- **Entrypoint do nginx:** [`scripts/nginx-entrypoint.sh`](scripts/nginx-entrypoint.sh) recusa rodar como `root`, confere a rede privada, monta a configuração a partir de [`nginx/nginx.conf.modelo`](nginx/nginx.conf.modelo) e executa o `nginx`.
+- **Entrypoint do FTP:** [`ftp/entrypoint.sh`](ftp/entrypoint.sh) cria ou atualiza o usuário inicial, gera o certificado autoassinado na primeira subida e executa o `pure-ftpd`.
+- **Entrypoint do painel:** [`painel/entrypoint.sh`](painel/entrypoint.sh) confere a rede privada, gera o certificado do painel, prepara a pasta do nginx e executa o [`painel/servidor.py`](painel/servidor.py).
+- **Entrypoint do nginx:** [`nginx/entrypoint.sh`](nginx/entrypoint.sh) recusa rodar como `root`, confere a rede privada, monta a configuração a partir de [`nginx/nginx.conf.modelo`](nginx/nginx.conf.modelo) e executa o `nginx`, que também entrega os arquivos estáticos de [`web/`](web/).
 
 </details>
 
@@ -439,7 +439,7 @@ Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python e Bash, com a vers�
 | Pure-FTPd | 1.0.50 (pacote Debian `1.0.50-2.2`) | Servidor FTP com TLS, `chroot` e usuários virtuais |
 | PureDB | embutido no Pure-FTPd 1.0.50 | Banco local dos usuários virtuais |
 | OpenSSL | 3.5.7 (série 3.5 do Debian 13) | Gera os certificados autoassinados e fornece o TLS |
-| nginx | 1.26.3 (pacote Debian `nginx`) | Frente web do painel: HTTPS, redes permitidas e limite de pedidos |
+| nginx | 1.26.3 (pacote Debian `nginx`) | Frente web do painel: HTTPS, redes permitidas, limite de pedidos e arquivos estáticos |
 | Python | 3.13.5 (pacote Debian `python3`) | Painel web, só com a biblioteca padrão |
 | tini | 0.19.0 (`docker-init` do Docker Engine) | Processo 1 de cada container (`init: true`) |
 | Bash | 5.2 | Scripts do host e dos containers |
@@ -523,7 +523,7 @@ Modelo de ameaça e o endurecimento linha a linha em [doc/seguranca.md](doc/segu
 |---|---|---|
 | Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `painel/servidor.py OK`, `compose OK com <perfil>.env` para os cinco perfis e `Validacao FTP concluida.` |
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB |
-| Rodar a bateria completa: funcional, segurança e rede | `./scripts/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
+| Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
 A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. Os detalhes estão em [Scripts](doc/scripts.md#testar).
 
@@ -533,7 +533,7 @@ A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao t
 
 ## 🗂️ Estrutura de arquivos
 
-Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`deploy.sh`, `manage-user.sh`); o resto está em `scripts/`, `painel/`, `nginx/`, `profiles/` e `doc/`.
+Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`deploy.sh`, `manage-user.sh`). Cada serviço tem a pasta dele, com o que vai dentro da imagem: `ftp/`, `painel/` e `nginx/`; `web/` guarda os arquivos estáticos que o nginx entrega; `scripts/` tem só o que roda no servidor; `tests/` tem a bateria de testes.
 
 <details>
 <summary>Arquivo por arquivo — clique para expandir</summary>
@@ -544,22 +544,26 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`Dockerfile`](Dockerfile) | Imagens sobre o Debian 13 slim: alvos `ftp` e `painel`, com Pure-FTPd e o usuário `ftpdata`, e alvo `nginx` |
 | [`deploy.sh`](deploy.sh) | Instala, reaplica, atualiza ou remove a stack em um comando |
 | [`manage-user.sh`](manage-user.sh) | Atalho do host para `add`, `passwd`, `del` e `list` de usuários |
-| [`scripts/entrypoint.sh`](scripts/entrypoint.sh) | Prepara o usuário inicial e o certificado e executa o `pure-ftpd` |
-| [`scripts/ftp-saude.sh`](scripts/ftp-saude.sh) | Healthcheck do FTP: abre a porta de controle e espera a saudação do servidor |
-| [`scripts/ftp-user.sh`](scripts/ftp-user.sh) | Gestão de usuários **dentro** dos containers (chamado pelo `manage-user.sh` e pelo painel) |
+| [`ftp/entrypoint.sh`](ftp/entrypoint.sh) | Prepara o usuário inicial e o certificado e executa o `pure-ftpd` |
+| [`ftp/saude.sh`](ftp/saude.sh) | Healthcheck do FTP: abre a porta de controle e espera a saudação do servidor |
+| [`ftp/usuario.sh`](ftp/usuario.sh) | Gestão de usuários **dentro** dos containers (chamado pelo `manage-user.sh` e pelo painel) |
 | [`painel/servidor.py`](painel/servidor.py) | Painel web: servidor em Python, só com a biblioteca padrão, atrás do nginx |
-| [`painel/estilo.css`](painel/estilo.css) | Aparência do painel |
-| [`scripts/painel-entrypoint.sh`](scripts/painel-entrypoint.sh) | Confere a rede privada, gera o certificado do painel e executa o servidor |
+| [`painel/entrypoint.sh`](painel/entrypoint.sh) | Confere a rede privada, gera o certificado do painel e executa o servidor |
+| [`nginx/nginx.conf.modelo`](nginx/nginx.conf.modelo) | Modelo da configuração do nginx: HTTPS, redes permitidas, limites e repasse ao painel |
+| [`nginx/cabecalhos.conf`](nginx/cabecalhos.conf) | Cabeçalhos de segurança das respostas que o próprio nginx dá (páginas de erro e arquivos estáticos) |
+| [`nginx/erro/`](nginx/erro/) | Páginas de erro do nginx, em texto |
+| [`nginx/entrypoint.sh`](nginx/entrypoint.sh) | Confere a rede privada, monta a configuração e executa o nginx |
+| [`nginx/saude.sh`](nginx/saude.sh) | Healthcheck do nginx: pede `/saude` por HTTPS, de ponta a ponta |
+| [`web/estilo.css`](web/estilo.css) | Aparência do painel, entregue direto pelo nginx |
 | [`scripts/painel-senha.sh`](scripts/painel-senha.sh) | Troca a senha do painel, gravando só o hash |
-| [`nginx/`](nginx/) | Modelo da configuração do nginx (`nginx.conf.modelo`) e as páginas de erro |
-| [`scripts/nginx-entrypoint.sh`](scripts/nginx-entrypoint.sh) | Confere a rede privada, monta a configuração e executa o nginx |
-| [`scripts/nginx-saude.sh`](scripts/nginx-saude.sh) | Healthcheck do nginx: pede `/saude` por HTTPS, de ponta a ponta |
 | [`scripts/rede-privada.sh`](scripts/rede-privada.sh) | Funções que recusam IP e rede que não sejam privados |
 | [`scripts/ambiente.sh`](scripts/ambiente.sh) | Função que lê uma chave do `.env` sem executar o arquivo |
 | [`scripts/backup.sh`](scripts/backup.sh) | Grava a cópia de segurança dos dados, dos usuários, dos certificados e da auditoria em `BACKUP_DIR` |
 | [`scripts/restaurar.sh`](scripts/restaurar.sh) | Devolve a stack ao estado de uma cópia, guardando antes o estado atual |
 | [`scripts/validate.sh`](scripts/validate.sh) | Checagem de sintaxe e Compose de todos os perfis e, com `--runtime`, dos três serviços no ar |
-| [`scripts/testar.sh`](scripts/testar.sh) | Bateria de testes funcional, de segurança e de rede, em instância de teste própria |
+| [`tests/testar.sh`](tests/testar.sh) | Bateria de testes funcional, de segurança e de rede, em instância de teste própria |
+| [`tests/comum.sh`](tests/comum.sh) | Funções da bateria: registro dos casos, auxiliares de FTP e do painel e gravação dos resultados |
+| [`tests/etapas/`](tests/etapas/) | Os casos da bateria, um arquivo por etapa, na ordem do nome |
 | [`profiles/`](profiles/) | Perfis de capacidade (`--size small\|medium\|large\|xlarge\|extended`) |
 | [`.env.example`](.env.example) | Modelo de configuração, copiado para `.env` |
 | `.secrets/` | Senha do usuário inicial e senha do painel (arquivos `.txt` ignorados pelo Git) |
@@ -606,7 +610,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.8.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.8.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

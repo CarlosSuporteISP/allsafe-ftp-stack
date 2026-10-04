@@ -99,7 +99,7 @@ chmod 600 .secrets/ftp_password.txt
 <summary>Detalhe técnico — regras da senha</summary>
 
 - A senha é gerada com `openssl rand -base64 36`; o `openssl` é exigido no host.
-- Mínimo de **12 caracteres**: o [`entrypoint.sh`](../scripts/entrypoint.sh) recusa senhas menores.
+- Mínimo de **12 caracteres**: o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) recusa senhas menores.
 - O arquivo chega ao container como o segredo `/run/secrets/ftp_password`, somente leitura; o serviço não vê o resto de `.secrets/`.
 - Arquivos `.txt` de `.secrets/` são ignorados pelo Git. Veja [Segredos](segredos.md).
 - Senha no `.env` **não é aceita**: o `deploy.sh` recusa um `.env` com `FTP_PASSWORD` preenchido e o container recusa a variável.
@@ -155,7 +155,7 @@ O [`deploy.sh`](../deploy.sh), nesta ordem:
 
 Com `--check-only`, o script para depois do passo 4 e de um `config --quiet`, sem criar `.env`, pasta ou senha, com `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.`
 
-Na **primeira** subida o [`entrypoint.sh`](../scripts/entrypoint.sh):
+Na **primeira** subida o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh):
 
 - cria `/data/$FTP_USER` com dono `ftpdata`;
 - grava o usuário no PureDB (`/auth/pureftpd.pdb`);

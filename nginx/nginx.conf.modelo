@@ -1,6 +1,6 @@
 # Modelo da configuração do nginx da allsafe-ftp-stack. SÓ PARA REDE PRIVADA, atrás de firewall.
-# O nginx é a única porta publicada do painel: fecha o HTTPS, limita redes e taxa, e repassa o
-# pedido ao painel por soquete Unix. A entrada do container (scripts/nginx-entrypoint.sh) troca a
+# O nginx é a única porta publicada do painel: fecha o HTTPS, limita redes e taxa, serve os arquivos
+# estáticos e repassa o resto ao painel por soquete Unix. A entrada do container (nginx/entrypoint.sh) troca a
 # linha que contém só o marcador das redes pelas redes de PAINEL_REDES_PERMITIDAS e grava o resultado em /run/nginx/nginx.conf.
 daemon off;
 pid /run/nginx/nginx.pid;
@@ -84,15 +84,20 @@ http {
             types { }
             default_type text/plain;
             charset utf-8;
-            add_header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'" always;
-            add_header X-Frame-Options DENY always;
-            add_header X-Content-Type-Options nosniff always;
-            add_header Referrer-Policy same-origin always;
-            add_header Strict-Transport-Security "max-age=31536000" always;
-            add_header Cross-Origin-Opener-Policy same-origin always;
-            add_header Cross-Origin-Resource-Policy same-origin always;
-            add_header Permissions-Policy "camera=(), geolocation=(), microphone=()" always;
+            include /etc/allsafe-nginx/cabecalhos.conf;
             add_header Cache-Control no-store always;
+        }
+
+        # Arquivos estáticos do painel (pasta web/ do projeto): o nginx entrega direto, sem ocupar o
+        # painel. Só os nomes listados aqui existem; o navegador revalida a cada uso (ETag).
+        location = /estilo.css {
+            root /usr/share/allsafe-nginx/web;
+            types { text/css css; }
+            default_type application/octet-stream;
+            charset utf-8;
+            access_log off;
+            include /etc/allsafe-nginx/cabecalhos.conf;
+            add_header Cache-Control no-cache always;
         }
 
         # O painel manda os próprios cabeçalhos de segurança; aqui o nginx só repassa.

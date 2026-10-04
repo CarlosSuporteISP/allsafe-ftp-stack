@@ -314,9 +314,9 @@ Senha, token e cookie **nunca** são gravados. As transferências dos equipament
 <details>
 <summary>Detalhe técnico — implementação</summary>
 
-- **Código:** [`painel/servidor.py`](../painel/servidor.py), só com a biblioteca padrão do Python 3.13 do Debian 13; a aparência está em [`painel/estilo.css`](../painel/estilo.css). Não há JavaScript, fonte nem imagem externa.
+- **Código:** [`painel/servidor.py`](../painel/servidor.py), só com a biblioteca padrão do Python 3.13 do Debian 13; a aparência está em [`web/estilo.css`](../web/estilo.css), que o nginx entrega direto, sem passar pelo painel. Não há JavaScript, fonte nem imagem externa.
 - **Imagem:** alvo `painel` do [`Dockerfile`](../Dockerfile), sobre a mesma base do FTP (traz o `pure-pw` e o `allsafe-ftp-user`). Imagem `PAINEL_IMAGE`, container `PAINEL_CONTAINER_NAME`.
-- **Entrada do container:** [`scripts/painel-entrypoint.sh`](../scripts/painel-entrypoint.sh) recusa senha em variável, confere IP e redes privados, ajusta dono e modo de `/painel`, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
+- **Entrada do container:** [`painel/entrypoint.sh`](../painel/entrypoint.sh) recusa senha em variável, confere IP e redes privados, ajusta dono e modo de `/painel`, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
 - **Frente web:** alvo `nginx` do [`Dockerfile`](../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo). O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [Segurança](seguranca.md#painel).
 - **Hash da senha:** `scrypt` com `N=2^15`, `r=8`, `p=1` e sal de 16 bytes, no formato `scrypt$15$8$1$<sal>$<resumo>`. É lido de `/run/secrets/painel_password_hash` a cada entrada e comparado em tempo constante.
 - **Sessão:** o token do cookie tem 256 bits aleatórios e o servidor guarda só o resumo SHA-256 dele, em memória. Reiniciar o painel encerra todas as sessões e zera a contagem de erros de entrada.

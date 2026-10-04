@@ -654,8 +654,6 @@ class Painel(http.server.BaseHTTPRequestHandler):
 
         if metodo == 'GET' and self.caminho == '/saude':
             return self.enviar(200, 'ok\n', 'text/plain; charset=utf-8')
-        if metodo == 'GET' and self.caminho == '/estilo.css':
-            return self.enviar(200, ESTILO, 'text/css; charset=utf-8')
         if metodo == 'GET' and self.caminho == '/favicon.svg':
             return self.enviar(200, ICONE, 'image/svg+xml')
 
@@ -1009,7 +1007,6 @@ ROTAS = {
 ABAS = (('/', '📊 Visão geral'), ('/usuarios', '👥 Usuários'), ('/seguranca', '🔐 Segurança'), ('/atividade', '📜 Atividade'))
 ICONE = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" rx="3" fill="#0d1117"/>'
          '<path d="M3 5h10v2H3zm0 4h10v2H3z" fill="#58a6ff"/></svg>')
-ESTILO = ''
 
 
 def pagina(titulo, miolo, sessao=None, ativa=''):
@@ -1070,7 +1067,6 @@ def modo_saude():
 
 
 def principal():
-    global ESTILO
     if '--hash' in sys.argv[1:]:
         return modo_hash()
     if '--saude' in sys.argv[1:]:
@@ -1078,8 +1074,6 @@ def principal():
     CFG.update(configuracao())
     if ler_hash() is None:
         falha(f'{ARQ_HASH} ausente ou inválido: rode ./deploy.sh ou scripts/painel-senha.sh')
-    with open(os.path.join(RAIZ, 'estilo.css'), encoding='utf-8') as arq:
-        ESTILO = arq.read()
     servidor = Servidor(ARQ_SOQUETE, Painel)
     auditar('-', 'painel_iniciado', f'versao={limpo(CFG["versao"])}')
     print(f'Painel pronto no soquete {ARQ_SOQUETE}, atrás do nginx; sessão de {CFG["inatividade"] // 60} min; '

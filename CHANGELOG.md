@@ -8,6 +8,31 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.8.1] - 2026-10-04
+
+As pastas do projeto passam a seguir a divisão por serviço. Nada muda para quem usa: os comandos do dia a dia, o `.env`, os segredos e os dados continuam iguais. **Uso só em rede privada, atrás de firewall.**
+
+### Alterado
+
+- **Uma pasta por serviço**, com o que vai dentro de cada imagem: [`ftp/`](ftp/), [`painel/`](painel/) e [`nginx/`](nginx/). A pasta [`scripts/`](scripts/) fica só com o que roda no servidor.
+- **Arquivos estáticos em [`web/`](web/)**, entregues direto pelo nginx. O painel deixa de servir a folha de estilo; a aparência é a mesma.
+- **Cabeçalhos de segurança do nginx em um arquivo só**, [`nginx/cabecalhos.conf`](nginx/cabecalhos.conf), usado nas páginas de erro e nos arquivos estáticos.
+- **Bateria de testes em [`tests/`](tests/)**: `tests/testar.sh` chama as funções de `tests/comum.sh` e os casos de `tests/etapas/`, um arquivo por etapa. O comando passa de `./scripts/testar.sh` para `./tests/testar.sh`.
+- Um caso na bateria funcional, que passa a 20: a folha de estilo chega pelo nginx, com os cabeçalhos de segurança, e o painel não a entrega mais.
+
+### Arquivos que mudaram de lugar
+
+| Antes | Agora |
+|---|---|
+| `scripts/entrypoint.sh` | `ftp/entrypoint.sh` |
+| `scripts/ftp-saude.sh` | `ftp/saude.sh` |
+| `scripts/ftp-user.sh` | `ftp/usuario.sh` |
+| `scripts/painel-entrypoint.sh` | `painel/entrypoint.sh` |
+| `scripts/nginx-entrypoint.sh` | `nginx/entrypoint.sh` |
+| `scripts/nginx-saude.sh` | `nginx/saude.sh` |
+| `painel/estilo.css` | `web/estilo.css` |
+| `scripts/testar.sh` | `tests/testar.sh`, `tests/comum.sh` e `tests/etapas/` |
+
 ## [0.8.0] - 2026-10-04
 
 O painel passa a aceitar a entrada pelo navegador e a documentação ganha as fotos de todas as telas. **Uso só em rede privada, atrás de firewall.**

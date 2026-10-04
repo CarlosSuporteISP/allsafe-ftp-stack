@@ -61,7 +61,7 @@ Regras:
 <details>
 <summary>Detalhe técnico — onde a mudança é gravada</summary>
 
-O `manage-user.sh` encapsula o [`scripts/ftp-user.sh`](../scripts/ftp-user.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo.
+O `manage-user.sh` encapsula o [`ftp/usuario.sh`](../ftp/usuario.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo.
 
 </details>
 
@@ -88,7 +88,7 @@ docker compose restart ftp
 **Resultado esperado:** o cliente conecta sem aviso de certificado e o container volta a `healthy`.
 
 - O arquivo precisa conter **chave, certificado e intermediárias** no mesmo PEM, `0600`.
-- O [`entrypoint.sh`](../scripts/entrypoint.sh) só gera o autoassinado **se o arquivo não existir**: o seu não será sobrescrito.
+- O [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) só gera o autoassinado **se o arquivo não existir**: o seu não será sobrescrito.
 - Renovação: repita os passos 1 a 3 (por exemplo, por `cron` no host, puxando do seu cliente ACME).
 - Apague a cópia local do `pure-ftpd.pem` depois de instalar: ela contém a chave privada.
 

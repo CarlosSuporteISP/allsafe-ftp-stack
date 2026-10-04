@@ -136,12 +136,13 @@ flowchart LR
 | Serviço `nginx` | [`compose.yaml`](../compose.yaml) | Container da frente web (`allsafe-ftp-nginx`), a única porta publicada do painel; só inicia depois de o `painel` ficar `healthy` e reinicia junto com ele |
 | Imagens | [`Dockerfile`](../Dockerfile) | Três alvos sobre o mesmo `debian:trixie-slim` (Debian 13), fixado por digest. Alvo `ftp`: `pure-ftpd`, `pure-ftpd-common`, `openssl`, `procps`, `ca-certificates` e o entrypoint do FTP. Alvo `painel`: os mesmos pacotes, `python3` e o painel. Alvo `nginx`: só `nginx` e `openssl`, sem nada do FTP |
 | Usuário do processo de dados | [`Dockerfile`](../Dockerfile) | `ftpdata`, uid e gid **10000**, shell `nologin`, sem home |
-| Entrypoint | [`scripts/entrypoint.sh`](../scripts/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-ftp-entrypoint` | Provisiona usuário e certificado e faz `exec` do `pure-ftpd` |
-| Gestão de usuários | [`scripts/ftp-user.sh`](../scripts/ftp-user.sh), instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user` | `add`, `passwd`, `del` e `list` no PureDB, chamado de fora por [`manage-user.sh`](../manage-user.sh) e, dentro do painel, pelo servidor web |
-| Painel web | [`painel/servidor.py`](../painel/servidor.py) e [`painel/estilo.css`](../painel/estilo.css), em `/opt/painel` | Servidor em Python, só com a biblioteca padrão e sem JavaScript: telas, sessão e auditoria. Atende só o nginx, por soquete Unix |
-| Entrypoint do painel | [`scripts/painel-entrypoint.sh`](../scripts/painel-entrypoint.sh), instalado como `/usr/local/sbin/allsafe-painel-entrypoint` | Confere a rede privada, gera o certificado, entrega a cópia dele ao nginx e faz `exec` do servidor |
-| Frente web | [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo) e as páginas de erro de [`nginx/erro/`](../nginx/erro/) | nginx sem root: fecha o HTTPS, recusa quem está fora das redes permitidas, limita taxa de pedidos, conexões e tamanho do pedido e repassa o resto ao painel |
-| Entrypoint do nginx | [`scripts/nginx-entrypoint.sh`](../scripts/nginx-entrypoint.sh), instalado como `/usr/local/sbin/allsafe-nginx-entrypoint` | Confere a rede privada, gera a configuração a partir do modelo e faz `exec` do `nginx` |
+| Entrypoint | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-ftp-entrypoint` | Provisiona usuário e certificado e faz `exec` do `pure-ftpd` |
+| Gestão de usuários | [`ftp/usuario.sh`](../ftp/usuario.sh), instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user` | `add`, `passwd`, `del` e `list` no PureDB, chamado de fora por [`manage-user.sh`](../manage-user.sh) e, dentro do painel, pelo servidor web |
+| Painel web | [`painel/servidor.py`](../painel/servidor.py), em `/opt/painel` | Servidor em Python, só com a biblioteca padrão e sem JavaScript: telas, sessão e auditoria. Atende só o nginx, por soquete Unix |
+| Entrypoint do painel | [`painel/entrypoint.sh`](../painel/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-painel-entrypoint` | Confere a rede privada, gera o certificado, entrega a cópia dele ao nginx e faz `exec` do servidor |
+| Frente web | [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo), [`nginx/cabecalhos.conf`](../nginx/cabecalhos.conf) e as páginas de erro de [`nginx/erro/`](../nginx/erro/) | nginx sem root: fecha o HTTPS, recusa quem está fora das redes permitidas, limita taxa de pedidos, conexões e tamanho do pedido, entrega os arquivos estáticos e repassa o resto ao painel |
+| Arquivos estáticos | [`web/estilo.css`](../web/estilo.css), na imagem do nginx em `/usr/share/allsafe-nginx/web` | Aparência do painel. O nginx entrega direto, com os cabeçalhos de segurança de `cabecalhos.conf`, sem ocupar o painel |
+| Entrypoint do nginx | [`nginx/entrypoint.sh`](../nginx/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-nginx-entrypoint` | Confere a rede privada, gera a configuração a partir do modelo e faz `exec` do `nginx` |
 
 O que cada script faz, com parâmetros e saída: [Scripts](scripts.md). Uso e proteções do painel: [Painel web](painel.md).
 
@@ -295,7 +296,7 @@ Ao terminar, o entrypoint escreve no log: `FTP pronto em 2121/tcp; TLS=<modo>; p
 
 ## 🚩 Opções do `pure-ftpd`
 
-Linha final do [`entrypoint.sh`](../scripts/entrypoint.sh):
+Linha final do [`ftp/entrypoint.sh`](../ftp/entrypoint.sh):
 
 | Opção | Efeito |
 |---|---|
@@ -328,7 +329,7 @@ test: ["CMD", "/usr/local/sbin/allsafe-ftp-saude"]
 interval: 20s   timeout: 6s   retries: 5   start_period: 20s
 ```
 
-Abre a porta de controle (`2121`), de dentro do container, e espera a saudação do servidor: um `pure-ftpd` vivo que não atende deixa de contar como saudável, e o container passa a `unhealthy` depois de cinco verificações seguidas sem resposta. Servidor no limite de conexões (`421`) conta como atendendo. O teste não faz login: veja [`scripts/ftp-saude.sh`](scripts.md#ftp-saude). Para conferir também o usuário no PureDB, use `./scripts/validate.sh --runtime`: veja [Scripts](scripts.md#validate).
+Abre a porta de controle (`2121`), de dentro do container, e espera a saudação do servidor: um `pure-ftpd` vivo que não atende deixa de contar como saudável, e o container passa a `unhealthy` depois de cinco verificações seguidas sem resposta. Servidor no limite de conexões (`421`) conta como atendendo. O teste não faz login: veja [`ftp/saude.sh`](scripts.md#ftp-saude). Para conferir também o usuário no PureDB, use `./scripts/validate.sh --runtime`: veja [Scripts](scripts.md#validate).
 
 O painel tem o dele, que pede `/saude` pelo soquete Unix, do jeito que o nginx faz:
 

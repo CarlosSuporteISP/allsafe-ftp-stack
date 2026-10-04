@@ -116,7 +116,7 @@ Se o equipamento não tiver mesmo como falar TLS (confira o manual e a versão d
 | Sintoma | Causa | Como verificar | Correção |
 |---|---|---|---|
 | `553 Could not create file` | Diretório do usuário sem dono `ftpdata` (uid 10000) | `docker compose exec ftp ls -ld /data/<usuario>` | `docker compose exec ftp chown -R 10000:10000 /data/<usuario>` |
-| Arquivos entram com permissão inesperada | O `umask` do `pure-ftpd` é `133:022` (arquivos sem execução e sem escrita para grupo e outros) | `docker compose exec ftp ls -l /data/<usuario>` | Comportamento esperado; ajuste `-U` no [`entrypoint.sh`](../scripts/entrypoint.sh) se precisar |
+| Arquivos entram com permissão inesperada | O `umask` do `pure-ftpd` é `133:022` (arquivos sem execução e sem escrita para grupo e outros) | `docker compose exec ftp ls -l /data/<usuario>` | Comportamento esperado; ajuste `-U` no [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) se precisar |
 | Cliente não consegue `chmod` | `-R` desabilita o `SITE CHMOD` | Mensagem de recusa no cliente | Intencional, por segurança. Remova `-R` do entrypoint só se for realmente necessário |
 | `ls` não mostra todos os arquivos | Limite `-L 10000:8` (10000 arquivos, profundidade 8) | Conte os arquivos da pasta | Reduza o número de arquivos por diretório ou ajuste `-L` |
 
@@ -168,7 +168,7 @@ Se o equipamento não tiver mesmo como falar TLS (confira o manual e a versão d
 ./scripts/validate.sh                     # bash -n dos scripts e compose config
 ./scripts/validate.sh --runtime           # também exige os três serviços running e healthy
 docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude && echo atendendo   # o que o healthcheck testa
-./scripts/testar.sh                       # bateria completa em instância de teste separada
+./tests/testar.sh                       # bateria completa em instância de teste separada
 ```
 
 **Resultado esperado:** `Validacao FTP concluida.`, `atendendo` e `Bateria aprovada: nenhum desvio.` A bateria não toca na instalação em uso; se ela passa e a sua instalação falha, a diferença está no `.env`, nos dados ou na rede do host. Veja [Scripts](scripts.md#testar).
