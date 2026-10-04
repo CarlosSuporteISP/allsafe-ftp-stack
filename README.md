@@ -4,7 +4,7 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com usuários virtuais, chroot e FTPS obrigatório para backup de equipamentos.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.1.1-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.2.0-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -28,7 +28,7 @@ flowchart LR
 
 <sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](doc/diagramas/)</sub>
 
-<sub><b>v0.1.1</b> · visão geral da stack · 2026-10-04</sub>
+<sub><b>v0.2.0</b> · visão geral da stack · 2026-10-04</sub>
 
 </div>
 
@@ -209,9 +209,9 @@ flowchart LR
         logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
     end
     subgraph VOLUMES["💽 Volumes"]
-        vcerts@{ shape: lin-cyl, label: "💽 allsafe-ftp-certs<br>/etc/ssl/private" }
-        vauth@{ shape: cyl, label: "🗄️ allsafe-ftp-auth<br>/auth, PureDB" }
-        vdata@{ shape: lin-cyl, label: "💽 allsafe-ftp-data<br>/data" }
+        vcerts@{ shape: lin-cyl, label: "💽 DATA_DIR/certs<br>/etc/ssl/private" }
+        vauth@{ shape: cyl, label: "🗄️ DATA_DIR/auth<br>/auth, PureDB" }
+        vdata@{ shape: lin-cyl, label: "💽 DATA_DIR/dados<br>/data" }
     end
     subgraph RESULTADO["🏁 Resultado"]
         fim@{ shape: stadium, label: "🏁 backup guardado" }
@@ -236,16 +236,16 @@ flowchart LR
 | 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | O usuário executa `./deploy.sh --size small` no host |
 | 2 | ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd | O script valida o Compose e roda `docker compose up -d --build` |
 | 3 | 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
-| 4 | ⚙️ Pure-FTPd ➜ 💽 `allsafe-ftp-data` | O arquivo é gravado pelo canal passivo `30000-30049/tcp` |
-| 5 | 💽 `allsafe-ftp-data` ➜ 🏁 backup guardado | O arquivo fica no volume, na pasta do usuário |
+| 4 | ⚙️ Pure-FTPd ➜ 💽 `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo `30000-30049/tcp` |
+| 5 | 💽 `DATA_DIR/dados` ➜ 🏁 backup guardado | O arquivo fica na pasta do usuário, no host |
 
 | Peça | Papel | Porta | Dados em |
 |---|---|---|---|
 | ⚙️ Container `allsafe-ftp` (serviço `ftp`) | Pure-FTPd com FTPS, `chroot` e limites | `21/tcp` ➜ `2121/tcp` e `30000-30049/tcp` | — |
-| 🗄️ Volume `allsafe-ftp-auth` | Banco PureDB dos usuários virtuais | — | `/auth` |
-| 💽 Volume `allsafe-ftp-data` | Arquivos enviados, uma pasta por usuário | — | `/data` |
-| 💽 Volume `allsafe-ftp-certs` | Chave e certificado TLS (`pure-ftpd.pem`) | — | `/etc/ssl/private` |
-| 🔑 Bind `./.secrets` | Senha do usuário inicial, somente leitura | — | `/run/.secrets` |
+| 🗄️ Pasta `DATA_DIR/auth` | Banco PureDB dos usuários virtuais | — | `/auth` |
+| 💽 Pasta `DATA_DIR/dados` | Arquivos enviados, uma pasta por usuário | — | `/data` |
+| 💽 Pasta `DATA_DIR/certs` | Chave e certificado TLS (`pure-ftpd.pem`) | — | `/etc/ssl/private` |
+| 🔑 Segredo `ftp_password` | Senha do usuário inicial (`.secrets/ftp_password.txt`), somente leitura | — | `/run/secrets/ftp_password` |
 | 🌐 Rede `allsafe-ftp-network` | Bridge dedicada, sub-rede `172.29.1.0/29` | — | — |
 
 - **Imagem:** [`Dockerfile`](Dockerfile) com `debian:bookworm-slim` fixada por digest, `pure-ftpd` e o usuário `ftpdata` (uid e gid **10000**).
@@ -385,7 +385,7 @@ O que já foi feito e o que falta fazer está em [🗺️ doc/planos/README.md](
 
 ## 🏷️ Versão
 
-**0.1.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` no repositório.
+**0.2.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. A sequência completa está no [🗺️ plano mestre](doc/planos/README.md#versoes).
 

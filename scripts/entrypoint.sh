@@ -2,23 +2,26 @@
 set -Eeuo pipefail
 
 die() { echo "FALHA: $*" >&2; exit 1; }
-read_password() {
-  if [[ -n "${FTP_PASSWORD_FILE:-}" ]]; then
-    [[ -r "$FTP_PASSWORD_FILE" ]] || die "FTP_PASSWORD_FILE nao pode ser lido"
-    tr -d '\r\n' < "$FTP_PASSWORD_FILE"
-  else
-    printf '%s' "${FTP_PASSWORD:-}"
-  fi
-}
+# shellcheck source=scripts/rede-privada.sh
+source /usr/local/lib/allsafe/rede-privada.sh
+
+# A senha vem só do segredo montado pelo Compose; variável de ambiente com senha é recusada.
+secret_file=/run/secrets/ftp_password
+[[ -z "${FTP_PASSWORD:-}" ]] || die "FTP_PASSWORD não é mais aceita: grave a senha em .secrets/ftp_password.txt"
+[[ -r "$secret_file" ]] || die "segredo $secret_file ausente: rode ./deploy.sh, que cria .secrets/ftp_password.txt"
 
 FTP_USER="${FTP_USER:-transfer}"
+FTP_BIND_IP="${FTP_BIND_IP:-127.0.0.1}"
 FTP_PUBLIC_IP="${FTP_PUBLIC_IP:-127.0.0.1}"
 FTP_PASSIVE_PORT_START="${FTP_PASSIVE_PORT_START:-30000}"
 FTP_PASSIVE_PORT_END="${FTP_PASSIVE_PORT_END:-30049}"
 FTP_TLS_MODE="${FTP_TLS_MODE:-2}"
 FTP_MAX_CLIENTS="${FTP_MAX_CLIENTS:-50}"
 FTP_MAX_CLIENTS_PER_IP="${FTP_MAX_CLIENTS_PER_IP:-8}"
-password="$(read_password)"
+password="$(tr -d '\r\n' < "$secret_file")"
+
+exigir_ip_privado FTP_BIND_IP "$FTP_BIND_IP" || exit 1
+exigir_ip_privado FTP_PUBLIC_IP "$FTP_PUBLIC_IP" || exit 1
 
 [[ "$FTP_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || die "FTP_USER invalido"
 [[ ${#password} -ge 12 ]] || die "a senha FTP deve ter pelo menos 12 caracteres"
@@ -26,16 +29,20 @@ password="$(read_password)"
 (( FTP_PASSIVE_PORT_START >= 1024 && FTP_PASSIVE_PORT_END <= 65535 && FTP_PASSIVE_PORT_START <= FTP_PASSIVE_PORT_END )) || die "faixa passiva fora dos limites"
 [[ "$FTP_TLS_MODE" =~ ^[123]$ ]] || die "FTP_TLS_MODE deve ser 1, 2 ou 3"
 
-install -d -o root -g root -m 0750 /auth
+# As pastas vêm do host por bind mount: o dono e o modo são normalizados a cada subida.
+chown root:root /data /auth /etc/ssl/private
+chmod 0755 /data
+chmod 0750 /auth
+chmod 0700 /etc/ssl/private
 install -d -o ftpdata -g ftpdata -m 0750 "/data/$FTP_USER"
 touch /auth/pureftpd.passwd
 chmod 0600 /auth/pureftpd.passwd
 
 if grep -Fq "${FTP_USER}:" /auth/pureftpd.passwd; then
-  printf '%s\n%s\n' "$password" "$password" | pure-pw usermod "$FTP_USER" -f /auth/pureftpd.passwd
+  printf '%s\n%s\n' "$password" "$password" | pure-pw usermod "$FTP_USER" -f /auth/pureftpd.passwd >/dev/null
 else
   printf '%s\n%s\n' "$password" "$password" | pure-pw useradd "$FTP_USER" \
-    -f /auth/pureftpd.passwd -u ftpdata -g ftpdata -d "/data/$FTP_USER"
+    -f /auth/pureftpd.passwd -u ftpdata -g ftpdata -d "/data/$FTP_USER" >/dev/null
 fi
 pure-pw mkdb /auth/pureftpd.pdb -f /auth/pureftpd.passwd
 chmod 0600 /auth/pureftpd.passwd /auth/pureftpd.pdb
@@ -54,8 +61,11 @@ if [[ ! -s "$certificate" ]]; then
     -addext "subjectAltName=${certificate_san}" >/dev/null 2>&1
 fi
 chmod 0600 "$certificate"
+# Parte pública do certificado, para o painel mostrar validade e impressão digital sem ver a chave.
+openssl x509 -in "$certificate" -out /auth/ftp-cert.pem
+chmod 0644 /auth/ftp-cert.pem
 
-unset FTP_PASSWORD password
+unset password
 echo "FTP pronto em 2121/tcp; TLS=${FTP_TLS_MODE}; passivo=${FTP_PASSIVE_PORT_START}-${FTP_PASSIVE_PORT_END}"
 exec /usr/sbin/pure-ftpd \
   -A -E -H -j -R \

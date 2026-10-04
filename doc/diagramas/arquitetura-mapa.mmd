@@ -14,9 +14,9 @@ flowchart LR
         logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
     end
     subgraph VOLUMES["💽 Volumes"]
-        vcerts@{ shape: lin-cyl, label: "💽 allsafe-ftp-certs<br>/etc/ssl/private" }
-        vauth@{ shape: cyl, label: "🗄️ allsafe-ftp-auth<br>/auth, PureDB" }
-        vdata@{ shape: lin-cyl, label: "💽 allsafe-ftp-data<br>/data" }
+        vcerts@{ shape: lin-cyl, label: "💽 DATA_DIR/certs<br>/etc/ssl/private" }
+        vauth@{ shape: cyl, label: "🗄️ DATA_DIR/auth<br>/auth, PureDB" }
+        vdata@{ shape: lin-cyl, label: "💽 DATA_DIR/dados<br>/data" }
     end
     subgraph RESULTADO["🏁 Resultado"]
         fim@{ shape: stadium, label: "🏁 backup guardado" }

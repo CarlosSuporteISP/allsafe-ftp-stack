@@ -42,27 +42,28 @@ Todas as variáveis vivem no `.env`, copiado de [`.env.example`](../.env.example
 
 ```ini
 TZ=America/Sao_Paulo
-FTP_BIND_IP=203.0.113.10
-FTP_PUBLIC_IP=203.0.113.10
+DATA_DIR=/home/carlos/code/data/allsafe-ftp-stack
+FTP_BIND_IP=192.168.10.20
+FTP_PUBLIC_IP=192.168.10.20
 FTP_PORT=21
 FTP_PASSIVE_PORT_START=30000
 FTP_PASSIVE_PORT_END=30049
 FTP_USER=backup-rede
-FTP_PASSWORD=
-FTP_PASSWORD_FILE=/run/.secrets/ftp_password.txt
 FTP_TLS_MODE=2
 FTP_CERT_CN=ftp.exemplo.com.br
 FTP_MAX_CLIENTS=50
 FTP_MAX_CLIENTS_PER_IP=8
 ```
 
+Nenhuma senha entra no `.env`: ela fica em `.secrets/ftp_password.txt` ([🔑 Segredos](segredos.md)).
+
 Depois de editar o `.env`, valide sem subir:
 
 ```bash
-docker compose --env-file .env config --quiet && echo OK
+./deploy.sh --check-only
 ```
 
-**Resultado esperado:** `OK`. Qualquer erro de sintaxe ou de valor aparece antes, com o nome da variável.
+**Resultado esperado:** `OK: perfil 'small', rede privada e compose validados; nada foi alterado.` Um IP fora das faixas privadas ou uma senha no `.env` param o comando com a explicação.
 
 A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../.env.example). Quando a variável falta no `.env`, o [`compose.yaml`](../compose.yaml) aplica o mesmo valor, com duas exceções: `FTP_CERT_CN` vira `localhost` e `FTP_PASSWORD_FILE` fica vazio, o que faz o container parar com `FALHA: a senha FTP deve ter pelo menos 12 caracteres`.
 
@@ -79,17 +80,37 @@ A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../.env.e
 
 ---
 
+<a name="pastas-e-nomes"></a>
+
+## 📦 Pastas e nomes
+
+| Variável | Para que serve | Valores | Padrão |
+|---|---|---|---|
+| `DATA_DIR` | Pasta do host com os dados da stack: `dados/` (arquivos enviados), `auth/` (PureDB) e `certs/` (TLS). Montada por _bind mount_; a stack não cria volume nomeado | Caminho absoluto | `/home/carlos/code/data/allsafe-ftp-stack` |
+| `BACKUP_DIR` | Pasta do host para as cópias de segurança | Caminho absoluto | `/home/carlos/code/backups/allsafe-ftp-stack` |
+| `TEMP_DIR` | Pasta do host para temporários: instância de teste, coleta de diagnóstico | Caminho absoluto | `/home/carlos/code/tmp/allsafe-ftp-stack` |
+| `SECRETS_DIR` | Pasta dos segredos, um arquivo por segredo, modo `0700` | Caminho absoluto ou relativo à pasta do projeto | `./.secrets` |
+| `STACK_NAME` | Nome do projeto no Compose | Minúsculas, números e hífen | `allsafe-ftp-stack` |
+| `FTP_CONTAINER_NAME` | Nome do container e do host do FTP | Nome de container | `allsafe-ftp` |
+| `FTP_NETWORK_NAME` | Nome da rede Docker da stack | Nome de rede | `allsafe-ftp-network` |
+
+Para uma **segunda instância** no mesmo host, troque os três nomes, as pastas, as portas e a `FTP_SUBNET`. O [`deploy.sh`](../deploy.sh) aceita outro arquivo no lugar do `.env`: `ENV_FILE=/caminho/outro.env ./deploy.sh`.
+
+---
+
 <a name="rede-e-portas"></a>
 
 ## 🔌 Rede e portas
 
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
-| `FTP_BIND_IP` | IP do **host** onde a porta de controle e a faixa passiva escutam | IP do host; `0.0.0.0` para todos (evite) | `127.0.0.1` |
+| `FTP_BIND_IP` | IP do **host** onde a porta de controle e a faixa passiva escutam | **Só IP privado** do host; `0.0.0.0` e IP público são recusados | `127.0.0.1` |
 | `FTP_PORT` | Porta de controle publicada no host (mapeada para `2121` no container) | `1` a `65535` | `21` |
-| `FTP_PUBLIC_IP` | IP anunciado ao cliente na resposta `PASV`. Precisa ser alcançável pelo cliente | IP público ou roteável | `127.0.0.1` |
+| `FTP_PUBLIC_IP` | IP anunciado ao cliente na resposta `PASV`: o IP interno pelo qual os equipamentos chegam | **Só IP privado**, alcançável pelo cliente | `127.0.0.1` |
 | `FTP_PASSIVE_PORT_START` | Início da faixa de portas de dados (modo passivo) | `1024` a `65535`, menor ou igual ao fim | `30000` |
 | `FTP_PASSIVE_PORT_END` | Fim da faixa passiva. Número de portas maior ou igual a `FTP_MAX_CLIENTS` | `1024` a `65535`, maior ou igual ao início | `30049` |
+
+> 🧱 **Rede privada:** só são aceitos `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16`. O [`deploy.sh`](../deploy.sh) e o container param com `não é IP privado` para qualquer outro valor ([`scripts/rede-privada.sh`](../scripts/rede-privada.sh)).
 
 > ⚠️ A faixa passiva é publicada **1:1** (mesma porta no host e no container). Ao ampliá-la, ajuste também o firewall do host.
 
@@ -102,8 +123,7 @@ A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../.env.e
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
 | `FTP_USER` | Nome do usuário virtual criado ou atualizado a cada subida | Regra `^[a-z_][a-z0-9_-]{0,31}$` | `transfer` |
-| `FTP_PASSWORD` | Senha em texto puro (use só se **não** usar arquivo) | 12 caracteres ou mais | _vazio_ |
-| `FTP_PASSWORD_FILE` | Caminho, **dentro do container**, do arquivo com a senha. Tem precedência sobre `FTP_PASSWORD` | Caminho legível; o padrão aponta para o bind `.secrets/` | `/run/.secrets/ftp_password.txt` |
+A **senha** do usuário inicial não é variável: fica em `SECRETS_DIR/ftp_password.txt`, criada pelo `deploy.sh`, e chega ao container como o segredo `/run/secrets/ftp_password`. Um `.env` com `FTP_PASSWORD` preenchido é recusado. Veja [🔑 Segredos](segredos.md).
 
 Só o usuário inicial vem do `.env`. Os demais são criados com [`manage-user.sh`](../manage-user.sh): veja [🧰 Operação](operacao.md#usuarios).
 

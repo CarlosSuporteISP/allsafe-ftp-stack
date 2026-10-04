@@ -96,32 +96,60 @@ docker compose restart ftp
 
 <a name="backup-dos-volumes"></a>
 
-## ♻️ Backup dos volumes
+## ♻️ Backup dos dados
 
-Volumes a salvar: `allsafe-ftp-data` (arquivos) e `allsafe-ftp-auth` (PureDB). O `allsafe-ftp-certs` é reconstruível se você tiver o PEM guardado em outro lugar.
+Pastas a salvar: `DATA_DIR/dados` (arquivos) e `DATA_DIR/auth` (PureDB). A `DATA_DIR/certs` é reconstruível se você tiver o PEM guardado em outro lugar. A leitura é feita por um container, porque `auth/` pertence ao `root`.
 
 ```bash
-# Backup: um tar.gz de cada volume
-for v in allsafe-ftp-data allsafe-ftp-auth; do
-  docker run --rm -v "$v":/src:ro -v "$PWD":/dst alpine \
-    tar czf "/dst/$v-$(date +%Y%m%d).tar.gz" -C /src .
-done
+DATA_DIR=/home/carlos/code/data/allsafe-ftp-stack      # o DATA_DIR do seu .env
+BACKUP_DIR=/home/carlos/code/backups/allsafe-ftp-stack # o BACKUP_DIR do seu .env
+mkdir -p "$BACKUP_DIR"
+docker run --rm --network none -v "$DATA_DIR":/origem:ro -v "$BACKUP_DIR":/destino \
+  --entrypoint tar allsafe-ftp:local czf "/destino/$(date +%Y%m%d-%H%M%S)-dados-auth.tar.gz" -C /origem dados auth
 ```
 
-**Resultado esperado:** dois arquivos `allsafe-ftp-data-AAAAMMDD.tar.gz` e `allsafe-ftp-auth-AAAAMMDD.tar.gz` na pasta atual.
+**Resultado esperado:** um arquivo `AAAAMMDD-HHMMSS-dados-auth.tar.gz` em `BACKUP_DIR`.
 
 Restauração, com a stack parada:
 
 ```bash
 docker compose down
-docker run --rm -v allsafe-ftp-data:/dst -v "$PWD":/src alpine \
-  sh -c 'cd /dst && tar xzf /src/allsafe-ftp-data-AAAAMMDD.tar.gz'
+docker run --rm --network none -v "$DATA_DIR":/destino -v "$BACKUP_DIR":/origem:ro \
+  --entrypoint tar allsafe-ftp:local xzf /origem/AAAAMMDD-HHMMSS-dados-auth.tar.gz -C /destino
 docker compose up -d
 ```
 
 **Resultado esperado:** o container volta a `healthy` e os arquivos reaparecem na pasta do usuário.
 
-> ⚠️ Os arquivos de backup gerados aqui **não** entram no repositório: guarde-os fora da árvore do projeto. O `allsafe-ftp-auth` contém o hash das senhas; trate a cópia como dado sensível.
+> ⚠️ A cópia **não** entra no repositório. Ela contém o hash das senhas (`auth/`): trate como dado sensível. Os arquivos de `.secrets/` não entram na cópia: guarde-os à parte, em um cofre de senhas.
+
+---
+
+<a name="migracao"></a>
+
+## 🚚 Migrar dos volumes nomeados (instalação anterior à 0.2.0)
+
+Até a versão `0.1.x` os dados ficavam em volumes nomeados do Docker (`allsafe-ftp-data`, `allsafe-ftp-auth`, `allsafe-ftp-certs`). A partir da `0.2.0` ficam em `DATA_DIR`. A migração **copia**, não move: os volumes antigos continuam intactos até você decidir apagá-los.
+
+```bash
+docker compose down                       # 1. para a stack antiga (sem -v)
+git pull                                  # 2. traz a versão nova
+# 3. no .env: acrescente as chaves novas do .env.example (DATA_DIR, BACKUP_DIR, TEMP_DIR, SECRETS_DIR,
+#    STACK_NAME, FTP_CONTAINER_NAME, FTP_NETWORK_NAME) e apague FTP_PASSWORD e FTP_PASSWORD_FILE.
+#    Se a senha estava no .env, grave-a em .secrets/ftp_password.txt (chmod 600).
+DATA_DIR=/home/carlos/code/data/allsafe-ftp-stack   # o DATA_DIR do seu .env
+mkdir -p "$DATA_DIR"/{dados,auth,certs}
+docker build -q -t allsafe-ftp:local .    # 4. imagem nova, usada para copiar
+for par in allsafe-ftp-data:dados allsafe-ftp-auth:auth allsafe-ftp-certs:certs; do
+  docker run --rm --network none -v "${par%%:*}":/origem:ro -v "$DATA_DIR/${par##*:}":/destino \
+    --entrypoint cp allsafe-ftp:local -a /origem/. /destino/
+done
+./deploy.sh                               # 5. sobe com as pastas novas
+```
+
+**Resultado esperado:** container `healthy`, os usuários entram com a mesma senha e os arquivos aparecem em `DATA_DIR/dados/<usuario>`.
+
+Só depois de conferir, e por decisão sua, apague os volumes antigos: `docker volume rm allsafe-ftp-data allsafe-ftp-auth allsafe-ftp-certs`.
 
 ---
 
@@ -184,11 +212,10 @@ docker compose exec ftp pure-pw show transfer -f /auth/pureftpd.passwd
 
 ```bash
 docker compose stop      # para sem remover
-docker compose down      # remove o container e a rede, mantém os volumes
-docker compose down -v   # remove TAMBÉM os volumes (apaga tudo)
+docker compose down      # remove o container e a rede; os dados continuam em DATA_DIR
 ```
 
-**Resultado esperado:** `docker compose ps` vazio; com `-v`, `docker volume ls` não lista mais os três volumes `allsafe-ftp-*`.
+**Resultado esperado:** `docker compose ps` vazio. As pastas `dados/`, `auth/` e `certs/` de `DATA_DIR` e os segredos continuam no host; apagar os dados é uma decisão à parte, manual.
 
 > ⚠️ `docker compose down -v` apaga os arquivos recebidos, os usuários e o certificado. Faça o [backup](#backup-dos-volumes) antes.
 

@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |---|---|
-| Status | 🔄 Em execução — fase 04 a começar |
+| Status | 🔄 Em execução — fase 05 a começar |
 | Última atualização | 2026-10-04 — por Claude Code (VS Code) |
 | Branch | `feat/painel-web-e-pastas-fixas` |
 | Tamanho | 🟡 Médio |
@@ -18,7 +18,7 @@
 | 01 | Base da stack | ✅ Concluído | 2026-09-11 |
 | 02 | Perfis e operação | ✅ Concluído | 2026-09-25 |
 | 03 | Documentação e plano no padrão | ✅ Concluído | 2026-10-04 |
-| 04 | Pastas fixas, segredos e rede privada | ⏳ A fazer | — |
+| 04 | Pastas fixas, segredos e rede privada | ✅ Concluído | 2026-10-04 |
 | 05 | Painel web seguro | ⏳ A fazer | — |
 | 06 | Instalação em um comando | ⏳ A fazer | — |
 | 07 | Testes automatizados | ⏳ A fazer | — |
@@ -31,9 +31,11 @@
 
 O usuário mandou executar o plano inteiro, uma fase emendada na outra, sem perguntar entre elas.
 
-1. Abrir a [fase 04](README.md#fase-04) e começar pelo passo 1: variáveis de pasta e de nome no `.env.example`, sem `FTP_PASSWORD` nem `FTP_PASSWORD_FILE`.
-2. Seguir os passos na ordem, validar no portão, registrar aqui e fazer commit.
-3. Emendar a fase 05, e assim até a 09.
+1. Abrir a [fase 05](README.md#fase-05): `painel/servidor.py` e `painel/estilo.css`, alvo `painel` no `Dockerfile`, serviço `painel` no `compose.yaml`, `scripts/painel-entrypoint.sh` e `scripts/painel-senha.sh`.
+2. Seguir os passos na ordem, validar no portão, registrar aqui e publicar a `0.3.0`.
+3. Emendar a fase 06, e assim até a 09.
+
+Publicação de cada fase: commit na branch, tag `vX.Y.Z`, merge na `main` com a linha `Testado:`, push da branch, da `main` e da tag, e Release no GitHub com o trecho do changelog.
 
 Ordens do usuário que valem para todas as fases:
 
@@ -44,6 +46,7 @@ Ordens do usuário que valem para todas as fases:
 - O painel web tem de ser **seguro**.
 - `.env` só com variável ajustável; senha, token, chave e identificador de integração só em `.secrets/`.
 - PDF só a pedido, e nunca no Git.
+- Cada versão tem **Release** no GitHub (normal, a mais nova como a mais recente): a página do repositório mostra o número da versão.
 
 ---
 

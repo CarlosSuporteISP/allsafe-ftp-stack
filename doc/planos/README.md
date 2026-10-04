@@ -358,7 +358,7 @@ Limite conhecido e aceito: o certificado é próprio, então o navegador avisa n
 | 01 | Base da stack | Imagem, Compose endurecido, entrypoint, usuários virtuais, FTPS | — | ✅ Concluído | [fase 01](#fase-01) |
 | 02 | Perfis e operação | `profiles/`, `deploy.sh --size`, `manage-user.sh`, `validate.sh`, sub-rede configurável | 01 | ✅ Concluído | [fase 02](#fase-02) |
 | 03 | Documentação e plano no padrão | README, guias, diagramas, este plano, `VERSION`, `CHANGELOG.md` | 02 | ✅ Concluído | [fase 03](#fase-03) |
-| 04 | Pastas fixas, segredos e rede privada | _Bind mount_ em `DATA_DIR`, nomes configuráveis, senhas só em `.secrets/`, recusa de IP público | 03 | ⏳ A fazer | [fase 04](#fase-04) |
+| 04 | Pastas fixas, segredos e rede privada | _Bind mount_ em `DATA_DIR`, nomes configuráveis, senhas só em `.secrets/`, recusa de IP público | 03 | ✅ Concluído | [fase 04](#fase-04) |
 | 05 | Painel web seguro | Serviço `painel` em HTTPS, com login, quatro abas e auditoria | 04 | ⏳ A fazer | [fase 05](#fase-05) |
 | 06 | Instalação em um comando | `deploy.sh` idempotente, espera `healthy`, `--remover`, perfil gravado no `.env` | 05 | ⏳ A fazer | [fase 06](#fase-06) |
 | 07 | Testes automatizados | `scripts/testar.sh` e casos de teste, segurança e rede, do FTP e do painel | 06 | ⏳ A fazer | [fase 07](#fase-07) |
@@ -511,7 +511,7 @@ As três são anteriores ao padrão atual de plano; ficam registradas com o que 
 
 <a name="fase-04"></a>
 
-### ⏳ Fase 04 · Pastas fixas, segredos e rede privada
+### ✅ Fase 04 · Pastas fixas, segredos e rede privada
 
 **Objetivo:** tirar os dados dos volumes nomeados, tirar a senha do `.env`, permitir duas instâncias no mesmo host sem colisão de nomes e impedir, por código, que a stack escute em IP público.
 
@@ -584,6 +584,8 @@ flowchart LR
 | `docker exec … ls /run/secrets` | Só `ftp_password`; nenhuma variável de ambiente com senha no container |
 | `FTP_BIND_IP=0.0.0.0` e `FTP_BIND_IP=8.8.8.8` | `deploy.sh` para com erro; com `docker compose up` direto, o container para com erro |
 | `.env` com `FTP_PASSWORD` preenchido | `deploy.sh` recusa e explica a migração |
+
+**Resultado:** ✅ aprovado em 2026-10-04 — [saída do portão](testes/resultados/20261004-080025-portao-fase-04.md), com o teste do roteiro de migração.
 
 **Rollback:** `git revert` do commit da fase; não há instalação anterior neste host e, em quem tem, os volumes nomeados continuam intactos, porque a migração copia e não move.
 
@@ -1098,6 +1100,8 @@ O plano só está concluído quando tudo abaixo for verdade:
 | 2026-10-04 | Diagramas com link para abrir com zoom e movimento; um fluxograma por fase; plano sem imagem da aplicação | Padrão de diagramas e de planos atualizado pelo usuário |
 | 2026-10-04 | Diagramas passam a entrar nos `.md` como bloco Mermaid, direto do `.mmd`, com fundo escuro e os controles de zoom do próprio diagrama; SVG só na pasta | Ordem do usuário: a imagem ficava com fundo branco e sem zoom nem movimento |
 | 2026-10-04 | A versão passa a avançar a cada publicação, com tag; sequência até a `1.0.0` registrada | Ordem do usuário: a versão tem de aparecer no repositório e subir a cada commit e push |
+| 2026-10-04 | Cada versão ganha uma **Release** no GitHub, normal e não pré-lançamento, com a mais nova marcada como a mais recente; descrição e tópicos do repositório aplicados | Ordem do usuário: a página do repositório tem de mostrar o número da versão, não a contagem de tags. Com pré-lançamento o GitHub não elege a versão mais recente |
+| 2026-10-04 | Fase 04 concluída: `CGNAT` (`100.64.0.0/10`) também é recusado; a faixa passiva da instância de teste vem do perfil até a fase 06 | Achados do portão |
 
 Achados no código, com a fase que resolve cada um:
 
@@ -1125,7 +1129,7 @@ A versão avança **a cada publicação** (commit e push): o `VERSION`, o `CHANG
 |---|---|---|---|
 | `0.1.0` | Servidor FTP, perfis e operação pelo terminal | 01 a 03 | ✅ Publicada |
 | `0.1.1` | Documentação e plano refeitos; diagramas com fundo escuro, zoom e movimento | 03 | ✅ Publicada |
-| `0.2.0` | Pastas fixas, segredos só em `.secrets/` e recusa de IP público | 04 | ⏳ A fazer |
+| `0.2.0` | Pastas fixas, segredos só em `.secrets/` e recusa de IP público | 04 | ✅ Publicada |
 | `0.3.0` | Painel web seguro | 05 | ⏳ A fazer |
 | `0.4.0` | Instalação em um comando | 06 | ⏳ A fazer |
 | `0.5.0` | Testes automatizados | 07 | ⏳ A fazer |
@@ -1145,15 +1149,15 @@ Dependem do usuário e **não travam a execução**:
 | Nº | Pendência | O que fazer |
 |---|---|---|
 | 1 | Firewall do host | Aplicar as regras de exemplo de `doc/seguranca.md` na cadeia `DOCKER-USER`, quando a stack for aberta para a rede interna. O plano só documenta |
-| 2 | Release no GitHub | As tags são publicadas por `git`. A Release de cada tag depende do `gh` autenticado neste host: `gh release create vX.Y.Z --verify-tag --notes-from-tag` |
+| 2 | Release no GitHub | ✅ Resolvida em 2026-10-04: o usuário autorizou o `gh` com a credencial que o Git já usa, só na hora do comando. Cada versão publicada ganha a Release dela, com o trecho do changelog |
 | 3 | Licença | Não há arquivo `LICENSE`; a escolha é do usuário |
-| 4 | Descrição e tópicos do repositório | Aplicar o comando abaixo, com o `gh` autenticado |
+| 4 | Descrição e tópicos do repositório | ✅ Aplicados em 2026-10-04. A descrição passa a citar o painel web na `0.3.0`, com o comando abaixo |
 | 5 | Links externos | Confirmar os links dos projetos oficiais citados nos créditos do README |
 | 6 | Remoto `empresa` | Está atrás de `origin`; o envio depende de ordem |
 | 7 | PDF | A documentação e o plano viram PDF só a pedido, em dois arquivos separados, fora do Git |
 | 8 | Teste com os equipamentos reais | Só com eles dá para decidir se `FTP_TLS_MODE=3` pode virar o padrão |
 
-Descrição e tópicos propostos:
+Descrição e tópicos, na forma final:
 
 ```bash
 gh repo edit CarlosSuporteISP/allsafe-ftp-stack \

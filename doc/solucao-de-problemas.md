@@ -57,7 +57,10 @@ O `entrypoint.sh` aborta com `FALHA: <motivo>` e o container reinicia em laço: 
 
 | Mensagem no log | Causa | Como verificar | Correção |
 |---|---|---|---|
-| `FALHA: FTP_PASSWORD_FILE nao pode ser lido` | `FTP_PASSWORD_FILE` aponta para um arquivo ausente ou sem permissão de leitura | `ls -l .secrets/` | Crie `.secrets/ftp_password.txt` e aplique `chmod 600`. Confirme que o bind `./.secrets` existe. Veja [🔑 Segredos](segredos.md) |
+| `FALHA: segredo /run/secrets/ftp_password ausente` | `.secrets/ftp_password.txt` não existe | `ls -l .secrets/` | Rode `./deploy.sh`, que cria o arquivo com uma senha forte. Veja [🔑 Segredos](segredos.md) |
+| `FALHA: FTP_BIND_IP=… não é IP privado` (ou `FTP_PUBLIC_IP`) | Endereço fora de `127/8`, `10/8`, `172.16/12` e `192.168/16`; o container reinicia em laço | `grep -E "FTP_(BIND|PUBLIC)_IP" .env` | Use o IP **interno** do servidor. A stack não aceita `0.0.0.0` nem IP público: veja [🛡️ Segurança](seguranca.md) |
+| `ERRO: .env ainda traz FTP_PASSWORD` (no `deploy.sh`) | `.env` de uma versão anterior, com senha | `grep -c "^FTP_PASSWORD" .env` | Grave a senha em `.secrets/ftp_password.txt` (`chmod 600`) e apague `FTP_PASSWORD` e `FTP_PASSWORD_FILE` do `.env` |
+| `bind source path does not exist` ao subir | Pasta de `DATA_DIR` ausente (o Compose não cria) | `ls "$DATA_DIR"` | Rode `./deploy.sh`, que cria `dados/`, `auth/` e `certs/` |
 | `FALHA: a senha FTP deve ter pelo menos 12 caracteres` | Senha curta, ou arquivo vazio ou só com linha em branco | `wc -c .secrets/ftp_password.txt` | Regrave: `printf '%s' 'senha-com-12+' > .secrets/ftp_password.txt` |
 | `FALHA: FTP_USER invalido` | Nome fora de `^[a-z_][a-z0-9_-]{0,31}$` | `grep '^FTP_USER=' .env` | Use minúsculas, sem espaço nem acento; comece com letra ou `_` |
 | `FALHA: faixa passiva invalida` ou `fora dos limites` | `FTP_PASSIVE_PORT_START` ou `FTP_PASSIVE_PORT_END` não numéricos, abaixo de `1024`, acima de `65535` ou invertidos | `grep PASSIVE .env profiles/*.env` | Corrija no `.env`; mantenha o início menor ou igual ao fim |
@@ -102,7 +105,7 @@ O `entrypoint.sh` aborta com `FALHA: <motivo>` e o container reinicia em laço: 
 | Sintoma | Causa | Como verificar | Correção |
 |---|---|---|---|
 | Novo certificado não é usado depois de copiar | Serviço não reiniciado, ou PEM sem a chave | `docker compose exec ftp ls -l /etc/ssl/private/` | `docker compose restart ftp`; o PEM deve ter **chave e certificado** juntos, `0600` |
-| O entrypoint gera autoassinado a cada subida | O arquivo `/etc/ssl/private/pure-ftpd.pem` não está persistindo | `docker volume ls` lista `allsafe-ftp-certs`? | Confirme o volume no [`compose.yaml`](../compose.yaml) |
+| O entrypoint gera autoassinado a cada subida | O arquivo `/etc/ssl/private/pure-ftpd.pem` não está persistindo | `ls -ld "$DATA_DIR/certs"` no host | Confirme o `DATA_DIR` do `.env` e a pasta `certs/` dentro dele |
 | Handshake TLS falha com "certificate expired" | Relógio do host errado, ou certificado vencido (o autoassinado dura 825 dias) | `date` no host; `openssl s_client -connect SEU_IP:21 -starttls ftp` mostra a validade | Sincronize a hora (stack `allsafe-ntp-nts-stack`); gere ou renove o certificado |
 
 ---
@@ -122,13 +125,15 @@ docker compose exec ftp pidof pure-ftpd   # o que o healthcheck testa
 Ainda travado? Colete e analise:
 
 ```bash
-docker compose logs --no-color ftp > /tmp/allsafe-ftp.log
-docker inspect allsafe-ftp > /tmp/allsafe-ftp.inspect.json
+TEMP_DIR=/home/carlos/code/tmp/allsafe-ftp-stack   # o TEMP_DIR do seu .env
+mkdir -p "$TEMP_DIR"
+docker compose logs --no-color ftp > "$TEMP_DIR/allsafe-ftp.log"
+docker inspect allsafe-ftp > "$TEMP_DIR/allsafe-ftp.inspect.json"
 ```
 
-**Resultado esperado:** dois arquivos em `/tmp` com o log completo e a configuração efetiva do container.
+**Resultado esperado:** dois arquivos em `TEMP_DIR` com o log completo e a configuração efetiva do container. Apague-os ao terminar.
 
-> ⚠️ O `inspect` traz as variáveis de ambiente do container. Se você usa `FTP_PASSWORD` no `.env` em vez do arquivo de senha, a senha aparece nesse arquivo: apague-a antes de compartilhar.
+> ⚠️ O `inspect` traz as variáveis de ambiente do container. Nenhuma delas é senha (a senha só existe no segredo), mas o arquivo mostra IPs e caminhos do host: revise antes de compartilhar.
 
 ---
 

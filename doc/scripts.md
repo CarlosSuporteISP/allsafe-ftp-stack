@@ -128,8 +128,8 @@ A senha é lida do terminal e enviada pelo `stdin` para o container: não aparec
 
 Roda a cada início do container. Não tem parâmetros: tudo vem das variáveis de [⚙️ Configuração](configuracao.md).
 
-1. Lê a senha do arquivo montado em `FTP_PASSWORD_FILE` e cria ou atualiza o usuário inicial `FTP_USER` (recusa senha com menos de 12 caracteres).
-2. Gera um certificado autoassinado para `FTP_CERT_CN` se o volume de certificados estiver vazio.
+1. Confere que `FTP_BIND_IP` e `FTP_PUBLIC_IP` são IPs privados ([`rede-privada.sh`](../scripts/rede-privada.sh)), lê a senha do segredo `/run/secrets/ftp_password`, ajusta dono e modo de `/data`, `/auth` e `/etc/ssl/private` e cria ou atualiza o usuário inicial `FTP_USER` (recusa senha com menos de 12 caracteres).
+2. Gera um certificado autoassinado para `FTP_CERT_CN` se `DATA_DIR/certs` estiver vazia, e grava a parte pública dele em `/auth/ftp-cert.pem`.
 3. Executa o `pure-ftpd` com TLS, `chroot`, limites e faixa passiva do `.env`.
 
 **Resultado esperado:** a linha `FTP pronto em 2121/tcp; TLS=2; passivo=30000-30049` no log do container.
@@ -143,7 +143,9 @@ Quando uma validação falha, o script sai com `FALHA: <motivo>`:
 
 | Mensagem | Quando |
 |---|---|
-| `FALHA: FTP_PASSWORD_FILE nao pode ser lido` | o arquivo apontado não existe ou não pode ser lido |
+| `FALHA: segredo /run/secrets/ftp_password ausente` | `.secrets/ftp_password.txt` não existe: rode o `deploy.sh` |
+| `FALHA: FTP_PASSWORD não é mais aceita` | há senha em variável de ambiente; ela só é lida do segredo |
+| `FALHA: FTP_BIND_IP=… não é IP privado` (ou `FTP_PUBLIC_IP`) | o endereço está fora das faixas privadas; o container reinicia em laço até a correção |
 | `FALHA: FTP_USER invalido` | o nome não segue `^[a-z_][a-z0-9_-]{0,31}$` |
 | `FALHA: a senha FTP deve ter pelo menos 12 caracteres` | senha curta ou arquivo vazio |
 | `FALHA: faixa passiva invalida` | início ou fim não numéricos |

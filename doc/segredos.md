@@ -12,7 +12,7 @@ A senha do usuário inicial do FTP mora em um arquivo só, dentro da pasta `.sec
 flowchart LR
     deploy@{ shape: console, label: "⌨️ deploy.sh<br>gera a senha" }
     arquivo@{ shape: doc, label: "🔑 .secrets/ftp_password.txt<br>0600, fora do Git" }
-    montagem@{ shape: rect, label: "🐳 /run/.secrets<br>só leitura" }
+    montagem@{ shape: rect, label: "🐳 /run/secrets/ftp_password<br>só leitura" }
     entry@{ shape: rect, label: "⚙️ entrypoint<br>lê e apaga da memória" }
     puredb@{ shape: cyl, label: "🗄️ PureDB<br>guarda só o hash" }
     fim@{ shape: stadium, label: "🏁 senha fora da imagem" }
@@ -22,7 +22,7 @@ flowchart LR
 
 <sub>📐 Nível 1 · Diagrama · 🔍 aproximar e mover: controles no canto do diagrama · 📁 [fonte e SVG](diagramas/)</sub>
 
-**🧭 Sequência:** ⌨️ `deploy.sh` ➜ 🔑 `.secrets/ftp_password.txt` ➜ 🐳 `/run/.secrets` (somente leitura) ➜ ⚙️ entrypoint ➜ 🗄️ PureDB (guarda só o hash) ➜ 🏁 senha fora da imagem
+**🧭 Sequência:** ⌨️ `deploy.sh` ➜ 🔑 `.secrets/ftp_password.txt` ➜ 🐳 `/run/secrets/ftp_password` (somente leitura) ➜ ⚙️ entrypoint ➜ 🗄️ PureDB (guarda só o hash) ➜ 🏁 senha fora da imagem
 
 ---
 
@@ -94,17 +94,18 @@ chmod 600 .secrets/ftp_password.txt
 | Item | Onde fica | Proteção |
 |---|---|---|
 | `.env` | raiz da stack | `0600`, ignorado pelo Git e pelo build |
-| Chave privada TLS | volume `allsafe-ftp-certs`, arquivo `pure-ftpd.pem` | `0600`, fora do repositório |
-| Hash das senhas dos usuários | volume `allsafe-ftp-auth`, arquivos `pureftpd.passwd` e `pureftpd.pdb` | `0600`, fora do repositório |
+| Chave privada TLS | pasta `DATA_DIR/certs`, arquivo `pure-ftpd.pem` | `0600`, fora do repositório |
+| Hash das senhas dos usuários | pasta `DATA_DIR/auth`, arquivos `pureftpd.passwd` e `pureftpd.pdb` | `0600`, fora do repositório |
 | Arquivos de backup dos volumes | onde você os guardar | fora da árvore do projeto |
 
 <details>
 <summary>🔬 Detalhe técnico — geração, montagem e descarte</summary>
 
-- **Geração:** `openssl rand -base64 36` (48 caracteres); sem `openssl` no host, 48 caracteres de `/dev/urandom` no alfabeto `A-Za-z0-9_-`. O script aplica `umask 077` e `chmod 0600`.
-- **Montagem:** o [`compose.yaml`](../compose.yaml) monta `./.secrets` em `/run/.secrets` como somente leitura; a variável `FTP_PASSWORD_FILE` aponta para `/run/.secrets/ftp_password.txt`.
+- **Geração:** `openssl rand -base64 36` (48 caracteres). O script aplica `umask 077`, `chmod 0700` na pasta e `chmod 0600` no arquivo, e nunca regrava um segredo que já existe.
+- **Montagem:** o [`compose.yaml`](../compose.yaml) declara o segredo `ftp_password` (`SECRETS_DIR/ftp_password.txt`) e o entrega **só** ao serviço `ftp`, em `/run/secrets/ftp_password`, somente leitura. A pasta `.secrets/` inteira não é montada.
+- **Sem senha em variável:** o `.env` guarda só o que se ajusta. O `deploy.sh` recusa `FTP_PASSWORD` no `.env` e o container recusa a variável.
 - **Leitura:** o [`entrypoint.sh`](../scripts/entrypoint.sh) lê o arquivo sem as quebras de linha, valida o mínimo de 12 caracteres e entrega a senha ao `pure-pw` pelo `stdin`.
-- **Descarte:** antes do `exec` do `pure-ftpd`, o entrypoint faz `unset` das variáveis de senha.
+- **Descarte:** antes do `exec` do `pure-ftpd`, o entrypoint faz `unset` da variável interna da senha.
 - **Git:** o [`.gitignore`](../.gitignore) ignora `.env` e `.secrets/*.txt`, mantendo só o `.gitkeep`.
 - **Imagem:** o [`.dockerignore`](../.dockerignore) deixa `.env` e `.secrets` fora do contexto de build.
 

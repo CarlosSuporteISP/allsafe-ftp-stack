@@ -91,13 +91,13 @@ chmod 600 .secrets/ftp_password.txt
 ```
 
 <details>
-<summary>🔬 Detalhe técnico — regras da senha e alternativa pelo <code>.env</code></summary>
+<summary>🔬 Detalhe técnico — regras da senha</summary>
 
-- A senha é gerada com `openssl rand -base64 36`; sem `openssl` no host, o script lê 48 caracteres de `/dev/urandom`.
+- A senha é gerada com `openssl rand -base64 36`; o `openssl` é exigido no host.
 - Mínimo de **12 caracteres**: o [`entrypoint.sh`](../scripts/entrypoint.sh) recusa senhas menores.
-- O arquivo é montado somente leitura em `/run/.secrets/ftp_password.txt` (variável `FTP_PASSWORD_FILE`).
+- O arquivo chega ao container como o segredo `/run/secrets/ftp_password`, somente leitura; o serviço não vê o resto de `.secrets/`.
 - Arquivos `.txt` de `.secrets/` são ignorados pelo Git. Veja [🔑 Segredos](segredos.md).
-- Alternativa (não recomendada): definir `FTP_PASSWORD` direto no `.env` e deixar `FTP_PASSWORD_FILE` vazio.
+- Senha no `.env` **não é aceita**: o `deploy.sh` recusa um `.env` com `FTP_PASSWORD` preenchido e o container recusa a variável.
 
 </details>
 
@@ -175,7 +175,7 @@ docker compose down -v          # remove TAMBÉM os volumes (apaga dados, PureDB
 
 **Resultado esperado:** `docker compose ps` não lista mais o `allsafe-ftp`.
 
-Os arquivos dos usuários ficam no volume `allsafe-ftp-data`; enquanto você não usar `-v`, nada é perdido.
+Os arquivos dos usuários ficam em `DATA_DIR/dados`, no host: `docker compose down` não apaga nada.
 
 ---
 

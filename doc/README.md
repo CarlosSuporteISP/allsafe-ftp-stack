@@ -70,16 +70,16 @@ flowchart LR
 
 ## 💽 Onde ficam os dados
 
-| O quê | Onde fica hoje | Dentro do container |
+| O quê | Onde fica no host | Dentro do container |
 |---|---|---|
-| Arquivos enviados pelos equipamentos | volume nomeado `allsafe-ftp-data` | `/data` |
-| Usuários virtuais (PureDB) | volume nomeado `allsafe-ftp-auth` | `/auth` |
-| Chave e certificado TLS | volume nomeado `allsafe-ftp-certs` | `/etc/ssl/private` |
-| Senha do usuário inicial | `.secrets/ftp_password.txt`, na pasta do projeto | `/run/.secrets` (somente leitura) |
+| Arquivos enviados pelos equipamentos | `DATA_DIR/dados` | `/data` |
+| Usuários virtuais (PureDB) | `DATA_DIR/auth` | `/auth` |
+| Chave e certificado TLS | `DATA_DIR/certs` | `/etc/ssl/private` |
+| Senha do usuário inicial | `.secrets/ftp_password.txt`, na pasta do projeto | `/run/secrets/ftp_password` (somente leitura) |
 | Configuração | `.env`, na pasta do projeto | variáveis de ambiente |
 | Logs | driver `local` do Docker, 10 MB × 3 | `stdout` |
 
-> ⚠️ Os volumes nomeados ficam em `/var/lib/docker/volumes`, sob controle do Docker. A mudança para pastas fixas do host faz parte do [plano](#plano).
+`DATA_DIR` é uma pasta do host definida no `.env` (padrão `/home/carlos/code/data/allsafe-ftp-stack`). As cópias vão para `BACKUP_DIR` e os temporários para `TEMP_DIR`: veja [⚙️ Configuração](configuracao.md#pastas-e-nomes). A stack não cria volume nomeado.
 
 ---
 

@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-Aqui ficam os testes que mostram se a stack funciona: se os scripts e o Compose estão corretos, se um equipamento consegue entrar, enviar e baixar um arquivo e se o painel web cria, altera e remove usuários. Só a validação estática já foi executada; os testes com o servidor no ar são da fase 07.
+Aqui ficam os testes que mostram se a stack funciona: se os scripts e o Compose estão corretos, se um equipamento consegue entrar, enviar e baixar um arquivo e se o painel web cria, altera e remove usuários. A validação estática e o portão da fase 04 já foram executados; a bateria completa, com o servidor e o painel no ar, é da fase 07.
 
 ---
 
@@ -47,6 +47,7 @@ Cada execução vira um arquivo em [`resultados/`](resultados/), com o nome `AAA
 | Data | Arquivo | Resultado |
 |---|---|---|
 | 2026-10-04 06:30 | [20261004-063044-validacao-estatica.md](resultados/20261004-063044-validacao-estatica.md) | ✅ Aprovado |
+| 2026-10-04 08:00 | [20261004-080025-portao-fase-04.md](resultados/20261004-080025-portao-fase-04.md) | ✅ Aprovado — portão da fase 04 e roteiro de migração |
 
 ---
 

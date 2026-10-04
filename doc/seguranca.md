@@ -79,7 +79,7 @@ A recusa de IP público por código (no `deploy.sh` e no container) está no [pl
 2. `FTP_BIND_IP` com o IP **privado** dedicado e **regra no firewall** do host liberando só as origens de backup: [🧱 rede privada](#rede-privada).
 3. `fail2ban` no host lendo o log CLF do container (`docker logs allsafe-ftp`).
 4. Rever `FTP_MAX_CLIENTS` e a faixa passiva conforme o número real de equipamentos: [🎚️ Perfis](perfis.md).
-5. Backup dos volumes `allsafe-ftp-data` e `allsafe-ftp-auth`: [🧰 Operação](operacao.md#backup-dos-volumes).
+5. Backup de `DATA_DIR/dados` e `DATA_DIR/auth`: [🧰 Operação](operacao.md#backup-dos-volumes).
 6. Avaliar `FTP_TLS_MODE=3`, que obriga a criptografia também do arquivo: [⚙️ Configuração](configuracao.md#tls).
 7. Considerar SFTP (`allsafe-sftp-stack`) onde o equipamento suportar: canal único, sem faixa passiva.
 
@@ -171,10 +171,10 @@ Nenhuma delas permite montar sistema de arquivos, carregar módulo, usar `ptrace
 
 ## 🔑 Gestão de segredos
 
-- Senha do usuário inicial: `.secrets/ftp_password.txt`, `chmod 600`, montado **somente leitura** em `/run/.secrets/`. Veja [🔑 Segredos](segredos.md).
+- Senha do usuário inicial: `.secrets/ftp_password.txt`, `chmod 600`, entregue **só** ao serviço `ftp` como o segredo `/run/secrets/ftp_password`, somente leitura. O `.env` não guarda senha. Veja [🔑 Segredos](segredos.md).
 - [`.gitignore`](../.gitignore): `.env` e `.secrets/*.txt` (mantém só `.secrets/.gitkeep`, para a pasta existir no clone).
 - [`.dockerignore`](../.dockerignore): `.env`, `.env.example`, `.git`, `.gitignore`, `.secrets`, `doc`, `profiles`, `README.md`, `deploy.sh` e `manage-user.sh`. Só o `Dockerfile` e a pasta `scripts/` chegam ao build; nada de segredo entra na imagem.
-- O [`entrypoint.sh`](../scripts/entrypoint.sh) faz `unset` de `FTP_PASSWORD` e da variável interna da senha antes do `exec`.
+- O [`entrypoint.sh`](../scripts/entrypoint.sh) recusa senha em variável de ambiente e faz `unset` da variável interna da senha antes do `exec`.
 
 ---
 

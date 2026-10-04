@@ -56,9 +56,9 @@ flowchart LR
         logs@{ shape: docs, label: "📚 log CLF<br>stdout" }
     end
     subgraph VOLUMES["💽 Volumes"]
-        vcerts@{ shape: lin-cyl, label: "💽 allsafe-ftp-certs<br>/etc/ssl/private" }
-        vauth@{ shape: cyl, label: "🗄️ allsafe-ftp-auth<br>/auth, PureDB" }
-        vdata@{ shape: lin-cyl, label: "💽 allsafe-ftp-data<br>/data" }
+        vcerts@{ shape: lin-cyl, label: "💽 DATA_DIR/certs<br>/etc/ssl/private" }
+        vauth@{ shape: cyl, label: "🗄️ DATA_DIR/auth<br>/auth, PureDB" }
+        vdata@{ shape: lin-cyl, label: "💽 DATA_DIR/dados<br>/data" }
     end
     subgraph RESULTADO["🏁 Resultado"]
         fim@{ shape: stadium, label: "🏁 backup guardado" }
@@ -83,8 +83,8 @@ flowchart LR
 | 1 | 👤 Usuário ➜ ⌨️ `deploy.sh` | O usuário executa `./deploy.sh --size small` no host |
 | 2 | ⌨️ `deploy.sh` ➜ ⚙️ Pure-FTPd | O script valida o Compose e roda `docker compose up -d --build` |
 | 3 | 📡 Equipamento de rede ➜ ⚙️ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
-| 4 | ⚙️ Pure-FTPd ➜ 💽 `allsafe-ftp-data` | O arquivo é gravado pelo canal passivo `30000-30049/tcp` |
-| 5 | 💽 `allsafe-ftp-data` ➜ 🏁 backup guardado | O arquivo fica no volume, na pasta do usuário |
+| 4 | ⚙️ Pure-FTPd ➜ 💽 `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo `30000-30049/tcp` |
+| 5 | 💽 `DATA_DIR/dados` ➜ 🏁 backup guardado | O arquivo fica na pasta do usuário, no host |
 
 **🧷 Apoio**
 
@@ -92,8 +92,8 @@ flowchart LR
 |---|---|---|
 | ⌨️ `deploy.sh` e `manage-user.sh` | 📄 `.env` e perfil | lê |
 | ⚙️ Pure-FTPd | 🔑 `.secrets/ftp_password.txt` | lê na subida, somente leitura |
-| ⚙️ Pure-FTPd | 🗄️ `allsafe-ftp-auth` (PureDB) | consulta os usuários |
-| ⚙️ Pure-FTPd | 💽 `allsafe-ftp-certs` | lê o certificado |
+| ⚙️ Pure-FTPd | 🗄️ `DATA_DIR/auth` (PureDB) | consulta os usuários |
+| ⚙️ Pure-FTPd | 💽 `DATA_DIR/certs` | lê o certificado |
 | ⚙️ Pure-FTPd | 📚 log CLF (`stdout`) | grava cada transferência |
 
 ---
@@ -120,10 +120,10 @@ O que cada script faz, com parâmetros e saída: [⌨️ Scripts](scripts.md).
 
 | Volume (nome) | Monta em | Guarda |
 |---|---|---|
-| `allsafe-ftp-data` | `/data` | Arquivos dos usuários: um diretório `chroot` por usuário (`/data/<usuario>`) |
-| `allsafe-ftp-auth` | `/auth` | Base **PureDB**: `pureftpd.passwd` (texto, com o hash das senhas) e `pureftpd.pdb` (compilada), ambos `0600` |
-| `allsafe-ftp-certs` | `/etc/ssl/private` | `pure-ftpd.pem`: chave e certificado concatenados, `0600` |
-| _bind_ `./.secrets` | `/run/.secrets` (somente leitura) | Arquivo da senha do usuário inicial |
+| `DATA_DIR/dados` | `/data` | Arquivos dos usuários: um diretório `chroot` por usuário (`/data/<usuario>`) |
+| `DATA_DIR/auth` | `/auth` | Base **PureDB**: `pureftpd.passwd` (texto, com o hash das senhas) e `pureftpd.pdb` (compilada), ambos `0600` |
+| `DATA_DIR/certs` | `/etc/ssl/private` | `pure-ftpd.pem`: chave e certificado concatenados, `0600` |
+| segredo `ftp_password` (`SECRETS_DIR/ftp_password.txt`) | `/run/secrets/ftp_password` (somente leitura) | Senha do usuário inicial; é o único arquivo de `.secrets/` que o serviço vê |
 
 Além deles, dois `tmpfs`: `/run` (8 MiB) e `/tmp` (16 MiB), ambos `noexec,nosuid,nodev`.
 

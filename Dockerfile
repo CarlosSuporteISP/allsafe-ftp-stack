@@ -15,6 +15,7 @@ RUN apt-get update \
     && mkdir -p /data /auth /etc/ssl/private \
     && rm -rf /var/lib/apt/lists/*
 
+COPY --chmod=0644 scripts/rede-privada.sh /usr/local/lib/allsafe/rede-privada.sh
 COPY --chmod=0755 scripts/entrypoint.sh /usr/local/sbin/allsafe-ftp-entrypoint
 COPY --chmod=0755 scripts/ftp-user.sh /usr/local/sbin/allsafe-ftp-user
 
