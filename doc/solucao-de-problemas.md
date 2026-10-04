@@ -165,7 +165,7 @@ Se o equipamento não tiver mesmo como falar TLS (confira o manual e a versão d
 
 ```bash
 ./scripts/validate.sh                     # bash -n dos scripts e compose config
-./scripts/validate.sh --runtime           # também exige container running e healthcheck healthy
+./scripts/validate.sh --runtime           # também exige os três serviços running e healthy
 docker compose exec ftp pidof pure-ftpd   # o que o healthcheck testa
 ```
 

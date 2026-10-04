@@ -176,7 +176,7 @@ O modelo completo da subida está em [Arquitetura](arquitetura.md#subida).
 
 ```bash
 ./scripts/validate.sh            # sintaxe dos scripts e Compose de todos os perfis, sem subir nada
-./scripts/validate.sh --runtime  # exige o container 'running', 'healthy' e o usuário no PureDB
+./scripts/validate.sh --runtime  # exige os três serviços 'running' e 'healthy' e o usuário no PureDB
 ```
 
 **Resultado esperado:** `painel/servidor.py OK` (se o host tiver `python3`), uma linha `compose OK com <perfil>.env` para cada um dos cinco perfis e, no fim, `Validacao FTP concluida.`

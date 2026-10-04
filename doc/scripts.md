@@ -114,7 +114,7 @@ Os scripts da pasta [`scripts/`](../scripts/) que rodam em container são copiad
 
 **Resultado esperado:** `add` e `passwd` terminam sem erro e o usuário aparece no `list`; `del` responde `Usuario removido; os dados em /data/<usuario> foram preservados.`
 
-A senha é lida do terminal e enviada pelo `stdin` para o container: não aparece na linha de comando nem no histórico. Regras e casos de uso em [Operação](operacao.md#usuarios).
+A senha é lida do terminal e enviada pelo `stdin` para o container: não aparece na linha de comando nem no histórico. O script opera a instalação do `.env` desta pasta; para operar outra, aponte o arquivo dela: `ENV_FILE=<arquivo> ./manage-user.sh list`. Regras e casos de uso em [Operação](operacao.md#usuarios).
 
 ---
 
@@ -152,10 +152,10 @@ A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.
 
 ```bash
 ./scripts/validate.sh            # bash -n dos scripts e compose config de todos os perfis
-./scripts/validate.sh --runtime  # também exige o container running e healthy e o usuário no PureDB
+./scripts/validate.sh --runtime  # também exige os três serviços running e healthy e o usuário no PureDB
 ```
 
-**Resultado esperado:** `painel/servidor.py OK`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Qualquer falha encerra com código diferente de zero.
+**Resultado esperado:** `painel/servidor.py OK`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Com `--runtime`, também `servico ftp: running, healthy`, o mesmo para `painel` e `nginx`, e `usuario inicial '<usuário>' presente no PureDB`. Qualquer falha encerra com código diferente de zero.
 
 <details>
 <summary>Detalhe técnico — o que cada modo confere</summary>
@@ -163,9 +163,9 @@ A senha tem de ter no mínimo 12 caracteres. Só o hash é gravado; o arquivo `.
 | Modo | Confere |
 |---|---|
 | sem parâmetro | `bash -n` em `deploy.sh`, `manage-user.sh` e `scripts/*.sh`; a sintaxe de `painel/servidor.py`, se o host tiver `python3`; `docker compose config --quiet` com `.env.example` e cada arquivo de `profiles/` |
-| `--runtime` | tudo acima, mais: serviço `ftp` em `running`, saúde `healthy` e `pure-pw show` do usuário inicial |
+| `--runtime` | tudo acima, mais: os serviços `ftp`, `painel` e `nginx` em `running` e `healthy`, e `pure-pw show` do usuário inicial, lido de `FTP_USER` no `.env` |
 
-> ⚠️ No modo `--runtime`, o usuário conferido vem da variável `FTP_USER` **do shell**, com padrão `transfer`; o script não lê o `.env`. Se o seu usuário inicial tem outro nome, rode `FTP_USER=<usuario> ./scripts/validate.sh --runtime`.
+O modo `--runtime` confere a instalação do `.env` desta pasta. Para conferir outra, aponte o arquivo dela: `ENV_FILE=<arquivo> ./scripts/validate.sh --runtime`. Sem o arquivo, o script para com `ERRO: ... não há instalação para conferir.`
 
 </details>
 

@@ -20,7 +20,7 @@ Uso: ./scripts/testar.sh [--manter] [--resultados <pasta>]
 
   (sem opção)           sobe a instância de teste, roda a bateria, grava os resultados e remove tudo
   --manter              deixa a instância de teste no ar ao final (remova depois com --limpar)
-  --resultados <pasta>  onde gravar os três arquivos de resultado (padrão: TEMP_DIR/resultados)
+  --resultados <pasta>  onde gravar os três arquivos de resultado (padrão: doc/planos, se existir; senão TEMP_DIR/resultados)
   --limpar              só remove a instância de teste e a pasta dela
 
 Ajustes por variável de ambiente (padrão entre parênteses):
@@ -602,13 +602,14 @@ r="$(c -o /dev/null -w '%{http_code}' -b "$J" -H 'Origin: https://site-de-fora.e
 r="$(c -o /dev/null -w '%{http_code}' -b "$J" -H 'Host: painel.exemplo.com.br' "$B/")"
 [[ "$r" == 400 ]]; caso $? seguranca 27 "Cabeçalho Host inesperado" "GET / com Host: painel.exemplo.com.br: $r"
 
-ev=""; ok=0
+ev=""; ok=0; pastas_antes="$(docker exec "$FTP" sh -c 'ls -A /data | wc -l')"
 for nome in '../x' 'equip 01' 'equip;01' 'Equip01' '-equip'; do
   r="$(envio /usuarios/novo --data-urlencode "usuario=$nome" --data-urlencode "csrf=$K" --data-urlencode "senha@$W/u4.senha" --data-urlencode "confirmacao@$W/u4.senha")"
   [[ "$r" == "400 " ]] || ok=1; ev+="'$nome': $r; "
 done
-[[ "$antes" == "$(usuarios_ftp)" ]] || ok=1
-caso $ok seguranca 32 "Nome de usuário malicioso" "$ev usuários $([[ "$antes" == "$(usuarios_ftp)" ]] && echo inalterados || echo ALTERADOS) · pastas novas em /data: $(docker exec "$FTP" sh -c 'ls -A /data | wc -l') (eram $(docker exec "$FTP" sh -c 'ls -A /data | wc -l'))"
+pastas_depois="$(docker exec "$FTP" sh -c 'ls -A /data | wc -l')"
+[[ "$antes" == "$(usuarios_ftp)" && "$pastas_antes" == "$pastas_depois" ]] || ok=1
+caso $ok seguranca 32 "Nome de usuário malicioso" "$ev usuários $([[ "$antes" == "$(usuarios_ftp)" ]] && echo inalterados || echo ALTERADOS) · pastas em /data: $pastas_depois (eram $pastas_antes)"
 printf 'curta123' > "$W/curta.senha"
 r="$(envio /usuarios/novo --data-urlencode 'usuario=equip05' --data-urlencode "csrf=$K" --data-urlencode "senha@$W/curta.senha" --data-urlencode "confirmacao@$W/curta.senha")"
 [[ "$r" == "400 " && "$antes" == "$(usuarios_ftp)" ]]; caso $? seguranca 33 "Senha fraca no painel" "novo usuário com senha de 8 caracteres: $r· usuário criado: $([[ "$antes" == "$(usuarios_ftp)" ]] && echo não || echo SIM)"
@@ -634,8 +635,11 @@ r="$(aba -b "$J" "$B/atividade")"; ev=""; ok=0
 for texto in 'Entrada' 'Usuário criado' 'Senha trocada' 'Usuário removido'; do
   n="$(grep -o "$texto" "$W/corpo" | wc -l)"; [[ "$n" -ge 1 ]] || ok=1; ev+="$texto: $n; "
 done
-[[ "$r" == "200 " && "$(segredos_em "$W/corpo")" == 0 ]] || ok=1
-caso $ok testes 17 "Atividade" "GET /atividade: $r· $ev senhas, token ou cookie na página: $(segredos_em "$W/corpo")"
+# o token CSRF da própria sessão faz parte dos formulários da página: o que não pode aparecer é senha nem cookie
+grep -v -x -F -e "$K" "$W/proibidos" > "$W/proibidos-pagina"
+na_pagina="$(grep -c -a -F -f "$W/proibidos-pagina" "$W/corpo" || true)"
+[[ "$r" == "200 " && "$na_pagina" == 0 ]] || ok=1
+caso $ok testes 17 "Atividade" "GET /atividade: $r· $ev senhas ou cookie de sessão na página: $na_pagina"
 
 r="$(envio /sair --data-urlencode "csrf=$K")"; depois="$(aba -b "$J" "$B/")"
 [[ "$r" == "303 /entrar" && "$depois" == "303 /entrar" ]]
@@ -683,17 +687,21 @@ par 20 "Rede permitida pública no painel" painel PAINEL_REDES_PERMITIDAS=0.0.0.
 ev=""
 
 chaves='^[A-Za-z0-9_]*(PASSWORD|PASSWD|SECRET|TOKEN|HASH|API_KEY|PRIVATE_KEY)[A-Za-z0-9_]*=.+'
-n_env="$(grep -c -i -E "$chaves" "$ENVA")"; n_exemplo="$(grep -c -i -E "$chaves" .env.example)"; n_valor="$(segredos_em "$ENVA")"
+caminhos='^[A-Za-z0-9_]*_(DIR|FILE|PATH)='   # caminho de onde o segredo mora não é segredo
+n_env="$(grep -i -E "$chaves" "$ENVA" | grep -c -v -E "$caminhos")"; n_exemplo="$(grep -i -E "$chaves" .env.example | grep -c -v -E "$caminhos")"; n_valor="$(segredos_em "$ENVA")"
 [[ "$n_env" == 0 && "$n_exemplo" == 0 && "$n_valor" == 0 ]]
 caso $? seguranca 11 "Nenhuma senha no .env" "chaves de senha, token, hash ou chave preenchidas · .env da instância: $n_env · .env.example: $n_exemplo · valores dos segredos no .env: $n_valor"
 
 if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-  no_indice="$(git ls-files -- .env .secrets | grep -c -v -x '.secrets/.gitkeep')"
-  no_historico="$(git log --all --diff-filter=A --name-only --format= -- .env .secrets 2>/dev/null | grep -v -x -e '.secrets/.gitkeep' -e '' | sort -u | wc -l)"
-  git check-ignore -q .env .secrets/ftp_password.txt .secrets/painel_password.txt .secrets/painel_password_hash.txt; ignorados=$?
+  no_indice="$(git ls-files -- .env .secrets | grep -c -v -x -e '.secrets/.gitkeep' -e '.secrets/README.md')"
+  no_historico="$(git log --all --diff-filter=A --name-only --format= -- .env .secrets 2>/dev/null | grep -v -x -e '.secrets/.gitkeep' -e '.secrets/README.md' -e '' | sort -u | wc -l)"
+  ignorados=0
+  for arquivo in .env .secrets/ftp_password.txt .secrets/painel_password.txt .secrets/painel_password_hash.txt; do
+    git check-ignore -q "$arquivo" || ignorados=1
+  done
   no_git="$(git grep -c -I -F -f "$W/proibidos" 2>/dev/null | wc -l)"
   [[ "$no_indice" == 0 && "$no_historico" == 0 && "$ignorados" == 0 && "$no_git" == 0 ]]
-  caso $? seguranca 10 "Segredo fora do Git" "git ls-files com .env ou arquivo de .secrets além do .gitkeep: $no_indice · no histórico (git log --all): $no_historico · .env e os três segredos ignorados pelo .gitignore: $([[ "$ignorados" == 0 ]] && echo sim || echo NÃO) · arquivos versionados com um segredo desta bateria: $no_git"
+  caso $? seguranca 10 "Segredo fora do Git" "git ls-files com .env ou arquivo de .secrets além do .gitkeep e do README.md: $no_indice · no histórico (git log --all): $no_historico · .env e os três segredos ignorados pelo .gitignore: $([[ "$ignorados" == 0 ]] && echo sim || echo NÃO) · arquivos versionados com um segredo desta bateria: $no_git"
 else
   fora seguranca 10 "Segredo fora do Git" "a pasta não é um repositório Git"
 fi
