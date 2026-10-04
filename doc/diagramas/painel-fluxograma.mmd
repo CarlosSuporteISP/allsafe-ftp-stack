@@ -11,6 +11,7 @@ flowchart LR
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
         hash@{ shape: doc, label: "administradores<br>DATA_DIR/painel, nome e hash da senha" }
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna da stack" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 15 min<br>cookie e token CSRF" }
@@ -37,15 +38,16 @@ flowchart LR
     rede -- "3a · sim: repassa pelo soquete Unix" --> painel
     rede -- "3b · não: 403 ou 429" --> recusa
     painel -- "4 · pede usuário e senha" --> senha
-    senha -. "5 · compara com o hash do administrador" .-> hash
-    senha -- "6a · sim: abre a sessão" --> sessao
+    senha -. "5a · compara com o hash do administrador" .-> hash
+    senha -. "5b · não é administrador: o servidor FTP confere a senha" .-> ftp
+    senha -- "6a · sim: abre a sessão do administrador ou do usuário do FTP" --> sessao
     senha -- "6b · não: 5 erros bloqueiam o endereço" --> recusa
-    sessao -- "7 · envia o formulário" --> pedido
+    sessao -- "7 · administrador envia o formulário" --> pedido
     pedido -- "8a · sim: executa" --> cmd
     pedido -- "8b · não: sem token CSRF ou de outra origem" --> recusa
     cmd -- "9 · grava o usuário" --> puredb
     puredb -- "10 · vale no próximo login, sem reiniciar o FTP" --> fim
-    sessao -- "11 · na aba Arquivos, pede um arquivo ou cria uma pasta" --> caminho
+    sessao -- "11 · em Arquivos ou em Meus arquivos, pede um arquivo ou cria uma pasta" --> caminho
     caminho -. "12 · abre parte por parte, sem seguir link simbólico" .-> dados
     caminho -- "13a · sim, arquivo: entrega como anexo" --> baixado
     caminho -- "13b · sim, pasta nova: cria vazia" --> criada

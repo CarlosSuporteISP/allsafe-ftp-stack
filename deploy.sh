@@ -250,6 +250,9 @@ painel_cn="$(env_valor PAINEL_CERT_CN)"
 if [[ "$painel_cn" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   exigir_ip PAINEL_CERT_CN "$painel_cn" || exit 1
 fi
+acesso_usuarios="$(env_valor PAINEL_ACESSO_USUARIOS_FTP sim)"
+[[ "$acesso_usuarios" == sim || "$acesso_usuarios" == nao ]] \
+  || die "PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'; em $env_file está '$acesso_usuarios'."
 painel_admin="$(env_valor PAINEL_ADMIN_USER admin)"
 [[ "$painel_admin" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] \
   || die "PAINEL_ADMIN_USER inválido em $env_file: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres."

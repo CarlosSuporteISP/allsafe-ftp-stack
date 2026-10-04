@@ -115,7 +115,7 @@ Um comando guarda os arquivos dos equipamentos, os usuários, os certificados e 
 
 O que entra na cópia, como desfazer uma restauração, como restaurar em outro servidor e como agendar a cópia estão em [Backup e restauração](backup.md).
 
-Para pegar **um arquivo só**, enviado por um equipamento, use a aba Arquivos do painel: [Arquivos e download](painel.md#arquivos). No host, o mesmo arquivo está na pasta do usuário, dentro de `DATA_DIR/dados`: a aba Usuários mostra o caminho de cada um.
+Para pegar **um arquivo só**, enviado por um equipamento, use a aba Arquivos do painel: [Arquivos e download](painel.md#arquivos). O dono dos arquivos pega os dele do mesmo jeito, entrando no painel com o usuário e a senha do FTP: [Usuário do FTP no painel](painel.md#usuario-ftp). No host, o mesmo arquivo está na pasta do usuário, dentro de `DATA_DIR/dados`: a aba Usuários mostra o caminho de cada um.
 
 > ⚠️ A cópia contém o hash das senhas e as chaves privadas dos certificados: trate como dado sensível e leve-a também para fora do servidor. O `.env` e os arquivos de `.secrets/` não entram na cópia: guarde-os à parte, em um cofre de senhas.
 

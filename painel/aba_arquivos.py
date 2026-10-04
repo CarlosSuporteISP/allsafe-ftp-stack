@@ -1,6 +1,7 @@
 """Aba Arquivos: navegar pelas pastas dos usuários do FTP, baixar um arquivo pelo navegador e criar pasta.
 
-O painel não envia, não renomeia e não apaga: a única gravação que ele faz nos dados é criar pasta vazia."""
+O painel não envia, não renomeia e não apaga: a única gravação que ele faz nos dados é criar pasta vazia.
+A abertura dos caminhos, a lista e a entrega do arquivo servem também à tela Meus arquivos, do usuário do FTP."""
 import os
 import pwd
 import re
@@ -9,11 +10,14 @@ import threading
 import urllib.parse
 
 from auditoria import auditar, limpo
-from config import CFG, DONO_DADOS, DOWNLOADS_MAX, LISTA_MAX, NIVEL, PASTA, PASTA_DADOS
+from config import CFG, DONO_DADOS, DOWNLOADS_MAX, DOWNLOADS_POR_USUARIO, LISTA_MAX, NIVEL, PASTA, PASTA_DADOS
 from estado import usuarios
 from pagina import e, pagina, quando, tamanho
+from sessao import quem
 
 VAGAS = threading.BoundedSemaphore(DOWNLOADS_MAX)
+TRAVA_CURSO = threading.Lock()
+EM_CURSO = {}  # usuário do FTP → downloads dele em andamento
 # Nenhuma parte do caminho é seguida se for link simbólico; O_NONBLOCK não deixa um FIFO prender o pedido.
 ABRIR = os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK
 RECUSAS = {
@@ -86,11 +90,17 @@ def abrir(lista, pasta):
     return atual
 
 
+def tela_de(sessao):
+    """Rota e nome da tela de arquivos de quem está na sessão: a do administrador ou a do usuário do FTP."""
+    return ('/meus-arquivos', 'Meus arquivos') if sessao['usuario'] else ('/arquivos', 'Arquivos')
+
+
 def recusa(pedido, sessao, erro, caminho):
+    rota, tela = tela_de(sessao)
     if erro.codigo != 404:
-        auditar(pedido.ip, 'recusa_caminho', f'admin={sessao["admin"]} caminho={limpo(caminho, 120)}')
-    pedido.enviar(erro.codigo, pagina('Arquivos', f'<section class="cartao"><h1>⛔ Pedido recusado</h1><p>{e(RECUSAS[erro.codigo])}</p>'
-                                      '<p><a href="/arquivos">Voltar para Arquivos</a></p></section>', sessao, '/arquivos'))
+        auditar(pedido.ip, 'recusa_caminho', f'{quem(sessao)} caminho={limpo(caminho, 120)}')
+    pedido.enviar(erro.codigo, pagina(tela, f'<section class="cartao"><h1>⛔ Pedido recusado</h1><p>{e(RECUSAS[erro.codigo])}</p>'
+                                      f'<p><a href="{rota}">Voltar para {tela}</a></p></section>', sessao, rota))
 
 
 def conteudo(descritor):
@@ -122,6 +132,30 @@ def trilha(lista):
     return ' / '.join(niveis)
 
 
+def linhas_da_lista(rota, caminho, pastas, arquivos):
+    """Linhas da tabela de uma pasta aberta; `rota` é a tela que mostra a lista e `caminho`, a pasta como ela a vê."""
+    base = caminho + '/' if caminho else ''
+    linhas = []
+    for nome, dados in pastas:
+        linhas.append(f'<tr><td>📁 <a href="{e(endereco(rota, "pasta", base + nome))}"><strong>{e(visivel(nome))}</strong></a></td>'
+                      f'<td class="suave">pasta</td><td>{e(quando(dados.st_mtime))}</td><td></td></tr>')
+    for nome, dados in arquivos:
+        if stat.S_ISREG(dados.st_mode):
+            linhas.append(f'<tr><td>📄 {e(visivel(nome))}</td><td>{e(tamanho(dados.st_size))}</td><td>{e(quando(dados.st_mtime))}</td>'
+                          f'<td class="acoes"><a class="botao" href="{e(endereco(rota + "/baixar", "arquivo", base + nome))}" download>'
+                          '⬇️ Baixar</a></td></tr>')
+        else:
+            tipo = 'link simbólico' if stat.S_ISLNK(dados.st_mode) else 'arquivo especial'
+            linhas.append(f'<tr><td>🔗 {e(visivel(nome))} <span class="etiqueta">{tipo}</span></td><td class="suave">—</td>'
+                          f'<td>{e(quando(dados.st_mtime))}</td><td class="acoes"><span class="suave">o painel não abre</span></td></tr>')
+    return ''.join(linhas) or '<tr><td colspan="4" class="suave">Pasta vazia.</td></tr>'
+
+
+def aviso_de_corte(cortado):
+    return (f'<p class="aviso">⚠️ Esta pasta tem mais de {LISTA_MAX} itens: a lista mostra só os primeiros {LISTA_MAX}. '
+            'Para ver todos, entre por FTP.</p>') if cortado else ''
+
+
 def lista_arquivos(pedido, sessao, consulta, formulario, token):
     caminho = parametro(pedido, 'pasta')
     try:
@@ -135,23 +169,7 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
         pastas, arquivos, cortado = [], [], False
     finally:
         os.close(descritor)
-    base = caminho + '/' if caminho else ''
-    linhas = []
-    for nome, dados in pastas:
-        linhas.append(f'<tr><td>📁 <a href="{e(endereco("/arquivos", "pasta", base + nome))}"><strong>{e(visivel(nome))}</strong></a></td>'
-                      f'<td class="suave">pasta</td><td>{e(quando(dados.st_mtime))}</td><td></td></tr>')
-    for nome, dados in arquivos:
-        if stat.S_ISREG(dados.st_mode):
-            linhas.append(f'<tr><td>📄 {e(visivel(nome))}</td><td>{e(tamanho(dados.st_size))}</td><td>{e(quando(dados.st_mtime))}</td>'
-                          f'<td class="acoes"><a class="botao" href="{e(endereco("/arquivos/baixar", "arquivo", base + nome))}" download>'
-                          '⬇️ Baixar</a></td></tr>')
-        else:
-            tipo = 'link simbólico' if stat.S_ISLNK(dados.st_mode) else 'arquivo especial'
-            linhas.append(f'<tr><td>🔗 {e(visivel(nome))} <span class="etiqueta">{tipo}</span></td><td class="suave">—</td>'
-                          f'<td>{e(quando(dados.st_mtime))}</td><td class="acoes"><span class="suave">o painel não abre</span></td></tr>')
-    corpo = ''.join(linhas) or '<tr><td colspan="4" class="suave">Pasta vazia.</td></tr>'
-    aviso = (f'<p class="aviso">⚠️ Esta pasta tem mais de {LISTA_MAX} itens: a lista mostra só os primeiros {LISTA_MAX}. '
-             'Para ver todos, entre por FTP.</p>') if cortado else ''
+    corpo, aviso = linhas_da_lista('/arquivos', caminho, pastas, arquivos), aviso_de_corte(cortado)
     feito = MENSAGENS.get(consulta.get('m', ''), '')
     donos = [nome for nome, dele in usuarios().items() if dele == caminho] if caminho else []
     de_quem = f'<p class="suave">Pasta do usuário do FTP: <strong>{e(", ".join(donos))}</strong>.</p>' if donos else ''
@@ -201,7 +219,7 @@ def criar_pasta(pedido, sessao, consulta, formulario, token):
     try:
         lista = partes(caminho)
         if not NIVEL.fullmatch(nome):
-            auditar(pedido.ip, 'recusa_caminho', f'admin={sessao["admin"]} caminho={limpo(novo, 120)}')
+            auditar(pedido.ip, 'recusa_caminho', f'{quem(sessao)} caminho={limpo(novo, 120)}')
             return resposta_pasta(pedido, sessao, 400, '⛔ Nome não aceito', 'Use letras, números, _, - e ponto; o nome não começa '
                                   'com ponto e tem até 64 caracteres.', caminho)
         descritor = abrir(lista, pasta=True)
@@ -219,11 +237,11 @@ def criar_pasta(pedido, sessao, consulta, formulario, token):
     except FileExistsError:
         return resposta_pasta(pedido, sessao, 409, '📁 Nome já usado', 'Já existe uma pasta ou um arquivo com este nome.', caminho)
     except (OSError, KeyError):
-        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=criar_pasta pasta={limpo(novo, 200)}')
+        auditar(pedido.ip, 'falha_comando', f'{quem(sessao)} acao=criar_pasta pasta={limpo(novo, 200)}')
         return resposta_pasta(pedido, sessao, 500, '⚠️ Pasta não criada', 'Não foi possível criar a pasta.', caminho)
     finally:
         os.close(descritor)
-    auditar(pedido.ip, 'pasta_criada', f'admin={sessao["admin"]} pasta={limpo(novo, 200)}')
+    auditar(pedido.ip, 'pasta_criada', f'{quem(sessao)} pasta={limpo(novo, 200)}')
     return pedido.redirecionar(endereco('/arquivos', 'pasta', caminho) + '&m=criada')
 
 
@@ -244,18 +262,38 @@ def baixar(pedido, sessao, consulta, formulario, token):
         descritor = abrir(lista, pasta=False)
     except Recusado as erro:
         return recusa(pedido, sessao, erro, caminho)
-    if not VAGAS.acquire(blocking=False):
+    return entregar(pedido, sessao, descritor, lista[-1], caminho)
+
+
+def entregar(pedido, sessao, descritor, nome, registro):
+    """Entrega como anexo um arquivo já aberto e registra o download. `registro` é o caminho que vai para a
+    auditoria, relativo à pasta dos dados. Vale o teto geral de downloads e, para usuário do FTP, o teto dele."""
+    rota, tela = tela_de(sessao)
+    usuario, limite = sessao['usuario'], ''
+    with TRAVA_CURSO:
+        if usuario and EM_CURSO.get(usuario, 0) >= DOWNLOADS_POR_USUARIO:
+            limite = f'Cada usuário baixa até {DOWNLOADS_POR_USUARIO} arquivos por vez.'
+        elif not VAGAS.acquire(blocking=False):
+            limite = f'O painel entrega até {DOWNLOADS_MAX} arquivos por vez.'
+        elif usuario:
+            EM_CURSO[usuario] = EM_CURSO.get(usuario, 0) + 1
+    if limite:
         os.close(descritor)
-        return pedido.enviar(503, pagina('Arquivos', '<section class="cartao"><h1>⏳ Muitos downloads ao mesmo tempo</h1>'
-                                         f'<p>O painel entrega até {DOWNLOADS_MAX} arquivos por vez. Espere um deles terminar e repita.</p>'
-                                         '<p><a href="/arquivos">Voltar para Arquivos</a></p></section>', sessao, '/arquivos'),
+        return pedido.enviar(503, pagina(tela, '<section class="cartao"><h1>⏳ Muitos downloads ao mesmo tempo</h1>'
+                                         f'<p>{limite} Espere um deles terminar e repita.</p>'
+                                         f'<p><a href="{rota}">Voltar para {tela}</a></p></section>', sessao, rota),
                              extras=(('Retry-After', '30'),))
     try:
         with os.fdopen(descritor, 'rb', buffering=0) as arquivo:
             total = os.fstat(arquivo.fileno()).st_size
-            enviados = pedido.enviar_arquivo(arquivo, total, extras=(('Content-Disposition', anexo(lista[-1])),))
+            enviados = pedido.enviar_arquivo(arquivo, total, extras=(('Content-Disposition', anexo(nome)),))
     finally:
         VAGAS.release()
+        if usuario:
+            with TRAVA_CURSO:
+                EM_CURSO[usuario] -= 1
+                if EM_CURSO[usuario] <= 0:
+                    del EM_CURSO[usuario]
     evento = 'arquivo_baixado' if enviados == total else 'arquivo_interrompido'
-    auditar(pedido.ip, evento, f'admin={sessao["admin"]} arquivo={limpo(caminho, 200)} bytes={enviados}')
+    auditar(pedido.ip, evento, f'{quem(sessao)} arquivo={limpo(registro, 200)} bytes={enviados}')
     return None

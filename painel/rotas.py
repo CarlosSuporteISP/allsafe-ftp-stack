@@ -1,9 +1,12 @@
 """Rotas do painel depois da entrada: método e caminho ➜ função que responde.
 
+São duas tabelas, uma por papel: ROTAS é a do administrador e ROTAS_USUARIO, a do usuário do FTP, que só
+navega e baixa na pasta dele. O que não está na tabela do papel não existe para ele.
 Toda função recebe (pedido, sessao, consulta, formulario, token); `pedido` é o tratador de atendimento.py."""
 import aba_administradores
 import aba_arquivos
 import aba_atividade
+import aba_meus_arquivos
 import aba_seguranca
 import aba_usuarios
 import aba_visao_geral
@@ -32,5 +35,12 @@ ROTAS = {
     ('POST', '/administradores/remover'): aba_administradores.remover,
     ('GET', '/seguranca'): aba_seguranca.seguranca,
     ('GET', '/atividade'): aba_atividade.atividade,
+    ('POST', '/sair'): entrada.sair,
+}
+
+ROTAS_USUARIO = {
+    ('GET', '/'): aba_meus_arquivos.inicio,
+    ('GET', '/meus-arquivos'): aba_meus_arquivos.lista_arquivos,
+    ('GET', '/meus-arquivos/baixar'): aba_meus_arquivos.baixar,
     ('POST', '/sair'): entrada.sair,
 }

@@ -31,6 +31,8 @@ done
   || die "PAINEL_CERT_CN inválido: use um nome em minúsculas ou um endereço IPv4"
 [[ "$PAINEL_ADMIN_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] \
   || die "PAINEL_ADMIN_USER inválido: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres"
+[[ "${PAINEL_ACESSO_USUARIOS_FTP:-sim}" == sim || "${PAINEL_ACESSO_USUARIOS_FTP:-sim}" == nao ]] \
+  || die "PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'"
 cn_ip=false
 if [[ "$PAINEL_CERT_CN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   cn_ip=true

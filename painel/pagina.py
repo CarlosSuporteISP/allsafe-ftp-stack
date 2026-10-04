@@ -7,6 +7,7 @@ from estado import dias_restantes
 
 ABAS = (('/', '📊 Visão geral'), ('/usuarios', '👥 Usuários'), ('/arquivos', '📁 Arquivos'),
         ('/administradores', '🛡️ Administradores'), ('/seguranca', '🔐 Segurança'), ('/atividade', '📜 Atividade'))
+ABAS_USUARIO = (('/meus-arquivos', '📁 Meus arquivos'),)
 ICONE = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" rx="3" fill="#0d1117"/>'
          '<path d="M3 5h10v2H3zm0 4h10v2H3z" fill="#58a6ff"/></svg>')
 
@@ -61,11 +62,13 @@ def aviso_rede():
 def pagina(titulo, miolo, sessao=None, ativa=''):
     menu = ''
     if sessao:
+        abas, nome, papel = ((ABAS_USUARIO, sessao['usuario'], 'Usuário do FTP desta sessão') if sessao['usuario']
+                             else (ABAS, sessao['admin'], 'Administrador desta sessão'))
         links = ''.join(f'<a href="{caminho}"' + (' class="ativa" aria-current="page"' if caminho == ativa else '') + f'>{rotulo}</a>'
-                        for caminho, rotulo in ABAS)
+                        for caminho, rotulo in abas)
         menu = (f'<nav aria-label="Abas do painel">{links}<form method="post" action="/sair">'
-                f'<input type="hidden" name="csrf" value="{e(sessao["csrf"])}"><span class="quem" title="Administrador desta sessão">'
-                f'{e(sessao["admin"])}</span><button type="submit">🚪 Sair</button></form></nav>')
+                f'<input type="hidden" name="csrf" value="{e(sessao["csrf"])}"><span class="quem" title="{papel}">'
+                f'{e(nome)}</span><button type="submit">🚪 Sair</button></form></nav>')
     return f'''<!doctype html>
 <html lang="pt-BR">
 <head>

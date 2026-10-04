@@ -8,6 +8,7 @@ EVENTOS = {
     'entrada_falha': '❌ Entrada recusada',
     'entrada_bloqueada': '⛔ Entrada bloqueada pelo limite de tentativas',
     'saida': '🚪 Saída',
+    'sessao_encerrada': '🚪 Sessão de usuário do FTP encerrada',
     'usuario_criado': '👤 Usuário criado',
     'senha_trocada': '🔑 Senha trocada',
     'usuario_removido': '🗑️ Usuário removido',
@@ -27,6 +28,7 @@ EVENTOS = {
     'recusa_host': '⛔ Endereço não aceito',
     'recusa_rede': '⛔ Cliente fora das redes permitidas',
     'recusa_caminho': '⛔ Caminho de arquivo recusado',
+    'recusa_papel': '⛔ Tela de administração pedida por usuário do FTP',
 }
 
 

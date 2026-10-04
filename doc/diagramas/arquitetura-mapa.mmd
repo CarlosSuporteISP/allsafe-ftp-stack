@@ -43,4 +43,5 @@ flowchart LR
     painel -. "cria o soquete e copia o certificado" .-> vnginx
     nginx -. "lê, só leitura" .-> vnginx
     painel -. "cria pastas e lê os arquivos para o download" .-> vdata
+    painel -. "confere a senha do usuário do FTP, na rede interna" .-> ftp
     ftp -. "grava cada transferência" .-> logs

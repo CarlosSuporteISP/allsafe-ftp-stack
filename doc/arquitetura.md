@@ -90,6 +90,7 @@ flowchart LR
     painel -. "cria o soquete e copia o certificado" .-> vnginx
     nginx -. "lê, só leitura" .-> vnginx
     painel -. "cria pastas e lê os arquivos para o download" .-> vdata
+    painel -. "confere a senha do usuário do FTP, na rede interna" .-> ftp
     ftp -. "grava cada transferência" .-> logs
 ```
 
@@ -119,6 +120,7 @@ flowchart LR
 | Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
 | nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
 | Painel web | `DATA_DIR/dados` | cria pastas e lê os arquivos para o download |
+| Painel web | Pure-FTPd | confere a senha do usuário do FTP que entra no painel, pela rede interna da stack |
 | Pure-FTPd | log CLF (`stdout`) | grava cada transferência |
 
 </details>
@@ -138,7 +140,7 @@ flowchart LR
 | Usuário do processo de dados | [`Dockerfile`](../Dockerfile) | `ftpdata`, uid e gid **10000**, shell `nologin`, sem home |
 | Entrypoint | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-ftp-entrypoint` | Provisiona usuário e certificado e faz `exec` do `pure-ftpd` |
 | Gestão de usuários | [`ftp/usuario.sh`](../ftp/usuario.sh), instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user` | `add`, `passwd`, `del` e `list` no PureDB, chamado de fora por [`manage-user.sh`](../manage-user.sh) e, dentro do painel, pelo servidor web |
-| Painel web | Módulos Python de [`painel/`](../painel/), em `/opt/painel`; o ponto de entrada é o [`painel/servidor.py`](../painel/servidor.py) | Servidor em Python, só com a biblioteca padrão e sem JavaScript: telas, sessão, auditoria e download dos arquivos, um assunto por módulo ([lista](painel.md#modulos)). Atende só o nginx, por soquete Unix |
+| Painel web | Módulos Python de [`painel/`](../painel/), em `/opt/painel`; o ponto de entrada é o [`painel/servidor.py`](../painel/servidor.py) | Servidor em Python, só com a biblioteca padrão e sem JavaScript: telas do administrador, tela do usuário do FTP, sessão, auditoria e download dos arquivos, um assunto por módulo ([lista](painel.md#modulos)). Atende só o nginx, por soquete Unix |
 | Entrypoint do painel | [`painel/entrypoint.sh`](../painel/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-painel-entrypoint` | Confere a rede privada, gera o certificado, entrega a cópia dele ao nginx e faz `exec` do servidor |
 | Frente web | [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo), [`nginx/cabecalhos.conf`](../nginx/cabecalhos.conf) e as páginas de erro de [`nginx/erro/`](../nginx/erro/) | nginx sem root: fecha o HTTPS, recusa quem está fora das redes permitidas, limita taxa de pedidos, conexões e tamanho do pedido, entrega os arquivos estáticos e repassa o resto ao painel. O download de arquivo passa por ele no ritmo do navegador, sem arquivo temporário |
 | Arquivos estáticos | [`web/estilo.css`](../web/estilo.css), na imagem do nginx em `/usr/share/allsafe-nginx/web` | Aparência do painel. O nginx entrega direto, com os cabeçalhos de segurança de `cabecalhos.conf`, sem ocupar o painel |
@@ -180,7 +182,7 @@ Cada serviço vê um único arquivo de `.secrets/`, e o `nginx` não vê nenhum.
 | `PAINEL_BIND_IP:PAINEL_PORT` ➜ `8443/tcp` do `nginx` | painel web, HTTPS |
 
 - O painel não publica nem escuta porta: o nginx o alcança pelo soquete Unix da pasta `DATA_DIR/nginx`, sem passar pela rede.
-- O painel não conversa com o FTP pela rede: os dois dividem as pastas `auth` e `dados`.
+- O painel fala com o FTP pela rede em dois casos, sempre em `ftp:2121`, dentro desta rede: para ver se ele está no ar, pela saudação da porta, e para conferir a senha do usuário do FTP que entra no painel, com um login em TLS. O cadastro e os arquivos, os dois dividem pelas pastas `auth` e `dados`.
 - Quem abre o painel pelo próprio servidor, em `127.0.0.1`, chega ao nginx com o endereço do gateway desta rede (`172.29.1.1`), que já está dentro das redes permitidas por padrão.
 - Sem DNS reverso (`-H`): o `pure-ftpd` nunca resolve o IP do cliente.
 

@@ -9,12 +9,13 @@ import sys
 import threading
 import urllib.parse
 
+import conta_ftp
 import entrada
 from auditoria import auditar, limpo
 from config import BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, GID_NGINX, TEMPO_CONEXAO, privado
 from pagina import ICONE, e, pagina
-from rotas import ROTAS
-from sessao import buscar_sessao
+from rotas import ROTAS, ROTAS_USUARIO
+from sessao import buscar_sessao, encerrar_sessao
 
 CABECALHOS = (
     ('Content-Security-Policy', "default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; "
@@ -247,12 +248,21 @@ class Painel(http.server.BaseHTTPRequestHandler):
         sessao = buscar_sessao(token, self.ip) if token else None
         if sessao is None:
             return self.redirecionar('/entrar')
+        if sessao['usuario']:
+            motivo = conta_ftp.motivo_do_fim(sessao)
+            if motivo:
+                encerrar_sessao(token)
+                auditar(self.ip, 'sessao_encerrada', f'usuario={sessao["usuario"]} motivo={motivo}')
+                return self.redirecionar('/entrar', (('Set-Cookie', entrada.COOKIE_VAZIO),))
         if metodo == 'POST' and not hmac.compare_digest(formulario.get('csrf', ''), sessao['csrf']):
             auditar(self.ip, 'recusa_csrf', f'caminho={limpo(self.caminho)}')
             return self.recusar(403, 'Formulário sem token válido. Abra a página de novo e repita.')
 
-        rota = ROTAS.get((metodo, self.caminho))
+        # Cada papel tem a tabela dele: para o usuário do FTP, as telas de administração não existem.
+        rota = (ROTAS_USUARIO if sessao['usuario'] else ROTAS).get((metodo, self.caminho))
         if rota is None:
+            if sessao['usuario'] and (metodo, self.caminho) in ROTAS:
+                auditar(self.ip, 'recusa_papel', f'usuario={sessao["usuario"]} caminho={limpo(self.caminho)}')
             return self.enviar(404, pagina('Não encontrado', '<section class="cartao"><h1>🔎 Página não encontrada</h1>'
                                            '<p><a href="/">Voltar ao painel</a></p></section>', sessao))
         return rota(self, sessao, consulta, formulario, token)

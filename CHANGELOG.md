@@ -8,6 +8,31 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.15.0] - 2026-10-04
+
+O dono dos arquivos passa a baixar os próprios backups pelo navegador: cada usuário do FTP entra no painel com o nome e a senha do FTP e vê só a pasta dele. A administração continua só com os administradores. **Por padrão, uso só em rede privada, atrás de firewall.**
+
+### Adicionado
+
+- **Entrada do usuário do FTP no painel:** na mesma tela de entrada, o usuário do FTP digita o nome e a senha do FTP e chega à tela **Meus arquivos**, com a pasta do cadastro dele: navega pelas subpastas e baixa os arquivos. Não cria, não envia, não renomeia e não apaga. Guia em [Usuário do FTP no painel](doc/painel.md#usuario-ftp).
+- **Senha conferida pelo servidor FTP:** o painel faz um login no serviço `ftp`, pela rede interna da stack, em TLS e com o certificado dele conferido; não lê o hash do cadastro. Com `FTP_TLS_MODE=0`, essa conferência vai em texto puro, sem sair da rede interna, e a aba Segurança avisa.
+- **Variável `PAINEL_ACESSO_USUARIOS_FTP`:** `sim` (padrão) liga a entrada dos usuários do FTP; `nao` deixa o painel só para administradores. Valor diferente é recusado pelo `deploy.sh` e pelo container do painel.
+- **Sem alcance à administração:** para o usuário do FTP, as abas e os formulários de administração respondem `404`, com o evento `recusa_papel` na auditoria. Nome igual ao de um administrador entra só como administrador, com a senha de administrador.
+- **Sessão que acompanha o cadastro:** trocar a senha do usuário, removê-lo, recriá-lo com outra pasta, criar um administrador com o mesmo nome ou desligar a entrada encerra a sessão dele no pedido seguinte, com o evento `sessao_encerrada` e o motivo.
+- **Limites por usuário do FTP:** até 3 sessões, a quarta entrada encerra a mais antiga, e até 2 downloads ao mesmo tempo, dentro do teto de 8 do painel. Os erros de entrada contam no mesmo limite de cinco em 15 minutos por endereço.
+- **Aba Segurança:** linha nova com a entrada dos usuários do FTP, ligada ou desligada, e como a senha é conferida.
+- Bateria de testes: três casos funcionais (entrada e download do usuário do FTP; sessão que acompanha o cadastro e a variável que desliga; entrada em cada modo de TLS) e quatro de segurança (administração fora do alcance; preso à própria pasta; entrada sem brecha; limites de sessões e de downloads).
+
+### Alterado
+
+- Na auditoria, os eventos `entrada_ok`, `saida`, `arquivo_baixado`, `arquivo_interrompido` e `recusa_caminho`, que levam `admin=<nome>`, levam `usuario=<nome>` quando quem fez foi um usuário do FTP; a entrada recusada porque o servidor FTP não pôde conferir a senha leva `conferencia=ftp_indisponivel`.
+- Com a entrada dos usuários ligada, a senha errada na tela de entrada demora de 3 a 9 segundos para ser recusada, também para nome de administrador: o tempo é o do servidor FTP, que confere todo nome válido. A entrada do administrador com a senha certa continua imediata.
+- A tela de entrada explica os dois tipos de conta quando a entrada dos usuários está ligada.
+
+### Atualização a partir da 0.14.x
+
+Rode `./deploy.sh`. A variável nova é opcional: sem ela no `.env`, vale `sim`, e os usuários do FTP que já existem passam a entrar no painel com a senha que têm. Para manter o painel só com administradores, acrescente `PAINEL_ACESSO_USUARIOS_FTP=nao` ao `.env` antes de rodar. Não há mudança nos dados.
+
 ## [0.14.0] - 2026-10-04
 
 Quem administra passa a escolher a pasta de cada usuário do FTP e a criar pastas pelo navegador. Sem escolha, nada muda: a pasta continua sendo a do nome do usuário. **Por padrão, uso só em rede privada, atrás de firewall.**

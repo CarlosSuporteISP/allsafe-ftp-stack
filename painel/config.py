@@ -36,6 +36,11 @@ FALHAS_MAX = 5              # falhas de entrada por IP...
 JANELA_FALHAS = 15 * 60     # ...nesta janela, em segundos
 SESSAO_ABSOLUTA = 8 * 3600
 SESSOES_MAX = 50
+SESSOES_POR_USUARIO = 3     # sessões de um mesmo usuário do FTP; a mais antiga sai quando entra a quarta
+DOWNLOADS_POR_USUARIO = 2   # arquivos que um usuário do FTP baixa ao mesmo tempo
+CONFERENCIAS_FTP = 2        # senhas conferidas no servidor FTP ao mesmo tempo (ele limita as conexões por IP)
+ESPERA_FTP = 5              # segundos de espera pela vez de conferir
+TEMPO_FTP = 15              # segundos por etapa da conferência: o servidor FTP leva de 3 a 6 s a mais para recusar uma senha
 ADMINS_MAX = 20
 VALIDADE_FORMULARIO = 15 * 60
 AUDITORIA_MAX = 1024 * 1024
@@ -83,6 +88,8 @@ def configuracao():
     admin = amb('PAINEL_ADMIN_USER', 'admin')
     if not NOME.fullmatch(admin):
         falha('PAINEL_ADMIN_USER inválido: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres')
+    if amb('PAINEL_ACESSO_USUARIOS_FTP', 'sim') not in ('nao', 'sim'):
+        falha("PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'")
     minutos = amb('PAINEL_SESSAO_MINUTOS', '15')
     if not (minutos.isdigit() and 1 <= int(minutos) <= 120):
         falha('PAINEL_SESSAO_MINUTOS deve ficar entre 1 e 120')
@@ -95,6 +102,7 @@ def configuracao():
         'ip_publico': publico,
         'redes': redes,
         'admin_inicial': admin,
+        'acesso_usuarios': amb('PAINEL_ACESSO_USUARIOS_FTP', 'sim') == 'sim',
         'inatividade': int(minutos) * 60,
         'cert_cn': amb('PAINEL_CERT_CN', '').strip().lower(),
         'painel_bind': amb('PAINEL_BIND_IP', '127.0.0.1'),

@@ -55,6 +55,12 @@ def seguranca(pedido, sessao, consulta, formulario, token):
               + (f' <strong>Rede pública na lista: {e(", ".join(redes_publicas))}.</strong>' if redes_publicas else '')),
         linha('✅', 'Sessão', f'Encerra com {CFG["inatividade"] // 60} minutos sem uso e, de qualquer forma, em 8 horas. '
               f'{FALHAS_MAX} entradas erradas bloqueiam o endereço por 15 minutos.'),
+        linha('⚠️' if CFG['acesso_usuarios'] and CFG['ftp_tls'] == '0' else '✅', 'Entrada dos usuários do FTP',
+              ('Ligada (<code>PAINEL_ACESSO_USUARIOS_FTP=sim</code>): cada usuário do FTP entra com o nome e a senha do FTP e só '
+               'navega e baixa na pasta dele. Quem confere a senha é o próprio servidor FTP, pela rede interna da stack, '
+               + ('<strong>em texto puro</strong>, porque o FTP está sem TLS.' if CFG['ftp_tls'] == '0'
+                  else 'em TLS e com o certificado dele conferido.')) if CFG['acesso_usuarios']
+              else 'Desligada (<code>PAINEL_ACESSO_USUARIOS_FTP=nao</code>): só administrador entra no painel.'),
         linha('✅' if somente_leitura else '⚠️', 'Container do painel',
               ('Raiz somente leitura' if somente_leitura else 'Raiz gravável: confira o <code>read_only</code>')
               + (' e sem acesso ao Docker do host.' if sem_docker else '. <strong>Há um socket do Docker montado: remova.</strong>')),
