@@ -73,7 +73,7 @@ nav .quem { color: var(--suave); font-size: 0.875rem; }
 nav button { margin: 0; background: transparent; color: var(--suave); border-color: var(--borda); }
 nav button:hover { color: var(--texto); background: var(--fundo); }
 
-main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+main { flex: 1; width: 100%; max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
 
 footer {
   padding: 12px 16px;
@@ -133,8 +133,8 @@ th, td { padding: 8px 12px; border-bottom: 1px solid var(--borda); text-align: l
 thead th { color: var(--suave); font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
 tbody th { width: 1%; font-weight: 600; white-space: nowrap; }
 tbody tr:last-child > * { border-bottom: 0; }
-.acoes { white-space: nowrap; }
-.acoes .suave { white-space: normal; }
+.acoes { min-width: 12rem; }
+.acoes .botao { margin: 2px 0; white-space: nowrap; }
 td:first-child strong { white-space: nowrap; }
 .conferencia .marca { width: 1%; font-size: 1.1rem; }
 .digital { font-size: 0.75rem; }
@@ -148,6 +148,7 @@ td:first-child strong { white-space: nowrap; }
   border-radius: 999px;
   color: var(--suave);
   font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 /* ------------------------------------------------------------ formulários e botões */
@@ -192,5 +193,6 @@ p > .botao { margin-top: 0; }
 @media (max-width: 640px) {
   main { padding: 16px 12px; }
   nav form { margin-left: 0; }
-  .acoes { white-space: normal; }
+  .acoes { min-width: 0; }
+  .acoes .botao, .etiqueta { white-space: normal; }
 }

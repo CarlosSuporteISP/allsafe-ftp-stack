@@ -8,6 +8,18 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.18.3] - 2026-10-05
+
+A lista de usuários do painel deixa de cortar os botões de ação em telas de computador.
+
+### Corrigido
+
+- **Botão `Remover` cortado na aba Usuários.** Com `FTP_TLS_EXCECOES=sim` a lista ganha a coluna TLS e o botão `Dispensar TLS`. Em janelas de 1024 a 1440 px de largura a tabela passava de 55 a 131 px da área visível: o botão `Remover` ficava cortado e o caminho da pasta quebrava em até oito linhas. Agora os botões de ação descem para a linha de baixo quando falta espaço, a área útil do painel vai de 1100 para 1280 px e as etiquetas (`inicial`, `dividida`, `sem TLS`, `você`) não quebram no meio. Em tela de celular nada muda.
+
+### Alterado
+
+- **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados. As imagens são reconstruídas e os três containers, recriados.
+
 ## [0.18.2] - 2026-10-05
 
 O projeto passa a ter licença: o código é livre pela Apache 2.0, e o nome, a logo e o ícone da ALL-SAFE têm regra própria.
