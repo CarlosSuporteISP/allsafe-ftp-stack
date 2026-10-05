@@ -10,6 +10,8 @@ passwd_file=/auth/pureftpd.passwd
 lista_tls=/auth/sem-tls.lista
 # Pasta do usuário, dentro de /data: até 4 níveis. Nenhum nível começa com ponto, então "." e ".." não passam.
 regra_pasta='^[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,3}$'
+# Custo do hash da senha: o mesmo do entrypoint do serviço ftp (`pure-pw -C`, logins ao mesmo tempo).
+logins="${FTP_MAX_CLIENTS:-50}"
 [[ $# -le 2 || "$action" == add ]] || usage
 
 # O serviço ftp e o painel alteram os mesmos arquivos: uma alteração por vez.
@@ -94,6 +96,7 @@ case "$action" in
       echo "Pasta invalida: ate 4 niveis separados por /; letras, numeros, _ - e ponto; nenhum nivel comeca com ponto" >&2
       exit 1
     fi
+    [[ "$logins" =~ ^[1-9][0-9]{0,4}$ ]] || { echo "FTP_MAX_CLIENTS deve ser um inteiro maior que zero" >&2; exit 1; }
     IFS= read -r password
     [[ ${#password} -ge 12 ]] || { echo "Senha deve ter pelo menos 12 caracteres" >&2; exit 1; }
     travar
@@ -103,10 +106,10 @@ case "$action" in
       fi
       preparar_pasta "$pasta"
       printf '%s\n%s\n' "$password" "$password" | pure-pw useradd "$user" \
-        -f "$passwd_file" -u ftpdata -g ftpdata -d "/data/$pasta"
+        -f "$passwd_file" -u ftpdata -g ftpdata -d "/data/$pasta" -C "$logins"
       avisar_divisao
     else
-      printf '%s\n%s\n' "$password" "$password" | pure-pw passwd "$user" -f "$passwd_file"
+      printf '%s\n%s\n' "$password" "$password" | pure-pw passwd "$user" -f "$passwd_file" -C "$logins"
     fi
     pure-pw mkdb /auth/pureftpd.pdb -f "$passwd_file"
     chmod 0600 "$passwd_file" /auth/pureftpd.pdb

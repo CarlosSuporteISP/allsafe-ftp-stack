@@ -262,7 +262,7 @@ flowchart LR
 | 2 | `deploy.sh` ➜ Docker Compose | Roda `docker compose build` e `up -d --wait` com o `.env` | — | Antes roda `config --quiet`; configuração inválida não sobe |
 | 3 | Docker Compose ➜ entrypoint | Inicia o container `allsafe-ftp` | — | Raiz somente leitura, `tini` como processo 1 |
 | 4 | entrypoint ➜ variáveis válidas? | Confere usuário, senha, faixa passiva e modo TLS | — | Nome `^[a-z_][a-z0-9_-]{0,31}$`, senha de 12 ou mais, faixa entre `1024` e `65535`, TLS de `0` a `3` |
-| 5a | variáveis válidas? ➜ `pure-pw` | Sim: cria (`useradd`) ou atualiza (`usermod`) o usuário inicial | — | Usuário virtual com uid e gid `ftpdata`, home `/data/<usuario>` |
+| 5a | variáveis válidas? ➜ `pure-pw` | Sim: cria o usuário inicial (`useradd`) ou regrava a senha dele (`passwd`) | — | Usuário virtual com uid e gid `ftpdata`, home `/data/<usuario>` |
 | 5b | variáveis válidas? ➜ FALHA no log | Não: o entrypoint sai com `FALHA: <motivo>` | — | O container reinicia em laço até a correção |
 | 6 | `pure-pw` ➜ certificado existe? | Compila o banco com `pure-pw mkdb` e segue | — | `pureftpd.passwd` e `pureftpd.pdb` ficam `0600` |
 | 7a | certificado existe? ➜ `pure-ftpd` | Sim: reutiliza o `pure-ftpd.pem` | — | O certificado existente nunca é sobrescrito |
@@ -288,7 +288,7 @@ flowchart LR
 
 </details>
 
-Nas subidas seguintes o usuário inicial é **atualizado** (`usermod`) e o certificado existente é **mantido**. Com o FTP `healthy`, o Compose inicia o painel e, com o painel `healthy`, o nginx: o que cada entrypoint confere está em [Scripts](scripts.md#painel-entrypoint), nas seções do painel e do [nginx](scripts.md#nginx-entrypoint). Nos modos `0` e `1` de `FTP_TLS_MODE`, e com `FTP_TLS_EXCECOES=sim`, o entrypoint do FTP grava um `AVISO` no log antes de subir: [Segurança](seguranca.md#ftp-sem-tls).
+Nas subidas seguintes a senha do usuário inicial é **regravada** a partir do segredo (`pure-pw passwd`) e o certificado existente é **mantido**. Com o FTP `healthy`, o Compose inicia o painel e, com o painel `healthy`, o nginx: o que cada entrypoint confere está em [Scripts](scripts.md#painel-entrypoint), nas seções do painel e do [nginx](scripts.md#nginx-entrypoint). Nos modos `0` e `1` de `FTP_TLS_MODE`, e com `FTP_TLS_EXCECOES=sim`, o entrypoint do FTP grava um `AVISO` no log antes de subir: [Segurança](seguranca.md#ftp-sem-tls).
 
 <details>
 <summary>Detalhe técnico — quem é o processo 1</summary>

@@ -1,6 +1,7 @@
 """Leitura do estado da stack (usuários, pastas, FTP, certificados) e o comando que altera usuários."""
 import datetime
 import os
+import re
 import socket
 import stat
 import subprocess
@@ -11,6 +12,8 @@ from config import ARQ_SEM_TLS, ARQ_USUARIOS, CFG, CMD_USUARIO, NIVEL, NOME, PAS
 
 TRAVA_CACHE = threading.Lock()
 CACHE = {}
+# Memória por conferência de senha (m=, em KiB), no começo do campo da senha do cadastro do FTP.
+CUSTO = re.compile(r'\$argon2id\$v=\d+\$m=(\d+),t=\d+,p=\d+\$')
 
 
 def com_cache(chave, validade, funcao):
@@ -54,6 +57,27 @@ def usuarios():
     except OSError:
         pass
     return dict(sorted(cadastro.items()))
+
+
+def senhas_de_custo_antigo():
+    """Usuários com a senha gravada com mais memória por conferência do que o porte atual prevê: cada tentativa
+    de entrada com o nome deles ocupa mais o processador do FTP. A referência é o usuário inicial, que o serviço
+    ftp regrava a cada subida. Do campo da senha só sai o número da memória; o hash nunca sai daqui.
+    Devolve None quando o usuário inicial não está no cadastro."""
+    memoria = {}
+    try:
+        with open(ARQ_USUARIOS, encoding='utf-8', errors='replace') as arq:
+            for linha in arq:
+                campos = linha.rstrip('\n').split(':')
+                if len(campos) > 5 and NOME.fullmatch(campos[0]):
+                    custo = CUSTO.match(campos[1])
+                    memoria[campos[0]] = int(custo.group(1)) if custo else None
+    except OSError:
+        pass
+    atual = memoria.get(CFG['ftp_usuario'])
+    if not atual:
+        return None
+    return sorted(nome for nome, dele in memoria.items() if dele is None or dele > atual)
 
 
 def sem_tls(cadastro=None):
@@ -198,12 +222,14 @@ def dias_restantes(info):
 
 
 def executar_usuario(acao, nome, senha=None, pasta=None):
-    """Chama o allsafe-ftp-user, o mesmo do serviço ftp. A senha vai pela entrada padrão."""
+    """Chama o allsafe-ftp-user, o mesmo do serviço ftp. A senha vai pela entrada padrão.
+    O FTP_MAX_CLIENTS vai junto: é dele que sai o custo do hash da senha, o mesmo do serviço ftp."""
     try:
         resultado = subprocess.run(
             [CMD_USUARIO, acao, nome] + ([pasta] if pasta else []), input=None if senha is None else senha + '\n',
             capture_output=True, text=True, timeout=30,
-            env={'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LC_ALL': 'C'})
+            env={'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LC_ALL': 'C',
+                 'FTP_MAX_CLIENTS': CFG['ftp_clientes']})
     except (OSError, subprocess.SubprocessError):
         return False, 'O comando de usuários não respondeu.'
     limpar_cache()

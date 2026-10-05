@@ -183,7 +183,7 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
-| `FTP_MAX_CLIENTS` | Máximo de conexões simultâneas (opção `-c`). Alinhe ao tamanho da faixa passiva | inteiro maior que zero | `50` |
+| `FTP_MAX_CLIENTS` | Máximo de conexões simultâneas (opção `-c`). Alinhe ao tamanho da faixa passiva. Também define o custo da senha gravada de cada usuário do FTP: [Segurança](seguranca.md#custo-das-senhas) | inteiro maior que zero | `50` |
 | `FTP_MAX_CLIENTS_PER_IP` | Máximo de conexões por IP de origem (opção `-C`) | inteiro maior que zero | `8` |
 
 ---

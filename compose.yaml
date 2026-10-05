@@ -130,6 +130,7 @@ services:
       FTP_TLS_EXCECOES: ${FTP_TLS_EXCECOES:-nao}
       FTP_PASSIVE_PORT_START: ${FTP_PASSIVE_PORT_START:-30000}
       FTP_PASSIVE_PORT_END: ${FTP_PASSIVE_PORT_END:-30049}
+      FTP_MAX_CLIENTS: ${FTP_MAX_CLIENTS:-50}
     volumes:
       - type: bind
         source: ${DATA_DIR}/dados

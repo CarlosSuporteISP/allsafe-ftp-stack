@@ -30,6 +30,8 @@ exigir_ip FTP_PASSIVE_IP "$FTP_PASSIVE_IP" || exit 1
 [[ "$FTP_PASSIVE_PORT_START" =~ ^[0-9]+$ && "$FTP_PASSIVE_PORT_END" =~ ^[0-9]+$ ]] || die "faixa passiva invalida"
 (( FTP_PASSIVE_PORT_START >= 1024 && FTP_PASSIVE_PORT_END <= 65535 && FTP_PASSIVE_PORT_START <= FTP_PASSIVE_PORT_END )) || die "faixa passiva fora dos limites"
 [[ "$FTP_TLS_MODE" =~ ^[0123]$ ]] || die "FTP_TLS_MODE deve ser 0, 1, 2 ou 3"
+[[ "$FTP_MAX_CLIENTS" =~ ^[1-9][0-9]{0,4}$ ]] || die "FTP_MAX_CLIENTS deve ser um inteiro maior que zero"
+[[ "$FTP_MAX_CLIENTS_PER_IP" =~ ^[1-9][0-9]{0,4}$ ]] || die "FTP_MAX_CLIENTS_PER_IP deve ser um inteiro maior que zero"
 # Com IP público aceito, senha em texto puro não passa: o TLS tem de ser obrigatório.
 if ip_publico_permitido && (( FTP_TLS_MODE < 2 )); then
   die "REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3; está $FTP_TLS_MODE (FTP sem TLS na internet entrega a senha a quem escuta)"
@@ -56,11 +58,15 @@ flock -w 30 9 || die "arquivo de usuarios em uso por outra alteracao"
 touch /auth/pureftpd.passwd
 chmod 0600 /auth/pureftpd.passwd
 
+# Custo do hash da senha (argon2id): o pure-pw divide a memória da conta pelo número de logins ao mesmo
+# tempo (-C). Sem a opção ele supõe 8, e cada conferência de senha ocupa o processador por cerca de 3 s:
+# poucas senhas erradas ao mesmo tempo seguravam o login de todos por quase um minuto.
+# A senha do segredo é reaplicada a cada subida pelo `passwd`: o `usermod` não regrava senha.
 if grep -q "^${FTP_USER}:" /auth/pureftpd.passwd; then
-  printf '%s\n%s\n' "$password" "$password" | pure-pw usermod "$FTP_USER" -f /auth/pureftpd.passwd >/dev/null
+  printf '%s\n%s\n' "$password" "$password" | pure-pw passwd "$FTP_USER" -f /auth/pureftpd.passwd -C "$FTP_MAX_CLIENTS" >/dev/null
 else
   printf '%s\n%s\n' "$password" "$password" | pure-pw useradd "$FTP_USER" \
-    -f /auth/pureftpd.passwd -u ftpdata -g ftpdata -d "/data/$FTP_USER" >/dev/null
+    -f /auth/pureftpd.passwd -u ftpdata -g ftpdata -d "/data/$FTP_USER" -C "$FTP_MAX_CLIENTS" >/dev/null
 fi
 pure-pw mkdb /auth/pureftpd.pdb -f /auth/pureftpd.passwd
 chmod 0600 /auth/pureftpd.passwd /auth/pureftpd.pdb

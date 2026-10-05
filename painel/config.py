@@ -104,6 +104,9 @@ def configuracao():
     contato = amb('SEGURANCA_CONTATO_EMAIL', '')
     if contato and not (len(contato) <= 254 and EMAIL.fullmatch(contato)):
         falha('SEGURANCA_CONTATO_EMAIL inválido: um endereço de e-mail só, como seguranca@exemplo.com.br, ou vazio')
+    clientes = amb('FTP_MAX_CLIENTS', '50')
+    if not re.fullmatch(r'[1-9][0-9]{0,4}', clientes):
+        falha('FTP_MAX_CLIENTS deve ser um inteiro maior que zero')
     minutos = amb('PAINEL_SESSAO_MINUTOS', '15')
     if not (minutos.isdigit() and 1 <= int(minutos) <= 120):
         falha('PAINEL_SESSAO_MINUTOS deve ficar entre 1 e 120')
@@ -128,6 +131,7 @@ def configuracao():
         'ftp_porta': amb('FTP_PORT', '21'),
         'ftp_anunciado': amb('FTP_PASSIVE_IP', '127.0.0.1'),
         'ftp_tls': amb('FTP_TLS_MODE', '2'),
+        'ftp_clientes': clientes,
         'tls_excecoes': excecoes,
         'ftp_passiva': f"{amb('FTP_PASSIVE_PORT_START', '30000')}–{amb('FTP_PASSIVE_PORT_END', '30049')}",
         'pasta_host': amb('PAINEL_PASTA_DADOS', 'DATA_DIR/dados').rstrip('/'),

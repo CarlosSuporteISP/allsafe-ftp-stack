@@ -8,6 +8,28 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.18.1] - 2026-10-05
+
+A bateria de segurança passa a responder a quatro perguntas a cada versão: abre alguma coisa sem senha, abre com senha aleatória, dá para derrubar por exaustão e dá para ler o cadastro das senhas sem passar pela entrada. Ela achou dois defeitos, corrigidos nesta versão.
+
+### Corrigido
+
+- **Rajada de senhas erradas segurava a entrada de quem tinha a senha certa.** A senha de cada usuário do FTP era gravada com o custo que o `pure-pw` usa quando supõe 8 sessões: cerca de 3 segundos de processador por conferência. Na máquina de teste, 7 senhas erradas ao mesmo tempo, de um só endereço, seguravam por cerca de 50 segundos a entrada de quem tinha a senha certa. O custo passa a acompanhar o porte (`pure-pw -C FTP_MAX_CLIENTS`): a conferência leva menos de 1 segundo e a mesma rajada atrasa a entrada em cerca de 8 segundos.
+- **A senha do usuário inicial não era reaplicada do segredo.** A documentação dizia que a senha de `.secrets/ftp-usuario-inicial-senha.txt` valia a cada subida, mas ela só era gravada na criação do usuário: trocar o arquivo e reiniciar o `ftp` deixava a senha antiga valendo. Agora o `ftp/entrypoint.sh` regrava a senha a cada subida.
+
+### Adicionado
+
+- Validação de `FTP_MAX_CLIENTS` e `FTP_MAX_CLIENTS_PER_IP` no container do `ftp`: valor que não é inteiro maior que zero para o serviço com `FALHA: FTP_MAX_CLIENTS deve ser um inteiro maior que zero`.
+- Aba Segurança: item `Custo das senhas do FTP`, com os usuários que ainda estão com a senha gravada com o custo anterior. O painel lê só o parâmetro de memória de cada linha do cadastro; o hash não aparece na tela.
+- Bateria: etapa 18, com 2 casos funcionais (tudo em Docker, sem systemd; senha do usuário inicial reaplicada do segredo) e 12 de segurança: nenhuma rota do painel e nenhum comando do FTP sem login, senha aleatória no FTP e no painel, rajada de senhas, de pedidos e de conexões, conexão parada, pedido grande ou malformado, cadastro das senhas fora do alcance da web, do FTP, dos outros containers e do host, e custo da senha conforme o porte. São 38 casos funcionais, 80 de segurança e 13 de rede.
+- Documentação: [o que a bateria tenta e o que acontece](doc/seguranca.md#sem-senha-e-exaustao) e o [custo das senhas do FTP](doc/seguranca.md#custo-das-senhas), com os limites conhecidos.
+
+### Alterado
+
+- **Ao atualizar:** as senhas já gravadas continuam com o custo anterior até serem trocadas. A do usuário inicial é regravada na primeira subida; as demais aparecem na aba Segurança e são acertadas com a troca da senha, na aba Usuários ou com `./manage-user.sh passwd`. As senhas desses usuários continuam valendo.
+- **Ao atualizar:** se a senha do usuário inicial foi trocada só com `./manage-user.sh passwd`, sem atualizar `.secrets/ftp-usuario-inicial-senha.txt`, a senha do arquivo volta a valer na primeira subida. Grave no arquivo a senha em uso antes de atualizar.
+- O serviço `painel` recebe `FTP_MAX_CLIENTS`, para gravar as senhas com o mesmo custo do serviço `ftp`.
+
 ## [0.18.0] - 2026-10-04
 
 O painel passa a publicar o contato de segurança da instalação, em `/.well-known/security.txt`, e o `robots.txt`. **Por padrão, uso só em rede privada, atrás de firewall.**

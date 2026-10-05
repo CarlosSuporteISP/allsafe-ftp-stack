@@ -2,7 +2,7 @@
 import os
 
 from config import ARQ_CERT, ARQ_CERT_FTP, CFG, FALHAS_MAX, PRIVADAS, endereco_privado
-from estado import certificado, sem_tls
+from estado import certificado, sem_tls, senhas_de_custo_antigo
 from pagina import alerta_tls, aviso_rede, e, pagina, validade
 
 
@@ -32,6 +32,7 @@ def seguranca(pedido, sessao, consulta, formulario, token):
     somente_leitura = not os.access('/', os.W_OK)
     sem_docker = not os.path.exists('/var/run/docker.sock') and not os.path.exists('/run/docker.sock')
     redes = ', '.join(str(rede) for rede in CFG['redes'])
+    antigas = senhas_de_custo_antigo()
 
     def local(ip):
         if ip.startswith('127.'):
@@ -74,6 +75,13 @@ def seguranca(pedido, sessao, consulta, formulario, token):
                + ('<strong>em texto puro</strong>, porque o FTP está sem TLS.' if CFG['ftp_tls'] == '0'
                   else 'em TLS e com o certificado dele conferido.')) if CFG['acesso_usuarios']
               else 'Desligada (<code>PAINEL_ACESSO_USUARIOS_FTP=nao</code>): só administrador entra no painel.'),
+        linha('➖' if antigas is None else ('⚠️' if antigas else '✅'), 'Custo das senhas do FTP',
+              'Sem referência: o usuário inicial não está no cadastro. Ele volta na próxima subida do serviço <code>ftp</code>.'
+              if antigas is None
+              else (f'<strong>{len(antigas)} usuário(s) com a senha gravada com o custo anterior</strong>: {e(", ".join(antigas))}. '
+                    'Cada tentativa de entrada com esses nomes ocupa mais o processador do FTP. O custo atual passa a valer '
+                    'quando a senha é trocada, na aba Usuários.') if antigas
+              else 'Todas as senhas estão gravadas com o custo do porte atual (<code>FTP_MAX_CLIENTS</code>).'),
         linha('✅' if CFG['contato_seguranca'] else ('⚠️' if CFG['ip_publico'] else '➖'), 'Contato de segurança',
               (f'Publicado em <code>/.well-known/security.txt</code>: quem achar uma falha nesta instalação escreve para '
                f'<code>{e(CFG["contato_seguranca"])}</code>.') if CFG['contato_seguranca']
