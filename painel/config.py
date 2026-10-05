@@ -24,6 +24,8 @@ NOME = re.compile(r'[a-z_][a-z0-9_-]{0,31}')
 # não passam. É a mesma regra do allsafe-ftp-user, que é quem decide; aqui ela antecipa a mensagem de erro.
 NIVEL = re.compile(r'[A-Za-z0-9_][A-Za-z0-9._-]{0,63}')
 PASTA = re.compile(r'[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(?:/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,3}')
+# Contato de segurança (SEGURANCA_CONTATO_EMAIL): um endereço de e-mail só, que cabe em um `mailto:` sem codificação.
+EMAIL = re.compile(r'[A-Za-z0-9._+-]{1,64}@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,24}')
 DONO_DADOS = 'ftpdata'      # usuário do sistema dono das pastas e dos arquivos do FTP
 PRIVADAS = [ipaddress.ip_network(r) for r in ('127.0.0.0/8', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16')]
 
@@ -44,6 +46,7 @@ ESPERA_FTP = 5              # segundos de espera pela vez de conferir
 TEMPO_FTP = 15              # segundos por etapa da conferência: o servidor FTP leva de 3 a 6 s a mais para recusar uma senha
 ADMINS_MAX = 20
 VALIDADE_FORMULARIO = 15 * 60
+VALIDADE_CONTATO = 90       # dias de validade (Expires) do security.txt, contados do pedido
 AUDITORIA_MAX = 1024 * 1024
 SENHA_MIN, SENHA_MAX = 12, 128
 
@@ -98,6 +101,9 @@ def configuracao():
         falha('FTP_TLS_EXCECOES=sim exige FTP_TLS_MODE=2')
     if excecoes and publico:
         falha('FTP_TLS_EXCECOES=sim não combina com REDE_PERMITIR_IP_PUBLICO=sim')
+    contato = amb('SEGURANCA_CONTATO_EMAIL', '')
+    if contato and not (len(contato) <= 254 and EMAIL.fullmatch(contato)):
+        falha('SEGURANCA_CONTATO_EMAIL inválido: um endereço de e-mail só, como seguranca@exemplo.com.br, ou vazio')
     minutos = amb('PAINEL_SESSAO_MINUTOS', '15')
     if not (minutos.isdigit() and 1 <= int(minutos) <= 120):
         falha('PAINEL_SESSAO_MINUTOS deve ficar entre 1 e 120')
@@ -113,6 +119,7 @@ def configuracao():
         'acesso_usuarios': amb('PAINEL_ACESSO_USUARIOS_FTP', 'sim') == 'sim',
         'inatividade': int(minutos) * 60,
         'cert_cn': amb('PAINEL_CERT_CN', '').strip().lower(),
+        'contato_seguranca': contato,
         'painel_bind': amb('PAINEL_BIND_IP', '127.0.0.1'),
         'painel_porta': amb('PAINEL_PORT', '8443'),
         'ftp_host': amb('PAINEL_FTP_HOST', 'ftp'),

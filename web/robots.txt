@@ -1,0 +1,3 @@
+# allsafe-ftp-stack: painel de administração, atrás de usuário e senha. Nada aqui é para indexar.
+User-agent: *
+Disallow: /

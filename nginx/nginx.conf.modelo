@@ -100,6 +100,17 @@ http {
             add_header Cache-Control no-cache always;
         }
 
+        # Aviso aos robôs de busca (RFC 9309): nada do painel é para indexar. Entregue sem sessão, como o estilo.
+        location = /robots.txt {
+            root /usr/share/allsafe-nginx/web;
+            types { text/plain txt; }
+            default_type application/octet-stream;
+            charset utf-8;
+            access_log off;
+            include /etc/allsafe-nginx/cabecalhos.conf;
+            add_header Cache-Control no-cache always;
+        }
+
         # Marca (pasta web/marca/ do projeto): o ícone do navegador, o símbolo do topo e a logo da tela
         # de entrada. Entregues sem sessão, como o estilo, e só os nomes listados aqui.
         location = /favicon.ico {

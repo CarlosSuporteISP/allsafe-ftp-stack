@@ -74,6 +74,11 @@ def seguranca(pedido, sessao, consulta, formulario, token):
                + ('<strong>em texto puro</strong>, porque o FTP está sem TLS.' if CFG['ftp_tls'] == '0'
                   else 'em TLS e com o certificado dele conferido.')) if CFG['acesso_usuarios']
               else 'Desligada (<code>PAINEL_ACESSO_USUARIOS_FTP=nao</code>): só administrador entra no painel.'),
+        linha('✅' if CFG['contato_seguranca'] else ('⚠️' if CFG['ip_publico'] else '➖'), 'Contato de segurança',
+              (f'Publicado em <code>/.well-known/security.txt</code>: quem achar uma falha nesta instalação escreve para '
+               f'<code>{e(CFG["contato_seguranca"])}</code>.') if CFG['contato_seguranca']
+              else ('Não publicado (<code>SEGURANCA_CONTATO_EMAIL</code> vazio): quem achar uma falha nesta instalação não tem '
+                    'para onde escrever.' + (' <strong>Com endereço público aceito, preencha.</strong>' if CFG['ip_publico'] else ''))),
         linha('✅' if somente_leitura else '⚠️', 'Container do painel',
               ('Raiz somente leitura' if somente_leitura else 'Raiz gravável: confira o <code>read_only</code>')
               + (' e sem acesso ao Docker do host.' if sem_docker else '. <strong>Há um socket do Docker montado: remova.</strong>')),

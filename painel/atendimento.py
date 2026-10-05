@@ -7,12 +7,13 @@ import re
 import socketserver
 import sys
 import threading
+import time
 import urllib.parse
 
 import conta_ftp
 import entrada
 from auditoria import auditar, limpo
-from config import BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, GID_NGINX, TEMPO_CONEXAO, privado
+from config import BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, GID_NGINX, TEMPO_CONEXAO, VALIDADE_CONTATO, privado
 from pagina import e, pagina
 from rotas import ROTAS, ROTAS_USUARIO
 from sessao import buscar_sessao, encerrar_sessao
@@ -29,6 +30,15 @@ CABECALHOS = (
     ('Permissions-Policy', 'camera=(), geolocation=(), microphone=()'),
     ('Cache-Control', 'no-store'),
 )
+
+
+def security_txt():
+    """Texto de /.well-known/security.txt (RFC 9116), ou None sem SEGURANCA_CONTATO_EMAIL. Sai da configuração em
+    vigor a cada pedido, com a validade contada de agora: não fica vencido nem diferente do `.env`."""
+    if not CFG['contato_seguranca']:
+        return None
+    expira = time.strftime('%Y-%m-%dT00:00:00Z', time.gmtime(time.time() + VALIDADE_CONTATO * 86400))
+    return f'Contact: mailto:{CFG["contato_seguranca"]}\nExpires: {expira}\nPreferred-Languages: pt-BR\n'
 
 
 class Servidor(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
@@ -229,6 +239,9 @@ class Painel(http.server.BaseHTTPRequestHandler):
 
         if metodo == 'GET' and self.caminho == '/saude':
             return self.enviar(200, 'ok\n', 'text/plain; charset=utf-8')
+        if metodo == 'GET' and self.caminho == '/.well-known/security.txt':
+            texto = security_txt()
+            return self.enviar(200 if texto else 404, texto or 'contato de segurança não configurado\n', 'text/plain; charset=utf-8')
 
         formulario = {}
         if metodo == 'POST':

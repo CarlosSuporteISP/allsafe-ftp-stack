@@ -33,6 +33,10 @@ done
   || die "PAINEL_ADMIN_USER inválido: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres"
 [[ "${PAINEL_ACESSO_USUARIOS_FTP:-sim}" == sim || "${PAINEL_ACESSO_USUARIOS_FTP:-sim}" == nao ]] \
   || die "PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'"
+SEGURANCA_CONTATO_EMAIL="${SEGURANCA_CONTATO_EMAIL:-}"
+[[ -z "$SEGURANCA_CONTATO_EMAIL" ]] \
+  || [[ ${#SEGURANCA_CONTATO_EMAIL} -le 254 && "$SEGURANCA_CONTATO_EMAIL" =~ ^[A-Za-z0-9._+-]{1,64}@([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,24}$ ]] \
+  || die "SEGURANCA_CONTATO_EMAIL inválido: um endereço de e-mail só, como seguranca@exemplo.com.br, ou vazio"
 [[ "${FTP_TLS_EXCECOES:-nao}" == sim || "${FTP_TLS_EXCECOES:-nao}" == nao ]] \
   || die "FTP_TLS_EXCECOES deve ser 'nao' ou 'sim'"
 if [[ "${FTP_TLS_EXCECOES:-nao}" == sim ]]; then

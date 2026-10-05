@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Exemplo mínimo de produção](#exemplo-minimo-de-producao) · [Geral](#geral) · [Rede e portas](#rede-e-portas) · [Usuário inicial e senha](#usuario-inicial-e-senha) · [TLS](#tls) · [Limites de sessão](#limites-de-sessao) · [Painel web](#painel) · [Limites de recurso do container](#limites-de-recurso-do-container) · [Rede Docker](#rede-docker-sub-rede)
+[Exemplo mínimo de produção](#exemplo-minimo-de-producao) · [Geral](#geral) · [Rede e portas](#rede-e-portas) · [Usuário inicial e senha](#usuario-inicial-e-senha) · [TLS](#tls) · [Limites de sessão](#limites-de-sessao) · [Painel web](#painel) · [Contato de segurança](#contato-de-seguranca) · [Limites de recurso do container](#limites-de-recurso-do-container) · [Rede Docker](#rede-docker-sub-rede)
 
 </details>
 
@@ -213,6 +213,60 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 A senha do painel **não** é variável: a inicial fica em `.secrets/`, e a de cada administrador, só como hash, em `DATA_DIR/painel/administradores`. O `deploy.sh` e o container recusam `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`, e param com `PAINEL_ADMIN_USER inválido` para um nome fora da regra. Veja [Segredos](segredos.md#senha-do-painel) e [Administradores do painel](painel.md#administradores).
 
 O navegador nunca fala direto com o painel: só o nginx publica porta, e ele repassa o pedido ao painel por um soquete dentro de `DATA_DIR/nginx`. O limite de pedidos por endereço e o tamanho máximo do pedido são fixos na configuração do nginx ([`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo)), sem variável. Os perfis de [`profiles/`](../profiles/) não mexem nas variáveis do painel nem nas do nginx.
+
+---
+
+<a name="contato-de-seguranca"></a>
+
+## 📮 Contato de segurança
+
+| Variável | Para que serve | Valores | Padrão |
+|---|---|---|---|
+| `SEGURANCA_CONTATO_EMAIL` | E-mail para onde quem achar uma falha de segurança nesta instalação deve escrever. Preenchido, o painel publica o endereço em `/.well-known/security.txt`, sem pedir senha, para as redes de `PAINEL_REDES_PERMITIDAS` | Um endereço de e-mail só, sem `mailto:`; vazio para não publicar | vazio |
+
+O arquivo segue a RFC 9116: é onde um pesquisador, ou a ferramenta de varredura da própria empresa, procura para quem avisar. Use uma caixa lida por mais de uma pessoa, como `seguranca@suaempresa.com.br`: o endereço fica à vista de quem alcança o painel.
+
+1. No `.env`, preencha a variável:
+
+   ```bash
+   SEGURANCA_CONTATO_EMAIL=seguranca@suaempresa.com.br
+   ```
+
+2. Reaplique:
+
+   ```bash
+   ./deploy.sh
+   ```
+
+3. Confira, de uma máquina das redes permitidas:
+
+   ```bash
+   curl -k https://<endereço do painel>:8443/.well-known/security.txt
+   ```
+
+**Resultado esperado:** três linhas, e a aba Segurança do painel com o item `Contato de segurança` marcado.
+
+```text
+Contact: mailto:seguranca@suaempresa.com.br
+Expires: 2027-01-03T00:00:00Z
+Preferred-Languages: pt-BR
+```
+
+Com a variável vazia, o mesmo endereço responde `404` com `contato de segurança não configurado`. Com `REDE_PERMITIR_IP_PUBLICO=sim`, a aba Segurança passa a cobrar o preenchimento.
+
+<details>
+<summary>Detalhe técnico — validade, validação e o que não é publicado</summary>
+
+- **Validade sempre no futuro:** a linha `Expires` é calculada a cada pedido, 90 dias à frente, à meia-noite UTC. O arquivo não vence com o servidor no ar, e a RFC pede validade menor que um ano.
+- **Sempre igual ao `.env`:** o texto sai da configuração em vigor, não de arquivo gravado. Esvaziar a variável e rodar o `deploy.sh` tira o arquivo do ar.
+- **Validação em três pontos:** o [`deploy.sh`](../deploy.sh), o container do painel e o próprio painel recusam o valor que não é um endereço só: sem `@`, domínio sem ponto, dois endereços, espaço, `mailto:`, URL, `<`, `>`, `%`, quebra de linha, parte antes do `@` com mais de 64 caracteres ou endereço com mais de 254. A mensagem é `SEGURANCA_CONTATO_EMAIL inválido`.
+- **Só o contato:** o arquivo não traz versão, nome da stack nem caminho. Não há linha `Canonical`, porque o endereço do painel muda de uma instalação para outra e o arquivo não é assinado.
+- **Só esse endereço:** `/security.txt` na raiz, a lista de `/.well-known/` e qualquer outro nome dentro dela não existem; sem sessão, levam à tela de entrada.
+- **De quem é o contato:** de quem opera esta instalação, não de quem desenvolveu a stack.
+
+O que mais fica aberto sem senha, e por quê: [Segurança](seguranca.md#contato-de-seguranca).
+
+</details>
 
 ---
 

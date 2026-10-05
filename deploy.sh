@@ -275,6 +275,11 @@ acesso_usuarios="$(env_valor PAINEL_ACESSO_USUARIOS_FTP sim)"
 painel_admin="$(env_valor PAINEL_ADMIN_USER admin)"
 [[ "$painel_admin" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] \
   || die "PAINEL_ADMIN_USER inválido em $env_file: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres."
+contato_seguranca="$(env_valor SEGURANCA_CONTATO_EMAIL)"
+if [[ -n "$contato_seguranca" ]]; then
+  [[ ${#contato_seguranca} -le 254 && "$contato_seguranca" =~ ^[A-Za-z0-9._+-]{1,64}@([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,24}$ ]] \
+    || die "SEGURANCA_CONTATO_EMAIL inválido em $env_file: um endereço de e-mail só, como seguranca@exemplo.com.br, ou vazio."
+fi
 if ip_publico_permitido; then rede_texto="endereço público aceito"; else rede_texto="rede privada"; fi
 
 if [[ "$check_only" == true ]]; then

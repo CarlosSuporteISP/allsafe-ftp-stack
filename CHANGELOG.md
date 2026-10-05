@@ -8,6 +8,24 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.18.0] - 2026-10-04
+
+O painel passa a publicar o contato de segurança da instalação, em `/.well-known/security.txt`, e o `robots.txt`. **Por padrão, uso só em rede privada, atrás de firewall.**
+
+### Adicionado
+
+- **Contato de segurança (RFC 9116):** a variável `SEGURANCA_CONTATO_EMAIL` do `.env` recebe o e-mail para onde quem achar uma falha na instalação deve escrever. Preenchida, o painel publica `/.well-known/security.txt` com o contato, a validade e o idioma, sem pedir senha, para as redes de `PAINEL_REDES_PERMITIDAS`. Vazia, que é o padrão, o endereço responde `404`. Guia em [Configuração](doc/configuracao.md#contato-de-seguranca).
+- **Validade que não vence:** a linha `Expires` é calculada a cada pedido, 90 dias à frente; o arquivo sai sempre da configuração em vigor.
+- **`robots.txt` (RFC 9309):** [`web/robots.txt`](web/robots.txt), entregue pelo nginx, pede aos robôs de busca que não indexem nada do painel.
+- **Aba Segurança:** item `Contato de segurança`, com o e-mail publicado ou, com a variável vazia, o aviso de que não há para onde escrever; em alerta quando endereço público é aceito.
+- **Validação do e-mail** no `deploy.sh`, no container do painel e no painel: só um endereço, sem `mailto:`, espaço, `%`, `<`, `>` nem quebra de linha. Valor fora da regra para com `SEGURANCA_CONTATO_EMAIL inválido`.
+- Seção [Contato de segurança e robôs de busca](doc/seguranca.md#contato-de-seguranca) em Segurança, com o que os dois endereços entregam e o que não entregam.
+- Bateria de testes: dois casos funcionais (`robots.txt` entregue pelo nginx; `security.txt` publicado com o contato de segurança) e um de segurança (os dois endereços, abertos sem senha, não entregam mais nada).
+
+### Alterado
+
+- O `.env.example` passa a ter 45 variáveis, com a seção Contato de segurança.
+
 ## [0.17.0] - 2026-10-04
 
 O painel passa a mostrar a logo e o ícone da ALL-SAFE e, no rodapé de todas as telas, a autoria: desenvolvido pela allsafe.inf.br. **Por padrão, uso só em rede privada, atrás de firewall.**
