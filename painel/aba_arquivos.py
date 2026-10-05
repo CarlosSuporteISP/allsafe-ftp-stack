@@ -269,6 +269,10 @@ def baixar(pedido, sessao, consulta, formulario, token):
 def entregar(pedido, sessao, descritor, nome, registro):
     """Entrega como anexo um arquivo já aberto e registra o download. `registro` é o caminho que vai para a
     auditoria, relativo à pasta dos dados. Vale o teto geral de downloads e, para usuário do FTP, o teto dele."""
+    if pedido.command == 'HEAD':  # só os cabeçalhos: nada é baixado, não ocupa vaga nem entra na auditoria
+        with os.fdopen(descritor, 'rb', buffering=0) as arquivo:
+            pedido.enviar_arquivo(arquivo, os.fstat(arquivo.fileno()).st_size, extras=(('Content-Disposition', anexo(nome)),))
+        return None
     rota, tela = tela_de(sessao)
     usuario, limite = sessao['usuario'], ''
     with TRAVA_CURSO:

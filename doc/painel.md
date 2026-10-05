@@ -175,6 +175,7 @@ Limites:
 - **Entrega:** `Content-Type: application/octet-stream` e `Content-Disposition: attachment`, com o nome em duas formas (RFC 6266 e RFC 8187): reduzido a ASCII e inteiro, em UTF-8. Com o `nosniff` e a `Content-Security-Policy` de toda resposta, o navegador salva o arquivo e nunca o abre, mesmo que seja uma página HTML.
 - **Memória e disco:** o arquivo sai em blocos de 64 KiB, sem ser carregado na memória. O nginx repassa no ritmo do navegador, sem gravar arquivo temporário (`proxy_max_temp_file_size 0`), então o tamanho do arquivo não é limitado pelo `/tmp` do container.
 - **Sem retomada:** a resposta leva `Accept-Ranges: none` e o painel ignora o cabeçalho `Range`.
+- **Só os cabeçalhos (`HEAD`):** o pedido `HEAD` do mesmo endereço devolve o tamanho e o nome do arquivo, sem o conteúdo. Não ocupa vaga de download nem entra na auditoria.
 - **Ritmo mínimo:** cada bloco tem 15 segundos para sair; passado isso, o painel fecha a conexão e libera a vaga do download.
 - **Nome fora do UTF-8:** aparece na lista com o sinal de substituição no lugar do byte inválido, e é baixado do mesmo jeito.
 - **Auditoria:** `pasta_criada` registra o administrador e o caminho; `arquivo_baixado` e `arquivo_interrompido` registram quem baixou, o caminho e os bytes entregues; o conteúdo do arquivo nunca é registrado.

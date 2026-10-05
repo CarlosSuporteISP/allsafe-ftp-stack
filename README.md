@@ -8,7 +8,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.18.4-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.18.5-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
@@ -39,7 +39,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.18.4</b> · visão geral da stack · 2026-10-05</sub>
+<sub><b>v0.18.5</b> · visão geral da stack · 2026-10-05</sub>
 
 </div>
 
@@ -501,7 +501,7 @@ Medido em 2026-10-05, na versão `0.18.4`, com os três containers em repouso, n
 - **Total em repouso:** cerca de 19 MiB de memória e processador perto de zero.
 - **Resposta do painel:** a tela de entrada, com uma conexão HTTPS nova a cada pedido, respondeu em 2,8 ms na mediana de 30 pedidos (de 2,4 ms a 3,8 ms).
 - **Sem dependência de terceiros:** o painel não instala pacote do PyPI e não tem JavaScript; o que há para atualizar é a imagem base e os pacotes do Debian.
-- **Tamanho do código:** 2558 linhas de Python em 19 módulos, 198 de CSS e 4078 de Bash, contando a bateria de testes.
+- **Tamanho do código:** 2568 linhas de Python em 19 módulos, 198 de CSS e 4157 de Bash, contando a bateria de testes.
 - **De onde vem o peso das imagens:** da base `debian:13-slim`, com 119 MB, comum às três.
 
 </details>
@@ -680,7 +680,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.18.4**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.18.5**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

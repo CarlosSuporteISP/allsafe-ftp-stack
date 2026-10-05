@@ -8,6 +8,23 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.18.5] - 2026-10-05
+
+O painel passa a responder ao método `HEAD`, que a RFC 9110 pede de todo servidor HTTP.
+
+### Corrigido
+
+- **`HEAD` respondia `501` no painel.** Nas telas, no `security.txt` e no download, o `HEAD` agora traz o código e os cabeçalhos que o `GET` traria, sem o corpo. O `HEAD` de um arquivo devolve o tamanho e o nome e não conta como download: não ocupa vaga nem entra na auditoria. Na [tabela de conformidade](doc/seguranca.md#conformidade-rfc), a linha da RFC 9110, seção 9.1, passa de desvio a atendida: 23 normas atendidas e uma parcial.
+- **Duração da bateria no guia.** O [guia dos scripts](doc/scripts.md) dizia perto de cinco minutos; a bateria completa leva perto de 25.
+
+### Adicionado
+
+- Um caso na bateria funcional, que passa a 40: `GET` e `HEAD` comparados em doze endereços, sem sessão, com o administrador e com o usuário do FTP, no código e nos cabeçalhos; dezoito `HEAD` de um arquivo sem nenhum registro de download; e o pedido cru, sem nenhum byte depois dos cabeçalhos.
+
+### Alterado
+
+- **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados. As imagens são reconstruídas e os três containers, recriados.
+
 ## [0.18.4] - 2026-10-05
 
 A documentação ganha as fotos de todas as telas do painel, a tabela de conformidade com as RFCs e a medida do peso de cada serviço. Nenhum código da stack mudou.

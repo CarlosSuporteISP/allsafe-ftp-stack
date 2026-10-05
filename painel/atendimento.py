@@ -110,6 +110,10 @@ class Painel(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         self.tratar('POST')
 
+    def do_HEAD(self):
+        # RFC 9110, seção 9.3.2: a resposta que o GET daria, com os mesmos cabeçalhos e sem o corpo.
+        self.tratar('GET')
+
     # ------------------------------------------------------------ respostas
 
     def enviar(self, codigo, corpo, tipo='text/html; charset=utf-8', extras=()):
@@ -120,12 +124,14 @@ class Painel(http.server.BaseHTTPRequestHandler):
         for nome, valor in extras:
             self.send_header(nome, valor)
         self.end_headers()
-        self.wfile.write(dados)
+        if self.command != 'HEAD':
+            self.wfile.write(dados)
         if self.caminho != '/saude':
             print(f'{self.ip} {self.command} {limpo(self.caminho)} {codigo}', flush=True)
 
     def enviar_arquivo(self, arquivo, total, extras=()):
-        """Entrega um arquivo já aberto, em blocos, sem carregá-lo na memória. Devolve quantos bytes saíram."""
+        """Entrega um arquivo já aberto, em blocos, sem carregá-lo na memória. Devolve quantos bytes saíram.
+        No HEAD saem só os cabeçalhos, com o tamanho do arquivo."""
         self.send_response(200)
         self.send_header('Content-Type', 'application/octet-stream')
         self.send_header('Content-Length', str(total))
@@ -135,7 +141,7 @@ class Painel(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         enviados = 0
         try:
-            while enviados < total:
+            while self.command != 'HEAD' and enviados < total:
                 bloco = arquivo.read(min(BLOCO_ARQUIVO, total - enviados))
                 if not bloco:
                     break
