@@ -1,4 +1,5 @@
-/* Painel da allsafe-ftp-stack. Fundo escuro, sem fonte nem imagem de fora: a CSP só aceita o próprio painel. */
+/* Painel da allsafe-ftp-stack. Fundo escuro, sem fonte nem imagem de fora: a CSP só aceita o próprio painel.
+   A logo e o ícone vêm de /marca/ (pasta web/marca/ do projeto), entregues pelo nginx. */
 :root {
   --fundo: #0d1117;
   --cartao: #161b22;
@@ -59,7 +60,8 @@ header {
   background: var(--cartao);
 }
 
-.marca-topo { font-weight: 700; white-space: nowrap; }
+.marca-topo { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; white-space: nowrap; }
+.marca-topo img { display: block; }
 
 nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; flex: 1; }
 nav a { padding: 6px 12px; border-radius: var(--raio); color: var(--texto); }
@@ -79,6 +81,8 @@ footer {
   font-size: 0.8125rem;
   text-align: center;
 }
+footer p { margin: 0; }
+footer .autoria { margin-top: 4px; }
 
 /* ------------------------------------------------------------ cartões e números */
 
@@ -92,7 +96,8 @@ footer {
 .cartao > :last-child { margin-bottom: 0; }
 .cartao.estreito { max-width: 560px; }
 .cartao.entrada { max-width: 420px; margin: 8vh auto 0; }
-.cartao.entrada h1 { margin-bottom: 4px; }
+.cartao.entrada h1 { margin-bottom: 4px; text-align: center; }
+.logo-entrada { display: block; margin: 0 auto 12px; }
 
 .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 0 0 16px; }
 .grade .cartao { margin: 0; }

@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`tests/testar.sh`](#testar) · [`ftp/entrypoint.sh`](#entrypoint) · [`ftp/saude.sh`](#ftp-saude) · [`ftp/porteiro-tls.sh`](#porteiro-tls) · [`painel/entrypoint.sh`](#painel-entrypoint) · [`nginx/entrypoint.sh`](#nginx-entrypoint) · [`nginx/saude.sh`](#nginx-saude) · [`ftp/usuario.sh`](#ftp-user) · [Scripts de apoio](#apoio)
+[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`scripts/gerar-marca.sh`](#gerar-marca) · [`tests/testar.sh`](#testar) · [`ftp/entrypoint.sh`](#entrypoint) · [`ftp/saude.sh`](#ftp-saude) · [`ftp/porteiro-tls.sh`](#porteiro-tls) · [`painel/entrypoint.sh`](#painel-entrypoint) · [`nginx/entrypoint.sh`](#nginx-entrypoint) · [`nginx/saude.sh`](#nginx-saude) · [`ftp/usuario.sh`](#ftp-user) · [Scripts de apoio](#apoio)
 
 </details>
 
@@ -46,7 +46,8 @@ flowchart LR
 | [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | host | Recupera o acesso ao painel: define a senha de um administrador ou cria o administrador, gravando só o hash |
 | [`scripts/backup.sh`](../scripts/backup.sh) | host | Grava a cópia de segurança de `dados/`, `auth/`, `certs/` e `painel/` em `BACKUP_DIR` |
 | [`scripts/restaurar.sh`](../scripts/restaurar.sh) | host | Devolve a stack ao estado de uma cópia, guardando antes o estado atual |
-| [`scripts/validate.sh`](../scripts/validate.sh) | host | Checagem de sintaxe, do Compose de todos os perfis e, opcionalmente, dos três serviços no ar |
+| [`scripts/validate.sh`](../scripts/validate.sh) | host | Checagem de sintaxe, da marca, do Compose de todos os perfis e, opcionalmente, dos três serviços no ar |
+| [`scripts/gerar-marca.sh`](../scripts/gerar-marca.sh) | computador de quem troca a logo | Gera os seis arquivos de logo e ícone do painel a partir das duas artes de origem |
 | [`tests/testar.sh`](../tests/testar.sh) | host | Bateria de testes funcional, de segurança e de rede, em instância de teste que o próprio script cria e remove |
 | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado e executa o `pure-ftpd` |
 | [`ftp/saude.sh`](../ftp/saude.sh) | container | Healthcheck: abre a porta de controle e espera a saudação do servidor |
@@ -58,7 +59,7 @@ flowchart LR
 | [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | host e containers | Funções que conferem se um IP ou uma rede é privado e que tratam a opção de IP público; carregado pelos outros scripts |
 | [`scripts/ambiente.sh`](../scripts/ambiente.sh) | host | Função que lê uma chave do `.env` sem executar o arquivo; carregado pelos outros scripts |
 
-A pasta [`scripts/`](../scripts/) tem só o que roda no servidor. O que roda em container fica na pasta do serviço ([`ftp/`](../ftp/), [`painel/`](../painel/) e [`nginx/`](../nginx/)) e é copiado para a imagem pelo [`Dockerfile`](../Dockerfile). A bateria de testes fica em [`tests/`](../tests/).
+A pasta [`scripts/`](../scripts/) tem o que roda fora dos containers: no servidor e, no caso do `gerar-marca.sh`, no computador de quem troca a logo. O que roda em container fica na pasta do serviço ([`ftp/`](../ftp/), [`painel/`](../painel/) e [`nginx/`](../nginx/)) e é copiado para a imagem pelo [`Dockerfile`](../Dockerfile). A bateria de testes fica em [`tests/`](../tests/).
 
 ---
 
@@ -203,21 +204,56 @@ Confere a cópia antes de alterar qualquer coisa, para a stack, guarda o estado 
 ## 🧪 `scripts/validate.sh`
 
 ```bash
-./scripts/validate.sh            # sintaxe dos scripts, .env.example comentado e compose config de todos os perfis
+./scripts/validate.sh            # sintaxe dos scripts, .env.example comentado, marca e compose config de todos os perfis
 ./scripts/validate.sh --runtime  # também exige os três serviços running e healthy e o usuário no PureDB
 ```
 
-**Resultado esperado:** `painel OK: <n> módulos Python`, `.env.example OK: <n> variáveis, todas comentadas e no guia de configuração`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Com `--runtime`, também `servico ftp: running, healthy`, o mesmo para `painel` e `nginx`, e `usuario inicial '<usuário>' presente no PureDB`. Qualquer falha encerra com código diferente de zero.
+**Resultado esperado:** `painel OK: <n> módulos Python`, `.env.example OK: <n> variáveis, todas comentadas e no guia de configuração`, `marca OK: 6 arquivos em web/marca/`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Com `--runtime`, também `servico ftp: running, healthy`, o mesmo para `painel` e `nginx`, e `usuario inicial '<usuário>' presente no PureDB`. Qualquer falha encerra com código diferente de zero.
 
 <details>
 <summary>Detalhe técnico — o que cada modo confere</summary>
 
 | Modo | Confere |
 |---|---|
-| sem parâmetro | `bash -n` em `deploy.sh`, `manage-user.sh` e nos scripts de `scripts/`, `ftp/`, `painel/`, `nginx/` e `tests/`; se o host tiver `python3`, a sintaxe de cada módulo de `painel/` e que todo nome usado em cada um está definido ou importado nele, sem importar nem gravar nada; no `.env.example`, que cada variável tem comentário na linha de cima e está em [Configuração](configuracao.md); `docker compose config --quiet` com `.env.example` e cada arquivo de `profiles/` |
+| sem parâmetro | `bash -n` em `deploy.sh`, `manage-user.sh` e nos scripts de `scripts/`, `ftp/`, `painel/`, `nginx/` e `tests/`; se o host tiver `python3`, a sintaxe de cada módulo de `painel/` e que todo nome usado em cada um está definido ou importado nele, sem importar nem gravar nada; no `.env.example`, que cada variável tem comentário na linha de cima e está em [Configuração](configuracao.md); em [`web/marca/`](../web/marca/), que os seis arquivos da marca existem e são PNG ou ICO; `docker compose config --quiet` com `.env.example` e cada arquivo de `profiles/` |
 | `--runtime` | tudo acima, mais: os serviços `ftp`, `painel` e `nginx` em `running` e `healthy`, e `pure-pw show` do usuário inicial, lido de `FTP_USER` no `.env` |
 
 O modo `--runtime` confere a instalação do `.env` desta pasta. Para conferir outra, aponte o arquivo dela: `ENV_FILE=<arquivo> ./scripts/validate.sh --runtime`. Sem o arquivo, o script para com `ERRO: ... não há instalação para conferir.`
+
+</details>
+
+---
+
+<a name="gerar-marca"></a>
+
+## 🎨 `scripts/gerar-marca.sh`
+
+Gera, em [`web/marca/`](../web/marca/), os seis arquivos de logo e ícone que o painel usa, a partir das duas artes de [`web/marca/fonte/`](../web/marca/fonte/). Só roda quando a logo muda: os arquivos gerados ficam no repositório e a instalação não usa este script. O passo a passo da troca está em [Painel web](painel.md#marca).
+
+```bash
+./scripts/gerar-marca.sh                        # placa branca atrás da arte
+MARCA_PLACA='#f0f3f6' ./scripts/gerar-marca.sh  # outra cor de placa, no formato #rrggbb
+```
+
+**Resultado esperado:** uma linha por arquivo, com o tamanho em bytes, e, no fim, `Marca gerada em web/marca/. Rode ./deploy.sh para o painel passar a usar.` Rodar de novo com as mesmas artes gera arquivos idênticos.
+
+<details>
+<summary>Detalhe técnico — o que é gerado</summary>
+
+| Arquivo | Lado | Arte de origem | Onde o painel usa |
+|---|---|---|---|
+| `favicon.ico` | 16, 32 e 48 pixels no mesmo arquivo | `allsafe-simbolo-512.png` | Ícone da aba do navegador |
+| `icone-32.png` | 32 pixels | `allsafe-simbolo-512.png` | Ícone da aba do navegador |
+| `icone-192.png` | 192 pixels | `allsafe-simbolo-512.png` | Ícone em tela de alta densidade e em atalho |
+| `apple-touch-icon.png` | 180 pixels | `allsafe-simbolo-512.png` | Atalho na tela inicial do celular |
+| `simbolo-64.png` | 64 pixels | `allsafe-simbolo-512.png` | Símbolo no topo de todas as telas |
+| `logo-320.png` | 320 pixels | `allsafe-logo-2048.png` | Logo da tela de entrada |
+
+- **Placa clara:** a arte é escura em fundo transparente e o painel tem fundo escuro. Cada arquivo sai com a arte, nas cores originais, sobre uma placa de cantos arredondados, que aparece igual em aba clara ou escura do navegador. `MARCA_PLACA` troca a cor da placa; o padrão é `#ffffff`.
+- **Como monta:** a arte é recortada na borda, centralizada na placa com 10% de margem, montada em 1024 pixels e reduzida ao tamanho final. Os arquivos saem com 128 cores em 8 bits, sem metadado nem data: os seis somam 22 KB.
+- **Artes de origem:** não são alteradas, e não entram na imagem do nginx ([`.dockerignore`](../.dockerignore)).
+- **Dependência:** ImageMagick 7 (comando `magick`), só no computador de quem troca a logo. O servidor não precisa dele.
+- **Recusas:** `ERRO: o ImageMagick 7 (comando magick) não está instalado neste computador.`, `ERRO: faltam as fontes ...` e `ERRO: MARCA_PLACA aceita só cor no formato #rrggbb.`
 
 </details>
 
@@ -272,8 +308,8 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 
 | Bateria | Casos | Exemplos |
 |---|---|---|
-| Funcional | 32 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh`, administradores pelo painel, recuperação do acesso pelo host, download pelo painel (arquivo pequeno, subpasta, nome com acento e arquivo de 40 MiB, com a soma conferida), pasta criada pelo painel, usuário com pasta escolhida e pasta dividida entre usuários, usuário do FTP que entra no painel e baixa os próprios arquivos, sessão dele acompanhando o cadastro e a variável que desliga a entrada, a entrada dele em cada modo de TLS, e o TLS por usuário: dispensa e volta pelo painel e pelo terminal, com o padrão desligado |
-| Segurança | 66 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, a opção de IP público (só com `sim`, "todos" sempre recusado, TLS obrigatório, valor inválido, alerta em execução), CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos, entrada que não revela nomes de administrador, senha atual em toda alteração de administrador, sessões do administrador alterado encerradas, arquivo de administradores só com hash, aba Arquivos sem sessão, fuga da pasta pela aba Arquivos, link simbólico não seguido, arquivo entregue só como anexo, limite de downloads ao mesmo tempo, criação de pasta sem sessão e sem token, nome de pasta que tenta sair da pasta dos dados, usuário preso à pasta escolhida, usuário do FTP sem alcance à administração do painel, preso à própria pasta no painel, entrada dele sem brecha (telas iguais na recusa, nome de administrador, servidor FTP parado, certificado trocado, bloqueio por tentativas), os limites de sessões e de downloads por usuário, e o TLS por usuário: sem TLS só entra quem foi dispensado, o FTP encerra se o `pure-authd` morre, as combinações recusadas na subida e quem pode alterar a lista |
+| Funcional | 34 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh`, administradores pelo painel, recuperação do acesso pelo host, download pelo painel (arquivo pequeno, subpasta, nome com acento e arquivo de 40 MiB, com a soma conferida), pasta criada pelo painel, usuário com pasta escolhida e pasta dividida entre usuários, usuário do FTP que entra no painel e baixa os próprios arquivos, sessão dele acompanhando o cadastro e a variável que desliga a entrada, a entrada dele em cada modo de TLS, e o TLS por usuário: dispensa e volta pelo painel e pelo terminal, com o padrão desligado, e a marca: logo e ícone entregues pelo nginx e a autoria no rodapé de todas as telas |
+| Segurança | 67 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, a opção de IP público (só com `sim`, "todos" sempre recusado, TLS obrigatório, valor inválido, alerta em execução), CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos, entrada que não revela nomes de administrador, senha atual em toda alteração de administrador, sessões do administrador alterado encerradas, arquivo de administradores só com hash, aba Arquivos sem sessão, fuga da pasta pela aba Arquivos, link simbólico não seguido, arquivo entregue só como anexo, limite de downloads ao mesmo tempo, criação de pasta sem sessão e sem token, nome de pasta que tenta sair da pasta dos dados, usuário preso à pasta escolhida, usuário do FTP sem alcance à administração do painel, preso à própria pasta no painel, entrada dele sem brecha (telas iguais na recusa, nome de administrador, servidor FTP parado, certificado trocado, bloqueio por tentativas), os limites de sessões e de downloads por usuário, e o TLS por usuário: sem TLS só entra quem foi dispensado, o FTP encerra se o `pure-authd` morre, as combinações recusadas na subida e quem pode alterar a lista, e a pasta da marca, que entrega só os seis arquivos, só para leitura |
 | Rede | 13 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host, rede pública no painel só com a opção |
 
 **Organização:** o [`tests/testar.sh`](../tests/testar.sh) prepara a instância de teste e carrega o [`tests/comum.sh`](../tests/comum.sh), com as funções de registro, de FTP, do painel e de gravação dos resultados. Os casos ficam em [`tests/etapas/`](../tests/etapas/), um arquivo por etapa, executados na ordem do nome: cada etapa parte do estado que a anterior deixou e não roda sozinha.

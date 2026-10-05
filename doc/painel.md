@@ -31,7 +31,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
+[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
 
 </details>
 
@@ -80,7 +80,7 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 | Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, isolamento do container e o lembrete do firewall | Só consultar |
 | Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads, pastas criadas e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
 
-No topo ficam o nome do administrador da sessão e o botão **Sair**, que encerra a sessão na hora.
+No topo ficam o nome do administrador da sessão e o botão **Sair**, que encerra a sessão na hora. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
 
 Quem entra com a conta do FTP não vê nenhuma dessas abas: vê uma tela só, **Meus arquivos**, descrita em [Usuário do FTP no painel](#usuario-ftp).
 
@@ -355,6 +355,54 @@ A lista é aplicada duas vezes: pelo nginx, antes de o pedido chegar ao painel, 
 
 ---
 
+<a name="marca"></a>
+
+## 🎨 Marca do painel
+
+O painel mostra a logo da ALL-SAFE em quatro lugares e a autoria em um:
+
+| Onde | O que aparece | Arquivo |
+|---|---|---|
+| Aba do navegador e favoritos | Ícone | `favicon.ico`, `icone-32.png` e `icone-192.png` |
+| Atalho na tela inicial do celular | Ícone | `apple-touch-icon.png` |
+| Topo de todas as telas | Símbolo, ao lado do nome | `simbolo-64.png` |
+| Tela de entrada | Logo completa | `logo-320.png` |
+| Rodapé de todas as telas | `Desenvolvido pela allsafe.inf.br`, com o endereço do site e o do GitHub | texto do painel |
+
+Os seis arquivos ficam em [`web/marca/`](../web/marca/) e são entregues pelo nginx.
+
+**Trocar a logo e o ícone:**
+
+1. Substitua as duas artes de [`web/marca/fonte/`](../web/marca/fonte/), mantendo os nomes: `allsafe-logo-2048.png` (logo completa) e `allsafe-simbolo-512.png` (só o símbolo). Use PNG quadrado, de preferência com fundo transparente.
+2. Gere os seis arquivos:
+
+   ```bash
+   ./scripts/gerar-marca.sh
+   ```
+
+3. Reaplique a stack:
+
+   ```bash
+   ./deploy.sh
+   ```
+
+**Resultado esperado:** o script lista os seis arquivos, com o tamanho de cada um, e termina com `Marca gerada em web/marca/. Rode ./deploy.sh para o painel passar a usar.` Depois do `deploy.sh`, a tela de entrada mostra a logo nova. Se a aba do navegador continuar com o ícone antigo, veja [Solução de problemas](solucao-de-problemas.md#painel).
+
+A linha `Desenvolvido pela allsafe.inf.br` continua no rodapé de todas as telas, com qualquer logo.
+
+<details>
+<summary>Detalhe técnico — como a marca é entregue</summary>
+
+- **Sem o ImageMagick:** o `gerar-marca.sh` precisa dele só no computador de quem troca a logo. Também serve substituir direto os seis arquivos de `web/marca/`, com os mesmos nomes e tamanhos: a tabela está em [Scripts](scripts.md#gerar-marca).
+- **Placa clara:** a arte é escura e o painel tem fundo escuro; o script põe a arte sobre uma placa clara de cantos arredondados, sem alterar as cores dela. `MARCA_PLACA='#rrggbb'` troca a cor da placa.
+- **Só os seis nomes existem:** o nginx entrega `/favicon.ico` e os cinco PNG de `/marca/`, só para leitura, com os cabeçalhos de segurança de [`nginx/cabecalhos.conf`](../nginx/cabecalhos.conf) e `Cache-Control: no-cache`. Outro nome, a lista da pasta e as artes de origem não são entregues, e as artes de origem nem entram na imagem.
+- **Sem conteúdo de fora:** o painel continua com `img-src 'self'`: só carrega imagem do próprio endereço. Os dois links do rodapé abrem em outra aba com `rel="noopener noreferrer"`, e o `Referrer-Policy: same-origin` não repassa o endereço do painel ao site de destino.
+- **Conferência:** o `./scripts/validate.sh` recusa a pasta sem um dos seis arquivos, ou com arquivo que não é PNG nem ICO.
+
+</details>
+
+---
+
 <a name="como-decide"></a>
 
 ## 🔄 Como o painel decide
@@ -522,7 +570,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 <details>
 <summary>Detalhe técnico — implementação</summary>
 
-- **Código:** os módulos de [`painel/`](../painel/), só com a biblioteca padrão do Python 3.13 do Debian 13, listados [logo abaixo](#modulos); a aparência está em [`web/estilo.css`](../web/estilo.css), que o nginx entrega direto, sem passar pelo painel. Não há JavaScript, fonte nem imagem externa.
+- **Código:** os módulos de [`painel/`](../painel/), só com a biblioteca padrão do Python 3.13 do Debian 13, listados [logo abaixo](#modulos); a aparência está em [`web/estilo.css`](../web/estilo.css) e a logo e o ícone em [`web/marca/`](../web/marca/), que o nginx entrega direto, sem passar pelo painel. Não há JavaScript, fonte nem imagem externa.
 - **Imagem:** alvo `painel` do [`Dockerfile`](../Dockerfile), sobre a mesma base do FTP (traz o `pure-pw` e o `allsafe-ftp-user`). Imagem `PAINEL_IMAGE`, container `PAINEL_CONTAINER_NAME`.
 - **Entrada do container:** [`painel/entrypoint.sh`](../painel/entrypoint.sh) recusa senha em variável, confere o `PAINEL_ADMIN_USER`, o IP e as redes privados, ajusta dono e modo de `/painel` e do arquivo de administradores, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
 - **Frente web:** alvo `nginx` do [`Dockerfile`](../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo). O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [Segurança](seguranca.md#painel).
@@ -556,7 +604,7 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`sessao.py`](../painel/sessao.py) | Sessões em memória, de administrador e de usuário do FTP, limite de tentativas e token do formulário de entrada |
 | [`auditoria.py`](../painel/auditoria.py) | Gravação e leitura do `auditoria.log` |
 | [`estado.py`](../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados, quem entra sem TLS) e a chamada do `allsafe-ftp-user` |
-| [`pagina.py`](../painel/pagina.py) | Moldura das telas e os textos que mais de uma aba usa |
+| [`pagina.py`](../painel/pagina.py) | Moldura das telas, com o símbolo no topo e a autoria no rodapé, e os textos que mais de uma aba usa |
 | [`atendimento.py`](../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF), roteamento por papel (administrador ou usuário do FTP) e a entrega de arquivo em blocos |
 | [`rotas.py`](../painel/rotas.py) | Tabelas de método e caminho para a função que responde: uma para o administrador e outra para o usuário do FTP |
 | [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, do administrador e do usuário do FTP, e saída |

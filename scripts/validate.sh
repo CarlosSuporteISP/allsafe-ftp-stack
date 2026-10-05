@@ -38,6 +38,15 @@ awk -v guia=doc/configuracao.md '
   { anterior = $0 }
   END { if (falha) exit 1; print ".env.example OK: " total " variáveis, todas comentadas e no guia de configuração" }
 ' .env.example
+# Marca: todo arquivo que a imagem do nginx copia e o nginx.conf.modelo serve existe e é PNG ou ICO de verdade.
+for arquivo in favicon.ico icone-32.png icone-192.png apple-touch-icon.png simbolo-64.png logo-320.png; do
+  assinatura="$(head -c 4 "web/marca/$arquivo" 2>/dev/null | od -An -tx1 | tr -d ' \n')"
+  case "$arquivo:$assinatura" in
+    *.png:89504e47 | *.ico:00000100) ;;
+    *) echo "ERRO: web/marca/$arquivo falta ou não é uma imagem válida. Rode scripts/gerar-marca.sh." >&2; exit 1 ;;
+  esac
+done
+echo "marca OK: 6 arquivos em web/marca/"
 for profile in profiles/*.env; do
   docker compose --env-file .env.example --env-file "$profile" config --quiet
   echo "compose OK com $(basename "$profile")"

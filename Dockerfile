@@ -17,7 +17,7 @@ RUN apt-get update \
     && groupadd --gid 10001 frente \
     && useradd --uid 10001 --gid frente --home-dir /nonexistent \
        --shell /usr/sbin/nologin --no-create-home frente \
-    && mkdir -p /usr/local/lib/allsafe /etc/allsafe-nginx /usr/share/allsafe-nginx/_erro /usr/share/allsafe-nginx/web \
+    && mkdir -p /usr/local/lib/allsafe /etc/allsafe-nginx /usr/share/allsafe-nginx/_erro /usr/share/allsafe-nginx/web/marca \
     && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled /etc/nginx/sites-available /var/www/html
 
 # As pastas de destino já existem (0755): o --chmod de um COPY vale também para a pasta que ele cria,
@@ -27,6 +27,8 @@ COPY --chmod=0644 nginx/nginx.conf.modelo nginx/cabecalhos.conf /etc/allsafe-ngi
 COPY --chmod=0644 nginx/erro/pedido.txt nginx/erro/rede.txt nginx/erro/taxa.txt nginx/erro/painel.txt /usr/share/allsafe-nginx/_erro/
 # Arquivos estáticos do painel (pasta web/): quem serve é o nginx, sem passar pelo painel.
 COPY --chmod=0644 web/estilo.css /usr/share/allsafe-nginx/web/
+# Marca: só os arquivos gerados por scripts/gerar-marca.sh; as fontes (web/marca/fonte/) não entram na imagem.
+COPY --chmod=0644 web/marca/favicon.ico web/marca/*.png /usr/share/allsafe-nginx/web/marca/
 COPY --chmod=0755 nginx/entrypoint.sh /usr/local/sbin/allsafe-nginx-entrypoint
 COPY --chmod=0755 nginx/saude.sh /usr/local/sbin/allsafe-nginx-saude
 

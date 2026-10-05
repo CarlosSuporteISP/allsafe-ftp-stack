@@ -13,7 +13,7 @@ import conta_ftp
 import entrada
 from auditoria import auditar, limpo
 from config import BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, GID_NGINX, TEMPO_CONEXAO, privado
-from pagina import ICONE, e, pagina
+from pagina import e, pagina
 from rotas import ROTAS, ROTAS_USUARIO
 from sessao import buscar_sessao, encerrar_sessao
 
@@ -229,8 +229,6 @@ class Painel(http.server.BaseHTTPRequestHandler):
 
         if metodo == 'GET' and self.caminho == '/saude':
             return self.enviar(200, 'ok\n', 'text/plain; charset=utf-8')
-        if metodo == 'GET' and self.caminho == '/favicon.svg':
-            return self.enviar(200, ICONE, 'image/svg+xml')
 
         formulario = {}
         if metodo == 'POST':

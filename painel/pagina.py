@@ -8,8 +8,9 @@ from estado import dias_restantes, sem_tls
 ABAS = (('/', '📊 Visão geral'), ('/usuarios', '👥 Usuários'), ('/arquivos', '📁 Arquivos'),
         ('/administradores', '🛡️ Administradores'), ('/seguranca', '🔐 Segurança'), ('/atividade', '📜 Atividade'))
 ABAS_USUARIO = (('/meus-arquivos', '📁 Meus arquivos'),)
-ICONE = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" rx="3" fill="#0d1117"/>'
-         '<path d="M3 5h10v2H3zm0 4h10v2H3z" fill="#58a6ff"/></svg>')
+# Autoria: aparece no rodapé de todas as telas e fica também em quem troca a logo e o ícone (web/marca/).
+AUTORIA = ('Desenvolvido pela <a href="https://allsafe.inf.br" target="_blank" rel="noopener noreferrer">allsafe.inf.br</a> · '
+           '<a href="https://github.com/allsafe-inf" target="_blank" rel="noopener noreferrer">github.com/allsafe-inf</a>')
 
 
 def e(texto):
@@ -82,15 +83,21 @@ def pagina(titulo, miolo, sessao=None, ativa=''):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>{e(titulo)} · AllSafe FTP</title>
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="/marca/icone-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="/marca/icone-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/marca/apple-touch-icon.png">
 <link rel="stylesheet" href="/estilo.css">
 </head>
 <body>
-<header><span class="marca-topo">🗄️ AllSafe FTP</span>{menu}</header>
+<header><span class="marca-topo"><img src="/marca/simbolo-64.png" alt="" width="28" height="28">AllSafe FTP</span>{menu}</header>
 <main>
 {miolo}
 </main>
-<footer>allsafe-ftp-stack v{e(CFG.get('versao', '?'))} · {'⚠️ endereço público aceito: confira o firewall' if CFG.get('ip_publico') else '🧱 só para rede privada, atrás de firewall'}</footer>
+<footer>
+<p>allsafe-ftp-stack v{e(CFG.get('versao', '?'))} · {'⚠️ endereço público aceito: confira o firewall' if CFG.get('ip_publico') else '🧱 só para rede privada, atrás de firewall'}</p>
+<p class="autoria">{AUTORIA}</p>
+</footer>
 </body>
 </html>
 '''

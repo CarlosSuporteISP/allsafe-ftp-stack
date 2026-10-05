@@ -20,7 +20,8 @@ def tela_entrada(pedido, codigo=200, erro=''):
     quem_entra = ('Administradores entram com a conta do painel. Usuários do FTP entram com o nome e a senha do FTP '
                   'e veem só os arquivos da própria pasta.') if CFG['acesso_usuarios'] else 'Painel de administração da stack.'
     pedido.enviar(codigo, pagina('Entrar', f'''<section class="cartao entrada">
-<h1>🗄️ AllSafe FTP</h1>
+<img class="logo-entrada" src="/marca/logo-320.png" alt="ALL-SAFE" width="128" height="128">
+<h1>AllSafe FTP</h1>
 <p class="suave">{quem_entra}</p>
 {aviso}
 <form method="post" action="/entrar">

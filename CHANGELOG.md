@@ -8,6 +8,30 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.17.0] - 2026-10-04
+
+O painel passa a mostrar a logo e o ícone da ALL-SAFE e, no rodapé de todas as telas, a autoria: desenvolvido pela allsafe.inf.br. **Por padrão, uso só em rede privada, atrás de firewall.**
+
+### Adicionado
+
+- **Logo e ícone no painel:** ícone na aba do navegador (`favicon.ico`, com 16, 32 e 48 pixels, e PNG de 32, 180 e 192 pixels), símbolo no topo de todas as telas e logo na tela de entrada. Guia em [Marca do painel](doc/painel.md#marca).
+- **Autoria no rodapé de todas as telas**, inclusive na de entrada, na de tela não encontrada e na do usuário do FTP: `Desenvolvido pela allsafe.inf.br`, com os endereços [allsafe.inf.br](https://allsafe.inf.br) e [github.com/allsafe-inf](https://github.com/allsafe-inf). Os links abrem em outra aba e o site de destino não recebe o endereço do painel.
+- **Pasta [`web/marca/`](web/marca/):** os seis arquivos que o painel usa, 22 KB no total, e, em `fonte/`, as duas artes de origem, sem alteração.
+- **[`scripts/gerar-marca.sh`](scripts/gerar-marca.sh):** gera os seis arquivos a partir das artes de origem, sobre uma placa clara, para a arte escura aparecer no fundo escuro do painel e em aba escura do navegador. `MARCA_PLACA` troca a cor da placa. Só roda quando a logo muda: a instalação não depende dele nem do ImageMagick.
+- **Entrega pelo nginx:** em `/favicon.ico` e em `/marca/` só existem os seis nomes, só para leitura, com os cabeçalhos de segurança; as artes de origem não entram na imagem.
+- **`./scripts/validate.sh`** confere que os seis arquivos existem e são PNG ou ICO: `marca OK: 6 arquivos em web/marca/`.
+- Bateria de testes: dois casos funcionais (logo e ícone entregues pelo nginx; autoria no rodapé de todas as telas) e um de segurança (a pasta da marca entrega só os seis arquivos, só para leitura).
+
+### Alterado
+
+- O topo das telas e a tela de entrada mostram a logo no lugar do emoji que fazia esse papel.
+- O rodapé passa a ter duas linhas: a versão com o aviso de rede privada, e a autoria.
+- README com a logo no cabeçalho e a ALL-SAFE nos créditos.
+
+### Removido
+
+- O ícone em SVG que o painel gerava em `/favicon.svg`: o endereço deixa de existir.
+
 ## [0.16.0] - 2026-10-04
 
 O administrador passa a escolher, no painel, quais usuários entram no FTP sem TLS: serve para o equipamento antigo que não fala TLS, sem abrir mão do TLS dos demais. A opção nasce desligada. **Por padrão, uso só em rede privada, atrás de firewall.**

@@ -100,6 +100,25 @@ http {
             add_header Cache-Control no-cache always;
         }
 
+        # Marca (pasta web/marca/ do projeto): o ícone do navegador, o símbolo do topo e a logo da tela
+        # de entrada. Entregues sem sessão, como o estilo, e só os nomes listados aqui.
+        location = /favicon.ico {
+            root /usr/share/allsafe-nginx/web/marca;
+            types { image/x-icon ico; }
+            default_type application/octet-stream;
+            access_log off;
+            include /etc/allsafe-nginx/cabecalhos.conf;
+            add_header Cache-Control no-cache always;
+        }
+        location ~ ^/marca/(icone-32|icone-192|apple-touch-icon|simbolo-64|logo-320)\.png$ {
+            root /usr/share/allsafe-nginx/web;
+            types { image/png png; }
+            default_type application/octet-stream;
+            access_log off;
+            include /etc/allsafe-nginx/cabecalhos.conf;
+            add_header Cache-Control no-cache always;
+        }
+
         # O painel manda os próprios cabeçalhos de segurança; aqui o nginx só repassa.
         location / {
             proxy_pass http://unix:/nginx/painel.sock;
