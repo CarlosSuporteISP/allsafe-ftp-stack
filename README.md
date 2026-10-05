@@ -8,7 +8,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.18.3-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.18.4-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
@@ -20,9 +20,9 @@ Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsaf
 ![Bash](https://img.shields.io/badge/Bash-5.2-4eaa25?logo=gnubash&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.13-3776ab?logo=python&logoColor=white)
 
-<a href="doc/imagens/painel-principal.png"><img src="doc/imagens/painel-principal.png" alt="Painel web da allsafe-ftp-stack na aba Visão geral: servidor FTP no ar, usuários, espaço usado, último envio, certificado e os dados para configurar o equipamento" width="100%"></a>
+<a href="doc/imagens/painel-principal.png"><img src="doc/imagens/painel-principal.png" alt="Aba Visão geral com os cartões Servidor FTP, Usuários, Espaço usado, Último envio e Certificado do FTP, e a tabela de dados para configurar o equipamento" width="100%"></a>
 
-<sub><b>v0.8.0</b> · painel web, aba Visão geral · captura de 2026-10-04</sub>
+<sub><b>v0.18.4</b> · painel web, aba Visão geral · captura de 2026-10-05</sub>
 
 <!-- diagrama: doc/diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -39,7 +39,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.18.3</b> · visão geral da stack · 2026-10-05</sub>
+<sub><b>v0.18.4</b> · visão geral da stack · 2026-10-05</sub>
 
 </div>
 
@@ -104,14 +104,18 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 
 ## 📸 Imagens
 
-O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página.
+O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página, e a tela Meus arquivos é a do usuário do FTP, que entra com o nome e a senha do FTP.
 
 | | |
 |---|---|
-| <a href="doc/imagens/aba-usuarios.png"><img src="doc/imagens/aba-usuarios.png" alt="Aba Usuários do painel, com a lista de usuários do FTP e as ações Trocar senha e Remover" width="100%"></a> | <a href="doc/imagens/aba-seguranca.png"><img src="doc/imagens/aba-seguranca.png" alt="Aba Segurança do painel, com a conferência dos endereços, do TLS e dos certificados" width="100%"></a> |
-| **Usuários** — cria, troca a senha e remove a conta de cada equipamento | **Segurança** — confere rede privada, TLS e a impressão digital dos certificados |
-| <a href="doc/imagens/aba-atividade.png"><img src="doc/imagens/aba-atividade.png" alt="Aba Atividade do painel, com o registro de entradas e de alterações de usuário" width="100%"></a> | |
-| **Atividade** — quem entrou, de onde, e o que foi alterado | |
+| <a href="doc/imagens/aba-usuarios.png"><img src="doc/imagens/aba-usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista de usuários: pasta no host, com a marca dividida em duas delas, uso, arquivos, último envio e as ações Trocar senha e Remover" width="100%"></a> | <a href="doc/imagens/aba-arquivos.png"><img src="doc/imagens/aba-arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma e o formulário Nova pasta" width="100%"></a> |
+| **Usuários** — cria, troca a senha e remove a conta de cada equipamento | **Arquivos** — navega nas pastas dos usuários, baixa os backups e cria pasta |
+| <a href="doc/imagens/aba-administradores.png"><img src="doc/imagens/aba-administradores.png" alt="Aba Administradores com o botão Novo administrador e a lista de três administradores: a marca você na conta em uso, as sessões abertas de cada um e as ações Trocar senha, Trocar nome e Remover" width="100%"></a> | <a href="doc/imagens/aba-seguranca.png"><img src="doc/imagens/aba-seguranca.png" alt="Aba Segurança com a conferência da instalação, uma linha por item: endereço público, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, custo das senhas, contato de segurança, container e firewall" width="100%"></a> |
+| **Administradores** — cada pessoa com o próprio nome e a própria senha | **Segurança** — confere rede, TLS, certificados, senhas e contato de segurança |
+| <a href="doc/imagens/aba-atividade.png"><img src="doc/imagens/aba-atividade.png" alt="Aba Atividade com os registros do painel: data, endereço de origem, o que aconteceu e o detalhe, como arquivo baixado, pasta criada, administrador criado e tela de administração pedida por usuário do FTP" width="100%"></a> | <a href="doc/imagens/aba-meus-arquivos.png"><img src="doc/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, com as pastas 2026-09 e 2026-10, um arquivo de configuração com o botão Baixar e, no topo, só o nome do usuário e o botão Sair" width="100%"></a> |
+| **Atividade** — quem entrou, de onde, o que baixou e o que foi alterado | **Meus arquivos** — o usuário do FTP baixa os próprios backups, e só eles |
+
+<sub><b>v0.18.4</b> · painel web, uma foto por aba · capturas de 2026-10-05</sub>
 
 Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplicação](doc/aplicacao/README.md).
 
@@ -483,6 +487,25 @@ Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python e Bash, com a vers�
 
 </details>
 
+<details>
+<summary>Peso das linguagens e dos serviços, medido — clique para expandir</summary>
+
+Medido em 2026-10-05, na versão `0.18.4`, com os três containers em repouso, no porte `small`:
+
+| Serviço | Linguagem ou programa | Memória em uso | Limite do porte | Imagem |
+|---|---|---|---|---|
+| `ftp` | Pure-FTPd, em C, com entrada em Bash | 2,7 MiB | 256 MiB | 208 MB |
+| `painel` | Python, só com a biblioteca padrão | 12,9 MiB | 192 MiB | 258 MB |
+| `nginx` | nginx, em C | 3,2 MiB | 64 MiB | 145 MB |
+
+- **Total em repouso:** cerca de 19 MiB de memória e processador perto de zero.
+- **Resposta do painel:** a tela de entrada, com uma conexão HTTPS nova a cada pedido, respondeu em 2,8 ms na mediana de 30 pedidos (de 2,4 ms a 3,8 ms).
+- **Sem dependência de terceiros:** o painel não instala pacote do PyPI e não tem JavaScript; o que há para atualizar é a imagem base e os pacotes do Debian.
+- **Tamanho do código:** 2558 linhas de Python em 19 módulos, 198 de CSS e 4078 de Bash, contando a bateria de testes.
+- **De onde vem o peso das imagens:** da base `debian:13-slim`, com 119 MB, comum às três.
+
+</details>
+
 ---
 
 <a name="portas"></a>
@@ -545,6 +568,7 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 - `read_only` no sistema de arquivos raiz, `cap_drop: ALL` (só as estritamente necessárias voltam), `no-new-privileges`, limites de CPU, memória, PIDs e `nofile`.
 - Senha em `.secrets/ftp-usuario-inicial-senha.txt` (mínimo de 12 caracteres, `0600`), fora da imagem e ignorada pelo Git. Veja [doc/segredos.md](doc/segredos.md).
 - nginx na frente do painel: é a única porta publicada, roda sem `root` e sem `capability`, aceita só as redes de `PAINEL_REDES_PERMITIDAS` e limita pedidos e conexões por endereço.
+- **Normas seguidas:** FTP sobre TLS, TLS 1.2 e 1.3, HTTP, cookie, download, `security.txt` e `robots.txt` conferidos contra as RFCs, com a situação de cada uma. Veja [conformidade com as RFCs](doc/seguranca.md#conformidade-rfc).
 - Painel só por HTTPS e só de rede privada: senha guardada como hash `scrypt`, sessão de 15 minutos, bloqueio depois de cinco senhas erradas, proteção contra CSRF, sem JavaScript, sem acesso ao Docker e com registro de cada ação. Veja [doc/painel.md](doc/painel.md#protecoes).
 - Logs rotacionados (`max-size: 10m`, `max-file: 3`).
 
@@ -656,7 +680,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.18.3**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.18.4**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

@@ -8,6 +8,21 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.18.4] - 2026-10-05
+
+A documentação ganha as fotos de todas as telas do painel, a tabela de conformidade com as RFCs e a medida do peso de cada serviço. Nenhum código da stack mudou.
+
+### Adicionado
+
+- **Fotos de todas as telas:** [fotos da aplicação](doc/aplicacao/README.md) passa de 12 para 26 capturas, menu por menu, com as abas Arquivos e Administradores, a tela Meus arquivos do usuário do FTP, o download de um backup, a criação de pasta e o TLS por usuário. O [README](README.md#imagens) mostra uma foto de cada aba.
+- **Conformidade com as RFCs:** [tabela](doc/seguranca.md#conformidade-rfc) com as 24 normas que a stack usa no FTP, no TLS, no HTTP, nos cookies, no download, nas senhas e nos endereços, o que ela faz de cada uma e a situação: 22 atendidas, uma parcial (a memória do `argon2id`, abaixo da que a RFC 9106 recomenda) e um desvio (o `HEAD` responde `501` nas telas do painel, e a RFC 9110 pede que seja atendido).
+- **Peso das linguagens e dos serviços:** no [README](README.md#tecnologias), a memória em repouso, o tamanho das imagens, o tempo de resposta do painel e o tamanho do código, medidos na instância de teste.
+
+### Alterado
+
+- **Fotos refeitas na versão atual:** as 12 capturas que já existiam foram refeitas com a marca, os administradores e as colunas novas da aba Usuários.
+- **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados.
+
 ## [0.18.3] - 2026-10-05
 
 A lista de usuários do painel deixa de cortar os botões de ação em telas de computador.

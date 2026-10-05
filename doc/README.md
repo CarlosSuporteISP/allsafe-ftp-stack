@@ -46,7 +46,7 @@ flowchart LR
 | 2 | [Configuração](configuracao.md) | Todas as variáveis do `.env`: nome, para que serve, valores válidos e padrão |
 | 3 | [Perfis](perfis.md) | Perfis `small`, `medium`, `large`, `xlarge` e `extended`: dimensionamento por porte, o que o servidor precisa ter e o impacto na faixa passiva |
 | 4 | [Arquitetura](arquitetura.md) | Containers, imagens, entrypoints, volumes, rede e as opções do `pure-ftpd` |
-| 5 | [Segurança](seguranca.md) | Rede privada e firewall, a opção de IP público e o alerta dela, o modo sem TLS para equipamento antigo, modelo de ameaça, superfície exposta, proteções do painel e do nginx e o endurecimento do Compose linha a linha |
+| 5 | [Segurança](seguranca.md) | Rede privada e firewall, a opção de IP público e o alerta dela, o modo sem TLS para equipamento antigo, modelo de ameaça, superfície exposta, proteções do painel e do nginx, conformidade com as RFCs e o endurecimento do Compose linha a linha |
 | 6 | [Segredos](segredos.md) | O que fica em `.secrets/`, quem gera cada arquivo e como trocar as senhas do FTP e do painel |
 | 7 | [Scripts](scripts.md) | O que cada script faz, parâmetros e saída esperada |
 | 8 | [Operação](operacao.md) | Usuários, certificado real, logs e atualização da imagem |
