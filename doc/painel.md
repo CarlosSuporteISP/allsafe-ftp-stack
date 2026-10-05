@@ -371,6 +371,8 @@ O painel mostra a logo da ALL-SAFE em quatro lugares e a autoria em um:
 
 Os seis arquivos ficam em [`web/marca/`](../web/marca/) e são entregues pelo nginx.
 
+> ⚠️ **Venda e revenda:** quem usa a stack para si pode manter a logo e o ícone. Quem vende, revende ou entrega como serviço sem contrato com a ALL-SAFE troca os dois e não liga o produto à empresa. A regra está em [Marca ALL-SAFE](../MARCA.md).
+
 **Trocar a logo e o ícone:**
 
 1. Substitua as duas artes de [`web/marca/fonte/`](../web/marca/fonte/), mantendo os nomes: `allsafe-logo-2048.png` (logo completa) e `allsafe-simbolo-512.png` (só o símbolo). Use PNG quadrado, de preferência com fundo transparente.
@@ -388,7 +390,7 @@ Os seis arquivos ficam em [`web/marca/`](../web/marca/) e são entregues pelo ng
 
 **Resultado esperado:** o script lista os seis arquivos, com o tamanho de cada um, e termina com `Marca gerada em web/marca/. Rode ./deploy.sh para o painel passar a usar.` Depois do `deploy.sh`, a tela de entrada mostra a logo nova. Se a aba do navegador continuar com o ícone antigo, veja [Solução de problemas](solucao-de-problemas.md#painel).
 
-A linha `Desenvolvido pela allsafe.inf.br` continua no rodapé de todas as telas, com qualquer logo.
+A linha `Desenvolvido pela allsafe.inf.br` continua no rodapé de todas as telas, com qualquer logo: ela é mantida em toda cópia, de uso próprio ou vendida.
 
 <details>
 <summary>Detalhe técnico — como a marca é entregue</summary>

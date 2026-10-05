@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Aba Atividade: os últimos registros da auditoria."""
 from auditoria import ler_auditoria
 from pagina import e, pagina

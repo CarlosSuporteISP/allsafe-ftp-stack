@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: Apache-2.0 */
 /* Painel da allsafe-ftp-stack. Fundo escuro, sem fonte nem imagem de fora: a CSP só aceita o próprio painel.
    A logo e o ícone vêm de /marca/ (pasta web/marca/ do projeto), entregues pelo nginx. */
 :root {

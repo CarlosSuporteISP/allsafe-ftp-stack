@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Tela de entrada, entrada e saída do painel."""
 import administradores
 import conta_ftp

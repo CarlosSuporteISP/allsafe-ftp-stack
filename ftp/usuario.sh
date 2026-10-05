@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 set -Eeuo pipefail
 
 usage() { echo "Uso: $0 add|passwd|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta]" >&2; exit 2; }

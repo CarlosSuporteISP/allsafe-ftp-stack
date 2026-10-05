@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Etapa Q: robots.txt e contato de segurança. O aviso aos robôs de busca entregue pelo nginx, o
 # security.txt (RFC 9116) que o painel publica com SEGURANCA_CONTATO_EMAIL e o que esses dois endereços,
 # abertos sem senha, não entregam: outro arquivo, outro método, caminho que sobe de pasta e valor inválido.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Configuração do painel: caminhos, limites e o que vem do ambiente do container."""
 import ipaddress
 import os

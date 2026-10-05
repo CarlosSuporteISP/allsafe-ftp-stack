@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Aba Administradores: quem entra no painel. Lista, criação, troca de senha, troca de nome e remoção.
 
 Toda alteração pede de novo a senha de quem está na sessão: um navegador esquecido aberto não basta

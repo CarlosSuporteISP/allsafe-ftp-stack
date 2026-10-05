@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Sessão do painel, limite de tentativas de entrada e token do formulário de entrada."""
 import hashlib
 import hmac

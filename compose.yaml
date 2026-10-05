@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # Por padrão, só para rede privada: publique em IP interno, atrás de firewall. IP público só com
 # REDE_PERMITIR_IP_PUBLICO=sim no .env, lido o alerta do .env.example.
 name: ${STACK_NAME:-allsafe-ftp-stack}

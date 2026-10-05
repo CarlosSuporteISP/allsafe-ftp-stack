@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Bateria de testes da stack: funcional, segurança e rede. Roda em uma instância isolada, que o
 # próprio script cria e remove: nomes, portas, sub-rede, dados e segredos separados da instalação
 # desta pasta, que não é tocada. A instância de teste só sobe em IP privado, inclusive nos casos que

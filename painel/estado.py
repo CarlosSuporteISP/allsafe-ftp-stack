@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Leitura do estado da stack (usuários, pastas, FTP, certificados) e o comando que altera usuários."""
 import datetime
 import os

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Auditoria do painel: uma linha por evento, no arquivo e na saída do container."""
 import os
 import re

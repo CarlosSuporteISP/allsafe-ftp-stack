@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # Modelo da configuração do nginx da allsafe-ftp-stack. Por padrão, só para rede privada, atrás de firewall.
 # O nginx é a única porta publicada do painel: fecha o HTTPS, limita redes e taxa, serve os arquivos
 # estáticos e repassa o resto ao painel por soquete Unix. A entrada do container (nginx/entrypoint.sh) troca a

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Entrada do container do nginx, a frente web do painel. Por padrão, só para rede privada.
 # Roda sem root: gera a configuração em /run/nginx a partir do modelo e das redes permitidas.
 set -Eeuo pipefail

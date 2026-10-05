@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Atendimento HTTP atrás do nginx: o soquete Unix, as conferências de todo pedido e o roteamento."""
 import hmac
 import http.server

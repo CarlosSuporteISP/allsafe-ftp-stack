@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Tela Meus arquivos: o usuário do FTP navega pela pasta dele e baixa os próprios arquivos.
 
 A raiz é a pasta do cadastro, guardada na sessão. O caminho pedido é sempre relativo a ela e passa pelas

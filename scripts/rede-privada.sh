@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Funções de rede, usadas pelo deploy.sh e pelos entrypoints (carregue com `source`).
 # Por padrão a stack só publica em IPv4 privado: 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12 e 192.168.0.0/16.
 # CGNAT (100.64.0.0/10) e qualquer IP público só passam com REDE_PERMITIR_IP_PUBLICO=sim, por escolha

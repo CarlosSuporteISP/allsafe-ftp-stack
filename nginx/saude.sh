@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Healthcheck do nginx: pede /saude ao painel passando pelo nginx (TLS e soquete Unix), de dentro
 # do container. Não confere a cadeia do certificado: serve também para certificado da CA interna.
 set -Eeuo pipefail

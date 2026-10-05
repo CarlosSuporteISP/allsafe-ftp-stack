@@ -8,6 +8,8 @@ profiles
 tests
 web/marca/fonte
 README.md
+MARCA.md
+CHANGELOG.md
 deploy.sh
 manage-user.sh
 *.pdf

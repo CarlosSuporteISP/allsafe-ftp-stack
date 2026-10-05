@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Painel web da allsafe-ftp-stack. Por padrão, só para rede privada, atrás de firewall.
 
 O navegador fala HTTPS com o nginx, que é a única porta publicada; o painel não escuta na rede:

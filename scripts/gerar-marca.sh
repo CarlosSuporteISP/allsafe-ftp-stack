@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Gera os arquivos da marca que o painel usa (web/marca/) a partir das fontes em web/marca/fonte/:
 # o ícone do navegador, o símbolo do topo e a logo da tela de entrada. As fontes não são alteradas.
 # A arte é escura em fundo transparente e o painel tem fundo escuro: cada arquivo sai sobre uma

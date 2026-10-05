@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Senha de administrador do painel: hash scrypt, conferido em tempo constante."""
 import base64
 import hashlib

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 set -Eeuo pipefail
 root_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root_dir"
@@ -47,6 +48,24 @@ for arquivo in favicon.ico icone-32.png icone-192.png apple-touch-icon.png simbo
   esac
 done
 echo "marca OK: 6 arquivos em web/marca/"
+# Licença: o LICENSE é o texto oficial da Apache-2.0, o NOTICE traz a autoria, o MARCA.md existe e todo
+# arquivo de código diz a licença dele em uma das duas primeiras linhas.
+[[ "$(sha256sum LICENSE 2>/dev/null | cut -c1-64)" == cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30 ]] \
+  || { echo "ERRO: LICENSE falta ou não é o texto oficial da Apache-2.0." >&2; exit 1; }
+{ grep -q -F 'Desenvolvido pela allsafe.inf.br' NOTICE && grep -q -F 'https://github.com/allsafe-inf' NOTICE; } 2>/dev/null \
+  || { echo "ERRO: NOTICE falta ou está sem a linha de autoria e o endereço do GitHub." >&2; exit 1; }
+[[ -s MARCA.md ]] || { echo "ERRO: MARCA.md falta." >&2; exit 1; }
+com_licenca=0; sem_licenca=0
+for arquivo in Dockerfile compose.yaml deploy.sh manage-user.sh scripts/*.sh ftp/*.sh painel/*.sh painel/*.py nginx/*.sh nginx/*.conf \
+  nginx/*.modelo web/*.css tests/*.sh tests/etapas/*.sh; do
+  if head -n 2 "$arquivo" | grep -q -F 'SPDX-License-Identifier: Apache-2.0'; then
+    com_licenca=$((com_licenca + 1))
+  else
+    echo "ERRO: $arquivo sem a linha SPDX-License-Identifier: Apache-2.0 no começo." >&2; sem_licenca=1
+  fi
+done
+[[ "$sem_licenca" == 0 ]] || exit 1
+echo "licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em $com_licenca arquivos de código"
 for profile in profiles/*.env; do
   docker compose --env-file .env.example --env-file "$profile" config --quiet
   echo "compose OK com $(basename "$profile")"

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Recupera o acesso ao painel pelo host: define a senha de um administrador e cria o administrador se
 # ele não existir. No dia a dia, nome e senha são trocados na aba Administradores do painel.
 # A senha em texto não é guardada: o hash scrypt é calculado dentro da imagem do painel, sem rede

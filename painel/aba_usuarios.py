@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Aba Usuários: lista, criação, troca de senha e remoção dos usuários do FTP."""
 import secrets
 import urllib.parse

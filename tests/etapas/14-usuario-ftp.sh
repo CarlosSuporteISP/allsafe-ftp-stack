@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Etapa N: usuário do FTP no painel. Entrada com o nome e a senha do FTP, tela Meus arquivos, download,
 # sessão que acompanha o cadastro, a chave PAINEL_ACESSO_USUARIOS_FTP, os modos de TLS, telas de
 # administração fora do alcance, usuário preso à própria pasta, entrada que não abre brecha e limites.

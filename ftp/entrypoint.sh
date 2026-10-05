@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 set -Eeuo pipefail
 
 die() { echo "FALHA: $*" >&2; exit 1; }

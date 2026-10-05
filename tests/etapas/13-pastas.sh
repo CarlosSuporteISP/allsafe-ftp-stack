@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Etapa M: pastas. Pasta criada pelo painel, pasta escolhida para o usuário, pasta dividida entre usuários,
 # criação sem sessão, nome que tenta sair da pasta dos dados e usuário preso à pasta escolhida.
 # Trecho da bateria: carregado pelo tests/testar.sh, na ordem do nome do arquivo; não roda sozinho.

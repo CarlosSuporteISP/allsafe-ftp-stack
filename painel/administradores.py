@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Administradores do painel: nome e hash scrypt da senha de cada um, em /painel/administradores.
 
 Uma linha por administrador, `nome:hash`. O arquivo nasce na primeira subida, com o nome de

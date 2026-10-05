@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Moldura das telas e os textos que mais de uma aba usa."""
 import html
 import time

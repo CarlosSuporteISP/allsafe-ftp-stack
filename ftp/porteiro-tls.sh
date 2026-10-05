@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Porteiro do TLS por usuário (FTP_TLS_EXCECOES=sim). O pure-authd chama este script a cada entrada,
 # antes da conferência da senha. Ele não confere senha: só decide se a sessão pode seguir para ela.
 #   auth_ok:0   "não é comigo": o pure-ftpd segue para o PureDB, que confere a senha;

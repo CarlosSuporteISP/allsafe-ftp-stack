@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Etapa P: marca. A logo e o ícone entregues pelo nginx, a autoria no rodapé de todas as telas e o que
 # a pasta da marca não entrega: nome fora da lista, as fontes, outro método e caminho que sobe de pasta.
 # Trecho da bateria: carregado pelo tests/testar.sh, na ordem do nome do arquivo; não roda sozinho.

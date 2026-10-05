@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Instala, reaplica, atualiza ou remove a stack em um comando, sem perguntas.
 # Por padrão, só para rede privada: recusa bind e IP anunciado fora de IP privado. IP público só
 # passa com REDE_PERMITIR_IP_PUBLICO=sim no .env, por escolha de quem instala.

@@ -8,6 +8,25 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.18.2] - 2026-10-05
+
+O projeto passa a ter licença: o código é livre pela Apache 2.0, e o nome, a logo e o ícone da ALL-SAFE têm regra própria.
+
+### Adicionado
+
+- **Licença do código:** [`LICENSE`](LICENSE), com o texto oficial da Licença Apache 2.0. Qualquer pessoa ou empresa pode usar, copiar, alterar e redistribuir a stack, de graça ou cobrando, levando junto o `LICENSE` e o `NOTICE`.
+- **Autoria:** [`NOTICE`](NOTICE), com a linha `Desenvolvido pela allsafe.inf.br` e o endereço do GitHub. Ele acompanha toda cópia e toda versão derivada.
+- **Regra da marca:** [`MARCA.md`](MARCA.md). No uso próprio, a logo e o ícone podem ficar. Quem vende, revende ou entrega como serviço sem contrato com a ALL-SAFE troca os dois e não liga o produto à empresa. A linha de autoria é mantida em todos os casos.
+- As três imagens levam o `LICENSE` e o `NOTICE` em `/usr/share/doc/allsafe-ftp-stack/`.
+- Linha `SPDX-License-Identifier: Apache-2.0` no começo de cada arquivo de código.
+- `./scripts/validate.sh` confere o `LICENSE` pelo sha256 do texto oficial, a autoria no `NOTICE`, o `MARCA.md` e a linha da licença em cada arquivo de código, e imprime `licença OK: ...`.
+- Bateria: etapa 19, com 1 caso funcional: licença e autoria no projeto e dentro das três imagens.
+- Documentação: seção [Licença](README.md#licenca) e selo no README, e a regra de venda e revenda em [Marca do painel](doc/painel.md#marca).
+
+### Alterado
+
+- **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados. As imagens são reconstruídas e os três containers, recriados.
+
 ## [0.18.1] - 2026-10-05
 
 A bateria de segurança passa a responder a quatro perguntas a cada versão: abre alguma coisa sem senha, abre com senha aleatória, dá para derrubar por exaustão e dá para ler o cadastro das senhas sem passar pela entrada. Ela achou dois defeitos, corrigidos nesta versão.

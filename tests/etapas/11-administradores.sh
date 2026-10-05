@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Etapa K: administradores do painel. Criar, trocar senha e nome, remover, sessões encerradas, senha
 # atual em toda alteração e recuperação do acesso pelo host (scripts/painel-senha.sh).
 # Trecho da bateria: carregado pelo tests/testar.sh, na ordem do nome do arquivo; não roda sozinho.

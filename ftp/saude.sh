@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Healthcheck do FTP: abre a porta de controle e espera a saudação do servidor. Processo vivo que
 # não atende deixa de contar como saudável. 220 = pronto; 421 = no limite de conexões, mas atendendo.
 # Com TLS por usuário, o FTP só está saudável com o soquete do pure-authd aberto.

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Entrada do container do painel. Por padrão, só para rede privada: recusa endereço e rede que não
 # sejam internos, a não ser que quem instalou tenha ligado REDE_PERMITIR_IP_PUBLICO.
 set -Eeuo pipefail

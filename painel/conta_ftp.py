@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Conta de usuário do FTP no painel: o cadastro dele e a conferência da senha.
 
 Quem confere a senha é o próprio servidor FTP, pela rede interna da stack: o painel não lê o hash do

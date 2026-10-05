@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Aba Segurança: o que o painel consegue conferir da própria stack."""
 import os
 

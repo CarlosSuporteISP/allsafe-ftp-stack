@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Etapa O: TLS por usuário (FTP_TLS_EXCECOES). O padrão desligado, o administrador dispensando e voltando
 # a exigir pelo painel e pelo terminal, quem entra sem TLS e quem não entra, a queda do pure-authd, as
 # combinações que a subida recusa e quem consegue alterar a lista dos dispensados.

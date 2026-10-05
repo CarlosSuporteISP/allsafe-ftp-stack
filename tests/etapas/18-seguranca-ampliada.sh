@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Etapa R: segurança ampliada. Quatro perguntas, cada uma com os seus casos: abre alguma coisa sem senha?
 # Abre com senha aleatória? Dá para exaurir a stack (rajada de senhas, de pedidos e de conexões, conexão
 # parada, pedido malformado)? Dá para chegar ao cadastro das senhas sem passar pela entrada (pela web, pelo

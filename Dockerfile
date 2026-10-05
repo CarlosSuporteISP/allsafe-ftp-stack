@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # Três imagens sobre o mesmo Debian 13 fixado por digest: `nginx` (frente web do painel), `painel`
 # (administração web) e `ftp` (servidor). O alvo padrão é o `ftp`.
 ARG DEBIAN=debian:trixie-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee5b77cc54cd1b20a
@@ -18,6 +19,7 @@ RUN apt-get update \
     && useradd --uid 10001 --gid frente --home-dir /nonexistent \
        --shell /usr/sbin/nologin --no-create-home frente \
     && mkdir -p /usr/local/lib/allsafe /etc/allsafe-nginx /usr/share/allsafe-nginx/_erro /usr/share/allsafe-nginx/web/marca \
+       /usr/share/doc/allsafe-ftp-stack \
     && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled /etc/nginx/sites-available /var/www/html
 
 # As pastas de destino já existem (0755): o --chmod de um COPY vale também para a pasta que ele cria,
@@ -29,6 +31,8 @@ COPY --chmod=0644 nginx/erro/pedido.txt nginx/erro/rede.txt nginx/erro/taxa.txt 
 COPY --chmod=0644 web/estilo.css web/robots.txt /usr/share/allsafe-nginx/web/
 # Marca: só os arquivos gerados por scripts/gerar-marca.sh; as fontes (web/marca/fonte/) não entram na imagem.
 COPY --chmod=0644 web/marca/favicon.ico web/marca/*.png /usr/share/allsafe-nginx/web/marca/
+# Licença e autoria acompanham a imagem (Apache-2.0, seção 4).
+COPY --chmod=0644 LICENSE NOTICE /usr/share/doc/allsafe-ftp-stack/
 COPY --chmod=0755 nginx/entrypoint.sh /usr/local/sbin/allsafe-nginx-entrypoint
 COPY --chmod=0755 nginx/saude.sh /usr/local/sbin/allsafe-nginx-saude
 
@@ -49,11 +53,13 @@ RUN apt-get update \
     && groupadd --gid 10000 ftpdata \
     && useradd --uid 10000 --gid ftpdata --home-dir /nonexistent \
        --shell /usr/sbin/nologin --no-create-home ftpdata \
-    && mkdir -p /data /auth /etc/ssl/private /usr/local/lib/allsafe \
+    && mkdir -p /data /auth /etc/ssl/private /usr/local/lib/allsafe /usr/share/doc/allsafe-ftp-stack \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chmod=0644 scripts/rede-privada.sh /usr/local/lib/allsafe/rede-privada.sh
 COPY --chmod=0755 ftp/usuario.sh /usr/local/sbin/allsafe-ftp-user
+# Licença e autoria acompanham as imagens do ftp e do painel (Apache-2.0, seção 4).
+COPY --chmod=0644 LICENSE NOTICE /usr/share/doc/allsafe-ftp-stack/
 
 
 FROM base AS painel

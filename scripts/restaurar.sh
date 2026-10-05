@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Restaura uma cópia feita pelo scripts/backup.sh: para a stack, guarda antes uma cópia do estado
 # atual, troca o conteúdo de dados/, auth/, certs/ e painel/ em DATA_DIR pelo da cópia e sobe de novo.
 # O .env e os segredos de SECRETS_DIR não estão na cópia: continuam os desta pasta.

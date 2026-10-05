@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Aba Arquivos: navegar pelas pastas dos usuários do FTP, baixar um arquivo pelo navegador e criar pasta.
 
 O painel não envia, não renomeia e não apaga: a única gravação que ele faz nos dados é criar pasta vazia.

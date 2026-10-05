@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Leitura e gravação do arquivo de ambiente, usadas pelos scripts do host (carregue com `source`).
 # O arquivo nunca é executado: só a linha da chave pedida é lida ou trocada.
 

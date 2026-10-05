@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Etapa L: aba Arquivos do painel. Navegação, download pelo navegador, fuga da pasta, link simbólico,
 # entrega só como anexo e limite de downloads ao mesmo tempo.
 # Trecho da bateria: carregado pelo tests/testar.sh, na ordem do nome do arquivo; não roda sozinho.

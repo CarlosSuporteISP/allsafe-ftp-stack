@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Aba Visão geral: situação do FTP e os dados para configurar o equipamento."""
 import shutil
 

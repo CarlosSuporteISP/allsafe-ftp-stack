@@ -8,8 +8,9 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.18.1-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.18.2-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
+[![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
 ![Debian](https://img.shields.io/badge/Debian-13_trixie-a81d33?logo=debian&logoColor=white)
@@ -38,7 +39,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.18.1</b> · visão geral da stack · 2026-10-05</sub>
+<sub><b>v0.18.2</b> · visão geral da stack · 2026-10-05</sub>
 
 </div>
 
@@ -51,7 +52,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[O que é](#o-que-e) · [Destaques](#destaques) · [Imagens](#imagens) · [Instalação rápida](#instalacao) · [Como funciona](#como-funciona) · [Arquitetura](#arquitetura) · [Tecnologias](#tecnologias) · [Portas e binds](#portas) · [Configuração](#configuracao) · [Segurança](#seguranca) · [Testes](#testes) · [Estrutura de arquivos](#arquivos) · [Documentação](#documentacao) · [Plano](#plano) · [Versão](#versao) · [Projetos relacionados](#relacionados) · [Créditos](#creditos)
+[O que é](#o-que-e) · [Destaques](#destaques) · [Imagens](#imagens) · [Instalação rápida](#instalacao) · [Como funciona](#como-funciona) · [Arquitetura](#arquitetura) · [Tecnologias](#tecnologias) · [Portas e binds](#portas) · [Configuração](#configuracao) · [Segurança](#seguranca) · [Testes](#testes) · [Estrutura de arquivos](#arquivos) · [Documentação](#documentacao) · [Plano](#plano) · [Versão](#versao) · [Projetos relacionados](#relacionados) · [Créditos](#creditos) · [Licença](#licenca)
 
 </details>
 
@@ -447,7 +448,7 @@ flowchart LR
 | Segredo `painel_admin_inicial_senha_hash` | Hash da senha inicial do primeiro administrador do painel (`.secrets/painel-admin-inicial-senha-hash.txt`), somente leitura | — | `/run/secrets/painel_admin_inicial_senha_hash` |
 | Rede `allsafe-ftp-network` | Bridge dedicada, sub-rede `172.29.1.0/29` | — | — |
 
-- **Imagens:** [`Dockerfile`](Dockerfile) com três alvos sobre o mesmo `debian:trixie-slim` (Debian 13), fixado por digest: `ftp` (`pure-ftpd` e o usuário `ftpdata`, uid e gid **10000**), `painel` (o mesmo, com `python3`) e `nginx` (só `nginx` e `openssl`, com o usuário `frente`, uid e gid **10001**).
+- **Imagens:** [`Dockerfile`](Dockerfile) com três alvos sobre o mesmo `debian:trixie-slim` (Debian 13), fixado por digest: `ftp` (`pure-ftpd` e o usuário `ftpdata`, uid e gid **10000**), `painel` (o mesmo, com `python3`) e `nginx` (só `nginx` e `openssl`, com o usuário `frente`, uid e gid **10001**). As três levam o `LICENSE` e o `NOTICE` do projeto em `/usr/share/doc/allsafe-ftp-stack/`.
 - **Entrypoint do FTP:** [`ftp/entrypoint.sh`](ftp/entrypoint.sh) cria ou atualiza o usuário inicial, gera o certificado autoassinado na primeira subida e executa o `pure-ftpd`.
 - **Entrypoint do painel:** [`painel/entrypoint.sh`](painel/entrypoint.sh) confere a rede privada, gera o certificado do painel, prepara a pasta do nginx e executa o [`painel/servidor.py`](painel/servidor.py), o ponto de entrada dos módulos do painel.
 - **Entrypoint do nginx:** [`nginx/entrypoint.sh`](nginx/entrypoint.sh) recusa rodar como `root`, confere a rede privada, monta a configuração a partir de [`nginx/nginx.conf.modelo`](nginx/nginx.conf.modelo) e executa o `nginx`, que também entrega os arquivos estáticos de [`web/`](web/): a folha de estilo e a marca.
@@ -559,7 +560,7 @@ Modelo de ameaça e o endurecimento linha a linha em [doc/seguranca.md](doc/segu
 
 | Quero | Comando | Resultado esperado |
 |---|---|---|
-| Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `painel OK: <n> módulos Python`, `marca OK: 6 arquivos em web/marca/`, `compose OK com <perfil>.env` para os cinco perfis e `Validacao FTP concluida.` |
+| Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `painel OK: <n> módulos Python`, `marca OK: 6 arquivos em web/marca/`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` para os cinco perfis e `Validacao FTP concluida.` |
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
@@ -571,7 +572,7 @@ A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao t
 
 ## 🗂️ Estrutura de arquivos
 
-Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`deploy.sh`, `manage-user.sh`). Cada serviço tem a pasta dele, com o que vai dentro da imagem: `ftp/`, `painel/` e `nginx/`; `web/` guarda os arquivos estáticos que o nginx entrega, com a logo e o ícone em `web/marca/`; `scripts/` tem o que roda fora dos containers; `tests/` tem a bateria de testes.
+Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`deploy.sh`, `manage-user.sh`). Cada serviço tem a pasta dele, com o que vai dentro da imagem: `ftp/`, `painel/` e `nginx/`; `web/` guarda os arquivos estáticos que o nginx entrega, com a logo e o ícone em `web/marca/`; `scripts/` tem o que roda fora dos containers; `tests/` tem a bateria de testes. O `LICENSE`, o `NOTICE` e o `MARCA.md` dizem a licença do código, a autoria e a regra da marca.
 
 <details>
 <summary>Arquivo por arquivo — clique para expandir</summary>
@@ -601,7 +602,7 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`scripts/ambiente.sh`](scripts/ambiente.sh) | Função que lê uma chave do `.env` sem executar o arquivo |
 | [`scripts/backup.sh`](scripts/backup.sh) | Grava a cópia de segurança dos dados, dos usuários, dos certificados e da auditoria em `BACKUP_DIR` |
 | [`scripts/restaurar.sh`](scripts/restaurar.sh) | Devolve a stack ao estado de uma cópia, guardando antes o estado atual |
-| [`scripts/validate.sh`](scripts/validate.sh) | Checagem de sintaxe, da marca e do Compose de todos os perfis e, com `--runtime`, dos três serviços no ar |
+| [`scripts/validate.sh`](scripts/validate.sh) | Checagem de sintaxe, da marca, da licença e do Compose de todos os perfis e, com `--runtime`, dos três serviços no ar |
 | [`scripts/gerar-marca.sh`](scripts/gerar-marca.sh) | Gera os arquivos de `web/marca/` a partir das artes de origem; só roda quando a logo muda |
 | [`tests/testar.sh`](tests/testar.sh) | Bateria de testes funcional, de segurança e de rede, em instância de teste própria |
 | [`tests/comum.sh`](tests/comum.sh) | Funções da bateria: registro dos casos, auxiliares de FTP e do painel e gravação dos resultados |
@@ -611,6 +612,9 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | `.secrets/` | Um arquivo por segredo, com o nome do que guarda, e o `LEIAME.txt` que explica cada um (ignorados pelo Git) |
 | [`VERSION`](VERSION) | Versão atual, em um lugar só |
 | [`CHANGELOG.md`](CHANGELOG.md) | Histórico de mudanças por versão |
+| [`LICENSE`](LICENSE) | Licença Apache 2.0: vale para o código, a configuração, os roteiros, os testes e a documentação |
+| [`NOTICE`](NOTICE) | Aviso de autoria, que acompanha toda cópia e toda versão derivada |
+| [`MARCA.md`](MARCA.md) | Regra de uso do nome, da logo e do ícone da ALL-SAFE: uso próprio, venda e revenda |
 | [`doc/`](doc/README.md) | Documentação, diagramas e fotos da aplicação |
 
 </details>
@@ -652,7 +656,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.18.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.18.2**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -693,3 +697,20 @@ A versão avança a cada publicação: `0.x` é a fase de construção, uma vers
 
 </details>
 
+---
+
+<a name="licenca"></a>
+
+## 📄 Licença
+
+O código, a configuração, os roteiros, os testes e a documentação são livres pela [Licença Apache 2.0](LICENSE): qualquer pessoa ou empresa pode usar, copiar, alterar e redistribuir, de graça ou cobrando, levando junto o `LICENSE` e o [`NOTICE`](NOTICE).
+
+O nome ALL-SAFE, a logo e o ícone são marca da ALL-SAFE e não entram na licença do código:
+
+| Situação | Logo e ícone da ALL-SAFE | Linha `Desenvolvido pela allsafe.inf.br` |
+|---|---|---|
+| Uso próprio | Podem ficar | Mantida |
+| Venda ou revenda, com contrato com a ALL-SAFE | Conforme o contrato | Mantida |
+| Venda ou revenda, sem contrato com a ALL-SAFE | Trocados pelos de quem vende; ligar o produto à ALL-SAFE é proibido | Mantida |
+
+A regra completa está em [Marca ALL-SAFE](MARCA.md). A troca da logo e do ícone, em um comando, está em [Marca do painel](doc/painel.md#marca).

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
 # Cópia de segurança da stack: dados/, auth/, certs/ e painel/ de DATA_DIR viram um arquivo
 # BACKUP_DIR/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz (modo 0600), com a soma sha256 ao lado.
 # A leitura é feita por um container sem rede, porque parte dos arquivos é do root.

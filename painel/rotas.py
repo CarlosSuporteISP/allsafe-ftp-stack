@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Rotas do painel depois da entrada: método e caminho ➜ função que responde.
 
 São duas tabelas, uma por papel: ROTAS é a do administrador e ROTAS_USUARIO, a do usuário do FTP, que só
