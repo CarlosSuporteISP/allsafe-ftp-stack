@@ -296,11 +296,17 @@ caso $? seguranca 73 "Rajada de pedidos não derruba o painel" "300 pedidos a /e
 head -c 9000 /dev/zero | tr '\0' a > "$W/r18.9k"; head -c 200000 /dev/zero | tr '\0' a > "$W/r18.200k"
 muitos=(); for i in $(seq 1 200); do muitos+=(-H "X-T$i: $i"); done
 ev=""; atendidos=0; sleep 2
-pede18() { # <nome> <opções do curl...>: pedido que o painel tem de recusar sem cair
-  local nome="$1" r; shift
-  r="$(c -o /dev/null -w '%{http_code}' "$@")"
-  [[ "$r" =~ ^(4[0-9][0-9]|501)$ ]] || atendidos=$((atendidos + 1))
-  ev+="$nome $r · "
+pede18() { # <nome> <opções do curl...>: pedido que o painel tem de recusar sem cair, em HTTP/1.1 e em HTTP/2
+  local nome="$1" modo r s; shift
+  ev+="$nome:"
+  for modo in ${MODOS18:---http1.1 --http2}; do
+    r="$(c "$modo" -o /dev/null -w '%{http_code}' "$@")"; s=$?
+    # Campo grande demais em HTTP/2: o nginx encerra a conexão sem atender, e o curl sai com 16 (erro na camada do HTTP/2).
+    if [[ "$modo" == --http2 && "$r" == 000 && "$s" == 16 ]]; then r="conexão encerrada pelo nginx"
+    elif [[ ! "$r" =~ ^(4[0-9][0-9]|501)$ ]]; then atendidos=$((atendidos + 1)); fi
+    ev+=" HTTP/${modo#--http} $r,"
+  done
+  ev="${ev%,} · "
 }
 pede18 "corpo de 9 mil bytes" -H "Origin: $B" --data-binary "@$W/r18.9k" "$B/entrar"
 pede18 "corpo de 200 mil bytes" -H "Origin: $B" --data-binary "@$W/r18.200k" "$B/entrar"
@@ -312,7 +318,7 @@ pede18 "PUT" -X PUT "$B/entrar"
 pede18 "DELETE" -X DELETE "$B/"
 pede18 "TRACE" -X TRACE "$B/"
 pede18 "método inventado" -X ABCDEFGHIJ "$B/"
-pede18 "HTTP sem TLS na porta do HTTPS" "http://$IP:$PAINEL_PORTA/entrar"
+MODOS18=--http1.1 pede18 "HTTP sem TLS na porta do HTTPS" "http://$IP:$PAINEL_PORTA/entrar"
 cru18() { # <nome> <texto do pedido>
   local r; r="$(http_cru "$2")"
   [[ "$r" =~ ^(4[0-9][0-9]|501)$ ]] || atendidos=$((atendidos + 1))

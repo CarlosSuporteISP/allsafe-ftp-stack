@@ -560,8 +560,9 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 |---|---|
 | nginx na frente | Só o nginx publica a porta do painel. Ele fecha o HTTPS, confere a rede e a taxa de pedidos e repassa ao painel por um soquete interno; o painel não escuta em porta de rede |
 | Só rede interna | O nginx recusa o cliente fora de `PAINEL_REDES_PERMITIDAS` com `403`, antes de chegar ao painel; o painel confere de novo e recusa com `400` o pedido com `Host` que não seja IP privado, `localhost` ou o `PAINEL_CERT_CN` (com `REDE_PERMITIR_IP_PUBLICO=sim`, qualquer endereço IPv4) |
-| Só HTTPS | TLS 1.2 ou 1.3. HTTP puro na porta do painel recebe `400` (`pedido não aceito`), sem nenhuma tela |
-| Limite de pedidos | 20 pedidos por segundo por endereço, com rajada de 40, e 16 conexões por endereço; acima disso, `429`. Pedido maior que 16 KiB recebe `413` |
+| Só HTTPS | TLS 1.2 ou 1.3, em HTTP/2 para o navegador que pede e em HTTP/1.1 para os outros. HTTP puro na porta do painel recebe `400` (`pedido não aceito`), sem nenhuma tela, e HTTP/2 sem TLS não é atendido |
+| Limite de pedidos | 20 pedidos por segundo por endereço, com rajada de 40, e 16 conexões por endereço; acima disso, `429`. Pedido maior que 16 KiB recebe `413`. Endereço ou cabeçalho maior que 5 KiB, ou conjunto de cabeçalhos maior que 20 KiB, é recusado: em HTTP/1.1 com `414` ou `400`; em HTTP/2, onde o limite vale para o campo ainda comprimido, o nginx encerra a conexão, e nenhum campo acima de 8192 bytes passa. Os limites de pedidos são os mesmos em HTTP/2 e em HTTP/1.1: em HTTP/2, cada pedido aberto conta como uma conexão, e uma conexão leva no máximo 16 pedidos ao mesmo tempo |
+| Página nunca comprimida | O nginx comprime um arquivo só, o `estilo.css`, que é fixo, igual para todos e sem segredo. As páginas do painel saem sempre inteiras, mesmo quando o navegador aceita compressão: elas trazem o token do formulário, e página com segredo comprimida deixa adivinhar o segredo pelo tamanho da resposta (ataque BREACH) |
 | Usuário e senha por administrador | Cada administrador entra com o próprio nome; a senha fica só como hash `scrypt`, em `DATA_DIR/painel/administradores` (`0600`, do `root`); o container nunca vê a senha inicial em texto |
 | Entrada que não revela nomes | Usuário que não existe e senha errada recebem a mesma resposta, depois da mesma conta; o nome digitado não vai para a auditoria nem para os logs |
 | Limite de tentativas | Cinco erros em 15 minutos, somando entrada recusada, de administrador ou de usuário do FTP, e senha atual recusada, bloqueiam o endereço do cliente, mesmo para a senha certa |
@@ -580,7 +581,7 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 
 O que cada proteção significa na prática e o fluxograma da decisão: [Painel web](painel.md#protecoes).
 
-> Tudo acima foi conferido nos portões de validação das versões `0.3.0` (painel), `0.5.0` (nginx na frente), `0.12.0` (administradores), `0.13.0` (aba Arquivos), `0.14.0` (pastas), `0.15.0` (entrada do usuário do FTP), `0.16.0` (TLS por usuário), `0.17.0` (logo e ícone entregues pelo nginx), `0.18.0` (`robots.txt` e `security.txt`), `0.18.1` (sem senha, senha aleatória, exaustão e acesso direto ao cadastro), `0.19.0` (edição de usuário), `0.20.0` (renomear e apagar pelo painel), `0.21.0` (limites por usuário) e `0.22.0` (bloqueio por tentativa no FTP), em instância de teste. O firewall do host continua sendo de quem opera o servidor.
+> Tudo acima foi conferido nos portões de validação das versões `0.3.0` (painel), `0.5.0` (nginx na frente), `0.12.0` (administradores), `0.13.0` (aba Arquivos), `0.14.0` (pastas), `0.15.0` (entrada do usuário do FTP), `0.16.0` (TLS por usuário), `0.17.0` (logo e ícone entregues pelo nginx), `0.18.0` (`robots.txt` e `security.txt`), `0.18.1` (sem senha, senha aleatória, exaustão e acesso direto ao cadastro), `0.19.0` (edição de usuário), `0.20.0` (renomear e apagar pelo painel), `0.21.0` (limites por usuário), `0.22.0` (bloqueio por tentativa no FTP) e `0.22.1` (HTTP/2 e compressão do estilo), em instância de teste. O firewall do host continua sendo de quem opera o servidor.
 
 ---
 
@@ -683,7 +684,8 @@ As RFCs são as normas públicas dos protocolos da internet. A tabela diz o que 
 | RFC 5280 | Certificado X.509 | Certificados autoassinados com nome alternativo (`subjectAltName`), SHA-256 e 825 dias: RSA de 3072 bits no FTP, curva P-256 no painel | Atende |
 | RFC 9110 | Semântica do HTTP | `GET`, `HEAD` e `POST` atendidos; `303` depois de cada formulário enviado; `411` para envio sem tamanho; `405` ou `501` para os outros métodos | Atende |
 | RFC 9110, seção 9.1 | Métodos que todo servidor atende | A norma pede `GET` e `HEAD`: os dois são atendidos em todos os endereços, e o `HEAD` traz o código e os cabeçalhos do `GET`, sem o corpo | Atende |
-| RFC 9112 | HTTP/1.1 | O nginx fala HTTP/1.1 com o navegador e com o painel; toda resposta do painel sai com `Content-Length` e `Connection: close` | Atende |
+| RFC 9112 | HTTP/1.1 | O nginx fala HTTP/1.1 com o painel e com o navegador que não pede HTTP/2; toda resposta do painel sai com `Content-Length` e `Connection: close` | Atende |
+| RFC 9113 e RFC 7301 | HTTP/2 e escolha do protocolo no TLS (ALPN) | O nginx fala HTTP/2 com o navegador que oferece `h2` no aperto de mão do TLS, com até 16 pedidos abertos por conexão; quem oferece só `http/1.1` continua em HTTP/1.1, e HTTP/2 sem TLS não é atendido | Atende |
 | RFC 6585 | Código `429` | Resposta para quem passa do limite de pedidos ou de tentativas de entrada | Atende |
 | RFC 6797 | HTTPS obrigatório (HSTS) | `Strict-Transport-Security: max-age=31536000` em toda resposta; não existe porta HTTP, e HTTP puro na porta do painel recebe `400` | Atende |
 | RFC 6265 | Cookie | Um só cookie, `__Host-sessao`, com `Secure`, `HttpOnly`, `Path=/` e sem `Domain`; o `SameSite=Strict` e o prefixo `__Host-` vêm da revisão da norma, ainda em rascunho | Atende |
@@ -791,7 +793,7 @@ O nginx é o único container que publica a porta do painel, e por isso é o mai
 | Limites | `64M` de memória, `0.5` CPU, `32` processos | Um servidor web pequeno não precisa de mais |
 | Ambiente | só `TZ` e `PAINEL_REDES_PERMITIDAS` | Não recebe senha, hash nem segredo do Compose |
 
-O que a configuração fixa: TLS 1.2 e 1.3 com cifras ECDHE; só as redes de `PAINEL_REDES_PERMITIDAS`, depois `deny all`; 20 pedidos por segundo por endereço, com rajada de 40; 16 conexões por endereço; pedido de até 16 KiB; prazos de 15 s; `server_tokens off`. O endereço do cliente segue para o painel em `X-Real-IP`, sempre sobrescrito pelo nginx; `X-Forwarded-For` e `Forwarded` vindos do cliente são apagados.
+O que a configuração fixa: TLS 1.2 e 1.3 com cifras ECDHE; HTTP/2 para quem pede, com até 16 pedidos abertos por conexão, e HTTP/1.1 para os outros; só as redes de `PAINEL_REDES_PERMITIDAS`, depois `deny all`; 20 pedidos por segundo por endereço, com rajada de 40; 16 conexões por endereço; pedido de até 16 KiB; endereço e cada cabeçalho de até 5 KiB, 20 KiB no conjunto (`large_client_header_buffers 4 5k`); prazos de 15 s; conexão parada mantida por 60 s; compressão só do `estilo.css`, com a cópia pronta na imagem; `server_tokens off`. O endereço do cliente segue para o painel em `X-Real-IP`, sempre sobrescrito pelo nginx; `X-Forwarded-For` e `Forwarded` vindos do cliente são apagados.
 
 O nginx registra só o que ele mesmo recusa, no formato `ip método caminho código`, sem a consulta da URL e sem cabeçalho: nenhum cookie e nenhuma senha chegam ao registro.
 

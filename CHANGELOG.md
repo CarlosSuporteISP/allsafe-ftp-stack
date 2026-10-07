@@ -8,6 +8,30 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.22.1] - 2026-10-07
+
+A frente web ficou mais rápida, com medida de antes e depois na instância de teste: o painel passa a abrir em HTTP/2, o estilo vai comprimido e a conexão do navegador é mantida entre um clique e outro. Nenhuma tela, variável ou comando mudou.
+
+### Alterado
+
+- **HTTP/2 no painel.** O nginx fala HTTP/2 com o navegador que pede e continua em HTTP/1.1 com quem não pede. A página, o estilo e as imagens chegam por uma conexão só, com um aperto de mão do TLS: a tela de entrada inteira passou de 11,0 ms, em cinco conexões, para 8,8 ms, em uma. Cada conexão leva no máximo 16 pedidos ao mesmo tempo, o mesmo número do limite de conexões por endereço.
+- **Estilo comprimido.** O `estilo.css` vai com 2175 bytes para o navegador que aceita gzip, em vez de 6957. A cópia comprimida é feita uma vez, na construção da imagem do nginx: nada é comprimido a cada pedido.
+- **Conexão parada mantida por 60 segundos**, em vez de 15. O clique feito depois de 20 ou de 45 segundos parado reaproveita a conexão: 0,8 ms, contra 2,0 ms com conexão nova.
+- **O que a medida deixou como estava.** Página do painel continua sem compressão, porque traz o token do formulário. As imagens da marca continuam revalidadas a cada uso, para a troca da marca aparecer na hora: a revalidação custa 0,04 ms. O nginx continua com um processo em todos os portes, e o cache de arquivo aberto não mostrou diferença.
+- **Custo medido do HTTP/2 no download.** O arquivo de 300 MiB baixado pelo painel levou 0,69 s em HTTP/2 e 0,45 s em HTTP/1.1, com o nginx no limite de meio processador. Os dois ficam acima do que uma rede de 1 Gbit/s entrega.
+
+### Adicionado
+
+- **Casos de teste 50 (funcional) e 87 (segurança)**, em `tests/etapas/25-http2-e-compressao.sh`: os dois protocolos com a mesma sessão, o estilo comprimido e inteiro, a tela de entrada em uma conexão, a página com token sempre sem compressão, a cópia comprimida sem endereço e os limites de pedidos e de tamanho nos dois protocolos, com o campo de 8300 bytes recusado e o de 4000 aceito em cada um. A bateria passa a 50 casos funcionais, 87 de segurança e 13 de rede.
+
+### Segurança
+
+- **Limite de tamanho por endereço e por cabeçalho: 5 KiB, com 20 KiB no conjunto.** Antes valia o padrão do nginx, 8 KiB por campo e 32 KiB no conjunto. Em HTTP/2 o nginx mede o campo ainda comprimido, e com 8 KiB passavam endereço e cabeçalho de até 13 mil bytes; com 5 KiB, nenhum campo acima de 8192 bytes passa em nenhum dos dois protocolos. Em HTTP/1.1 a recusa continua com `414` ou `400`; em HTTP/2, o nginx encerra a conexão. Achado pela bateria, no caso 75 de segurança, que passa a fazer cada pedido grande ou malformado nos dois protocolos.
+
+### Ao atualizar
+
+Rode `./deploy.sh`: ele refaz a imagem do nginx, com a cópia comprimida do estilo, e sobe a configuração nova. Nada muda no `.env`, nos segredos nem nos dados.
+
 ## [0.22.0] - 2026-10-07
 
 O FTP passa a bloquear quem erra a senha vezes demais: o endereço que erra a senha de um usuário cinco vezes em 15 minutos fica bloqueado para aquele usuário pelo mesmo tempo. O administrador ajusta o limite e o tempo de cada usuário no painel, vê quem está bloqueado e desbloqueia. O registro do container passa a trazer cada entrada e cada transferência do FTP.

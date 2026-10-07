@@ -29,6 +29,8 @@ COPY --chmod=0644 nginx/nginx.conf.modelo nginx/cabecalhos.conf /etc/allsafe-ngi
 COPY --chmod=0644 nginx/erro/pedido.txt nginx/erro/rede.txt nginx/erro/taxa.txt nginx/erro/painel.txt /usr/share/allsafe-nginx/_erro/
 # Arquivos estáticos do painel (pasta web/): quem serve é o nginx, sem passar pelo painel.
 COPY --chmod=0644 web/estilo.css web/robots.txt /usr/share/allsafe-nginx/web/
+# Cópia comprimida do estilo, feita uma vez aqui: o nginx a entrega a quem aceita gzip, sem comprimir a cada pedido.
+RUN gzip -9 -k -n /usr/share/allsafe-nginx/web/estilo.css
 # Marca: só os arquivos gerados por scripts/gerar-marca.sh; as fontes (web/marca/fonte/) não entram na imagem.
 COPY --chmod=0644 web/marca/favicon.ico web/marca/*.png /usr/share/allsafe-nginx/web/marca/
 # Licença e autoria acompanham a imagem (Apache-2.0, seção 4).

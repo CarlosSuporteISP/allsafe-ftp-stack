@@ -46,10 +46,17 @@ http {
     limit_conn_log_level notice;
 
     client_max_body_size 16k;
+    # Tamanho de cada campo do pedido (endereço ou cabeçalho) e do conjunto: 5k por campo, 20k no total.
+    # Em HTTP/1.1 o limite vale para a linha como chega. Em HTTP/2 vale para o campo ainda comprimido (HPACK),
+    # e a compressão rende no máximo 8 bytes para cada 5: com 5k, nenhum campo acima de 8192 bytes passa
+    # em nenhum dos dois protocolos. O padrão do nginx (4 de 8k) deixava passar até 13 mil bytes em HTTP/2.
+    large_client_header_buffers 4 5k;
     client_header_timeout 15s;
     client_body_timeout 15s;
     send_timeout 15s;
-    keepalive_timeout 15s;
+    # Conexão parada: fica aberta por 60 s, e o clique seguinte no painel não refaz o aperto de mão do TLS.
+    # Quando faltam conexões, o nginx fecha primeiro as que estão paradas.
+    keepalive_timeout 60s;
 
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305;
@@ -60,6 +67,11 @@ http {
 
     server {
         listen 8443 ssl default_server;
+        # HTTP/2 para o navegador que pedir (ALPN): a página, o estilo e as imagens vêm por uma conexão só,
+        # com um aperto de mão do TLS. Quem não pede continua em HTTP/1.1. Cada pedido aberto ao mesmo tempo
+        # conta como uma conexão no limite por endereço, logo abaixo: o teto por conexão é o mesmo número.
+        http2 on;
+        http2_max_concurrent_streams 16;
         server_name _;
 
         ssl_certificate /nginx/tls/painel-cert.pem;
@@ -91,11 +103,15 @@ http {
 
         # Arquivos estáticos do painel (pasta web/ do projeto): o nginx entrega direto, sem ocupar o
         # painel. Só os nomes listados aqui existem; o navegador revalida a cada uso (ETag).
+        # O estilo é o único arquivo comprimido: é fixo, igual para todos e sem segredo, e a cópia .gz já vem
+        # pronta na imagem (Dockerfile). Página do painel nunca é comprimida: ela traz o token do formulário.
         location = /estilo.css {
             root /usr/share/allsafe-nginx/web;
             types { text/css css; }
             default_type application/octet-stream;
             charset utf-8;
+            gzip_static on;
+            gzip_vary on;
             access_log off;
             include /etc/allsafe-nginx/cabecalhos.conf;
             add_header Cache-Control no-cache always;
