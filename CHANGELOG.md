@@ -8,6 +8,22 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.18.6] - 2026-10-06
+
+Os créditos do README passam a citar o nginx e o Python, que a stack usa desde as versões `0.5.0` e `0.3.0`. Nenhum código da stack mudou.
+
+### Adicionado
+
+- **nginx e Python nos créditos.** A tabela dos [projetos oficiais usados](README.md#creditos) ganha os dois, com o uso de cada um na stack, a licença, a página oficial e o código-fonte.
+
+### Corrigido
+
+- **Frase "Ao atualizar" das notas `0.18.3` e `0.18.5`.** As duas diziam que os três containers eram recriados. Medido na atualização da `0.18.2` para a `0.18.5`: o do FTP continuou em execução, porque nada do que entra na imagem dele mudou nessas versões.
+
+### Alterado
+
+- **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados. É recriado o container do painel, porque a imagem dele leva o número da versão; o do FTP continua em execução.
+
 ## [0.18.5] - 2026-10-05
 
 O painel passa a responder ao método `HEAD`, que a RFC 9110 pede de todo servidor HTTP.
@@ -23,7 +39,7 @@ O painel passa a responder ao método `HEAD`, que a RFC 9110 pede de todo servid
 
 ### Alterado
 
-- **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados. As imagens são reconstruídas e os três containers, recriados.
+- **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados. As imagens são reconstruídas e só é recriado o container cuja imagem mudou: o do FTP continua em execução.
 
 ## [0.18.4] - 2026-10-05
 
@@ -50,7 +66,7 @@ A lista de usuários do painel deixa de cortar os botões de ação em telas de 
 
 ### Alterado
 
-- **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados. As imagens são reconstruídas e os três containers, recriados.
+- **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados. As imagens são reconstruídas e só é recriado o container cuja imagem mudou: o do FTP continua em execução.
 
 ## [0.18.2] - 2026-10-05
 
