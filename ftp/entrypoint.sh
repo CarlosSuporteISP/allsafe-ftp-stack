@@ -52,22 +52,61 @@ chown root:root /data /auth /etc/ssl/private
 chmod 0755 /data
 chmod 0750 /auth
 chmod 0700 /etc/ssl/private
-install -d -o ftpdata -g ftpdata -m 0750 "/data/$FTP_USER"
 # Mesma trava do allsafe-ftp-user: o painel pode estar alterando usuários agora.
 exec 9>/auth/.lock
 flock -w 30 9 || die "arquivo de usuarios em uso por outra alteracao"
 touch /auth/pureftpd.passwd
 chmod 0600 /auth/pureftpd.passwd
 
+# Senha do usuário inicial: a do segredo vale quando o usuário é criado e sempre que o arquivo do segredo
+# muda. Trocada pelo painel ou pelo manage-user.sh (o allsafe-ftp-user deixa a marca), a senha nova fica até
+# o segredo mudar. Para saber se mudou, a partida guarda a impressão do segredo aplicado por último:
+# sha512-crypt com sal, só o root lê; a senha em si não é gravada.
+impressao=/auth/senha-inicial.aplicada
+marca_inicial=/auth/senha-inicial.trocada
+casa_inicial() {
+  local nome casa _
+  while IFS=: read -r nome _ _ _ _ casa _; do
+    [[ "$nome" == "$FTP_USER" ]] && { printf '%s\n' "$casa"; return 0; }
+  done < /auth/pureftpd.passwd
+  return 1
+}
+segredo_ja_aplicado() {
+  local guardada=""
+  [[ -f "$impressao" && ! -L "$impressao" ]] || return 1
+  IFS= read -r guardada < "$impressao" || true
+  [[ "$guardada" =~ ^\$6\$([A-Za-z0-9./]{1,16})\$[A-Za-z0-9./]{86}$ ]] || return 1
+  [[ "$(printf '%s\n' "$password" | openssl passwd -6 -salt "${BASH_REMATCH[1]}" -stdin)" == "$guardada" ]]
+}
+trocada_por_fora() {
+  local nome=""
+  [[ -f "$marca_inicial" && ! -L "$marca_inicial" ]] || return 1
+  IFS= read -r nome < "$marca_inicial" || true
+  [[ "$nome" == "$FTP_USER" ]]
+}
+registrar_segredo() {
+  rm -f "$impressao.novo" "$marca_inicial"
+  ( umask 077; printf '%s\n' "$password" | openssl passwd -6 -salt "$(openssl rand -hex 8)" -stdin > "$impressao.novo" )
+  mv -f "$impressao.novo" "$impressao"
+}
 # Custo do hash da senha (argon2id): o pure-pw divide a memória da conta pelo número de logins ao mesmo
 # tempo (-C). Sem a opção ele supõe 8, e cada conferência de senha ocupa o processador por cerca de 3 s:
 # poucas senhas erradas ao mesmo tempo seguravam o login de todos por quase um minuto.
-# A senha do segredo é reaplicada a cada subida pelo `passwd`: o `usermod` não regrava senha.
-if grep -q "^${FTP_USER}:" /auth/pureftpd.passwd; then
-  printf '%s\n%s\n' "$password" "$password" | pure-pw passwd "$FTP_USER" -f /auth/pureftpd.passwd -C "$FTP_MAX_CLIENTS" >/dev/null
+# O `passwd` mantém a pasta do usuário, que pode ter sido trocada pelo painel; o `usermod` não regrava senha.
+if casa="$(casa_inicial)"; then
+  # A pasta de fábrica é refeita se sumiu; a escolhida pelo painel já foi criada por ele.
+  [[ "$casa" != "/data/$FTP_USER/./" ]] || install -d -o ftpdata -g ftpdata -m 0750 "/data/$FTP_USER"
+  if trocada_por_fora && segredo_ja_aplicado; then
+    echo "Usuário inicial '$FTP_USER': mantida a senha trocada pelo painel; o arquivo do segredo não mudou desde então."
+  else
+    printf '%s\n%s\n' "$password" "$password" | pure-pw passwd "$FTP_USER" -f /auth/pureftpd.passwd -C "$FTP_MAX_CLIENTS" >/dev/null
+    registrar_segredo
+  fi
 else
+  install -d -o ftpdata -g ftpdata -m 0750 "/data/$FTP_USER"
   printf '%s\n%s\n' "$password" "$password" | pure-pw useradd "$FTP_USER" \
     -f /auth/pureftpd.passwd -u ftpdata -g ftpdata -d "/data/$FTP_USER" -C "$FTP_MAX_CLIENTS" >/dev/null
+  registrar_segredo
 fi
 pure-pw mkdb /auth/pureftpd.pdb -f /auth/pureftpd.passwd
 chmod 0600 /auth/pureftpd.passwd /auth/pureftpd.pdb

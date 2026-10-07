@@ -62,9 +62,9 @@ def usuarios():
 
 def senhas_de_custo_antigo():
     """Usuários com a senha gravada com mais memória por conferência do que o porte atual prevê: cada tentativa
-    de entrada com o nome deles ocupa mais o processador do FTP. A referência é o usuário inicial, que o serviço
-    ftp regrava a cada subida. Do campo da senha só sai o número da memória; o hash nunca sai daqui.
-    Devolve None quando o usuário inicial não está no cadastro."""
+    de entrada com o nome deles ocupa mais o processador do FTP. A referência é a conta do pure-pw para o
+    FTP_MAX_CLIENTS em vigor: 65536 KiB divididos pelos logins ao mesmo tempo, com piso de 8 KiB.
+    Do campo da senha só sai o número da memória; o hash nunca sai daqui."""
     memoria = {}
     try:
         with open(ARQ_USUARIOS, encoding='utf-8', errors='replace') as arq:
@@ -75,9 +75,7 @@ def senhas_de_custo_antigo():
                     memoria[campos[0]] = int(custo.group(1)) if custo else None
     except OSError:
         pass
-    atual = memoria.get(CFG['ftp_usuario'])
-    if not atual:
-        return None
+    atual = max(8, 65536 // int(CFG['ftp_clientes']))
     return sorted(nome for nome, dele in memoria.items() if dele is None or dele > atual)
 
 
@@ -224,13 +222,14 @@ def dias_restantes(info):
 
 def executar_usuario(acao, nome, senha=None, pasta=None):
     """Chama o allsafe-ftp-user, o mesmo do serviço ftp. A senha vai pela entrada padrão.
-    O FTP_MAX_CLIENTS vai junto: é dele que sai o custo do hash da senha, o mesmo do serviço ftp."""
+    O FTP_MAX_CLIENTS vai junto: é dele que sai o custo do hash da senha, o mesmo do serviço ftp.
+    O FTP_USER também: a troca da senha do usuário inicial deixa a marca que a partida do ftp respeita."""
     try:
         resultado = subprocess.run(
             [CMD_USUARIO, acao, nome] + ([pasta] if pasta else []), input=None if senha is None else senha + '\n',
             capture_output=True, text=True, timeout=30,
             env={'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LC_ALL': 'C',
-                 'FTP_MAX_CLIENTS': CFG['ftp_clientes']})
+                 'FTP_MAX_CLIENTS': CFG['ftp_clientes'], 'FTP_USER': CFG['ftp_usuario']})
     except (OSError, subprocess.SubprocessError):
         return False, 'O comando de usuários não respondeu.'
     limpar_cache()

@@ -370,7 +370,8 @@ Este LEIAME não guarda segredo: só explica para que serve cada arquivo.
 ftp-usuario-inicial-senha.txt
   Senha do usuário inicial do FTP (o nome dele é FTP_USER, no .env). É a que vai no equipamento
   ou no cliente FTP. Trocar: grave a senha nova neste arquivo (12 caracteres ou mais) e rode
-  docker compose restart ftp. Ela é reaplicada a cada subida; o painel não altera este usuário.
+  docker compose restart ftp. Trocada pelo painel ou pelo ./manage-user.sh passwd, a senha nova vale
+  e a deste arquivo fica sem uso até o arquivo ser alterado: aí vale a do arquivo, na subida seguinte.
 
 painel-admin-inicial-senha.txt
   Senha inicial do primeiro administrador do painel web (o nome dele é PAINEL_ADMIN_USER, no .env),
@@ -427,7 +428,13 @@ ftp_ip="$(env_valor FTP_BIND_IP 127.0.0.1)"
 echo
 echo "Pronto: FTP, painel e nginx no ar (healthy), perfil '$(env_valor FTP_PROFILE small)'."
 echo "FTP:    $ftp_ip:$(env_valor FTP_PORT 21), $tls_texto, modo passivo $(env_valor FTP_PASSIVE_PORT_START 30000)-$(env_valor FTP_PASSIVE_PORT_END 30049)"
-echo "        usuário '$(env_valor FTP_USER transfer)', senha no arquivo $secret_file"
+ftp_usuario="$(env_valor FTP_USER transfer)"
+# Senha do usuário inicial trocada pelo painel ou pelo manage-user.sh: a do arquivo volta a valer quando ele mudar.
+if compose exec -T ftp grep -qxF -- "$ftp_usuario" /auth/senha-inicial.trocada 2>/dev/null; then
+  echo "        usuário '$ftp_usuario', senha trocada pelo painel (a do arquivo $secret_file volta a valer quando ele for alterado)"
+else
+  echo "        usuário '$ftp_usuario', senha no arquivo $secret_file"
+fi
 echo "Painel: https://$(env_valor PAINEL_BIND_IP 127.0.0.1):$(env_valor PAINEL_PORT 8443)  (pelo nginx; certificado autoassinado; $rede_texto, atrás de firewall)"
 if [[ -s "$painel_senha" ]]; then
   echo "        usuário '$painel_admin', senha inicial no arquivo $painel_senha"

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 set -Eeuo pipefail
 
-usage() { echo "Uso: $0 add|passwd|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta]" >&2; exit 2; }
+usage() { echo "Uso: $0 add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta]" >&2; exit 2; }
 action="${1:-}"
 user="${2:-}"
 pasta="${3:-$user}"
@@ -13,7 +13,15 @@ lista_tls=/auth/sem-tls.lista
 regra_pasta='^[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,3}$'
 # Custo do hash da senha: o mesmo do entrypoint do serviço ftp (`pure-pw -C`, logins ao mesmo tempo).
 logins="${FTP_MAX_CLIENTS:-50}"
-[[ $# -le 2 || "$action" == add ]] || usage
+# Senha do usuário inicial trocada por aqui: a partida do serviço ftp mantém esta senha enquanto o arquivo do
+# segredo não mudar. O arquivo guarda só o nome do usuário.
+inicial="${FTP_USER:-transfer}"
+marca_inicial=/auth/senha-inicial.trocada
+[[ $# -le 2 || "$action" == add || "$action" == pasta ]] || usage
+pasta_invalida() {
+  echo "Pasta invalida: ate 4 niveis separados por /; letras, numeros, _ - e ponto; nenhum nivel comeca com ponto" >&2
+  exit 1
+}
 
 # O serviço ftp e o painel alteram os mesmos arquivos: uma alteração por vez.
 travar() {
@@ -93,10 +101,7 @@ case "$action" in
     ;;
   add|passwd)
     [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || usage
-    if [[ "$action" == add && ! "$pasta" =~ $regra_pasta ]]; then
-      echo "Pasta invalida: ate 4 niveis separados por /; letras, numeros, _ - e ponto; nenhum nivel comeca com ponto" >&2
-      exit 1
-    fi
+    [[ "$action" != add || "$pasta" =~ $regra_pasta ]] || pasta_invalida
     [[ "$logins" =~ ^[1-9][0-9]{0,4}$ ]] || { echo "FTP_MAX_CLIENTS deve ser um inteiro maior que zero" >&2; exit 1; }
     IFS= read -r password
     [[ ${#password} -ge 12 ]] || { echo "Senha deve ter pelo menos 12 caracteres" >&2; exit 1; }
@@ -111,9 +116,29 @@ case "$action" in
       avisar_divisao
     else
       printf '%s\n%s\n' "$password" "$password" | pure-pw passwd "$user" -f "$passwd_file" -C "$logins"
+      if [[ "$user" == "$inicial" ]]; then
+        printf '%s\n' "$user" > "$marca_inicial.novo"
+        chmod 0600 "$marca_inicial.novo"
+        mv -f "$marca_inicial.novo" "$marca_inicial"
+      fi
     fi
     pure-pw mkdb /auth/pureftpd.pdb -f "$passwd_file"
     chmod 0600 "$passwd_file" /auth/pureftpd.pdb
+    ;;
+  pasta)
+    # Troca a pasta do usuário. Os arquivos da pasta anterior não são movidos nem apagados.
+    [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ && $# -eq 3 ]] || usage
+    [[ "$pasta" =~ $regra_pasta ]] || pasta_invalida
+    travar
+    if ! { [[ -f "$passwd_file" ]] && anterior="$(pasta_de "$user")"; }; then
+      echo "Usuario nao existe: $user" >&2; exit 1
+    fi
+    preparar_pasta "$pasta"
+    pure-pw usermod "$user" -f "$passwd_file" -d "/data/$pasta"
+    pure-pw mkdb /auth/pureftpd.pdb -f "$passwd_file"
+    chmod 0600 "$passwd_file" /auth/pureftpd.pdb
+    avisar_divisao
+    echo "Pasta do usuario $user: /data/$pasta. Os arquivos de ${anterior:-/data/$user} continuam la."
     ;;
   del)
     [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || usage

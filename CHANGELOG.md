@@ -8,6 +8,28 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.19.0] - 2026-10-06
+
+O painel passa a editar o usuário do FTP: troca a pasta de quem já existe e troca a senha e a pasta do usuário inicial, que antes só mudava pelo arquivo do segredo.
+
+### Adicionado
+
+- **Tela Editar, na aba Usuários.** O botão **Editar** de cada usuário abre a tela dele, com a troca da pasta. Valem as regras da criação: a pasta fica dentro de `DATA_DIR/dados`, é criada se não existir, e link simbólico ou arquivo no caminho são recusados. A troca vale na entrada seguinte do usuário, não mexe na senha e **não move nem apaga arquivo**: o que estava na pasta anterior continua nela.
+- **`./manage-user.sh pasta <usuario> <pasta>`.** A mesma troca pelo terminal, com as mesmas regras e a resposta `Pasta do usuario <nome>: /data/<pasta>. Os arquivos de /data/<anterior> continuam la.`
+- **Senha e pasta do usuário inicial pelo painel.** O usuário inicial (`FTP_USER`) ganha os botões **Editar** e **Trocar senha**, e o `./manage-user.sh passwd` vale para ele. Continua sem o botão **Remover**.
+- **Evento `pasta_trocada` na auditoria**, com o administrador, o usuário, a pasta nova e a anterior, e a linha `Pasta do usuário trocada` na aba Atividade.
+- **Casos de teste 41 e 42 (funcional) e 81 (segurança).** A bateria passa a 42 casos funcionais, 81 de segurança e 13 de rede.
+
+### Alterado
+
+- **Senha do usuário inicial: vale a troca mais recente.** O serviço `ftp` deixa de regravar a senha do segredo em toda subida. Trocada pelo painel ou pelo `manage-user.sh passwd`, a senha nova sobrevive aos reinícios; o arquivo `.secrets/ftp-usuario-inicial-senha.txt` volta a valer na subida seguinte a uma alteração dele. Sem troca pelo painel, nada muda: a senha do arquivo continua sendo aplicada. Veja [Segredos](doc/segredos.md#trocar-a-senha).
+- **Dois arquivos novos em `DATA_DIR/auth`**, modo `0600`: `senha-inicial.aplicada`, uma impressão do segredo aplicado (`sha512-crypt` com sal próprio, nunca a senha), e `senha-inicial.trocada`, só com o nome do usuário. Os dois entram no backup, com o cadastro.
+- **Resumo do `deploy.sh`.** Com a senha do usuário inicial trocada pelo painel, a linha do FTP diz `senha trocada pelo painel` e avisa que a do arquivo volta a valer quando ele for alterado.
+- **Pasta do usuário inicial.** O entrypoint do FTP só cria `DATA_DIR/dados/<FTP_USER>` enquanto ela é a pasta dele; trocada, a pasta escolhida é mantida nas subidas seguintes.
+- **Custo das senhas, na aba Segurança.** A referência passa a ser o custo do porte, calculado de `FTP_MAX_CLIENTS`, e não mais o da senha do usuário inicial. O resultado mostrado é o mesmo.
+- **Sessão do usuário do FTP no painel.** A troca de pasta encerra as sessões dele, como a troca de senha já fazia.
+- **Ao atualizar:** nada muda no `.env`, nos segredos nem nos dados; a senha de cada usuário continua a mesma. São recriados os containers do FTP e do painel. O usuário inicial continua na pasta `DATA_DIR/dados/<FTP_USER>` e com a senha do arquivo do segredo.
+
 ## [0.18.9] - 2026-10-06
 
 O projeto ganha a política de segurança, sem endereço fixo: quem acha uma falha é mandado para o contato que cada instalação publica, definido por quem a opera em `SEGURANCA_CONTATO_EMAIL`, no `.env`.

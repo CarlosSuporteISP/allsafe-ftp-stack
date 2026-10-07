@@ -12,6 +12,7 @@ EVENTOS = {
     'sessao_encerrada': '🚪 Sessão de usuário do FTP encerrada',
     'usuario_criado': '👤 Usuário criado',
     'senha_trocada': '🔑 Senha trocada',
+    'pasta_trocada': '📁 Pasta do usuário trocada',
     'usuario_removido': '🗑️ Usuário removido',
     'tls_dispensado': '🔓 Usuário dispensado do TLS',
     'tls_exigido': '🔒 Usuário volta a exigir TLS',

@@ -139,7 +139,7 @@ flowchart LR
 | Imagens | [`Dockerfile`](../Dockerfile) | Três alvos sobre o mesmo `debian:trixie-slim` (Debian 13), fixado por digest. Alvo `ftp`: `pure-ftpd`, `pure-ftpd-common`, `openssl` e o entrypoint do FTP. Alvo `painel`: os mesmos pacotes, `python3` e o painel. Alvo `nginx`: só `nginx` e `openssl`, sem nada do FTP. Os três levam o [`LICENSE`](../LICENSE) e o [`NOTICE`](../NOTICE) do projeto em `/usr/share/doc/allsafe-ftp-stack/` |
 | Usuário do processo de dados | [`Dockerfile`](../Dockerfile) | `ftpdata`, uid e gid **10000**, shell `nologin`, sem home |
 | Entrypoint | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-ftp-entrypoint` | Provisiona usuário e certificado e faz `exec` do `pure-ftpd`; com `FTP_TLS_EXCECOES=sim`, sobe e vigia o `pure-authd` e o `pure-ftpd` |
-| Gestão de usuários | [`ftp/usuario.sh`](../ftp/usuario.sh), instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user` | `add`, `passwd`, `del` e `list` no PureDB e a lista de quem entra sem TLS (`tls-dispensar`, `tls-exigir`, `tls-lista`), chamado de fora por [`manage-user.sh`](../manage-user.sh) e, dentro do painel, pelo servidor web |
+| Gestão de usuários | [`ftp/usuario.sh`](../ftp/usuario.sh), instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user` | `add`, `passwd`, `pasta`, `del` e `list` no PureDB e a lista de quem entra sem TLS (`tls-dispensar`, `tls-exigir`, `tls-lista`), chamado de fora por [`manage-user.sh`](../manage-user.sh) e, dentro do painel, pelo servidor web |
 | Porteiro do TLS por usuário | [`ftp/porteiro-tls.sh`](../ftp/porteiro-tls.sh), instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-porteiro-tls` | Com `FTP_TLS_EXCECOES=sim`, é chamado pelo `pure-authd` a cada entrada, antes da conferência da senha: sem TLS, só deixa seguir o usuário dispensado pelo administrador |
 | Painel web | Módulos Python de [`painel/`](../painel/), em `/opt/painel`; o ponto de entrada é o [`painel/servidor.py`](../painel/servidor.py) | Servidor em Python, só com a biblioteca padrão e sem JavaScript: telas do administrador, tela do usuário do FTP, sessão, auditoria e download dos arquivos, um assunto por módulo ([lista](painel.md#modulos)). Atende só o nginx, por soquete Unix |
 | Entrypoint do painel | [`painel/entrypoint.sh`](../painel/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-painel-entrypoint` | Confere a rede privada, gera o certificado, entrega a cópia dele ao nginx e faz `exec` do servidor |
@@ -262,7 +262,7 @@ flowchart LR
 | 2 | `deploy.sh` ➜ Docker Compose | Roda `docker compose build` e `up -d --wait` com o `.env` | — | Antes roda `config --quiet`; configuração inválida não sobe |
 | 3 | Docker Compose ➜ entrypoint | Inicia o container `allsafe-ftp` | — | Raiz somente leitura, `tini` como processo 1 |
 | 4 | entrypoint ➜ variáveis válidas? | Confere usuário, senha, faixa passiva e modo TLS | — | Nome `^[a-z_][a-z0-9_-]{0,31}$`, senha de 12 ou mais, faixa entre `1024` e `65535`, TLS de `0` a `3` |
-| 5a | variáveis válidas? ➜ `pure-pw` | Sim: cria o usuário inicial (`useradd`) ou regrava a senha dele (`passwd`) | — | Usuário virtual com uid e gid `ftpdata`, home `/data/<usuario>` |
+| 5a | variáveis válidas? ➜ `pure-pw` | Sim: cria o usuário inicial (`useradd`) ou regrava a senha dele (`passwd`), salvo se foi trocada pelo painel e o segredo não mudou | — | Usuário virtual com uid e gid `ftpdata`, home `/data/<usuario>` |
 | 5b | variáveis válidas? ➜ FALHA no log | Não: o entrypoint sai com `FALHA: <motivo>` | — | O container reinicia em laço até a correção |
 | 6 | `pure-pw` ➜ certificado existe? | Compila o banco com `pure-pw mkdb` e segue | — | `pureftpd.passwd` e `pureftpd.pdb` ficam `0600` |
 | 7a | certificado existe? ➜ `pure-ftpd` | Sim: reutiliza o `pure-ftpd.pem` | — | O certificado existente nunca é sobrescrito |
@@ -288,7 +288,7 @@ flowchart LR
 
 </details>
 
-Nas subidas seguintes a senha do usuário inicial é **regravada** a partir do segredo (`pure-pw passwd`) e o certificado existente é **mantido**. Com o FTP `healthy`, o Compose inicia o painel e, com o painel `healthy`, o nginx: o que cada entrypoint confere está em [Scripts](scripts.md#painel-entrypoint), nas seções do painel e do [nginx](scripts.md#nginx-entrypoint). Nos modos `0` e `1` de `FTP_TLS_MODE`, e com `FTP_TLS_EXCECOES=sim`, o entrypoint do FTP grava um `AVISO` no log antes de subir: [Segurança](seguranca.md#ftp-sem-tls).
+Nas subidas seguintes a senha do usuário inicial é **regravada** a partir do segredo (`pure-pw passwd`), a não ser que tenha sido trocada pelo painel e o segredo continue o mesmo, e o certificado existente é **mantido**. Com o FTP `healthy`, o Compose inicia o painel e, com o painel `healthy`, o nginx: o que cada entrypoint confere está em [Scripts](scripts.md#painel-entrypoint), nas seções do painel e do [nginx](scripts.md#nginx-entrypoint). Nos modos `0` e `1` de `FTP_TLS_MODE`, e com `FTP_TLS_EXCECOES=sim`, o entrypoint do FTP grava um `AVISO` no log antes de subir: [Segurança](seguranca.md#ftp-sem-tls).
 
 <details>
 <summary>Detalhe técnico — quem é o processo 1</summary>

@@ -143,10 +143,11 @@ O mesmo alerta abre a aba Segurança. As condições para dispensar um usuário 
 | Pasta no host | Onde os arquivos desse usuário ficam no servidor. O endereço abre a pasta na aba Arquivos |
 | Etiqueta `dividida` | A pasta é alcançada por mais de um usuário: um lê, grava e apaga os arquivos do outro |
 | Uso · Arquivos · Último envio | Espaço ocupado, quantidade de arquivos e data do envio mais recente |
+| **Editar** | Abre a tela do usuário, com a troca da pasta |
 | **Trocar senha** | Abre o formulário de troca de senha daquele usuário |
-| **Remover** | Abre a confirmação de remoção daquele usuário |
+| **Remover** | Abre a confirmação de remoção daquele usuário. O usuário inicial não tem este botão |
 
-O usuário inicial não tem ações: a senha dele vem de `.secrets/ftp-usuario-inicial-senha.txt`. Veja [Segredos](../segredos.md#trocar-a-senha).
+O usuário inicial tem a senha e a pasta trocadas como os demais e não pode ser removido. A senha trocada aqui vale até o arquivo `.secrets/ftp-usuario-inicial-senha.txt` ser alterado. Veja [Segredos](../segredos.md#trocar-a-senha).
 
 <details>
 <summary>Usuários ➜ Novo usuário — clique para expandir</summary>
@@ -277,7 +278,7 @@ A coluna e os dois botões só existem com `FTP_TLS_EXCECOES=sim` no `.env`. Ser
 <details>
 <summary>Detalhe técnico — rotas e comando usado</summary>
 
-- Rotas: `GET /usuarios`, `/usuarios/novo`, `/usuarios/senha?usuario=<nome>`, `/usuarios/remover?usuario=<nome>` e `/usuarios/tls?usuario=<nome>`; o envio de cada formulário é um `POST` na mesma rota, com o token CSRF da sessão.
+- Rotas: `GET /usuarios`, `/usuarios/novo`, `/usuarios/editar?usuario=<nome>`, `/usuarios/senha?usuario=<nome>`, `/usuarios/remover?usuario=<nome>` e `/usuarios/tls?usuario=<nome>`; o envio de cada formulário é um `POST` na mesma rota, com o token CSRF da sessão. A exceção é a tela Editar, que envia a pasta para `POST /usuarios/pasta`.
 - Com `FTP_TLS_EXCECOES=nao`, a rota `/usuarios/tls` responde `404` e a lista dos dispensados fica guardada, sem valer.
 - O painel chama o mesmo `allsafe-ftp-user` do [`manage-user.sh`](../../manage-user.sh): painel e linha de comando alteram as mesmas contas. Veja [Operação](../operacao.md#usuarios).
 - Cada alteração grava `usuario_criado`, `senha_trocada`, `usuario_removido`, `tls_dispensado` ou `tls_exigido` na [auditoria](../painel.md#auditoria), com o administrador que fez e sem a senha.
@@ -602,7 +603,7 @@ Com `FTP_TLS_EXCECOES=sim` e pelo menos um usuário dispensado, a aba abre com o
 - Rota `GET /seguranca`.
 - As impressões digitais são calculadas dos arquivos `DATA_DIR/certs` (FTP) e `DATA_DIR/painel/tls` (painel), os mesmos que os serviços usam.
 - As linhas com endereço e rede vêm do `.env`. Por padrão a stack recusa subir com valor que não seja privado; com `REDE_PERMITIR_IP_PUBLICO=sim`, o endereço e a rede públicos aparecem com a marca de atenção: [Segurança](../seguranca.md#ip-publico).
-- O custo das senhas compara a memória gravada na senha de cada usuário com a do usuário inicial, que o serviço `ftp` regrava a cada subida; o hash não sai do cadastro: [Custo das senhas](../seguranca.md#custo-das-senhas).
+- O custo das senhas compara a memória gravada na senha de cada usuário com a do porte atual, calculada de `FTP_MAX_CLIENTS`; o hash não sai do cadastro: [Custo das senhas](../seguranca.md#custo-das-senhas).
 - O contato é o valor de `SEGURANCA_CONTATO_EMAIL`; o arquivo `/.well-known/security.txt` segue a RFC 9116: [Contato de segurança](../seguranca.md#contato-de-seguranca).
 - A última linha não tem marca de conferido de propósito: nenhum container da stack lê as regras de firewall do host.
 

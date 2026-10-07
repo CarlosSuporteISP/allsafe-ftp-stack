@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Usuários: lista, criação, troca de senha e remoção dos usuários do FTP."""
+"""Aba Usuários: lista, criação, edição (pasta), troca de senha e remoção dos usuários do FTP."""
 import secrets
 import urllib.parse
 
@@ -11,6 +11,7 @@ from pagina import e, pagina, quando, tamanho
 MENSAGENS = {
     'criado': '✅ Usuário criado.',
     'senha': '✅ Senha trocada.',
+    'pasta': '✅ Pasta trocada. Os arquivos da pasta anterior continuam nela.',
     'removido': '✅ Usuário removido. Os arquivos continuam na pasta.',
     'tls_dispensado': '⚠️ Usuário dispensado do TLS: a senha e os arquivos dele passam em texto puro.',
     'tls_exigido': '✅ O usuário volta a ser obrigado a usar TLS.',
@@ -35,21 +36,23 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
         else:
             celula = '<span class="suave">fora da pasta dos dados</span>'
         mais = ' ou mais' if uso['parcial'] else ''
+        acoes = (f'<a class="botao" href="/usuarios/editar?usuario={destino}">✏️ Editar</a> '
+                 f'<a class="botao" href="/usuarios/senha?usuario={destino}">🔑 Trocar senha</a>')
         if nome == CFG['ftp_usuario']:
-            acoes = '<span class="suave">usuário inicial: a senha vem de <code>.secrets/ftp-usuario-inicial-senha.txt</code></span>'
-            marca = ' <span class="etiqueta">inicial</span>'
+            marca = ' <span class="etiqueta" title="Criado pela instalação; o serviço ftp o recria a cada subida">inicial</span>'
+            remover = ''
         else:
-            acoes = (f'<a class="botao" href="/usuarios/senha?usuario={destino}">🔑 Trocar senha</a> '
-                     f'<a class="botao perigo" href="/usuarios/remover?usuario={destino}">🗑️ Remover</a>')
             marca = ''
+            remover = f' <a class="botao perigo" href="/usuarios/remover?usuario={destino}">🗑️ Remover</a>'
         coluna_tls = ''
         if excecoes:
             if nome in marcados:
                 coluna_tls = '<td><span class="etiqueta">⚠️ sem TLS</span></td>'
-                acoes = f'<a class="botao" href="/usuarios/tls?usuario={destino}">🔒 Exigir TLS</a> ' + acoes
+                acoes += f' <a class="botao" href="/usuarios/tls?usuario={destino}">🔒 Exigir TLS</a>'
             else:
                 coluna_tls = '<td>obrigatório</td>'
-                acoes = f'<a class="botao" href="/usuarios/tls?usuario={destino}">🔓 Dispensar TLS</a> ' + acoes
+                acoes += f' <a class="botao" href="/usuarios/tls?usuario={destino}">🔓 Dispensar TLS</a>'
+        acoes += remover
         linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}</td>'
                       f'<td>{celula}</td>'
                       f'<td>{e(tamanho(uso["bytes"]))}{mais}</td><td>{uso["arquivos"]}{mais}</td>'
@@ -99,10 +102,22 @@ e não fica guardada em lugar nenhum além do hash do FTP.</p>
 <p><a class="botao principal" href="/usuarios">Já copiei: voltar para a lista</a></p></section>''', sessao, '/usuarios'))
 
 
+def campo_da_pasta(rotulo, pasta, obrigatoria=False):
+    """Campo da pasta do usuário, com as pastas que já existem como sugestão; o mesmo em criar e em editar."""
+    sugestoes = ''.join(f'<option value="{e(item)}">' for item in pastas_do_primeiro_nivel())
+    return f'''<label for="pasta">{rotulo}</label>
+<input id="pasta" name="pasta" maxlength="259" list="pastas" value="{e(pasta)}" autocapitalize="none" spellcheck="false"{' required' if obrigatoria else ''}
+ pattern="[A-Za-z0-9_][A-Za-z0-9._\\-]{{0,63}}(/[A-Za-z0-9_][A-Za-z0-9._\\-]{{0,63}}){{0,3}}">
+<datalist id="pastas">{sugestoes}</datalist>
+<p class="suave">Fica dentro de <code>{e(CFG['pasta_host'])}</code> e é criada se não existir. Até 4 níveis separados por <code>/</code>;
+letras, números, <code>_</code>, <code>-</code> e ponto; nenhum nível começa com ponto.</p>
+<p class="aviso">⚠️ Usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro.
+Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.</p>'''
+
+
 def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='', codigo=200, nome='', pasta=''):
     if not pasta and consulta and PASTA.fullmatch(consulta.get('pasta', '')):
         pasta = consulta['pasta']  # vindo da aba Arquivos: novo usuário nesta pasta
-    sugestoes = ''.join(f'<option value="{e(item)}">' for item in pastas_do_primeiro_nivel())
     pedido.enviar(codigo, pagina('Novo usuário', f'''<h1>➕ Novo usuário</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <form method="post" action="/usuarios/novo" autocomplete="off">
@@ -110,14 +125,7 @@ def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='
 <label for="usuario">Nome do usuário</label>
 <input id="usuario" name="usuario" required maxlength="32" pattern="[a-z_][a-z0-9_\\-]*" value="{e(nome)}" autocapitalize="none" spellcheck="false">
 <p class="suave">Letras minúsculas, números, <code>_</code> e <code>-</code>; começa com letra ou <code>_</code>; até 32 caracteres.</p>
-<label for="pasta">Pasta <span class="suave">(deixe em branco para usar o nome do usuário)</span></label>
-<input id="pasta" name="pasta" maxlength="259" list="pastas" value="{e(pasta)}" autocapitalize="none" spellcheck="false"
- pattern="[A-Za-z0-9_][A-Za-z0-9._\\-]{{0,63}}(/[A-Za-z0-9_][A-Za-z0-9._\\-]{{0,63}}){{0,3}}">
-<datalist id="pastas">{sugestoes}</datalist>
-<p class="suave">Fica dentro de <code>{e(CFG['pasta_host'])}</code> e é criada se não existir. Até 4 níveis separados por <code>/</code>;
-letras, números, <code>_</code>, <code>-</code> e ponto; nenhum nível começa com ponto.</p>
-<p class="aviso">⚠️ Usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro.
-Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.</p>
+{campo_da_pasta('Pasta <span class="suave">(deixe em branco para usar o nome do usuário)</span>', pasta)}
 {campos_de_senha()}
 <button type="submit">Criar usuário</button> <a class="botao" href="/usuarios">Cancelar</a>
 </form></section>''', sessao, '/usuarios'))
@@ -149,28 +157,86 @@ def criar_usuario(pedido, sessao, consulta, formulario, token):
     return pedido.redirecionar('/usuarios?m=criado')
 
 
-def usuario_alteravel(pedido, sessao, nome):
-    """Confere o nome recebido; responde com o erro e devolve False se não der para alterar."""
+def usuario_alteravel(pedido, sessao, nome, remover=False):
+    """Confere o nome recebido; responde com o erro e devolve False se não der para alterar.
+    O usuário inicial tem a pasta e a senha trocadas como os outros; só a remoção dele é recusada."""
     if not NOME.fullmatch(nome) or nome not in usuarios():
         pedido.enviar(404, pagina('Usuário não encontrado', '<section class="cartao"><h1>🔎 Usuário não encontrado</h1>'
                                 '<p><a href="/usuarios">Voltar para a lista</a></p></section>', sessao, '/usuarios'))
         return False
-    if nome == CFG['ftp_usuario']:
-        pedido.enviar(409, pagina('Usuário inicial', '<section class="cartao"><h1>🔑 Usuário inicial</h1>'
-                                '<p>A senha deste usuário vem do arquivo <code>.secrets/ftp-usuario-inicial-senha.txt</code> e é '
-                                'reaplicada a cada subida do FTP. Troque por lá: o guia de segredos mostra como.</p>'
+    if remover and nome == CFG['ftp_usuario']:
+        pedido.enviar(409, pagina('Usuário inicial', '<section class="cartao"><h1>🗑️ Usuário inicial</h1>'
+                                '<p>O usuário inicial não é removido: o serviço <code>ftp</code> o recria a cada subida, com a senha do '
+                                'arquivo <code>.secrets/ftp-usuario-inicial-senha.txt</code>. Para ele deixar de ser usado, troque a '
+                                'senha dele aqui no painel e não a entregue a ninguém.</p>'
                                 '<p><a href="/usuarios">Voltar para a lista</a></p></section>', sessao, '/usuarios'))
         return False
     return True
+
+
+def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, pasta=''):
+    nome = consulta.get('usuario', '')
+    if not usuario_alteravel(pedido, sessao, nome):
+        return
+    cadastro = usuarios()
+    atual = cadastro.get(nome)
+    uso = uso_da_pasta(atual)
+    destino = urllib.parse.quote(nome)
+    onde = f"<code>{e(CFG['pasta_host'])}/{e(atual)}</code>" if atual else '<span class="suave">fora da pasta dos dados</span>'
+    outros = vizinhos(cadastro, nome)
+    dividida = f' Também alcançada por: <strong>{e(", ".join(outros))}</strong>.' if outros else ''
+    mais = ' ou mais' if uso['parcial'] else ''
+    inicial = ' <span class="etiqueta">inicial</span>' if nome == CFG['ftp_usuario'] else ''
+    pedido.enviar(codigo, pagina('Editar usuário', f'''<h1>✏️ Editar usuário</h1>
+<section class="cartao estreito">
+<p>Usuário <strong>{e(nome)}</strong>{inicial}. O nome não muda: é com ele que o equipamento entra no FTP.</p>
+<p><a class="botao" href="/usuarios/senha?usuario={destino}">🔑 Trocar senha</a> <a class="botao" href="/usuarios">Voltar para a lista</a></p>
+</section>
+<section class="cartao estreito"><h2>📁 Pasta</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
+<p>Pasta atual: {onde}, com {uso['arquivos']}{mais} arquivo(s), {e(tamanho(uso['bytes']))}{mais}.{dividida}</p>
+<form method="post" action="/usuarios/pasta" autocomplete="off">
+<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+<input type="hidden" name="usuario" value="{e(nome)}">
+{campo_da_pasta('Pasta nova', pasta, obrigatoria=True)}
+<p class="suave">Os arquivos da pasta atual <strong>não são movidos nem apagados</strong>: continuam onde estão, e o usuário deixa de
+alcançá-los. A troca vale no próximo login no FTP e encerra a sessão dele no painel.</p>
+<button type="submit">Trocar pasta</button> <a class="botao" href="/usuarios">Cancelar</a>
+</form></section>''', sessao, '/usuarios'))
+
+
+def trocar_pasta(pedido, sessao, consulta, formulario, token):
+    nome = formulario.get('usuario', '')
+    if not usuario_alteravel(pedido, sessao, nome):
+        return None
+    pasta = formulario.get('pasta', '').strip()
+    anterior = usuarios().get(nome)
+    if not PASTA.fullmatch(pasta):
+        impedimento = 'Pasta inválida. Veja a regra abaixo do campo.'
+    elif pasta == anterior:
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro='Esta já é a pasta do usuário.', codigo=409, pasta=pasta)
+    else:
+        impedimento = impedimento_da_pasta(pasta)
+    if impedimento:
+        auditar(pedido.ip, 'recusa_caminho', f'admin={sessao["admin"]} caminho={limpo(pasta, 120)}')
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro=impedimento, codigo=400)
+    feito, mensagem = executar_usuario('pasta', nome, pasta=pasta)
+    if not feito:
+        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=trocar_pasta usuario={nome}')
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro='Não foi possível trocar: ' + mensagem, codigo=500, pasta=pasta)
+    auditar(pedido.ip, 'pasta_trocada', f'admin={sessao["admin"]} usuario={nome} pasta={pasta} anterior={anterior or "fora"}')
+    return pedido.redirecionar('/usuarios?m=pasta')
 
 
 def tela_trocar_senha(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200):
     nome = consulta.get('usuario', '')
     if not usuario_alteravel(pedido, sessao, nome):
         return
+    do_segredo = ('\n<p class="suave">Este é o usuário inicial. A senha trocada aqui vale até o arquivo '
+                  '<code>.secrets/ftp-usuario-inicial-senha.txt</code> ser alterado: aí, na subida seguinte do serviço '
+                  '<code>ftp</code>, volta a valer a do arquivo.</p>') if nome == CFG['ftp_usuario'] else ''
     pedido.enviar(codigo, pagina('Trocar senha', f'''<h1>🔑 Trocar senha</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
-<p>Usuário <strong>{e(nome)}</strong>. A senha antiga deixa de valer no próximo login.</p>
+<p>Usuário <strong>{e(nome)}</strong>. A senha antiga deixa de valer no próximo login.</p>{do_segredo}
 <form method="post" action="/usuarios/senha" autocomplete="off">
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
 <input type="hidden" name="usuario" value="{e(nome)}">
@@ -198,7 +264,7 @@ def trocar_senha(pedido, sessao, consulta, formulario, token):
 
 def tela_remover(pedido, sessao, consulta, formulario=None, token=None):
     nome = consulta.get('usuario', '')
-    if not usuario_alteravel(pedido, sessao, nome):
+    if not usuario_alteravel(pedido, sessao, nome, remover=True):
         return
     cadastro = usuarios()
     pasta = cadastro.get(nome)
@@ -221,7 +287,7 @@ continuam em {onde}.</p>{dividida}
 
 def remover_usuario(pedido, sessao, consulta, formulario, token):
     nome = formulario.get('usuario', '')
-    if not usuario_alteravel(pedido, sessao, nome):
+    if not usuario_alteravel(pedido, sessao, nome, remover=True):
         return None
     if formulario.get('confirmar') != 'sim':
         return pedido.redirecionar('/usuarios/remover?usuario=' + urllib.parse.quote(nome))
@@ -235,7 +301,7 @@ def remover_usuario(pedido, sessao, consulta, formulario, token):
 
 def usuario_do_tls(pedido, sessao, nome):
     """Confere o pedido de dispensa do TLS; responde com o erro e devolve False se não der para seguir.
-    Vale também para o usuário inicial: o que não se troca pelo painel é a senha dele, não a exigência do TLS."""
+    Vale também para o usuário inicial."""
     if not CFG['tls_excecoes']:
         pedido.enviar(404, pagina('TLS por usuário desligado', '<section class="cartao"><h1>🔒 TLS por usuário desligado</h1>'
                                 '<p>Todos os usuários seguem o <code>FTP_TLS_MODE</code>. Para dispensar um equipamento sem suporte '

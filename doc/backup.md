@@ -121,14 +121,14 @@ Estado atual guardado em: <BACKUP_DIR>/allsafe-ftp-stack-AAAAMMDD-HHMMSS-antes-d
 Subindo a stack...
 Restaurado e no ar (healthy).
 Usuários, arquivos, certificados, administradores do painel e auditoria voltaram ao estado da cópia.
-A senha do usuário inicial do FTP continua a de ./.secrets, que não faz parte da cópia.
+A senha do usuário inicial do FTP é a de ./.secrets, que não faz parte da cópia, ou a trocada pelo painel, se a cópia a trazia.
 Desfazer: ./scripts/restaurar.sh allsafe-ftp-stack-AAAAMMDD-HHMMSS-antes-da-restauracao.tar.gz
 ```
 
 O que muda depois de restaurar:
 
 - Usuários criados depois da cópia deixam de existir; os removidos depois dela voltam.
-- Cada usuário volta com a senha que tinha na cópia. A exceção é o usuário inicial (`FTP_USER`), que continua com a senha de `.secrets/ftp-usuario-inicial-senha.txt`.
+- Cada usuário volta com a senha e a pasta que tinha na cópia. O usuário inicial (`FTP_USER`) fica com a senha de `.secrets/ftp-usuario-inicial-senha.txt`; se na cópia a senha dele estava trocada pelo painel e o arquivo não mudou desde então, vale a da cópia.
 - As senhas voltam com o custo com que foram gravadas. Cópia feita antes da `0.18.1`, ou em um porte menor, traz senhas com o custo anterior: a aba Segurança do painel lista de quem, e o custo atual passa a valer quando a senha é trocada.
 - Os administradores do painel voltam os da cópia, cada um com a senha que tinha: quem foi criado depois dela deixa de existir e todos entram de novo. Cópia feita antes da `0.12.0` não tem administradores: o painel cria o de `PAINEL_ADMIN_USER` com o hash de `.secrets/painel-admin-inicial-senha-hash.txt`.
 - Se a stack estava parada, continua parada: `Restaurado. A stack estava parada e continua parada: suba com ./deploy.sh`.

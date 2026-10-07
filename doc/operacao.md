@@ -11,7 +11,7 @@ Este guia reúne as tarefas do dia a dia: criar a conta de um equipamento novo, 
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     usuario@{ shape: person, label: "Usuário" }
-    manage@{ shape: console, label: "manage-user.sh<br>add, passwd, del, list" }
+    manage@{ shape: console, label: "manage-user.sh<br>add, passwd, pasta, del, list" }
     interno@{ shape: console, label: "allsafe-ftp-user<br>dentro do container" }
     puredb@{ shape: cyl, label: "PureDB<br>contas virtuais" }
     pasta@{ shape: lin-cyl, label: "/data<br>pasta do usuário" }
@@ -45,6 +45,7 @@ Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.m
 ./manage-user.sh add cliente01      # cria o usuário e /data/cliente01 (pede a senha)
 ./manage-user.sh add olt01 clientes/olt-01   # cria o usuário na pasta escolhida, /data/clientes/olt-01
 ./manage-user.sh passwd cliente01   # troca a senha (pede a nova)
+./manage-user.sh pasta cliente01 clientes/olt-02   # troca a pasta; os arquivos da anterior continuam nela
 ./manage-user.sh list               # lista os usuários do PureDB
 ./manage-user.sh del cliente01      # remove o usuário e MANTÉM a pasta dele
 ./manage-user.sh tls-dispensar olt-antiga   # deixa o usuário entrar sem TLS (só vale com FTP_TLS_EXCECOES=sim)
@@ -52,14 +53,14 @@ Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.m
 ./manage-user.sh tls-lista                  # lista quem está dispensado do TLS
 ```
 
-**Resultado esperado:** depois do `add`, o usuário aparece no `list` e já consegue entrar por FTPS; depois do `del`, some do `list` e a pasta continua no volume.
+**Resultado esperado:** depois do `add`, o usuário aparece no `list` e já consegue entrar por FTPS; depois do `pasta`, a resposta é `Pasta do usuario <nome>: /data/<pasta>. Os arquivos de /data/<anterior> continuam la.`; depois do `del`, some do `list` e a pasta continua no volume.
 
 Regras:
 
 - Nome do usuário: `^[a-z_][a-z0-9_-]{0,31}$`.
 - Senha: mínimo de **12 caracteres** (recusada abaixo disso).
 - Pasta: sem o terceiro parâmetro, é `/data/<usuario>`. Com ele, fica sempre dentro de `/data` (`DATA_DIR/dados` no host), com até 4 níveis separados por `/`; cada nível tem letras, números, `_`, `-` e ponto, não começa com ponto e vai até 64 caracteres. A pasta é criada se não existir. Pasta que passa por link simbólico ou por um arquivo é recusada, e nada é criado.
-- A pasta vale só no `add`, e usuário que já existe não muda de pasta: `add` de um nome existente responde `Usuario ja existe`.
+- `add` de um nome existente responde `Usuario ja existe`. Para mudar a pasta de quem já existe, use `pasta`, com as mesmas regras: vale na entrada seguinte, não troca a senha e não move nem apaga arquivo. Usuário que não existe: `Usuario nao existe: <nome>`.
 - `del` **não apaga arquivos** e responde com a pasta que ficou: remova-a à mão se quiser.
 - `tls-dispensar` e `tls-exigir` valem na entrada seguinte do usuário, sem reiniciar, e só para usuário que existe (`Usuario nao existe: <nome>`). A dispensa só tem efeito com `FTP_TLS_EXCECOES=sim`; com `nao`, fica guardada. O `del` tira o usuário da lista.
 
@@ -67,7 +68,7 @@ Regras:
 
 > ⚠️ **Dispensa do TLS:** o usuário dispensado manda senha e arquivo em texto puro. Só para equipamento antigo que não fala TLS, em rede interna isolada: [Segurança](seguranca.md#tls-por-usuario).
 
-> ⚠️ O usuário definido em `FTP_USER` é recriado ou atualizado a cada subida, com a senha de `.secrets/ftp-usuario-inicial-senha.txt`. Para renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo. Para trocar a senha dele, veja [Segredos](segredos.md#trocar-a-senha).
+> ⚠️ O usuário definido em `FTP_USER` é criado na primeira subida, com a senha de `.secrets/ftp-usuario-inicial-senha.txt`, e não é removido pelo painel. A senha e a pasta dele são trocadas como as dos demais; a senha trocada vale até o arquivo do segredo ser alterado: [Segredos](segredos.md#trocar-a-senha). Para renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo.
 
 <details>
 <summary>Detalhe técnico — onde a mudança é gravada</summary>

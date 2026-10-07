@@ -76,10 +76,8 @@ def seguranca(pedido, sessao, consulta, formulario, token):
                + ('<strong>em texto puro</strong>, porque o FTP está sem TLS.' if CFG['ftp_tls'] == '0'
                   else 'em TLS e com o certificado dele conferido.')) if CFG['acesso_usuarios']
               else 'Desligada (<code>PAINEL_ACESSO_USUARIOS_FTP=nao</code>): só administrador entra no painel.'),
-        linha('➖' if antigas is None else ('⚠️' if antigas else '✅'), 'Custo das senhas do FTP',
-              'Sem referência: o usuário inicial não está no cadastro. Ele volta na próxima subida do serviço <code>ftp</code>.'
-              if antigas is None
-              else (f'<strong>{len(antigas)} usuário(s) com a senha gravada com o custo anterior</strong>: {e(", ".join(antigas))}. '
+        linha('⚠️' if antigas else '✅', 'Custo das senhas do FTP',
+              (f'<strong>{len(antigas)} usuário(s) com a senha gravada com o custo anterior</strong>: {e(", ".join(antigas))}. '
                     'Cada tentativa de entrada com esses nomes ocupa mais o processador do FTP. O custo atual passa a valer '
                     'quando a senha é trocada, na aba Usuários.') if antigas
               else 'Todas as senhas estão gravadas com o custo do porte atual (<code>FTP_MAX_CLIENTS</code>).'),

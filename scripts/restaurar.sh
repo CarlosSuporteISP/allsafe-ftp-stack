@@ -126,5 +126,5 @@ else
   echo "Restaurado. A stack estava parada e continua parada: suba com ./deploy.sh"
 fi
 echo "Usuários, arquivos, certificados, administradores do painel e auditoria voltaram ao estado da cópia."
-echo "A senha do usuário inicial do FTP continua a de $secrets_dir, que não faz parte da cópia."
+echo "A senha do usuário inicial do FTP é a de $secrets_dir, que não faz parte da cópia, ou a trocada pelo painel, se a cópia a trazia."
 [[ -z "$anterior" ]] || echo "Desfazer: ./scripts/restaurar.sh $(basename -- "$anterior")"

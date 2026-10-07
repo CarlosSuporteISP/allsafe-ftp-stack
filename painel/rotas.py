@@ -18,6 +18,8 @@ ROTAS = {
     ('GET', '/usuarios'): aba_usuarios.lista_usuarios,
     ('GET', '/usuarios/novo'): aba_usuarios.tela_novo,
     ('POST', '/usuarios/novo'): aba_usuarios.criar_usuario,
+    ('GET', '/usuarios/editar'): aba_usuarios.tela_editar,
+    ('POST', '/usuarios/pasta'): aba_usuarios.trocar_pasta,
     ('GET', '/usuarios/senha'): aba_usuarios.tela_trocar_senha,
     ('POST', '/usuarios/senha'): aba_usuarios.trocar_senha,
     ('GET', '/usuarios/remover'): aba_usuarios.tela_remover,
