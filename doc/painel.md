@@ -74,7 +74,7 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 | Aba | O que mostra | O que dá para fazer |
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar |
-| Usuários | Um usuário por linha: pasta no host, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; com `FTP_TLS_EXCECOES=sim`, a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta, editar, para trocar a pasta e os limites e tirar um bloqueio, trocar a senha, remover, com a pasta dele ou sem ela, e abrir a pasta do usuário na aba Arquivos; com `FTP_TLS_EXCECOES=sim`, dispensar um usuário do TLS e voltar a exigir |
+| Usuários | Um usuário por linha: pasta no host, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta e, para equipamento sem suporte a TLS, já dispensado do TLS; editar, para trocar a pasta e os limites e tirar um bloqueio; trocar a senha; remover, com a pasta dele ou sem ela; abrir a pasta do usuário na aba Arquivos; dispensar um usuário do TLS e voltar a exigir |
 | Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
 | Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
 | Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
@@ -88,7 +88,7 @@ A foto de cada tela, com a explicação item por item, está em [Fotos da aplica
 
 > ⚠️ Com `FTP_TLS_MODE` em `0` ou `1`, as abas Visão geral e Segurança abrem com um alerta no topo: o FTP está aceitando senha e arquivo em texto puro. O alerta só some quando a variável volta para `2` ou `3`. Veja [Segurança](seguranca.md#ftp-sem-tls).
 
-> ⚠️ Com `FTP_TLS_EXCECOES=sim` e pelo menos um usuário dispensado do TLS, as mesmas abas abrem com o alerta de quantos e quais usuários entram no FTP sem TLS. Ele some quando o último volta a ser obrigado a usar TLS. Veja [Segurança](seguranca.md#tls-por-usuario).
+> ⚠️ Com pelo menos um usuário dispensado do TLS, as mesmas abas abrem com o alerta de quantos e quais usuários entram no FTP sem TLS. Ele some quando o último volta a ser obrigado a usar TLS. Veja [Segurança](seguranca.md#tls-por-usuario).
 
 ---
 
@@ -99,13 +99,14 @@ A foto de cada tela, com a explicação item por item, está em [Fotos da aplica
 | Quero | Onde | O que acontece |
 |---|---|---|
 | Criar um usuário | Usuários ➜ **Novo usuário** | Cria a conta e a pasta dela: `DATA_DIR/dados/<usuario>` com o campo **Pasta** em branco, ou a pasta escolhida. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
+| Criar um usuário para equipamento sem suporte a TLS | Usuários ➜ **Novo usuário**, com a caixa **Equipamento sem suporte a TLS** | O usuário já nasce dispensado do TLS e o equipamento entra em seguida. Sem marcar a caixa, o usuário só entra com TLS |
 | Trocar a senha | Usuários ➜ **Trocar senha** | A senha antiga deixa de valer no próximo login |
 | Trocar a pasta | Usuários ➜ **Editar** | O usuário passa a entrar na pasta nova na entrada seguinte. **Os arquivos da pasta anterior continuam nela**, sem serem movidos nem apagados |
 | Limitar um usuário | Usuários ➜ **Editar**, cartão **Limites** | Sessões ao mesmo tempo, taxa de download e de envio, horário de entrada e downloads ao mesmo tempo pelo painel, só para aquele usuário. Campo em branco: vale o limite da stack. Vale na entrada seguinte dele no FTP |
 | Remover um usuário | Usuários ➜ **Remover** | Pede confirmação. A conta some; **os arquivos da pasta são preservados** |
 | Remover um usuário e a pasta dele | Usuários ➜ **Remover**, com a caixa **Apagar também a pasta e tudo o que há nela** | Pede também a sua senha atual. A conta some e a pasta é apagada com tudo o que tem dentro, **sem lixeira**. A caixa só aparece quando a pasta é só dele |
-| Deixar um usuário entrar sem TLS | Usuários ➜ **Dispensar TLS** | Só existe com `FTP_TLS_EXCECOES=sim`. Pede confirmação e vale na entrada seguinte do usuário; os demais continuam obrigados a usar TLS |
-| Voltar a exigir o TLS de um usuário | Usuários ➜ **Exigir TLS** | Pede confirmação e vale na entrada seguinte. Troque a senha dele, que passou em texto puro |
+| Deixar um usuário entrar sem TLS | Usuários ➜ **Dispensar TLS**, ou a caixa **Equipamento sem suporte a TLS** em **Novo usuário** | Pede confirmação e vale em instantes, sem derrubar quem está conectado; os demais continuam obrigados a usar TLS |
+| Voltar a exigir o TLS de um usuário | Usuários ➜ **Exigir TLS**, ou **Editar**, cartão **TLS** | Pede confirmação e vale em instantes, para as entradas seguintes dele. Troque a senha dele, que passou em texto puro |
 
 **Resultado esperado:** o usuário criado entra por FTPS logo em seguida, sem reiniciar o FTP.
 
@@ -161,8 +162,10 @@ Limites por usuário, no cartão **Limites** da tela **Editar**. Servem tanto pa
 <details>
 <summary>Detalhe técnico — a dispensa do TLS no painel</summary>
 
-- A coluna **TLS** e os botões **Dispensar TLS** e **Exigir TLS** só existem com `FTP_TLS_EXCECOES=sim`. Com `nao`, a lista dos dispensados fica guardada, não vale, e a tela responde `404`.
-- `GET /usuarios/tls?usuario=<nome>` mostra a confirmação; `POST /usuarios/tls` grava, com o token CSRF da sessão e o campo `acao` em `dispensar` ou `exigir`. Usuário que não existe e nome fora da regra respondem `404`; `acao` diferente volta para a confirmação sem alterar nada.
+- A dispensa vale com `FTP_TLS_EXCECOES=sim`, que é o padrão, `FTP_TLS_MODE=2` e sem `REDE_PERMITIR_IP_PUBLICO=sim`. Fora disso ela fica sem efeito: a coluna **TLS**, os botões e a caixa do **Novo usuário** somem, a tela de confirmação responde `404`, o cartão **TLS** de **Editar** e a aba Segurança dizem o motivo, e a lista dos dispensados fica guardada sem valer.
+- A caixa do **Novo usuário** manda `sem_tls=sim`. O usuário é criado e depois dispensado: se a dispensa falhar, ele fica obrigado a usar TLS e o aviso manda repetir em **Editar**. Com a dispensa sem efeito, o campo é ignorado.
+- Sem nenhum dispensado, o FTP recusa a sessão sem TLS antes de a senha ser enviada. Com o primeiro dispensado, e de novo quando o último volta a ser obrigado, o FTP troca o modo de entrada em cerca de um segundo, sem reiniciar o container e sem derrubar as sessões em andamento.
+- `GET /usuarios/tls?usuario=<nome>` mostra a confirmação, aberta pela lista ou pelo cartão **TLS** de **Editar**; `POST /usuarios/tls` grava, com o token CSRF da sessão e o campo `acao` em `dispensar` ou `exigir`. Usuário que não existe e nome fora da regra respondem `404`; `acao` diferente volta para a confirmação sem alterar nada.
 - Quem grava é o `allsafe-ftp-user`, o mesmo script do `manage-user.sh`, na `sem-tls.lista` de `DATA_DIR/auth`. O painel só lê a lista para montar as telas.
 - Remover o usuário tira o nome dele da lista: um usuário novo com o mesmo nome não herda a dispensa.
 - Cada alteração fica na auditoria, com o administrador e o usuário: `tls_dispensado` e `tls_exigido`.

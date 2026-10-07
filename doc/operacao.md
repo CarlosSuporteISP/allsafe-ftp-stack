@@ -53,7 +53,7 @@ Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.m
 ./manage-user.sh desbloquear olt01  # tira os bloqueios do usuário (ou de um endereço só: desbloquear olt01 10.0.0.5)
 ./manage-user.sh list               # lista os usuários do PureDB
 ./manage-user.sh del cliente01      # remove o usuário e MANTÉM a pasta dele
-./manage-user.sh tls-dispensar olt-antiga   # deixa o usuário entrar sem TLS (só vale com FTP_TLS_EXCECOES=sim)
+./manage-user.sh tls-dispensar olt-antiga   # deixa o usuário entrar sem TLS (equipamento que não fala TLS)
 ./manage-user.sh tls-exigir olt-antiga      # volta a exigir o TLS dele
 ./manage-user.sh tls-lista                  # lista quem está dispensado do TLS
 ```
@@ -69,7 +69,7 @@ Regras:
 - `limites` aceita um ou mais pares `chave=valor`, e só mexe nas chaves informadas: `sessoes` (sessões ao mesmo tempo no FTP), `download` e `envio` (KB por segundo, de 1 a 10.000.000), `horario` (`HHMM-HHMM`, no fuso do `TZ`, podendo passar da meia-noite), `baixar` (downloads ao mesmo tempo pelo painel, de 1 a 8), `tentativas` (senhas erradas no FTP até o bloqueio, de 0 a 100; `0`: nunca é bloqueado) e `minutos` (tempo do bloqueio, de 1 a 1440). Valor vazio (`download=`) tira o limite; sem nenhum par, mostra os que o usuário tem. Vale na entrada seguinte dele no FTP. O que cada limite faz está em [Painel web](painel.md#limites).
 - `bloqueios` lista os bloqueios por tentativa em vigor, um por linha, com o usuário, o endereço, as senhas erradas, o início e o fim; com um nome, só os dele. Sem nenhum, responde `Nenhum bloqueio em vigor.` `desbloquear <usuario>` tira todos os bloqueios do usuário, e com o endereço no fim, só o daquele endereço. Vale na entrada seguinte. Mudar `tentativas` ou `minutos`, trocar a senha e remover o usuário também tiram os bloqueios dele: [Segurança](seguranca.md#bloqueio-por-tentativa).
 - `del` **não apaga arquivos** e responde com a pasta que ficou. Para tirar a pasta junto com o usuário, use o painel: Usuários ➜ **Remover**, com a caixa de apagar a pasta, em [Painel web](painel.md#usuarios). Depois do `del`, a pasta que ficou é apagada na aba Arquivos.
-- `tls-dispensar` e `tls-exigir` valem na entrada seguinte do usuário, sem reiniciar, e só para usuário que existe (`Usuario nao existe: <nome>`). A dispensa só tem efeito com `FTP_TLS_EXCECOES=sim`; com `nao`, fica guardada. O `del` tira o usuário da lista.
+- `tls-dispensar` e `tls-exigir` valem em instantes, sem reiniciar o container e sem derrubar quem está conectado, e só para usuário que existe (`Usuario nao existe: <nome>`). A dispensa só tem efeito com `FTP_TLS_EXCECOES=sim` (o padrão), `FTP_TLS_MODE=2` e sem `REDE_PERMITIR_IP_PUBLICO=sim`; fora disso, fica guardada. O `del` tira o usuário da lista.
 
 > ⚠️ **Pasta dividida:** dois usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro. O `add` aceita e avisa, uma linha `Aviso:` por usuário que passa a dividir a pasta. Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.
 

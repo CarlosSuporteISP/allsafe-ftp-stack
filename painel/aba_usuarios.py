@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Usuários: lista, criação, edição (pasta, limites e bloqueios), troca de senha e remoção dos usuários do FTP.
+"""Aba Usuários: lista, criação, edição (pasta, TLS, limites e bloqueios), troca de senha e remoção dos usuários do FTP.
 
 A remoção pode levar junto a pasta do usuário, quando nenhum outro a alcança; apagar pede a senha atual
 do administrador."""
@@ -16,6 +16,8 @@ from pagina import e, pagina, quando, tamanho
 
 MENSAGENS = {
     'criado': '✅ Usuário criado.',
+    'criado_sem_tls': '⚠️ Usuário criado e dispensado do TLS: a senha e os arquivos dele passam em texto puro.',
+    'criado_tls_falhou': '⚠️ Usuário criado, mas a dispensa do TLS não foi gravada: ele só entra com TLS. Tente de novo em Editar.',
     'senha': '✅ Senha trocada.',
     'pasta': '✅ Pasta trocada. Os arquivos da pasta anterior continuam nela.',
     'limites': '✅ Limites gravados. Valem na próxima entrada do usuário no FTP.',
@@ -25,6 +27,10 @@ MENSAGENS = {
     'tls_dispensado': '⚠️ Usuário dispensado do TLS: a senha e os arquivos dele passam em texto puro.',
     'tls_exigido': '✅ O usuário volta a ser obrigado a usar TLS.',
 }
+
+ALERTA_SEM_TLS = ('⚠️ A senha e os arquivos deste usuário passam a trafegar em texto puro e podem ser lidos por quem estiver '
+                  'na mesma rede. Use só para equipamento antigo sem suporte a TLS, em rede interna isolada, com o firewall '
+                  'liberando só esse equipamento. Os outros usuários continuam obrigados a usar TLS.')
 
 
 def lista_usuarios(pedido, sessao, consulta, formulario, token):
@@ -73,7 +79,7 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
                       f'<td>{e(quando(uso["ultimo"]))}</td>{coluna_tls}<td class="acoes">{acoes}</td></tr>')
     corpo = ''.join(linhas) or f'<tr><td colspan="{7 if excecoes else 6}" class="suave">Nenhum usuário ainda.</td></tr>'
     nota_tls = (' <span class="etiqueta">⚠️ sem TLS</span> marca quem o administrador dispensou do TLS '
-                '(<code>FTP_TLS_EXCECOES=sim</code>): a senha e os arquivos desse usuário trafegam em texto puro.') if excecoes else ''
+                'em Editar ou ao criar: a senha e os arquivos desse usuário trafegam em texto puro.') if excecoes else ''
     pedido.enviar(200, pagina('Usuários', f'''<h1>👥 Usuários</h1>
 {f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}
 <p><a class="botao principal" href="/usuarios/novo">➕ Novo usuário</a></p>
@@ -109,10 +115,11 @@ def senha_do_formulario(formulario):
     return senha, False, ''
 
 
-def tela_senha_gerada(pedido, sessao, nome, senha, titulo):
+def tela_senha_gerada(pedido, sessao, nome, senha, titulo, nota=''):
     pedido.enviar(200, pagina(titulo, f'''<h1>{e(titulo)}</h1>
 <section class="cartao"><p>Usuário <strong>{e(nome)}</strong>. Senha gerada pelo painel:</p>
 <p class="segredo"><code>{e(senha)}</code></p>
+{f'<p class="aviso" role="alert">{e(nota)}</p>' if nota else ''}
 <p class="aviso">⚠️ Copie agora para o equipamento ou para o seu cofre de senhas. Ela <strong>não será mostrada de novo</strong>
 e não fica guardada em lugar nenhum além do hash do FTP.</p>
 <p><a class="botao principal" href="/usuarios">Já copiei: voltar para a lista</a></p></section>''', sessao, '/usuarios'))
@@ -131,7 +138,15 @@ letras, números, <code>_</code>, <code>-</code> e ponto; nenhum nível começa 
 Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.</p>'''
 
 
-def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='', codigo=200, nome='', pasta=''):
+def campo_do_tls(marcado=False):
+    """Caixa que dispensa o usuário novo do TLS; vazio quando o TLS por usuário não vale nesta instalação."""
+    if not CFG['tls_excecoes']:
+        return ''
+    return f'''<label class="marcar"><input type="checkbox" name="sem_tls" value="sim"{' checked' if marcado else ''}> Equipamento sem suporte a TLS: deixar este usuário entrar <strong>sem TLS</strong></label>
+<p class="aviso">{ALERTA_SEM_TLS} Sem marcar a caixa, o usuário só entra com TLS (FTPS explícito).</p>'''
+
+
+def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='', codigo=200, nome='', pasta='', sem_tls_marcado=False):
     if not pasta and consulta and PASTA.fullmatch(consulta.get('pasta', '')):
         pasta = consulta['pasta']  # vindo da aba Arquivos: novo usuário nesta pasta
     pedido.enviar(codigo, pagina('Novo usuário', f'''<h1>➕ Novo usuário</h1>
@@ -143,34 +158,50 @@ def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='
 <p class="suave">Letras minúsculas, números, <code>_</code> e <code>-</code>; começa com letra ou <code>_</code>; até 32 caracteres.</p>
 {campo_da_pasta('Pasta <span class="suave">(deixe em branco para usar o nome do usuário)</span>', pasta)}
 {campos_de_senha()}
+{campo_do_tls(sem_tls_marcado)}
 <button type="submit">Criar usuário</button> <a class="botao" href="/usuarios">Cancelar</a>
 </form></section>''', sessao, '/usuarios'))
 
 
 def criar_usuario(pedido, sessao, consulta, formulario, token):
     nome = formulario.get('usuario', '').strip()
+    # A caixa só existe com o TLS por usuário valendo: fora disso o campo é ignorado, e não recusado.
+    dispensar = CFG['tls_excecoes'] and formulario.get('sem_tls') == 'sim'
     if not NOME.fullmatch(nome):
-        return tela_novo(pedido, sessao, erro='Nome inválido. Veja a regra abaixo do campo.', codigo=400)
+        return tela_novo(pedido, sessao, erro='Nome inválido. Veja a regra abaixo do campo.', codigo=400, sem_tls_marcado=dispensar)
     informada = formulario.get('pasta', '').strip()
     pasta = informada or nome
     if nome in usuarios():
-        return tela_novo(pedido, sessao, erro='Já existe um usuário com este nome.', codigo=409, nome=nome, pasta=informada)
+        return tela_novo(pedido, sessao, erro='Já existe um usuário com este nome.', codigo=409, nome=nome, pasta=informada,
+                         sem_tls_marcado=dispensar)
     impedimento = impedimento_da_pasta(pasta) if PASTA.fullmatch(pasta) else 'Pasta inválida. Veja a regra abaixo do campo.'
     if impedimento:
         auditar(pedido.ip, 'recusa_caminho', f'admin={sessao["admin"]} caminho={limpo(pasta, 120)}')
-        return tela_novo(pedido, sessao, erro=impedimento, codigo=400, nome=nome)
+        return tela_novo(pedido, sessao, erro=impedimento, codigo=400, nome=nome, sem_tls_marcado=dispensar)
     senha, gerada, erro = senha_do_formulario(formulario)
     if erro:
-        return tela_novo(pedido, sessao, erro=erro, codigo=400, nome=nome, pasta=informada)
+        return tela_novo(pedido, sessao, erro=erro, codigo=400, nome=nome, pasta=informada, sem_tls_marcado=dispensar)
     feito, mensagem = executar_usuario('add', nome, senha, pasta)
     if not feito:
         auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=criar usuario={nome}')
-        return tela_novo(pedido, sessao, erro='Não foi possível criar: ' + mensagem, codigo=500, nome=nome, pasta=informada)
+        return tela_novo(pedido, sessao, erro='Não foi possível criar: ' + mensagem, codigo=500, nome=nome, pasta=informada,
+                         sem_tls_marcado=dispensar)
     auditar(pedido.ip, 'usuario_criado',
             f'admin={sessao["admin"]} usuario={nome} credencial={"gerada" if gerada else "informada"} pasta={pasta}')
+    resultado = 'criado'
+    if dispensar:
+        # O usuário já existe: se a dispensa falhar, ele fica obrigado a usar TLS, que é o lado seguro.
+        feito, _ = executar_usuario('tls-dispensar', nome)
+        if feito:
+            auditar(pedido.ip, 'tls_dispensado', f'admin={sessao["admin"]} usuario={nome}')
+            resultado = 'criado_sem_tls'
+        else:
+            auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=tls_dispensar usuario={nome}')
+            resultado = 'criado_tls_falhou'
     if gerada:
-        return tela_senha_gerada(pedido, sessao, nome, senha, '✅ Usuário criado')
-    return pedido.redirecionar('/usuarios?m=criado')
+        return tela_senha_gerada(pedido, sessao, nome, senha, '✅ Usuário criado',
+                                 MENSAGENS[resultado] if resultado != 'criado' else '')
+    return pedido.redirecionar('/usuarios?m=' + resultado)
 
 
 def usuario_alteravel(pedido, sessao, nome):
@@ -239,6 +270,26 @@ ele também é recusado, até o fim do prazo.</p>
 </form></section>'''
 
 
+def cartao_tls(nome):
+    """Como o usuário entra no FTP e o caminho para mudar; com o TLS por usuário sem efeito, o motivo."""
+    destino = urllib.parse.quote(nome)
+    if not CFG['tls_excecoes']:
+        return f'''<section class="cartao estreito" id="tls"><h2>🔒 TLS</h2>
+<p>Este usuário segue o <code>FTP_TLS_MODE</code>, como todos os outros.</p>
+<p class="suave">Dispensar um usuário do TLS não está disponível nesta instalação: {CFG['tls_sem_excecao']}. Quem muda isso é
+quem administra o servidor, no <code>.env</code>, com <code>./deploy.sh</code> em seguida.</p></section>'''
+    if nome in sem_tls():
+        return f'''<section class="cartao estreito" id="tls"><h2>🔓 TLS</h2>
+<p class="aviso" role="alert">⚠️ Este usuário entra <strong>sem TLS</strong>: a senha e os arquivos dele trafegam em texto puro e podem
+ser lidos por quem estiver na mesma rede. Com TLS ele continua entrando normalmente.</p>
+<p><a class="botao" href="/usuarios/tls?usuario={destino}">🔒 Exigir TLS</a></p>
+<p class="suave">Volte a exigir assim que o equipamento tiver suporte a TLS, e troque a senha em seguida.</p></section>'''
+    return f'''<section class="cartao estreito" id="tls"><h2>🔒 TLS</h2>
+<p>Este usuário só entra com <strong>TLS</strong> (FTPS explícito).</p>
+<p><a class="botao" href="/usuarios/tls?usuario={destino}">🔓 Dispensar TLS</a></p>
+<p class="suave">Para equipamento antigo sem suporte a TLS, em rede interna isolada. A tela seguinte pede a confirmação.</p></section>'''
+
+
 def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, pasta='', erro_limites='', digitado=None,
                 erro_bloqueio=''):
     nome = consulta.get('usuario', '')
@@ -274,6 +325,7 @@ def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
 alcançá-los. A troca vale no próximo login no FTP e encerra a sessão dele no painel.</p>
 <button type="submit">Trocar pasta</button> <a class="botao" href="/usuarios">Cancelar</a>
 </form></section>
+{cartao_tls(nome)}
 {cartao_limites(sessao, nome, digitado, erro_limites)}''', sessao, '/usuarios'))
 
 
@@ -451,10 +503,10 @@ def usuario_do_tls(pedido, sessao, nome):
     """Confere o pedido de dispensa do TLS; responde com o erro e devolve False se não der para seguir.
     Vale também para o usuário inicial."""
     if not CFG['tls_excecoes']:
-        pedido.enviar(404, pagina('TLS por usuário desligado', '<section class="cartao"><h1>🔒 TLS por usuário desligado</h1>'
-                                '<p>Todos os usuários seguem o <code>FTP_TLS_MODE</code>. Para dispensar um equipamento sem suporte '
-                                'a TLS, quem administra o servidor liga <code>FTP_TLS_EXCECOES=sim</code> no <code>.env</code> '
-                                'e roda <code>./deploy.sh</code>.</p>'
+        pedido.enviar(404, pagina('TLS por usuário sem efeito', '<section class="cartao"><h1>🔒 TLS por usuário sem efeito</h1>'
+                                '<p>Todos os usuários seguem o <code>FTP_TLS_MODE</code>. Dispensar um usuário do TLS não está '
+                                f'disponível nesta instalação: {CFG["tls_sem_excecao"]}. Quem muda isso é quem administra o '
+                                'servidor, no <code>.env</code>, com <code>./deploy.sh</code> em seguida.</p>'
                                 '<p><a href="/usuarios">Voltar para a lista</a></p></section>', sessao, '/usuarios'))
         return False
     if not NOME.fullmatch(nome) or nome not in usuarios():
@@ -476,11 +528,10 @@ def tela_tls(pedido, sessao, consulta, formulario=None, token=None):
     else:
         titulo, marca, acao, botao, classe = 'Dispensar TLS', '🔓', 'dispensar', 'Sim, deixar este usuário entrar sem TLS', ' class="perigo"'
         texto = (f'<p>Deixar <strong>{e(nome)}</strong> entrar no FTP <strong>sem TLS</strong>?</p>'
-                 '<p class="aviso">⚠️ A senha e os arquivos deste usuário passam a trafegar em texto puro e podem ser lidos por quem '
-                 'estiver na mesma rede. Use só para equipamento antigo sem suporte a TLS, em rede interna isolada, com o '
-                 'firewall liberando só esse equipamento. Os outros usuários continuam obrigados a usar TLS.</p>'
+                 f'<p class="aviso">{ALERTA_SEM_TLS}</p>'
                  '<p class="suave">Com TLS este usuário continua entrando normalmente. Dê a ele uma pasta só dele e uma senha '
-                 'que não seja usada em mais nenhum lugar.</p>')
+                 'que não seja usada em mais nenhum lugar. A dispensa vale em instantes; as sessões em andamento no FTP '
+                 'não são interrompidas.</p>')
     pedido.enviar(200, pagina(titulo, f'''<h1>{marca} {titulo}</h1>
 <section class="cartao estreito">{texto}
 <form method="post" action="/usuarios/tls">

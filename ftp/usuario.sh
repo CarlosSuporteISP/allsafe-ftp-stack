@@ -13,7 +13,8 @@ action="${1:-}"
 user="${2:-}"
 pasta="${3:-$user}"
 passwd_file=/auth/pureftpd.passwd
-# Quem entra sem TLS quando FTP_TLS_EXCECOES=sim: um nome por linha. Quem lê é o porteiro do FTP.
+# Quem entra sem TLS com o TLS por usuário valendo: um nome por linha. Quem lê é o porteiro do FTP, a cada
+# entrada, e a partida do serviço ftp, que só aceita sessão sem TLS enquanto houver nome aqui.
 lista_tls=/auth/sem-tls.lista
 # Limites por usuário que não são do cadastro do Pure-FTPd: uma linha por usuário, `nome chave=valor ...`.
 # `baixar` é lido e aplicado pelo painel; `tentativas` e `minutos`, pelo vigia do FTP.
@@ -270,9 +271,9 @@ case "$action" in
     fi
     gravar_lista_tls "${action#tls-}"
     if [[ "$action" == tls-dispensar ]]; then
-      echo "Usuario $user dispensado do TLS: vale na proxima entrada, com FTP_TLS_EXCECOES=sim."
+      echo "Usuario $user dispensado do TLS: vale em instantes, com FTP_TLS_EXCECOES=sim, FTP_TLS_MODE=2 e sem IP publico aceito."
     else
-      echo "Usuario $user volta a ser obrigado a usar TLS: vale na proxima entrada."
+      echo "Usuario $user volta a ser obrigado a usar TLS: vale na proxima entrada dele."
     fi
     ;;
   limites)

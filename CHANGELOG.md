@@ -8,6 +8,32 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.24.0] - 2026-10-07
+
+O equipamento sem suporte a TLS passa a ser liberado pelo painel, usuário por usuário, ao criar ou ao editar, sem mexer no `.env`. Enquanto ninguém é dispensado, nada muda: a sessão sem TLS é recusada antes de a senha ser enviada.
+
+### Adicionado
+
+- **Caixa "Equipamento sem suporte a TLS" em Novo usuário**: o usuário já nasce dispensado do TLS, com o alerta de que a senha e os arquivos dele passam em texto puro.
+- **Cartão TLS na tela Editar** do usuário, para dispensar e para voltar a exigir, além dos botões **Dispensar TLS** e **Exigir TLS** da aba Usuários.
+- Caso 52 da bateria funcional e caso 89 de segurança: usuário criado já dispensado, cartão do TLS, troca do modo de entrada com sessões abertas e opção sem efeito.
+
+### Alterado
+
+- **`FTP_TLS_EXCECOES=sim` passa a ser o padrão.** A opção sozinha não libera ninguém: o servidor exige TLS de todos até um administrador dispensar um usuário.
+- **Sessão sem TLS só é aceita enquanto houver usuário dispensado.** Sem nenhum, o Pure-FTPd recusa a sessão sem TLS antes da senha, como no modo `2` puro. Ao dispensar o primeiro, o serviço `ftp` troca o processo que escuta a porta, sem reiniciar o container e sem derrubar as sessões em andamento, e volta ao modo fechado quando o último volta a ser obrigado. Antes, com a opção ligada, toda sessão sem TLS era aceita até a recusa do porteiro, mesmo sem nenhum dispensado.
+- **Fora das condições, a opção fica sem efeito em vez de impedir a subida.** Com `FTP_TLS_MODE` diferente de `2` ou com `REDE_PERMITIR_IP_PUBLICO=sim`, a stack sobe, ninguém é dispensado, e o `./deploy.sh`, o registro do container e o painel dizem o motivo. Só o valor fora de `sim` e de `nao` continua recusado.
+- O resumo e os avisos do `./deploy.sh` e a linha `FTP pronto` do registro dizem quantos usuários estão dispensados; a aba Segurança e a Visão geral do painel seguem o mesmo texto.
+
+### Segurança
+
+- A senha de um equipamento configurado sem TLS por engano deixa de passar em texto puro nas instalações em que ninguém foi dispensado: o servidor recusa na resposta ao nome do usuário, antes de a senha ser enviada.
+- O serviço `ftp` encerra o container se o observador da lista dos dispensados parar, como já fazia com o `pure-authd`, o vigia e o `pure-ftpd`.
+
+### Ao atualizar
+
+Instalação anterior a esta versão traz `FTP_TLS_EXCECOES=nao` gravado no `.env`, e o `./deploy.sh` respeita o que está lá: a opção continua fora do painel. Para tê-la, troque para `FTP_TLS_EXCECOES=sim` e rode `./deploy.sh`. Quem já usava `sim` não precisa fazer nada: os usuários dispensados continuam dispensados.
+
 ## [0.23.0] - 2026-10-07
 
 O usuário inicial do FTP passa a ser removido pelo painel, como os outros, com ou sem a pasta. Ele é criado uma vez, na instalação, e não volta sozinho.

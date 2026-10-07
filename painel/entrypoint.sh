@@ -39,14 +39,10 @@ SEGURANCA_CONTATO_EMAIL="${SEGURANCA_CONTATO_EMAIL:-}"
   || [[ ${#SEGURANCA_CONTATO_EMAIL} -le 254 && "$SEGURANCA_CONTATO_EMAIL" =~ ^[A-Za-z0-9._+-]{1,64}@([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,24}$ ]] \
   || die "SEGURANCA_CONTATO_EMAIL inválido: um endereço de e-mail só, como seguranca@exemplo.com.br, ou vazio"
 [[ "${FTP_MAX_CLIENTS:-50}" =~ ^[1-9][0-9]{0,4}$ ]] || die "FTP_MAX_CLIENTS deve ser um inteiro maior que zero"
-[[ "${FTP_TLS_EXCECOES:-nao}" == sim || "${FTP_TLS_EXCECOES:-nao}" == nao ]] \
+# Só o valor é recusado. Fora do modo 2 ou com IP público aceito, o TLS por usuário fica sem efeito: o painel
+# sobe e diz o motivo no lugar dos botões (config.py).
+[[ "${FTP_TLS_EXCECOES:-sim}" == sim || "${FTP_TLS_EXCECOES:-sim}" == nao ]] \
   || die "FTP_TLS_EXCECOES deve ser 'nao' ou 'sim'"
-if [[ "${FTP_TLS_EXCECOES:-nao}" == sim ]]; then
-  [[ "${FTP_TLS_MODE:-2}" == 2 ]] || die "FTP_TLS_EXCECOES=sim exige FTP_TLS_MODE=2; está ${FTP_TLS_MODE:-2}"
-  if ip_publico_permitido; then
-    die "FTP_TLS_EXCECOES=sim não combina com REDE_PERMITIR_IP_PUBLICO=sim"
-  fi
-fi
 # A mesma regra do deploy.sh e do serviço ftp: o painel mostra e aplica o padrão do bloqueio por tentativa.
 [[ "${FTP_BLOQUEIO_TENTATIVAS:-5}" =~ ^(0|[1-9][0-9]{0,2})$ ]] && (( ${FTP_BLOQUEIO_TENTATIVAS:-5} <= 100 )) \
   || die "FTP_BLOQUEIO_TENTATIVAS deve ficar entre 0 e 100 (0 desliga o bloqueio por tentativa)"

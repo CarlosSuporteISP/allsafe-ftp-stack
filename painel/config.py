@@ -15,7 +15,7 @@ ARQ_CERT = '/painel/tls/painel-cert.pem'
 ARQ_AUDITORIA = '/painel/auditoria.log'
 ARQ_USUARIOS = '/auth/pureftpd.passwd'
 ARQ_CERT_FTP = '/auth/ftp-cert.pem'
-ARQ_SEM_TLS = '/auth/sem-tls.lista'   # quem entra sem TLS com FTP_TLS_EXCECOES=sim; quem grava é o allsafe-ftp-user
+ARQ_SEM_TLS = '/auth/sem-tls.lista'   # quem entra sem TLS com o TLS por usuário valendo; quem grava é o allsafe-ftp-user
 ARQ_LIMITES = '/auth/limites.lista'   # limites por usuário que o painel aplica; quem grava é o allsafe-ftp-user
 PASTA_BLOQUEIOS = '/auth/bloqueios'   # bloqueios por tentativa no FTP, um arquivo por usuário e endereço; quem grava é o vigia do ftp
 CMD_USUARIO = '/usr/local/sbin/allsafe-ftp-user'
@@ -100,13 +100,18 @@ def configuracao():
         falha('PAINEL_ADMIN_USER inválido: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres')
     if amb('PAINEL_ACESSO_USUARIOS_FTP', 'sim') not in ('nao', 'sim'):
         falha("PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'")
-    if amb('FTP_TLS_EXCECOES', 'nao') not in ('nao', 'sim'):
+    if amb('FTP_TLS_EXCECOES', 'sim') not in ('nao', 'sim'):
         falha("FTP_TLS_EXCECOES deve ser 'nao' ou 'sim'")
-    excecoes = amb('FTP_TLS_EXCECOES', 'nao') == 'sim'
-    if excecoes and amb('FTP_TLS_MODE', '2') != '2':
-        falha('FTP_TLS_EXCECOES=sim exige FTP_TLS_MODE=2')
-    if excecoes and publico:
-        falha('FTP_TLS_EXCECOES=sim não combina com REDE_PERMITIR_IP_PUBLICO=sim')
+    # O TLS por usuário só vale sobre o modo 2 e sem IP público aceito; fora disso a opção fica sem efeito,
+    # como no serviço ftp, e o painel diz o motivo no lugar dos botões.
+    if amb('FTP_TLS_EXCECOES', 'sim') == 'nao':
+        sem_excecao = 'a opção está desligada (<code>FTP_TLS_EXCECOES=nao</code>)'
+    elif amb('FTP_TLS_MODE', '2') != '2':
+        sem_excecao = 'ela só vale com <code>FTP_TLS_MODE=2</code>, e o FTP está em outro modo'
+    elif publico:
+        sem_excecao = 'ela não vale com <code>REDE_PERMITIR_IP_PUBLICO=sim</code>: FTP sem TLS na internet entrega a senha a quem escuta'
+    else:
+        sem_excecao = ''
     contato = amb('SEGURANCA_CONTATO_EMAIL', '')
     if contato and not (len(contato) <= 254 and EMAIL.fullmatch(contato)):
         falha('SEGURANCA_CONTATO_EMAIL inválido: um endereço de e-mail só, como seguranca@exemplo.com.br, ou vazio')
@@ -144,7 +149,8 @@ def configuracao():
         'ftp_anunciado': amb('FTP_PASSIVE_IP', '127.0.0.1'),
         'ftp_tls': amb('FTP_TLS_MODE', '2'),
         'ftp_clientes': clientes,
-        'tls_excecoes': excecoes,
+        'tls_excecoes': not sem_excecao,
+        'tls_sem_excecao': sem_excecao,
         'bloqueio_tentativas': int(tentativas),
         'bloqueio_minutos': int(bloqueio),
         'ftp_passiva': f"{amb('FTP_PASSIVE_PORT_START', '30000')}–{amb('FTP_PASSIVE_PORT_END', '30049')}",

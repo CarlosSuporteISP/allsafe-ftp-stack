@@ -19,14 +19,15 @@ def seguranca(pedido, sessao, consulta, formulario, token):
         if marcados:
             marca_tls = '⚠️'
             texto_tls += (f' <strong>Exceção por usuário ligada</strong> (<code>FTP_TLS_EXCECOES=sim</code>): {len(marcados)} '
-                          f'usuário(s) entram sem TLS, com senha e arquivos em texto puro: {e(", ".join(marcados))}.')
+                          f'usuário(s) entram sem TLS, com senha e arquivos em texto puro: {e(", ".join(marcados))}.'
+                          ' Quem tenta entrar sem TLS sem estar dispensado é recusado, mas a senha já passou em texto puro: '
+                          'o log do FTP registra a tentativa.')
         else:
             texto_tls += (' Exceção por usuário ligada (<code>FTP_TLS_EXCECOES=sim</code>), sem nenhum usuário dispensado: '
-                          'todos entram com TLS.')
-        texto_tls += (' Quem tenta entrar sem TLS sem estar dispensado é recusado, mas a senha já passou em texto puro: '
-                      'o log do FTP registra a tentativa.')
-    elif CFG['ftp_tls'] == '2':
-        texto_tls += ' Sem exceção por usuário (<code>FTP_TLS_EXCECOES=nao</code>).'
+                          'todos entram com TLS, e a sessão sem TLS é recusada antes de a senha ser enviada. A dispensa de '
+                          'um equipamento sem suporte a TLS é feita em <a href="/usuarios">Usuários</a>.')
+    elif CFG['ftp_tls'] in ('2', '3'):
+        texto_tls += f' Sem exceção por usuário: {CFG["tls_sem_excecao"]}.'
     cert_ftp, cert_painel = certificado(ARQ_CERT_FTP), certificado(ARQ_CERT)
     marca_ftp, validade_ftp = validade(cert_ftp)
     marca_painel, validade_painel = validade(cert_painel)

@@ -5,8 +5,9 @@
 #   auth_ok:0   "não é comigo": o pure-ftpd segue para o PureDB, que confere a senha;
 #   auth_ok:-1  recusa definitiva: o cliente recebe 530, com a senha certa ou errada.
 # Duas regras, nesta ordem:
-#   TLS por usuário (só com FTP_TLS_EXCECOES=sim, que o entrypoint marca em /run/allsafe/tls-por-usuario):
-#     com TLS toda conta segue; sem TLS, só a que o administrador marcou em /auth/sem-tls.lista;
+#   TLS por usuário (só com a opção valendo, que o entrypoint marca em /run/allsafe/tls-por-usuario):
+#     com TLS toda conta segue; sem TLS, só a que o administrador marcou em /auth/sem-tls.lista. Sem nenhum
+#     dispensado o pure-ftpd nem chega aqui com sessão sem TLS: ele a recusa antes da senha;
 #   bloqueio por tentativa: a conta com /auth/bloqueios/<conta>@<origem> ainda valendo é recusada. Quem
 #     grava esse arquivo é o vigia (allsafe-ftp-vigia), que conta as senhas erradas; apagá-lo desbloqueia.
 # A senha chega em AUTHD_PASSWORD e não é lida, gravada nem registrada aqui.

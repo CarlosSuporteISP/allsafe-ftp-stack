@@ -3,7 +3,7 @@
 import shutil
 
 from config import ARQ_CERT_FTP, CFG, PASTA_DADOS
-from estado import certificado, ftp_no_ar, pastas_distintas, uso_da_pasta, usuarios
+from estado import certificado, ftp_no_ar, pastas_distintas, sem_tls, uso_da_pasta, usuarios
 from pagina import alerta_tls, e, pagina, quando, tamanho, validade
 
 
@@ -27,7 +27,7 @@ def visao_geral(pedido, sessao, consulta, formulario, token):
 {alerta_tls()}
 <div class="grade">
 <section class="cartao"><h2>⚙️ Servidor FTP</h2><p class="numero {'bom' if no_ar else 'ruim'}">{'🟢 No ar' if no_ar else '🔴 Fora do ar'}</p>
-<p class="suave">{e(tls.get(CFG['ftp_tls'], 'modo TLS ' + CFG['ftp_tls']))}{', com exceção por usuário' if CFG['tls_excecoes'] else ''}</p></section>
+<p class="suave">{e(tls.get(CFG['ftp_tls'], 'modo TLS ' + CFG['ftp_tls']))}{', com exceção por usuário' if CFG['tls_excecoes'] and sem_tls() else ''}</p></section>
 <section class="cartao"><h2>👥 Usuários</h2><p class="numero">{len(nomes)}</p><p class="suave"><a href="/usuarios">ver a lista</a></p></section>
 <section class="cartao"><h2>💽 Espaço usado</h2><p class="numero">{e(tamanho(total))}</p><p class="suave">{e(livre)}</p></section>
 <section class="cartao"><h2>📥 Último envio</h2><p class="numero menor">{e(quando(ultimo))}</p><p class="suave">arquivo mais novo nas pastas</p></section>

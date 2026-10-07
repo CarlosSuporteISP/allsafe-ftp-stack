@@ -138,7 +138,7 @@ Abra o endereço do painel no navegador e entre com o usuário `admin` (o de `PA
 
 Qual perfil usar: [Perfis](perfis.md). Nos perfis `xlarge` e `extended` a subida leva minutos, porque o Docker publica as portas passivas uma a uma: [tempo de subida](perfis.md#tempo-de-subida).
 
-> ⚠️ **Equipamento antigo que não fala TLS?** O padrão exige TLS e recusa esse equipamento. Para aceitar sem TLS só o usuário dele, existe a `FTP_TLS_EXCECOES=sim`, com a dispensa feita no painel, usuário por usuário; para aceitar de todos, a `FTP_TLS_MODE=0` (ou `1`). Em qualquer uma, quem entra sem TLS deixa senha e arquivo legíveis para quem estiver na mesma rede. Leia as condições antes de ligar: [Segurança](seguranca.md#ftp-sem-tls).
+> ⚠️ **Equipamento antigo que não fala TLS?** O padrão exige TLS e recusa esse equipamento. Para aceitar sem TLS só o usuário dele, um administrador o dispensa no painel, ao criar o usuário ou em Usuários ➜ **Dispensar TLS**; para aceitar de todos, existe a `FTP_TLS_MODE=0` (ou `1`). Em qualquer caminho, quem entra sem TLS deixa senha e arquivo legíveis para quem estiver na mesma rede. Leia as condições antes: [Segurança](seguranca.md#ftp-sem-tls).
 
 <details>
 <summary>Detalhe técnico — o que o <code>deploy.sh</code> e o entrypoint fazem</summary>

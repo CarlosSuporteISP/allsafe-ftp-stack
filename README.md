@@ -8,7 +8,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.23.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.24.0-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
@@ -39,7 +39,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.23.0</b> · visão geral da stack · 2026-10-07</sub>
+<sub><b>v0.24.0</b> · visão geral da stack · 2026-10-07</sub>
 
 </div>
 
@@ -77,7 +77,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 
 > ⚠️ **Equipamento antigo sem TLS:** para o equipamento que não tem suporte a TLS existe a opção `FTP_TLS_MODE=0` (ou `1`). Com ela, **senha e arquivos trafegam em texto puro**: use só em rede interna isolada, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Veja [doc/seguranca.md](doc/seguranca.md#ftp-sem-tls).
 >
-> Para dispensar do TLS **só os usuários dos equipamentos antigos**, mantendo os demais obrigados, use `FTP_TLS_EXCECOES=sim` e marque cada um na aba Usuários do painel: [TLS por usuário](doc/seguranca.md#tls-por-usuario).
+> Para dispensar do TLS **só os usuários dos equipamentos antigos**, mantendo os demais obrigados, o administrador marca cada um na aba Usuários do painel, ao criar o usuário ou depois: [TLS por usuário](doc/seguranca.md#tls-por-usuario).
 
 ---
 
@@ -230,7 +230,7 @@ flowchart LR
 | 1 | Equipamento de rede ➜ Pure-FTPd | O equipamento abre a conexão de controle na porta `21/tcp` do host, entregue ao container em `2121/tcp` |
 | 2 | Pure-FTPd ➜ pediu TLS? | No padrão (`FTP_TLS_MODE=2`), o servidor só aceita seguir se o cliente pedir `AUTH TLS`; o certificado `pure-ftpd.pem` é apresentado |
 | 3a | pediu TLS? ➜ usuário e senha conferem? | Sim: o cliente envia usuário e senha, já criptografados |
-| 3b | pediu TLS? ➜ conexão recusada | Não: no padrão, sessão em texto puro é recusada. Só entra sem TLS o usuário dispensado por um administrador, com `FTP_TLS_EXCECOES=sim`, ou quem estiver em uma instalação com `FTP_TLS_MODE=0` ou `1`, opções para [equipamento antigo](doc/seguranca.md#ftp-sem-tls) |
+| 3b | pediu TLS? ➜ conexão recusada | Não: no padrão, sessão em texto puro é recusada. Só entra sem TLS o usuário dispensado por um administrador no painel, ou quem estiver em uma instalação com `FTP_TLS_MODE=0` ou `1`, opções para [equipamento antigo](doc/seguranca.md#ftp-sem-tls) |
 | 4 | usuário e senha conferem? ➜ PureDB | A conta é procurada no banco de usuários virtuais (`/auth/pureftpd.pdb`) |
 | 5a | usuário e senha conferem? ➜ sessão em chroot | Sim: a sessão abre presa na pasta do usuário |
 | 5b | usuário e senha conferem? ➜ conexão recusada | Não: `530 Login authentication failed`. No padrão, 5 senhas erradas do mesmo endereço em 15 minutos bloqueiam o usuário para aquele endereço por 15 minutos; o limite de cada usuário é ajustado no painel: [bloqueio por tentativa](doc/seguranca.md#bloqueio-por-tentativa) |
@@ -504,7 +504,7 @@ Medido em 2026-10-05, na versão `0.18.4`, com os três containers em repouso, n
 - **Resposta do painel:** a tela de entrada, com uma conexão HTTPS nova a cada pedido, respondeu em 2,8 ms na mediana de 30 pedidos (de 2,4 ms a 3,8 ms).
 - **Frente web, medida em 2026-10-07, na versão `0.22.1`:** a tela de entrada inteira (página, estilo e três imagens) chegou em 8,8 ms por uma conexão só, em HTTP/2; antes eram 11,0 ms em cinco conexões. O estilo passou de 6957 para 2175 bytes na rede. O clique feito depois de 20 e de 45 segundos parado levou 0,8 ms, pela mesma conexão; antes, 2,0 ms, com conexão nova. A memória do nginx ficou em 3,5 MiB.
 - **Sem dependência de terceiros:** o painel não instala pacote do PyPI e não tem JavaScript; o que há para atualizar é a imagem base e os pacotes do Debian.
-- **Tamanho do código:** 3300 linhas de Python em 21 módulos, 201 de CSS, 5582 de Bash e 278 de Perl, contando a bateria de testes.
+- **Tamanho do código:** 3358 linhas de Python em 21 módulos, 201 de CSS, 5784 de Bash e 278 de Perl, contando a bateria de testes.
 - **De onde vem o peso das imagens:** da base `debian:13-slim`, com 119 MB, comum às três.
 
 </details>
@@ -567,7 +567,7 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 - Bind em `127.0.0.1` por padrão: abra só um IP privado dedicado e libere no firewall do host apenas as redes que enviam backup.
 - TLS **obrigatório** para entrar no padrão (`FTP_TLS_MODE=2`), `chroot` em todos, sem usuário anônimo, sem DNS reverso.
 - **Bloqueio por tentativa no FTP:** o endereço que erra a senha de um usuário cinco vezes em 15 minutos fica bloqueado para aquele usuário pelo mesmo tempo; o limite e o tempo são ajustados por usuário, e o administrador desbloqueia pelo painel. Veja [bloqueio por tentativa](doc/seguranca.md#bloqueio-por-tentativa).
-- **Sem TLS só para quem o administrador dispensar:** com `FTP_TLS_EXCECOES=sim`, o administrador marca no painel os usuários dos equipamentos antigos, um a um; os demais continuam obrigados a usar TLS. Veja [TLS por usuário](doc/seguranca.md#tls-por-usuario).
+- **Sem TLS só para quem o administrador dispensar:** no painel, ao criar o usuário ou em Editar, o administrador marca os usuários dos equipamentos antigos, um a um; os demais continuam obrigados a usar TLS, e sem nenhum dispensado a sessão sem TLS é recusada antes da senha. Veja [TLS por usuário](doc/seguranca.md#tls-por-usuario).
 - **Sem TLS para todos só por escolha:** `FTP_TLS_MODE=0` ou `1` existe para equipamento antigo que não fala TLS. Senha e arquivos passam em texto puro, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Só em rede interna isolada. Veja [equipamento sem TLS](doc/seguranca.md#ftp-sem-tls).
 - `read_only` no sistema de arquivos raiz, `cap_drop: ALL` (só as estritamente necessárias voltam), `no-new-privileges`, limites de CPU, memória, PIDs e `nofile`.
 - Senha em `.secrets/ftp-usuario-inicial-senha.txt` (mínimo de 12 caracteres, `0600`), fora da imagem e ignorada pelo Git. Veja [doc/segredos.md](doc/segredos.md).
@@ -685,7 +685,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.23.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.24.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

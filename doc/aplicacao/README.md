@@ -105,7 +105,7 @@ Nada é alterado por esta aba.
 
 | Alerta no topo | Quando aparece | Como some |
 |---|---|---|
-| Quantos e quais usuários entram no FTP sem TLS | Com `FTP_TLS_EXCECOES=sim` e pelo menos um usuário dispensado | Quando o último volta a ser obrigado a usar TLS, em [Usuários ➜ Exigir TLS](#usuarios) |
+| Quantos e quais usuários entram no FTP sem TLS | Com pelo menos um usuário dispensado do TLS | Quando o último volta a ser obrigado a usar TLS, em [Usuários ➜ Exigir TLS](#usuarios) |
 | O FTP aceita senha e arquivo em texto puro | Com `FTP_TLS_MODE` em `0` ou `1` | Quando a variável volta para `2` ou `3` |
 
 O mesmo alerta abre a aba Segurança. As condições para dispensar um usuário estão em [TLS por usuário](../seguranca.md#tls-por-usuario) e as do FTP sem TLS, em [Equipamento sem TLS](../seguranca.md#ftp-sem-tls).
@@ -259,19 +259,21 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 <sub><b>v0.18.4</b> · menu Usuários, coluna TLS · captura de 2026-10-05</sub>
 
-A coluna e os dois botões só existem com `FTP_TLS_EXCECOES=sim` no `.env`. Servem para o equipamento antigo que não fala TLS: ele é dispensado sozinho, e os demais continuam obrigados.
+A coluna e os dois botões servem para o equipamento antigo que não fala TLS: ele é dispensado sozinho, e os demais continuam obrigados. O mesmo se faz na criação, com a caixa **Equipamento sem suporte a TLS** do **Novo usuário**, e no cartão **TLS** da tela **Editar**.
 
 | Item da tela | O que faz |
 |---|---|
 | Coluna TLS | `obrigatório` para quem só entra com TLS e `sem TLS` para quem foi dispensado |
 | **Dispensar TLS** | Abre a confirmação para deixar aquele usuário entrar sem TLS |
 | **Exigir TLS** | Abre a confirmação para voltar a exigir o TLS de quem está dispensado |
+| Caixa **Equipamento sem suporte a TLS**, em **Novo usuário** | Cria o usuário já dispensado do TLS; sem marcar, ele só entra com TLS |
+| Cartão **TLS**, em **Editar** | Diz como aquele usuário entra e leva à mesma confirmação |
 
 <a href="imagens/usuarios-tls-dispensar.png"><img src="imagens/usuarios-tls-dispensar.png" alt="Tela Dispensar TLS do usuário radio-antigo, com o aviso de que a senha e os arquivos passam a trafegar em texto puro e os botões Sim, deixar este usuário entrar sem TLS e Cancelar" width="100%"></a>
 
 <sub><b>v0.18.4</b> · menu Usuários, confirmação da dispensa do TLS · captura de 2026-10-05</sub>
 
-**Resultado esperado:** a lista volta com a mensagem `Usuário dispensado do TLS: a senha e os arquivos dele passam em texto puro.`, a linha dele mostra `sem TLS` e as abas Visão geral e Segurança abrem com o alerta. A dispensa vale na entrada seguinte do usuário. Ao voltar a exigir, a mensagem é `O usuário volta a ser obrigado a usar TLS.`
+**Resultado esperado:** a lista volta com a mensagem `Usuário dispensado do TLS: a senha e os arquivos dele passam em texto puro.`, a linha dele mostra `sem TLS` e as abas Visão geral e Segurança abrem com o alerta. A dispensa vale em instantes, sem derrubar quem está conectado. Ao voltar a exigir, a mensagem é `O usuário volta a ser obrigado a usar TLS.`
 
 > ⚠️ **Dispensa do TLS:** o usuário dispensado manda senha e arquivo em texto puro. Use só para o equipamento antigo que não fala TLS, em rede interna isolada, com pasta e senha só dele, e troque a senha quando voltar a exigir. As condições estão em [TLS por usuário](../seguranca.md#tls-por-usuario).
 
@@ -281,7 +283,7 @@ A coluna e os dois botões só existem com `FTP_TLS_EXCECOES=sim` no `.env`. Ser
 <summary>Detalhe técnico — rotas e comando usado</summary>
 
 - Rotas: `GET /usuarios`, `/usuarios/novo`, `/usuarios/editar?usuario=<nome>`, `/usuarios/senha?usuario=<nome>`, `/usuarios/remover?usuario=<nome>` e `/usuarios/tls?usuario=<nome>`; o envio de cada formulário é um `POST` na mesma rota, com o token CSRF da sessão. A exceção é a tela Editar, que envia a pasta para `POST /usuarios/pasta`.
-- Com `FTP_TLS_EXCECOES=nao`, a rota `/usuarios/tls` responde `404` e a lista dos dispensados fica guardada, sem valer.
+- A dispensa do TLS vale com `FTP_TLS_EXCECOES=sim`, que é o padrão, `FTP_TLS_MODE=2` e sem `REDE_PERMITIR_IP_PUBLICO=sim`. Fora disso, a coluna, os botões e a caixa somem, a rota `/usuarios/tls` responde `404` e a lista dos dispensados fica guardada, sem valer.
 - O painel chama o mesmo `allsafe-ftp-user` do [`manage-user.sh`](../../manage-user.sh): painel e linha de comando alteram as mesmas contas. Veja [Operação](../operacao.md#usuarios).
 - Cada alteração grava `usuario_criado`, `senha_trocada`, `usuario_removido`, `tls_dispensado` ou `tls_exigido` na [auditoria](../painel.md#auditoria), com o administrador que fez e sem a senha.
 - A senha gerada tem 32 caracteres aleatórios e não fica guardada: só o hash vai para o cadastro do FTP.
@@ -595,7 +597,7 @@ Nada é alterado por esta aba. As regras de firewall de exemplo estão em [Segur
 
 <sub><b>v0.18.4</b> · menu Segurança, alerta de usuário sem TLS · captura de 2026-10-05</sub>
 
-Com `FTP_TLS_EXCECOES=sim` e pelo menos um usuário dispensado, a aba abre com o alerta e a linha **TLS do FTP** troca a marca de conferido pela de atenção, com a quantidade e os nomes de quem entra sem TLS.
+Com pelo menos um usuário dispensado do TLS, a aba abre com o alerta e a linha **TLS do FTP** troca a marca de conferido pela de atenção, com a quantidade e os nomes de quem entra sem TLS.
 
 **Resultado esperado:** depois de **Usuários ➜ Exigir TLS** no último usuário dispensado, o alerta some e a linha volta a dizer que todos entram com TLS.
 

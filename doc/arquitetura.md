@@ -140,7 +140,7 @@ flowchart LR
 | Usuário do processo de dados | [`Dockerfile`](../Dockerfile) | `ftpdata`, uid e gid **10000**, shell `nologin`, sem home |
 | Entrypoint | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-ftp-entrypoint` | Provisiona usuário e certificado, sobe o vigia, o `pure-authd` e o `pure-ftpd` e encerra o container se um deles sair |
 | Gestão de usuários | [`ftp/usuario.sh`](../ftp/usuario.sh), instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user` | `add`, `passwd`, `pasta`, `limites`, `del` e `list` no PureDB, os bloqueios por tentativa (`bloqueios`, `desbloquear`) e a lista de quem entra sem TLS (`tls-dispensar`, `tls-exigir`, `tls-lista`), chamado de fora por [`manage-user.sh`](../manage-user.sh) e, dentro do painel, pelo servidor web |
-| Porteiro | [`ftp/porteiro.sh`](../ftp/porteiro.sh), instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-porteiro` | É chamado pelo `pure-authd` a cada entrada, antes da conferência da senha: recusa o usuário bloqueado por senhas erradas e, com `FTP_TLS_EXCECOES=sim`, a sessão sem TLS de quem não foi dispensado pelo administrador |
+| Porteiro | [`ftp/porteiro.sh`](../ftp/porteiro.sh), instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-porteiro` | É chamado pelo `pure-authd` a cada entrada, antes da conferência da senha: recusa o usuário bloqueado por senhas erradas e, com o [TLS por usuário](seguranca.md#tls-por-usuario) valendo, a sessão sem TLS de quem não foi dispensado pelo administrador |
 | Vigia | [`ftp/vigia.pl`](../ftp/vigia.pl), instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-vigia` | Lê em `/dev/log` o que o `pure-ftpd` registra, conta as senhas erradas de cada endereço para cada usuário, grava o [bloqueio por tentativa](seguranca.md#bloqueio-por-tentativa) em `/auth/bloqueios` e escreve no registro do container cada entrada e cada transferência. Em Perl, só com o `perl-base` da imagem base |
 | Painel web | Módulos Python de [`painel/`](../painel/), em `/opt/painel`; o ponto de entrada é o [`painel/servidor.py`](../painel/servidor.py) | Servidor em Python, só com a biblioteca padrão e sem JavaScript: telas do administrador, tela do usuário do FTP, sessão, auditoria e download dos arquivos, um assunto por módulo ([lista](painel.md#modulos)). Atende só o nginx, por soquete Unix |
 | Entrypoint do painel | [`painel/entrypoint.sh`](../painel/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-painel-entrypoint` | Confere a rede privada, gera o certificado, entrega a cópia dele ao nginx e faz `exec` do servidor |
@@ -289,14 +289,16 @@ flowchart LR
 
 </details>
 
-Nas subidas seguintes a senha do usuário inicial é **regravada** a partir do segredo (`pure-pw passwd`), a não ser que tenha sido trocada pelo painel e o segredo continue o mesmo, e o certificado existente é **mantido**. O usuário inicial removido pelo painel **não é recriado**: a marca `/auth/usuario-inicial.criado` diz que ele já foi criado uma vez. Com o FTP `healthy`, o Compose inicia o painel e, com o painel `healthy`, o nginx: o que cada entrypoint confere está em [Scripts](scripts.md#painel-entrypoint), nas seções do painel e do [nginx](scripts.md#nginx-entrypoint). Nos modos `0` e `1` de `FTP_TLS_MODE`, e com `FTP_TLS_EXCECOES=sim`, o entrypoint do FTP grava um `AVISO` no log antes de subir: [Segurança](seguranca.md#ftp-sem-tls).
+Nas subidas seguintes a senha do usuário inicial é **regravada** a partir do segredo (`pure-pw passwd`), a não ser que tenha sido trocada pelo painel e o segredo continue o mesmo, e o certificado existente é **mantido**. O usuário inicial removido pelo painel **não é recriado**: a marca `/auth/usuario-inicial.criado` diz que ele já foi criado uma vez. Com o FTP `healthy`, o Compose inicia o painel e, com o painel `healthy`, o nginx: o que cada entrypoint confere está em [Scripts](scripts.md#painel-entrypoint), nas seções do painel e do [nginx](scripts.md#nginx-entrypoint). Nos modos `0` e `1` de `FTP_TLS_MODE`, e quando há usuário dispensado do TLS, o entrypoint do FTP grava um `AVISO` no log antes de subir: [Segurança](seguranca.md#ftp-sem-tls).
 
 <details>
 <summary>Detalhe técnico — quem é o processo 1</summary>
 
 Com `init: true` no [`compose.yaml`](../compose.yaml), o processo 1 do container é o `tini` (`docker-init`), que repassa os sinais e recolhe processos órfãos. Ele inicia o entrypoint, que continua vivo e sobe três filhos, nesta ordem: o vigia (`allsafe-ftp-vigia`), o `pure-authd` e o `pure-ftpd`. Se um dos três sair, o entrypoint encerra os outros e termina com código `1`, e o Docker sobe o container de novo: sem o vigia ninguém seria bloqueado, e sem o `pure-authd` o `pure-ftpd` aceitaria a entrada sem a conferência do porteiro.
 
-Ao terminar a subida, o entrypoint escreve no log: `FTP pronto em 2121/tcp; TLS=<modo>; passivo=<inicio>-<fim>`. Com `FTP_TLS_EXCECOES=sim`, a linha é `FTP pronto em 2121/tcp; TLS=2 com exceção por usuário; passivo=<inicio>-<fim>`. O motivo de cada processo está em [Segurança](seguranca.md#bloqueio-por-tentativa), nas seções do bloqueio por tentativa e do [TLS por usuário](seguranca.md#tls-por-usuario).
+Com o [TLS por usuário](seguranca.md#tls-por-usuario) valendo, há um quarto filho: o observador da lista dos dispensados, uma função do próprio entrypoint que relê `/auth/sem-tls.lista` a cada segundo. Quando a lista sai de vazia ou volta a ficar vazia, o entrypoint troca só o processo do `pure-ftpd` que escuta a porta, com o `-Y` novo: o container não reinicia e as sessões em andamento, que são processos à parte, continuam até terminar.
+
+Ao terminar a subida, o entrypoint escreve no log: `FTP pronto em 2121/tcp; TLS=<modo>; passivo=<inicio>-<fim>`. Com o TLS por usuário valendo, a linha diz também como está a entrada sem TLS: `TLS=2; TLS por usuário: nenhum dispensado, sessão sem TLS recusada antes da senha` ou `TLS=2 com exceção por usuário (<n> dispensado(s) do TLS)`. A linha se repete a cada troca de modo, depois de `TLS por usuário: a lista dos dispensados mudou; o FTP troca o modo de entrada sem derrubar as sessões em andamento.` O motivo de cada processo está em [Segurança](seguranca.md#bloqueio-por-tentativa), nas seções do bloqueio por tentativa e do [TLS por usuário](seguranca.md#tls-por-usuario).
 
 </details>
 
@@ -326,7 +328,7 @@ Linha final do [`ftp/entrypoint.sh`](../ftp/entrypoint.sh):
 | `-p INICIO:FIM` | Faixa de portas passivas |
 | `-P <ip>` | IP anunciado no `PASV` (`FTP_PASSIVE_IP`) |
 | `-S 0.0.0.0,2121` | Escuta na porta 2121 (não privilegiada) |
-| `-Y <modo>` | Política TLS (`FTP_TLS_MODE`): veja [Configuração](configuracao.md#tls). Com `FTP_TLS_EXCECOES=sim`, vai `-Y 1`, e a exigência do TLS passa a ser feita usuário por usuário: [Segurança](seguranca.md#tls-por-usuario) |
+| `-Y <modo>` | Política TLS (`FTP_TLS_MODE`): veja [Configuração](configuracao.md#tls). Com o TLS por usuário valendo e pelo menos um usuário dispensado, vai `-Y 1`, e a exigência do TLS passa a ser feita usuário por usuário pelo porteiro; sem nenhum dispensado, vai o `-Y 2`: [Segurança](seguranca.md#tls-por-usuario) |
 
 ---
 
