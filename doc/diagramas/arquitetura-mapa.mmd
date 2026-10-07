@@ -6,42 +6,35 @@ flowchart LR
     end
     subgraph HOST["Host"]
         scripts@{ shape: console, label: "deploy.sh<br>manage-user.sh" }
-        env@{ shape: doc, label: ".env<br>configuração e limites" }
-        segredo@{ shape: doc, label: ".secrets<br>senha do FTP, hash inicial do painel" }
     end
     subgraph CONTAINERS["Containers · rede allsafe-ftp-network"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
-        logs@{ shape: docs, label: "registro do container<br>entradas e transferências" }
     end
     subgraph VOLUMES["Volumes"]
-        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
-        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>/painel, certificado, administradores e auditoria" }
-        vauth@{ shape: cyl, label: "DATA_DIR/auth<br>/auth, PureDB" }
-        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>/etc/ssl/private" }
-        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>/data" }
+        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>soquete e cópia do certificado" }
+        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>administradores e auditoria" }
+        vauth@{ shape: cyl, label: "DATA_DIR/auth<br>PureDB" }
+        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>arquivos enviados" }
+        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>certificado do FTP" }
     end
     subgraph RESULTADO["Resultado"]
         fim@{ shape: stadium, label: "backup guardado" }
     end
 
     operador -- "1 · ./deploy.sh" --> scripts
-    scripts -- "2 · docker compose build e up -d --wait" --> ftp
+    scripts -- "2 · docker compose build e up -d --wait" --> nginx
     operador -- "3 · HTTPS, TCP 8443" --> nginx
     nginx -- "4 · repassa pelo soquete Unix" --> painel
-    painel -- "5 · cria, troca a senha ou remove o usuário" --> vauth
+    painel -- "5 · cria, edita ou remove o usuário" --> vauth
     equip -- "6 · FTPS, TCP 21 para 2121" --> ftp
-    ftp -- "7 · grava o arquivo, faixa passiva do perfil" --> vdata
+    ftp -- "7 · grava o arquivo" --> vdata
     vdata -- "8 · arquivo no volume" --> fim
-    scripts -. "cria, lê e grava o perfil" .-> env
-    ftp -. "lê a senha na subida, só leitura" .-> segredo
-    painel -. "lê o hash inicial na subida, só leitura" .-> segredo
-    ftp -. "consulta os usuários" .-> vauth
-    ftp -. "lê o certificado" .-> vcerts
-    painel -. "grava certificado, administradores e auditoria" .-> vpainel
-    painel -. "cria o soquete e copia o certificado" .-> vnginx
     nginx -. "lê, só leitura" .-> vnginx
-    painel -. "cria pasta, renomeia, apaga e lê os arquivos para o download" .-> vdata
-    painel -. "confere a senha do usuário do FTP, na rede interna" .-> ftp
-    ftp -. "registra entradas e transferências" .-> logs
+    painel -. "cria o soquete" .-> vnginx
+    painel -. "grava" .-> vpainel
+    painel -. "gerencia e lê" .-> vdata
+    painel -. "confere a senha do FTP" ..-> ftp
+    ftp -. "consulta" .-> vauth
+    ftp -. "lê o certificado" .-> vcerts

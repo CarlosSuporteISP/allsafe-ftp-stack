@@ -8,7 +8,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.24.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.24.1-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
@@ -22,7 +22,7 @@ Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsaf
 
 <a href="doc/imagens/painel-principal.png"><img src="doc/imagens/painel-principal.png" alt="Aba Visão geral com os cartões Servidor FTP, Usuários, Espaço usado, Último envio e Certificado do FTP, e a tabela de dados para configurar o equipamento" width="100%"></a>
 
-<sub><b>v0.18.4</b> · painel web, aba Visão geral · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · painel web, aba Visão geral · captura de 2026-10-07</sub>
 
 <!-- diagrama: doc/diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -39,7 +39,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.24.0</b> · visão geral da stack · 2026-10-07</sub>
+<sub><b>v0.24.1</b> · visão geral da stack · 2026-10-07</sub>
 
 </div>
 
@@ -109,14 +109,14 @@ O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página,
 
 | | |
 |---|---|
-| <a href="doc/imagens/aba-usuarios.png"><img src="doc/imagens/aba-usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista de usuários: pasta no host, com a marca dividida em duas delas, uso, arquivos, último envio e as ações Trocar senha e Remover" width="100%"></a> | <a href="doc/imagens/aba-arquivos.png"><img src="doc/imagens/aba-arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma e o formulário Nova pasta" width="100%"></a> |
+| <a href="doc/imagens/aba-usuarios.png"><img src="doc/imagens/aba-usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista de usuários: o nome, com as etiquetas inicial, limites e bloqueado, a pasta no host, com a etiqueta dividida em duas, uso, arquivos, último envio, a coluna TLS, com obrigatório em todas as linhas, e as ações Editar, Trocar senha, Remover e Dispensar TLS" width="100%"></a> | <a href="doc/imagens/aba-arquivos.png"><img src="doc/imagens/aba-arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma, os botões Renomear e Apagar em cada linha e o formulário Nova pasta" width="100%"></a> |
 | **Usuários** — cria, troca a senha, a pasta e os limites, desbloqueia e remove a conta de cada equipamento | **Arquivos** — navega nas pastas dos usuários, baixa os backups, cria pasta, renomeia e apaga |
-| <a href="doc/imagens/aba-administradores.png"><img src="doc/imagens/aba-administradores.png" alt="Aba Administradores com o botão Novo administrador e a lista de três administradores: a marca você na conta em uso, as sessões abertas de cada um e as ações Trocar senha, Trocar nome e Remover" width="100%"></a> | <a href="doc/imagens/aba-seguranca.png"><img src="doc/imagens/aba-seguranca.png" alt="Aba Segurança com a conferência da instalação, uma linha por item: endereço público, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, custo das senhas, contato de segurança, container e firewall" width="100%"></a> |
+| <a href="doc/imagens/aba-administradores.png"><img src="doc/imagens/aba-administradores.png" alt="Aba Administradores com o botão Novo administrador e a lista de três administradores: a marca você na conta em uso, as sessões abertas de cada um e as ações Trocar senha, Trocar nome e Remover" width="100%"></a> | <a href="doc/imagens/aba-seguranca.png"><img src="doc/imagens/aba-seguranca.png" alt="Aba Segurança com a conferência da instalação, uma linha por item: endereço público, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, custo das senhas, contato de segurança, container e firewall" width="100%"></a> |
 | **Administradores** — cada pessoa com o próprio nome e a própria senha | **Segurança** — confere rede, TLS, certificados, senhas e contato de segurança |
 | <a href="doc/imagens/aba-atividade.png"><img src="doc/imagens/aba-atividade.png" alt="Aba Atividade com os registros do painel: data, endereço de origem, o que aconteceu e o detalhe, como arquivo baixado, pasta criada, administrador criado e tela de administração pedida por usuário do FTP" width="100%"></a> | <a href="doc/imagens/aba-meus-arquivos.png"><img src="doc/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, com as pastas 2026-09 e 2026-10, um arquivo de configuração com o botão Baixar e, no topo, só o nome do usuário e o botão Sair" width="100%"></a> |
 | **Atividade** — quem entrou, de onde, o que baixou e o que foi alterado | **Meus arquivos** — o usuário do FTP baixa os próprios backups, e só eles |
 
-<sub><b>v0.18.4</b> · painel web, uma foto por aba · capturas de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · painel web, uma foto por aba · capturas de 2026-10-07</sub>
 
 Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplicação](doc/aplicacao/README.md).
 
@@ -248,10 +248,10 @@ flowchart LR
 
 ### Painel web
 
-Como o nginx e o painel decidem se atendem um pedido, da abertura da página até o usuário pronto no FTP.
+Como o nginx e o painel decidem se atendem um pedido, em dois fluxogramas: da abertura da página até a sessão, e o que acontece com cada pedido da sessão, até o usuário pronto no FTP.
 
 <details>
-<summary>Fluxograma do painel web, com a sequência escrita — clique para expandir</summary>
+<summary>Fluxogramas do painel web, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: doc/diagramas/painel-fluxograma.mmd -->
 ```mermaid
@@ -267,26 +267,15 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
-        hash@{ shape: doc, label: "administradores<br>DATA_DIR/painel, nome e hash da senha" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna da stack" }
+        hash@{ shape: doc, label: "administradores<br>nome e hash da senha" }
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 15 min<br>cookie e token CSRF" }
-        pedido@{ shape: diam, label: "pedido<br>legítimo?" }
-    end
-    subgraph USUARIOS["Usuários do FTP"]
-        cmd@{ shape: rect, label: "allsafe-ftp-user<br>pure-pw" }
-        puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
-        auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
-    end
-    subgraph ARQUIVOS["Arquivos"]
-        caminho@{ shape: diam, label: "caminho dentro<br>da pasta dos dados?" }
-        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>pastas dos usuários" }
+        pedidos@{ shape: subproc, label: "pedidos da sessão<br>fluxograma dos pedidos" }
     end
     subgraph RESULTADO["Resultado"]
-        fim@{ shape: stadium, label: "usuário pronto no FTP" }
-        baixado@{ shape: stadium, label: "arquivo baixado" }
-        criada@{ shape: stadium, label: "pasta criada" }
+        atendido@{ shape: stadium, label: "pedido atendido" }
         recusa@{ shape: stadium, label: "pedido recusado" }
     end
 
@@ -294,23 +283,14 @@ flowchart LR
     nginx -- "2 · confere a origem e a taxa de pedidos" --> rede
     rede -- "3a · sim: repassa pelo soquete Unix" --> painel
     rede -- "3b · não: 403 ou 429" --> recusa
-    painel -- "4 · pede usuário e senha" --> senha
-    senha -. "5a · compara com o hash do administrador" .-> hash
-    senha -. "5b · não é administrador: o servidor FTP confere a senha" .-> ftp
-    senha -- "6a · sim: abre a sessão do administrador ou do usuário do FTP" --> sessao
-    senha -- "6b · não: 5 erros bloqueiam o endereço" --> recusa
-    sessao -- "7 · administrador envia o formulário" --> pedido
-    pedido -- "8a · sim: executa" --> cmd
-    pedido -- "8b · não: sem token CSRF ou de outra origem" --> recusa
-    cmd -- "9 · grava o usuário" --> puredb
-    puredb -- "10 · vale no próximo login, sem reiniciar o FTP" --> fim
-    sessao -- "11 · em Arquivos ou em Meus arquivos, pede um arquivo ou cria uma pasta" --> caminho
-    caminho -. "12 · abre parte por parte, sem seguir link simbólico" .-> dados
-    caminho -- "13a · sim, arquivo: entrega como anexo" --> baixado
-    caminho -- "13b · sim, pasta nova: cria vazia" --> criada
-    caminho -- "13c · não: 400, 403, 404 ou 409" --> recusa
-    cmd -. "cria a pasta do usuário, se faltar" .-> dados
-    painel -. "registra cada ação" .-> auditoria
+    painel -- "4 · pede usuário e senha e confere" --> senha
+    senha -- "5a · sim: abre a sessão do administrador ou do usuário do FTP" --> sessao
+    senha -- "5b · não: 5 erros bloqueiam o endereço" --> recusa
+    sessao -- "6 · cada pedido passa pelas conferências" --> pedidos
+    pedidos -- "7a · aceito" --> atendido
+    pedidos -- "7b · recusado" --> recusa
+    painel -. "administrador: compara com o hash" .-> hash
+    painel -. "outro nome: o servidor FTP confere a senha" .-> ftp
 ```
 
 <sub>Nível 2 · Fluxograma · [fonte](doc/diagramas/)</sub>
@@ -321,31 +301,81 @@ flowchart LR
 | 2 | nginx ➜ rede permitida e dentro do limite? | O endereço de origem é comparado com `PAINEL_REDES_PERMITIDAS`, e o pedido, com os limites de taxa, de conexões e de tamanho |
 | 3a | rede permitida e dentro do limite? ➜ Painel web | Sim: o nginx repassa o pedido pelo soquete Unix, com o endereço do cliente |
 | 3b | rede permitida e dentro do limite? ➜ pedido recusado | Não: `403` para rede de fora, `429` para pedidos demais; o painel nem recebe o pedido |
-| 4 | Painel web ➜ usuário e senha conferem? | O painel confere de novo a rede e o nome de host e mostra a tela de entrada, que pede usuário e senha |
-| 5a | usuário e senha conferem? ➜ administradores | A senha digitada é comparada com o hash `scrypt` do administrador, em `DATA_DIR/painel/administradores`; nome que não existe passa pela mesma conta |
-| 5b | usuário e senha conferem? ➜ Pure-FTPd | Não é administrador com essa senha e a entrada dos usuários do FTP está ligada: o painel entra no servidor FTP com o nome e a senha, pela rede interna da stack, e sai em seguida; quem diz se a senha vale é o servidor |
-| 6a | usuário e senha conferem? ➜ sessão | Sim: abre a sessão, com cookie e token CSRF. A do administrador alcança todas as abas; a do usuário do FTP, só a tela Meus arquivos |
-| 6b | usuário e senha conferem? ➜ pedido recusado | Não: `401`, sem dizer qual dos dois errou; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
-| 7 | sessão ➜ pedido legítimo? | Cada formulário enviado pelo administrador traz o token CSRF da sessão e a origem do próprio painel; na sessão do usuário do FTP, o único formulário é o de sair |
-| 8a | pedido legítimo? ➜ `allsafe-ftp-user` | Sim: o painel chama o comando, com a senha pela entrada padrão |
-| 8b | pedido legítimo? ➜ pedido recusado | Não: `403`, sem alterar nada |
-| 9 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez; a dispensa do TLS de um usuário fica na `sem-tls.lista`, na mesma pasta |
-| 10 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
-| 11 | sessão ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta, pede um arquivo ou cria uma pasta; na tela Meus arquivos, o usuário do FTP abre uma pasta ou pede um arquivo. O caminho pedido é conferido parte por parte |
-| 12 | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | O painel abre cada parte sem seguir link simbólico: a partir da pasta dos dados, para o administrador, e a partir da pasta do cadastro, para o usuário do FTP |
-| 13a | caminho dentro da pasta dos dados? ➜ arquivo baixado | Sim, arquivo: sai como anexo, em blocos, e o download fica na auditoria |
-| 13b | caminho dentro da pasta dos dados? ➜ pasta criada | Sim, pasta nova: nasce vazia, do usuário `ftpdata`, e fica na auditoria |
-| 13c | caminho dentro da pasta dos dados? ➜ pedido recusado | Não: `400` para caminho ou nome que tenta sair da pasta, `403` para link simbólico, `404` para o que não existe, `409` para nome já usado |
+| 4 | Painel web ➜ usuário e senha conferem? | O painel confere de novo a rede e o nome de host, mostra a tela de entrada, que pede usuário e senha, e confere o que foi digitado |
+| 5a | usuário e senha conferem? ➜ sessão de 15 min | Sim: abre a sessão, com cookie e token CSRF. A do administrador alcança todas as abas; a do usuário do FTP, só a tela Meus arquivos |
+| 5b | usuário e senha conferem? ➜ pedido recusado | Não: `401`, sem dizer qual dos dois errou; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
+| 6 | sessão de 15 min ➜ pedidos da sessão | Cada pedido feito com a sessão aberta passa pelas conferências do fluxograma dos pedidos, logo abaixo |
+| 7a | pedidos da sessão ➜ pedido atendido | Aceito: o usuário fica pronto no FTP, o arquivo é baixado ou a alteração é feita |
+| 7b | pedidos da sessão ➜ pedido recusado | Recusado: nada muda, e a recusa fica na auditoria |
 
 **Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
-| usuário e senha conferem? | administradores (`DATA_DIR/painel/administradores`) | lê a cada entrada |
-| usuário e senha conferem? | Pure-FTPd (`allsafe-ftp`, rede interna da stack) | entra com o nome e a senha do usuário do FTP e sai em seguida, em TLS com o certificado conferido |
-| caminho dentro da pasta dos dados? | `DATA_DIR/dados` | lê a pasta e o arquivo pedidos; grava só a pasta nova, vazia |
-| `allsafe-ftp-user` | `DATA_DIR/dados` | cria a pasta do usuário novo, se ela ainda não existe |
-| Painel web | `auditoria.log` | registra cada entrada, recusa e alteração |
+| Painel web | administradores (`DATA_DIR/painel/administradores`) | compara a senha digitada com o hash `scrypt` do administrador, a cada entrada; nome que não existe passa pela mesma conta |
+| Painel web | Pure-FTPd (`allsafe-ftp`, rede interna da stack) | não é administrador com essa senha e a entrada dos usuários do FTP está ligada: entra no servidor FTP com o nome e a senha e sai em seguida, em TLS com o certificado conferido; quem diz se a senha vale é o servidor |
+
+**Pedidos da sessão**
+
+O que o painel faz com cada pedido depois da entrada: o formulário que cria, edita ou remove um usuário, e a pasta ou o arquivo pedido na aba Arquivos ou na tela Meus arquivos.
+
+<!-- diagrama: doc/diagramas/painel-pedidos-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph SESSAO["Sessão"]
+        painel@{ shape: rect, label: "Painel web<br>sessão aberta, token CSRF" }
+        pedido@{ shape: diam, label: "origem e token<br>conferem?" }
+        auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
+    end
+    subgraph USUARIOS["Usuários do FTP"]
+        cmd@{ shape: rect, label: "allsafe-ftp-user<br>pure-pw" }
+        puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
+    end
+    subgraph ARQUIVOS["Arquivos"]
+        caminho@{ shape: diam, label: "caminho dentro<br>da pasta dos dados?" }
+        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>pastas dos usuários" }
+    end
+    subgraph RESULTADO["Resultado"]
+        fim@{ shape: stadium, label: "usuário pronto no FTP" }
+        barrado@{ shape: stadium, label: "403<br>envio recusado" }
+        feito@{ shape: stadium, label: "arquivo baixado<br>ou alteração feita" }
+        recusa@{ shape: stadium, label: "pedido recusado" }
+    end
+
+    painel -- "1 · envia um formulário, de usuário ou de arquivos" --> pedido
+    pedido -- "2a · sim, usuário: executa" --> cmd
+    pedido -- "2b · sim, arquivos: confere o caminho" --> caminho
+    pedido -- "2c · não: fora do painel ou sem token" --> barrado
+    cmd -- "3 · grava o usuário e cria a pasta dele, se faltar" --> puredb
+    puredb -- "4 · vale no próximo login, sem reiniciar o FTP" --> fim
+    painel -- "5 · em Arquivos ou em Meus arquivos, abre uma pasta ou baixa um arquivo" --> caminho
+    caminho -- "6a · sim: abre parte por parte, sem seguir link simbólico" --> dados
+    caminho -- "6b · não: 400, 403, 404 ou 409" --> recusa
+    dados -- "7 · entrega o arquivo ou cria a pasta, renomeia ou apaga" --> feito
+    painel -. "registra cada ação" .-> auditoria
+```
+
+<sub>Nível 2 · Fluxograma · [fonte](doc/diagramas/)</sub>
+
+| Nº | De ➜ Para | O que acontece |
+|---|---|---|
+| 1 | Painel web ➜ origem e token conferem? | Todo formulário enviado é conferido duas vezes: a origem tem de ser o próprio painel e o token CSRF tem de ser o da sessão. Só o administrador tem formulário de usuário e de arquivos; na sessão do usuário do FTP, o único formulário é o de sair |
+| 2a | origem e token conferem? ➜ `allsafe-ftp-user` | Sim, formulário de usuário: o painel chama o comando, com a senha pela entrada padrão |
+| 2b | origem e token conferem? ➜ caminho dentro da pasta dos dados? | Sim, formulário da aba Arquivos (criar pasta, renomear ou apagar): segue para a conferência do caminho |
+| 2c | origem e token conferem? ➜ 403 | Não: `403`, sem alterar nada, para o envio que não partiu do painel ou que veio sem o token da sessão |
+| 3 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez, e a pasta do usuário novo é criada em `DATA_DIR/dados`, se ainda não existe; a dispensa do TLS de um usuário fica na `sem-tls.lista`, na mesma pasta do banco |
+| 4 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
+| 5 | Painel web ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta ou baixa um arquivo; na tela Meus arquivos, o usuário do FTP faz o mesmo, só na pasta dele. Esses pedidos não levam formulário, e o caminho é conferido do mesmo jeito |
+| 6a | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | Sim: o painel abre cada parte do caminho sem seguir link simbólico, a partir da pasta dos dados, para o administrador, e a partir da pasta do cadastro, para o usuário do FTP |
+| 6b | caminho dentro da pasta dos dados? ➜ pedido recusado | Não: `400` para caminho ou nome que tenta sair da pasta, `403` para link simbólico, `404` para o que não existe, `409` para nome já usado |
+| 7 | `DATA_DIR/dados` ➜ arquivo baixado ou alteração feita | O arquivo sai como anexo, em blocos; a pasta nova nasce vazia, do usuário `ftpdata`; o arquivo ou a pasta escolhida é renomeada ou apagada |
+
+**Apoio**
+
+| Quem | Usa | Como |
+|---|---|---|
+| Painel web | `auditoria.log` (`DATA_DIR/painel`) | registra cada entrada, recusa, download e alteração |
 
 </details>
 
@@ -367,45 +397,38 @@ flowchart LR
     end
     subgraph HOST["Host"]
         scripts@{ shape: console, label: "deploy.sh<br>manage-user.sh" }
-        env@{ shape: doc, label: ".env<br>configuração e limites" }
-        segredo@{ shape: doc, label: ".secrets<br>senha do FTP, hash inicial do painel" }
     end
     subgraph CONTAINERS["Containers · rede allsafe-ftp-network"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
-        logs@{ shape: docs, label: "registro do container<br>entradas e transferências" }
     end
     subgraph VOLUMES["Volumes"]
-        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
-        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>/painel, certificado, administradores e auditoria" }
-        vauth@{ shape: cyl, label: "DATA_DIR/auth<br>/auth, PureDB" }
-        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>/etc/ssl/private" }
-        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>/data" }
+        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>soquete e cópia do certificado" }
+        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>administradores e auditoria" }
+        vauth@{ shape: cyl, label: "DATA_DIR/auth<br>PureDB" }
+        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>arquivos enviados" }
+        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>certificado do FTP" }
     end
     subgraph RESULTADO["Resultado"]
         fim@{ shape: stadium, label: "backup guardado" }
     end
 
     operador -- "1 · ./deploy.sh" --> scripts
-    scripts -- "2 · docker compose build e up -d --wait" --> ftp
+    scripts -- "2 · docker compose build e up -d --wait" --> nginx
     operador -- "3 · HTTPS, TCP 8443" --> nginx
     nginx -- "4 · repassa pelo soquete Unix" --> painel
-    painel -- "5 · cria, troca a senha ou remove o usuário" --> vauth
+    painel -- "5 · cria, edita ou remove o usuário" --> vauth
     equip -- "6 · FTPS, TCP 21 para 2121" --> ftp
-    ftp -- "7 · grava o arquivo, faixa passiva do perfil" --> vdata
+    ftp -- "7 · grava o arquivo" --> vdata
     vdata -- "8 · arquivo no volume" --> fim
-    scripts -. "cria, lê e grava o perfil" .-> env
-    ftp -. "lê a senha na subida, só leitura" .-> segredo
-    painel -. "lê o hash inicial na subida, só leitura" .-> segredo
-    ftp -. "consulta os usuários" .-> vauth
-    ftp -. "lê o certificado" .-> vcerts
-    painel -. "grava certificado, administradores e auditoria" .-> vpainel
-    painel -. "cria o soquete e copia o certificado" .-> vnginx
     nginx -. "lê, só leitura" .-> vnginx
-    painel -. "cria pasta, renomeia, apaga e lê os arquivos para o download" .-> vdata
-    painel -. "confere a senha do usuário do FTP, na rede interna" .-> ftp
-    ftp -. "registra entradas e transferências" .-> logs
+    painel -. "cria o soquete" .-> vnginx
+    painel -. "grava" .-> vpainel
+    painel -. "gerencia e lê" .-> vdata
+    painel -. "confere a senha do FTP" ..-> ftp
+    ftp -. "consulta" .-> vauth
+    ftp -. "lê o certificado" .-> vcerts
 ```
 
 <sub>Nível 2 · Mapa · [fonte](doc/diagramas/)</sub>
@@ -413,10 +436,10 @@ flowchart LR
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
 | 1 | Usuário ➜ `deploy.sh` | O usuário executa `./deploy.sh` no host |
-| 2 | `deploy.sh` ➜ Pure-FTPd | O script valida a configuração, constrói as imagens (`docker compose build`), sobe os três containers (`up -d --wait`) e espera ficarem `healthy` |
+| 2 | `deploy.sh` ➜ nginx | O script valida a configuração, constrói as imagens (`docker compose build`) e sobe os três containers (`up -d --wait`), na ordem `ftp`, `painel` e `nginx`: cada um espera o anterior ficar `healthy`, e o nginx, a porta de entrada do painel, é o último |
 | 3 | Usuário ➜ nginx | O usuário abre o painel por HTTPS em `8443/tcp`: quem atende é o nginx, que confere a rede de origem e a taxa de pedidos |
 | 4 | nginx ➜ Painel web | O pedido aceito é repassado ao painel pelo soquete Unix, com o endereço do cliente |
-| 5 | Painel web ➜ `DATA_DIR/auth` | O painel cria, troca a senha ou remove o usuário no PureDB |
+| 5 | Painel web ➜ `DATA_DIR/auth` | O painel cria, edita ou remove o usuário no PureDB |
 | 6 | Equipamento de rede ➜ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
 | 7 | Pure-FTPd ➜ `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
 | 8 | `DATA_DIR/dados` ➜ backup guardado | O arquivo fica na pasta do usuário, no host |
@@ -425,16 +448,23 @@ flowchart LR
 
 | Quem | Usa | Como |
 |---|---|---|
+| nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
+| Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
+| Painel web | `DATA_DIR/painel` | grava o certificado, os administradores e a auditoria |
+| Painel web | `DATA_DIR/dados` | cria pasta, renomeia, apaga e lê os arquivos para o download |
+| Painel web | Pure-FTPd | confere a senha do usuário do FTP que entra no painel, pela rede interna da stack |
+| Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
+| Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
+
+**Configuração, segredos e registro**
+
+O mapa mostra as peças e os volumes. A configuração, os segredos e o registro ficam nesta tabela:
+
+| Quem | Usa | Como |
+|---|---|---|
 | `deploy.sh` e `manage-user.sh` | `.env` | cria, lê e grava o perfil |
 | Pure-FTPd | `.secrets` (`ftp-usuario-inicial-senha.txt`) | lê a senha na subida, somente leitura |
 | Painel web | `.secrets` (`painel-admin-inicial-senha-hash.txt`) | lê o hash inicial na subida, somente leitura |
-| Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
-| Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
-| Painel web | `DATA_DIR/painel` | grava o certificado, os administradores e a auditoria |
-| Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
-| nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
-| Painel web | `DATA_DIR/dados` | cria pasta, renomeia, apaga e lê os arquivos para o download |
-| Painel web | Pure-FTPd | confere a senha do usuário do FTP que entra no painel, pela rede interna da stack |
 | Pure-FTPd | registro do container | registra cada entrada e cada transferência, com o usuário e o endereço |
 
 <details>
@@ -504,7 +534,7 @@ Medido em 2026-10-05, na versão `0.18.4`, com os três containers em repouso, n
 - **Resposta do painel:** a tela de entrada, com uma conexão HTTPS nova a cada pedido, respondeu em 2,8 ms na mediana de 30 pedidos (de 2,4 ms a 3,8 ms).
 - **Frente web, medida em 2026-10-07, na versão `0.22.1`:** a tela de entrada inteira (página, estilo e três imagens) chegou em 8,8 ms por uma conexão só, em HTTP/2; antes eram 11,0 ms em cinco conexões. O estilo passou de 6957 para 2175 bytes na rede. O clique feito depois de 20 e de 45 segundos parado levou 0,8 ms, pela mesma conexão; antes, 2,0 ms, com conexão nova. A memória do nginx ficou em 3,5 MiB.
 - **Sem dependência de terceiros:** o painel não instala pacote do PyPI e não tem JavaScript; o que há para atualizar é a imagem base e os pacotes do Debian.
-- **Tamanho do código:** 3358 linhas de Python em 21 módulos, 201 de CSS, 5784 de Bash e 278 de Perl, contando a bateria de testes.
+- **Tamanho do código:** 3358 linhas de Python em 21 módulos, 202 de CSS, 5784 de Bash e 278 de Perl, contando a bateria de testes.
 - **De onde vem o peso das imagens:** da base `debian:13-slim`, com 119 MB, comum às três.
 
 </details>
@@ -685,7 +715,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.24.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.24.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

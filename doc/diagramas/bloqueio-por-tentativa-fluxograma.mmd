@@ -12,9 +12,9 @@ flowchart LR
     subgraph AUTH["Autenticação"]
         login@{ shape: diam, label: "usuário e senha<br>conferem?" }
         puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
-        vigia@{ shape: rect, label: "vigia<br>conta as senhas erradas" }
-        limite@{ shape: diam, label: "chegou ao limite<br>do usuário?" }
+        limite@{ shape: diam, label: "vigia soma os erros<br>chegou ao limite?" }
         limites@{ shape: doc, label: "limites.lista<br>limite próprio do usuário" }
+        bloqueia@{ shape: rect, label: "vigia<br>bloqueia usuário e endereço" }
     end
     subgraph RESULTADO["Resultado"]
         sessao@{ shape: stadium, label: "sessão em chroot<br>presa na pasta" }
@@ -27,11 +27,11 @@ flowchart LR
     preso -- "4a · sim: recusa definitiva" --> recusa
     preso -- "4b · não: segue" --> login
     login -- "5a · sim: abre a sessão" --> sessao
-    login -- "5b · não: avisa a senha errada" --> vigia
-    vigia -- "6 · soma as senhas erradas do endereço" --> limite
-    limite -- "7a · sim: recusa e bloqueia" --> recusa
-    limite -- "7b · não: só recusa" --> recusa
+    login -- "5b · não: avisa a senha errada ao vigia" --> limite
+    limite -- "6a · sim: bloqueia" --> bloqueia
+    limite -- "6b · não: só recusa" --> recusa
+    bloqueia -- "7 · recusa" --> recusa
     preso -. "lê" .-> bloqueios
     login -. "consulta o usuário" .-> puredb
     limite -. "lê" .-> limites
-    limite -. "grava o bloqueio" .-> bloqueios
+    bloqueia -. "grava o bloqueio" .-> bloqueios

@@ -142,7 +142,7 @@ def campo_do_tls(marcado=False):
     """Caixa que dispensa o usuário novo do TLS; vazio quando o TLS por usuário não vale nesta instalação."""
     if not CFG['tls_excecoes']:
         return ''
-    return f'''<label class="marcar"><input type="checkbox" name="sem_tls" value="sim"{' checked' if marcado else ''}> Equipamento sem suporte a TLS: deixar este usuário entrar <strong>sem TLS</strong></label>
+    return f'''<label class="marcar"><input type="checkbox" name="sem_tls" value="sim"{' checked' if marcado else ''}> <span>Equipamento sem suporte a TLS: deixar este usuário entrar <strong>sem TLS</strong></span></label>
 <p class="aviso">{ALERTA_SEM_TLS} Sem marcar a caixa, o usuário só entra com TLS (FTPS explícito).</p>'''
 
 
@@ -254,7 +254,7 @@ def cartao_bloqueios(sessao, nome, erro=''):
     dele = bloqueios().get(nome, [])
     if not dele and not erro:
         return ''
-    linhas = ''.join(f'<tr><td><code>{e(origem)}</code></td><td>{erradas}</td><td>{e(quando(desde))}</td><td>{e(quando(expira))}</td></tr>'
+    linhas = ''.join(f'<tr><td class="origem"><code>{e(origem)}</code></td><td>{erradas}</td><td>{e(quando(desde))}</td><td>{e(quando(expira))}</td></tr>'
                      for origem, expira, desde, erradas in dele)
     return f'''<section class="cartao estreito" id="bloqueios"><h2>⛔ Bloqueios</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>O FTP está recusando este usuário quando ele chega dos endereços abaixo, por senhas erradas demais. Com a senha certa

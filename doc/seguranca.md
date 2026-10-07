@@ -412,9 +412,9 @@ flowchart LR
     subgraph AUTH["Autenticação"]
         login@{ shape: diam, label: "usuário e senha<br>conferem?" }
         puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
-        vigia@{ shape: rect, label: "vigia<br>conta as senhas erradas" }
-        limite@{ shape: diam, label: "chegou ao limite<br>do usuário?" }
+        limite@{ shape: diam, label: "vigia soma os erros<br>chegou ao limite?" }
         limites@{ shape: doc, label: "limites.lista<br>limite próprio do usuário" }
+        bloqueia@{ shape: rect, label: "vigia<br>bloqueia usuário e endereço" }
     end
     subgraph RESULTADO["Resultado"]
         sessao@{ shape: stadium, label: "sessão em chroot<br>presa na pasta" }
@@ -427,14 +427,14 @@ flowchart LR
     preso -- "4a · sim: recusa definitiva" --> recusa
     preso -- "4b · não: segue" --> login
     login -- "5a · sim: abre a sessão" --> sessao
-    login -- "5b · não: avisa a senha errada" --> vigia
-    vigia -- "6 · soma as senhas erradas do endereço" --> limite
-    limite -- "7a · sim: recusa e bloqueia" --> recusa
-    limite -- "7b · não: só recusa" --> recusa
+    login -- "5b · não: avisa a senha errada ao vigia" --> limite
+    limite -- "6a · sim: bloqueia" --> bloqueia
+    limite -- "6b · não: só recusa" --> recusa
+    bloqueia -- "7 · recusa" --> recusa
     preso -. "lê" .-> bloqueios
     login -. "consulta o usuário" .-> puredb
     limite -. "lê" .-> limites
-    limite -. "grava o bloqueio" .-> bloqueios
+    bloqueia -. "grava o bloqueio" .-> bloqueios
 ```
 
 <sub>Nível 2 · Mapa · [fonte](diagramas/)</sub>
@@ -447,10 +447,10 @@ flowchart LR
 | 4a | usuário bloqueado para o endereço? ➜ 530 | Sim: recusa definitiva, com a senha certa ou errada |
 | 4b | usuário bloqueado para o endereço? ➜ usuário e senha conferem? | Não: segue para a conferência da senha |
 | 5a | usuário e senha conferem? ➜ sessão em chroot | Sim: a sessão abre, presa na pasta do usuário, e a contagem daquele endereço volta a zero |
-| 5b | usuário e senha conferem? ➜ vigia | Não: o servidor registra a senha errada, e o vigia (`allsafe-ftp-vigia`) recebe o aviso, com o usuário e o endereço |
-| 6 | vigia ➜ chegou ao limite do usuário? | O vigia soma as senhas erradas daquele endereço para aquele usuário, dentro do prazo, e compara com o limite |
-| 7a | chegou ao limite do usuário? ➜ 530 | Sim: a entrada é recusada e o vigia grava o bloqueio, que vale a partir da tentativa seguinte |
-| 7b | chegou ao limite do usuário? ➜ 530 | Não: a entrada é recusada com `530 Login authentication failed`, e a contagem fica guardada |
+| 5b | usuário e senha conferem? ➜ vigia soma os erros: chegou ao limite? | Não: o servidor registra a senha errada, e o vigia (`allsafe-ftp-vigia`) recebe o aviso, com o usuário e o endereço, soma as senhas erradas daquele endereço para aquele usuário, dentro do prazo, e compara com o limite |
+| 6a | vigia soma os erros: chegou ao limite? ➜ vigia | Sim: o vigia grava o bloqueio do usuário para aquele endereço, que vale a partir da tentativa seguinte |
+| 6b | vigia soma os erros: chegou ao limite? ➜ 530 | Não: a entrada é recusada com `530 Login authentication failed`, e a contagem fica guardada |
+| 7 | vigia ➜ 530 | A entrada que atingiu o limite também é recusada |
 
 **Apoio**
 
@@ -458,8 +458,8 @@ flowchart LR
 |---|---|---|
 | usuário bloqueado para o endereço? | bloqueios (`DATA_DIR/auth/bloqueios`) | lê a cada entrada |
 | usuário e senha conferem? | PureDB | consulta o usuário |
-| chegou ao limite do usuário? | `limites.lista` (`DATA_DIR/auth`) | lê o limite próprio do usuário; sem ele, vale o da stack |
-| chegou ao limite do usuário? | bloqueios (`DATA_DIR/auth/bloqueios`) | grava o bloqueio, com o prazo |
+| vigia soma os erros: chegou ao limite? | `limites.lista` (`DATA_DIR/auth`) | lê o limite próprio do usuário; sem ele, vale o da stack |
+| vigia | bloqueios (`DATA_DIR/auth/bloqueios`) | grava o bloqueio, com o prazo |
 
 </details>
 

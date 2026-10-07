@@ -8,6 +8,21 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.24.1] - 2026-10-07
+
+Duas correções de leitura nas telas de usuário do painel, e a documentação revisada de ponta a ponta: fotos refeitas, guia da aplicação com as telas novas e diagramas redesenhados.
+
+### Corrigido
+
+- **Caixa "Equipamento sem suporte a TLS" em Novo usuário**: o texto ficava repartido em pedaços ao lado da caixa; agora é um bloco só, com "sem TLS" em destaque.
+- **Endereço de origem no cartão Bloqueios da tela Editar**: o endereço quebrava em duas linhas; agora fica inteiro numa linha.
+
+### Alterado
+
+- **Fotos da aplicação refeitas** nesta versão: 38 no guia da aplicação e 7 no README, com a coluna TLS, a etiqueta `inicial` e as telas das versões `0.21.0` a `0.24.0`.
+- **Guia da aplicação** com as telas que faltavam: Editar, Limites, Bloqueios, Renomear e Apagar arquivo, usuário novo já dispensado do TLS, cartão TLS e remoção do usuário inicial com a pasta.
+- **Diagramas redesenhados** para caber na tela sem linha cruzada: o fluxograma do painel foi dividido em dois, a entrada e os pedidos de uma sessão aberta, e o mapa da arquitetura deixou o `.env`, os segredos e o registro para o modelo da subida. As sequências escritas abaixo de cada um acompanham os números novos.
+
 ## [0.24.0] - 2026-10-07
 
 O equipamento sem suporte a TLS passa a ser liberado pelo painel, usuário por usuário, ao criar ou ao editar, sem mexer no `.env`. Enquanto ninguém é dispensado, nada muda: a sessão sem TLS é recusada antes de a senha ser enviada.

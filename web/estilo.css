@@ -136,6 +136,7 @@ tbody tr:last-child > * { border-bottom: 0; }
 .acoes { min-width: 12rem; }
 .acoes .botao { margin: 2px 0; white-space: nowrap; }
 td:first-child strong { white-space: nowrap; }
+td.origem code { overflow-wrap: normal; white-space: nowrap; }
 .conferencia .marca { width: 1%; font-size: 1.1rem; }
 .digital { font-size: 0.75rem; }
 

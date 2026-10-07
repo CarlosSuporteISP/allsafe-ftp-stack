@@ -28,6 +28,7 @@ button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke
 #esquerda { grid-area: 2 / 1; } #reset { grid-area: 2 / 2; } #direita { grid-area: 2 / 3; }
 #baixo { grid-area: 3 / 2; } #menos { grid-area: 3 / 3; }
 #zoom { position: absolute; left: 16px; bottom: 16px; padding: 4px 8px; background: var(--painel); border: 1px solid var(--borda); border-radius: 6px; color: var(--apagado); font-size: 12px; }
+#aviso { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); z-index: 5; max-width: calc(100% - 32px); padding: 8px 14px; background: var(--painel); border: 1px solid var(--borda); border-radius: 8px; color: var(--texto); box-shadow: 0 4px 16px rgba(0,0,0,.35); text-align: center; }
 #vazio { margin: auto; padding: 24px; color: var(--apagado); text-align: center; }
 [hidden] { display: none !important; }
 </style>
@@ -52,10 +53,11 @@ button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke
     <button id="baixo" title="Mover para baixo (↓)" aria-label="Mover para baixo"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
     <button id="menos" title="Afastar (−)" aria-label="Afastar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5M8 11h6"/></svg></button>
   </div>
+  <div id="aviso" role="status" hidden>O navegador não deixa esta página se fechar sozinha. Feche a aba com <b>Ctrl+W</b> (ou <b>⌘W</b>).</div>
   <p id="vazio" hidden>Nenhum diagrama nem imagem nesta pasta.</p>
 </main>
 <script>
-const DIAGRAMAS = /*LISTA*/["arquitetura-mapa", "backup-diagrama", "bloqueio-por-tentativa-fluxograma", "configuracao-diagrama", "diagnostico-diagrama", "funcionamento-fluxograma", "instalacao-diagrama", "painel-diagrama", "painel-fluxograma", "scripts-diagrama", "segredos-diagrama", "seguranca-diagrama", "subida-modelo", "tls-por-usuario-fluxograma", "usuarios-diagrama", "visao-geral-diagrama"];
+const DIAGRAMAS = /*LISTA*/["arquitetura-mapa", "backup-diagrama", "bloqueio-por-tentativa-fluxograma", "configuracao-diagrama", "diagnostico-diagrama", "funcionamento-fluxograma", "instalacao-diagrama", "painel-diagrama", "painel-fluxograma", "painel-pedidos-fluxograma", "scripts-diagrama", "segredos-diagrama", "seguranca-diagrama", "subida-modelo", "tls-por-usuario-fluxograma", "usuarios-diagrama", "visao-geral-diagrama"];
 const palco = document.getElementById("palco");
 const desenho = document.getElementById("desenho");
 const lista = document.getElementById("lista");
@@ -116,7 +118,18 @@ document.getElementById("cima").onclick = () => mover(0, ANDAR);
 document.getElementById("baixo").onclick = () => mover(0, -ANDAR);
 document.getElementById("esquerda").onclick = () => mover(ANDAR, 0);
 document.getElementById("direita").onclick = () => mover(-ANDAR, 0);
-document.getElementById("fechar").onclick = () => { if (history.length > 1) history.back(); else window.close(); };
+// Fechar: se a página veio de um link, volta; se foi aberta direto do arquivo, o navegador só deixa fechar o que ele mesmo abriu,
+// então tenta fechar e, se a aba continuar aqui, mostra o aviso com o atalho em vez de parecer que o botão não funciona.
+document.getElementById("fechar").onclick = () => {
+  const aviso = document.getElementById("aviso");
+  if (document.referrer || history.length > 1) history.back(); else window.close();
+  setTimeout(() => {
+    if (document.visibilityState === "hidden") return;
+    aviso.hidden = false;
+    clearTimeout(aviso._t);
+    aviso._t = setTimeout(() => { aviso.hidden = true; }, 6000);
+  }, 350);
+};
 
 palco.addEventListener("wheel", (e) => {
   e.preventDefault();

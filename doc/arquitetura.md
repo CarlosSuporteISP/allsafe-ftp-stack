@@ -53,45 +53,38 @@ flowchart LR
     end
     subgraph HOST["Host"]
         scripts@{ shape: console, label: "deploy.sh<br>manage-user.sh" }
-        env@{ shape: doc, label: ".env<br>configuração e limites" }
-        segredo@{ shape: doc, label: ".secrets<br>senha do FTP, hash inicial do painel" }
     end
     subgraph CONTAINERS["Containers · rede allsafe-ftp-network"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
-        logs@{ shape: docs, label: "registro do container<br>entradas e transferências" }
     end
     subgraph VOLUMES["Volumes"]
-        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
-        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>/painel, certificado, administradores e auditoria" }
-        vauth@{ shape: cyl, label: "DATA_DIR/auth<br>/auth, PureDB" }
-        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>/etc/ssl/private" }
-        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>/data" }
+        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>soquete e cópia do certificado" }
+        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>administradores e auditoria" }
+        vauth@{ shape: cyl, label: "DATA_DIR/auth<br>PureDB" }
+        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>arquivos enviados" }
+        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>certificado do FTP" }
     end
     subgraph RESULTADO["Resultado"]
         fim@{ shape: stadium, label: "backup guardado" }
     end
 
     operador -- "1 · ./deploy.sh" --> scripts
-    scripts -- "2 · docker compose build e up -d --wait" --> ftp
+    scripts -- "2 · docker compose build e up -d --wait" --> nginx
     operador -- "3 · HTTPS, TCP 8443" --> nginx
     nginx -- "4 · repassa pelo soquete Unix" --> painel
-    painel -- "5 · cria, troca a senha ou remove o usuário" --> vauth
+    painel -- "5 · cria, edita ou remove o usuário" --> vauth
     equip -- "6 · FTPS, TCP 21 para 2121" --> ftp
-    ftp -- "7 · grava o arquivo, faixa passiva do perfil" --> vdata
+    ftp -- "7 · grava o arquivo" --> vdata
     vdata -- "8 · arquivo no volume" --> fim
-    scripts -. "cria, lê e grava o perfil" .-> env
-    ftp -. "lê a senha na subida, só leitura" .-> segredo
-    painel -. "lê o hash inicial na subida, só leitura" .-> segredo
-    ftp -. "consulta os usuários" .-> vauth
-    ftp -. "lê o certificado" .-> vcerts
-    painel -. "grava certificado, administradores e auditoria" .-> vpainel
-    painel -. "cria o soquete e copia o certificado" .-> vnginx
     nginx -. "lê, só leitura" .-> vnginx
-    painel -. "cria pasta, renomeia, apaga e lê os arquivos para o download" .-> vdata
-    painel -. "confere a senha do usuário do FTP, na rede interna" .-> ftp
-    ftp -. "registra entradas e transferências" .-> logs
+    painel -. "cria o soquete" .-> vnginx
+    painel -. "grava" .-> vpainel
+    painel -. "gerencia e lê" .-> vdata
+    painel -. "confere a senha do FTP" ..-> ftp
+    ftp -. "consulta" .-> vauth
+    ftp -. "lê o certificado" .-> vcerts
 ```
 
 <sub>Nível 2 · Mapa · [fonte](diagramas/)</sub>
@@ -99,10 +92,10 @@ flowchart LR
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
 | 1 | Usuário ➜ `deploy.sh` | O usuário executa `./deploy.sh` no host |
-| 2 | `deploy.sh` ➜ Pure-FTPd | O script valida a configuração, constrói as imagens (`docker compose build`), sobe os três containers (`up -d --wait`) e espera ficarem `healthy` |
+| 2 | `deploy.sh` ➜ nginx | O script valida a configuração, constrói as imagens (`docker compose build`) e sobe os três containers (`up -d --wait`), na ordem `ftp`, `painel` e `nginx`: cada um espera o anterior ficar `healthy`, e o nginx, a porta de entrada do painel, é o último |
 | 3 | Usuário ➜ nginx | O usuário abre o painel por HTTPS em `8443/tcp`: quem atende é o nginx, que confere a rede de origem e a taxa de pedidos |
 | 4 | nginx ➜ Painel web | O pedido aceito é repassado ao painel pelo soquete Unix, com o endereço do cliente |
-| 5 | Painel web ➜ `DATA_DIR/auth` | O painel cria, troca a senha ou remove o usuário no PureDB |
+| 5 | Painel web ➜ `DATA_DIR/auth` | O painel cria, edita ou remove o usuário no PureDB |
 | 6 | Equipamento de rede ➜ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
 | 7 | Pure-FTPd ➜ `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
 | 8 | `DATA_DIR/dados` ➜ backup guardado | O arquivo fica na pasta do usuário, no host |
@@ -111,16 +104,23 @@ flowchart LR
 
 | Quem | Usa | Como |
 |---|---|---|
+| nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
+| Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
+| Painel web | `DATA_DIR/painel` | grava o certificado, os administradores e a auditoria |
+| Painel web | `DATA_DIR/dados` | cria pasta, renomeia, apaga e lê os arquivos para o download |
+| Painel web | Pure-FTPd | confere a senha do usuário do FTP que entra no painel, pela rede interna da stack |
+| Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
+| Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
+
+**Configuração, segredos e registro**
+
+O mapa mostra as peças e os volumes. A configuração, os segredos e o registro ficam nesta tabela:
+
+| Quem | Usa | Como |
+|---|---|---|
 | `deploy.sh` e `manage-user.sh` | `.env` | cria, lê e grava o perfil |
 | Pure-FTPd | `.secrets` (`ftp-usuario-inicial-senha.txt`) | lê a senha na subida, somente leitura |
 | Painel web | `.secrets` (`painel-admin-inicial-senha-hash.txt`) | lê o hash inicial na subida, somente leitura |
-| Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
-| Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
-| Painel web | `DATA_DIR/painel` | grava o certificado, os administradores e a auditoria |
-| Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
-| nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
-| Painel web | `DATA_DIR/dados` | cria pasta, renomeia, apaga e lê os arquivos para o download |
-| Painel web | Pure-FTPd | confere a senha do usuário do FTP que entra no painel, pela rede interna da stack |
 | Pure-FTPd | registro do container | registra cada entrada e cada transferência, com o usuário e o endereço |
 
 </details>
@@ -222,8 +222,7 @@ flowchart LR
         gera@{ shape: rect, label: "openssl<br>autoassinado, 825 dias" }
         cert@{ shape: doc, label: "pure-ftpd.pem<br>/etc/ssl/private" }
         pure@{ shape: rect, label: "pure-ftpd<br>0.0.0.0, 2121" }
-        authd@{ shape: rect, label: "vigia e pure-authd<br>bloqueio e porteiro" }
-        semtls@{ shape: docs, label: "bloqueios e sem-tls.lista<br>/auth, lidos a cada entrada" }
+        authd@{ shape: rect, label: "vigia e pure-authd<br>bloqueio e porteiro, listas em /auth" }
         saude@{ shape: rect, label: "healthcheck<br>saudação na porta 2121" }
     end
     subgraph RESULTADO["Resultado"]
@@ -238,21 +237,19 @@ flowchart LR
     valida -- "5a · sim" --> pw
     valida -- "5b · não" --> falha
     pw -- "6 · banco compilado" --> certq
-    certq -- "7a · sim: reutiliza" --> pure
-    certq -- "7b · não" --> gera
-    gera -- "8 · certificado pronto" --> pure
-    pure -- "9 · conferido a cada 20 s" --> saude
-    saude -- "10 · servidor atende" --> pronto
+    certq -- "7a · sim: reutiliza" --> cert
+    certq -- "7b · não: gera" --> gera
+    gera -- "8 · grava o certificado" --> cert
+    cert -- "9 · lido na partida" --> pure
+    pure -- "10 · conferido a cada 20 s" --> saude
+    saude -- "11 · servidor atende" ---> pronto
     deploy -. "gera a senha se vazio, 0600" .-> segredo
     compose -. "lê" .-> env
     entry -. "lê, só leitura" .-> segredo
     entry -. "cria a pasta" .-> dados
     pw -. "grava" .-> puredb
-    gera -. "grava" .-> cert
-    pure -. "lê" .-> cert
     pure -. "consulta" .-> puredb
     pure -. "pergunta a cada entrada e avisa a senha errada" .-> authd
-    authd -. "lê e grava" .-> semtls
 ```
 
 <sub>Nível 3 · Modelo · [fonte](diagramas/)</sub>
@@ -266,11 +263,12 @@ flowchart LR
 | 5a | variáveis válidas? ➜ `pure-pw` | Sim: na primeira subida cria o usuário inicial (`useradd`); nas seguintes regrava a senha dele (`passwd`), salvo se foi trocada pelo painel e o segredo não mudou, e não o recria se foi removido | — | Usuário virtual com uid e gid `ftpdata`, home `/data/<usuario>` |
 | 5b | variáveis válidas? ➜ FALHA no log | Não: o entrypoint sai com `FALHA: <motivo>` | — | O container reinicia em laço até a correção |
 | 6 | `pure-pw` ➜ certificado existe? | Compila o banco com `pure-pw mkdb` e segue | — | `pureftpd.passwd` e `pureftpd.pdb` ficam `0600` |
-| 7a | certificado existe? ➜ `pure-ftpd` | Sim: reutiliza o `pure-ftpd.pem` | — | O certificado existente nunca é sobrescrito |
+| 7a | certificado existe? ➜ `pure-ftpd.pem` | Sim: reutiliza o certificado que já está no volume | — | O certificado existente nunca é sobrescrito |
 | 7b | certificado existe? ➜ `openssl` | Não: gera um autoassinado | — | RSA 3072, SHA-256, 825 dias, SAN `IP:` ou `DNS:` conforme `FTP_CERT_CN` |
-| 8 | `openssl` ➜ `pure-ftpd` | Certificado pronto, `0600` | — | As variáveis de senha são apagadas (`unset`) antes de os processos subirem; o vigia e o `pure-authd` sobem antes do `pure-ftpd` |
-| 9 | `pure-ftpd` ➜ healthcheck | Porta de controle conferida a cada 20 s | TCP `2121` | `start_period` de 20 s, 5 tentativas |
-| 10 | healthcheck ➜ FTP pronto | Saudação recebida: container `healthy` | — | Confere que o servidor atende, sem fazer login |
+| 8 | `openssl` ➜ `pure-ftpd.pem` | Grava o certificado novo, `0600` | — | Em `/etc/ssl/private`, no volume `DATA_DIR/certs` |
+| 9 | `pure-ftpd.pem` ➜ `pure-ftpd` | O servidor lê o certificado na partida | — | As variáveis de senha são apagadas (`unset`) antes de os processos subirem; o vigia e o `pure-authd` sobem antes do `pure-ftpd` |
+| 10 | `pure-ftpd` ➜ healthcheck | Porta de controle conferida a cada 20 s | TCP `2121` | `start_period` de 20 s, 5 tentativas |
+| 11 | healthcheck ➜ FTP pronto | Saudação recebida: container `healthy` | — | Confere que o servidor atende, sem fazer login |
 
 **Apoio**
 
@@ -281,11 +279,8 @@ flowchart LR
 | entrypoint | `.secrets/ftp-usuario-inicial-senha.txt` | lê, somente leitura |
 | entrypoint | `/data` | cria a pasta do usuário |
 | `pure-pw` | PureDB (`/auth/pureftpd.pdb`) | grava |
-| `openssl` | `pure-ftpd.pem` | grava |
-| `pure-ftpd` | `pure-ftpd.pem` | lê |
 | `pure-ftpd` | PureDB | consulta |
-| `pure-ftpd` | vigia e `pure-authd` | pergunta ao `pure-authd` a cada entrada, antes de conferir a senha, e avisa o vigia de cada senha errada |
-| vigia e `pure-authd` | bloqueios e `sem-tls.lista` (`/auth`) | o porteiro lê os bloqueios e a lista de quem entra sem TLS; o vigia grava os bloqueios |
+| `pure-ftpd` | vigia e `pure-authd` | pergunta ao `pure-authd` a cada entrada, antes de conferir a senha, e avisa o vigia de cada senha errada; em `/auth`, o porteiro lê os bloqueios e a `sem-tls.lista`, de quem entra sem TLS, e o vigia grava os bloqueios |
 
 </details>
 

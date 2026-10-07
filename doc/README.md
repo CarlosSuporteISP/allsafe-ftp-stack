@@ -121,6 +121,7 @@ Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com o
 | [backup-diagrama.mmd](diagramas/backup-diagrama.mmd) | 1 | [Backup e restauração](backup.md) |
 | [painel-diagrama.mmd](diagramas/painel-diagrama.mmd) | 1 | [Painel web](painel.md) |
 | [painel-fluxograma.mmd](diagramas/painel-fluxograma.mmd) | 2 | [README do projeto](../README.md#como-funciona) e [Painel web](painel.md#como-decide) |
+| [painel-pedidos-fluxograma.mmd](diagramas/painel-pedidos-fluxograma.mmd) | 2 | [README do projeto](../README.md#como-funciona) e [Painel web](painel.md#como-decide) |
 | [diagnostico-diagrama.mmd](diagramas/diagnostico-diagrama.mmd) | 1 | [Solução de problemas](solucao-de-problemas.md) |
 
 ---

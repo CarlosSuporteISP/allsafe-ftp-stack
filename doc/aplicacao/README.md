@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-Todas as telas do painel web, menu por menu, com a foto de cada uma e a explicação do que dá para fazer nela. As fotos são capturas reais da versão **0.18.4**, em tema escuro (o único do painel), com usuários de exemplo, como `olt-centro`, `switch-core` e `roteador-borda`. Clique em qualquer foto para abri-la em tamanho real.
+Todas as telas do painel web, menu por menu, com a foto de cada uma e a explicação do que dá para fazer nela. As fotos são capturas reais da versão **0.24.1**, em tema escuro (o único do painel), com usuários de exemplo, como `olt-centro`, `switch-core` e `roteador-borda`. Clique em qualquer foto para abri-la em tamanho real.
 
 O painel tem uma tela de entrada, seis abas para quem administra (Visão geral, Usuários, Arquivos, Administradores, Segurança e Atividade) e uma tela para o usuário do FTP baixar os próprios backups (Meus arquivos). Como abrir, criar administradores e o que protege o painel está em [Painel web](../painel.md).
 
@@ -25,7 +25,7 @@ O painel tem uma tela de entrada, seis abas para quem administra (Visão geral, 
 
 <a href="imagens/entrar.png"><img src="imagens/entrar.png" alt="Tela de entrada do painel, com a logo, os campos Usuário e Senha, o botão Entrar e o aviso de uso só em rede privada" width="100%"></a>
 
-<sub><b>v0.18.4</b> · tela de entrada · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · tela de entrada · captura de 2026-10-07</sub>
 
 **Para que serve:** conferir o usuário e a senha antes de mostrar qualquer dado da stack. É a mesma tela para quem administra e para o usuário do FTP.
 
@@ -46,7 +46,7 @@ O painel tem uma tela de entrada, seis abas para quem administra (Visão geral, 
 
 <a href="imagens/entrar-recusada.png"><img src="imagens/entrar-recusada.png" alt="Tela de entrada com a mensagem Não foi possível entrar acima dos campos Usuário e Senha" width="100%"></a>
 
-<sub><b>v0.18.4</b> · tela de entrada, entrada recusada · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · tela de entrada, entrada recusada · captura de 2026-10-07</sub>
 
 | Mensagem | Quando aparece | O que fazer |
 |---|---|---|
@@ -75,7 +75,7 @@ O painel tem uma tela de entrada, seis abas para quem administra (Visão geral, 
 
 <a href="imagens/visao-geral.png"><img src="imagens/visao-geral.png" alt="Aba Visão geral com os cartões Servidor FTP, Usuários, Espaço usado, Último envio e Certificado do FTP, e a tabela de dados para configurar o equipamento" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Visão geral · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Visão geral · captura de 2026-10-07</sub>
 
 **Para que serve:** ver de uma vez se o FTP está no ar e quais dados digitar no equipamento que vai mandar o backup.
 
@@ -99,9 +99,9 @@ Nada é alterado por esta aba.
 
 ### Visão geral ➜ Alerta de usuário sem TLS
 
-<a href="imagens/visao-geral-alerta-tls.png"><img src="imagens/visao-geral-alerta-tls.png" alt="Aba Visão geral com o alerta no topo de que um usuário, radio-antigo, entra no FTP sem TLS, e o cartão Servidor FTP indicando TLS obrigatório com exceção por usuário" width="100%"></a>
+<a href="imagens/visao-geral-alerta-tls.png"><img src="imagens/visao-geral-alerta-tls.png" alt="Aba Visão geral com o alerta no topo de que dois usuários, central-pabx e radio-antigo, entram no FTP sem TLS, e o cartão Servidor FTP indicando TLS obrigatório no login, com exceção por usuário" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Visão geral, alerta de usuário sem TLS · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Visão geral, alerta de usuário sem TLS · captura de 2026-10-07</sub>
 
 | Alerta no topo | Quando aparece | Como some |
 |---|---|---|
@@ -128,11 +128,11 @@ O mesmo alerta abre a aba Segurança. As condições para dispensar um usuário 
 
 ## 👥 Usuários
 
-<a href="imagens/usuarios.png"><img src="imagens/usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista de usuários: pasta no host, com a marca dividida em duas delas, uso, arquivos, último envio e as ações Trocar senha e Remover" width="100%"></a>
+<a href="imagens/usuarios.png"><img src="imagens/usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista de usuários: o nome, com as etiquetas inicial, limites e bloqueado, a pasta no host, com a etiqueta dividida em duas, uso, arquivos, último envio, a coluna TLS, com obrigatório em todas as linhas, e as ações Editar, Trocar senha, Remover e Dispensar TLS" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Usuários · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Usuários · captura de 2026-10-07</sub>
 
-**Para que serve:** criar a conta de cada equipamento, escolher a pasta em que ela fica presa, trocar a senha e remover a conta, sem linha de comando.
+**Para que serve:** criar a conta de cada equipamento ou pessoa, escolher e trocar a pasta em que ela fica presa, trocar a senha, dar limites próprios, tirar o bloqueio por senha errada e remover a conta, com ou sem a pasta, sem linha de comando.
 
 **Como chegar:** menu do topo ➜ **Usuários**.
 
@@ -142,8 +142,11 @@ O mesmo alerta abre a aba Segurança. As condições para dispensar um usuário 
 | Usuário | Nome da conta. A etiqueta `inicial` marca o usuário criado na instalação (`FTP_USER`) |
 | Pasta no host | Onde os arquivos desse usuário ficam no servidor. O endereço abre a pasta na aba Arquivos |
 | Etiqueta `dividida` | A pasta é alcançada por mais de um usuário: um lê, grava e apaga os arquivos do outro |
+| Etiqueta `limites` | O usuário tem limite próprio, gravado em **Editar**; passando o mouse, aparece cada um |
+| Etiqueta `bloqueado` | O FTP está recusando o usuário por senhas erradas demais vindas de um endereço; sai sozinha no fim do prazo, ou em **Editar** |
 | Uso · Arquivos · Último envio | Espaço ocupado, quantidade de arquivos e data do envio mais recente |
-| **Editar** | Abre a tela do usuário, com a troca da pasta |
+| Coluna TLS · **Dispensar TLS** · **Exigir TLS** | Como o usuário entra no FTP e o caminho para mudar: veja [Usuários ➜ TLS por usuário](#usuarios) |
+| **Editar** | Abre a tela do usuário, com a troca da pasta, os limites próprios e os bloqueios |
 | **Trocar senha** | Abre o formulário de troca de senha daquele usuário |
 | **Remover** | Abre a confirmação de remoção daquele usuário, inclusive o inicial |
 
@@ -154,9 +157,9 @@ O usuário inicial tem a senha e a pasta trocadas e é removido como os demais. 
 
 ### Usuários ➜ Novo usuário
 
-<a href="imagens/usuarios-novo.png"><img src="imagens/usuarios-novo.png" alt="Formulário Novo usuário com os campos Nome do usuário, Pasta, Senha e Repita a senha, o aviso de pasta dividida e os botões Criar usuário e Cancelar" width="100%"></a>
+<a href="imagens/usuarios-novo.png"><img src="imagens/usuarios-novo.png" alt="Formulário Novo usuário com os campos Nome do usuário, Pasta, Senha e Repita a senha, o aviso de pasta dividida, a caixa Equipamento sem suporte a TLS, desmarcada, com o alerta do texto puro, e os botões Criar usuário e Cancelar" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Usuários, formulário Novo usuário · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Usuários, formulário Novo usuário · captura de 2026-10-07</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -164,10 +167,11 @@ O usuário inicial tem a senha e a pasta trocadas e é removido como os demais. 
 | Pasta | Não | Em branco, é o nome do usuário. Escolhida, fica dentro de `DATA_DIR/dados`, com até 4 níveis separados por `/`, e é criada se não existir. O campo sugere as pastas que já existem |
 | Senha | Não | 12 caracteres ou mais. Em branco, o painel gera uma senha forte |
 | Repita a senha | Só com a senha preenchida | A mesma senha |
+| Caixa **Equipamento sem suporte a TLS** | Não | Marque só para o equipamento antigo que não fala TLS: o usuário já nasce dispensado. Sem marcar, ele só entra com TLS |
 
 **Resultado esperado:** a lista volta com a mensagem `Usuário criado.` e o usuário já entra por FTPS, sem reiniciar o FTP, preso na pasta escolhida.
 
-> ⚠️ **Pasta dividida:** dois usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro. Na foto, `filiais/olt-norte` fica dentro de `filiais`, a pasta de uma conta de consulta. Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.
+> ⚠️ **Pasta dividida:** dois usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro. Na lista de usuários do começo desta seção, `filiais/olt-norte` fica dentro de `filiais`, a pasta de uma conta de consulta, e as duas levam a etiqueta `dividida`. Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.
 
 </details>
 
@@ -178,7 +182,7 @@ O usuário inicial tem a senha e a pasta trocadas e é removido como os demais. 
 
 <a href="imagens/usuarios-novo-recusado.png"><img src="imagens/usuarios-novo-recusado.png" alt="Formulário Novo usuário com a mensagem Já existe um usuário com este nome acima dos campos" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Usuários, cadastro recusado · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Usuários, cadastro recusado · captura de 2026-10-07</sub>
 
 O painel devolve o formulário com o motivo no topo e nada é criado.
 
@@ -201,9 +205,103 @@ Pasta que passa por link simbólico, ou por um nome que já é de um arquivo, ta
 
 <a href="imagens/usuarios-senha-gerada.png"><img src="imagens/usuarios-senha-gerada.png" alt="Tela Usuário criado com a senha gerada pelo painel, aqui substituída por REDACTED, e o aviso de que ela não será mostrada de novo" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Usuários, senha gerada · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Usuários, senha gerada · captura de 2026-10-07</sub>
 
 Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca de senha. A senha é mostrada **uma única vez**: copie para o equipamento ou para o cofre de senhas antes de sair da tela. Na foto, o valor foi trocado por `<REDACTED>`.
+
+</details>
+
+<details>
+<summary>Usuários ➜ Editar — clique para expandir</summary>
+
+### Usuários ➜ Editar
+
+<a href="imagens/usuarios-editar.png"><img src="imagens/usuarios-editar.png" alt="Tela Editar usuário de roteador-borda, com o cartão Pasta, que mostra a pasta atual e o campo Pasta nova, o cartão TLS, que diz que o usuário só entra com TLS e traz o botão Dispensar TLS, e o cartão Limites preenchido com sessões, taxas, horário, downloads pelo painel, senhas erradas até o bloqueio e minutos de bloqueio" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Usuários, tela Editar usuário · captura de 2026-10-07</sub>
+
+Reúne o que muda em um usuário sem criá-lo de novo. O nome não muda: é com ele que o equipamento entra no FTP.
+
+| Cartão | O que faz |
+|---|---|
+| Topo | Mostra o usuário, leva a **Trocar senha** e volta para a lista |
+| **Bloqueios** | Só aparece quando o FTP está recusando o usuário por senhas erradas demais: veja [Usuários ➜ Bloqueios](#usuarios) |
+| **Pasta** | Mostra a pasta atual, com a quantidade de arquivos e o espaço ocupado, e troca a pasta do usuário |
+| **TLS** | Diz se o usuário entra com ou sem TLS e leva à confirmação da troca: veja [Usuários ➜ TLS por usuário](#usuarios) |
+| **Limites** | Grava os limites próprios do usuário: veja [Usuários ➜ Limites](#usuarios) |
+
+| Campo do cartão Pasta | Obrigatório | O que preencher |
+|---|---|---|
+| Pasta nova | Sim | A mesma regra do cadastro: dentro de `DATA_DIR/dados`, com até 4 níveis separados por `/`; é criada se não existir |
+
+**Resultado esperado:** depois de **Trocar pasta**, a lista volta com a mensagem `Pasta trocada. Os arquivos da pasta anterior continuam nela.` O usuário entra na pasta nova no próximo login no FTP, e a sessão dele no painel é encerrada.
+
+| Mensagem | Motivo |
+|---|---|
+| Esta já é a pasta do usuário. | A pasta nova é igual à atual |
+| Pasta inválida. Veja a regra abaixo do campo. | A pasta foge da regra, tem mais de 4 níveis ou um nível começa com ponto |
+
+> ⚠️ **Os arquivos não acompanham a troca:** o que estava na pasta anterior continua nela, sem ser movido nem apagado, e o usuário deixa de alcançá-lo.
+
+</details>
+
+<details>
+<summary>Usuários ➜ Limites — clique para expandir</summary>
+
+### Usuários ➜ Limites
+
+<a href="imagens/usuarios-limites-gravados.png"><img src="imagens/usuarios-limites-gravados.png" alt="Aba Usuários com a mensagem Limites gravados, valem na próxima entrada do usuário no FTP, e a etiqueta limites ao lado do nome roteador-borda" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Usuários, limites gravados · captura de 2026-10-07</sub>
+
+O cartão **Limites** da tela **Editar** vale só para aquele usuário, seja a conta de um equipamento, que só envia, seja a de uma pessoa, que entra, envia e baixa. Campo em branco quer dizer sem limite próprio: vale o da stack.
+
+| Campo | Onde vale | O que preencher |
+|---|---|---|
+| Sessões ao mesmo tempo no FTP | FTP | De 1 ao `FTP_MAX_CLIENTS` da stack |
+| Taxa de download, em KB por segundo | FTP e downloads dele pelo painel | De 1 a 10.000.000 |
+| Taxa de envio, em KB por segundo | FTP | De 1 a 10.000.000 |
+| Horário em que o FTP aceita a entrada: das · até as | FTP e entrada dele no painel | Início e fim, em horas e minutos; pode passar da meia-noite, como `22:00` às `06:00` |
+| Downloads ao mesmo tempo pelo painel | Painel | De 1 a 8; em branco, 2 |
+| Senhas erradas no FTP até o bloqueio | FTP | De 1 a 100; `0`: este usuário nunca é bloqueado; em branco, o padrão da stack |
+| Minutos de bloqueio | FTP | De 1 a 1440; em branco, o padrão da stack |
+
+**Resultado esperado:** depois de **Gravar limites**, a lista volta com a mensagem `Limites gravados. Valem na próxima entrada do usuário no FTP.` e a etiqueta `limites` ao lado do nome; passando o mouse sobre ela, aparece cada limite do usuário. Para tirar um limite, apague o campo e grave de novo.
+
+Na foto, `roteador-borda` ficou com 2 sessões, 4096 KB por segundo de download, 2048 de envio, entrada das `22:00` às `06:00`, 1 download por vez pelo painel e bloqueio de 30 minutos na terceira senha errada.
+
+> ⚠️ **Taxa de envio e arquivo pequeno:** com a taxa de envio definida, o servidor segura cada arquivo enviado por cerca de `256 ÷ taxa` segundos. Para equipamento que manda muitos arquivos pequenos, use uma taxa alta ou deixe em branco. Os valores e o que cada limite muda para o usuário estão em [Painel web](../painel.md#limites).
+
+</details>
+
+<details>
+<summary>Usuários ➜ Bloqueios — clique para expandir</summary>
+
+### Usuários ➜ Bloqueios
+
+<a href="imagens/usuarios-editar-bloqueios.png"><img src="imagens/usuarios-editar-bloqueios.png" alt="Tela Editar usuário de switch-core com o cartão Bloqueios: a origem bloqueada, a quantidade de senhas erradas, a hora do bloqueio, até quando ele vale e o botão Desbloquear" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Usuários, cartão Bloqueios · captura de 2026-10-07</sub>
+
+O endereço que erra a senha de um usuário no FTP vezes demais fica bloqueado para aquele usuário, pelo tempo configurado: até lá, nem a senha certa entra dali. Na lista, o nome ganha a etiqueta `bloqueado`; passando o mouse sobre ela, aparecem os endereços.
+
+| Item do cartão | O que mostra |
+|---|---|
+| Origem | O endereço de onde vieram as senhas erradas |
+| Senhas erradas | Quantas foram contadas até o bloqueio |
+| Bloqueado em · Até | A hora do bloqueio e a hora em que ele sai sozinho |
+| **Desbloquear** | Tira todos os bloqueios do usuário na hora |
+
+1. Corrija a senha no equipamento: se ele continuar errando, o bloqueio volta.
+2. Clique em **Desbloquear**.
+
+<a href="imagens/usuarios-desbloqueado.png"><img src="imagens/usuarios-desbloqueado.png" alt="Aba Usuários com a mensagem Bloqueio removido, o usuário volta a poder entrar no FTP, e o nome switch-core sem a etiqueta bloqueado" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Usuários, depois do desbloqueio · captura de 2026-10-07</sub>
+
+**Resultado esperado:** a lista volta com a mensagem `Bloqueio removido. O usuário volta a poder entrar no FTP.`, sem a etiqueta `bloqueado`, e a entrada seguinte do equipamento passa.
+
+Na foto, a origem é o endereço do host na rede interna da stack fotografada, porque as senhas erradas partiram do próprio servidor. O que conta como senha errada está em [Segurança](../seguranca.md#bloqueio-por-tentativa).
 
 </details>
 
@@ -214,7 +312,7 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 <a href="imagens/usuarios-trocar-senha.png"><img src="imagens/usuarios-trocar-senha.png" alt="Formulário Trocar senha do usuário switch-core, com os campos Senha e Repita a senha e os botões Trocar senha e Cancelar" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Usuários, formulário Trocar senha · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Usuários, formulário Trocar senha · captura de 2026-10-07</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -230,9 +328,9 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 ### Usuários ➜ Remover
 
-<a href="imagens/usuarios-remover.png"><img src="imagens/usuarios-remover.png" alt="Tela Remover usuário pedindo confirmação, com o aviso de que o arquivo da pasta não é apagado e os botões Sim, remover o usuário e Cancelar" width="100%"></a>
+<a href="imagens/usuarios-remover.png"><img src="imagens/usuarios-remover.png" alt="Tela Remover usuário de ap-deposito, com o aviso dos arquivos da pasta, a caixa Apagar também a pasta e tudo o que há nela marcada, o campo Sua senha atual e os botões Sim, remover o usuário e Cancelar" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Usuários, confirmação de remoção · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Usuários, confirmação de remoção · captura de 2026-10-07</sub>
 
 | Item da tela | O que faz |
 |---|---|
@@ -242,11 +340,17 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 | **Sim, remover o usuário** | Apaga a conta: o login deixa de funcionar na hora |
 | **Cancelar** | Volta para a lista sem alterar nada |
 
-<a href="imagens/usuarios-removido.png"><img src="imagens/usuarios-removido.png" alt="Aba Usuários depois da remoção, com a mensagem Usuário removido, os arquivos continuam na pasta" width="100%"></a>
+<a href="imagens/usuarios-removido.png"><img src="imagens/usuarios-removido.png" alt="Aba Usuários depois da remoção, com a mensagem Usuário removido e pasta apagada" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Usuários, depois da remoção · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Usuários, depois da remoção · captura de 2026-10-07</sub>
 
-**Resultado esperado:** a lista volta com a mensagem `Usuário removido. Os arquivos continuam na pasta.` A pasta fica em `DATA_DIR/dados` e continua visível na aba Arquivos, onde o que está dentro dela pode ser apagado. Com a caixa marcada e a senha certa, a mensagem é `Usuário removido e pasta apagada.` e a pasta some.
+**Resultado esperado:** com a caixa marcada e a senha certa, como na foto, a lista volta com a mensagem `Usuário removido e pasta apagada.` e a pasta some. Sem a caixa, a mensagem é `Usuário removido. Os arquivos continuam na pasta.`: a pasta fica em `DATA_DIR/dados` e continua visível na aba Arquivos, onde pode ser apagada depois.
+
+<a href="imagens/usuarios-remover-inicial.png"><img src="imagens/usuarios-remover-inicial.png" alt="Tela Remover usuário do usuário inicial transfer, com o aviso de que, removido, ele não volta nas próximas subidas do serviço ftp, a caixa Apagar também a pasta e tudo o que há nela marcada, o campo Sua senha atual e os botões Sim, remover o usuário e Cancelar" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Usuários, remoção do usuário inicial · captura de 2026-10-07</sub>
+
+O usuário inicial, o `FTP_USER` da instalação (`transfer`, no exemplo), é removido do mesmo jeito, com ou sem a pasta. A tela avisa que ele não volta nas próximas subidas do serviço `ftp`: para tê-lo de novo, crie um usuário com o mesmo nome.
 
 </details>
 
@@ -255,9 +359,9 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 ### Usuários ➜ TLS por usuário
 
-<a href="imagens/usuarios-tls.png"><img src="imagens/usuarios-tls.png" alt="Aba Usuários com a coluna TLS, que mostra obrigatório ou sem TLS em cada linha, e os botões Dispensar TLS e Exigir TLS ao lado de Trocar senha e Remover" width="100%"></a>
+<a href="imagens/usuarios-tls.png"><img src="imagens/usuarios-tls.png" alt="Aba Usuários com o aviso de que o usuário foi dispensado do TLS e a senha e os arquivos dele passam em texto puro, a coluna TLS, que mostra obrigatório ou sem TLS em cada linha, e os botões Dispensar TLS e Exigir TLS ao lado de Editar, Trocar senha e Remover" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Usuários, coluna TLS · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Usuários, coluna TLS · captura de 2026-10-07</sub>
 
 A coluna e os dois botões servem para o equipamento antigo que não fala TLS: ele é dispensado sozinho, e os demais continuam obrigados. O mesmo se faz na criação, com a caixa **Equipamento sem suporte a TLS** do **Novo usuário**, e no cartão **TLS** da tela **Editar**.
 
@@ -269,9 +373,21 @@ A coluna e os dois botões servem para o equipamento antigo que não fala TLS: e
 | Caixa **Equipamento sem suporte a TLS**, em **Novo usuário** | Cria o usuário já dispensado do TLS; sem marcar, ele só entra com TLS |
 | Cartão **TLS**, em **Editar** | Diz como aquele usuário entra e leva à mesma confirmação |
 
+<a href="imagens/usuarios-novo-sem-tls.png"><img src="imagens/usuarios-novo-sem-tls.png" alt="Formulário Novo usuário preenchido para central-pabx, com a caixa Equipamento sem suporte a TLS marcada e o alerta de que a senha e os arquivos deste usuário passam a trafegar em texto puro" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Usuários, usuário novo sem TLS · captura de 2026-10-07</sub>
+
+Na criação, a caixa marcada grava o usuário já dispensado, e a lista volta com a mensagem `Usuário criado e dispensado do TLS: a senha e os arquivos dele passam em texto puro.`
+
+<a href="imagens/usuarios-editar-tls.png"><img src="imagens/usuarios-editar-tls.png" alt="Tela Editar usuário de central-pabx, com o cartão TLS avisando que este usuário entra sem TLS e o botão Exigir TLS" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Usuários, cartão TLS da tela Editar · captura de 2026-10-07</sub>
+
+Na tela **Editar**, o cartão **TLS** diz como o usuário entra e traz o botão para trocar: **Dispensar TLS** para quem é obrigado, **Exigir TLS** para quem está dispensado. Para o usuário que já existe, o botão abre a confirmação:
+
 <a href="imagens/usuarios-tls-dispensar.png"><img src="imagens/usuarios-tls-dispensar.png" alt="Tela Dispensar TLS do usuário radio-antigo, com o aviso de que a senha e os arquivos passam a trafegar em texto puro e os botões Sim, deixar este usuário entrar sem TLS e Cancelar" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Usuários, confirmação da dispensa do TLS · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Usuários, confirmação da dispensa do TLS · captura de 2026-10-07</sub>
 
 **Resultado esperado:** a lista volta com a mensagem `Usuário dispensado do TLS: a senha e os arquivos dele passam em texto puro.`, a linha dele mostra `sem TLS` e as abas Visão geral e Segurança abrem com o alerta. A dispensa vale em instantes, sem derrubar quem está conectado. Ao voltar a exigir, a mensagem é `O usuário volta a ser obrigado a usar TLS.`
 
@@ -282,11 +398,13 @@ A coluna e os dois botões servem para o equipamento antigo que não fala TLS: e
 <details>
 <summary>Detalhe técnico — rotas e comando usado</summary>
 
-- Rotas: `GET /usuarios`, `/usuarios/novo`, `/usuarios/editar?usuario=<nome>`, `/usuarios/senha?usuario=<nome>`, `/usuarios/remover?usuario=<nome>` e `/usuarios/tls?usuario=<nome>`; o envio de cada formulário é um `POST` na mesma rota, com o token CSRF da sessão. A exceção é a tela Editar, que envia a pasta para `POST /usuarios/pasta`.
+- Rotas: `GET /usuarios`, `/usuarios/novo`, `/usuarios/editar?usuario=<nome>`, `/usuarios/senha?usuario=<nome>`, `/usuarios/remover?usuario=<nome>` e `/usuarios/tls?usuario=<nome>`; o envio de cada formulário é um `POST` na mesma rota, com o token CSRF da sessão. A exceção é a tela Editar, que envia a pasta para `POST /usuarios/pasta`, os limites para `POST /usuarios/limites` e o desbloqueio para `POST /usuarios/desbloquear`.
 - A dispensa do TLS vale com `FTP_TLS_EXCECOES=sim`, que é o padrão, `FTP_TLS_MODE=2` e sem `REDE_PERMITIR_IP_PUBLICO=sim`. Fora disso, a coluna, os botões e a caixa somem, a rota `/usuarios/tls` responde `404` e a lista dos dispensados fica guardada, sem valer.
 - O painel chama o mesmo `allsafe-ftp-user` do [`manage-user.sh`](../../manage-user.sh): painel e linha de comando alteram as mesmas contas. Veja [Operação](../operacao.md#usuarios).
-- Cada alteração grava `usuario_criado`, `senha_trocada`, `usuario_removido`, `tls_dispensado` ou `tls_exigido` na [auditoria](../painel.md#auditoria), com o administrador que fez e sem a senha.
+- Cada alteração grava `usuario_criado`, `senha_trocada`, `pasta_trocada`, `limites_alterados`, `bloqueio_removido`, `usuario_removido`, `tls_dispensado` ou `tls_exigido` na [auditoria](../painel.md#auditoria), com o administrador que fez e sem a senha.
 - A senha gerada tem 32 caracteres aleatórios e não fica guardada: só o hash vai para o cadastro do FTP.
+- Sessões, taxas e horário ficam no cadastro do FTP, e é o `pure-ftpd` que os aplica a cada entrada; os downloads pelo painel e o bloqueio por tentativa ficam em arquivos próprios da stack: [Limites por usuário](../painel.md#limites).
+- Mudar as senhas erradas até o bloqueio ou os minutos de bloqueio tira os bloqueios do usuário; trocar a senha dele e removê-lo também.
 - As regras da pasta e o que a marca `dividida` confere estão em [Usuários pelo painel](../painel.md#usuarios).
 
 </details>
@@ -297,9 +415,9 @@ A coluna e os dois botões servem para o equipamento antigo que não fala TLS: e
 
 ## 📁 Arquivos
 
-<a href="imagens/arquivos.png"><img src="imagens/arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma e o formulário Nova pasta" width="100%"></a>
+<a href="imagens/arquivos.png"><img src="imagens/arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma, os botões Renomear e Apagar em cada linha e o formulário Nova pasta" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Arquivos · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Arquivos · captura de 2026-10-07</sub>
 
 **Para que serve:** ver o que cada equipamento enviou, baixar um backup pelo navegador, criar a pasta de um usuário novo, trocar o nome e apagar arquivo e pasta, sem cliente de FTP.
 
@@ -323,9 +441,9 @@ O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continu
 
 ### Arquivos ➜ Pasta de um usuário e download
 
-<a href="imagens/arquivos-pasta.png"><img src="imagens/arquivos-pasta.png" alt="Aba Arquivos dentro da pasta roteador-borda, com o caminho no alto, a linha que diz de qual usuário do FTP é a pasta, o botão Novo usuário nesta pasta e o botão Baixar em cada arquivo" width="100%"></a>
+<a href="imagens/arquivos-pasta.png"><img src="imagens/arquivos-pasta.png" alt="Aba Arquivos dentro da pasta roteador-borda, com o caminho no alto, a linha que diz de qual usuário do FTP é a pasta, o botão Novo usuário nesta pasta e os botões Baixar, Renomear e Apagar em cada arquivo" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Arquivos, pasta de um usuário · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Arquivos, pasta de um usuário · captura de 2026-10-07</sub>
 
 1. Clique no nome da pasta para entrar.
 2. Confira, na linha `Pasta do usuário do FTP`, de quem é a pasta.
@@ -348,7 +466,7 @@ O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continu
 
 <a href="imagens/arquivos-pasta-criada.png"><img src="imagens/arquivos-pasta-criada.png" alt="Aba Arquivos com a mensagem Pasta criada e a pasta clientes na lista" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Arquivos, pasta criada · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Arquivos, pasta criada · captura de 2026-10-07</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -366,13 +484,83 @@ O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continu
 </details>
 
 <details>
+<summary>Arquivos ➜ Renomear — clique para expandir</summary>
+
+### Arquivos ➜ Renomear
+
+<a href="imagens/arquivos-renomear.png"><img src="imagens/arquivos-renomear.png" alt="Tela Renomear do arquivo switch-core-antigo.cfg, com a pasta em que ele fica, o campo Nome novo preenchido e os botões Trocar nome e Cancelar" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Arquivos, tela Renomear · captura de 2026-10-07</sub>
+
+| Campo | Obrigatório | O que preencher |
+|---|---|---|
+| Nome novo | Sim | Letras, números, `_`, `-` e ponto; não começa com ponto; até 64 caracteres |
+
+<a href="imagens/arquivos-renomeado.png"><img src="imagens/arquivos-renomeado.png" alt="Aba Arquivos dentro da pasta switch-core, com a mensagem Nome trocado e o arquivo com o nome novo na lista" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Arquivos, depois da troca de nome · captura de 2026-10-07</sub>
+
+**Resultado esperado:** a pasta volta com a mensagem `Nome trocado.` e o item com o nome novo, no mesmo lugar. O painel não move de uma pasta para outra, e o equipamento que grava com o nome antigo cria outro arquivo no envio seguinte.
+
+| Mensagem | Motivo |
+|---|---|
+| Nome não aceito. Veja a regra abaixo do campo. | O nome foge da regra |
+| O item já tem este nome. | O nome novo é igual ao atual |
+| Já existe uma pasta ou um arquivo com este nome. | O nome já está em uso naquela pasta; nada é substituído |
+
+</details>
+
+<details>
+<summary>Arquivos ➜ Apagar — clique para expandir</summary>
+
+### Arquivos ➜ Apagar
+
+<a href="imagens/arquivos-apagar.png"><img src="imagens/arquivos-apagar.png" alt="Tela Apagar do arquivo teste-de-envio.txt, com o tamanho, a data e a pasta dele, o aviso de que o painel não tem lixeira, a caixa de confirmação marcada, o campo Sua senha atual e os botões Apagar de vez e Cancelar" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Arquivos, confirmação de apagar · captura de 2026-10-07</sub>
+
+| Item da tela | O que faz |
+|---|---|
+| Primeira linha | Diz o que vai sair: o arquivo, com o tamanho e a data, ou a pasta, com a quantidade de arquivos e o espaço de tudo o que há dentro dela |
+| Caixa **Conferi o nome e quero apagar** | Obrigatória: sem ela nada é apagado |
+| **Sua senha atual** | A senha de quem está usando o painel, para confirmar |
+| **Apagar de vez** | Apaga o arquivo, ou a pasta com tudo o que tem dentro |
+| **Cancelar** | Volta para a pasta sem alterar nada |
+
+<a href="imagens/arquivos-apagado.png"><img src="imagens/arquivos-apagado.png" alt="Aba Arquivos dentro da pasta switch-core, com a mensagem Apagado e a lista sem o arquivo teste-de-envio.txt" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Arquivos, depois de apagar · captura de 2026-10-07</sub>
+
+**Resultado esperado:** a pasta volta com a mensagem `Apagado.` e sem o item, e a aba Atividade ganha a linha `Arquivo ou pasta apagado`.
+
+> ⚠️ **Apagar não tem volta:** o painel não tem lixeira, e o que foi apagado só volta de uma cópia de segurança. Veja [Backup](../backup.md).
+
+| Mensagem ou tela | Motivo |
+|---|---|
+| Marque a caixa de confirmação. Nada foi apagado. | A caixa ficou desmarcada |
+| A sua senha atual não confere. Nada foi apagado. | O campo Sua senha atual está errado; cinco recusas em 15 minutos bloqueiam o endereço |
+| Tela `Apagado em parte` | A pasta tem mais do que o painel apaga em um pedido: repita para continuar |
+| Tela `Nada foi apagado` | O painel já está apagando outra pasta, ou um item não pôde ser removido |
+
+<a href="imagens/arquivos-pasta-de-usuario.png"><img src="imagens/arquivos-pasta-de-usuario.png" alt="Tela Pasta de usuário do FTP, que recusa apagar a pasta roteador-borda por ser a pasta de um usuário e indica Usuários, Editar e Usuários, Remover" width="100%"></a>
+
+<sub><b>v0.24.1</b> · menu Arquivos, pasta de usuário recusada · captura de 2026-10-07</sub>
+
+A pasta de um usuário do FTP, e a pasta que tem a de um usuário dentro, não é renomeada nem apagada pela aba Arquivos: o cadastro ficaria apontando para uma pasta que não existe. Para dar outra pasta ao usuário, use **Usuários ➜ Editar**; para apagar a pasta junto com ele, **Usuários ➜ Remover**. O que está dentro dela é renomeado e apagado item por item.
+
+</details>
+
+<details>
 <summary>Detalhe técnico — rotas e proteções</summary>
 
-- Rotas: `GET /arquivos?pasta=<caminho>` lista, `GET /arquivos/baixar?arquivo=<caminho>` entrega e `POST /arquivos/pasta` cria a pasta, com o token CSRF. Não existe rota de envio, de troca de nome nem de remoção.
-- O caminho é sempre relativo a `DATA_DIR/dados`, aberto parte por parte, só para leitura e sem seguir link simbólico. Caminho com `..` recebe `400` e link simbólico, `403`, os dois com o evento `recusa_caminho`.
+- Rotas: `GET /arquivos?pasta=<caminho>` lista, `GET /arquivos/baixar?arquivo=<caminho>` entrega e `POST /arquivos/pasta` cria a pasta, com o token CSRF. `GET /arquivos/renomear?item=<caminho>` e `GET /arquivos/apagar?item=<caminho>` mostram a tela de cada ação, e o envio é um `POST` na mesma rota. Não existe rota de envio.
+- O caminho é sempre relativo a `DATA_DIR/dados`, aberto parte por parte e sem seguir link simbólico. Caminho com `..` recebe `400` e link simbólico, `403`, os dois com o evento `recusa_caminho`.
 - O arquivo sai como anexo (`Content-Disposition: attachment`, RFC 6266 e RFC 8187), em blocos de 64 KiB, sem ser carregado na memória: o navegador salva e nunca abre.
 - A pasta nova nasce com o dono `ftpdata` e o modo `0750`, os mesmos das pastas criadas pelo FTP.
-- Os eventos `arquivo_baixado`, `arquivo_interrompido` e `pasta_criada` ficam na [auditoria](../painel.md#auditoria); o conteúdo do arquivo nunca é registrado.
+- O nome é trocado por uma chamada só ao sistema, que recusa o nome que já existe; a pasta é esvaziada de dentro para fora, e um link simbólico dentro dela é apagado como link, sem tocar no destino.
+- Um pedido de apagar remove até 50.000 itens ou trabalha por até 20 segundos, e o painel faz um apagamento por vez.
+- A pasta de um usuário do FTP, ou a que tem uma dentro, responde `409` na tela e no envio.
+- Os eventos `arquivo_baixado`, `arquivo_interrompido`, `pasta_criada`, `item_renomeado` e `item_apagado` ficam na [auditoria](../painel.md#auditoria); o conteúdo do arquivo nunca é registrado.
 - O funcionamento completo está em [Arquivos e download](../painel.md#arquivos).
 
 </details>
@@ -385,7 +573,7 @@ O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continu
 
 <a href="imagens/meus-arquivos.png"><img src="imagens/meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, com as pastas 2026-09 e 2026-10, um arquivo de configuração com o botão Baixar e, no topo, só o nome do usuário e o botão Sair" width="100%"></a>
 
-<sub><b>v0.18.4</b> · tela Meus arquivos, do usuário do FTP · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · tela Meus arquivos, do usuário do FTP · captura de 2026-10-07</sub>
 
 **Para que serve:** o dono dos arquivos baixa os próprios backups pelo navegador, sem depender de quem administra e sem conta nova.
 
@@ -408,7 +596,7 @@ O usuário vê só a pasta do cadastro dele e o que há dentro dela. O caminho d
 
 <a href="imagens/meus-arquivos-pasta.png"><img src="imagens/meus-arquivos-pasta.png" alt="Tela Meus arquivos dentro da pasta 2026-10, com três arquivos de backup, o tamanho e a data de cada um e o botão Baixar em cada linha" width="100%"></a>
 
-<sub><b>v0.18.4</b> · tela Meus arquivos, dentro de uma pasta · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · tela Meus arquivos, dentro de uma pasta · captura de 2026-10-07</sub>
 
 1. Clique no nome da pasta para entrar.
 2. Clique em **Baixar** na linha do arquivo.
@@ -419,7 +607,7 @@ O usuário vê só a pasta do cadastro dele e o que há dentro dela. O caminho d
 | Limite | Valor |
 |---|---|
 | Sessões por usuário do FTP | 3; a quarta entrada encerra a mais antiga |
-| Downloads ao mesmo tempo por usuário | 2; o terceiro recebe a tela `Muitos downloads ao mesmo tempo` |
+| Downloads ao mesmo tempo por usuário | 2, ou o número gravado nos limites dele; o seguinte recebe a tela `Muitos downloads ao mesmo tempo` |
 | Depois de trocar a senha ou remover o usuário | A sessão dele é encerrada no pedido seguinte |
 
 </details>
@@ -443,7 +631,7 @@ O usuário vê só a pasta do cadastro dele e o que há dentro dela. O caminho d
 
 <a href="imagens/administradores.png"><img src="imagens/administradores.png" alt="Aba Administradores com o botão Novo administrador e a lista de três administradores: a marca você na conta em uso, as sessões abertas de cada um e as ações Trocar senha, Trocar nome e Remover" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Administradores · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Administradores · captura de 2026-10-07</sub>
 
 **Para que serve:** dar a cada pessoa que administra o painel o próprio usuário e a própria senha, e trocar o usuário e a senha do primeiro administrador depois da instalação.
 
@@ -467,7 +655,7 @@ Todos têm o mesmo acesso, e o que cada um faz fica na aba Atividade com o nome 
 
 <a href="imagens/administradores-novo.png"><img src="imagens/administradores-novo.png" alt="Formulário Novo administrador com os campos Nome do administrador, Senha, Repita a senha e Sua senha atual, e os botões Criar administrador e Cancelar" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Administradores, formulário Novo administrador · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Administradores, formulário Novo administrador · captura de 2026-10-07</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -487,7 +675,7 @@ Todos têm o mesmo acesso, e o que cada um faz fica na aba Atividade com o nome 
 
 <a href="imagens/administradores-trocar-senha.png"><img src="imagens/administradores-trocar-senha.png" alt="Formulário Trocar senha de administrador, com os campos Senha, Repita a senha e Sua senha atual e os botões Trocar senha e Cancelar" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Administradores, formulário Trocar senha · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Administradores, formulário Trocar senha · captura de 2026-10-07</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -508,7 +696,7 @@ Todos têm o mesmo acesso, e o que cada um faz fica na aba Atividade com o nome 
 
 <a href="imagens/administradores-trocar-nome.png"><img src="imagens/administradores-trocar-nome.png" alt="Formulário Trocar nome de administrador, com o campo Nome novo preenchido com suporte-redes, o campo Sua senha atual e os botões Trocar nome e Cancelar" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Administradores, formulário Trocar nome · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Administradores, formulário Trocar nome · captura de 2026-10-07</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -528,7 +716,7 @@ Trocar o nome do primeiro administrador pelo painel não mexe no `.env`: o `PAIN
 
 <a href="imagens/administradores-remover.png"><img src="imagens/administradores-remover.png" alt="Tela Remover administrador pedindo confirmação, com o campo Sua senha atual e os botões Sim, remover o administrador e Cancelar" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Administradores, confirmação de remoção · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Administradores, confirmação de remoção · captura de 2026-10-07</sub>
 
 | Item da tela | O que faz |
 |---|---|
@@ -563,9 +751,9 @@ Trocar o nome do primeiro administrador pelo painel não mexe no `.env`: o `PAIN
 
 ## 🔐 Segurança
 
-<a href="imagens/seguranca.png"><img src="imagens/seguranca.png" alt="Aba Segurança com a conferência da instalação, uma linha por item: endereço público, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, custo das senhas, contato de segurança, container e firewall" width="100%"></a>
+<a href="imagens/seguranca.png"><img src="imagens/seguranca.png" alt="Aba Segurança com a conferência da instalação, uma linha por item: endereço público, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, custo das senhas, contato de segurança, container e firewall" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Segurança · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Segurança · captura de 2026-10-07</sub>
 
 **Para que serve:** conferir, em uma tela, se a instalação está dentro do que a stack exige: rede privada, TLS, certificados válidos, painel isolado e contato de segurança publicado.
 
@@ -581,6 +769,7 @@ Trocar o nome do primeiro administrador pelo painel não mexe no `.env`: o `PAIN
 | Quem pode abrir o painel | As redes de `PAINEL_REDES_PERMITIDAS`; rede pública na lista aparece destacada |
 | Sessão | Tempo sem uso, tempo máximo e bloqueio por entrada errada |
 | Entrada dos usuários do FTP | Se os usuários do FTP entram no painel (`PAINEL_ACESSO_USUARIOS_FTP`) e como a senha deles é conferida |
+| Bloqueio por tentativa no FTP | Quantas senhas erradas do mesmo endereço bloqueiam um usuário e por quanto tempo (`FTP_BLOQUEIO_TENTATIVAS` e `FTP_BLOQUEIO_MINUTOS`), e quem está bloqueado agora |
 | Custo das senhas do FTP | Se todas as senhas estão gravadas com o custo do porte atual, ou quais usuários ainda estão com o anterior |
 | Contato de segurança | O e-mail publicado em `/.well-known/security.txt` (`SEGURANCA_CONTATO_EMAIL`), ou o aviso de que não há contato |
 | Container do painel | Raiz somente leitura e sem acesso ao Docker do host |
@@ -593,9 +782,9 @@ Nada é alterado por esta aba. As regras de firewall de exemplo estão em [Segur
 
 ### Segurança ➜ Alerta de usuário sem TLS
 
-<a href="imagens/seguranca-tls-por-usuario.png"><img src="imagens/seguranca-tls-por-usuario.png" alt="Aba Segurança com o alerta no topo de que um usuário, radio-antigo, entra no FTP sem TLS, e a linha TLS do FTP com a marca de atenção e o nome do usuário dispensado" width="100%"></a>
+<a href="imagens/seguranca-tls-por-usuario.png"><img src="imagens/seguranca-tls-por-usuario.png" alt="Aba Segurança com o alerta no topo de que dois usuários, central-pabx e radio-antigo, entram no FTP sem TLS, e a linha TLS do FTP com a marca de atenção e os nomes dos usuários dispensados" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Segurança, alerta de usuário sem TLS · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Segurança, alerta de usuário sem TLS · captura de 2026-10-07</sub>
 
 Com pelo menos um usuário dispensado do TLS, a aba abre com o alerta e a linha **TLS do FTP** troca a marca de conferido pela de atenção, com a quantidade e os nomes de quem entra sem TLS.
 
@@ -623,7 +812,7 @@ Com pelo menos um usuário dispensado do TLS, a aba abre com o alerta e a linha 
 
 <a href="imagens/atividade.png"><img src="imagens/atividade.png" alt="Aba Atividade com os registros do painel: data, endereço de origem, o que aconteceu e o detalhe, como arquivo baixado, pasta criada, administrador criado e tela de administração pedida por usuário do FTP" width="100%"></a>
 
-<sub><b>v0.18.4</b> · menu Atividade · captura de 2026-10-05</sub>
+<sub><b>v0.24.1</b> · menu Atividade · captura de 2026-10-07</sub>
 
 **Para que serve:** saber quem entrou no painel, de onde, o que foi alterado e quem baixou cada arquivo.
 
@@ -639,10 +828,11 @@ Com pelo menos um usuário dispensado do TLS, a aba abre com o alerta e a linha 
 | O que aconteceu | Quando aparece |
 |---|---|
 | Entrada · Entrada recusada · Entrada bloqueada pelo limite de tentativas · Saída | Alguém entrou, errou o usuário ou a senha, teve o endereço bloqueado ou saiu |
-| Usuário criado · Senha trocada · Usuário removido | Alteração de usuário do FTP, com o administrador que fez |
+| Usuário criado · Senha trocada · Pasta do usuário trocada · Usuário removido | Alteração de usuário do FTP, com o administrador que fez |
+| Limites do usuário alterados · Bloqueio do usuário no FTP removido | Limites gravados, com o valor de cada um, e bloqueio por senha errada tirado em **Editar** |
 | Usuário dispensado do TLS · Usuário volta a exigir TLS | Alteração do TLS de um usuário |
 | Arquivo baixado · Download interrompido | Download pela aba Arquivos ou pela tela Meus arquivos, completo ou cortado antes do fim |
-| Pasta criada | Pasta criada pela aba Arquivos |
+| Pasta criada · Arquivo ou pasta renomeado · Arquivo ou pasta apagado | Alteração pela aba Arquivos, com o caminho; o apagado aparece também quando a pasta sai junto com o usuário |
 | Administrador criado · Senha de administrador trocada · Administrador renomeado · Administrador removido | Alteração de administrador, com quem fez e quem foi alterado |
 | Senha atual recusada | Alteração de administrador recusada pela senha de confirmação |
 | Tela de administração pedida por usuário do FTP | Um usuário do FTP tentou abrir uma aba de administração e recebeu `404` |
@@ -667,7 +857,7 @@ A aba mostra os últimos 300 registros. As transferências dos equipamentos não
 
 ## 🎞️ Como as fotos foram feitas
 
-Capturas reais do painel no ar, feitas com Playwright no Google Chrome, em 1440×900 e tema escuro. A stack fotografada foi uma instalação de demonstração, separada da instalação em uso: subiu em `127.0.0.4`, com nomes de container, rede, pasta de dados e segredos próprios, recebeu usuários e arquivos de exemplo por FTPS e foi removida depois das fotos. Por isso a coluna **Pasta no host** mostra uma pasta temporária.
+Capturas reais do painel no ar, feitas com Playwright no Google Chrome, em 1440×900 e tema escuro. A stack fotografada foi uma instalação de demonstração, separada da instalação em uso: subiu em `127.0.0.4`, com nomes de container, rede, pasta de dados e segredos próprios, recebeu usuários e arquivos de exemplo por FTPS e foi removida depois das fotos. Na coluna **Pasta no host**, a demonstração mostra a pasta padrão do `.env.example`, no lugar da pasta temporária em que ela de fato subiu.
 
 Nenhuma senha aparece nas imagens: os campos de senha são mascarados pelo navegador e a senha gerada foi trocada por `<REDACTED>` antes da captura. As impressões digitais são dos certificados autoassinados da instalação fotografada; cada instalação gera os seus. O e-mail do contato de segurança é um endereço de exemplo.
 

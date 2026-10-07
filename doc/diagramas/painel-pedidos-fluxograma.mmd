@@ -1,0 +1,33 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph SESSAO["Sessão"]
+        painel@{ shape: rect, label: "Painel web<br>sessão aberta, token CSRF" }
+        pedido@{ shape: diam, label: "origem e token<br>conferem?" }
+        auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
+    end
+    subgraph USUARIOS["Usuários do FTP"]
+        cmd@{ shape: rect, label: "allsafe-ftp-user<br>pure-pw" }
+        puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
+    end
+    subgraph ARQUIVOS["Arquivos"]
+        caminho@{ shape: diam, label: "caminho dentro<br>da pasta dos dados?" }
+        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>pastas dos usuários" }
+    end
+    subgraph RESULTADO["Resultado"]
+        fim@{ shape: stadium, label: "usuário pronto no FTP" }
+        barrado@{ shape: stadium, label: "403<br>envio recusado" }
+        feito@{ shape: stadium, label: "arquivo baixado<br>ou alteração feita" }
+        recusa@{ shape: stadium, label: "pedido recusado" }
+    end
+
+    painel -- "1 · envia um formulário, de usuário ou de arquivos" --> pedido
+    pedido -- "2a · sim, usuário: executa" --> cmd
+    pedido -- "2b · sim, arquivos: confere o caminho" --> caminho
+    pedido -- "2c · não: fora do painel ou sem token" --> barrado
+    cmd -- "3 · grava o usuário e cria a pasta dele, se faltar" --> puredb
+    puredb -- "4 · vale no próximo login, sem reiniciar o FTP" --> fim
+    painel -- "5 · em Arquivos ou em Meus arquivos, abre uma pasta ou baixa um arquivo" --> caminho
+    caminho -- "6a · sim: abre parte por parte, sem seguir link simbólico" --> dados
+    caminho -- "6b · não: 400, 403, 404 ou 409" --> recusa
+    dados -- "7 · entrega o arquivo ou cria a pasta, renomeia ou apaga" --> feito
+    painel -. "registra cada ação" .-> auditoria

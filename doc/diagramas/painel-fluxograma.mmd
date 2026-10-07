@@ -10,26 +10,15 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
-        hash@{ shape: doc, label: "administradores<br>DATA_DIR/painel, nome e hash da senha" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna da stack" }
+        hash@{ shape: doc, label: "administradores<br>nome e hash da senha" }
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 15 min<br>cookie e token CSRF" }
-        pedido@{ shape: diam, label: "pedido<br>legítimo?" }
-    end
-    subgraph USUARIOS["Usuários do FTP"]
-        cmd@{ shape: rect, label: "allsafe-ftp-user<br>pure-pw" }
-        puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
-        auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
-    end
-    subgraph ARQUIVOS["Arquivos"]
-        caminho@{ shape: diam, label: "caminho dentro<br>da pasta dos dados?" }
-        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>pastas dos usuários" }
+        pedidos@{ shape: subproc, label: "pedidos da sessão<br>fluxograma dos pedidos" }
     end
     subgraph RESULTADO["Resultado"]
-        fim@{ shape: stadium, label: "usuário pronto no FTP" }
-        baixado@{ shape: stadium, label: "arquivo baixado" }
-        criada@{ shape: stadium, label: "pasta criada" }
+        atendido@{ shape: stadium, label: "pedido atendido" }
         recusa@{ shape: stadium, label: "pedido recusado" }
     end
 
@@ -37,20 +26,11 @@ flowchart LR
     nginx -- "2 · confere a origem e a taxa de pedidos" --> rede
     rede -- "3a · sim: repassa pelo soquete Unix" --> painel
     rede -- "3b · não: 403 ou 429" --> recusa
-    painel -- "4 · pede usuário e senha" --> senha
-    senha -. "5a · compara com o hash do administrador" .-> hash
-    senha -. "5b · não é administrador: o servidor FTP confere a senha" .-> ftp
-    senha -- "6a · sim: abre a sessão do administrador ou do usuário do FTP" --> sessao
-    senha -- "6b · não: 5 erros bloqueiam o endereço" --> recusa
-    sessao -- "7 · administrador envia o formulário" --> pedido
-    pedido -- "8a · sim: executa" --> cmd
-    pedido -- "8b · não: sem token CSRF ou de outra origem" --> recusa
-    cmd -- "9 · grava o usuário" --> puredb
-    puredb -- "10 · vale no próximo login, sem reiniciar o FTP" --> fim
-    sessao -- "11 · em Arquivos ou em Meus arquivos, pede um arquivo ou cria uma pasta" --> caminho
-    caminho -. "12 · abre parte por parte, sem seguir link simbólico" .-> dados
-    caminho -- "13a · sim, arquivo: entrega como anexo" --> baixado
-    caminho -- "13b · sim, pasta nova: cria vazia" --> criada
-    caminho -- "13c · não: 400, 403, 404 ou 409" --> recusa
-    cmd -. "cria a pasta do usuário, se faltar" .-> dados
-    painel -. "registra cada ação" .-> auditoria
+    painel -- "4 · pede usuário e senha e confere" --> senha
+    senha -- "5a · sim: abre a sessão do administrador ou do usuário do FTP" --> sessao
+    senha -- "5b · não: 5 erros bloqueiam o endereço" --> recusa
+    sessao -- "6 · cada pedido passa pelas conferências" --> pedidos
+    pedidos -- "7a · aceito" --> atendido
+    pedidos -- "7b · recusado" --> recusa
+    painel -. "administrador: compara com o hash" .-> hash
+    painel -. "outro nome: o servidor FTP confere a senha" .-> ftp

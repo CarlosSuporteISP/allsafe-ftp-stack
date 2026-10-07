@@ -491,10 +491,10 @@ A linha `Desenvolvido pela allsafe.inf.br` continua no rodapé de todas as telas
 
 ## 🔄 Como o painel decide
 
-Cada pedido passa por três conferências antes de mudar alguma coisa: a rede de origem (nginx), o usuário e a senha, e o token do formulário (painel). O download de um arquivo passa pelas duas primeiras e pela conferência do caminho pedido. A senha do administrador é conferida pelo painel; a do usuário do FTP, pelo servidor FTP.
+Cada pedido passa por três conferências antes de mudar alguma coisa: a rede de origem (nginx), o usuário e a senha, e a origem e o token do formulário (painel). O download de um arquivo passa pelas duas primeiras e pela conferência do caminho pedido. A senha do administrador é conferida pelo painel; a do usuário do FTP, pelo servidor FTP. O primeiro fluxograma vai da abertura da página até a sessão; o segundo mostra o que acontece com cada pedido da sessão.
 
 <details>
-<summary>Fluxograma do painel, com a sequência escrita — clique para expandir</summary>
+<summary>Fluxogramas do painel, com a sequência escrita — clique para expandir</summary>
 
 <!-- diagrama: diagramas/painel-fluxograma.mmd -->
 ```mermaid
@@ -510,26 +510,15 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
-        hash@{ shape: doc, label: "administradores<br>DATA_DIR/painel, nome e hash da senha" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna da stack" }
+        hash@{ shape: doc, label: "administradores<br>nome e hash da senha" }
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 15 min<br>cookie e token CSRF" }
-        pedido@{ shape: diam, label: "pedido<br>legítimo?" }
-    end
-    subgraph USUARIOS["Usuários do FTP"]
-        cmd@{ shape: rect, label: "allsafe-ftp-user<br>pure-pw" }
-        puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
-        auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
-    end
-    subgraph ARQUIVOS["Arquivos"]
-        caminho@{ shape: diam, label: "caminho dentro<br>da pasta dos dados?" }
-        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>pastas dos usuários" }
+        pedidos@{ shape: subproc, label: "pedidos da sessão<br>fluxograma dos pedidos" }
     end
     subgraph RESULTADO["Resultado"]
-        fim@{ shape: stadium, label: "usuário pronto no FTP" }
-        baixado@{ shape: stadium, label: "arquivo baixado" }
-        criada@{ shape: stadium, label: "pasta criada" }
+        atendido@{ shape: stadium, label: "pedido atendido" }
         recusa@{ shape: stadium, label: "pedido recusado" }
     end
 
@@ -537,23 +526,14 @@ flowchart LR
     nginx -- "2 · confere a origem e a taxa de pedidos" --> rede
     rede -- "3a · sim: repassa pelo soquete Unix" --> painel
     rede -- "3b · não: 403 ou 429" --> recusa
-    painel -- "4 · pede usuário e senha" --> senha
-    senha -. "5a · compara com o hash do administrador" .-> hash
-    senha -. "5b · não é administrador: o servidor FTP confere a senha" .-> ftp
-    senha -- "6a · sim: abre a sessão do administrador ou do usuário do FTP" --> sessao
-    senha -- "6b · não: 5 erros bloqueiam o endereço" --> recusa
-    sessao -- "7 · administrador envia o formulário" --> pedido
-    pedido -- "8a · sim: executa" --> cmd
-    pedido -- "8b · não: sem token CSRF ou de outra origem" --> recusa
-    cmd -- "9 · grava o usuário" --> puredb
-    puredb -- "10 · vale no próximo login, sem reiniciar o FTP" --> fim
-    sessao -- "11 · em Arquivos ou em Meus arquivos, pede um arquivo ou cria uma pasta" --> caminho
-    caminho -. "12 · abre parte por parte, sem seguir link simbólico" .-> dados
-    caminho -- "13a · sim, arquivo: entrega como anexo" --> baixado
-    caminho -- "13b · sim, pasta nova: cria vazia" --> criada
-    caminho -- "13c · não: 400, 403, 404 ou 409" --> recusa
-    cmd -. "cria a pasta do usuário, se faltar" .-> dados
-    painel -. "registra cada ação" .-> auditoria
+    painel -- "4 · pede usuário e senha e confere" --> senha
+    senha -- "5a · sim: abre a sessão do administrador ou do usuário do FTP" --> sessao
+    senha -- "5b · não: 5 erros bloqueiam o endereço" --> recusa
+    sessao -- "6 · cada pedido passa pelas conferências" --> pedidos
+    pedidos -- "7a · aceito" --> atendido
+    pedidos -- "7b · recusado" --> recusa
+    painel -. "administrador: compara com o hash" .-> hash
+    painel -. "outro nome: o servidor FTP confere a senha" .-> ftp
 ```
 
 <sub>Nível 2 · Fluxograma · [fonte](diagramas/)</sub>
@@ -564,31 +544,81 @@ flowchart LR
 | 2 | nginx ➜ rede permitida e dentro do limite? | O endereço de origem é comparado com `PAINEL_REDES_PERMITIDAS`, e o pedido, com os limites de taxa, de conexões e de tamanho |
 | 3a | rede permitida e dentro do limite? ➜ Painel web | Sim: o nginx repassa o pedido pelo soquete Unix, com o endereço do cliente |
 | 3b | rede permitida e dentro do limite? ➜ pedido recusado | Não: `403` para rede de fora, `429` para pedidos demais; o painel nem recebe o pedido |
-| 4 | Painel web ➜ usuário e senha conferem? | O painel confere de novo a rede e o nome de host e mostra a tela de entrada, que pede usuário e senha |
-| 5a | usuário e senha conferem? ➜ administradores | A senha digitada é comparada com o hash `scrypt` do administrador, em `DATA_DIR/painel/administradores`; nome que não existe passa pela mesma conta |
-| 5b | usuário e senha conferem? ➜ Pure-FTPd | Não é administrador com essa senha e a entrada dos usuários do FTP está ligada: o painel entra no servidor FTP com o nome e a senha, pela rede interna da stack, e sai em seguida; quem diz se a senha vale é o servidor |
-| 6a | usuário e senha conferem? ➜ sessão | Sim: abre a sessão, com cookie e token CSRF. A do administrador alcança todas as abas; a do usuário do FTP, só a tela Meus arquivos |
-| 6b | usuário e senha conferem? ➜ pedido recusado | Não: `401`, sem dizer qual dos dois errou; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
-| 7 | sessão ➜ pedido legítimo? | Cada formulário enviado pelo administrador traz o token CSRF da sessão e a origem do próprio painel; na sessão do usuário do FTP, o único formulário é o de sair |
-| 8a | pedido legítimo? ➜ `allsafe-ftp-user` | Sim: o painel chama o comando, com a senha pela entrada padrão |
-| 8b | pedido legítimo? ➜ pedido recusado | Não: `403`, sem alterar nada |
-| 9 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez; a dispensa do TLS de um usuário fica na `sem-tls.lista`, na mesma pasta |
-| 10 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
-| 11 | sessão ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta, pede um arquivo ou cria uma pasta; na tela Meus arquivos, o usuário do FTP abre uma pasta ou pede um arquivo. O caminho pedido é conferido parte por parte |
-| 12 | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | O painel abre cada parte sem seguir link simbólico: a partir da pasta dos dados, para o administrador, e a partir da pasta do cadastro, para o usuário do FTP |
-| 13a | caminho dentro da pasta dos dados? ➜ arquivo baixado | Sim, arquivo: sai como anexo, em blocos, e o download fica na auditoria |
-| 13b | caminho dentro da pasta dos dados? ➜ pasta criada | Sim, pasta nova: nasce vazia, do usuário `ftpdata`, e fica na auditoria |
-| 13c | caminho dentro da pasta dos dados? ➜ pedido recusado | Não: `400` para caminho ou nome que tenta sair da pasta, `403` para link simbólico, `404` para o que não existe, `409` para nome já usado |
+| 4 | Painel web ➜ usuário e senha conferem? | O painel confere de novo a rede e o nome de host, mostra a tela de entrada, que pede usuário e senha, e confere o que foi digitado |
+| 5a | usuário e senha conferem? ➜ sessão de 15 min | Sim: abre a sessão, com cookie e token CSRF. A do administrador alcança todas as abas; a do usuário do FTP, só a tela Meus arquivos |
+| 5b | usuário e senha conferem? ➜ pedido recusado | Não: `401`, sem dizer qual dos dois errou; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
+| 6 | sessão de 15 min ➜ pedidos da sessão | Cada pedido feito com a sessão aberta passa pelas conferências do fluxograma dos pedidos, logo abaixo |
+| 7a | pedidos da sessão ➜ pedido atendido | Aceito: o usuário fica pronto no FTP, o arquivo é baixado ou a alteração é feita |
+| 7b | pedidos da sessão ➜ pedido recusado | Recusado: nada muda, e a recusa fica na auditoria |
 
 **Apoio**
 
 | Quem | Usa | Como |
 |---|---|---|
-| usuário e senha conferem? | administradores (`DATA_DIR/painel/administradores`) | lê a cada entrada |
-| usuário e senha conferem? | Pure-FTPd (`allsafe-ftp`, rede interna da stack) | entra com o nome e a senha do usuário do FTP e sai em seguida, em TLS com o certificado conferido |
-| caminho dentro da pasta dos dados? | `DATA_DIR/dados` | lê a pasta e o arquivo pedidos; grava só a pasta nova, vazia |
-| `allsafe-ftp-user` | `DATA_DIR/dados` | cria a pasta do usuário novo, se ela ainda não existe |
-| Painel web | `auditoria.log` | registra cada entrada, recusa e alteração |
+| Painel web | administradores (`DATA_DIR/painel/administradores`) | compara a senha digitada com o hash `scrypt` do administrador, a cada entrada; nome que não existe passa pela mesma conta |
+| Painel web | Pure-FTPd (`allsafe-ftp`, rede interna da stack) | não é administrador com essa senha e a entrada dos usuários do FTP está ligada: entra no servidor FTP com o nome e a senha e sai em seguida, em TLS com o certificado conferido; quem diz se a senha vale é o servidor |
+
+**Pedidos da sessão**
+
+O que o painel faz com cada pedido depois da entrada: o formulário que cria, edita ou remove um usuário, e a pasta ou o arquivo pedido na aba Arquivos ou na tela Meus arquivos.
+
+<!-- diagrama: diagramas/painel-pedidos-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph SESSAO["Sessão"]
+        painel@{ shape: rect, label: "Painel web<br>sessão aberta, token CSRF" }
+        pedido@{ shape: diam, label: "origem e token<br>conferem?" }
+        auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
+    end
+    subgraph USUARIOS["Usuários do FTP"]
+        cmd@{ shape: rect, label: "allsafe-ftp-user<br>pure-pw" }
+        puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
+    end
+    subgraph ARQUIVOS["Arquivos"]
+        caminho@{ shape: diam, label: "caminho dentro<br>da pasta dos dados?" }
+        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>pastas dos usuários" }
+    end
+    subgraph RESULTADO["Resultado"]
+        fim@{ shape: stadium, label: "usuário pronto no FTP" }
+        barrado@{ shape: stadium, label: "403<br>envio recusado" }
+        feito@{ shape: stadium, label: "arquivo baixado<br>ou alteração feita" }
+        recusa@{ shape: stadium, label: "pedido recusado" }
+    end
+
+    painel -- "1 · envia um formulário, de usuário ou de arquivos" --> pedido
+    pedido -- "2a · sim, usuário: executa" --> cmd
+    pedido -- "2b · sim, arquivos: confere o caminho" --> caminho
+    pedido -- "2c · não: fora do painel ou sem token" --> barrado
+    cmd -- "3 · grava o usuário e cria a pasta dele, se faltar" --> puredb
+    puredb -- "4 · vale no próximo login, sem reiniciar o FTP" --> fim
+    painel -- "5 · em Arquivos ou em Meus arquivos, abre uma pasta ou baixa um arquivo" --> caminho
+    caminho -- "6a · sim: abre parte por parte, sem seguir link simbólico" --> dados
+    caminho -- "6b · não: 400, 403, 404 ou 409" --> recusa
+    dados -- "7 · entrega o arquivo ou cria a pasta, renomeia ou apaga" --> feito
+    painel -. "registra cada ação" .-> auditoria
+```
+
+<sub>Nível 2 · Fluxograma · [fonte](diagramas/)</sub>
+
+| Nº | De ➜ Para | O que acontece |
+|---|---|---|
+| 1 | Painel web ➜ origem e token conferem? | Todo formulário enviado é conferido duas vezes: a origem tem de ser o próprio painel e o token CSRF tem de ser o da sessão. Só o administrador tem formulário de usuário e de arquivos; na sessão do usuário do FTP, o único formulário é o de sair |
+| 2a | origem e token conferem? ➜ `allsafe-ftp-user` | Sim, formulário de usuário: o painel chama o comando, com a senha pela entrada padrão |
+| 2b | origem e token conferem? ➜ caminho dentro da pasta dos dados? | Sim, formulário da aba Arquivos (criar pasta, renomear ou apagar): segue para a conferência do caminho |
+| 2c | origem e token conferem? ➜ 403 | Não: `403`, sem alterar nada, para o envio que não partiu do painel ou que veio sem o token da sessão |
+| 3 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez, e a pasta do usuário novo é criada em `DATA_DIR/dados`, se ainda não existe; a dispensa do TLS de um usuário fica na `sem-tls.lista`, na mesma pasta do banco |
+| 4 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
+| 5 | Painel web ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta ou baixa um arquivo; na tela Meus arquivos, o usuário do FTP faz o mesmo, só na pasta dele. Esses pedidos não levam formulário, e o caminho é conferido do mesmo jeito |
+| 6a | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | Sim: o painel abre cada parte do caminho sem seguir link simbólico, a partir da pasta dos dados, para o administrador, e a partir da pasta do cadastro, para o usuário do FTP |
+| 6b | caminho dentro da pasta dos dados? ➜ pedido recusado | Não: `400` para caminho ou nome que tenta sair da pasta, `403` para link simbólico, `404` para o que não existe, `409` para nome já usado |
+| 7 | `DATA_DIR/dados` ➜ arquivo baixado ou alteração feita | O arquivo sai como anexo, em blocos; a pasta nova nasce vazia, do usuário `ftpdata`; o arquivo ou a pasta escolhida é renomeada ou apagada |
+
+**Apoio**
+
+| Quem | Usa | Como |
+|---|---|---|
+| Painel web | `auditoria.log` (`DATA_DIR/painel`) | registra cada entrada, recusa, download e alteração |
 
 </details>
 
