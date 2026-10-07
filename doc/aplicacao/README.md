@@ -145,9 +145,9 @@ O mesmo alerta abre a aba Segurança. As condições para dispensar um usuário 
 | Uso · Arquivos · Último envio | Espaço ocupado, quantidade de arquivos e data do envio mais recente |
 | **Editar** | Abre a tela do usuário, com a troca da pasta |
 | **Trocar senha** | Abre o formulário de troca de senha daquele usuário |
-| **Remover** | Abre a confirmação de remoção daquele usuário. O usuário inicial não tem este botão |
+| **Remover** | Abre a confirmação de remoção daquele usuário, inclusive o inicial |
 
-O usuário inicial tem a senha e a pasta trocadas como os demais e não pode ser removido. A senha trocada aqui vale até o arquivo `.secrets/ftp-usuario-inicial-senha.txt` ser alterado. Veja [Segredos](../segredos.md#trocar-a-senha).
+O usuário inicial tem a senha e a pasta trocadas e é removido como os demais. Removido, ele não volta nas próximas subidas do FTP; para tê-lo de novo, crie um usuário com o mesmo nome. A senha trocada aqui vale até o arquivo `.secrets/ftp-usuario-inicial-senha.txt` ser alterado. Veja [Segredos](../segredos.md#trocar-a-senha).
 
 <details>
 <summary>Usuários ➜ Novo usuário — clique para expandir</summary>

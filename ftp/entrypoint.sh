@@ -62,12 +62,27 @@ flock -w 30 9 || die "arquivo de usuarios em uso por outra alteracao"
 touch /auth/pureftpd.passwd
 chmod 0600 /auth/pureftpd.passwd
 
+# Usuário inicial: criado uma vez, na primeira subida. A marca em /auth guarda o nome de quem já foi criado;
+# removido depois pelo painel ou pelo manage-user.sh, ele não volta nas subidas seguintes. Trocar o FTP_USER
+# no .env cria o usuário do nome novo, também uma vez.
 # Senha do usuário inicial: a do segredo vale quando o usuário é criado e sempre que o arquivo do segredo
 # muda. Trocada pelo painel ou pelo manage-user.sh (o allsafe-ftp-user deixa a marca), a senha nova fica até
 # o segredo mudar. Para saber se mudou, a partida guarda a impressão do segredo aplicado por último:
 # sha512-crypt com sal, só o root lê; a senha em si não é gravada.
 impressao=/auth/senha-inicial.aplicada
 marca_inicial=/auth/senha-inicial.trocada
+marca_criado=/auth/usuario-inicial.criado
+inicial_ja_criado() {
+  local nome=""
+  [[ -f "$marca_criado" && ! -L "$marca_criado" ]] || return 1
+  IFS= read -r nome < "$marca_criado" || true
+  [[ "$nome" == "$FTP_USER" ]]
+}
+marcar_criado() {
+  rm -f "$marca_criado.novo"
+  ( umask 077; printf '%s\n' "$FTP_USER" > "$marca_criado.novo" )
+  mv -f "$marca_criado.novo" "$marca_criado"
+}
 casa_inicial() {
   local nome casa _
   while IFS=: read -r nome _ _ _ _ casa _; do
@@ -106,11 +121,18 @@ if casa="$(casa_inicial)"; then
     printf '%s\n%s\n' "$password" "$password" | pure-pw passwd "$FTP_USER" -f /auth/pureftpd.passwd -C "$FTP_MAX_CLIENTS" >/dev/null
     registrar_segredo
   fi
+  # Instalação anterior à marca: o usuário que já existe passa a contar como criado.
+  inicial_ja_criado || marcar_criado
+elif inicial_ja_criado; then
+  # A impressão acompanha o segredo: recriado depois com o mesmo nome, ele fica com a senha informada no painel.
+  registrar_segredo
+  echo "Usuário inicial '$FTP_USER': removido pelo administrador; não é recriado. Para tê-lo de novo, crie um usuário com este nome no painel."
 else
   install -d -o ftpdata -g ftpdata -m 0750 "/data/$FTP_USER"
   printf '%s\n%s\n' "$password" "$password" | pure-pw useradd "$FTP_USER" \
     -f /auth/pureftpd.passwd -u ftpdata -g ftpdata -d "/data/$FTP_USER" -C "$FTP_MAX_CLIENTS" >/dev/null
   registrar_segredo
+  marcar_criado
 fi
 pure-pw mkdb /auth/pureftpd.pdb -f /auth/pureftpd.passwd
 chmod 0600 /auth/pureftpd.passwd /auth/pureftpd.pdb

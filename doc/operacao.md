@@ -75,7 +75,7 @@ Regras:
 
 > ⚠️ **Dispensa do TLS:** o usuário dispensado manda senha e arquivo em texto puro. Só para equipamento antigo que não fala TLS, em rede interna isolada: [Segurança](seguranca.md#tls-por-usuario).
 
-> ⚠️ O usuário definido em `FTP_USER` é criado na primeira subida, com a senha de `.secrets/ftp-usuario-inicial-senha.txt`, e não é removido pelo painel. A senha e a pasta dele são trocadas como as dos demais; a senha trocada vale até o arquivo do segredo ser alterado: [Segredos](segredos.md#trocar-a-senha). Para renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo.
+> ⚠️ O usuário definido em `FTP_USER` é criado uma vez, na primeira subida, com a senha de `.secrets/ftp-usuario-inicial-senha.txt`. A senha e a pasta dele são trocadas como as dos demais; a senha trocada vale até o arquivo do segredo ser alterado: [Segredos](segredos.md#trocar-a-senha). Ele é removido como os outros, pelo painel ou com `del`, e não volta nas subidas seguintes; para tê-lo de novo, crie um usuário com o mesmo nome. Para renomeá-lo, crie o novo com `add`, migre os dados e remova o antigo.
 
 <details>
 <summary>Detalhe técnico — onde a mudança é gravada</summary>

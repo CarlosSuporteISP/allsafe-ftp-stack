@@ -30,6 +30,13 @@ logins="${FTP_MAX_CLIENTS:-50}"
 # segredo não mudar. O arquivo guarda só o nome do usuário.
 inicial="${FTP_USER:-transfer}"
 marca_inicial=/auth/senha-inicial.trocada
+# Usuário inicial já criado uma vez: com esta marca, a partida do serviço ftp não o recria depois de removido.
+marca_criado=/auth/usuario-inicial.criado
+gravar_marca() { # <arquivo>: grava o nome do usuário inicial, só para o root
+  rm -f "$1.novo"
+  ( umask 077; printf '%s\n' "$inicial" > "$1.novo" )
+  mv -f "$1.novo" "$1"
+}
 [[ $# -le 2 || "$action" == add || "$action" == pasta || "$action" == limites || "$action" == desbloquear ]] || usage
 pasta_invalida() {
   echo "Pasta invalida: ate 4 niveis separados por /; letras, numeros, _ - e ponto; nenhum nivel comeca com ponto" >&2
@@ -211,15 +218,13 @@ case "$action" in
       printf '%s\n%s\n' "$password" "$password" | pure-pw useradd "$user" \
         -f "$passwd_file" -u ftpdata -g ftpdata -d "/data/$pasta" -C "$logins"
       avisar_divisao
+      # Usuário inicial criado de novo depois de removido: fica com a senha informada aqui, como na troca de senha.
+      [[ "$user" != "$inicial" ]] || { gravar_marca "$marca_inicial"; gravar_marca "$marca_criado"; }
     else
       printf '%s\n%s\n' "$password" "$password" | pure-pw passwd "$user" -f "$passwd_file" -C "$logins"
       # Senha nova: quem estava bloqueado por errar a anterior volta a poder entrar.
       tirar_bloqueios > /dev/null
-      if [[ "$user" == "$inicial" ]]; then
-        printf '%s\n' "$user" > "$marca_inicial.novo"
-        chmod 0600 "$marca_inicial.novo"
-        mv -f "$marca_inicial.novo" "$marca_inicial"
-      fi
+      [[ "$user" != "$inicial" ]] || gravar_marca "$marca_inicial"
     fi
     pure-pw mkdb /auth/pureftpd.pdb -f "$passwd_file"
     chmod 0600 "$passwd_file" /auth/pureftpd.pdb
@@ -244,6 +249,11 @@ case "$action" in
     travar
     casa="$(pasta_de "$user" || true)"
     pure-pw userdel "$user" -f "$passwd_file"
+    # Usuário inicial removido: a marca de criado impede a partida do serviço ftp de trazê-lo de volta.
+    if [[ "$user" == "$inicial" ]]; then
+      gravar_marca "$marca_criado"
+      rm -f "$marca_inicial"
+    fi
     pure-pw mkdb /auth/pureftpd.pdb -f "$passwd_file"
     chmod 0600 "$passwd_file" /auth/pureftpd.pdb
     # Um usuário novo com o mesmo nome não herda a dispensa do TLS, os limites nem os bloqueios.

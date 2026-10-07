@@ -103,8 +103,13 @@ if [[ "${1:-}" == "--runtime" ]]; then
     echo "servico $servico: running, healthy"
   done
   usuario="$(env_valor FTP_USER transfer)"
-  compose exec -T ftp pure-pw show "$usuario" -f /auth/pureftpd.passwd >/dev/null \
-    || { echo "ERRO: o usuário inicial '$usuario' não está no PureDB." >&2; exit 1; }
-  echo "usuario inicial '$usuario' presente no PureDB"
+  # O usuário inicial é criado uma vez; removido pelo administrador, fica a marca de que já existiu.
+  if compose exec -T ftp pure-pw show "$usuario" -f /auth/pureftpd.passwd >/dev/null 2>&1; then
+    echo "usuario inicial '$usuario' presente no PureDB"
+  elif compose exec -T ftp grep -qxF -- "$usuario" /auth/usuario-inicial.criado 2>/dev/null; then
+    echo "usuario inicial '$usuario' removido pelo administrador (o serviço ftp não o recria)"
+  else
+    echo "ERRO: o usuário inicial '$usuario' não está no PureDB nem consta como removido." >&2; exit 1
+  fi
 fi
 echo "Validacao FTP concluida."

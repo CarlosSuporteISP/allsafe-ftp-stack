@@ -380,6 +380,8 @@ ftp-usuario-inicial-senha.txt
   ou no cliente FTP. Trocar: grave a senha nova neste arquivo (12 caracteres ou mais) e rode
   docker compose restart ftp. Trocada pelo painel ou pelo ./manage-user.sh passwd, a senha nova vale
   e a deste arquivo fica sem uso até o arquivo ser alterado: aí vale a do arquivo, na subida seguinte.
+  O usuário inicial é criado uma vez. Removido pelo painel, ele não volta nas subidas seguintes e
+  este arquivo fica sem uso.
 
 painel-admin-inicial-senha.txt
   Senha inicial do primeiro administrador do painel web (o nome dele é PAINEL_ADMIN_USER, no .env),
@@ -438,7 +440,10 @@ echo "Pronto: FTP, painel e nginx no ar (healthy), perfil '$(env_valor FTP_PROFI
 echo "FTP:    $ftp_ip:$(env_valor FTP_PORT 21), $tls_texto, modo passivo $(env_valor FTP_PASSIVE_PORT_START 30000)-$(env_valor FTP_PASSIVE_PORT_END 30049)"
 ftp_usuario="$(env_valor FTP_USER transfer)"
 # Senha do usuário inicial trocada pelo painel ou pelo manage-user.sh: a do arquivo volta a valer quando ele mudar.
-if compose exec -T ftp grep -qxF -- "$ftp_usuario" /auth/senha-inicial.trocada 2>/dev/null; then
+# Removido pelo painel ou pelo manage-user.sh, o usuário inicial não é recriado: os usuários são os do painel.
+if ! compose exec -T ftp grep -q -- "^$ftp_usuario:" /auth/pureftpd.passwd 2>/dev/null; then
+  echo "        usuário inicial '$ftp_usuario' removido pelo administrador; os usuários do FTP são os da aba Usuários do painel"
+elif compose exec -T ftp grep -qxF -- "$ftp_usuario" /auth/senha-inicial.trocada 2>/dev/null; then
   echo "        usuário '$ftp_usuario', senha trocada pelo painel (a do arquivo $secret_file volta a valer quando ele for alterado)"
 else
   echo "        usuário '$ftp_usuario', senha no arquivo $secret_file"

@@ -8,6 +8,26 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.23.0] - 2026-10-07
+
+O usuário inicial do FTP passa a ser removido pelo painel, como os outros, com ou sem a pasta. Ele é criado uma vez, na instalação, e não volta sozinho.
+
+### Adicionado
+
+- **Remover o usuário inicial pelo painel.** O usuário de `FTP_USER` ganha o botão **Remover** na aba Usuários, com a mesma tela dos demais: a caixa para apagar também a pasta pede a senha do administrador. Pelo terminal, `./manage-user.sh del <usuario>` faz o mesmo, sem apagar a pasta.
+- Caso 51 da bateria funcional: remoção sem e com a pasta, subidas seguintes sem o usuário, criação de novo com o mesmo nome e volta pelo terminal.
+
+### Alterado
+
+- **O usuário inicial é criado uma vez.** O serviço `ftp` deixa a marca `/auth/usuario-inicial.criado` ao criá-lo e, nas subidas seguintes, não o recria se ele foi removido: o log diz `removido pelo administrador; não é recriado`. Antes, ele voltava a cada subida, com a senha do arquivo do segredo.
+- **Criado de novo com o mesmo nome, vale a senha informada**, no painel ou no `./manage-user.sh add`, até o arquivo `.secrets/ftp-usuario-inicial-senha.txt` ser alterado.
+- `./scripts/validate.sh --runtime` aceita o usuário inicial removido pelo administrador, e o resumo do `./deploy.sh` diz quando ele não existe mais.
+- A resposta `409` do painel para a remoção do usuário inicial deixa de existir.
+
+### Ao atualizar
+
+Nada a fazer. Na primeira subida depois da atualização, o usuário inicial que já existe recebe a marca e continua como está.
+
 ## [0.22.2] - 2026-10-07
 
 O padrão das três pastas da stack deixa de ser a pasta do computador onde ela é desenvolvida e passa a ser `/srv/allsafe-ftp-stack`. Instalação que já existe não muda: o `.env` dela continua valendo.

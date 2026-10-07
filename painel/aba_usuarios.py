@@ -49,12 +49,9 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
         mais = ' ou mais' if uso['parcial'] else ''
         acoes = (f'<a class="botao" href="/usuarios/editar?usuario={destino}">✏️ Editar</a> '
                  f'<a class="botao" href="/usuarios/senha?usuario={destino}">🔑 Trocar senha</a>')
-        if nome == CFG['ftp_usuario']:
-            marca = ' <span class="etiqueta" title="Criado pela instalação; o serviço ftp o recria a cada subida">inicial</span>'
-            remover = ''
-        else:
-            marca = ''
-            remover = f' <a class="botao perigo" href="/usuarios/remover?usuario={destino}">🗑️ Remover</a>'
+        marca = (' <span class="etiqueta" title="Criado pela instalação, uma vez; removido, não volta sozinho">inicial</span>'
+                 if nome == CFG['ftp_usuario'] else '')
+        remover = f' <a class="botao perigo" href="/usuarios/remover?usuario={destino}">🗑️ Remover</a>'
         dele = limites.resumo(proprios[nome]) if nome in proprios else ''
         if dele:
             marca += f' <span class="etiqueta" title="Limites próprios: {e(dele)}">limites</span>'
@@ -176,18 +173,11 @@ def criar_usuario(pedido, sessao, consulta, formulario, token):
     return pedido.redirecionar('/usuarios?m=criado')
 
 
-def usuario_alteravel(pedido, sessao, nome, remover=False):
+def usuario_alteravel(pedido, sessao, nome):
     """Confere o nome recebido; responde com o erro e devolve False se não der para alterar.
-    O usuário inicial tem a pasta e a senha trocadas como os outros; só a remoção dele é recusada."""
+    O usuário inicial é alterado e removido como os outros."""
     if not NOME.fullmatch(nome) or nome not in usuarios():
         pedido.enviar(404, pagina('Usuário não encontrado', '<section class="cartao"><h1>🔎 Usuário não encontrado</h1>'
-                                '<p><a href="/usuarios">Voltar para a lista</a></p></section>', sessao, '/usuarios'))
-        return False
-    if remover and nome == CFG['ftp_usuario']:
-        pedido.enviar(409, pagina('Usuário inicial', '<section class="cartao"><h1>🗑️ Usuário inicial</h1>'
-                                '<p>O usuário inicial não é removido: o serviço <code>ftp</code> o recria a cada subida, com a senha do '
-                                'arquivo <code>.secrets/ftp-usuario-inicial-senha.txt</code>. Para ele deixar de ser usado, troque a '
-                                'senha dele aqui no painel e não a entregue a ninguém.</p>'
                                 '<p><a href="/usuarios">Voltar para a lista</a></p></section>', sessao, '/usuarios'))
         return False
     return True
@@ -377,7 +367,7 @@ def trocar_senha(pedido, sessao, consulta, formulario, token):
 
 def tela_remover(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200):
     nome = consulta.get('usuario', '')
-    if not usuario_alteravel(pedido, sessao, nome, remover=True):
+    if not usuario_alteravel(pedido, sessao, nome):
         return
     cadastro = usuarios()
     pasta = cadastro.get(nome)
@@ -395,9 +385,12 @@ Sem marcar a caixa, os arquivos continuam em {onde}.</p>
 {campo_senha_atual(sessao, obrigatoria=False, para='só para apagar a pasta')}'''
     else:
         opcao = ''
+    do_inicial = ('\n<p class="suave">Este é o usuário inicial, criado pela instalação. Removido, ele não volta nas próximas '
+                  'subidas do serviço <code>ftp</code>; para tê-lo de novo, crie um usuário com o mesmo nome.</p>'
+                  ) if nome == CFG['ftp_usuario'] else ''
     pedido.enviar(codigo, pagina('Remover usuário', f'''<h1>🗑️ Remover usuário</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
-<p>Remover <strong>{e(nome)}</strong>? O login deixa de funcionar na hora.</p>
+<p>Remover <strong>{e(nome)}</strong>? O login deixa de funcionar na hora.</p>{do_inicial}
 <p>📁 A pasta dele tem {uso['arquivos']}{mais} arquivo(s), {e(tamanho(uso['bytes']))}{mais}, em {onde}.</p>
 <form method="post" action="/usuarios/remover" autocomplete="off">
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
@@ -412,7 +405,7 @@ def remover_usuario(pedido, sessao, consulta, formulario, token):
     """Remove o usuário do cadastro. Com a caixa marcada, apaga também a pasta dele, depois de conferir a senha
     atual do administrador e que nenhum outro usuário alcança a mesma pasta, uma de dentro ou uma de fora."""
     nome = formulario.get('usuario', '')
-    if not usuario_alteravel(pedido, sessao, nome, remover=True):
+    if not usuario_alteravel(pedido, sessao, nome):
         return None
     if formulario.get('confirmar') != 'sim':
         return pedido.redirecionar('/usuarios/remover?usuario=' + urllib.parse.quote(nome))

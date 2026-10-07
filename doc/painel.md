@@ -118,7 +118,7 @@ Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
 - Pasta: em branco, é o nome do usuário. Escolhida, fica sempre dentro de `DATA_DIR/dados`, com até 4 níveis separados por `/` (`clientes/olt-01`); cada nível tem letras, números, `_`, `-` e ponto, não começa com ponto e vai até 64 caracteres. A pasta é criada se não existir, e o campo sugere as que já existem no primeiro nível.
 - Pasta que passa por link simbólico, ou por um nome que já é de um arquivo, é recusada.
 - A pasta é escolhida na criação e trocada depois em **Editar**, com as mesmas regras. A troca não mexe na senha nem nos arquivos: o que estava na pasta anterior continua lá, e a pasta nova é criada se não existir.
-- O **usuário inicial** (`FTP_USER`) tem a senha e a pasta trocadas como os demais; só não pode ser removido. A senha trocada pelo painel vale até o arquivo `.secrets/ftp-usuario-inicial-senha.txt` ser alterado: na subida seguinte do FTP, passa a valer a do arquivo. Veja [Segredos](segredos.md#trocar-a-senha).
+- O **usuário inicial** (`FTP_USER`) tem a senha e a pasta trocadas e é removido como os demais. Ele é criado uma vez, pela instalação: removido, não volta nas subidas seguintes do FTP, e para tê-lo de novo basta criar um usuário com o mesmo nome, que fica com a senha informada. A senha trocada pelo painel vale até o arquivo `.secrets/ftp-usuario-inicial-senha.txt` ser alterado: na subida seguinte do FTP, passa a valer a do arquivo. Veja [Segredos](segredos.md#trocar-a-senha).
 
 <a name="limites"></a>
 

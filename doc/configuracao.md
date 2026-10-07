@@ -141,10 +141,10 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
-| `FTP_USER` | Nome do usuário inicial, criado na primeira subida; o painel não o remove | Regra `^[a-z_][a-z0-9_-]{0,31}$` | `transfer` |
+| `FTP_USER` | Nome do usuário inicial, criado uma vez, na primeira subida. Removido pelo painel, não é recriado | Regra `^[a-z_][a-z0-9_-]{0,31}$` | `transfer` |
 A **senha** do usuário inicial não é variável: fica em `SECRETS_DIR/ftp-usuario-inicial-senha.txt`, criada pelo `deploy.sh`, e chega ao container como o segredo `/run/secrets/ftp_usuario_inicial_senha`. Um `.env` com `FTP_PASSWORD` preenchido é recusado. Veja [Segredos](segredos.md).
 
-Só o usuário inicial vem do `.env`. Os demais são criados pelo [painel](painel.md#usuarios) ou com [`manage-user.sh`](../manage-user.sh): veja [Operação](operacao.md#usuarios). A senha e a pasta do usuário inicial também são trocadas por eles.
+Só o usuário inicial vem do `.env`. Os demais são criados pelo [painel](painel.md#usuarios) ou com [`manage-user.sh`](../manage-user.sh): veja [Operação](operacao.md#usuarios). A senha e a pasta do usuário inicial também são trocadas por eles, e ele é removido como os outros. Trocar o `FTP_USER` depois da instalação cria o usuário do nome novo na subida seguinte, também uma vez; o do nome antigo continua no cadastro até ser removido.
 
 ---
 
