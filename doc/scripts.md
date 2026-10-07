@@ -99,6 +99,7 @@ A pasta [`scripts/`](../scripts/) tem o que roda fora dos containers: no servido
 - **Converte os nomes antigos, os segredos:** em instalação feita até a `0.9.0`, dá o nome novo aos três arquivos de `.secrets/` com `mv`, sem ler nem copiar o conteúdo, e avisa `Convertido: <antigo> virou <novo>.` para cada um. Se o antigo e o novo existirem, vale o novo e sai um `AVISO`. Com `--check-only`, só avisa. Tabela dos nomes: [Segredos](segredos.md#nomes-antigos).
 - Se `.secrets/ftp-usuario-inicial-senha.txt` estiver vazio ou ausente, gera uma senha forte (`0600`): veja [Segredos](segredos.md).
 - Grava o `.secrets/LEIAME.txt` (`0600`), que diz para que serve cada arquivo da pasta e não guarda segredo, e fecha o resumo com `Segredos: .../LEIAME.txt diz para que serve cada arquivo.`
+- Diz, no fim do resumo, se o contato de segurança está publicado: `Contato de segurança: <e-mail>, publicado em /.well-known/security.txt do painel.` ou, com `SEGURANCA_CONTATO_EMAIL` vazia, `Contato de segurança: não publicado.`, com o que preencher. Não bloqueia a instalação.
 - Recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env` e, por padrão, qualquer `FTP_BIND_IP`, `FTP_PASSIVE_IP`, `PAINEL_BIND_IP`, `PAINEL_REDES_PERMITIDAS` ou `PAINEL_CERT_CN` (em forma de IP) fora de rede privada.
 - **Opção de IP público:** `REDE_PERMITIR_IP_PUBLICO` diferente de `nao` e de `sim` para com `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` e código `1`. Com `sim`, aceita IPv4 público de servidor e rede de `/8` a `/32`, continua recusando `0.0.0.0` e rede mais larga, exige `FTP_TLS_MODE` em `2` ou `3` (`ERRO: REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3`) e mostra o `ALERTA` ao final, também no `--check-only`.
 - Se `.secrets/painel-admin-inicial-senha-hash.txt` não existir, gera a senha inicial do painel em `.secrets/painel-admin-inicial-senha.txt` (`0600`) e grava o hash dela, chamando o `scripts/painel-senha.sh --inicial` depois de construir a imagem.
@@ -205,21 +206,23 @@ Confere a cópia antes de alterar qualquer coisa, para a stack, guarda o estado 
 ## 🧪 `scripts/validate.sh`
 
 ```bash
-./scripts/validate.sh            # sintaxe dos scripts, .env.example comentado, marca, licença e compose config de todos os perfis
+./scripts/validate.sh            # sintaxe dos scripts, .env.example comentado, marca, política de segurança, licença e compose config de todos os perfis
 ./scripts/validate.sh --runtime  # também exige os três serviços running e healthy e o usuário no PureDB
 ```
 
-**Resultado esperado:** `painel OK: <n> módulos Python`, `.env.example OK: <n> variáveis, todas comentadas e no guia de configuração`, `marca OK: 6 arquivos em web/marca/`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Com `--runtime`, também `servico ftp: running, healthy`, o mesmo para `painel` e `nginx`, e `usuario inicial '<usuário>' presente no PureDB`. Qualquer falha encerra com código diferente de zero.
+**Resultado esperado:** `painel OK: <n> módulos Python`, `.env.example OK: <n> variáveis, todas comentadas e no guia de configuração`, `marca OK: 6 arquivos em web/marca/`, `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Com `--runtime`, também `servico ftp: running, healthy`, o mesmo para `painel` e `nginx`, e `usuario inicial '<usuário>' presente no PureDB`. Qualquer falha encerra com código diferente de zero.
 
 <details>
 <summary>Detalhe técnico — o que cada modo confere</summary>
 
 | Modo | Confere |
 |---|---|
-| sem parâmetro | `bash -n` em `deploy.sh`, `manage-user.sh` e nos scripts de `scripts/`, `ftp/`, `painel/`, `nginx/` e `tests/`; se o host tiver `python3`, a sintaxe de cada módulo de `painel/` e que todo nome usado em cada um está definido ou importado nele, sem importar nem gravar nada; no `.env.example`, que cada variável tem comentário na linha de cima e está em [Configuração](configuracao.md); em [`web/marca/`](../web/marca/), que os seis arquivos da marca existem e são PNG ou ICO; que o [`LICENSE`](../LICENSE) é o texto oficial da Apache-2.0, conferido pelo sha256, que o [`NOTICE`](../NOTICE) traz a linha de autoria e o endereço do GitHub, que o [`MARCA.md`](../MARCA.md) existe e que cada arquivo de código tem a linha `SPDX-License-Identifier: Apache-2.0` em uma das duas primeiras linhas; `docker compose config --quiet` com `.env.example` e cada arquivo de `profiles/` |
+| sem parâmetro | `bash -n` em `deploy.sh`, `manage-user.sh` e nos scripts de `scripts/`, `ftp/`, `painel/`, `nginx/` e `tests/`; se o host tiver `python3`, a sintaxe de cada módulo de `painel/` e que todo nome usado em cada um está definido ou importado nele, sem importar nem gravar nada; no `.env.example`, que cada variável tem comentário na linha de cima e está em [Configuração](configuracao.md); em [`web/marca/`](../web/marca/), que os seis arquivos da marca existem e são PNG ou ICO; que o [`SECURITY.md`](../SECURITY.md) existe, cita `SEGURANCA_CONTATO_EMAIL` e não traz endereço de e-mail fixo; que o [`LICENSE`](../LICENSE) é o texto oficial da Apache-2.0, conferido pelo sha256, que o [`NOTICE`](../NOTICE) traz a linha de autoria e o endereço do GitHub, que o [`MARCA.md`](../MARCA.md) existe e que cada arquivo de código tem a linha `SPDX-License-Identifier: Apache-2.0` em uma das duas primeiras linhas; `docker compose config --quiet` com `.env.example` e cada arquivo de `profiles/` |
 | `--runtime` | tudo acima, mais: os serviços `ftp`, `painel` e `nginx` em `running` e `healthy`, e `pure-pw show` do usuário inicial, lido de `FTP_USER` no `.env` |
 
 O modo `--runtime` confere a instalação do `.env` desta pasta. Para conferir outra, aponte o arquivo dela: `ENV_FILE=<arquivo> ./scripts/validate.sh --runtime`. Sem o arquivo, o script para com `ERRO: ... não há instalação para conferir.`
+
+Recusa da política de segurança: `ERRO: SECURITY.md falta, não cita SEGURANCA_CONTATO_EMAIL ou traz um endereço de e-mail fixo.`
 
 Recusas da licença: `ERRO: LICENSE falta ou não é o texto oficial da Apache-2.0.`, `ERRO: NOTICE falta ou está sem a linha de autoria e o endereço do GitHub.`, `ERRO: MARCA.md falta.` e `ERRO: <arquivo> sem a linha SPDX-License-Identifier: Apache-2.0 no começo.` A linha da licença vai na primeira linha do arquivo de código ou, quando ele começa com `#!`, na segunda.
 

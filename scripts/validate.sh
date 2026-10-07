@@ -55,6 +55,10 @@ echo "marca OK: 6 arquivos em web/marca/"
 { grep -q -F 'Desenvolvido pela allsafe.inf.br' NOTICE && grep -q -F 'https://github.com/allsafe-inf' NOTICE; } 2>/dev/null \
   || { echo "ERRO: NOTICE falta ou está sem a linha de autoria e o endereço do GitHub." >&2; exit 1; }
 [[ -s MARCA.md ]] || { echo "ERRO: MARCA.md falta." >&2; exit 1; }
+# Política de segurança: o SECURITY.md existe, aponta para a variável do contato e não traz endereço fixo.
+{ grep -q -F 'SEGURANCA_CONTATO_EMAIL' SECURITY.md && ! grep -q -E '[A-Za-z0-9._+-]+@[A-Za-z0-9-]+\.[A-Za-z]' SECURITY.md; } 2>/dev/null \
+  || { echo "ERRO: SECURITY.md falta, não cita SEGURANCA_CONTATO_EMAIL ou traz um endereço de e-mail fixo." >&2; exit 1; }
+echo "política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo"
 com_licenca=0; sem_licenca=0
 for arquivo in Dockerfile compose.yaml deploy.sh manage-user.sh scripts/*.sh ftp/*.sh painel/*.sh painel/*.py nginx/*.sh nginx/*.conf \
   nginx/*.modelo web/*.css tests/*.sh tests/etapas/*.sh; do

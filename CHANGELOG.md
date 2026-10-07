@@ -8,6 +8,22 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.18.9] - 2026-10-06
+
+O projeto ganha a política de segurança, sem endereço fixo: quem acha uma falha é mandado para o contato que cada instalação publica, definido por quem a opera em `SEGURANCA_CONTATO_EMAIL`, no `.env`.
+
+### Adicionado
+
+- **[`SECURITY.md`](SECURITY.md).** Diz para quem avisar de uma falha, o que mandar, o que não mandar e quais versões recebem correção. O contato não fica escrito no arquivo: é o que a instalação publica em `/.well-known/security.txt`, com a variável `SEGURANCA_CONTATO_EMAIL`, que existe desde a `0.18.0`.
+- **Linha do contato no resumo do `deploy.sh`.** O resumo passa a terminar com `Contato de segurança: <e-mail>, publicado em /.well-known/security.txt do painel.` ou, com a variável vazia, `Contato de segurança: não publicado.`, com o que preencher. A instalação não é bloqueada.
+- **Conferência no `scripts/validate.sh`.** O `SECURITY.md` tem de existir, citar a variável e não trazer endereço de e-mail fixo; a linha nova é `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`.
+
+### Alterado
+
+- **Comentário da variável no [`.env.example`](.env.example) e guia de [Configuração](doc/configuracao.md#contato-de-seguranca)** dizem que a política do projeto aponta para o contato da instalação. [Segurança](doc/seguranca.md#contato-de-seguranca), [Instalação](doc/instalacao.md), [Scripts](doc/scripts.md#deploy) e o índice da [documentação](doc/README.md) acompanham.
+- **Caso 36 da bateria** confere também as duas linhas do resumo do `deploy.sh`, com o contato e sem ele. O número de casos não muda.
+- **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados; a variável continua vazia até ser preenchida. É recriado o container do painel, porque a imagem dele leva o número da versão; o do FTP continua em execução.
+
 ## [0.18.8] - 2026-10-06
 
 A regra da marca fica com um pedido só: a stack é livre para usar e distribuir, e a logo da ALL-SAFE sai quando houver contrato ou venda para terceiros. Nenhum código da stack mudou.

@@ -250,6 +250,15 @@ if [[ "$tls_excecoes" == sim ]]; then
   fi
   tls_texto+=", com exceção por usuário"
 fi
+# Contato de segurança: o resumo diz se o security.txt está publicado e, com a variável vazia, como publicar.
+aviso_contato() {
+  if [[ -n "$contato_seguranca" ]]; then
+    echo "Contato de segurança: $contato_seguranca, publicado em /.well-known/security.txt do painel."
+  else
+    echo "Contato de segurança: não publicado. Para publicar, preencha SEGURANCA_CONTATO_EMAIL em $env_file"
+    echo "        e rode ./deploy.sh de novo (política do projeto: SECURITY.md)."
+  fi
+}
 aviso_tls() {
   if [[ "$tls_excecoes" == sim ]]; then
     echo "AVISO: FTP_TLS_EXCECOES=sim: os usuários marcados na aba Usuários do painel entram SEM TLS, com senha e"
@@ -428,5 +437,6 @@ else
 fi
 echo "Segredos: $secrets_dir/LEIAME.txt diz para que serve cada arquivo."
 echo "Remover: ./deploy.sh --remover  (os dados ficam em $data_dir)"
+aviso_contato
 aviso_tls
 aviso_ip_publico

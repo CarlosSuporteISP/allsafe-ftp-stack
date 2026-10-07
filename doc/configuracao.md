@@ -244,7 +244,7 @@ O arquivo segue a RFC 9116: é onde um pesquisador, ou a ferramenta de varredura
    curl -k https://<endereço do painel>:8443/.well-known/security.txt
    ```
 
-**Resultado esperado:** três linhas, e a aba Segurança do painel com o item `Contato de segurança` marcado.
+**Resultado esperado:** o resumo do `deploy.sh` com a linha `Contato de segurança: seguranca@suaempresa.com.br, publicado em /.well-known/security.txt do painel.`, três linhas na resposta e a aba Segurança do painel com o item `Contato de segurança` marcado.
 
 ```text
 Contact: mailto:seguranca@suaempresa.com.br
@@ -252,7 +252,7 @@ Expires: 2027-01-03T00:00:00Z
 Preferred-Languages: pt-BR
 ```
 
-Com a variável vazia, o mesmo endereço responde `404` com `contato de segurança não configurado`. Com `REDE_PERMITIR_IP_PUBLICO=sim`, a aba Segurança passa a cobrar o preenchimento.
+Com a variável vazia, o mesmo endereço responde `404` com `contato de segurança não configurado`, e o resumo do `deploy.sh` traz `Contato de segurança: não publicado`, com o que preencher. Com `REDE_PERMITIR_IP_PUBLICO=sim`, a aba Segurança passa a cobrar o preenchimento.
 
 <details>
 <summary>Detalhe técnico — validade, validação e o que não é publicado</summary>
@@ -262,7 +262,7 @@ Com a variável vazia, o mesmo endereço responde `404` com `contato de seguran�
 - **Validação em três pontos:** o [`deploy.sh`](../deploy.sh), o container do painel e o próprio painel recusam o valor que não é um endereço só: sem `@`, domínio sem ponto, dois endereços, espaço, `mailto:`, URL, `<`, `>`, `%`, quebra de linha, parte antes do `@` com mais de 64 caracteres ou endereço com mais de 254. A mensagem é `SEGURANCA_CONTATO_EMAIL inválido`.
 - **Só o contato:** o arquivo não traz versão, nome da stack nem caminho. Não há linha `Canonical`, porque o endereço do painel muda de uma instalação para outra e o arquivo não é assinado.
 - **Só esse endereço:** `/security.txt` na raiz, a lista de `/.well-known/` e qualquer outro nome dentro dela não existem; sem sessão, levam à tela de entrada.
-- **De quem é o contato:** de quem opera esta instalação, não de quem desenvolveu a stack.
+- **De quem é o contato:** de quem opera esta instalação, não de quem desenvolveu a stack. A [política de segurança](../SECURITY.md) do projeto não traz endereço fixo: manda quem achou a falha para o contato publicado aqui.
 
 O que mais fica aberto sem senha, e por quê: [Segurança](seguranca.md#contato-de-seguranca).
 

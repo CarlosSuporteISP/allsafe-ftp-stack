@@ -127,6 +127,8 @@ Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede priv
         (valem até serem trocados na aba Administradores do painel)
 Segredos: ./.secrets/LEIAME.txt diz para que serve cada arquivo.
 Remover: ./deploy.sh --remover  (os dados ficam em <DATA_DIR>)
+Contato de segurança: não publicado. Para publicar, preencha SEGURANCA_CONTATO_EMAIL em .env
+        e rode ./deploy.sh de novo (política do projeto: SECURITY.md).
 ```
 
 O resumo diz **onde** está cada senha e nunca a mostra. O `LEIAME.txt` da pasta `.secrets/` explica para que serve cada arquivo dela. Na primeira vez aparecem também `Gerada uma senha forte em .secrets/ftp-usuario-inicial-senha.txt (0600). Guarde-a para o cliente FTP.` e `Gerada uma senha forte para o painel em .secrets/painel-admin-inicial-senha.txt (0600).`

@@ -42,6 +42,7 @@ seg_sem="$(aba -b "$J" "$B/seguranca")"; aba_sem="$(grep -c -F 'Não publicado (
 conferir_deploy "SEGURANCA_CONTATO_EMAIL=time+seguranca@sub.exemplo.com.br"; r_aceita=$?
 
 antes="$(ids)"; gravar_env "$ENVA" SEGURANCA_CONTATO_EMAIL "$CONTATO"; dep; r_liga=$?; painel_de_pe; depois="$(ids)"
+resumo_com="$(grep -c -F "Contato de segurança: $CONTATO, publicado em /.well-known/security.txt do painel." "$W/deploy.log")"
 ftp_mantido=NÃO; [[ "${antes%% *}" == "${depois%% *}" ]] && ftp_mantido=sim
 r_com="$(pede "$SECURITY")"; tipo_com="$(tipo_de)"; falta_com="$(faltando)"; biscoito_com="$(biscoitos)"; cp "$W/st.corpo" "$W/st.txt"
 linhas="$(grep -c . "$W/st.txt")"; retornos="$(grep -c $'\r' "$W/st.txt" || true)"
@@ -108,14 +109,15 @@ r_ainda="$(pede "$SECURITY")"; intacto=NÃO; cmp -s "$W/st.txt" "$W/st.corpo" &&
 auditoria; pedidos_get="$(grep -c 'security.txt' "$W/auditoria" || true)"; envios_recusados="$(grep -c 'evento=recusa_origem caminho=/.well-known/security.txt' "$W/auditoria" || true)"
 
 gravar_env "$ENVA" SEGURANCA_CONTATO_EMAIL ""; dep; r_desliga=$?; painel_de_pe
+resumo_sem="$(grep -c '^Contato de segurança: não publicado. Para publicar, preencha SEGURANCA_CONTATO_EMAIL' "$W/deploy.log")"
 r_volta="$(pede "$SECURITY")"; contato_volta="$(grep -c -a -F "$CONTATO" "$W/st.corpo" || true)"
 
 [[ "$linha_env" == 1 && "$r_sem" == 404 && "$tipo_sem" == "text/plain; charset=utf-8" && "$corpo_sem" == "contato de segurança não configurado" && "$e_adm" == 303 \
   && "$seg_sem" == "200 " && "$aba_sem" == 1 && "$r_aceita" == 0 && "$r_liga" == 0 && "$ftp_mantido" == sim && "$r_com" == 200 && "$tipo_com" == "text/plain; charset=utf-8" \
   && "$falta_com" == " nenhum" && "$biscoito_com" == 0 && "$linhas" == 3 && "$retornos" == 0 && "$contato" == "Contact: mailto:$CONTATO" && "$formato" == sim \
   && "$dias" -ge 89 && "$dias" -le 90 && "$idioma" == "Preferred-Languages: pt-BR" && "$e_adm2" == 303 && "$r_sessao" == 200 && "$mesmo" == sim \
-  && "$seg_com" == "200 " && "$aba_com" == 1 && "$r_desliga" == 0 && "$r_volta" == 404 && "$contato_volta" == 0 ]]
-caso $? testes 36 "security.txt publicado com o contato de segurança" "padrão da instalação: SEGURANCA_CONTATO_EMAIL vazia no .env ($linha_env linha) · sem contato: GET /.well-known/security.txt: $r_sem, $tipo_sem, \"$corpo_sem\"; aba Segurança: $seg_sem· linha Não publicado: $aba_sem · deploy.sh --check-only com time+seguranca@sub.exemplo.com.br: saída $r_aceita · com SEGURANCA_CONTATO_EMAIL=$CONTATO (deploy.sh: saída $r_liga, container do FTP mantido: $ftp_mantido): $r_com, $tipo_com, cabeçalhos de segurança faltando:$falta_com, cookie: $biscoito_com · conteúdo: $linhas linhas, retornos de carro: $retornos · $contato · Expires: $expira (formato RFC 3339: $formato, daqui a $dias dias) · $idioma · com a sessão do administrador: $r_sessao, o mesmo texto: $mesmo · aba Segurança: $seg_com· linha Publicado, com o contato: $aba_com · variável esvaziada de novo (deploy.sh: saída $r_desliga): $r_volta, contato na resposta: $contato_volta"
+  && "$seg_com" == "200 " && "$aba_com" == 1 && "$r_desliga" == 0 && "$r_volta" == 404 && "$contato_volta" == 0 && "$resumo_com" == 1 && "$resumo_sem" == 1 ]]
+caso $? testes 36 "security.txt publicado com o contato de segurança" "padrão da instalação: SEGURANCA_CONTATO_EMAIL vazia no .env ($linha_env linha) · sem contato: GET /.well-known/security.txt: $r_sem, $tipo_sem, \"$corpo_sem\"; aba Segurança: $seg_sem· linha Não publicado: $aba_sem · deploy.sh --check-only com time+seguranca@sub.exemplo.com.br: saída $r_aceita · com SEGURANCA_CONTATO_EMAIL=$CONTATO (deploy.sh: saída $r_liga, linha do contato publicado no resumo: $resumo_com, container do FTP mantido: $ftp_mantido): $r_com, $tipo_com, cabeçalhos de segurança faltando:$falta_com, cookie: $biscoito_com · conteúdo: $linhas linhas, retornos de carro: $retornos · $contato · Expires: $expira (formato RFC 3339: $formato, daqui a $dias dias) · $idioma · com a sessão do administrador: $r_sessao, o mesmo texto: $mesmo · aba Segurança: $seg_com· linha Publicado, com o contato: $aba_com · variável esvaziada de novo (deploy.sh: saída $r_desliga, linha do contato não publicado no resumo: $resumo_sem): $r_volta, contato na resposta: $contato_volta"
 
 [[ "$ok" == 0 && "$vazou_cfg" == 0 && "$vazou_contato" == 0 && "$alem" == 0 && "$servidor" != *[0-9]* && "$ok_r" == 0 && "$recusados" == 13 \
   && "$r_ainda" == 200 && "$intacto" == sim && "$pedidos_get" == "$envios_recusados" ]]
