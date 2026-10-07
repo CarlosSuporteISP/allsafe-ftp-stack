@@ -3,7 +3,7 @@
 import os
 
 from config import ARQ_CERT, ARQ_CERT_FTP, CFG, FALHAS_MAX, PRIVADAS, endereco_privado
-from estado import certificado, sem_tls, senhas_de_custo_antigo
+from estado import bloqueios, certificado, sem_tls, senhas_de_custo_antigo
 from pagina import alerta_tls, aviso_rede, e, pagina, validade
 
 
@@ -34,6 +34,7 @@ def seguranca(pedido, sessao, consulta, formulario, token):
     sem_docker = not os.path.exists('/var/run/docker.sock') and not os.path.exists('/run/docker.sock')
     redes = ', '.join(str(rede) for rede in CFG['redes'])
     antigas = senhas_de_custo_antigo()
+    presos = bloqueios()
 
     def local(ip):
         if ip.startswith('127.'):
@@ -76,6 +77,13 @@ def seguranca(pedido, sessao, consulta, formulario, token):
                + ('<strong>em texto puro</strong>, porque o FTP está sem TLS.' if CFG['ftp_tls'] == '0'
                   else 'em TLS e com o certificado dele conferido.')) if CFG['acesso_usuarios']
               else 'Desligada (<code>PAINEL_ACESSO_USUARIOS_FTP=nao</code>): só administrador entra no painel.'),
+        linha('✅' if CFG['bloqueio_tentativas'] else '⚠️', 'Bloqueio por tentativa no FTP',
+              ((f'{CFG["bloqueio_tentativas"]} senhas erradas do mesmo endereço bloqueiam o usuário para aquele endereço por '
+                f'{CFG["bloqueio_minutos"]} minutos (<code>FTP_BLOQUEIO_TENTATIVAS</code> e <code>FTP_BLOQUEIO_MINUTOS</code>). ')
+               if CFG['bloqueio_tentativas'] else
+               '<strong>Desligado na stack</strong> (<code>FTP_BLOQUEIO_TENTATIVAS=0</code>): só é bloqueado o usuário que tem limite próprio. ')
+              + 'O limite próprio de cada usuário fica em Editar, na aba Usuários. '
+              + (f'<strong>Bloqueado agora: {e(", ".join(sorted(presos)))}.</strong>' if presos else 'Nenhum usuário bloqueado agora.')),
         linha('⚠️' if antigas else '✅', 'Custo das senhas do FTP',
               (f'<strong>{len(antigas)} usuário(s) com a senha gravada com o custo anterior</strong>: {e(", ".join(antigas))}. '
                     'Cada tentativa de entrada com esses nomes ocupa mais o processador do FTP. O custo atual passa a valer '

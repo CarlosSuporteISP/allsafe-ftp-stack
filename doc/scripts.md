@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`scripts/gerar-marca.sh`](#gerar-marca) · [`tests/testar.sh`](#testar) · [`ftp/entrypoint.sh`](#entrypoint) · [`ftp/saude.sh`](#ftp-saude) · [`ftp/porteiro-tls.sh`](#porteiro-tls) · [`painel/entrypoint.sh`](#painel-entrypoint) · [`nginx/entrypoint.sh`](#nginx-entrypoint) · [`nginx/saude.sh`](#nginx-saude) · [`ftp/usuario.sh`](#ftp-user) · [Scripts de apoio](#apoio)
+[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`scripts/gerar-marca.sh`](#gerar-marca) · [`tests/testar.sh`](#testar) · [`ftp/entrypoint.sh`](#entrypoint) · [`ftp/saude.sh`](#ftp-saude) · [`ftp/porteiro.sh`](#porteiro) · [`ftp/vigia.pl`](#vigia) · [`painel/entrypoint.sh`](#painel-entrypoint) · [`nginx/entrypoint.sh`](#nginx-entrypoint) · [`nginx/saude.sh`](#nginx-saude) · [`ftp/usuario.sh`](#ftp-user) · [Scripts de apoio](#apoio)
 
 </details>
 
@@ -42,20 +42,21 @@ flowchart LR
 | Script | Onde roda | Para que serve |
 |---|---|---|
 | [`deploy.sh`](../deploy.sh) | host | Instala, reaplica, atualiza ou remove a stack em um comando, sem perguntas |
-| [`manage-user.sh`](../manage-user.sh) | host | Atalho para criar, trocar senha, trocar pasta, remover e listar usuários FTP, e para dispensar um usuário do TLS |
+| [`manage-user.sh`](../manage-user.sh) | host | Atalho para criar, trocar senha, trocar pasta, ajustar limites, desbloquear, remover e listar usuários FTP, e para dispensar um usuário do TLS |
 | [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | host | Recupera o acesso ao painel: define a senha de um administrador ou cria o administrador, gravando só o hash |
 | [`scripts/backup.sh`](../scripts/backup.sh) | host | Grava a cópia de segurança de `dados/`, `auth/`, `certs/` e `painel/` em `BACKUP_DIR` |
 | [`scripts/restaurar.sh`](../scripts/restaurar.sh) | host | Devolve a stack ao estado de uma cópia, guardando antes o estado atual |
 | [`scripts/validate.sh`](../scripts/validate.sh) | host | Checagem de sintaxe, da marca, da licença, do Compose de todos os perfis e, opcionalmente, dos três serviços no ar |
 | [`scripts/gerar-marca.sh`](../scripts/gerar-marca.sh) | computador de quem troca a logo | Gera os seis arquivos de logo e ícone do painel a partir das duas artes de origem |
 | [`tests/testar.sh`](../tests/testar.sh) | host | Bateria de testes funcional, de segurança e de rede, em instância de teste que o próprio script cria e remove |
-| [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado e executa o `pure-ftpd` |
+| [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado, sobe o vigia, o `pure-authd` e o `pure-ftpd` e encerra o container se um deles sair |
 | [`ftp/saude.sh`](../ftp/saude.sh) | container | Healthcheck: abre a porta de controle e espera a saudação do servidor |
-| [`ftp/porteiro-tls.sh`](../ftp/porteiro-tls.sh) | container | Com `FTP_TLS_EXCECOES=sim`, decide a cada entrada se a sessão sem TLS pode seguir para a conferência da senha |
+| [`ftp/porteiro.sh`](../ftp/porteiro.sh) | container | Decide a cada entrada, antes da conferência da senha, se ela pode seguir: recusa o usuário bloqueado por senhas erradas e, com `FTP_TLS_EXCECOES=sim`, a sessão sem TLS de quem não foi dispensado |
+| [`ftp/vigia.pl`](../ftp/vigia.pl) | container | Conta as senhas erradas de cada endereço para cada usuário e grava o bloqueio que o porteiro aplica |
 | [`painel/entrypoint.sh`](../painel/entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel, entrega a cópia dele ao nginx e executa o painel |
 | [`nginx/entrypoint.sh`](../nginx/entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
 | [`nginx/saude.sh`](../nginx/saude.sh) | container do nginx | Healthcheck: pede `/saude` ao painel passando pelo nginx |
-| [`ftp/usuario.sh`](../ftp/usuario.sh) | containers do FTP e do painel | Gestão de usuários no PureDB e da lista de quem entra sem TLS, chamada pelo `manage-user.sh` e pelo painel |
+| [`ftp/usuario.sh`](../ftp/usuario.sh) | containers do FTP e do painel | Gestão de usuários no PureDB, dos limites, dos bloqueios e da lista de quem entra sem TLS, chamada pelo `manage-user.sh` e pelo painel |
 | [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | host e containers | Funções que conferem se um IP ou uma rede é privado e que tratam a opção de IP público; carregado pelos outros scripts |
 | [`scripts/ambiente.sh`](../scripts/ambiente.sh) | host | Função que lê uma chave do `.env` sem executar o arquivo; carregado pelos outros scripts |
 
@@ -128,13 +129,16 @@ A pasta [`scripts/`](../scripts/) tem o que roda fora dos containers: no servido
 ./manage-user.sh pasta backup-olt clientes/olt-02   # troca a pasta; os arquivos da anterior continuam nela
 ./manage-user.sh limites backup-olt sessoes=2 download=500 horario=0800-1800   # grava limites só do usuário
 ./manage-user.sh limites backup-olt   # mostra os limites do usuário
+./manage-user.sh limites backup-olt tentativas=3 minutos=30   # senhas erradas até o bloqueio e minutos de bloqueio, só do usuário
+./manage-user.sh bloqueios            # lista os bloqueios por tentativa em vigor (ou só os de um usuário)
+./manage-user.sh desbloquear backup-olt   # tira os bloqueios do usuário (ou só o de uma origem)
 ./manage-user.sh del backup-olt       # remove o usuário (os arquivos ficam em /data)
 ./manage-user.sh tls-dispensar olt-antiga   # deixa o usuário entrar sem TLS (só vale com FTP_TLS_EXCECOES=sim)
 ./manage-user.sh tls-exigir olt-antiga      # volta a exigir o TLS do usuário
 ./manage-user.sh tls-lista                  # lista os usuários dispensados do TLS
 ```
 
-**Resultado esperado:** `add` e `passwd` terminam sem erro e o usuário aparece no `list`; `pasta` responde `Pasta do usuario <nome>: /data/<pasta>. Os arquivos de /data/<anterior> continuam la.`; `del` responde `Usuario removido; os dados em /data/<pasta> foram preservados.`, com a pasta real do usuário. O `add` com uma pasta que outro usuário já alcança termina sem erro e mostra uma linha `Aviso:` por usuário. `tls-dispensar` responde `Usuario <nome> dispensado do TLS: vale na proxima entrada, com FTP_TLS_EXCECOES=sim.` e `tls-exigir`, `Usuario <nome> volta a ser obrigado a usar TLS: vale na proxima entrada.`; `tls-lista` mostra um nome por linha, ou nada. `limites` com pelo menos um par responde `Limites do usuario <nome> gravados: valem na proxima entrada no FTP.`; sem par nenhum, mostra uma linha por limite (`sessoes=`, `download=`, `envio=`, `horario=` e `baixar=`), vazia no que o usuário não tem.
+**Resultado esperado:** `add` e `passwd` terminam sem erro e o usuário aparece no `list`; `pasta` responde `Pasta do usuario <nome>: /data/<pasta>. Os arquivos de /data/<anterior> continuam la.`; `del` responde `Usuario removido; os dados em /data/<pasta> foram preservados.`, com a pasta real do usuário. O `add` com uma pasta que outro usuário já alcança termina sem erro e mostra uma linha `Aviso:` por usuário. `tls-dispensar` responde `Usuario <nome> dispensado do TLS: vale na proxima entrada, com FTP_TLS_EXCECOES=sim.` e `tls-exigir`, `Usuario <nome> volta a ser obrigado a usar TLS: vale na proxima entrada.`; `tls-lista` mostra um nome por linha, ou nada. `limites` com pelo menos um par responde `Limites do usuario <nome> gravados: valem na proxima entrada no FTP.`; sem par nenhum, mostra uma linha por limite (`sessoes=`, `download=`, `envio=`, `horario=`, `baixar=`, `tentativas=` e `minutos=`), vazia no que o usuário não tem. `bloqueios` mostra uma linha por bloqueio, `usuario=<nome> origem=<ip> senhas_erradas=<n> desde=<data hora> ate=<data hora>`, ou `Nenhum bloqueio em vigor.`; `desbloquear` responde `Usuario <nome> desbloqueado (<n> endereco(s)): vale na proxima entrada no FTP.`, ou `Usuario <nome> nao tem bloqueio.`
 
 A senha é lida do terminal e enviada pelo `stdin` para o container: não aparece na linha de comando nem no histórico. O script opera a instalação do `.env` desta pasta; para operar outra, aponte o arquivo dela: `ENV_FILE=<arquivo> ./manage-user.sh list`. Regras e casos de uso em [Operação](operacao.md#usuarios).
 
@@ -317,8 +321,8 @@ As senhas da instância de teste são geradas na hora, ficam só em `TEMP_DIR/te
 
 | Bateria | Casos | Exemplos |
 |---|---|---|
-| Funcional | 46 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh`, administradores pelo painel, recuperação do acesso pelo host, download pelo painel (arquivo pequeno, subpasta, nome com acento e arquivo de 40 MiB, com a soma conferida), pasta criada pelo painel, usuário com pasta escolhida e pasta dividida entre usuários, usuário do FTP que entra no painel e baixa os próprios arquivos, sessão dele acompanhando o cadastro e a variável que desliga a entrada, a entrada dele em cada modo de TLS, e o TLS por usuário: dispensa e volta pelo painel e pelo terminal, com o padrão desligado, e a marca: logo e ícone entregues pelo nginx e a autoria no rodapé de todas as telas, o `robots.txt` e o `security.txt` com o contato de segurança, a execução só em Docker, sem systemd, a senha do usuário inicial reaplicada do segredo a cada subida, a licença e a autoria no projeto e dentro das três imagens, o `HEAD` do painel igual ao `GET`, sem o corpo, a pasta do usuário trocada pelo painel e pelo terminal, sem mover arquivo, a senha e a pasta do usuário inicial trocadas pelo painel, valendo até o segredo mudar, o arquivo e a pasta renomeados e apagados pelo painel, o usuário removido junto com a pasta, e os limites por usuário gravados pelo painel e pelo terminal e aplicados pelo FTP, os downloads pelo painel no limite do usuário |
-| Segurança | 84 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, a opção de IP público (só com `sim`, "todos" sempre recusado, TLS obrigatório, valor inválido, alerta em execução), CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos, entrada que não revela nomes de administrador, senha atual em toda alteração de administrador, sessões do administrador alterado encerradas, arquivo de administradores só com hash, aba Arquivos sem sessão, fuga da pasta pela aba Arquivos, link simbólico não seguido, arquivo entregue só como anexo, limite de downloads ao mesmo tempo, criação de pasta sem sessão e sem token, nome de pasta que tenta sair da pasta dos dados, usuário preso à pasta escolhida, usuário do FTP sem alcance à administração do painel, preso à própria pasta no painel, entrada dele sem brecha (telas iguais na recusa, nome de administrador, servidor FTP parado, certificado trocado, bloqueio por tentativas), os limites de sessões e de downloads por usuário, e o TLS por usuário: sem TLS só entra quem foi dispensado, o FTP encerra se o `pure-authd` morre, as combinações recusadas na subida e quem pode alterar a lista, e a pasta da marca, que entrega só os seis arquivos, só para leitura, os endereços abertos sem senha do `robots.txt` e do `security.txt`, que não entregam mais nada, e a segurança ampliada: nenhuma rota do painel e nenhum comando do FTP sem login, senha aleatória no FTP e no painel, rajada de senhas, de pedidos e de conexões, conexão parada, pedido grande ou malformado, cadastro das senhas fora do alcance da web, do FTP, dos outros containers e do host, custo da senha do FTP conforme o porte, a troca de pasta, o renomear e o apagar, que não saem da pasta dos dados nem agem sem sessão, sem token e sem a senha do administrador, a pasta grande apagada em mais de um pedido, e os limites por usuário, que recusam valor fora da regra, sem sessão e sem token |
+| Funcional | 49 | instalação em um comando, login por FTPS, envio e download com comparação, ciclo de usuário pelo terminal e pelo painel, reinício sem perda, healthcheck do FTP, backup e restauração, arquivos estáticos entregues pelo nginx, conversão dos nomes antigos pelo `deploy.sh`, administradores pelo painel, recuperação do acesso pelo host, download pelo painel (arquivo pequeno, subpasta, nome com acento e arquivo de 40 MiB, com a soma conferida), pasta criada pelo painel, usuário com pasta escolhida e pasta dividida entre usuários, usuário do FTP que entra no painel e baixa os próprios arquivos, sessão dele acompanhando o cadastro e a variável que desliga a entrada, a entrada dele em cada modo de TLS, e o TLS por usuário: dispensa e volta pelo painel e pelo terminal, com o padrão desligado, e a marca: logo e ícone entregues pelo nginx e a autoria no rodapé de todas as telas, o `robots.txt` e o `security.txt` com o contato de segurança, a execução só em Docker, sem systemd, a senha do usuário inicial reaplicada do segredo a cada subida, a licença e a autoria no projeto e dentro das três imagens, o `HEAD` do painel igual ao `GET`, sem o corpo, a pasta do usuário trocada pelo painel e pelo terminal, sem mover arquivo, a senha e a pasta do usuário inicial trocadas pelo painel, valendo até o segredo mudar, o arquivo e a pasta renomeados e apagados pelo painel, o usuário removido junto com a pasta, os limites por usuário gravados pelo painel e pelo terminal e aplicados pelo FTP, os downloads pelo painel no limite do usuário, o bloqueio por tentativa no FTP: limite do usuário pelo painel e pelo terminal, bloqueio, vencimento, desbloqueio, reinício e padrão da stack, e as transferências pelo FTP no registro do container |
+| Segurança | 86 | login sem TLS e anônimo recusados, fuga do `chroot`, isolamento entre usuários, recusas do `deploy.sh` e dos containers a IP público, a opção de IP público (só com `sim`, "todos" sempre recusado, TLS obrigatório, valor inválido, alerta em execução), CSRF, `Origin` de fora e `Origin: null`, `Host` de fora, limite de tentativas, cabeçalhos, TLS antigo, nenhum segredo no `.env`, no Git, nos logs, na auditoria e no `LEIAME.txt` da pasta de segredos, entrada que não revela nomes de administrador, senha atual em toda alteração de administrador, sessões do administrador alterado encerradas, arquivo de administradores só com hash, aba Arquivos sem sessão, fuga da pasta pela aba Arquivos, link simbólico não seguido, arquivo entregue só como anexo, limite de downloads ao mesmo tempo, criação de pasta sem sessão e sem token, nome de pasta que tenta sair da pasta dos dados, usuário preso à pasta escolhida, usuário do FTP sem alcance à administração do painel, preso à própria pasta no painel, entrada dele sem brecha (telas iguais na recusa, nome de administrador, servidor FTP parado, certificado trocado, bloqueio por tentativas), os limites de sessões e de downloads por usuário, e o TLS por usuário: sem TLS só entra quem foi dispensado, o FTP encerra se o `pure-authd` morre, as combinações recusadas na subida e quem pode alterar a lista, e a pasta da marca, que entrega só os seis arquivos, só para leitura, os endereços abertos sem senha do `robots.txt` e do `security.txt`, que não entregam mais nada, e a segurança ampliada: nenhuma rota do painel e nenhum comando do FTP sem login, senha aleatória no FTP e no painel, rajada de senhas, de pedidos e de conexões, conexão parada, pedido grande ou malformado, cadastro das senhas fora do alcance da web, do FTP, dos outros containers e do host, custo da senha do FTP conforme o porte, a troca de pasta, o renomear e o apagar, que não saem da pasta dos dados nem agem sem sessão, sem token e sem a senha do administrador, a pasta grande apagada em mais de um pedido, os limites por usuário, que recusam valor fora da regra, sem sessão e sem token, e o bloqueio por tentativa: arquivo de bloqueio forjado, nome fora do cadastro, queda do vigia, e desbloqueio e limites sem sessão, sem token e fora da regra |
 | Rede | 13 | portas publicadas só no IP configurado, endereço anunciado no modo passivo, limite de sessões por IP, painel só em HTTPS, troca de perfil, duas instâncias no mesmo host, rede pública no painel só com a opção |
 
 **Organização:** o [`tests/testar.sh`](../tests/testar.sh) prepara a instância de teste e carrega o [`tests/comum.sh`](../tests/comum.sh), com as funções de registro, de FTP, do painel e de gravação dos resultados. Os casos ficam em [`tests/etapas/`](../tests/etapas/), um arquivo por etapa, executados na ordem do nome: cada etapa parte do estado que a anterior deixou e não roda sozinha.
@@ -339,15 +343,16 @@ Roda a cada início do container. Não tem parâmetros: tudo vem das variáveis 
 
 1. Confere que `FTP_BIND_IP` e `FTP_PASSIVE_IP` são IPs privados, ou públicos de servidor com `REDE_PERMITIR_IP_PUBLICO=sim` ([`rede-privada.sh`](../scripts/rede-privada.sh)), lê a senha do segredo `/run/secrets/ftp_usuario_inicial_senha`, ajusta dono e modo de `/data`, `/auth` e `/etc/ssl/private` e cria o usuário inicial `FTP_USER` ou, se ele já existe, regrava a senha dele com a do segredo (recusa senha com menos de 12 caracteres). Se a senha foi trocada pelo painel e o segredo não mudou desde então, ela é mantida, e o log diz `mantida a senha trocada pelo painel`. O custo do hash da senha acompanha `FTP_MAX_CLIENTS`.
 2. Gera um certificado autoassinado para `FTP_CERT_CN` se `DATA_DIR/certs` estiver vazia, e grava a parte pública dele em `/auth/ftp-cert.pem`.
-3. Executa o `pure-ftpd` com o modo de TLS, o `chroot`, os limites e a faixa passiva do `.env`. Com `FTP_TLS_MODE` em `0` ou `1`, grava antes um `AVISO` no log.
-4. Com `FTP_TLS_EXCECOES=sim`, sobe antes o `pure-authd`, que chama o [porteiro](#porteiro-tls) a cada entrada, e fica vigiando os dois processos: se um deles sair, encerra o container.
+3. Sobe o [vigia](#vigia), que conta as senhas erradas, e o `pure-authd`, que chama o [porteiro](#porteiro) a cada entrada.
+4. Sobe o `pure-ftpd` com o modo de TLS, o `chroot`, os limites e a faixa passiva do `.env`. Com `FTP_TLS_MODE` em `0` ou `1`, grava antes um `AVISO` no log.
+5. Fica vigiando os três processos: se um deles sair, encerra o container, e o Docker o sobe de novo.
 
-**Resultado esperado:** a linha `FTP pronto em 2121/tcp; TLS=2; passivo=30000-30049` no log do container; com a exceção por usuário, `FTP pronto em 2121/tcp; TLS=2 com exceção por usuário; passivo=30000-30049`.
+**Resultado esperado:** as linhas `vigia: pronto: 5 senhas erradas do mesmo endereço bloqueiam o usuário para ele por 15 min; ...` e `FTP pronto em 2121/tcp; TLS=2; passivo=30000-30049` no log do container; com a exceção por usuário, `FTP pronto em 2121/tcp; TLS=2 com exceção por usuário; passivo=30000-30049`.
 
 <details>
 <summary>Detalhe técnico — processo 1 e mensagens de falha</summary>
 
-Com `init: true`, o processo 1 do container é o `tini`; o entrypoint é iniciado por ele e termina com `exec`, deixando o `pure-ftpd` no seu lugar. Com `FTP_TLS_EXCECOES=sim` não há `exec`: o entrypoint continua vivo, com o `pure-authd` e o `pure-ftpd` como filhos, repassa a eles o sinal de parada e, se um dos dois sair sozinho, encerra o outro e sai com código `1`.
+Com `init: true`, o processo 1 do container é o `tini`, que inicia o entrypoint. O entrypoint continua vivo, com o vigia, o `pure-authd` e o `pure-ftpd` como filhos, repassa a eles o sinal de parada e, se um dos três sair sozinho, encerra os outros e sai com código `1`.
 
 Quando uma validação falha, o script sai com `FALHA: <motivo>`:
 
@@ -368,8 +373,12 @@ Quando uma validação falha, o script sai com `FALHA: <motivo>`:
 | `FALHA: FTP_TLS_EXCECOES deve ser 'nao' ou 'sim'` | a exceção por usuário tem outro valor |
 | `FALHA: FTP_TLS_EXCECOES=sim exige FTP_TLS_MODE=2` | a exceção está ligada com o TLS em `0`, `1` ou `3` |
 | `FALHA: FTP_TLS_EXCECOES=sim não combina com REDE_PERMITIR_IP_PUBLICO=sim` | a exceção está ligada junto com a opção de IP público |
-| `FALHA: o pure-authd não abriu o soquete /run/pure-authd.sock: o FTP não sobe sem o porteiro do TLS` | com a exceção ligada, o `pure-authd` não iniciou em 10 segundos |
-| `FALHA: o pure-authd saiu: o container encerra para ninguém entrar sem a conferência do TLS por usuário` (ou `o pure-ftpd saiu`) | com a exceção ligada, um dos dois processos parou depois da subida; o Docker sobe o container de novo |
+| `FALHA: FTP_BLOQUEIO_TENTATIVAS deve ficar entre 0 e 100 (0 desliga o bloqueio por tentativa)` | o limite de senhas erradas da stack não é um inteiro de 0 a 100 |
+| `FALHA: FTP_BLOQUEIO_MINUTOS deve ficar entre 1 e 1440` | os minutos de bloqueio da stack não são um inteiro de 1 a 1440 |
+| `FALHA: /auth/bloqueios é link simbólico: remova-o` | a pasta dos bloqueios, em `DATA_DIR/auth`, foi trocada por um link |
+| `FALHA: o vigia não abriu o soquete /dev/log: o FTP não sobe sem a contagem das senhas erradas` | o vigia não iniciou |
+| `FALHA: o pure-authd não abriu o soquete /run/pure-authd.sock: o FTP não sobe sem o porteiro` | o `pure-authd` não iniciou |
+| `FALHA: o pure-authd saiu: o container encerra para ninguém entrar sem a conferência do porteiro` (ou `o vigia saiu`, ou `o pure-ftpd saiu`) | um dos três processos parou depois da subida; o Docker sobe o container de novo |
 
 Não é falha, e o container sobe: `AVISO: FTP_TLS_MODE=0, FTP sem TLS: senhas e arquivos trafegam em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada.` (ou `FTP_TLS_MODE=1, TLS opcional: ...`). O aviso se repete a cada subida enquanto o modo estiver ligado. Com `FTP_TLS_EXCECOES=sim`, o aviso é `AVISO: FTP_TLS_EXCECOES=sim: <n> usuário(s) marcado(s) no painel entram sem TLS, com senha e arquivos em texto puro. ...`.
 
@@ -388,7 +397,7 @@ A correção de cada uma está em [Solução de problemas](solucao-de-problemas.
 <details>
 <summary>Detalhe técnico — o que ele confere</summary>
 
-Abre a porta de controle (`127.0.0.1:2121`, de dentro do container), espera até 4 segundos pela saudação do servidor e encerra a conexão com `QUIT`. Considera saudável a saudação `220` (pronto) e também a `421` (limite de conexões atingido: o servidor está cheio, mas atendendo). Porta fechada, ou aberta sem saudação, conta como falha: depois de cinco falhas seguidas o Docker marca o container como `unhealthy`. O teste não faz login e não usa senha. Com `FTP_TLS_EXCECOES=sim`, antes de abrir a porta ele exige o soquete `/run/pure-authd.sock`: sem o `pure-authd`, o FTP não conta como saudável.
+Abre a porta de controle (`127.0.0.1:2121`, de dentro do container), espera até 4 segundos pela saudação do servidor e encerra a conexão com `QUIT`. Considera saudável a saudação `220` (pronto) e também a `421` (limite de conexões atingido: o servidor está cheio, mas atendendo). Porta fechada, ou aberta sem saudação, conta como falha: depois de cinco falhas seguidas o Docker marca o container como `unhealthy`. O teste não faz login e não usa senha. Antes de abrir a porta ele exige o soquete `/run/pure-authd.sock` e o `/dev/log`: sem o `pure-authd` ou sem o vigia, o FTP não conta como saudável.
 
 Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; echo $?` (`0` = atendendo).
 
@@ -396,22 +405,63 @@ Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; 
 
 ---
 
-<a name="porteiro-tls"></a>
+<a name="porteiro"></a>
 
-## 🚪 `ftp/porteiro-tls.sh`
+## 🚪 `ftp/porteiro.sh`
 
-É o porteiro do TLS por usuário, instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-porteiro-tls`. Não é chamado direto: com `FTP_TLS_EXCECOES=sim`, o `pure-authd` o executa a cada entrada, antes da conferência da senha. Com `nao`, não é usado.
+É o porteiro do FTP, instalado na imagem como `/usr/local/sbin/allsafe-ftp-porteiro`. Não é chamado direto: o `pure-authd` o executa a cada entrada, antes da conferência da senha. Ele não confere senha: só decide se a entrada pode seguir para ela.
 
-**Resultado esperado:** a sessão com TLS e a do usuário dispensado seguem para a conferência da senha; a sessão sem TLS de qualquer outro recebe `530`, e o log do container ganha a linha `porteiro: entrada sem TLS recusada: usuario=<nome> origem=<ip> (a senha enviada passou em texto puro: troque-a)`.
+**Resultado esperado:** a entrada sem impedimento segue para a conferência da senha. O usuário com [bloqueio por tentativa](seguranca.md#bloqueio-por-tentativa) valendo para o endereço recebe `530`. Com `FTP_TLS_EXCECOES=sim`, a sessão sem TLS de quem não foi dispensado recebe `530`, e o log do container ganha a linha `porteiro: entrada sem TLS recusada: usuario=<nome> origem=<ip> (a senha enviada passou em texto puro: troque-a)`.
 
 <details>
 <summary>Detalhe técnico — o que ele responde</summary>
 
 - Recebe do `pure-authd`, em variáveis de ambiente, o nome (`AUTHD_ACCOUNT`), se a sessão tem TLS (`AUTHD_ENCRYPTED`) e o endereço de origem (`AUTHD_REMOTE_IP`). A senha também chega em variável e **não** é lida, gravada nem registrada.
-- Responde `auth_ok:0` quando a sessão tem TLS ou quando o nome, dentro da regra `^[a-z_][a-z0-9_-]{0,31}$`, está em uma linha inteira de `/auth/sem-tls.lista`. É a resposta "não é comigo": o `pure-ftpd` segue para o PureDB, que confere a senha.
-- Nos outros casos responde `auth_ok:-1`, a recusa definitiva: o cliente recebe `530` com a senha certa ou errada.
-- No registro da recusa, nome fora da regra vira `(nome fora da regra)` e origem fora do formato de endereço vira `?`: o que o cliente mandou não vai cru para o log. A linha sai pela saída de erro do processo 1 do container, porque o `pure-authd` fecha a do script.
-- Lista ausente ou ilegível conta como lista vazia: ninguém entra sem TLS.
+- Responde `auth_ok:0`, a resposta "não é comigo", quando nenhuma das duas regras recusa: o `pure-ftpd` segue para o PureDB, que confere a senha. Responde `auth_ok:-1`, a recusa definitiva, quando uma delas recusa: o cliente recebe `530` com a senha certa ou errada.
+- **TLS por usuário**, só com `FTP_TLS_EXCECOES=sim`, que o entrypoint marca em `/run/allsafe/tls-por-usuario`: a sessão sem TLS só segue quando o nome está em uma linha inteira de `/auth/sem-tls.lista`. Lista ausente ou ilegível conta como lista vazia: ninguém entra sem TLS. A recusa deixa uma marca em `/run/allsafe/recusa/`, para o vigia não a contar como senha errada.
+- **Bloqueio por tentativa:** recusa quando existe o arquivo comum `/auth/bloqueios/<usuario>@<origem>` e a primeira linha dele começa por um número de até 12 dígitos maior que a hora atual. Arquivo vencido ou fora desse formato não bloqueia.
+- Só vira caminho de arquivo ou linha de registro o nome dentro da regra `^[a-z_][a-z0-9_-]{0,31}$` e a origem em formato de endereço. No registro, o nome fora da regra vira `(nome fora da regra)` e a origem fora do formato vira `?`: o que o cliente mandou não vai cru para o log. A linha sai pela saída de erro do processo 1 do container, porque o `pure-authd` fecha a do script.
+
+</details>
+
+---
+
+<a name="vigia"></a>
+
+## 👁️ `ftp/vigia.pl`
+
+É o vigia das entradas do FTP, instalado na imagem como `/usr/local/sbin/allsafe-ftp-vigia`. Não é chamado direto: o entrypoint o sobe antes do servidor. Ele conta as senhas erradas de cada endereço para cada usuário, grava o bloqueio que o porteiro aplica e escreve no log do container cada entrada e cada transferência.
+
+**Resultado esperado:** na subida, `vigia: pronto: 5 senhas erradas do mesmo endereço bloqueiam o usuário para ele por 15 min; limite próprio do usuário em Editar, na aba Usuários do painel`, com os valores do `.env`. Depois, uma linha por entrada e por transferência no log do container:
+
+| Linha | Quando |
+|---|---|
+| `vigia: entrada: usuario=<nome> origem=<ip>` | Entrada certa; a contagem daquele endereço para o usuário volta a zero |
+| `vigia: entrada recusada: usuario=<nome> origem=<ip> senhas_erradas=<n> de <limite>` | Senha errada, somada |
+| `vigia: entrada bloqueada: usuario=<nome> origem=<ip> senhas_erradas=<n> minutos=<m>` | A senha errada completou o limite e o bloqueio foi gravado |
+| `vigia: entrada recusada pelo bloqueio: usuario=<nome> origem=<ip>` | Tentativa feita durante o bloqueio |
+| `vigia: entrada recusada: usuario=<nome> origem=<ip> (bloqueio por tentativa desligado)` | O limite do usuário, ou o da stack, é `0` |
+| `vigia: entrada recusada: usuario=<nome> origem=<ip> (não está no cadastro)` | Nome dentro da regra, sem usuário com ele |
+| `vigia: entrada recusada: usuario=<nome> origem=<ip> (rede interna da stack: não conta para o bloqueio)` | Senha do usuário do FTP errada na tela do painel |
+| `vigia: entrada recusada: nome fora da regra, origem=<ip>` | O nome enviado não cabe na regra dos nomes; ele não vai para o log |
+| `vigia: envio: usuario=<nome> origem=<ip> bytes=<n> arquivo=<caminho>` | Arquivo recebido pelo FTP; o caminho é o de dentro do container, a partir de `/data` |
+| `vigia: download: usuario=<nome> origem=<ip> bytes=<n> arquivo=<caminho>` | Arquivo baixado pelo FTP |
+| `vigia: renomeado: usuario=<nome> origem=<ip> nomes=[<de>]->[<para>]` | Arquivo ou pasta renomeado ou movido pelo FTP; os nomes são os que o cliente enviou |
+| `vigia: apagado: usuario=<nome> origem=<ip> arquivo=<caminho>` | Arquivo apagado pelo FTP |
+
+<details>
+<summary>Detalhe técnico — como ele conta</summary>
+
+- **De onde vem o aviso:** o `pure-ftpd` só avisa da senha errada pelo registro do sistema. O vigia abre o soquete `/dev/log`, só para o `root`, e lê cada linha que o servidor grava ali. A linha é conferida do início ao fim: o que o cliente digitou só aparece no fim dela, e só vira contagem o nome dentro da regra.
+- **A senha não chega a ele:** o aviso traz o nome e o endereço.
+- **Limite e prazo:** os do usuário, em `/auth/limites.lista` (`tentativas=` e `minutos=`), ou os da stack (`FTP_BLOQUEIO_TENTATIVAS` e `FTP_BLOQUEIO_MINUTOS`). O cadastro e a lista são relidos quando o arquivo muda.
+- **Contagem:** na memória, por usuário e endereço, só das senhas erradas mais novas que os minutos de bloqueio; até 10.000 pares. Reiniciar o container zera a contagem em andamento e não tira bloqueio.
+- **Bloqueio:** o arquivo `/auth/bloqueios/<usuario>@<endereco>`, `0600`, gravado por troca de nome, com até quando vale, desde quando e quantas senhas erradas; até 4.096 arquivos. De minuto em minuto, o vigia apaga os vencidos e os inválidos.
+- **O que não conta:** endereço da rede interna da stack, recusa do porteiro por falta de TLS, tentativa durante o bloqueio, nome fora do cadastro e nome fora da regra.
+- **Por que Perl:** a imagem do FTP não tem Python, e o `perl-base` já vem na imagem base do Debian. O vigia usa só os módulos dele, sem pacote novo.
+- **Transferências:** o `pure-ftpd` avisa pelo mesmo registro de cada arquivo enviado, baixado, renomeado e apagado, e o vigia escreve a linha. O nome do arquivo vai por último, e o tamanho é lido do fim do aviso: um nome escolhido pelo cliente não se passa por outro campo. O aviso é reconhecido pelo começo, que é do servidor: um arquivo apagado cujo nome imita o fim de um envio continua registrado como apagado. Caractere de controle e de direção do texto vira `?`; nome em UTF-8 passa; o caminho é cortado em 400 caracteres. O que foi feito pelo painel fica na auditoria dele, não aqui.
+- Aviso e erro do `pure-ftpd` seguem para o log do container como `vigia: pure-ftpd: <texto> origem=<ip>`; conexão, saída, pasta criada e pasta apagada não são repetidas.
+- Se o vigia parar, o entrypoint encerra o container: sem ele, ninguém mais seria bloqueado.
 
 </details>
 

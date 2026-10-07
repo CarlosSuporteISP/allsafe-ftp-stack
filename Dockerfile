@@ -93,7 +93,8 @@ LABEL org.opencontainers.image.title="AllSafe FTP" \
 
 COPY --chmod=0755 ftp/entrypoint.sh /usr/local/sbin/allsafe-ftp-entrypoint
 COPY --chmod=0755 ftp/saude.sh /usr/local/sbin/allsafe-ftp-saude
-COPY --chmod=0755 ftp/porteiro-tls.sh /usr/local/sbin/allsafe-ftp-porteiro-tls
+COPY --chmod=0755 ftp/porteiro.sh /usr/local/sbin/allsafe-ftp-porteiro
+COPY --chmod=0755 ftp/vigia.pl /usr/local/sbin/allsafe-ftp-vigia
 
 EXPOSE 2121 30000-30049
 

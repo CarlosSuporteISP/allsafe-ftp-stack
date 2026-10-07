@@ -14,6 +14,7 @@ EVENTOS = {
     'senha_trocada': '🔑 Senha trocada',
     'pasta_trocada': '📁 Pasta do usuário trocada',
     'limites_alterados': '⏱️ Limites do usuário alterados',
+    'bloqueio_removido': '🔓 Bloqueio do usuário no FTP removido',
     'usuario_removido': '🗑️ Usuário removido',
     'tls_dispensado': '🔓 Usuário dispensado do TLS',
     'tls_exigido': '🔒 Usuário volta a exigir TLS',

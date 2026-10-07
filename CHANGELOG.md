@@ -8,6 +8,46 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.22.0] - 2026-10-07
+
+O FTP passa a bloquear quem erra a senha vezes demais: o endereço que erra a senha de um usuário cinco vezes em 15 minutos fica bloqueado para aquele usuário pelo mesmo tempo. O administrador ajusta o limite e o tempo de cada usuário no painel, vê quem está bloqueado e desbloqueia. O registro do container passa a trazer cada entrada e cada transferência do FTP.
+
+### Adicionado
+
+- **Bloqueio por tentativa no FTP.** As senhas erradas são contadas por usuário e por endereço de origem. No limite, o endereço fica bloqueado para aquele usuário: até o fim do prazo, nem a senha certa entra dali. Os outros endereços, os outros usuários e a entrada do usuário no painel continuam como estavam. A entrada certa zera a contagem.
+- **Variáveis `FTP_BLOQUEIO_TENTATIVAS` e `FTP_BLOQUEIO_MINUTOS`** no `.env`, com o padrão da stack: `5` senhas erradas (de 0 a 100; `0` desliga) e `15` minutos (de 1 a 1440). Os minutos são também o tempo em que as senhas erradas se somam.
+- **Limite próprio de cada usuário, no cartão Limites da tela Editar:** os campos **Senhas erradas no FTP até o bloqueio** e **Minutos de bloqueio**. Em branco, vale o padrão da stack; `0` no primeiro quer dizer que o usuário nunca é bloqueado.
+- **Cartão Bloqueios na tela Editar e marca `bloqueado` na lista de usuários.** O cartão mostra cada endereço bloqueado, as senhas erradas, a hora do bloqueio e até quando ele vale, com o botão **Desbloquear**.
+- **Comandos `./manage-user.sh bloqueios [usuario]` e `./manage-user.sh desbloquear <usuario> [origem]`**, e as chaves `tentativas` e `minutos` no comando `limites`.
+- **Vigia do FTP (`ftp/vigia.pl`).** Processo novo do serviço `ftp`, que recebe o registro do `pure-ftpd` dentro do container, conta as senhas erradas e grava os bloqueios em `/auth/bloqueios`. É escrito em Perl, com o `perl-base` que a imagem do Debian já traz: nenhum pacote novo.
+- **Entradas do FTP no registro do container.** Cada entrada, cada senha errada e cada bloqueio sai em uma linha `vigia:`, com o usuário e o endereço, sem senha.
+- **Transferências do FTP no registro do container.** Cada arquivo enviado, baixado, renomeado e apagado pelo FTP sai em uma linha `vigia: envio:`, `vigia: download:`, `vigia: renomeado:` ou `vigia: apagado:`, com o usuário, o endereço, o arquivo e, nos dois primeiros, o tamanho.
+- **Evento `bloqueio_removido` na auditoria**, a linha `Bloqueio do usuário no FTP removido` na aba Atividade e o item **Bloqueio por tentativa no FTP** na aba Segurança, com quem está bloqueado agora.
+- **Casos de teste 47, 48 e 49 (funcional) e 85 e 86 (segurança).** A bateria passa a 49 casos funcionais, 86 de segurança e 13 de rede.
+
+### Alterado
+
+- **O `pure-authd` e o porteiro rodam sempre.** Antes só rodavam com `FTP_TLS_EXCECOES=sim`. O porteiro (`ftp/porteiro.sh`, antes `ftp/porteiro-tls.sh`) confere a cada entrada se o usuário está bloqueado para o endereço e, com a exceção de TLS ligada, se ele pode entrar sem TLS.
+- **O serviço `ftp` tem três processos, e a queda de qualquer um encerra o container**, que o Docker sobe de novo: vigia, `pure-authd` e `pure-ftpd`. A mensagem de `FALHA` passa a dizer qual saiu. O healthcheck exige os dois soquetes antes de abrir a porta.
+- **Trocar a senha de um usuário tira os bloqueios dele**, e mudar o limite ou os minutos também. Remover o usuário tira os bloqueios e os limites.
+- **O backup leva os bloqueios em vigor**, junto com o resto de `auth/`. Bloqueio vencido ou com conteúdo fora do formato não bloqueia ninguém.
+- **Guia de segurança.** Seção nova do bloqueio por tentativa, com o fluxograma, o que conta e o que não conta como senha errada e os limites da proteção; a recomendação de `fail2ban` saiu, porque o bloqueio agora é da própria stack.
+
+### Corrigido
+
+- **Registro das transferências do FTP.** A opção `-O clf:/dev/stdout` do `pure-ftpd` nunca gravou linha nenhuma: o servidor não abre o arquivo de registro por link simbólico, e `/dev/stdout` é um. O registro do container não trazia as transferências, embora a documentação dissesse que sim. A opção saiu, e as transferências passam a sair pelo vigia.
+
+### Segurança
+
+- **Nome de arquivo no registro.** O nome vem do cliente: caractere de controle e de direção do texto vira `?` antes de a linha ser escrita, o nome vai por último na linha, o tamanho é lido do fim do aviso do servidor e o tipo do aviso, do começo dele. Um nome escolhido pelo cliente não quebra a linha, não se passa por outro campo nem faz um arquivo apagado sair como enviado.
+- **Não contam como senha errada:** a rede interna da stack, de onde o painel confere a senha de quem entra nele; a entrada sem TLS recusada pelo porteiro; a tentativa feita durante o bloqueio; o nome que não está no cadastro e o nome fora da regra. Assim, quem não tem a senha não estende o bloqueio de um usuário nem enche a lista com nomes inventados.
+- **Quem pode ser bloqueado de propósito.** Quem alcança a porta do FTP a partir do mesmo endereço de um equipamento pode errar a senha dele e bloqueá-lo para aquele endereço. O bloqueio não alcança os outros endereços, e o administrador o tira no painel; para a conta que não pode parar, use `0` no limite do usuário.
+- **Entrada fora do horário do usuário conta como senha errada**, porque o servidor responde às duas do mesmo jeito.
+
+### Ao atualizar
+
+Rode `./deploy.sh`. O bloqueio já sobe ligado, com 5 senhas erradas e 15 minutos. Para mudar o padrão, defina `FTP_BLOQUEIO_TENTATIVAS` e `FTP_BLOQUEIO_MINUTOS` no `.env`; para desligar, `FTP_BLOQUEIO_TENTATIVAS=0`. Equipamento que hoje tenta entrar com senha errada gravada passa a ser bloqueado: confira o registro (`docker compose logs ftp | grep 'vigia: entrada recusada'`) depois da subida.
+
 ## [0.21.0] - 2026-10-07
 
 Cada usuário do FTP passa a ter limites próprios, gravados pelo administrador no painel: quantas sessões abre, a que velocidade baixa e envia, em que horário entra e quantos arquivos baixa por vez pelo painel. Vale para a conta de um equipamento e para a de uma pessoa.

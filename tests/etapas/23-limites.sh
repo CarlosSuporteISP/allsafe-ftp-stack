@@ -53,7 +53,7 @@ aviso="$(aba -b "$J" "$B/usuarios?m=limites")"; n_aviso="$(grep -c 'Limites grav
 etiqueta="$(grep -c 'title="Limites próprios: sessões no FTP: 1 · download em KB/s: 100 · envio em KB/s: 100 · horário: [0-9:]* às [0-9:]* · downloads pelo painel: 1"' "$W/corpo")"
 t_sessoes="$(na_tela23 lim23 sessoes 1)"; t_inicio="$(na_tela23 lim23 inicio "$dentro_i")"; t_fim="$(na_tela23 lim23 fim "$dentro_f")"; t_baixar="$(na_tela23 lim23 baixar 1)"
 auditoria; n_depois="$(eventos limites_alterados)"
-registro="$(grep -c " evento=limites_alterados admin=$ADMIN usuario=lim23 sessoes=1 download=100 envio=100 horario=${dentro_i/:/}-${dentro_f/:/} baixar=1\$" "$W/auditoria")"
+registro="$(grep -c " evento=limites_alterados admin=$ADMIN usuario=lim23 sessoes=1 download=100 envio=100 horario=${dentro_i/:/}-${dentro_f/:/} baixar=1 tentativas=- minutos=-\$" "$W/auditoria")"
 atividade="$(aba -b "$J" "$B/atividade")"; na_atividade="$(grep -c 'Limites do usuário alterados' "$W/corpo")"
 # Uma sessão presa em um download na taxa do usuário: a segunda não entra no FTP nem no painel.
 ( a="$(date +%s%N)"; curl -sS --max-time 90 -K "$W/preso23.cfg" --ssl-reqd -k -o "$W/l2m.lento" "$F/l2m.bin" 2> /dev/null; echo "$? $(ms23 "$a")" > "$W/preso23.fim" ) & preso=$!

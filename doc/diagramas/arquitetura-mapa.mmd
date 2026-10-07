@@ -13,7 +13,7 @@ flowchart LR
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
-        logs@{ shape: docs, label: "log CLF<br>stdout" }
+        logs@{ shape: docs, label: "registro do container<br>entradas e transferências" }
     end
     subgraph VOLUMES["Volumes"]
         vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
@@ -44,4 +44,4 @@ flowchart LR
     nginx -. "lê, só leitura" .-> vnginx
     painel -. "cria pasta, renomeia, apaga e lê os arquivos para o download" .-> vdata
     painel -. "confere a senha do usuário do FTP, na rede interna" .-> ftp
-    ftp -. "grava cada transferência" .-> logs
+    ftp -. "registra entradas e transferências" .-> logs

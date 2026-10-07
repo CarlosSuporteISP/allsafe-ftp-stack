@@ -54,6 +54,8 @@ FTP_TLS_MODE=2
 FTP_CERT_CN=ftp.exemplo.com.br
 FTP_MAX_CLIENTS=50
 FTP_MAX_CLIENTS_PER_IP=8
+FTP_BLOQUEIO_TENTATIVAS=5
+FTP_BLOQUEIO_MINUTOS=15
 ```
 
 Nenhuma senha entra no `.env`: ela fica em `.secrets/ftp-usuario-inicial-senha.txt` ([Segredos](segredos.md)).
@@ -185,6 +187,8 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 |---|---|---|---|
 | `FTP_MAX_CLIENTS` | Máximo de conexões simultâneas (opção `-c`). Alinhe ao tamanho da faixa passiva. Também define o custo da senha gravada de cada usuário do FTP: [Segurança](seguranca.md#custo-das-senhas) | inteiro maior que zero | `50` |
 | `FTP_MAX_CLIENTS_PER_IP` | Máximo de conexões por IP de origem (opção `-C`) | inteiro maior que zero | `8` |
+| `FTP_BLOQUEIO_TENTATIVAS` | Bloqueio por tentativa: quantas senhas erradas vindas de um mesmo endereço bloqueiam o usuário para aquele endereço. É o padrão da stack; o limite próprio de cada usuário é ajustado no painel: [Painel](painel.md#limites) | `0` a `100`; `0` desliga | `5` |
+| `FTP_BLOQUEIO_MINUTOS` | Minutos que o bloqueio dura. É também o tempo em que as senhas erradas se somam: [Segurança](seguranca.md#bloqueio-por-tentativa) | `1` a `1440` | `15` |
 
 ---
 

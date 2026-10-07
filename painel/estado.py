@@ -9,12 +9,15 @@ import subprocess
 import threading
 import time
 
-from config import ARQ_SEM_TLS, ARQ_USUARIOS, CFG, CMD_USUARIO, NIVEL, NOME, PASTA_DADOS
+from config import ARQ_SEM_TLS, ARQ_USUARIOS, CFG, CMD_USUARIO, NIVEL, NOME, PASTA_BLOQUEIOS, PASTA_DADOS
 
 TRAVA_CACHE = threading.Lock()
 CACHE = {}
 # Memória por conferência de senha (m=, em KiB), no começo do campo da senha do cadastro do FTP.
 CUSTO = re.compile(r'\$argon2id\$v=\d+\$m=(\d+),t=\d+,p=\d+\$')
+# Endereço de origem no nome do arquivo de um bloqueio: o mesmo formato que o vigia e o porteiro do ftp aceitam.
+ORIGEM = re.compile(r'[0-9a-fA-F.:]{2,45}')
+BLOQUEIOS_LIDOS = 5000      # arquivos de bloqueio lidos por tela; o vigia guarda no máximo 4096
 
 
 def com_cache(chave, validade, funcao):
@@ -92,6 +95,38 @@ def sem_tls(cadastro=None):
     except OSError:
         pass
     return sorted(marcados)
+
+
+def bloqueios():
+    """Bloqueios por tentativa em vigor no FTP: usuário ➜ lista de (origem, vale até, desde, senhas erradas),
+    do mais recente para o mais antigo. Cada arquivo é `<usuário>@<origem>`, com os três números na primeira
+    linha; quem grava é o vigia do serviço ftp e quem tira é o allsafe-ftp-user."""
+    achados = {}
+    agora = time.time()
+    try:
+        itens = sorted(os.listdir(PASTA_BLOQUEIOS))[:BLOQUEIOS_LIDOS]
+    except OSError:
+        return achados
+    for item in itens:
+        nome, arroba, origem = item.partition('@')
+        if not (arroba and NOME.fullmatch(nome) and ORIGEM.fullmatch(origem)):
+            continue
+        caminho = os.path.join(PASTA_BLOQUEIOS, item)
+        try:
+            if os.path.islink(caminho):
+                continue
+            with open(caminho, encoding='ascii', errors='replace') as arq:
+                campos = arq.readline(64).split()
+        except OSError:
+            continue
+        if len(campos) < 3 or not all(campo.isascii() and campo.isdigit() and len(campo) <= 12 for campo in campos[:3]):
+            continue
+        expira, desde, erradas = (int(campo) for campo in campos[:3])
+        if expira > agora:
+            achados.setdefault(nome, []).append((origem, expira, desde, erradas))
+    for lista in achados.values():
+        lista.sort(key=lambda bloqueio: -bloqueio[2])
+    return achados
 
 
 def vizinhos(cadastro, nome):

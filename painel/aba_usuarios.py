@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Usuários: lista, criação, edição (pasta e limites), troca de senha e remoção dos usuários do FTP.
+"""Aba Usuários: lista, criação, edição (pasta, limites e bloqueios), troca de senha e remoção dos usuários do FTP.
 
 A remoção pode levar junto a pasta do usuário, quando nenhum outro a alcança; apagar pede a senha atual
 do administrador."""
@@ -11,7 +11,7 @@ from aba_arquivos import Recusado, apagar_caminho, endereco, resposta_parcial
 from auditoria import auditar, limpo
 from config import CFG, DOWNLOADS_POR_USUARIO, NOME, PASTA, SENHA_MAX, SENHA_MIN
 from confirmacao import campo_senha_atual, confirmacao_recusada
-from estado import executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, sem_tls, uso_da_pasta, usuarios, vizinhos
+from estado import bloqueios, executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, sem_tls, uso_da_pasta, usuarios, vizinhos
 from pagina import e, pagina, quando, tamanho
 
 MENSAGENS = {
@@ -19,6 +19,7 @@ MENSAGENS = {
     'senha': '✅ Senha trocada.',
     'pasta': '✅ Pasta trocada. Os arquivos da pasta anterior continuam nela.',
     'limites': '✅ Limites gravados. Valem na próxima entrada do usuário no FTP.',
+    'desbloqueado': '✅ Bloqueio removido. O usuário volta a poder entrar no FTP.',
     'removido': '✅ Usuário removido. Os arquivos continuam na pasta.',
     'removido_com_pasta': '✅ Usuário removido e pasta apagada.',
     'tls_dispensado': '⚠️ Usuário dispensado do TLS: a senha e os arquivos dele passam em texto puro.',
@@ -33,6 +34,7 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
     excecoes = CFG['tls_excecoes']
     marcados = sem_tls(cadastro) if excecoes else []
     proprios = limites.todos()
+    presos = bloqueios()
     for nome, pasta in cadastro.items():
         uso = uso_da_pasta(pasta)
         destino = urllib.parse.quote(nome)
@@ -56,6 +58,9 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
         dele = limites.resumo(proprios[nome]) if nome in proprios else ''
         if dele:
             marca += f' <span class="etiqueta" title="Limites próprios: {e(dele)}">limites</span>'
+        if nome in presos:
+            origens = ', '.join(origem for origem, *_ in presos[nome][:5]) + (' e outros' if len(presos[nome]) > 5 else '')
+            marca += f' <span class="etiqueta" title="Senhas erradas demais no FTP, vindas de: {e(origens)}">⛔ bloqueado</span>'
         coluna_tls = ''
         if excecoes:
             if nome in marcados:
@@ -80,7 +85,8 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
 <tbody>{corpo}</tbody></table></div>
 <p class="suave">Cada usuário fica preso na pasta dele. Pasta marcada como <span class="etiqueta">dividida</span> é alcançada por
 mais de um usuário: um lê, grava e apaga os arquivos do outro. <span class="etiqueta">limites</span> marca quem tem limite próprio,
-ajustado em Editar. A alteração vale no próximo login, sem reiniciar o FTP.{nota_tls}</p></section>''',
+ajustado em Editar. <span class="etiqueta">⛔ bloqueado</span> marca quem o FTP está recusando por senhas erradas demais vindas de
+um endereço: o bloqueio sai sozinho no fim do prazo, ou em Editar. A alteração vale no próximo login, sem reiniciar o FTP.{nota_tls}</p></section>''',
                             sessao, '/usuarios'))
 
 
@@ -192,8 +198,10 @@ def cartao_limites(sessao, nome, dele, erro=''):
     depois de uma recusa, o que foi digitado."""
     def numero(chave, rotulo, nota):
         return (f'<label for="{chave}">{rotulo} <span class="suave">({nota})</span></label>\n'
-                f'<input id="{chave}" name="{chave}" type="number" min="1" max="{limites.teto(chave)}" step="1" '
+                f'<input id="{chave}" name="{chave}" type="number" min="{limites.piso(chave)}" max="{limites.teto(chave)}" step="1" '
                 f'inputmode="numeric" value="{e(str(dele.get(chave, "")))}">')
+    padrao = (f'vazio: {CFG["bloqueio_tentativas"]}, o padrão da stack' if CFG['bloqueio_tentativas']
+              else 'vazio: o padrão da stack, que está desligado')
     return f'''<section class="cartao estreito" id="limites"><h2>⏱️ Limites</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>Campo vazio quer dizer <strong>sem limite próprio</strong>: vale o da stack.</p>
 <form method="post" action="/usuarios/limites" autocomplete="off">
@@ -207,14 +215,42 @@ def cartao_limites(sessao, nome, dele, erro=''):
 <label for="fim">até as</label>
 <input id="fim" name="fim" type="time" value="{e(str(dele.get('fim', '')))}">
 {numero('baixar', 'Downloads ao mesmo tempo pelo painel', f'vazio: {DOWNLOADS_POR_USUARIO}')}
+{numero('tentativas', 'Senhas erradas no FTP até o bloqueio', f'{padrao}; 0: este usuário nunca é bloqueado')}
+{numero('minutos', 'Minutos de bloqueio', f'vazio: {CFG["bloqueio_minutos"]}, o padrão da stack; é também o tempo em que as senhas erradas se somam')}
 <p class="suave">Os limites valem na próxima entrada do usuário no FTP. Quando um limite do FTP muda, a sessão dele no
 painel é encerrada. Quem confere a senha do painel é o FTP: fora do horário, ou com todas as sessões dele ocupadas, o
 usuário também não entra no painel.</p>
+<p class="suave">O bloqueio vale só para este usuário e só para o endereço que errou a senha: os outros endereços e a entrada
+dele pelo painel continuam valendo. Entrada certa zera a contagem. Entrada fora do horário conta como senha errada.
+Equipamentos que chegam ao FTP pelo mesmo endereço são bloqueados juntos. Mudar um destes dois campos tira os
+bloqueios do usuário.</p>
 <button type="submit">Gravar limites</button> <a class="botao" href="/usuarios">Cancelar</a>
 </form></section>'''
 
 
-def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, pasta='', erro_limites='', digitado=None):
+def cartao_bloqueios(sessao, nome, erro=''):
+    """Bloqueios por tentativa do usuário no FTP, com o botão que os tira; vazio quando não há nenhum."""
+    dele = bloqueios().get(nome, [])
+    if not dele and not erro:
+        return ''
+    linhas = ''.join(f'<tr><td><code>{e(origem)}</code></td><td>{erradas}</td><td>{e(quando(desde))}</td><td>{e(quando(expira))}</td></tr>'
+                     for origem, expira, desde, erradas in dele)
+    return f'''<section class="cartao estreito" id="bloqueios"><h2>⛔ Bloqueios</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
+<p>O FTP está recusando este usuário quando ele chega dos endereços abaixo, por senhas erradas demais. Com a senha certa
+ele também é recusado, até o fim do prazo.</p>
+<div class="rolagem"><table>
+<thead><tr><th>Origem</th><th>Senhas erradas</th><th>Bloqueado em</th><th>Até</th></tr></thead>
+<tbody>{linhas or '<tr><td colspan="4" class="suave">Nenhum bloqueio em vigor.</td></tr>'}</tbody></table></div>
+<form method="post" action="/usuarios/desbloquear" autocomplete="off">
+<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+<input type="hidden" name="usuario" value="{e(nome)}">
+<p class="suave">Antes de desbloquear, corrija a senha no equipamento: se ele continuar errando, o bloqueio volta.</p>
+<button type="submit">🔓 Desbloquear</button>
+</form></section>'''
+
+
+def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, pasta='', erro_limites='', digitado=None,
+                erro_bloqueio=''):
     nome = consulta.get('usuario', '')
     if not usuario_alteravel(pedido, sessao, nome):
         return
@@ -237,6 +273,7 @@ def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
 <p>Usuário <strong>{e(nome)}</strong>{inicial}. O nome não muda: é com ele que o equipamento entra no FTP.</p>
 <p><a class="botao" href="/usuarios/senha?usuario={destino}">🔑 Trocar senha</a> <a class="botao" href="/usuarios">Voltar para a lista</a></p>
 </section>
+{cartao_bloqueios(sessao, nome, erro_bloqueio)}
 <section class="cartao estreito"><h2>📁 Pasta</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>Pasta atual: {onde}, com {uso['arquivos']}{mais} arquivo(s), {e(tamanho(uso['bytes']))}{mais}.{dividida}</p>
 <form method="post" action="/usuarios/pasta" autocomplete="off">
@@ -265,6 +302,19 @@ def gravar_limites(pedido, sessao, consulta, formulario, token):
     gravados = ' '.join(f'{chave}={valores[chave] if valores[chave] != "" else "-"}' for chave in limites.CHAVES)
     auditar(pedido.ip, 'limites_alterados', f'admin={sessao["admin"]} usuario={nome} {gravados}')
     return pedido.redirecionar('/usuarios?m=limites')
+
+
+def desbloquear(pedido, sessao, consulta, formulario, token):
+    nome = formulario.get('usuario', '')
+    if not usuario_alteravel(pedido, sessao, nome):
+        return None
+    origens = len(bloqueios().get(nome, []))
+    feito, mensagem = executar_usuario('desbloquear', nome)
+    if not feito:
+        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=desbloquear usuario={nome}')
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro_bloqueio='Não foi possível desbloquear: ' + mensagem, codigo=500)
+    auditar(pedido.ip, 'bloqueio_removido', f'admin={sessao["admin"]} usuario={nome} origens={origens}')
+    return pedido.redirecionar('/usuarios?m=desbloqueado')
 
 
 def trocar_pasta(pedido, sessao, consulta, formulario, token):

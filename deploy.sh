@@ -234,6 +234,13 @@ case "$tls_modo" in
   3) tls_texto="TLS explícito obrigatório no login e nos dados" ;;
   *) die "FTP_TLS_MODE deve ser 0 (sem TLS), 1 (opcional), 2 (obrigatório no login) ou 3 (obrigatório no login e nos dados); em $env_file está '$tls_modo'." ;;
 esac
+# Bloqueio por tentativa no FTP: o padrão da stack; o limite próprio de cada usuário fica no painel.
+bloqueio_tentativas="$(env_valor FTP_BLOQUEIO_TENTATIVAS 5)"
+[[ "$bloqueio_tentativas" =~ ^(0|[1-9][0-9]{0,2})$ ]] && (( bloqueio_tentativas <= 100 )) \
+  || die "FTP_BLOQUEIO_TENTATIVAS deve ficar entre 0 e 100 (0 desliga o bloqueio por tentativa); em $env_file está '$bloqueio_tentativas'."
+bloqueio_minutos="$(env_valor FTP_BLOQUEIO_MINUTOS 15)"
+[[ "$bloqueio_minutos" =~ ^[1-9][0-9]{0,3}$ ]] && (( bloqueio_minutos <= 1440 )) \
+  || die "FTP_BLOQUEIO_MINUTOS deve ficar entre 1 e 1440; em $env_file está '$bloqueio_minutos'."
 # Com IP público aceito, senha em texto puro não passa: o TLS tem de ser obrigatório.
 if ip_publico_permitido && (( tls_modo < 2 )); then
   die "REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3; em $env_file está '$tls_modo'. FTP sem TLS na internet entrega a senha a quem escuta."

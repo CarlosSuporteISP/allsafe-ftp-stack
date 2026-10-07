@@ -17,6 +17,7 @@ ARQ_USUARIOS = '/auth/pureftpd.passwd'
 ARQ_CERT_FTP = '/auth/ftp-cert.pem'
 ARQ_SEM_TLS = '/auth/sem-tls.lista'   # quem entra sem TLS com FTP_TLS_EXCECOES=sim; quem grava é o allsafe-ftp-user
 ARQ_LIMITES = '/auth/limites.lista'   # limites por usuário que o painel aplica; quem grava é o allsafe-ftp-user
+PASTA_BLOQUEIOS = '/auth/bloqueios'   # bloqueios por tentativa no FTP, um arquivo por usuário e endereço; quem grava é o vigia do ftp
 CMD_USUARIO = '/usr/local/sbin/allsafe-ftp-user'
 PASTA_DADOS = '/data'
 
@@ -112,6 +113,12 @@ def configuracao():
     clientes = amb('FTP_MAX_CLIENTS', '50')
     if not re.fullmatch(r'[1-9][0-9]{0,4}', clientes):
         falha('FTP_MAX_CLIENTS deve ser um inteiro maior que zero')
+    tentativas = amb('FTP_BLOQUEIO_TENTATIVAS', '5')
+    if not (re.fullmatch(r'0|[1-9][0-9]{0,2}', tentativas) and int(tentativas) <= 100):
+        falha('FTP_BLOQUEIO_TENTATIVAS deve ficar entre 0 e 100 (0 desliga o bloqueio por tentativa)')
+    bloqueio = amb('FTP_BLOQUEIO_MINUTOS', '15')
+    if not (re.fullmatch(r'[1-9][0-9]{0,3}', bloqueio) and int(bloqueio) <= 1440):
+        falha('FTP_BLOQUEIO_MINUTOS deve ficar entre 1 e 1440')
     minutos = amb('PAINEL_SESSAO_MINUTOS', '15')
     if not (minutos.isdigit() and 1 <= int(minutos) <= 120):
         falha('PAINEL_SESSAO_MINUTOS deve ficar entre 1 e 120')
@@ -138,6 +145,8 @@ def configuracao():
         'ftp_tls': amb('FTP_TLS_MODE', '2'),
         'ftp_clientes': clientes,
         'tls_excecoes': excecoes,
+        'bloqueio_tentativas': int(tentativas),
+        'bloqueio_minutos': int(bloqueio),
         'ftp_passiva': f"{amb('FTP_PASSIVE_PORT_START', '30000')}–{amb('FTP_PASSIVE_PORT_END', '30049')}",
         'pasta_host': amb('PAINEL_PASTA_DADOS', 'DATA_DIR/dados').rstrip('/'),
         'versao': versao,

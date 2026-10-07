@@ -48,6 +48,9 @@ Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.m
 ./manage-user.sh pasta cliente01 clientes/olt-02   # troca a pasta; os arquivos da anterior continuam nela
 ./manage-user.sh limites cliente01 sessoes=2 download=500 horario=0800-1800   # grava limites só dele
 ./manage-user.sh limites cliente01  # mostra os limites dele
+./manage-user.sh limites olt01 tentativas=3 minutos=30   # bloqueio por tentativa só dele: 3 senhas erradas, 30 minutos
+./manage-user.sh bloqueios          # lista quem o FTP está recusando por senhas erradas demais
+./manage-user.sh desbloquear olt01  # tira os bloqueios do usuário (ou de um endereço só: desbloquear olt01 10.0.0.5)
 ./manage-user.sh list               # lista os usuários do PureDB
 ./manage-user.sh del cliente01      # remove o usuário e MANTÉM a pasta dele
 ./manage-user.sh tls-dispensar olt-antiga   # deixa o usuário entrar sem TLS (só vale com FTP_TLS_EXCECOES=sim)
@@ -63,7 +66,8 @@ Regras:
 - Senha: mínimo de **12 caracteres** (recusada abaixo disso).
 - Pasta: sem o terceiro parâmetro, é `/data/<usuario>`. Com ele, fica sempre dentro de `/data` (`DATA_DIR/dados` no host), com até 4 níveis separados por `/`; cada nível tem letras, números, `_`, `-` e ponto, não começa com ponto e vai até 64 caracteres. A pasta é criada se não existir. Pasta que passa por link simbólico ou por um arquivo é recusada, e nada é criado.
 - `add` de um nome existente responde `Usuario ja existe`. Para mudar a pasta de quem já existe, use `pasta`, com as mesmas regras: vale na entrada seguinte, não troca a senha e não move nem apaga arquivo. Usuário que não existe: `Usuario nao existe: <nome>`.
-- `limites` aceita um ou mais pares `chave=valor`, e só mexe nas chaves informadas: `sessoes` (sessões ao mesmo tempo no FTP), `download` e `envio` (KB por segundo, de 1 a 10.000.000), `horario` (`HHMM-HHMM`, no fuso do `TZ`, podendo passar da meia-noite) e `baixar` (downloads ao mesmo tempo pelo painel, de 1 a 8). Valor vazio (`download=`) tira o limite; sem nenhum par, mostra os que o usuário tem. Vale na entrada seguinte dele no FTP. O que cada limite faz está em [Painel web](painel.md#limites).
+- `limites` aceita um ou mais pares `chave=valor`, e só mexe nas chaves informadas: `sessoes` (sessões ao mesmo tempo no FTP), `download` e `envio` (KB por segundo, de 1 a 10.000.000), `horario` (`HHMM-HHMM`, no fuso do `TZ`, podendo passar da meia-noite), `baixar` (downloads ao mesmo tempo pelo painel, de 1 a 8), `tentativas` (senhas erradas no FTP até o bloqueio, de 0 a 100; `0`: nunca é bloqueado) e `minutos` (tempo do bloqueio, de 1 a 1440). Valor vazio (`download=`) tira o limite; sem nenhum par, mostra os que o usuário tem. Vale na entrada seguinte dele no FTP. O que cada limite faz está em [Painel web](painel.md#limites).
+- `bloqueios` lista os bloqueios por tentativa em vigor, um por linha, com o usuário, o endereço, as senhas erradas, o início e o fim; com um nome, só os dele. Sem nenhum, responde `Nenhum bloqueio em vigor.` `desbloquear <usuario>` tira todos os bloqueios do usuário, e com o endereço no fim, só o daquele endereço. Vale na entrada seguinte. Mudar `tentativas` ou `minutos`, trocar a senha e remover o usuário também tiram os bloqueios dele: [Segurança](seguranca.md#bloqueio-por-tentativa).
 - `del` **não apaga arquivos** e responde com a pasta que ficou. Para tirar a pasta junto com o usuário, use o painel: Usuários ➜ **Remover**, com a caixa de apagar a pasta, em [Painel web](painel.md#usuarios). Depois do `del`, a pasta que ficou é apagada na aba Arquivos.
 - `tls-dispensar` e `tls-exigir` valem na entrada seguinte do usuário, sem reiniciar, e só para usuário que existe (`Usuario nao existe: <nome>`). A dispensa só tem efeito com `FTP_TLS_EXCECOES=sim`; com `nao`, fica guardada. O `del` tira o usuário da lista.
 
@@ -76,7 +80,7 @@ Regras:
 <details>
 <summary>Detalhe técnico — onde a mudança é gravada</summary>
 
-O `manage-user.sh` encapsula o [`ftp/usuario.sh`](../ftp/usuario.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo. A dispensa do TLS fica em `/auth/sem-tls.lista`, um nome por linha, lida pelo servidor a cada entrada. Os limites de sessões, de taxa e de horário ficam na própria linha do usuário no cadastro; o de downloads pelo painel, em `/auth/limites.lista`.
+O `manage-user.sh` encapsula o [`ftp/usuario.sh`](../ftp/usuario.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo. A dispensa do TLS fica em `/auth/sem-tls.lista`, um nome por linha, lida pelo servidor a cada entrada. Os limites de sessões, de taxa e de horário ficam na própria linha do usuário no cadastro; o de downloads pelo painel e os do bloqueio por tentativa, em `/auth/limites.lista`. Cada bloqueio em vigor é um arquivo em `/auth/bloqueios`.
 
 </details>
 
@@ -164,19 +168,27 @@ Só depois de conferir, e por decisão sua, apague os volumes antigos: `docker v
 ## 📜 Logs
 
 ```bash
-docker compose logs -f ftp          # segue o log (acesso em formato CLF e mensagens do entrypoint)
+docker compose logs -f ftp          # segue o log (entradas, transferências e mensagens do entrypoint)
 docker compose logs --since 1h ftp  # última hora
 docker compose logs -f painel       # subida do painel e avisos do servidor web
 docker compose logs -f nginx        # subida do nginx e os pedidos que ele recusou
 ```
 
-**Resultado esperado:** a linha `FTP pronto em 2121/tcp; ...` da subida e uma linha CLF por transferência; no painel, a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; ...`; no nginx, `nginx pronto em 8443/tcp (HTTPS), à frente do painel; ...`.
+**Resultado esperado:** a linha `FTP pronto em 2121/tcp; ...` da subida e, depois, uma linha `vigia:` por entrada e por transferência; no painel, a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; ...`; no nginx, `nginx pronto em 8443/tcp (HTTPS), à frente do painel; ...`.
 
 O nginx registra só o que ele mesmo recusa, uma linha por pedido, no formato `ip método caminho código` (exemplo: `10.99.0.7 GET /entrar 403`). Com `FTP_TLS_MODE` em `0` ou `1`, o log do FTP traz a cada subida o `AVISO` de FTP sem criptografia: [Segurança](seguranca.md#ftp-sem-tls). Com `FTP_TLS_EXCECOES=sim`, traz o `AVISO` com a quantidade de usuários dispensados e uma linha `porteiro: entrada sem TLS recusada: usuario=<nome> origem=<ip>` para cada entrada sem TLS de quem não foi dispensado: [Segurança](seguranca.md#tls-por-usuario).
 
+O vigia do serviço `ftp` registra cada entrada no FTP, com o usuário e o endereço: `vigia: entrada:` na que passou, `vigia: entrada recusada:` na senha errada, com a contagem, e `vigia: entrada bloqueada:` quando o endereço chega ao limite. Registra também cada arquivo enviado (`vigia: envio:`), baixado (`vigia: download:`), renomeado (`vigia: renomeado:`) e apagado (`vigia: apagado:`) pelo FTP, com o tamanho nos dois primeiros. As linhas estão em [Scripts](scripts.md#vigia). Para ver só elas:
+
+```bash
+docker compose logs ftp | grep 'vigia:'
+```
+
+**Resultado esperado:** uma linha por entrada, por recusa e por transferência, sem senha; quem está bloqueado agora sai em `./manage-user.sh bloqueios`. Para ver só o que um usuário enviou e baixou: `docker compose logs ftp | grep -E 'vigia: (envio|download): usuario=<nome> '`.
+
 O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos, arquivos baixados) fica no `auditoria.log`, visível na aba `📜 Atividade`: veja [Painel web](painel.md#auditoria).
 
-Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](../compose.yaml)). Para o `fail2ban`, aponte o filtro para a saída de `docker logs allsafe-ftp`.
+Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](../compose.yaml)).
 
 ---
 

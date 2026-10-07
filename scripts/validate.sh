@@ -4,6 +4,8 @@ set -Eeuo pipefail
 root_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root_dir"
 for script in deploy.sh manage-user.sh scripts/*.sh ftp/*.sh painel/*.sh nginx/*.sh tests/*.sh tests/etapas/*.sh; do bash -n "$script"; done
+# O vigia do FTP é Perl, que a imagem já traz; o host não precisa dele. Se tiver, confere a sintaxe.
+if command -v perl >/dev/null 2>&1; then for script in ftp/*.pl; do perl -c "$script" 2>/dev/null || { perl -c "$script"; exit 1; }; done; fi
 # O host não precisa de Python; se tiver, confere os módulos do painel sem importar nem gravar nada:
 # a sintaxe de cada um e que todo nome usado está definido ou importado nele (import esquecido).
 if command -v python3 >/dev/null 2>&1; then
@@ -60,7 +62,7 @@ echo "marca OK: 6 arquivos em web/marca/"
   || { echo "ERRO: SECURITY.md falta, não cita SEGURANCA_CONTATO_EMAIL ou traz um endereço de e-mail fixo." >&2; exit 1; }
 echo "política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo"
 com_licenca=0; sem_licenca=0
-for arquivo in Dockerfile compose.yaml deploy.sh manage-user.sh scripts/*.sh ftp/*.sh painel/*.sh painel/*.py nginx/*.sh nginx/*.conf \
+for arquivo in Dockerfile compose.yaml deploy.sh manage-user.sh scripts/*.sh ftp/*.sh ftp/*.pl painel/*.sh painel/*.py nginx/*.sh nginx/*.conf \
   nginx/*.modelo web/*.css tests/*.sh tests/etapas/*.sh; do
   if head -n 2 "$arquivo" | grep -q -F 'SPDX-License-Identifier: Apache-2.0'; then
     com_licenca=$((com_licenca + 1))

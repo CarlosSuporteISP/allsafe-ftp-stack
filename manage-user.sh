@@ -7,10 +7,12 @@ action="${1:-}"
 user="${2:-}"
 pasta="${3:-}"
 case "$action" in
-  list|del|add|passwd|pasta|limites|tls-dispensar|tls-exigir|tls-lista) ;;
+  list|del|add|passwd|pasta|limites|bloqueios|desbloquear|tls-dispensar|tls-exigir|tls-lista) ;;
   *)
     echo "Uso: $0 add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta]" >&2
-    echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N]" >&2
+    echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]" >&2
+    echo "     $0 bloqueios [usuario]" >&2
+    echo "     $0 desbloquear <usuario> [origem]" >&2
     exit 2 ;;
 esac
 # Instalação a operar: a do .env desta pasta ou a do arquivo apontado por ENV_FILE.
@@ -30,6 +32,15 @@ case "$action" in
     # Sem pares, mostra os limites do usuário; com pares, grava os que vieram (valor vazio tira o limite).
     [[ -n "$user" ]] || { echo "Uso: $0 limites <usuario> [chave=valor ...]" >&2; exit 2; }
     compose exec -T ftp allsafe-ftp-user limites "$user" "${@:3}"
+    ;;
+  bloqueios)
+    # Bloqueios por tentativa em vigor, de todos ou de um usuário.
+    compose exec -T ftp allsafe-ftp-user bloqueios ${user:+"$user"}
+    ;;
+  desbloquear)
+    # Tira o bloqueio por tentativa do usuário: de todas as origens ou só da que vier.
+    [[ -n "$user" ]] || { echo "Uso: $0 desbloquear <usuario> [origem]" >&2; exit 2; }
+    compose exec -T ftp allsafe-ftp-user desbloquear "$user" ${pasta:+"$pasta"}
     ;;
   add|passwd)
     read -r -s -p "Senha para $user: " password

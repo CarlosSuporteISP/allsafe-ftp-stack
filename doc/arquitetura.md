@@ -60,7 +60,7 @@ flowchart LR
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
-        logs@{ shape: docs, label: "log CLF<br>stdout" }
+        logs@{ shape: docs, label: "registro do container<br>entradas e transferências" }
     end
     subgraph VOLUMES["Volumes"]
         vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
@@ -91,7 +91,7 @@ flowchart LR
     nginx -. "lê, só leitura" .-> vnginx
     painel -. "cria pasta, renomeia, apaga e lê os arquivos para o download" .-> vdata
     painel -. "confere a senha do usuário do FTP, na rede interna" .-> ftp
-    ftp -. "grava cada transferência" .-> logs
+    ftp -. "registra entradas e transferências" .-> logs
 ```
 
 <sub>Nível 2 · Mapa · [fonte](diagramas/)</sub>
@@ -121,7 +121,7 @@ flowchart LR
 | nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
 | Painel web | `DATA_DIR/dados` | cria pasta, renomeia, apaga e lê os arquivos para o download |
 | Painel web | Pure-FTPd | confere a senha do usuário do FTP que entra no painel, pela rede interna da stack |
-| Pure-FTPd | log CLF (`stdout`) | grava cada transferência |
+| Pure-FTPd | registro do container | registra cada entrada e cada transferência, com o usuário e o endereço |
 
 </details>
 
@@ -138,9 +138,10 @@ flowchart LR
 | Serviço `nginx` | [`compose.yaml`](../compose.yaml) | Container da frente web (`allsafe-ftp-nginx`), a única porta publicada do painel; só inicia depois de o `painel` ficar `healthy` e reinicia junto com ele |
 | Imagens | [`Dockerfile`](../Dockerfile) | Três alvos sobre o mesmo `debian:trixie-slim` (Debian 13), fixado por digest. Alvo `ftp`: `pure-ftpd`, `pure-ftpd-common`, `openssl` e o entrypoint do FTP. Alvo `painel`: os mesmos pacotes, `python3` e o painel. Alvo `nginx`: só `nginx` e `openssl`, sem nada do FTP. Os três levam o [`LICENSE`](../LICENSE) e o [`NOTICE`](../NOTICE) do projeto em `/usr/share/doc/allsafe-ftp-stack/` |
 | Usuário do processo de dados | [`Dockerfile`](../Dockerfile) | `ftpdata`, uid e gid **10000**, shell `nologin`, sem home |
-| Entrypoint | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-ftp-entrypoint` | Provisiona usuário e certificado e faz `exec` do `pure-ftpd`; com `FTP_TLS_EXCECOES=sim`, sobe e vigia o `pure-authd` e o `pure-ftpd` |
-| Gestão de usuários | [`ftp/usuario.sh`](../ftp/usuario.sh), instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user` | `add`, `passwd`, `pasta`, `del` e `list` no PureDB e a lista de quem entra sem TLS (`tls-dispensar`, `tls-exigir`, `tls-lista`), chamado de fora por [`manage-user.sh`](../manage-user.sh) e, dentro do painel, pelo servidor web |
-| Porteiro do TLS por usuário | [`ftp/porteiro-tls.sh`](../ftp/porteiro-tls.sh), instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-porteiro-tls` | Com `FTP_TLS_EXCECOES=sim`, é chamado pelo `pure-authd` a cada entrada, antes da conferência da senha: sem TLS, só deixa seguir o usuário dispensado pelo administrador |
+| Entrypoint | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-ftp-entrypoint` | Provisiona usuário e certificado, sobe o vigia, o `pure-authd` e o `pure-ftpd` e encerra o container se um deles sair |
+| Gestão de usuários | [`ftp/usuario.sh`](../ftp/usuario.sh), instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user` | `add`, `passwd`, `pasta`, `limites`, `del` e `list` no PureDB, os bloqueios por tentativa (`bloqueios`, `desbloquear`) e a lista de quem entra sem TLS (`tls-dispensar`, `tls-exigir`, `tls-lista`), chamado de fora por [`manage-user.sh`](../manage-user.sh) e, dentro do painel, pelo servidor web |
+| Porteiro | [`ftp/porteiro.sh`](../ftp/porteiro.sh), instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-porteiro` | É chamado pelo `pure-authd` a cada entrada, antes da conferência da senha: recusa o usuário bloqueado por senhas erradas e, com `FTP_TLS_EXCECOES=sim`, a sessão sem TLS de quem não foi dispensado pelo administrador |
+| Vigia | [`ftp/vigia.pl`](../ftp/vigia.pl), instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-vigia` | Lê em `/dev/log` o que o `pure-ftpd` registra, conta as senhas erradas de cada endereço para cada usuário, grava o [bloqueio por tentativa](seguranca.md#bloqueio-por-tentativa) em `/auth/bloqueios` e escreve no registro do container cada entrada e cada transferência. Em Perl, só com o `perl-base` da imagem base |
 | Painel web | Módulos Python de [`painel/`](../painel/), em `/opt/painel`; o ponto de entrada é o [`painel/servidor.py`](../painel/servidor.py) | Servidor em Python, só com a biblioteca padrão e sem JavaScript: telas do administrador, tela do usuário do FTP, sessão, auditoria e download dos arquivos, um assunto por módulo ([lista](painel.md#modulos)). Atende só o nginx, por soquete Unix |
 | Entrypoint do painel | [`painel/entrypoint.sh`](../painel/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-painel-entrypoint` | Confere a rede privada, gera o certificado, entrega a cópia dele ao nginx e faz `exec` do servidor |
 | Frente web | [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo), [`nginx/cabecalhos.conf`](../nginx/cabecalhos.conf) e as páginas de erro de [`nginx/erro/`](../nginx/erro/) | nginx sem root: fecha o HTTPS, recusa quem está fora das redes permitidas, limita taxa de pedidos, conexões e tamanho do pedido, entrega os arquivos estáticos e repassa o resto ao painel. O download de arquivo passa por ele no ritmo do navegador, sem arquivo temporário |
@@ -158,7 +159,7 @@ O que cada script faz, com parâmetros e saída: [Scripts](scripts.md). Uso e pr
 | Pasta no host | Monta em | Quem monta | Guarda |
 |---|---|---|---|
 | `DATA_DIR/dados` | `/data` | `ftp` e `painel` | Arquivos dos usuários: cada usuário preso (`chroot`) na pasta do cadastro, `/data/<usuario>` ou a pasta escolhida na criação. O `ftp` grava; o `painel` cria a pasta de cada usuário e, na aba Arquivos, lê, cria pasta vazia, renomeia e apaga |
-| `DATA_DIR/auth` | `/auth` | `ftp` e `painel` | Base **PureDB**: `pureftpd.passwd` (texto, com o hash das senhas) e `pureftpd.pdb` (compilada), ambos `0600`; `ftp-cert.pem`, cópia do certificado do FTP **sem a chave**; `sem-tls.lista` (`0600`), os usuários dispensados do TLS, quando houver; `.lock`, a trava das alterações |
+| `DATA_DIR/auth` | `/auth` | `ftp` e `painel` | Base **PureDB**: `pureftpd.passwd` (texto, com o hash das senhas) e `pureftpd.pdb` (compilada), ambos `0600`; `ftp-cert.pem`, cópia do certificado do FTP **sem a chave**; `sem-tls.lista` (`0600`), os usuários dispensados do TLS, quando houver; `limites.lista` (`0600`), os limites próprios de cada usuário que não ficam no cadastro, quando houver; `bloqueios/` (`0700`), um arquivo por bloqueio por tentativa em vigor; `.lock`, a trava das alterações |
 | `DATA_DIR/certs` | `/etc/ssl/private` | só `ftp` | `pure-ftpd.pem`: chave e certificado concatenados, `0600` |
 | `DATA_DIR/painel` | `/painel` | só `painel` | `tls/painel-cert.pem`, `tls/painel-key.pem` (`0600`), `administradores` (`0600`, o nome e o hash `scrypt` da senha de cada administrador) e `auditoria.log` (`0600`); pasta `0700` |
 | `DATA_DIR/nginx` | `/nginx` | `painel` (grava) e `nginx` (somente leitura) | `painel.sock`, o soquete Unix do painel, e `tls/`, a cópia do certificado e da chave (`0640`) para o nginx; pasta `0750`, do grupo `10001`. Refeita a cada subida |
@@ -221,8 +222,8 @@ flowchart LR
         gera@{ shape: rect, label: "openssl<br>autoassinado, 825 dias" }
         cert@{ shape: doc, label: "pure-ftpd.pem<br>/etc/ssl/private" }
         pure@{ shape: rect, label: "pure-ftpd<br>0.0.0.0, 2121" }
-        authd@{ shape: rect, label: "pure-authd<br>porteiro do TLS por usuário" }
-        semtls@{ shape: doc, label: "sem-tls.lista<br>/auth, quem entra sem TLS" }
+        authd@{ shape: rect, label: "vigia e pure-authd<br>bloqueio e porteiro" }
+        semtls@{ shape: docs, label: "bloqueios e sem-tls.lista<br>/auth, lidos a cada entrada" }
         saude@{ shape: rect, label: "healthcheck<br>saudação na porta 2121" }
     end
     subgraph RESULTADO["Resultado"]
@@ -250,8 +251,8 @@ flowchart LR
     gera -. "grava" .-> cert
     pure -. "lê" .-> cert
     pure -. "consulta" .-> puredb
-    pure -. "pergunta a cada entrada, só com FTP_TLS_EXCECOES=sim" .-> authd
-    authd -. "lê" .-> semtls
+    pure -. "pergunta a cada entrada e avisa a senha errada" .-> authd
+    authd -. "lê e grava" .-> semtls
 ```
 
 <sub>Nível 3 · Modelo · [fonte](diagramas/)</sub>
@@ -267,7 +268,7 @@ flowchart LR
 | 6 | `pure-pw` ➜ certificado existe? | Compila o banco com `pure-pw mkdb` e segue | — | `pureftpd.passwd` e `pureftpd.pdb` ficam `0600` |
 | 7a | certificado existe? ➜ `pure-ftpd` | Sim: reutiliza o `pure-ftpd.pem` | — | O certificado existente nunca é sobrescrito |
 | 7b | certificado existe? ➜ `openssl` | Não: gera um autoassinado | — | RSA 3072, SHA-256, 825 dias, SAN `IP:` ou `DNS:` conforme `FTP_CERT_CN` |
-| 8 | `openssl` ➜ `pure-ftpd` | Certificado pronto, `0600` | — | As variáveis de senha são apagadas (`unset`) antes do `exec` |
+| 8 | `openssl` ➜ `pure-ftpd` | Certificado pronto, `0600` | — | As variáveis de senha são apagadas (`unset`) antes de os processos subirem; o vigia e o `pure-authd` sobem antes do `pure-ftpd` |
 | 9 | `pure-ftpd` ➜ healthcheck | Porta de controle conferida a cada 20 s | TCP `2121` | `start_period` de 20 s, 5 tentativas |
 | 10 | healthcheck ➜ FTP pronto | Saudação recebida: container `healthy` | — | Confere que o servidor atende, sem fazer login |
 
@@ -283,8 +284,8 @@ flowchart LR
 | `openssl` | `pure-ftpd.pem` | grava |
 | `pure-ftpd` | `pure-ftpd.pem` | lê |
 | `pure-ftpd` | PureDB | consulta |
-| `pure-ftpd` | `pure-authd` | só com `FTP_TLS_EXCECOES=sim`: pergunta a cada entrada, antes de conferir a senha |
-| `pure-authd` | `sem-tls.lista` (`/auth`) | lê, pelo porteiro, a lista de quem entra sem TLS |
+| `pure-ftpd` | vigia e `pure-authd` | pergunta ao `pure-authd` a cada entrada, antes de conferir a senha, e avisa o vigia de cada senha errada |
+| vigia e `pure-authd` | bloqueios e `sem-tls.lista` (`/auth`) | o porteiro lê os bloqueios e a lista de quem entra sem TLS; o vigia grava os bloqueios |
 
 </details>
 
@@ -293,11 +294,9 @@ Nas subidas seguintes a senha do usuário inicial é **regravada** a partir do s
 <details>
 <summary>Detalhe técnico — quem é o processo 1</summary>
 
-Com `init: true` no [`compose.yaml`](../compose.yaml), o processo 1 do container é o `tini` (`docker-init`). Ele inicia o entrypoint, que termina com `exec /usr/sbin/pure-ftpd`: o `pure-ftpd` toma o lugar do entrypoint e fica como filho direto do `tini`, que repassa os sinais e recolhe processos órfãos.
+Com `init: true` no [`compose.yaml`](../compose.yaml), o processo 1 do container é o `tini` (`docker-init`), que repassa os sinais e recolhe processos órfãos. Ele inicia o entrypoint, que continua vivo e sobe três filhos, nesta ordem: o vigia (`allsafe-ftp-vigia`), o `pure-authd` e o `pure-ftpd`. Se um dos três sair, o entrypoint encerra os outros e termina com código `1`, e o Docker sobe o container de novo: sem o vigia ninguém seria bloqueado, e sem o `pure-authd` o `pure-ftpd` aceitaria a entrada sem a conferência do porteiro.
 
-Ao terminar, o entrypoint escreve no log: `FTP pronto em 2121/tcp; TLS=<modo>; passivo=<inicio>-<fim>`.
-
-Com `FTP_TLS_EXCECOES=sim` não há `exec`: o entrypoint continua vivo, como filho do `tini`, sobe o `pure-authd` e o `pure-ftpd` como filhos dele e espera. Se um dos dois sair, encerra o outro e termina com código `1`, e o Docker sobe o container de novo. A linha do log passa a ser `FTP pronto em 2121/tcp; TLS=2 com exceção por usuário; passivo=<inicio>-<fim>`. O motivo está em [Segurança](seguranca.md#tls-por-usuario).
+Ao terminar a subida, o entrypoint escreve no log: `FTP pronto em 2121/tcp; TLS=<modo>; passivo=<inicio>-<fim>`. Com `FTP_TLS_EXCECOES=sim`, a linha é `FTP pronto em 2121/tcp; TLS=2 com exceção por usuário; passivo=<inicio>-<fim>`. O motivo de cada processo está em [Segurança](seguranca.md#bloqueio-por-tentativa), nas seções do bloqueio por tentativa e do [TLS por usuário](seguranca.md#tls-por-usuario).
 
 </details>
 
@@ -322,13 +321,12 @@ Linha final do [`ftp/entrypoint.sh`](../ftp/entrypoint.sh):
 | `-L 10000:8` | Limite de `ls`: 10000 arquivos, profundidade 8 |
 | `-u 10000` | UID mínimo autorizado a logar (bloqueia contas de sistema) |
 | `-U 133:022` | `umask`: 133 para arquivos, 022 para diretórios |
-| `-l extauth:/run/pure-authd.sock` | Só com `FTP_TLS_EXCECOES=sim`, antes do PureDB: o `pure-authd` decide se a entrada sem TLS pode seguir para a conferência da senha |
+| `-l extauth:/run/pure-authd.sock` | Antes do PureDB: o `pure-authd` chama o porteiro, que decide se a entrada pode seguir para a conferência da senha ([bloqueio por tentativa](seguranca.md#bloqueio-por-tentativa) e [TLS por usuário](seguranca.md#tls-por-usuario)) |
 | `-l puredb:/auth/pureftpd.pdb` | Backend de autenticação |
 | `-p INICIO:FIM` | Faixa de portas passivas |
 | `-P <ip>` | IP anunciado no `PASV` (`FTP_PASSIVE_IP`) |
 | `-S 0.0.0.0,2121` | Escuta na porta 2121 (não privilegiada) |
 | `-Y <modo>` | Política TLS (`FTP_TLS_MODE`): veja [Configuração](configuracao.md#tls). Com `FTP_TLS_EXCECOES=sim`, vai `-Y 1`, e a exigência do TLS passa a ser feita usuário por usuário: [Segurança](seguranca.md#tls-por-usuario) |
-| `-O clf:/dev/stdout` | Log de acesso em formato CLF no `stdout` |
 
 ---
 
@@ -341,7 +339,7 @@ test: ["CMD", "/usr/local/sbin/allsafe-ftp-saude"]
 interval: 20s   timeout: 6s   retries: 5   start_period: 20s
 ```
 
-Abre a porta de controle (`2121`), de dentro do container, e espera a saudação do servidor: um `pure-ftpd` vivo que não atende deixa de contar como saudável, e o container passa a `unhealthy` depois de cinco verificações seguidas sem resposta. Servidor no limite de conexões (`421`) conta como atendendo. O teste não faz login: veja [`ftp/saude.sh`](scripts.md#ftp-saude). Para conferir também o usuário no PureDB, use `./scripts/validate.sh --runtime`: veja [Scripts](scripts.md#validate).
+Abre a porta de controle (`2121`), de dentro do container, e espera a saudação do servidor: um `pure-ftpd` vivo que não atende deixa de contar como saudável, e o container passa a `unhealthy` depois de cinco verificações seguidas sem resposta. Servidor no limite de conexões (`421`) conta como atendendo. Antes de abrir a porta, o teste exige o soquete do `pure-authd` e o `/dev/log` do vigia. O teste não faz login: veja [`ftp/saude.sh`](scripts.md#ftp-saude). Para conferir também o usuário no PureDB, use `./scripts/validate.sh --runtime`: veja [Scripts](scripts.md#validate).
 
 O painel tem o dele, que pede `/saude` pelo soquete Unix, do jeito que o nginx faz:
 

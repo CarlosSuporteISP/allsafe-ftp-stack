@@ -20,6 +20,8 @@ FTP_TLS_MODE="${FTP_TLS_MODE:-2}"
 FTP_TLS_EXCECOES="${FTP_TLS_EXCECOES:-nao}"
 FTP_MAX_CLIENTS="${FTP_MAX_CLIENTS:-50}"
 FTP_MAX_CLIENTS_PER_IP="${FTP_MAX_CLIENTS_PER_IP:-8}"
+FTP_BLOQUEIO_TENTATIVAS="${FTP_BLOQUEIO_TENTATIVAS:-5}"
+FTP_BLOQUEIO_MINUTOS="${FTP_BLOQUEIO_MINUTOS:-15}"
 password="$(tr -d '\r\n' < "$secret_file")"
 
 conferir_opcao_ip_publico
@@ -33,6 +35,8 @@ exigir_ip FTP_PASSIVE_IP "$FTP_PASSIVE_IP" || exit 1
 [[ "$FTP_TLS_MODE" =~ ^[0123]$ ]] || die "FTP_TLS_MODE deve ser 0, 1, 2 ou 3"
 [[ "$FTP_MAX_CLIENTS" =~ ^[1-9][0-9]{0,4}$ ]] || die "FTP_MAX_CLIENTS deve ser um inteiro maior que zero"
 [[ "$FTP_MAX_CLIENTS_PER_IP" =~ ^[1-9][0-9]{0,4}$ ]] || die "FTP_MAX_CLIENTS_PER_IP deve ser um inteiro maior que zero"
+[[ "$FTP_BLOQUEIO_TENTATIVAS" =~ ^(0|[1-9][0-9]{0,2})$ ]] && (( FTP_BLOQUEIO_TENTATIVAS <= 100 )) || die "FTP_BLOQUEIO_TENTATIVAS deve ficar entre 0 e 100 (0 desliga o bloqueio por tentativa)"
+[[ "$FTP_BLOQUEIO_MINUTOS" =~ ^[1-9][0-9]{0,3}$ ]] && (( FTP_BLOQUEIO_MINUTOS <= 1440 )) || die "FTP_BLOQUEIO_MINUTOS deve ficar entre 1 e 1440"
 # Com IP público aceito, senha em texto puro não passa: o TLS tem de ser obrigatório.
 if ip_publico_permitido && (( FTP_TLS_MODE < 2 )); then
   die "REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3; está $FTP_TLS_MODE (FTP sem TLS na internet entrega a senha a quem escuta)"
@@ -115,6 +119,10 @@ if [[ -f /auth/sem-tls.lista && ! -L /auth/sem-tls.lista ]]; then
   chown root:root /auth/sem-tls.lista
   chmod 0600 /auth/sem-tls.lista
 fi
+# Bloqueios por tentativa (um arquivo por usuário e endereço): o vigia grava, o porteiro lê, o painel mostra.
+# Só o root entra na pasta. O que ainda vale atravessa o reinício.
+[[ ! -L /auth/bloqueios ]] || die "/auth/bloqueios é link simbólico: remova-o"
+install -d -o root -g root -m 0700 /auth/bloqueios
 exec 9>&-  # solta a trava: o descritor não pode ir para o pure-ftpd
 
 certificate=/etc/ssl/private/pure-ftpd.pem
@@ -148,37 +156,49 @@ opcoes=(
   -I 15 -L 10000:8 -u 10000 -U 133:022
   -p "${FTP_PASSIVE_PORT_START}:${FTP_PASSIVE_PORT_END}"
   -P "$FTP_PASSIVE_IP" -S "0.0.0.0,2121"
-  -O clf:/dev/stdout
 )
-if [[ "$FTP_TLS_EXCECOES" != sim ]]; then
-  echo "FTP pronto em 2121/tcp; TLS=${FTP_TLS_MODE}; passivo=${FTP_PASSIVE_PORT_START}-${FTP_PASSIVE_PORT_END}"
-  exec /usr/sbin/pure-ftpd "${opcoes[@]}" -l "puredb:/auth/pureftpd.pdb" -Y "$FTP_TLS_MODE"
-fi
-
-# TLS por usuário. O pure-ftpd aceita sessão com e sem TLS (-Y 1) e pergunta primeiro ao pure-authd, que
-# chama o porteiro: sem TLS só segue quem está em /auth/sem-tls.lista. Quem segue tem a senha conferida
-# no PureDB, como sempre. Sem o pure-authd o pure-ftpd cairia direto no PureDB e aceitaria todos sem TLS:
-# por isso os dois processos são vigiados aqui e, se um deles sair, o container encerra (e o Docker o
-# sobe de novo, com os dois).
+# Toda entrada passa pelo porteiro. O pure-ftpd pergunta primeiro ao pure-authd, que chama o porteiro: ele
+# recusa quem está bloqueado por senhas erradas e, com o TLS por usuário, quem chega sem TLS sem estar em
+# /auth/sem-tls.lista (aí o pure-ftpd aceita sessão com e sem TLS, -Y 1). Quem segue tem a senha conferida
+# no PureDB, como sempre. O vigia escuta o que o pure-ftpd registra, conta as senhas erradas e grava os
+# bloqueios. Sem o pure-authd o pure-ftpd cairia direto no PureDB, sem bloqueio e sem a conferência do TLS,
+# e sem o vigia ninguém mais seria bloqueado: por isso os três processos são vigiados aqui e, se um deles
+# sair, o container encerra (e o Docker o sobe de novo, com os três).
 soquete=/run/pure-authd.sock
-rm -f "$soquete"
-marcados="$(grep -c -E '^[a-z_][a-z0-9_-]{0,31}$' /auth/sem-tls.lista 2>/dev/null || true)"
-echo "AVISO: FTP_TLS_EXCECOES=sim: ${marcados:-0} usuário(s) marcado(s) no painel entram sem TLS, com senha e arquivos em texto puro. Os demais continuam obrigados a usar TLS, mas um equipamento mal configurado manda a senha em texto puro antes de ser recusado. Só para equipamento sem suporte a TLS, em rede interna isolada." >&2
-/usr/sbin/pure-authd -s "$soquete" -r /usr/local/sbin/allsafe-ftp-porteiro-tls &
+modo_tls="$FTP_TLS_MODE"
+descricao_tls="TLS=${FTP_TLS_MODE}"
+rm -rf "$soquete" /dev/log /run/allsafe
+install -d -o root -g root -m 0700 /run/allsafe /run/allsafe/recusa
+if [[ "$FTP_TLS_EXCECOES" == sim ]]; then
+  modo_tls=1
+  descricao_tls+=" com exceção por usuário"
+  : > /run/allsafe/tls-por-usuario
+  marcados="$(grep -c -E '^[a-z_][a-z0-9_-]{0,31}$' /auth/sem-tls.lista 2>/dev/null || true)"
+  echo "AVISO: FTP_TLS_EXCECOES=sim: ${marcados:-0} usuário(s) marcado(s) no painel entram sem TLS, com senha e arquivos em texto puro. Os demais continuam obrigados a usar TLS, mas um equipamento mal configurado manda a senha em texto puro antes de ser recusado. Só para equipamento sem suporte a TLS, em rede interna isolada." >&2
+fi
+# Espera até 10 s por um soquete aberto pelo processo que acabou de subir.
+esperar_soquete() { # <soquete> <pid>
+  local _
+  for _ in $(seq 1 100); do
+    [[ -S "$1" ]] && break
+    kill -0 "$2" 2>/dev/null || break
+    sleep 0.1
+  done
+  [[ -S "$1" ]] && kill -0 "$2" 2>/dev/null
+}
+/usr/local/sbin/allsafe-ftp-vigia &
+vigia=$!
+esperar_soquete /dev/log "$vigia" || die "o vigia não abriu o soquete /dev/log: o FTP não sobe sem a contagem das senhas erradas"
+/usr/sbin/pure-authd -s "$soquete" -r /usr/local/sbin/allsafe-ftp-porteiro &
 porteiro=$!
-for _ in $(seq 1 100); do
-  [[ -S "$soquete" ]] && break
-  kill -0 "$porteiro" 2>/dev/null || break
-  sleep 0.1
-done
-[[ -S "$soquete" ]] && kill -0 "$porteiro" 2>/dev/null || die "o pure-authd não abriu o soquete $soquete: o FTP não sobe sem o porteiro do TLS"
-/usr/sbin/pure-ftpd "${opcoes[@]}" -l "extauth:$soquete" -l "puredb:/auth/pureftpd.pdb" -Y 1 &
+esperar_soquete "$soquete" "$porteiro" || die "o pure-authd não abriu o soquete $soquete: o FTP não sobe sem o porteiro"
+/usr/sbin/pure-ftpd "${opcoes[@]}" -l "extauth:$soquete" -l "puredb:/auth/pureftpd.pdb" -Y "$modo_tls" &
 servidor=$!
-parar() { kill -TERM "$servidor" "$porteiro" 2>/dev/null || true; }
+parar() { kill -TERM "$servidor" "$porteiro" "$vigia" 2>/dev/null || true; }
 trap 'parar; wait; exit 0' TERM INT
-echo "FTP pronto em 2121/tcp; TLS=${FTP_TLS_MODE} com exceção por usuário; passivo=${FTP_PASSIVE_PORT_START}-${FTP_PASSIVE_PORT_END}"
-wait -n "$servidor" "$porteiro" || true
-kill -0 "$porteiro" 2>/dev/null && quem=pure-ftpd || quem=pure-authd
+echo "FTP pronto em 2121/tcp; ${descricao_tls}; passivo=${FTP_PASSIVE_PORT_START}-${FTP_PASSIVE_PORT_END}"
+wait -n "$servidor" "$porteiro" "$vigia" || true
+if ! kill -0 "$porteiro" 2>/dev/null; then quem=pure-authd; elif ! kill -0 "$vigia" 2>/dev/null; then quem=vigia; else quem=pure-ftpd; fi
 parar
-echo "FALHA: o $quem saiu: o container encerra para ninguém entrar sem a conferência do TLS por usuário" >&2
+echo "FALHA: o $quem saiu: o container encerra para ninguém entrar sem a conferência do porteiro" >&2
 exit 1

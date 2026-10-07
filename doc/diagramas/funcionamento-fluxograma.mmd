@@ -7,7 +7,7 @@ flowchart LR
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
         tls@{ shape: diam, label: "pediu<br>TLS?" }
         cert@{ shape: doc, label: "certificado<br>pure-ftpd.pem" }
-        logs@{ shape: docs, label: "log CLF<br>stdout" }
+        logs@{ shape: docs, label: "registro do container<br>entradas e transferências" }
     end
     subgraph AUTH["Autenticação"]
         login@{ shape: diam, label: "usuário e senha<br>conferem?" }
@@ -28,8 +28,8 @@ flowchart LR
     tls -- "3b · não: recusado no padrão" --> recusa
     login -. "4 · consulta o usuário" .-> puredb
     login -- "5a · sim: abre a sessão" --> sessao
-    login -- "5b · não" --> recusa
+    login -- "5b · não: 5 senhas erradas bloqueiam" --> recusa
     sessao -- "6 · envia o arquivo, faixa passiva do perfil" --> dados
     dados -- "7 · arquivo gravado" --> fim
     ftp -. "apresenta" .-> cert
-    ftp -. "grava cada transferência" .-> logs
+    ftp -. "registra entradas e transferências" .-> logs

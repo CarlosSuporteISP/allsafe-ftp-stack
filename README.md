@@ -8,7 +8,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.21.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.22.0-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
@@ -39,7 +39,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.21.0</b> · visão geral da stack · 2026-10-07</sub>
+<sub><b>v0.22.0</b> · visão geral da stack · 2026-10-07</sub>
 
 </div>
 
@@ -89,13 +89,14 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 |---|---|
 | **FTPS explícito obrigatório por padrão** | Sem `AUTH TLS` não há login: usuário e senha não passam em texto puro. O modo sem TLS, para equipamento antigo, é uma escolha explícita e avisada |
 | **Usuários virtuais em PureDB** | Não são contas do sistema; cada um fica preso (`chroot`) na própria pasta |
+| **Bloqueio por tentativa no FTP** | Cinco senhas erradas do mesmo endereço bloqueiam o usuário para ele por 15 minutos; o administrador ajusta o limite de cada usuário e desbloqueia pelo painel |
 | **Bind local por padrão** | Sobe em `127.0.0.1`; você abre só um IP **privado** dedicado, com firewall no host |
 | **Rede privada por padrão** | Feita para rede interna, atrás de firewall; endereço público só por uma opção explícita, com alerta |
 | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão de 15 minutos, bloqueio depois de cinco senhas erradas e registro de cada ação |
 | **nginx na frente do painel** | Só o nginx publica a porta do painel: TLS 1.2 e 1.3, lista de redes permitidas, limite de pedidos e de conexões por endereço; o painel fica sem porta de rede |
 | **Containers endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs; o nginx roda sem `root` e sem nenhuma `capability` |
 | **Segredos em arquivo** | As senhas ficam em `.secrets/`, nunca na imagem nem no `compose.yaml`; a do painel, só como hash |
-| **Logs no `stdout`** | Formato CLF, rotacionados pelo Docker (10 MB × 3) |
+| **Registro do container** | Uma linha por entrada, senha errada, bloqueio, envio, download, arquivo renomeado e arquivo apagado no FTP, com o usuário e o endereço; rotacionado pelo Docker (10 MB × 3) |
 | **Cinco perfis de capacidade** | `--size small`, `medium`, `large`, `xlarge` ou `extended` ajusta sessões, faixa passiva e recursos; o `deploy.sh` confere se o servidor tem a CPU e a memória do perfil |
 
 ---
@@ -109,7 +110,7 @@ O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página,
 | | |
 |---|---|
 | <a href="doc/imagens/aba-usuarios.png"><img src="doc/imagens/aba-usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista de usuários: pasta no host, com a marca dividida em duas delas, uso, arquivos, último envio e as ações Trocar senha e Remover" width="100%"></a> | <a href="doc/imagens/aba-arquivos.png"><img src="doc/imagens/aba-arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma e o formulário Nova pasta" width="100%"></a> |
-| **Usuários** — cria, troca a senha, a pasta e os limites e remove a conta de cada equipamento | **Arquivos** — navega nas pastas dos usuários, baixa os backups, cria pasta, renomeia e apaga |
+| **Usuários** — cria, troca a senha, a pasta e os limites, desbloqueia e remove a conta de cada equipamento | **Arquivos** — navega nas pastas dos usuários, baixa os backups, cria pasta, renomeia e apaga |
 | <a href="doc/imagens/aba-administradores.png"><img src="doc/imagens/aba-administradores.png" alt="Aba Administradores com o botão Novo administrador e a lista de três administradores: a marca você na conta em uso, as sessões abertas de cada um e as ações Trocar senha, Trocar nome e Remover" width="100%"></a> | <a href="doc/imagens/aba-seguranca.png"><img src="doc/imagens/aba-seguranca.png" alt="Aba Segurança com a conferência da instalação, uma linha por item: endereço público, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, custo das senhas, contato de segurança, container e firewall" width="100%"></a> |
 | **Administradores** — cada pessoa com o próprio nome e a própria senha | **Segurança** — confere rede, TLS, certificados, senhas e contato de segurança |
 | <a href="doc/imagens/aba-atividade.png"><img src="doc/imagens/aba-atividade.png" alt="Aba Atividade com os registros do painel: data, endereço de origem, o que aconteceu e o detalhe, como arquivo baixado, pasta criada, administrador criado e tela de administração pedida por usuário do FTP" width="100%"></a> | <a href="doc/imagens/aba-meus-arquivos.png"><img src="doc/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, com as pastas 2026-09 e 2026-10, um arquivo de configuração com o botão Baixar e, no topo, só o nome do usuário e o botão Sair" width="100%"></a> |
@@ -193,7 +194,7 @@ flowchart LR
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
         tls@{ shape: diam, label: "pediu<br>TLS?" }
         cert@{ shape: doc, label: "certificado<br>pure-ftpd.pem" }
-        logs@{ shape: docs, label: "log CLF<br>stdout" }
+        logs@{ shape: docs, label: "registro do container<br>entradas e transferências" }
     end
     subgraph AUTH["Autenticação"]
         login@{ shape: diam, label: "usuário e senha<br>conferem?" }
@@ -214,11 +215,11 @@ flowchart LR
     tls -- "3b · não: recusado no padrão" --> recusa
     login -. "4 · consulta o usuário" .-> puredb
     login -- "5a · sim: abre a sessão" --> sessao
-    login -- "5b · não" --> recusa
+    login -- "5b · não: 5 senhas erradas bloqueiam" --> recusa
     sessao -- "6 · envia o arquivo, faixa passiva do perfil" --> dados
     dados -- "7 · arquivo gravado" --> fim
     ftp -. "apresenta" .-> cert
-    ftp -. "grava cada transferência" .-> logs
+    ftp -. "registra entradas e transferências" .-> logs
 ```
 
 <sub>Nível 2 · Fluxograma · [fonte](doc/diagramas/)</sub>
@@ -231,7 +232,7 @@ flowchart LR
 | 3b | pediu TLS? ➜ conexão recusada | Não: no padrão, sessão em texto puro é recusada. Só entra sem TLS o usuário dispensado por um administrador, com `FTP_TLS_EXCECOES=sim`, ou quem estiver em uma instalação com `FTP_TLS_MODE=0` ou `1`, opções para [equipamento antigo](doc/seguranca.md#ftp-sem-tls) |
 | 4 | usuário e senha conferem? ➜ PureDB | A conta é procurada no banco de usuários virtuais (`/auth/pureftpd.pdb`) |
 | 5a | usuário e senha conferem? ➜ sessão em chroot | Sim: a sessão abre presa na pasta do usuário |
-| 5b | usuário e senha conferem? ➜ conexão recusada | Não: `530 Login authentication failed` |
+| 5b | usuário e senha conferem? ➜ conexão recusada | Não: `530 Login authentication failed`. No padrão, 5 senhas erradas do mesmo endereço em 15 minutos bloqueiam o usuário para aquele endereço por 15 minutos; o limite de cada usuário é ajustado no painel: [bloqueio por tentativa](doc/seguranca.md#bloqueio-por-tentativa) |
 | 6 | sessão em chroot ➜ `/data` | O arquivo sobe pelo canal de dados em modo passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
 | 7 | `/data` ➜ backup guardado | O arquivo fica gravado na pasta do usuário, dentro do volume |
 
@@ -240,7 +241,7 @@ flowchart LR
 | Quem | Usa | Como |
 |---|---|---|
 | Pure-FTPd | certificado `pure-ftpd.pem` | apresenta ao cliente na negociação TLS |
-| Pure-FTPd | log CLF | grava cada transferência no `stdout` do container |
+| Pure-FTPd | registro do container | registra cada entrada e cada transferência, com o usuário e o endereço |
 
 </details>
 
@@ -372,7 +373,7 @@ flowchart LR
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
-        logs@{ shape: docs, label: "log CLF<br>stdout" }
+        logs@{ shape: docs, label: "registro do container<br>entradas e transferências" }
     end
     subgraph VOLUMES["Volumes"]
         vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>/nginx, soquete e cópia do certificado" }
@@ -403,7 +404,7 @@ flowchart LR
     nginx -. "lê, só leitura" .-> vnginx
     painel -. "cria pasta, renomeia, apaga e lê os arquivos para o download" .-> vdata
     painel -. "confere a senha do usuário do FTP, na rede interna" .-> ftp
-    ftp -. "grava cada transferência" .-> logs
+    ftp -. "registra entradas e transferências" .-> logs
 ```
 
 <sub>Nível 2 · Mapa · [fonte](doc/diagramas/)</sub>
@@ -433,7 +434,7 @@ flowchart LR
 | nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
 | Painel web | `DATA_DIR/dados` | cria pasta, renomeia, apaga e lê os arquivos para o download |
 | Painel web | Pure-FTPd | confere a senha do usuário do FTP que entra no painel, pela rede interna da stack |
-| Pure-FTPd | log CLF (`stdout`) | grava cada transferência |
+| Pure-FTPd | registro do container | registra cada entrada e cada transferência, com o usuário e o endereço |
 
 <details>
 <summary>Peças, portas, pastas, imagens e entrypoints — clique para expandir</summary>
@@ -501,7 +502,7 @@ Medido em 2026-10-05, na versão `0.18.4`, com os três containers em repouso, n
 - **Total em repouso:** cerca de 19 MiB de memória e processador perto de zero.
 - **Resposta do painel:** a tela de entrada, com uma conexão HTTPS nova a cada pedido, respondeu em 2,8 ms na mediana de 30 pedidos (de 2,4 ms a 3,8 ms).
 - **Sem dependência de terceiros:** o painel não instala pacote do PyPI e não tem JavaScript; o que há para atualizar é a imagem base e os pacotes do Debian.
-- **Tamanho do código:** 3190 linhas de Python em 21 módulos, 201 de CSS e 4864 de Bash, contando a bateria de testes.
+- **Tamanho do código:** 3307 linhas de Python em 21 módulos, 201 de CSS, 5267 de Bash e 278 de Perl, contando a bateria de testes.
 - **De onde vem o peso das imagens:** da base `debian:13-slim`, com 119 MB, comum às três.
 
 </details>
@@ -563,6 +564,7 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 
 - Bind em `127.0.0.1` por padrão: abra só um IP privado dedicado e libere no firewall do host apenas as redes que enviam backup.
 - TLS **obrigatório** para entrar no padrão (`FTP_TLS_MODE=2`), `chroot` em todos, sem usuário anônimo, sem DNS reverso.
+- **Bloqueio por tentativa no FTP:** o endereço que erra a senha de um usuário cinco vezes em 15 minutos fica bloqueado para aquele usuário pelo mesmo tempo; o limite e o tempo são ajustados por usuário, e o administrador desbloqueia pelo painel. Veja [bloqueio por tentativa](doc/seguranca.md#bloqueio-por-tentativa).
 - **Sem TLS só para quem o administrador dispensar:** com `FTP_TLS_EXCECOES=sim`, o administrador marca no painel os usuários dos equipamentos antigos, um a um; os demais continuam obrigados a usar TLS. Veja [TLS por usuário](doc/seguranca.md#tls-por-usuario).
 - **Sem TLS para todos só por escolha:** `FTP_TLS_MODE=0` ou `1` existe para equipamento antigo que não fala TLS. Senha e arquivos passam em texto puro, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Só em rede interna isolada. Veja [equipamento sem TLS](doc/seguranca.md#ftp-sem-tls).
 - `read_only` no sistema de arquivos raiz, `cap_drop: ALL` (só as estritamente necessárias voltam), `no-new-privileges`, limites de CPU, memória, PIDs e `nofile`.
@@ -681,7 +683,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.21.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.22.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

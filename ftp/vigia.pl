@@ -1,0 +1,278 @@
+#!/usr/bin/perl
+# SPDX-License-Identifier: Apache-2.0
+# Vigia das entradas do FTP: conta as senhas erradas e cria o bloqueio que o porteiro aplica.
+#
+# O Pure-FTPd só avisa da senha errada pelo syslog. O vigia escuta em /dev/log, lê cada aviso e, quando um
+# endereço erra a senha de um usuário vezes demais, grava /auth/bloqueios/<usuario>@<endereco>. Quem recusa
+# a entrada é o porteiro (allsafe-ftp-porteiro), que só olha se esse arquivo existe e ainda vale: apagar o
+# arquivo desbloqueia na hora. A senha nunca chega aqui: o aviso traz só o nome e o endereço.
+#
+# É também por aqui que as transferências chegam ao registro do container: o Pure-FTPd avisa pelo syslog de
+# cada arquivo enviado, baixado, renomeado e apagado, e o vigia escreve uma linha para cada um.
+#
+#   limiar e minutos: os do usuário, em /auth/limites.lista (tentativas=N minutos=N), ou os da stack
+#                     (FTP_BLOQUEIO_TENTATIVAS e FTP_BLOQUEIO_MINUTOS); limiar 0 = não bloqueia;
+#   não contam:       os endereços da rede interna da stack (o painel confere a senha do usuário no FTP e
+#                     tem o limite de tentativas dele), a recusa do porteiro por falta de TLS, a tentativa
+#                     feita durante o bloqueio e o nome que não está no cadastro;
+#   entrada certa:    zera a contagem daquele endereço para aquele usuário.
+#
+# Só módulos do perl-base, que já vem na imagem. O laço não espera por nada além do soquete: se ele parar
+# de ler, o Pure-FTPd trava ao registrar. Se o vigia sair, o entrypoint encerra o container.
+use strict;
+use warnings;
+use Socket qw(AF_UNIX SOCK_DGRAM pack_sockaddr_un);
+
+my $SOQUETE   = '/dev/log';
+my $BLOQUEIOS = '/auth/bloqueios';
+my $RECUSAS   = '/run/allsafe/recusa';
+my $CADASTRO  = '/auth/pureftpd.passwd';
+my $LIMITES   = '/auth/limites.lista';
+my $NOME      = qr/[a-z_][a-z0-9_-]{0,31}/;
+my $ENDERECO  = qr/[0-9a-fA-F.:]{2,45}/;
+my $CHAVES_MAX    = 10000;   # contagens guardadas na memória
+my $BLOQUEIOS_MAX = 4096;    # arquivos de bloqueio
+my $RECUSA_VALE   = 30;      # segundos em que a marca de recusa do porteiro ainda explica uma falha
+
+sub registrar { print STDERR "vigia: $_[0]\n"; }
+
+sub inteiro {
+    my ($texto, $minimo, $maximo, $padrao) = @_;
+    return $padrao unless defined $texto && $texto =~ /^\d{1,6}$/ && $texto >= $minimo && $texto <= $maximo;
+    return $texto + 0;
+}
+my $PADRAO_TENTATIVAS = inteiro($ENV{FTP_BLOQUEIO_TENTATIVAS}, 0, 100, 5);
+my $PADRAO_MINUTOS    = inteiro($ENV{FTP_BLOQUEIO_MINUTOS}, 1, 1440, 15);
+
+# Rede interna da stack: as redes ligadas direto ao container, fora o endereço de saída (o gateway), que é
+# por onde chegam os clientes do próprio host. Lida uma vez de /proc/net/route, sem consulta de nomes.
+my (@redes, $saida);
+sub ler_redes {
+    open(my $arq, '<', '/proc/net/route') or return;
+    <$arq>;
+    while (my $linha = <$arq>) {
+        my @campo = split ' ', $linha;
+        next unless @campo >= 8 && $campo[1] =~ /^[0-9A-Fa-f]{8}$/ && $campo[2] =~ /^[0-9A-Fa-f]{8}$/ && $campo[7] =~ /^[0-9A-Fa-f]{8}$/;
+        my ($destino, $porta, $mascara) = map { unpack('N', pack('L', hex $_)) } @campo[1, 2, 7];
+        if ($destino == 0 && $mascara == 0) { $saida = $porta if $porta; }
+        elsif ($porta == 0 && $mascara != 0) { push @redes, [$destino, $mascara]; }
+    }
+    close $arq;
+}
+sub interno {
+    my ($ip) = @_;
+    return 0 unless $ip =~ /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/ && $1 < 256 && $2 < 256 && $3 < 256 && $4 < 256;
+    return 1 if $1 == 127;
+    my $numero = ($1 << 24) | ($2 << 16) | ($3 << 8) | $4;
+    return 0 if defined $saida && $numero == $saida;
+    for my $rede (@redes) { return 1 if ($numero & $rede->[1]) == $rede->[0]; }
+    return 0;
+}
+
+# Cadastro e limites próprios, relidos só quando o arquivo muda (inode, tamanho e data).
+my (%existe, %proprio);
+my ($visto_cadastro, $visto_limites) = ('?', '?');
+sub marca { my @s = stat($_[0]); return @s ? "$s[1]:$s[7]:$s[9]" : ''; }
+sub atualizar {
+    my $agora = marca($CADASTRO);
+    if ($agora ne $visto_cadastro) {
+        %existe = ();
+        if (open(my $arq, '<', $CADASTRO)) {
+            while (my $linha = <$arq>) { $existe{$1} = 1 if $linha =~ /^($NOME):/; }
+            close $arq;
+        }
+        $visto_cadastro = $agora;
+    }
+    $agora = marca($LIMITES);
+    if ($agora ne $visto_limites) {
+        %proprio = ();
+        if (open(my $arq, '<', $LIMITES)) {
+            while (my $linha = <$arq>) {
+                my ($nome, @pares) = split ' ', $linha;
+                next unless defined $nome && $nome =~ /^$NOME$/;
+                for my $par (@pares) {
+                    $proprio{$nome}{tentativas} = $1 + 0 if $par =~ /^tentativas=(\d{1,6})$/ && $1 <= 100;
+                    $proprio{$nome}{minutos}    = $1 + 0 if $par =~ /^minutos=(\d{1,6})$/ && $1 >= 1 && $1 <= 1440;
+                }
+            }
+            close $arq;
+        }
+        $visto_limites = $agora;
+    }
+}
+
+# Bloqueio: o arquivo é a única memória. Linha: <vale até> <desde> <senhas erradas>, em segundos desde 1970.
+sub bloqueado {
+    my ($nome, $ip) = @_;
+    open(my $arq, '<', "$BLOQUEIOS/$nome\@$ip") or return 0;
+    my $linha = <$arq> // '';
+    close $arq;
+    return $linha =~ /^(\d{1,12}) / && $1 > time ? 1 : 0;
+}
+sub bloquear {
+    my ($nome, $ip, $erradas, $minutos) = @_;
+    my $agora = time;
+    opendir(my $pasta, $BLOQUEIOS) or return registrar("FALHA: $BLOQUEIOS não abre: bloqueio de usuario=$nome origem=$ip não gravado");
+    my $quantos = grep { !/^\./ } readdir $pasta;
+    closedir $pasta;
+    return registrar("AVISO: $quantos bloqueios em vigor, o teto: bloqueio de usuario=$nome origem=$ip não gravado") if $quantos >= $BLOQUEIOS_MAX;
+    my $novo = "$BLOQUEIOS/.novo.$$";
+    open(my $arq, '>', $novo) or return registrar("FALHA: bloqueio de usuario=$nome origem=$ip não gravado");
+    printf $arq "%d %d %d\n", $agora + $minutos * 60, $agora, $erradas;
+    close $arq;
+    rename($novo, "$BLOQUEIOS/$nome\@$ip") or return registrar("FALHA: bloqueio de usuario=$nome origem=$ip não gravado");
+    registrar("entrada bloqueada: usuario=$nome origem=$ip senhas_erradas=$erradas minutos=$minutos");
+}
+
+# Marca que o porteiro deixa quando é ele quem recusa por falta de TLS: essa falha não é senha errada.
+sub recusa_do_porteiro {
+    my ($nome, $ip) = @_;
+    opendir(my $pasta, $RECUSAS) or return 0;
+    my @marcas = grep { /^\Q$ip\E\@\Q$nome\E\.\d+$/ } readdir $pasta;
+    closedir $pasta;
+    for my $marca (@marcas) {
+        my @s = stat("$RECUSAS/$marca") or next;
+        return 1 if time - $s[9] <= $RECUSA_VALE && unlink("$RECUSAS/$marca");
+    }
+    return 0;
+}
+
+my %falhas;   # "usuario@endereco" ➜ instantes das senhas erradas ainda dentro da janela
+sub senha_errada {
+    my ($ip, $nome) = @_;
+    return registrar("entrada recusada: nome fora da regra, origem=$ip") unless $nome =~ /^$NOME$/;
+    return if recusa_do_porteiro($nome, $ip);
+    return registrar("entrada recusada: usuario=$nome origem=$ip (rede interna da stack: não conta para o bloqueio)") if interno($ip);
+    return registrar("entrada recusada pelo bloqueio: usuario=$nome origem=$ip") if bloqueado($nome, $ip);
+    atualizar();
+    return registrar("entrada recusada: usuario=$nome origem=$ip (não está no cadastro)") unless $existe{$nome};
+    my $limiar  = $proprio{$nome}{tentativas} // $PADRAO_TENTATIVAS;
+    my $minutos = $proprio{$nome}{minutos} // $PADRAO_MINUTOS;
+    return registrar("entrada recusada: usuario=$nome origem=$ip (bloqueio por tentativa desligado)") if $limiar == 0;
+    my $agora = time;
+    my $chave = "$nome\@$ip";
+    if (!$falhas{$chave} && keys(%falhas) >= $CHAVES_MAX) {
+        registrar("AVISO: $CHAVES_MAX contagens na memória, o teto: as contagens recomeçam");
+        %falhas = ();
+    }
+    my @dentro = grep { $agora - $_ < $minutos * 60 } @{ $falhas{$chave} // [] };
+    push @dentro, $agora;
+    registrar("entrada recusada: usuario=$nome origem=$ip senhas_erradas=" . scalar(@dentro) . " de $limiar");
+    if (@dentro >= $limiar) {
+        delete $falhas{$chave};
+        bloquear($nome, $ip, scalar(@dentro), $minutos);
+    } else {
+        $falhas{$chave} = \@dentro;
+    }
+}
+
+sub entrada_certa {
+    my ($ip, $nome) = @_;
+    delete $falhas{"$nome\@$ip"};
+    registrar("entrada: usuario=$nome origem=$ip");
+}
+
+# Nome de arquivo vem do cliente: antes de ir para o registro, perde o que quebraria a linha ou comandaria o
+# terminal de quem lê (caractere de controle e de direção do texto). UTF-8 válido passa; o resto vira "?".
+sub limpo {
+    my ($texto, $teto) = @_;
+    $texto =~ s{/{2,}}{/}g;
+    if (utf8::decode($texto)) {
+        $texto =~ s/[^\x20-\x7e\xa0-\x{200a}\x{2010}-\x{2027}\x{2030}-\x{205f}\x{2070}-\x{d7ff}\x{e000}-\x{fefe}\x{ff00}-\x{fffd}]/?/g;
+        $texto = substr($texto, 0, $teto);
+        utf8::encode($texto);
+    } else {
+        $texto =~ s/[^\x20-\x7e]/?/g;
+        $texto = substr($texto, 0, $teto);
+    }
+    return $texto;
+}
+
+# Arquivo enviado, baixado, apagado e renomeado: o texto é o do Pure-FTPd, com o nome do arquivo no meio.
+# O nome vai por último na linha, e o tamanho é lido do fim do texto: nome nenhum se passa por outro campo.
+# O aviso é reconhecido pelo começo, que é do servidor: o de envio e o de download começam pelo caminho
+# completo ("/data/..."), e um arquivo apagado cujo nome imita o fim de um envio continua sendo "apagado".
+sub arquivo {
+    my ($conta, $ip, $texto) = @_;
+    return unless $conta =~ /^$NOME$/;
+    my $quem = "usuario=$conta origem=$ip";
+    return registrar("apagado: $quem arquivo=" . limpo($1, 400)) if $texto =~ /^Deleted (.+)$/s;
+    return registrar("renomeado: $quem nomes=" . limpo($1, 800)) if $texto =~ /^File successfully renamed or moved: (\[.+\]->\[.+\])$/s;
+    if ($texto =~ m{^(/.+) (uploaded|downloaded)  \((\d{1,20}) bytes, [\d.]+KB/sec\)$}s) {
+        return registrar(($2 eq 'uploaded' ? 'envio' : 'download') . ": $quem bytes=$3 arquivo=" . limpo($1, 400));
+    }
+}
+
+# Linha do syslog: "<prioridade>Mes DD HH:MM:SS pure-ftpd: (conta@endereco) [NIVEL] texto". O começo é
+# escrito pela libc e pelo Pure-FTPd; do cliente só vem o que está depois do nível, e é ali que o nome
+# digitado aparece. Por isso a linha é conferida do início ao fim.
+sub tratar {
+    my ($linha) = @_;
+    $linha =~ s/[\r\n\0]+$//;
+    return unless $linha =~ /^<(\d{1,3})>[A-Z][a-z]{2} [ \d]\d \d\d:\d\d:\d\d pure-ftpd(?:\[\d+\])?: \(([^@\s]{1,64})\@($ENDERECO)\) \[[A-Z]+\] (.*)$/s;
+    my ($gravidade, $conta, $ip, $texto) = ($1 & 7, $2, $3, $4);
+    return if $ip =~ /^127\./;   # a conferência de saúde do container
+    if ($texto =~ /^Authentication failed for user \[(.*)\]$/s) { return senha_errada($ip, $1); }
+    if ($texto =~ /^($NOME) is now logged in$/) { return entrada_certa($ip, $1); }
+    return arquivo($conta, $ip, $texto) if $gravidade == 5;
+    return if $gravidade > 4;    # aviso e erro seguem para o registro; o resto (conexão e saída) não
+    $texto =~ s/[^\x20-\x7e]/?/g;
+    registrar('pure-ftpd: ' . substr($texto, 0, 200) . " origem=$ip");
+}
+
+# De minuto em minuto: bloqueio vencido, marca de recusa velha e contagem parada saem.
+sub limpar {
+    my $agora = time;
+    if (opendir(my $pasta, $BLOQUEIOS)) {
+        for my $item (readdir $pasta) {
+            next unless $item =~ /^$NOME\@$ENDERECO$/ || $item =~ /^\.novo\.\d+$/;
+            my $caminho = "$BLOQUEIOS/$item";
+            if ($item =~ /^\./) {
+                my @s = stat($caminho);
+                unlink $caminho if @s && $agora - $s[9] > 60;
+                next;
+            }
+            open(my $arq, '<', $caminho) or next;
+            my $texto = <$arq> // '';
+            close $arq;
+            unlink $caminho unless $texto =~ /^(\d{1,12}) / && $1 > $agora;
+        }
+        closedir $pasta;
+    }
+    if (opendir(my $pasta, $RECUSAS)) {
+        for my $item (readdir $pasta) {
+            next if $item =~ /^\.\.?$/;
+            my @s = stat("$RECUSAS/$item");
+            unlink "$RECUSAS/$item" if @s && $agora - $s[9] > $RECUSA_VALE;
+        }
+        closedir $pasta;
+    }
+    for my $chave (keys %falhas) {
+        my @dentro = grep { $agora - $_ < 1440 * 60 } @{ $falhas{$chave} };
+        if (@dentro) { $falhas{$chave} = \@dentro; } else { delete $falhas{$chave}; }
+    }
+}
+
+$SIG{TERM} = $SIG{INT} = sub { exit 0 };
+umask 0077;
+ler_redes();
+socket(my $escuta, AF_UNIX, SOCK_DGRAM, 0) or die "vigia: FALHA: soquete: $!\n";
+unlink $SOQUETE;
+bind($escuta, pack_sockaddr_un($SOQUETE)) or die "vigia: FALHA: $SOQUETE não abre: $!\n";
+registrar('pronto: ' . ($PADRAO_TENTATIVAS
+    ? "$PADRAO_TENTATIVAS senhas erradas do mesmo endereço bloqueiam o usuário para ele por $PADRAO_MINUTOS min"
+    : 'bloqueio por tentativa desligado na stack (FTP_BLOQUEIO_TENTATIVAS=0); vale o limite de cada usuário')
+    . '; limite próprio do usuário em Editar, na aba Usuários do painel');
+my $proxima = time + 60;
+while (1) {
+    my $pronto = '';
+    vec($pronto, fileno($escuta), 1) = 1;
+    if (select($pronto, undef, undef, 5) > 0) {
+        my $linha = '';
+        tratar($linha) if defined recv($escuta, $linha, 8192, 0);
+    }
+    if (time >= $proxima) {
+        limpar();
+        $proxima = time + 60;
+    }
+}

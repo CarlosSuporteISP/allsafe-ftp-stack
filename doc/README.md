@@ -117,6 +117,8 @@ Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com o
 | [instalacao-diagrama.mmd](diagramas/instalacao-diagrama.mmd) | 1 | [Instalação](instalacao.md) |
 | [configuracao-diagrama.mmd](diagramas/configuracao-diagrama.mmd) | 1 | [Configuração](configuracao.md) e [Perfis](perfis.md) |
 | [seguranca-diagrama.mmd](diagramas/seguranca-diagrama.mmd) | 1 | [Segurança](seguranca.md) |
+| [tls-por-usuario-fluxograma.mmd](diagramas/tls-por-usuario-fluxograma.mmd) | 2 | [Segurança](seguranca.md#tls-por-usuario) |
+| [bloqueio-por-tentativa-fluxograma.mmd](diagramas/bloqueio-por-tentativa-fluxograma.mmd) | 2 | [Segurança](seguranca.md#bloqueio-por-tentativa) |
 | [segredos-diagrama.mmd](diagramas/segredos-diagrama.mmd) | 1 | [Segredos](segredos.md) |
 | [scripts-diagrama.mmd](diagramas/scripts-diagrama.mmd) | 1 | [Scripts](scripts.md) |
 | [usuarios-diagrama.mmd](diagramas/usuarios-diagrama.mmd) | 1 | [Operação](operacao.md) |

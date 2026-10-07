@@ -74,7 +74,7 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 | Aba | O que mostra | O que dá para fazer |
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar |
-| Usuários | Um usuário por linha: pasta no host, com a marca **dividida** quando outro usuário também a alcança, espaço usado, quantidade de arquivos e último envio; com `FTP_TLS_EXCECOES=sim`, a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta, editar, para trocar a pasta e os limites, trocar a senha, remover, com a pasta dele ou sem ela, e abrir a pasta do usuário na aba Arquivos; com `FTP_TLS_EXCECOES=sim`, dispensar um usuário do TLS e voltar a exigir |
+| Usuários | Um usuário por linha: pasta no host, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; com `FTP_TLS_EXCECOES=sim`, a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta, editar, para trocar a pasta e os limites e tirar um bloqueio, trocar a senha, remover, com a pasta dele ou sem ela, e abrir a pasta do usuário na aba Arquivos; com `FTP_TLS_EXCECOES=sim`, dispensar um usuário do TLS e voltar a exigir |
 | Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
 | Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
 | Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
@@ -131,10 +131,24 @@ Limites por usuário, no cartão **Limites** da tela **Editar**. Servem tanto pa
 | Taxa de envio | FTP | De 1 a 10.000.000 KB por segundo | Sem teto |
 | Horário de entrada | FTP e entrada dele no painel | Início e fim, em horas e minutos; pode passar da meia-noite (`22:00` às `06:00`) | Entra a qualquer hora |
 | Downloads ao mesmo tempo | Painel | De 1 a 8 | 2 |
+| Senhas erradas no FTP até o bloqueio | FTP | De 1 a 100; `0`: este usuário nunca é bloqueado | O padrão da stack, `FTP_BLOQUEIO_TENTATIVAS` (5) |
+| Minutos de bloqueio | FTP | De 1 a 1440 | O padrão da stack, `FTP_BLOQUEIO_MINUTOS` (15) |
 
 **Resultado esperado:** a lista de usuários volta com o aviso `Limites gravados` e a marca **limites** ao lado do nome; passando o mouse sobre ela, aparece cada limite que o usuário tem. Para tirar um limite, apague o campo e grave de novo.
 
+<a name="bloqueios"></a>
+
+**Bloqueio por tentativa.** O endereço que erra a senha de um usuário no FTP vezes demais fica bloqueado para aquele usuário, pelo tempo configurado: até lá, nem a senha certa entra dali. Os outros endereços, os outros usuários e a entrada dele no painel continuam como estavam. Para tirar o bloqueio antes do prazo:
+
+1. Na aba Usuários, o nome aparece com a marca **bloqueado**; passando o mouse sobre ela, aparecem os endereços.
+2. Clique em **Editar**. O cartão **Bloqueios** lista cada endereço, com as senhas erradas, a hora do bloqueio e até quando ele vale.
+3. Corrija a senha no equipamento e clique em **Desbloquear**.
+
+**Resultado esperado:** a lista de usuários volta com o aviso `Bloqueio removido. O usuário volta a poder entrar no FTP.`, sem a marca **bloqueado**, e a entrada seguinte do equipamento passa. O que conta e o que não conta como senha errada está em [Segurança](seguranca.md#bloqueio-por-tentativa).
+
 > ⚠️ **O que muda para o usuário:** fora do horário, o FTP recusa a entrada como recusa senha errada, e com todas as sessões dele ocupadas, responde que não aceita mais conexões do mesmo usuário. Nos dois casos ele também não entra no painel, porque é o FTP que confere a senha.
+
+> ⚠️ **Equipamento com a senha errada gravada:** ele tenta de novo sozinho, chega ao limite e fica bloqueado; se continuar tentando depois do prazo, é bloqueado outra vez. Corrija a senha no equipamento antes de desbloquear. Equipamentos que chegam ao FTP pelo mesmo endereço, com o mesmo usuário, são bloqueados juntos.
 
 > ⚠️ **Taxa de envio e arquivo pequeno:** com a taxa de envio definida, o servidor segura cada arquivo enviado por cerca de `256 ÷ taxa` segundos, além do tempo do envio. Com 50 KB por segundo, um arquivo de 1 KB leva 5 segundos; com 1.000, um quarto de segundo. Para equipamento que manda muitos arquivos pequenos, use uma taxa alta ou deixe em branco.
 
@@ -158,13 +172,14 @@ Limites por usuário, no cartão **Limites** da tela **Editar**. Servem tanto pa
 <details>
 <summary>Detalhe técnico — os limites por usuário</summary>
 
-- `POST /usuarios/limites` grava todos de uma vez, com o token CSRF da sessão e os campos `usuario`, `sessoes`, `download`, `envio`, `inicio`, `fim` e `baixar`. Campo em branco tira o limite. Valor fora da regra, início sem fim ou início igual ao fim respondem `400`, com a tela de volta e o que foi digitado; usuário que não existe e nome fora da regra, `404`. Nada é gravado pela metade.
-- **Quem guarda e quem aplica:** sessões, taxas e horário ficam na linha do usuário em `/auth/pureftpd.passwd`, gravados com `pure-pw usermod`, e quem os aplica é o `pure-ftpd`, a cada entrada. O limite de downloads pelo painel fica em `/auth/limites.lista` (`0600`), e quem o aplica é o painel. Os dois são gravados pelo `allsafe-ftp-user limites`, o mesmo comando do [`manage-user.sh`](../manage-user.sh).
+- `POST /usuarios/limites` grava todos de uma vez, com o token CSRF da sessão e os campos `usuario`, `sessoes`, `download`, `envio`, `inicio`, `fim`, `baixar`, `tentativas` e `minutos`. Campo em branco tira o limite. Valor fora da regra, início sem fim ou início igual ao fim respondem `400`, com a tela de volta e o que foi digitado; usuário que não existe e nome fora da regra, `404`. Nada é gravado pela metade.
+- **Quem guarda e quem aplica:** sessões, taxas e horário ficam na linha do usuário em `/auth/pureftpd.passwd`, gravados com `pure-pw usermod`, e quem os aplica é o `pure-ftpd`, a cada entrada. O limite de downloads pelo painel fica em `/auth/limites.lista` (`0600`), e quem o aplica é o painel. Os dois campos do bloqueio por tentativa ficam na mesma lista, e quem os aplica é o vigia do serviço `ftp`: [Scripts](scripts.md#vigia). Todos são gravados pelo `allsafe-ftp-user limites`, o mesmo comando do [`manage-user.sh`](../manage-user.sh).
 - **Horário:** vale no fuso do container, o da variável `TZ`. O `pure-pw` guarda as horas sem os zeros da esquerda (`08:00` às `18:00` fica `800-1800`); o painel e o `manage-user.sh` mostram sempre com quatro dígitos.
 - **Taxa de download no painel:** os downloads que o próprio usuário faz na tela Meus arquivos saem na taxa dele. Os que o administrador faz na aba Arquivos, não.
 - **Sessão do usuário no painel:** trocar um limite que fica no cadastro do FTP muda a linha dele, e as sessões dele no painel são encerradas no pedido seguinte. Trocar só o limite de downloads pelo painel não encerra nada e vale no download seguinte.
 - **Entrada recusada pelo limite:** fora do horário, o FTP responde `530`, e o painel, `401`, como para senha errada: conta como erro de entrada. Com as sessões ocupadas, o FTP responde `421` depois de conferir a senha, e o painel, `401`, com `entrada_falha conferencia=ftp_indisponivel` na auditoria.
 - **Usuário inicial:** os limites dele ficam de uma subida para a outra; o serviço `ftp` só reaplica a senha.
+- **Bloqueio:** mudar `tentativas` ou `minutos` tira os bloqueios que o usuário tem; gravar os outros limites, não. Trocar a senha dele e removê-lo também tiram. `POST /usuarios/desbloquear`, com o token CSRF da sessão e o campo `usuario`, tira todos os bloqueios do usuário de uma vez e grava `bloqueio_removido` na auditoria, com o administrador, o usuário e a quantidade de endereços; usuário que não existe e nome fora da regra respondem `404`. O painel só lê `/auth/bloqueios` para montar as telas: quem grava o bloqueio é o vigia, e quem o tira é o `allsafe-ftp-user desbloquear`, o mesmo comando do `manage-user.sh`. Para tirar o bloqueio de um endereço só, use o terminal: [Operação](operacao.md#usuarios).
 - Remover o usuário tira o nome dele da `limites.lista`: um usuário novo com o mesmo nome não herda o limite.
 - Cada gravação fica na auditoria como `limites_alterados`, com o administrador, o usuário e o valor de cada limite (`-` no que ficou em branco).
 
@@ -597,6 +612,7 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `recusa_papel` | Um usuário do FTP pediu uma tela ou um formulário de administração, com o usuário e o caminho pedido |
 | `usuario_criado` · `senha_trocada` · `pasta_trocada` · `usuario_removido` | Alteração de usuário do FTP, com o administrador que fez; a criação leva também a pasta do usuário, a troca de pasta, a nova e a anterior, e a remoção, a pasta, quando ela foi apagada junto |
 | `limites_alterados` | Limites de um usuário do FTP gravados, com o administrador, o usuário e o valor de cada limite; `-` no que ficou em branco |
+| `bloqueio_removido` | Um administrador tirou o bloqueio por tentativa de um usuário no FTP, com o administrador, o usuário e a quantidade de endereços desbloqueados |
 | `tls_dispensado` · `tls_exigido` | Um administrador dispensou um usuário do TLS · voltou a exigir; com o administrador e o usuário |
 | `pasta_criada` | Pasta criada pela aba Arquivos, com o administrador e o caminho |
 | `item_renomeado` · `item_apagado` | Arquivo ou pasta com o nome trocado · apagado, pela aba Arquivos ou junto com o usuário; com o administrador, o tipo e o caminho. O renomeado leva o caminho de antes e o de depois; o apagado, a quantidade de itens removidos, `completo=nao` quando o pedido parou no limite e `usuario=` quando a pasta saiu junto com o dono |
@@ -681,7 +697,7 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`conta_ftp.py`](../painel/conta_ftp.py) | Conta do usuário do FTP no painel: leitura do cadastro dele, conferência da senha no servidor FTP e os motivos que encerram a sessão |
 | [`aba_visao_geral.py`](../painel/aba_visao_geral.py) | Aba Visão geral |
 | [`limites.py`](../painel/limites.py) | Limites próprios de cada usuário do FTP: leitura do cadastro e da `limites.lista`, conferência do formulário e o resumo da lista |
-| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação com a pasta escolhida, edição (pasta e limites), troca de senha, remoção e a dispensa do TLS por usuário |
+| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação com a pasta escolhida, edição (pasta, limites e bloqueios), troca de senha, remoção e a dispensa do TLS por usuário |
 | [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta |
 | [`aba_meus_arquivos.py`](../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação e download dentro da pasta dele |
 | [`aba_administradores.py`](../painel/aba_administradores.py) | Aba Administradores: lista, criação, troca de senha, troca de nome e remoção |

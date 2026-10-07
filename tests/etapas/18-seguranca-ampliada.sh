@@ -217,6 +217,9 @@ e_ftp="$(escutas "$FTP")"; e_painel="$(escutas "$PAINEL")"; e_nginx="$(escutas "
 caso $? seguranca 79 "Cadastro fora do alcance dos outros containers e do host" "montagens do nginx: $m_nginx· do ftp: $m_ftp· do painel: $m_painel· pastas /auth, /painel, /data e /run/secrets dentro do nginx: $ve_nginx · /painel e /nginx dentro do ftp: $ve_ftp · $modos_ftp· $modos_painel· formato das senhas no cadastro do FTP: $tipos_ftp· no dos administradores: $tipos_painel· $no_host · portas em escuta (fora o DNS interno do Docker): ftp $e_ftp· painel $e_painel· nginx $e_nginx· portas publicadas pelo painel: $publica"
 
 # ------------------------------------------------------------------ senha aleatória e exaustão: FTP
+# Este caso mede o custo da conferência da senha. O bloqueio por tentativa (etapa 24) barraria a rajada na
+# quinta senha errada e, com ela, o login certo do mesmo endereço: aqui ele fica desligado para os dois usuários.
+mu limites "$USUARIO" "" tentativas=0; r_sem_bloqueio=$?
 limite="$(docker exec "$FTP" printenv FTP_MAX_CLIENTS_PER_IP)"; rajada=$((limite - 1)); pids=()
 s_certa="$(tenta "$USUARIO" "$W/inicial.senha")"
 : > "$W/r18.rajada"; t0="$(date +%s%N)"
@@ -232,15 +235,16 @@ for i in 1 2 3; do
 done
 depois="$(tenta "$USUARIO" "$W/inicial.senha")"
 # A mesma rajada em um usuário com a senha gravada como até a 0.18.0, para a comparação (só evidência).
-antigo antigo18r "$W/u18b.senha"; pids=()
+antigo antigo18r "$W/u18b.senha"; mu limites antigo18r "" tentativas=0; pids=()
 for ((i = 1; i <= rajada; i++)); do tenta antigo18r "$W/r18.s$i" > /dev/null & pids+=($!); done
 sleep 0.3; no_meio_antigo="$(tenta antigo18r "$W/u18b.senha")"
 wait "${pids[@]}"; mu del antigo18r
+mu limites "$USUARIO" "" tentativas=; r_com_bloqueio=$?; sobra18="$(docker exec "$FTP" sh -c 'cat /auth/limites.lista 2>/dev/null; ls /auth/bloqueios' | grep -c .)"
 s_ftp="$(saude "$FTP")"
-[[ "$s_certa" == "0 226 "* && "$recusadas" == "$rajada" && "$entraram" == 0 && "$no_meio" == "0 226 "* && "$(tempo_de "$no_meio")" -lt 25 && "$depois" == "0 226 "* && "$s_ftp" == "healthy " ]]
-caso $? seguranca 71 "Senha aleatória no FTP não entra nem segura quem tem a senha" "login certo sozinho: $(dur "$s_certa") · $rajada senhas aleatórias ao mesmo tempo no usuário $USUARIO, de um só endereço (FTP_MAX_CLIENTS_PER_IP=$limite): $recusadas recusadas com 530, em $(seg "$t_rajada") · login certo no meio da rajada: ${no_meio% *}, em $(dur "$no_meio") (limite do caso: 25 s) · mais 6 senhas aleatórias, uma por vez, com nome que existe e nome que não existe: entraram $entraram · login certo depois: ${depois% *}, em $(dur "$depois") · a mesma rajada em um usuário com a senha gravada como até a 0.18.0 (m=8192): login certo no meio em $(dur "$no_meio_antigo") · FTP: $s_ftp"
+[[ "$r_sem_bloqueio" == 0 && "$r_com_bloqueio" == 0 && "$sobra18" == 0 && "$s_certa" == "0 226 "* && "$recusadas" == "$rajada" && "$entraram" == 0 && "$no_meio" == "0 226 "* && "$(tempo_de "$no_meio")" -lt 25 && "$depois" == "0 226 "* && "$s_ftp" == "healthy " ]]
+caso $? seguranca 71 "Senha aleatória no FTP não entra nem segura quem tem a senha" "bloqueio por tentativa desligado para o usuário durante a medida (tentativas=0, saída $r_sem_bloqueio) e devolvido ao padrão no fim (saída $r_com_bloqueio; limites próprios e bloqueios que sobraram: $sobra18) · login certo sozinho: $(dur "$s_certa") · $rajada senhas aleatórias ao mesmo tempo no usuário $USUARIO, de um só endereço (FTP_MAX_CLIENTS_PER_IP=$limite): $recusadas recusadas com 530, em $(seg "$t_rajada") · login certo no meio da rajada: ${no_meio% *}, em $(dur "$no_meio") (limite do caso: 25 s) · mais 6 senhas aleatórias, uma por vez, com nome que existe e nome que não existe: entraram $entraram · login certo depois: ${depois% *}, em $(dur "$depois") · a mesma rajada em um usuário com a senha gravada como até a 0.18.0 (m=8192): login certo no meio em $(dur "$no_meio_antigo") · FTP: $s_ftp"
 achado seguranca "Tempo de recusa no FTP" "Recusa de senha errada, três medidas de cada: ${ev_existe%, } para um nome que existe e ${ev_falta%, } para um nome que não existe. O pure-ftpd só confere a senha (argon2id) quando o nome está no cadastro, e a espera que ele faz antes de recusar varia de uma tentativa para a outra: a diferença entre os dois casos fica menor que essa variação, mas não é zero, e quem repete a medida muitas vezes pode chegar a saber se um nome existe. O que protege a conta é a senha, de 12 caracteres ou mais, e a rede: FTP só para os endereços que precisam, no firewall do host."
-achado seguranca "Senha errada no FTP" "O pure-ftpd não bloqueia endereço por tentativa: cada senha errada custa ao atacante a espera do servidor (${ev_existe%%,*}) e uma das $limite sessões que o endereço dele pode abrir. Com a senha gravada como até a 0.18.0, $rajada tentativas ao mesmo tempo seguraram o login certo por $(dur "$no_meio_antigo") nesta máquina; com o custo atual, $(dur "$no_meio")."
+achado seguranca "Senha errada no FTP" "O pure-ftpd não bloqueia por tentativa; quem bloqueia é o vigia da stack, que no padrão recusa o usuário para o endereço que errou 5 senhas (casos da etapa do bloqueio). Com o bloqueio desligado para o usuário, como nesta medida, cada senha errada custa ao atacante a espera do servidor (${ev_existe%%,*}) e uma das $limite sessões que o endereço dele pode abrir. Com a senha gravada como até a 0.18.0, $rajada tentativas ao mesmo tempo seguraram o login certo por $(dur "$no_meio_antigo") nesta máquina; com o custo atual, $(dur "$no_meio")."
 
 # ------------------------------------------------------------------ exaustão: rajada de conexões no FTP
 abertas=(); aceitas=0; negadas=0; ultima=""; antes_r="$(reinicios)"; sleep 2

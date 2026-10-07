@@ -47,6 +47,11 @@ if [[ "${FTP_TLS_EXCECOES:-nao}" == sim ]]; then
     die "FTP_TLS_EXCECOES=sim não combina com REDE_PERMITIR_IP_PUBLICO=sim"
   fi
 fi
+# A mesma regra do deploy.sh e do serviço ftp: o painel mostra e aplica o padrão do bloqueio por tentativa.
+[[ "${FTP_BLOQUEIO_TENTATIVAS:-5}" =~ ^(0|[1-9][0-9]{0,2})$ ]] && (( ${FTP_BLOQUEIO_TENTATIVAS:-5} <= 100 )) \
+  || die "FTP_BLOQUEIO_TENTATIVAS deve ficar entre 0 e 100 (0 desliga o bloqueio por tentativa)"
+[[ "${FTP_BLOQUEIO_MINUTOS:-15}" =~ ^[1-9][0-9]{0,3}$ ]] && (( ${FTP_BLOQUEIO_MINUTOS:-15} <= 1440 )) \
+  || die "FTP_BLOQUEIO_MINUTOS deve ficar entre 1 e 1440"
 cn_ip=false
 if [[ "$PAINEL_CERT_CN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   cn_ip=true

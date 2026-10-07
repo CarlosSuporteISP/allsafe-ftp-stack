@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-O backup de um equipamento de rede traz senhas e a configuração inteira da rede, então o caminho até o servidor é protegido em camadas: a porta só escuta no IP escolhido, a conexão tem de ser criptografada (a exceção, para equipamento antigo, é ligada à mão e fica avisada), cada usuário fica preso na própria pasta e o container roda com o mínimo de permissões. Se uma camada falhar, as outras continuam valendo. O painel web segue a mesma ideia: fica atrás de um nginx, só HTTPS, só rede interna, usuário e senha para cada administrador e sessão curta.
+O backup de um equipamento de rede traz senhas e a configuração inteira da rede, então o caminho até o servidor é protegido em camadas: a porta só escuta no IP escolhido, a conexão tem de ser criptografada (a exceção, para equipamento antigo, é ligada à mão e fica avisada), o endereço que erra a senha de um usuário vezes demais fica bloqueado para ele, cada usuário fica preso na própria pasta e o container roda com o mínimo de permissões. Se uma camada falhar, as outras continuam valendo. O painel web segue a mesma ideia: fica atrás de um nginx, só HTTPS, só rede interna, usuário e senha para cada administrador e sessão curta.
 
 <!-- diagrama: diagramas/seguranca-diagrama.mmd -->
 ```mermaid
@@ -30,7 +30,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [FTP sem TLS](#ftp-sem-tls) · [TLS por usuário](#tls-por-usuario) · [Antes de produção](#o-que-endurecer-antes-de-producao) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Sem senha, senha aleatória, exaustão e acesso direto ao cadastro](#sem-senha-e-exaustao) · [Custo das senhas do FTP](#custo-das-senhas) · [Contato de segurança e robôs de busca](#contato-de-seguranca) · [Conformidade com as RFCs](#conformidade-rfc) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
+[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [FTP sem TLS](#ftp-sem-tls) · [TLS por usuário](#tls-por-usuario) · [Bloqueio por tentativa](#bloqueio-por-tentativa) · [Antes de produção](#o-que-endurecer-antes-de-producao) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Sem senha, senha aleatória, exaustão e acesso direto ao cadastro](#sem-senha-e-exaustao) · [Custo das senhas do FTP](#custo-das-senhas) · [Contato de segurança e robôs de busca](#contato-de-seguranca) · [Conformidade com as RFCs](#conformidade-rfc) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
 
 </details>
 
@@ -282,7 +282,7 @@ flowchart LR
 |---|---|---|
 | 1 | Equipamento de rede ➜ Pure-FTPd | O equipamento conecta na porta `21/tcp` e envia usuário e senha, com ou sem TLS |
 | 2 | Pure-FTPd ➜ pure-authd | Antes de conferir a senha, o servidor pergunta ao `pure-authd` se a entrada pode seguir |
-| 3 | pure-authd ➜ sessão com TLS? | O `pure-authd` chama o porteiro (`allsafe-ftp-porteiro-tls`), que olha se a sessão está criptografada |
+| 3 | pure-authd ➜ sessão com TLS? | O `pure-authd` chama o porteiro (`allsafe-ftp-porteiro`), que olha se a sessão está criptografada |
 | 4a | sessão com TLS? ➜ usuário e senha conferem? | Sim: segue para a conferência da senha, qualquer que seja o usuário |
 | 4b | sessão com TLS? ➜ usuário dispensado? | Não: o porteiro procura o nome na lista dos dispensados |
 | 5a | usuário dispensado? ➜ usuário e senha conferem? | Sim: segue para a conferência da senha |
@@ -303,14 +303,175 @@ flowchart LR
 <details>
 <summary>Detalhe técnico — como a exceção é aplicada</summary>
 
-- **Dois processos:** com `sim`, o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) sobe o `pure-authd -s /run/pure-authd.sock -r /usr/local/sbin/allsafe-ftp-porteiro-tls` e o `pure-ftpd` com `-l extauth:/run/pure-authd.sock -l puredb:/auth/pureftpd.pdb -Y 1`. O `-Y 1` faz o servidor aceitar sessão com e sem TLS; quem decide a entrada sem TLS é o porteiro.
-- **O porteiro não confere senha:** o [`ftp/porteiro-tls.sh`](../ftp/porteiro-tls.sh) responde `auth_ok:0` ("não é comigo") quando a sessão tem TLS ou quando o nome está na lista, e o `pure-ftpd` segue para o PureDB, que confere a senha como sempre. Nos outros casos responde `auth_ok:-1`, a recusa definitiva. A senha chega a ele em variável de ambiente e não é lida, gravada nem registrada.
+- **Sempre no ar:** o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) sobe o `pure-authd -s /run/pure-authd.sock -r /usr/local/sbin/allsafe-ftp-porteiro` e o `pure-ftpd` com `-l extauth:/run/pure-authd.sock -l puredb:/auth/pureftpd.pdb`, com a exceção ligada ou não, porque o mesmo porteiro aplica o [bloqueio por tentativa](#bloqueio-por-tentativa). O que o `sim` muda é o `-Y 1`, que faz o servidor aceitar sessão com e sem TLS, e a marca `/run/allsafe/tls-por-usuario`, que liga a regra do TLS no porteiro. Com `nao`, o `-Y` é o do `FTP_TLS_MODE` e a sessão sem TLS é recusada pelo próprio `pure-ftpd`.
+- **O porteiro não confere senha:** o [`ftp/porteiro.sh`](../ftp/porteiro.sh) responde `auth_ok:0` ("não é comigo") quando a sessão tem TLS ou quando o nome está na lista, e o `pure-ftpd` segue para o PureDB, que confere a senha como sempre. Nos outros casos responde `auth_ok:-1`, a recusa definitiva. A senha chega a ele em variável de ambiente e não é lida, gravada nem registrada.
 - **A lista:** `/auth/sem-tls.lista` (`DATA_DIR/auth` no host), `0600`, do `root`, um nome por linha. Só o `allsafe-ftp-user` grava, com a mesma trava do cadastro de usuários e por troca de nome do arquivo, para o porteiro nunca ler a lista pela metade. É lida a cada entrada: a mudança vale na entrada seguinte, sem reiniciar.
-- **Falha fechada:** sem o `pure-authd`, o `pure-ftpd` cairia direto no PureDB e aceitaria todos sem TLS. Por isso o entrypoint vigia os dois processos: se um sair, escreve `FALHA: o pure-authd saiu: o container encerra para ninguém entrar sem a conferência do TLS por usuário` (ou `o pure-ftpd saiu`), encerra com código `1`, e o `restart: unless-stopped` sobe o container de novo, com os dois. O healthcheck só responde saudável com o soquete do `pure-authd` aberto.
+- **Falha fechada:** sem o `pure-authd`, o `pure-ftpd` cairia direto no PureDB e aceitaria todos sem TLS. Por isso o entrypoint vigia os processos: se um sair, escreve `FALHA: o pure-authd saiu: o container encerra para ninguém entrar sem a conferência do porteiro` (ou `o vigia saiu`, ou `o pure-ftpd saiu`), encerra com código `1`, e o `restart: unless-stopped` sobe o container de novo, com todos. O healthcheck só responde saudável com o soquete do `pure-authd` aberto.
+- **A recusa por TLS não conta como senha errada:** o porteiro deixa uma marca em `/run/allsafe/recusa/`, e o vigia do bloqueio por tentativa ignora a falha que vem logo depois dela. Equipamento configurado sem TLS não bloqueia o próprio usuário.
 - **Combinações recusadas** pelo [`deploy.sh`](../deploy.sh) e pelos containers do FTP e do painel: valor fora de `nao` e de `sim`; `sim` com `FTP_TLS_MODE` diferente de `2`; `sim` com `REDE_PERMITIR_IP_PUBLICO=sim`.
 - **Quem altera a lista:** só um administrador, pelo painel, com token CSRF e origem conferidos, ou quem tem acesso ao Docker do servidor, pelo `manage-user.sh`. Para o usuário do FTP que entra no painel, a tela responde `404`. Com a exceção desligada, a tela também responde `404`.
 - O painel confere a senha do usuário do FTP em TLS, pela rede interna da stack, com ou sem a exceção: a dispensa não muda a [entrada dele no painel](painel.md#usuario-ftp).
 - As recusas, a queda do `pure-authd` e as combinações são conferidas pela [bateria de testes](scripts.md#testar).
+
+</details>
+
+---
+
+<a name="bloqueio-por-tentativa"></a>
+
+## 🚫 Bloqueio por tentativa no FTP
+
+Quando um mesmo endereço erra a senha de um usuário vezes demais, o FTP passa a recusar aquele usuário para aquele endereço, mesmo com a senha certa, até o prazo acabar. A stack sai da instalação com o bloqueio ligado: 5 senhas erradas, 15 minutos. O limite de cada usuário é ajustado pelo administrador no painel, tanto para a conta de um equipamento quanto para a de uma pessoa.
+
+| O que ajustar | Onde | Valor | Padrão |
+|---|---|---|---|
+| Senhas erradas até o bloqueio, para todos | `FTP_BLOQUEIO_TENTATIVAS`, no `.env` | `0` a `100`; `0` desliga | `5` |
+| Minutos de bloqueio, para todos | `FTP_BLOQUEIO_MINUTOS`, no `.env` | `1` a `1440` | `15` |
+| Senhas erradas até o bloqueio, de um usuário | Painel, Usuários ➜ **Editar**, cartão **Limites** | `0` a `100`; `0`: o usuário nunca é bloqueado | Em branco: o da stack |
+| Minutos de bloqueio, de um usuário | Painel, Usuários ➜ **Editar**, cartão **Limites** | `1` a `1440` | Em branco: o da stack |
+
+1. Para mudar o padrão de todos, edite as duas variáveis no `.env` e reaplique:
+
+   ```bash
+   ./deploy.sh
+   ```
+
+2. Para um usuário, abra Usuários ➜ **Editar**, preencha **Senhas erradas no FTP até o bloqueio** e **Minutos de bloqueio** e grave. Pelo terminal, o mesmo:
+
+   ```bash
+   ./manage-user.sh limites <usuario> tentativas=3 minutos=30
+   ```
+
+3. Para ver quem está bloqueado, abra a aba Usuários, que marca a linha com **bloqueado**, ou rode:
+
+   ```bash
+   ./manage-user.sh bloqueios
+   ```
+
+4. Para desbloquear antes do prazo, corrija a senha no equipamento e clique em **Desbloquear**, no cartão **Bloqueios** da tela **Editar**. Pelo terminal, o mesmo, para todos os endereços do usuário ou para um só:
+
+   ```bash
+   ./manage-user.sh desbloquear <usuario>
+   ./manage-user.sh desbloquear <usuario> <origem>
+   ```
+
+**Resultado esperado:** o `manage-user.sh bloqueios` responde uma linha por bloqueio, `usuario=<nome> origem=<ip> senhas_erradas=<n> desde=<data hora> ate=<data hora>`, ou `Nenhum bloqueio em vigor.`; o `desbloquear` responde `Usuario <nome> desbloqueado (<n> endereco(s)): vale na proxima entrada no FTP.`; a alteração do limite e o desbloqueio valem na entrada seguinte, sem reiniciar nada.
+
+| Situação | O que acontece |
+|---|---|
+| Senha errada, abaixo do limite | `530`, e a tentativa é somada às outras do mesmo endereço para aquele usuário |
+| Senha errada que completa o limite | `530`, e o usuário fica bloqueado para aquele endereço: a senha certa também recebe `530` até o fim do prazo |
+| Entrada certa antes do limite | Entra, e a contagem daquele endereço para aquele usuário volta a zero |
+| O mesmo usuário, de outro endereço | Entra: o bloqueio vale só para o endereço que errou |
+| Outro usuário, do mesmo endereço | Entra: o bloqueio vale só para o usuário que teve a senha errada |
+| O usuário bloqueado no FTP entra no painel | Entra: o painel tem o limite de tentativas dele, por endereço |
+| Fim do prazo | O bloqueio sai sozinho, e a contagem recomeça do zero |
+| Senha do usuário trocada | Os bloqueios dele saem |
+| Limite próprio do usuário alterado | Os bloqueios dele saem; gravar os mesmos valores não muda nada |
+| Usuário removido e criado de novo com o mesmo nome | Não herda o bloqueio nem o limite |
+| O container do FTP reinicia ou é recriado | O bloqueio continua valendo até o prazo; a contagem que ainda não tinha chegado ao limite recomeça |
+| Entrada fora do [horário do usuário](painel.md#limites) | Conta como senha errada: o servidor responde do mesmo jeito nos dois casos |
+| Sessão sem TLS recusada, nome que não está no cadastro, tentativa feita durante o bloqueio | Não contam |
+| Senha do usuário do FTP errada na tela do painel | Não conta aqui: conta no limite de tentativas do painel |
+
+> ⚠️ **Mesmo endereço, mesmo usuário:** equipamentos que usam o mesmo usuário e chegam ao servidor pelo mesmo endereço, atrás de um roteador que troca o endereço de origem, são bloqueados juntos. Dê a cada equipamento o usuário dele: o erro de um não segura o outro.
+
+> ⚠️ **Limite:** o bloqueio conta as senhas erradas de um endereço para um usuário. Quem tenta poucas senhas em muitos usuários, abaixo do limite de cada um, não é bloqueado: contra isso valem a espera de 3 a 6 segundos de cada recusa, o limite de sessões por endereço e o firewall do host, que deve liberar a porta `21/tcp` só para as origens de backup. O bloqueio freia a adivinhação; quem autentica continua sendo a senha.
+
+Enquanto houver bloqueio, ele aparece em:
+
+| Onde | O que aparece |
+|---|---|
+| Registro do container (`docker compose logs ftp`) | A cada subida, `vigia: pronto:` com o limite da stack; a cada senha errada, `vigia: entrada recusada: usuario=<nome> origem=<ip> senhas_erradas=<n> de <limite>`; no bloqueio, `vigia: entrada bloqueada: usuario=<nome> origem=<ip> senhas_erradas=<n> minutos=<m>`; a cada tentativa durante o bloqueio, `vigia: entrada recusada pelo bloqueio`; a cada arquivo enviado, baixado, renomeado ou apagado pelo FTP, `vigia: envio:`, `vigia: download:`, `vigia: renomeado:` e `vigia: apagado:`, com o usuário, o endereço e o arquivo |
+| Painel, aba Usuários | A marca **bloqueado** na linha do usuário, com os endereços ao passar o mouse; a marca **limites** mostra o limite próprio |
+| Painel, tela Editar | O cartão **Bloqueios**, com a origem, as senhas erradas, o início e o fim de cada bloqueio, e o botão **Desbloquear** |
+| Painel, aba Segurança | O item `Bloqueio por tentativa no FTP`, com o limite da stack e os usuários bloqueados agora |
+| Painel, aba Atividade | `Bloqueio do usuário no FTP removido` e `Limites do usuário alterados`, com o administrador que fez |
+
+<details>
+<summary>Fluxograma da entrada com o bloqueio por tentativa, com a sequência escrita — clique para expandir</summary>
+
+<!-- diagrama: diagramas/bloqueio-por-tentativa-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origem"]
+        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
+    end
+    subgraph ENTRADA["Entrada"]
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+        authd@{ shape: rect, label: "pure-authd<br>chama o porteiro" }
+        preso@{ shape: diam, label: "usuário bloqueado<br>para o endereço?" }
+        bloqueios@{ shape: docs, label: "bloqueios<br>/auth, um por usuário e endereço" }
+    end
+    subgraph AUTH["Autenticação"]
+        login@{ shape: diam, label: "usuário e senha<br>conferem?" }
+        puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
+        vigia@{ shape: rect, label: "vigia<br>conta as senhas erradas" }
+        limite@{ shape: diam, label: "chegou ao limite<br>do usuário?" }
+        limites@{ shape: doc, label: "limites.lista<br>limite próprio do usuário" }
+    end
+    subgraph RESULTADO["Resultado"]
+        sessao@{ shape: stadium, label: "sessão em chroot<br>presa na pasta" }
+        recusa@{ shape: stadium, label: "530<br>entrada recusada" }
+    end
+
+    equip -- "1 · conecta e envia usuário e senha, TCP 21" --> ftp
+    ftp -- "2 · pergunta antes de conferir a senha" --> authd
+    authd -- "3 · porteiro: há bloqueio valendo?" --> preso
+    preso -- "4a · sim: recusa definitiva" --> recusa
+    preso -- "4b · não: segue" --> login
+    login -- "5a · sim: abre a sessão" --> sessao
+    login -- "5b · não: avisa a senha errada" --> vigia
+    vigia -- "6 · soma as senhas erradas do endereço" --> limite
+    limite -- "7a · sim: recusa e bloqueia" --> recusa
+    limite -- "7b · não: só recusa" --> recusa
+    preso -. "lê" .-> bloqueios
+    login -. "consulta o usuário" .-> puredb
+    limite -. "lê" .-> limites
+    limite -. "grava o bloqueio" .-> bloqueios
+```
+
+<sub>Nível 2 · Mapa · [fonte](diagramas/)</sub>
+
+| Nº | De ➜ Para | O que acontece |
+|---|---|---|
+| 1 | Equipamento de rede ➜ Pure-FTPd | O equipamento conecta na porta `21/tcp` e envia usuário e senha |
+| 2 | Pure-FTPd ➜ pure-authd | Antes de conferir a senha, o servidor pergunta ao `pure-authd` se a entrada pode seguir |
+| 3 | pure-authd ➜ usuário bloqueado para o endereço? | O `pure-authd` chama o porteiro (`allsafe-ftp-porteiro`), que procura um bloqueio daquele usuário para aquele endereço, ainda dentro do prazo |
+| 4a | usuário bloqueado para o endereço? ➜ 530 | Sim: recusa definitiva, com a senha certa ou errada |
+| 4b | usuário bloqueado para o endereço? ➜ usuário e senha conferem? | Não: segue para a conferência da senha |
+| 5a | usuário e senha conferem? ➜ sessão em chroot | Sim: a sessão abre, presa na pasta do usuário, e a contagem daquele endereço volta a zero |
+| 5b | usuário e senha conferem? ➜ vigia | Não: o servidor registra a senha errada, e o vigia (`allsafe-ftp-vigia`) recebe o aviso, com o usuário e o endereço |
+| 6 | vigia ➜ chegou ao limite do usuário? | O vigia soma as senhas erradas daquele endereço para aquele usuário, dentro do prazo, e compara com o limite |
+| 7a | chegou ao limite do usuário? ➜ 530 | Sim: a entrada é recusada e o vigia grava o bloqueio, que vale a partir da tentativa seguinte |
+| 7b | chegou ao limite do usuário? ➜ 530 | Não: a entrada é recusada com `530 Login authentication failed`, e a contagem fica guardada |
+
+**Apoio**
+
+| Quem | Usa | Como |
+|---|---|---|
+| usuário bloqueado para o endereço? | bloqueios (`DATA_DIR/auth/bloqueios`) | lê a cada entrada |
+| usuário e senha conferem? | PureDB | consulta o usuário |
+| chegou ao limite do usuário? | `limites.lista` (`DATA_DIR/auth`) | lê o limite próprio do usuário; sem ele, vale o da stack |
+| chegou ao limite do usuário? | bloqueios (`DATA_DIR/auth/bloqueios`) | grava o bloqueio, com o prazo |
+
+</details>
+
+<details>
+<summary>Detalhe técnico — como o bloqueio é aplicado</summary>
+
+- **Dois papéis:** o vigia conta e grava; o porteiro lê e recusa. O [`ftp/vigia.pl`](../ftp/vigia.pl), instalado como `/usr/local/sbin/allsafe-ftp-vigia`, escuta em `/dev/log` o que o `pure-ftpd` registra, porque o servidor só avisa da senha errada por ali. O [`ftp/porteiro.sh`](../ftp/porteiro.sh) é chamado pelo `pure-authd` a cada entrada, antes da conferência da senha. Nenhum dos dois recebe a senha para conferir: o aviso traz só o nome e o endereço, e o porteiro não lê a variável em que ela chega.
+- **O bloqueio é um arquivo:** `/auth/bloqueios/<usuario>@<endereco>` (`DATA_DIR/auth/bloqueios` no host), `0600`, do `root`, em pasta `0700`, com uma linha: até quando vale, desde quando e quantas senhas erradas, em segundos desde 1970. É a única memória do bloqueio: por isso ele atravessa o reinício, e apagar o arquivo desbloqueia na entrada seguinte. O vigia grava por troca de nome do arquivo, para o porteiro nunca ler pela metade.
+- **Arquivo inválido não bloqueia:** vale só o arquivo comum cuja primeira linha começa por um número de até 12 dígitos maior que a hora atual. Vencido, vazio, com texto ou link simbólico, não bloqueia, e o vigia o apaga na limpeza de minuto em minuto.
+- **Janela de contagem:** as senhas erradas se somam enquanto a mais antiga tiver menos que os minutos de bloqueio do usuário. A contagem fica na memória do vigia, até 10.000 pares de usuário e endereço; os bloqueios gravados vão até 4.096. Acima desses tetos o vigia registra `AVISO` e segue.
+- **Limite próprio:** `tentativas` e `minutos` ficam na linha do usuário em `/auth/limites.lista` (`0600`), gravados pelo `allsafe-ftp-user limites`, o mesmo comando do painel e do [`manage-user.sh`](../manage-user.sh). O vigia relê o cadastro e a lista quando o arquivo muda.
+- **O que não conta:** a tentativa vinda da rede interna da stack, que é a conferência de senha feita pelo painel e tem o limite de tentativas dele; a recusa do porteiro por falta de TLS, que ele marca em `/run/allsafe/recusa/`; a tentativa feita durante o bloqueio; o nome que não está no cadastro e o nome fora da regra, que não viram arquivo nem contagem.
+- **Rede interna:** são as redes ligadas direto ao container, lidas de `/proc/net/route` na subida, menos o endereço de saída, por onde chegam os clientes do próprio servidor, e mais `127.0.0.0/8`.
+- **Falha fechada:** o entrypoint vigia o `pure-ftpd`, o `pure-authd` e o vigia. Se um sair, escreve `FALHA: o <processo> saiu: o container encerra para ninguém entrar sem a conferência do porteiro`, encerra com código `1`, e o `restart: unless-stopped` sobe o container de novo. O healthcheck só responde saudável com o soquete do `pure-authd` e o `/dev/log` abertos.
+- **Quem desbloqueia e quem altera o limite:** só um administrador, pelo painel (`POST /usuarios/desbloquear` e `POST /usuarios/limites`), com token CSRF e origem conferidos, ou quem tem acesso ao Docker do servidor, pelo `manage-user.sh`. Para o usuário do FTP que entra no painel, as duas telas respondem `404`. O desbloqueio fica na auditoria como `bloqueio_removido`, com o administrador, o usuário e a quantidade de endereços.
+- **Sem pacote novo:** o vigia usa só o `perl-base`, que já vem na imagem base, e o container continua com `read_only` e `cap_drop: ALL`.
+- O bloqueio, o desbloqueio, o vencimento, o reinício e as tentativas de burlar são conferidos pela [bateria de testes](scripts.md#testar), em [`tests/etapas/24-bloqueio.sh`](../tests/etapas/24-bloqueio.sh).
 
 </details>
 
@@ -323,7 +484,7 @@ flowchart LR
 1. **Certificado real** no lugar do autoassinado: [Operação](operacao.md#certificado-real-de-producao).
 2. `FTP_BIND_IP` com o IP **privado** dedicado e **regra no firewall** do host liberando só as origens de backup: [rede privada](#rede-privada).
 3. **Painel:** trocar a senha inicial ([Segredos](segredos.md#senha-do-painel)), reduzir `PAINEL_REDES_PERMITIDAS` à rede de administração e liberar a porta do painel no firewall só para ela. Em `PAINEL_BIND_IP=127.0.0.1` o painel só abre no próprio servidor.
-4. `fail2ban` no host lendo o log CLF do container (`docker logs allsafe-ftp`).
+4. Rever o [bloqueio por tentativa](#bloqueio-por-tentativa) do FTP: o padrão da stack e o limite próprio dos usuários que precisam de outro.
 5. Rever `FTP_MAX_CLIENTS` e a faixa passiva conforme o número real de equipamentos: [Perfis](perfis.md). Depois de mudar o porte, ou de atualizar uma instalação anterior à `0.18.1`, trocar a senha dos usuários que a aba Segurança lista em `Custo das senhas do FTP`: [Custo das senhas do FTP](#custo-das-senhas).
 6. Cópia de segurança agendada e levada para fora do servidor: [Backup e restauração](backup.md#automatica).
 7. Conferir que `FTP_TLS_MODE` está em `2` ou `3`. Se um equipamento antigo não falar TLS, siga antes [FTP sem TLS](#ftp-sem-tls) e prefira dispensar só o usuário dele: [TLS por usuário](#tls-por-usuario).
@@ -365,12 +526,15 @@ flowchart LR
 | 23 | Leitura do cadastro das senhas sem passar pela entrada (pela web, pelo FTP, por outro container, pelo host) | O cadastro do FTP e o dos administradores guardam só hash (`argon2id` e `scrypt`), em pastas do `root` com modo `0750` e `0700`, fora das pastas dos usuários e fora do que o nginx enxerga; nenhuma rota do painel entrega esses arquivos e nenhuma tela mostra hash; o `chroot` não deixa o usuário do FTP chegar a eles: [o que a bateria tenta](#sem-senha-e-exaustao) |
 | 24 | Rajada de senhas erradas no FTP para segurar a entrada de quem tem a senha | Custo do hash proporcional ao porte (`pure-pw -C FTP_MAX_CLIENTS`), limite de sessões por endereço e espera de 3 a 6 segundos em cada recusa: [Custo das senhas do FTP](#custo-das-senhas) |
 | 25 | Apagar ou renomear, pelo painel, o que está fora das pastas dos dados, ou apagar backup com um navegador esquecido aberto ou por pedido forjado | O caminho passa pelas mesmas conferências da leitura (`400` para `..`, caminho absoluto e byte nulo; `403` por dentro de link simbólico) e a ação é feita em relação à pasta já aberta. O apagamento não segue link: o link sai, o destino fica. Renomear não muda o item de pasta nem substitui outro. Apagar pede a caixa de confirmação e a senha atual do administrador, além da sessão, do token do formulário e do `Origin`; a senha errada conta para o bloqueio do endereço. A pasta de um usuário do FTP só sai junto com ele. O usuário do FTP não tem essas rotas (`404`) |
+| 26 | Adivinhação da senha de um usuário pelo FTP, ou senhas erradas de propósito para tirar a entrada dele | [Bloqueio por tentativa](#bloqueio-por-tentativa): 5 senhas erradas do mesmo endereço em 15 minutos bloqueiam o usuário para aquele endereço, com limite próprio por usuário no painel. O bloqueio vale só para o endereço que errou: o equipamento que chega de outro endereço continua entrando. Nome que não está no cadastro não vira contagem nem arquivo, e o bloqueio inválido ou vencido não bloqueia. Se o processo que conta ou o que recusa parar, o container do FTP encerra em vez de seguir sem o bloqueio |
 
 > ⚠️ **Limite da ameaça nº 1:** no modo `2`, o conteúdo do arquivo só é criptografado se o cliente pedir proteção do canal de dados (`PROT P`). Um equipamento que negocia TLS no login e envia os dados sem proteção é aceito. Só o modo `3` recusa esse caso. A troca do padrão está registrada no plano do projeto.
 
 > ⚠️ **Limite da ameaça nº 22:** com a exceção ligada, o equipamento de um usuário não dispensado que esteja configurado sem TLS manda a senha em texto puro antes de ser recusado. A stack recusa a entrada e registra o usuário e a origem; a senha tem de ser trocada.
 
-**Fora de escopo:** proteção de rede (faça ACL no host ou na borda), limitação de tentativas de força bruta **no FTP** (use `fail2ban` no host lendo os logs CLF; o painel tem limite próprio) e antivírus de conteúdo.
+> ⚠️ **Limite da ameaça nº 26:** o bloqueio é por usuário e por endereço. Poucas senhas em muitos usuários, abaixo do limite de cada um, não são bloqueadas pela stack: o firewall do host deve liberar a porta `21/tcp` só para as origens de backup.
+
+**Fora de escopo:** proteção de rede (faça ACL no host ou na borda) e antivírus de conteúdo.
 
 ---
 
@@ -411,11 +575,12 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 | Auditoria | Cada entrada, saída, download de arquivo, troca de nome, apagamento e mudança de usuário ou de administrador vai para `DATA_DIR/painel/auditoria.log`, com quem fez, administrador ou usuário do FTP, e sem senha |
 | Usuário inicial preservado | O `FTP_USER` não pode ser removido pelo painel. A senha, a pasta e os limites dele são trocados como os dos demais |
 | Troca de pasta contida | A pasta nova passa pelas mesmas regras da criação: fica dentro de `DATA_DIR/dados`, link simbólico e arquivo no caminho são recusados (`400`), e nenhum arquivo é movido nem apagado. Só o administrador troca, com sessão e token do formulário |
-| Limites por usuário | Sessões no FTP, taxa de download, taxa de envio, horário e downloads pelo painel, por usuário, na tela **Editar**. Só o administrador grava, com sessão e token do formulário; valor fora da regra é recusado com `400` e nada é gravado; o painel e o comando conferem cada valor, e o comando grava como `root`, em arquivos `0600`. Quem aplica os limites do FTP é o próprio `pure-ftpd`. Limite do FTP trocado encerra a sessão do usuário no painel |
+| Limites por usuário | Sessões no FTP, taxa de download, taxa de envio, horário, downloads pelo painel e bloqueio por tentativa no FTP, por usuário, na tela **Editar**. Só o administrador grava, com sessão e token do formulário; valor fora da regra é recusado com `400` e nada é gravado; o painel e o comando conferem cada valor, e o comando grava como `root`, em arquivos `0600`. Quem aplica os limites do FTP é o próprio `pure-ftpd`, e o do bloqueio, o vigia do serviço `ftp`. Limite do FTP trocado encerra a sessão do usuário no painel |
+| Desbloqueio só pelo administrador | Tirar o [bloqueio por tentativa](#bloqueio-por-tentativa) de um usuário pede sessão de administrador e token do formulário; fica na auditoria, com quem fez. O usuário do FTP não vê nem tira o próprio bloqueio (`404`) |
 
 O que cada proteção significa na prática e o fluxograma da decisão: [Painel web](painel.md#protecoes).
 
-> Tudo acima foi conferido nos portões de validação das versões `0.3.0` (painel), `0.5.0` (nginx na frente), `0.12.0` (administradores), `0.13.0` (aba Arquivos), `0.14.0` (pastas), `0.15.0` (entrada do usuário do FTP), `0.16.0` (TLS por usuário), `0.17.0` (logo e ícone entregues pelo nginx), `0.18.0` (`robots.txt` e `security.txt`), `0.18.1` (sem senha, senha aleatória, exaustão e acesso direto ao cadastro), `0.19.0` (edição de usuário), `0.20.0` (renomear e apagar pelo painel) e `0.21.0` (limites por usuário), em instância de teste. O firewall do host continua sendo de quem opera o servidor.
+> Tudo acima foi conferido nos portões de validação das versões `0.3.0` (painel), `0.5.0` (nginx na frente), `0.12.0` (administradores), `0.13.0` (aba Arquivos), `0.14.0` (pastas), `0.15.0` (entrada do usuário do FTP), `0.16.0` (TLS por usuário), `0.17.0` (logo e ícone entregues pelo nginx), `0.18.0` (`robots.txt` e `security.txt`), `0.18.1` (sem senha, senha aleatória, exaustão e acesso direto ao cadastro), `0.19.0` (edição de usuário), `0.20.0` (renomear e apagar pelo painel), `0.21.0` (limites por usuário) e `0.22.0` (bloqueio por tentativa no FTP), em instância de teste. O firewall do host continua sendo de quem opera o servidor.
 
 ---
 
@@ -428,11 +593,11 @@ Quatro perguntas que a bateria de segurança responde a cada versão, em instân
 | Pergunta | O que a bateria tenta | O que acontece |
 |---|---|---|
 | Abre alguma coisa sem senha? | Todas as rotas do painel, sem cookie e com cookie de sessão inventado, e os comandos do FTP antes do login, com e sem TLS, com senha vazia e sem senha | O painel responde `303` para a tela de entrada, com corpo vazio, e nada é criado. O FTP responde `530` a todo comando. Sem senha só respondem a tela de entrada, o estilo, a logo e o ícone, o `/saude`, o `/robots.txt` e, quando configurado, o `/.well-known/security.txt` |
-| Abre com senha aleatória? | Senhas sorteadas no FTP e no painel, com nome de administrador, de usuário do FTP e nome que não existe | Nenhuma entra. No painel, o quinto erro em 15 minutos bloqueia o endereço (`429`), inclusive para a senha certa, e a recusa bloqueada não gasta conferência de senha. No FTP, cada recusa custa de 3 a 6 segundos de espera e uma das sessões que o endereço pode abrir |
+| Abre com senha aleatória? | Senhas sorteadas no FTP e no painel, com nome de administrador, de usuário do FTP e nome que não existe | Nenhuma entra. No painel, o quinto erro em 15 minutos bloqueia o endereço (`429`), inclusive para a senha certa, e a recusa bloqueada não gasta conferência de senha. No FTP, cada recusa custa de 3 a 6 segundos de espera e uma das sessões que o endereço pode abrir, e a quinta senha errada do mesmo endereço em 15 minutos [bloqueia o usuário](#bloqueio-por-tentativa) para ele |
 | Dá para derrubar por exaustão? | Senhas erradas ao mesmo tempo até o limite de sessões do endereço, 300 pedidos em rajada, 300 conexões paradas, conexões que mandam o pedido pela metade, 60 conexões de FTP de uma vez, pedidos grandes e malformados | Os três containers continuam `healthy`, sem reinício. O nginx recusa o excesso com `429`, fecha a conexão parada em 15 segundos e devolve `413`, `414`, `400`, `431`, `405` ou `501` ao pedido fora da regra. O FTP aceita as sessões do limite por endereço e recusa as demais com `421`. Quem tem a senha certa continua entrando durante a rajada |
 | Dá para ler o cadastro das senhas sem passar pela entrada? | Os arquivos do cadastro, dos segredos, do `.env`, do Git e da chave do TLS pedidos pela web, sem sessão e com sessão de administrador; os mesmos arquivos pedidos por FTP por um usuário com a senha certa; a leitura pelos outros containers e por um usuário comum do host | Pela web, `303`, `404` ou `400`, e nenhuma tela mostra hash. Pelo FTP, `550`: o usuário não sai da pasta dele. O nginx não enxerga o cadastro, o painel não publica porta, e as pastas do cadastro são do `root`, fechadas para os outros usuários do host |
 
-**Resultado esperado:** `./tests/testar.sh` termina com `Bateria aprovada`, e o resultado da bateria de segurança traz os casos 69 a 80 aprovados, com o que foi medido em cada um. Os casos estão em [`tests/etapas/18-seguranca-ampliada.sh`](../tests/etapas/18-seguranca-ampliada.sh).
+**Resultado esperado:** `./tests/testar.sh` termina com `Bateria aprovada`, e o resultado da bateria de segurança traz os casos 69 a 80 aprovados, com o que foi medido em cada um. Os casos estão em [`tests/etapas/18-seguranca-ampliada.sh`](../tests/etapas/18-seguranca-ampliada.sh); os do bloqueio por tentativa, 85 e 86, em [`tests/etapas/24-bloqueio.sh`](../tests/etapas/24-bloqueio.sh).
 
 <a name="custo-das-senhas"></a>
 
