@@ -147,7 +147,7 @@ git pull                                  # 2. traz a versão nova
 # 3. no .env: acrescente as chaves novas do .env.example (DATA_DIR, BACKUP_DIR, TEMP_DIR, SECRETS_DIR,
 #    STACK_NAME, FTP_CONTAINER_NAME, FTP_NETWORK_NAME) e apague FTP_PASSWORD e FTP_PASSWORD_FILE.
 #    Se a senha estava no .env, grave-a em .secrets/ftp-usuario-inicial-senha.txt (chmod 600).
-DATA_DIR=/home/carlos/code/data/allsafe-ftp-stack   # o DATA_DIR do seu .env
+DATA_DIR="$(sed -n 's/^DATA_DIR=//p' .env | tail -n 1)"   # o DATA_DIR do seu .env
 mkdir -p "$DATA_DIR"/{dados,auth,certs}
 docker build -q -t allsafe-ftp:local .    # 4. imagem nova, usada para copiar
 for par in allsafe-ftp-data:dados allsafe-ftp-auth:auth allsafe-ftp-certs:certs; do

@@ -59,6 +59,7 @@ Os três entrypoints abortam com `FALHA: <motivo>` e o container reinicia em la�
 | Mensagem no log | Causa | Como verificar | Correção |
 |---|---|---|---|
 | `ERRO: porta já em uso por outro programa: <IP>:<porta>` (no `deploy.sh`) | Outro programa do host já escuta na porta do FTP, do painel ou da faixa passiva | `ss -ltnp` | Troque `FTP_PORT`, `PAINEL_PORT` ou a faixa passiva no `.env`, ou pare o outro programa, e rode `./deploy.sh` de novo |
+| `ERRO: não foi possível criar as pastas em <DATA_DIR>` (no `deploy.sh`) | Quem roda o `deploy.sh` não pode gravar na pasta de cima de `DATA_DIR` (no padrão, `/srv`, onde só o root grava). Nada foi construído nem subiu | `ls -ld /srv /srv/allsafe-ftp-stack` | Crie a pasta uma vez para o seu usuário, com o comando que a mensagem mostra (`sudo install -d -o <usuário> /srv/allsafe-ftp-stack`), ou aponte `DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR` para outro lugar no `.env`: [Configuração](configuracao.md#pastas-e-nomes). Depois, `./deploy.sh` de novo |
 | `ERRO: os containers não ficaram healthy` (no `deploy.sh`) | Um dos containers parou ou não respondeu no prazo (180 s mais um quarto de segundo por porta passiva) | `docker compose logs --tail 50 ftp painel nginx` | Corrija a causa mostrada no log (as linhas abaixo cobrem as mais comuns) e rode `./deploy.sh` de novo |
 | `ERRO: o perfil '…' pede … CPUs (FTP_CPU_LIMIT) e este servidor tem …` (ou `de memória (FTP_MEMORY_LIMIT)`), no `deploy.sh` | O perfil escolhido é maior que o servidor. Nada foi alterado | `nproc` e `free -m` | Use um perfil menor com `--size`: [Perfis](perfis.md#o-servidor-aguenta) |
 | `ERRO: FTP_TLS_MODE deve ser 0 (sem TLS), 1 (opcional), 2 (obrigatório no login) ou 3 (…)` (no `deploy.sh`) | Valor fora de `0` a `3` no `.env`. Nada foi alterado | `grep '^FTP_TLS_MODE=' .env` | Use `2`, o padrão: [Configuração](configuracao.md#tls) |
@@ -233,7 +234,7 @@ docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude && echo atendendo   # 
 Ainda travado? Colete e analise:
 
 ```bash
-TEMP_DIR=/home/carlos/code/tmp/allsafe-ftp-stack   # o TEMP_DIR do seu .env
+TEMP_DIR="$(sed -n 's/^TEMP_DIR=//p' .env | tail -n 1)"   # o TEMP_DIR do seu .env
 mkdir -p "$TEMP_DIR"
 docker compose logs --no-color ftp painel nginx > "$TEMP_DIR/allsafe-ftp.log"
 docker inspect allsafe-ftp allsafe-ftp-painel allsafe-ftp-nginx > "$TEMP_DIR/allsafe-ftp.inspect.json"

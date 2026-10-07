@@ -8,7 +8,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.22.1-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.22.2-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
@@ -39,7 +39,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.22.1</b> · visão geral da stack · 2026-10-07</sub>
+<sub><b>v0.22.2</b> · visão geral da stack · 2026-10-07</sub>
 
 </div>
 
@@ -129,10 +129,11 @@ Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplica�
 ```bash
 git clone https://github.com/CarlosSuporteISP/allsafe-ftp-stack.git
 cd allsafe-ftp-stack
+sudo install -d -o "$USER" /srv/allsafe-ftp-stack   # pasta dos dados, das cópias e dos temporários; como root, pule
 ./deploy.sh        # cria o .env, gera as senhas, sobe o FTP, o painel e o nginx e espera ficarem healthy
 ```
 
-**Um comando, sem perguntas.** Sem `.env`, o `deploy.sh` cria um a partir do exemplo, com tudo em `127.0.0.1`: só o próprio servidor acessa. Antes de agir ele confere o Docker, o Compose, se o servidor tem a CPU e a memória do perfil e se as portas estão livres. Pode ser rodado quantas vezes for preciso: o que já existe (senhas, dados, containers iguais) fica como está.
+**Um comando, sem perguntas.** Sem `.env`, o `deploy.sh` cria um a partir do exemplo, com tudo em `127.0.0.1`: só o próprio servidor acessa, e os dados ficam em `/srv/allsafe-ftp-stack` (para usar outro lugar, troque `DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR` no `.env`). Antes de agir ele confere o Docker, o Compose, se o servidor tem a CPU e a memória do perfil e se as portas estão livres. Pode ser rodado quantas vezes for preciso: o que já existe (senhas, dados, containers iguais) fica como está.
 
 <details>
 <summary>Senhas geradas e ajuste para a rede interna — clique para expandir</summary>
@@ -503,7 +504,7 @@ Medido em 2026-10-05, na versão `0.18.4`, com os três containers em repouso, n
 - **Resposta do painel:** a tela de entrada, com uma conexão HTTPS nova a cada pedido, respondeu em 2,8 ms na mediana de 30 pedidos (de 2,4 ms a 3,8 ms).
 - **Frente web, medida em 2026-10-07, na versão `0.22.1`:** a tela de entrada inteira (página, estilo e três imagens) chegou em 8,8 ms por uma conexão só, em HTTP/2; antes eram 11,0 ms em cinco conexões. O estilo passou de 6957 para 2175 bytes na rede. O clique feito depois de 20 e de 45 segundos parado levou 0,8 ms, pela mesma conexão; antes, 2,0 ms, com conexão nova. A memória do nginx ficou em 3,5 MiB.
 - **Sem dependência de terceiros:** o painel não instala pacote do PyPI e não tem JavaScript; o que há para atualizar é a imagem base e os pacotes do Debian.
-- **Tamanho do código:** 3307 linhas de Python em 21 módulos, 201 de CSS, 5428 de Bash e 278 de Perl, contando a bateria de testes.
+- **Tamanho do código:** 3307 linhas de Python em 21 módulos, 201 de CSS, 5463 de Bash e 278 de Perl, contando a bateria de testes.
 - **De onde vem o peso das imagens:** da base `debian:13-slim`, com 119 MB, comum às três.
 
 </details>
@@ -684,7 +685,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.22.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.22.2**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

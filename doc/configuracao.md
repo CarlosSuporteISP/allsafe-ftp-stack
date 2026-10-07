@@ -43,7 +43,7 @@ Todas as variáveis vivem no `.env`, copiado de [`.env.example`](../.env.example
 
 ```ini
 TZ=America/Sao_Paulo
-DATA_DIR=/home/carlos/code/data/allsafe-ftp-stack
+DATA_DIR=/srv/allsafe-ftp-stack/data
 FTP_BIND_IP=192.168.10.20
 FTP_PASSIVE_IP=192.168.10.20
 FTP_PORT=21
@@ -91,9 +91,9 @@ A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../.env.e
 
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
-| `DATA_DIR` | Pasta do host com os dados da stack: `dados/` (arquivos enviados), `auth/` (PureDB), `certs/` (TLS do FTP), `painel/` (certificado e auditoria do painel) e `nginx/` (o soquete e a cópia do certificado que o nginx lê). Montada por _bind mount_; a stack não cria volume nomeado | Caminho absoluto | `/home/carlos/code/data/allsafe-ftp-stack` |
-| `BACKUP_DIR` | Pasta do host onde o `scripts/backup.sh` grava as cópias de segurança e o `scripts/restaurar.sh` as procura. Nasce com modo `0700` e tem de ficar fora de `DATA_DIR`: [Backup e restauração](backup.md) | Caminho absoluto | `/home/carlos/code/backups/allsafe-ftp-stack` |
-| `TEMP_DIR` | Pasta do host para temporários: instância de teste, coleta de diagnóstico | Caminho absoluto | `/home/carlos/code/tmp/allsafe-ftp-stack` |
+| `DATA_DIR` | Pasta do host com os dados da stack: `dados/` (arquivos enviados), `auth/` (PureDB), `certs/` (TLS do FTP), `painel/` (certificado e auditoria do painel) e `nginx/` (o soquete e a cópia do certificado que o nginx lê). Montada por _bind mount_; a stack não cria volume nomeado | Caminho absoluto | `/srv/allsafe-ftp-stack/data` |
+| `BACKUP_DIR` | Pasta do host onde o `scripts/backup.sh` grava as cópias de segurança e o `scripts/restaurar.sh` as procura. Nasce com modo `0700` e tem de ficar fora de `DATA_DIR`: [Backup e restauração](backup.md) | Caminho absoluto | `/srv/allsafe-ftp-stack/backups` |
+| `TEMP_DIR` | Pasta do host para temporários: instância de teste, coleta de diagnóstico | Caminho absoluto | `/srv/allsafe-ftp-stack/tmp` |
 | `SECRETS_DIR` | Pasta dos segredos, um arquivo por segredo, modo `0700` | Caminho absoluto ou relativo à pasta do projeto | `./.secrets` |
 | `STACK_NAME` | Nome do projeto no Compose | Minúsculas, números e hífen | `allsafe-ftp-stack` |
 | `FTP_CONTAINER_NAME` | Nome do container e do host do FTP | Nome de container | `allsafe-ftp` |

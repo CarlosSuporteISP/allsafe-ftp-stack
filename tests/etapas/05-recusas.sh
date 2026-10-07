@@ -79,3 +79,25 @@ if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
 else
   fora seguranca 10 "Segredo fora do Git" "a pasta não é um repositório Git"
 fi
+
+# Pasta pessoal não é publicada, e a pasta de dados que não dá para criar é recusada com o que fazer.
+padrao="$(grep -c -E '^(DATA_DIR|BACKUP_DIR|TEMP_DIR)=/srv/allsafe-ftp-stack/(data|backups|tmp)$' .env.example)"
+antes="$(ids)"
+cp "$ENVA" "$W/env-recusa"; gravar_env "$W/env-recusa" DATA_DIR /proc/allsafe-ftp-teste/data
+ENV_FILE="$W/env-recusa" ./deploy.sh < /dev/null > "$W/recusa.log" 2>&1; r=$?
+d="saída $r · $(grep -E -m1 '^(ERRO|FALHA)' "$W/recusa.log" | cut -c1-150) · instância $([[ "$antes" == "$(ids)" ]] && echo intacta || echo ALTERADA)"
+recusou "$d" 'não foi possível criar as pastas em /proc/allsafe-ftp-teste/data. Crie a pasta de cima'; ok=$?
+grep -q -F 'sudo install -d -o' "$W/recusa.log" && grep -q -F 'aponte DATA_DIR, BACKUP_DIR e TEMP_DIR para outro lugar' "$W/recusa.log" || ok=1
+[[ "$padrao" == 3 ]] || ok=1
+if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  limpo="$(grep -c '^caminhos OK: nenhum arquivo do repositório cita pasta pessoal$' "$W/validate.log")"
+  rm -rf "$W/guarda"; git clone -q . "$W/guarda"
+  printf 'DATA_DIR=/home/%s/dados/allsafe\n' fulano > "$W/guarda/exemplo-plantado.txt"
+  ( cd "$W/guarda" && ./scripts/validate.sh ) > "$W/guarda.log" 2>&1; g=$?
+  plantado="saída $g · $(grep -m1 '^ERRO' "$W/guarda.log" | cut -c1-90) · arquivo apontado: $(grep -c '^exemplo-plantado.txt:1:' "$W/guarda.log")"
+  rm -rf "$W/guarda"
+  [[ "$ok" == 0 && "$limpo" == 1 && "$g" == 1 && "$plantado" == *'ERRO: pasta pessoal em arquivo do repositório'*'arquivo apontado: 1' ]]
+  caso $? seguranca 88 "Pasta pessoal fora do que é publicado" "padrão do .env.example em /srv/allsafe-ftp-stack: $padrao de 3 pastas · validate.sh no projeto: caminhos OK em $limpo linha · com um arquivo plantado citando pasta pessoal: $plantado · deploy.sh com DATA_DIR que não dá para criar: $d"
+else
+  caso "$ok" seguranca 88 "Pasta pessoal fora do que é publicado" "padrão do .env.example em /srv/allsafe-ftp-stack: $padrao de 3 pastas · deploy.sh com DATA_DIR que não dá para criar: $d · conferência do validate.sh pulada: a pasta não é um repositório Git"
+fi

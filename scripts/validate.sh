@@ -41,6 +41,18 @@ awk -v guia=doc/configuracao.md '
   { anterior = $0 }
   END { if (falha) exit 1; print ".env.example OK: " total " variáveis, todas comentadas e no guia de configuração" }
 ' .env.example
+# Caminho que só existe em um computador não é publicado: nenhum arquivo do repositório cita pasta pessoal.
+# Vale para o que o Git acompanha e para o que ainda não foi adicionado; o .env local fica fora, pelo .gitignore.
+if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  if pessoais="$(git grep -n -I --untracked -E '/(home|Users)/[A-Za-z0-9._-]+/' -- . 2>/dev/null)"; then
+    echo "ERRO: pasta pessoal em arquivo do repositório; use o padrão do .env.example ou leia o valor do .env:" >&2
+    printf '%s\n' "$pessoais" | cut -c1-160 | head -n 20 >&2
+    exit 1
+  fi
+  echo "caminhos OK: nenhum arquivo do repositório cita pasta pessoal"
+else
+  echo "caminhos: conferência pulada (a pasta não é um repositório Git)"
+fi
 # Marca: todo arquivo que a imagem do nginx copia e o nginx.conf.modelo serve existe e é PNG ou ICO de verdade.
 for arquivo in favicon.ico icone-32.png icone-192.png apple-touch-icon.png simbolo-64.png logo-320.png; do
   assinatura="$(head -c 4 "web/marca/$arquivo" 2>/dev/null | od -An -tx1 | tr -d ' \n')"

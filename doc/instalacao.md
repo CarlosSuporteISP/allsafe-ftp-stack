@@ -45,6 +45,7 @@ flowchart LR
 | Um IP dedicado para o FTP | Não compartilhe o IP com outros serviços; o modo passivo abre de 50 a 1600 portas, conforme o perfil |
 | Firewall no host | Libere `21/tcp` e a faixa passiva do perfil (`30000-30049/tcp` no `small`) **só** para as redes de gerência dos equipamentos, e a porta do painel (`8443/tcp`) **só** para quem administra |
 | Rede privada | Por padrão a stack só aceita IP interno: veja [Segurança](seguranca.md#rede-privada). Endereço público depende de uma opção com alerta: [IP público](seguranca.md#ip-publico) |
+| Pasta para os dados | O padrão é `/srv/allsafe-ftp-stack`, com `data`, `backups` e `tmp` dentro. Quem instala sem ser root cria a pasta uma vez: `sudo install -d -o "$USER" /srv/allsafe-ftp-stack`. Outro lugar: `DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR` em [Configuração](configuracao.md#pastas-e-nomes) |
 | Relógio sincronizado | O certificado TLS depende de data e hora corretas (a stack `allsafe-ntp-nts-stack` cuida disso) |
 
 ---
@@ -150,7 +151,7 @@ O [`deploy.sh`](../deploy.sh), nesta ordem:
 4. recusa senha no `.env`, endereço ou rede fora de IP privado (a não ser com `REDE_PERMITIR_IP_PUBLICO=sim`) e `FTP_TLS_MODE` fora de `0` a `3`;
 5. com `--size`, grava no `.env` os valores de `profiles/<perfil>.env` e o nome do perfil em `FTP_PROFILE`; sem `--size`, o `.env` fica como está;
 6. confere que a porta do FTP, a do painel e a faixa passiva estão livres no host (as que a própria stack já publica não contam); porta ocupada para o comando com `ERRO: porta já em uso por outro programa: ...`;
-7. cria as pastas `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` em `DATA_DIR` gera a senha em `.secrets/ftp-usuario-inicial-senha.txt` se o arquivo estiver vazio e grava o `.secrets/LEIAME.txt`;
+7. cria as pastas `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` em `DATA_DIR` (sem permissão para criar, para com `ERRO: não foi possível criar as pastas em ...` e o comando que cria a pasta de cima), gera a senha em `.secrets/ftp-usuario-inicial-senha.txt` se o arquivo estiver vazio e grava o `.secrets/LEIAME.txt`;
 8. roda `docker compose --env-file .env config --quiet`, que falha cedo se a configuração estiver inválida;
 9. `docker compose build`, que constrói as três imagens (com `--atualizar`, `build --no-cache`);
 10. gera a senha inicial do painel e grava o hash dela, se ainda não houver hash;

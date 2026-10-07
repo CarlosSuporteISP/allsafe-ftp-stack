@@ -94,7 +94,7 @@ flowchart LR
 | Configuração | `.env`, na pasta do projeto | variáveis de ambiente |
 | Logs | driver `local` do Docker, 10 MB × 3 | `stdout` |
 
-`DATA_DIR` é uma pasta do host definida no `.env` (padrão `/home/carlos/code/data/allsafe-ftp-stack`). As cópias de segurança vão para `BACKUP_DIR` ([Backup e restauração](backup.md)) e os temporários para `TEMP_DIR`: veja [Configuração](configuracao.md#pastas-e-nomes). A stack não cria volume nomeado.
+`DATA_DIR` é uma pasta do host definida no `.env` (padrão `/srv/allsafe-ftp-stack/data`). As cópias de segurança vão para `BACKUP_DIR` ([Backup e restauração](backup.md)) e os temporários para `TEMP_DIR`: veja [Configuração](configuracao.md#pastas-e-nomes). A stack não cria volume nomeado.
 
 ---
 
@@ -102,11 +102,7 @@ flowchart LR
 
 ## 📐 Diagramas
 
-Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com os **controles de aproximar e mover** no canto do próprio diagrama. Na pasta [`diagramas/`](diagramas/) fica o fonte de cada um e o [`visualizador.html`](diagramas/visualizador.html). As imagens SVG (escura, `<nome>.svg`, e de fundo branco, `<nome>-claro.svg`) **não vão para o repositório**: são geradas no computador, ficam só na pasta local e o visualizador abre qualquer uma delas, também com zoom e movimento. Para gerar depois de clonar ou de editar uma fonte:
-
-```bash
-/home/carlos/code/padrao-diagramas/renderizar.sh doc/diagramas
-```
+Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com os **controles de aproximar e mover** no canto do próprio diagrama. Na pasta [`diagramas/`](diagramas/) fica o fonte de cada um e o [`visualizador.html`](diagramas/visualizador.html). As imagens SVG (escura, `<nome>.svg`, e de fundo branco, `<nome>-claro.svg`) **não vão para o repositório**: são geradas no computador, ficam só na pasta local e o visualizador abre qualquer uma delas, também com zoom e movimento. Quem só lê não precisa delas: o bloco do diagrama em cada guia já vem do fonte.
 
 | Diagrama | Nível | Onde aparece |
 |---|---|---|

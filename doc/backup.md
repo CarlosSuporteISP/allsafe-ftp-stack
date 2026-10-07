@@ -239,7 +239,7 @@ Escolha um horário fora da janela em que os equipamentos enviam os backups dele
 O script não apaga cópia antiga. Para remover as que têm mais de 30 dias, junto com o `.sha256` de cada uma:
 
 ```bash
-BACKUP_DIR=/home/carlos/code/backups/allsafe-ftp-stack   # o BACKUP_DIR do seu .env
+BACKUP_DIR="$(sed -n 's/^BACKUP_DIR=//p' .env | tail -n 1)"   # o BACKUP_DIR do seu .env
 find "$BACKUP_DIR" -maxdepth 1 -name 'allsafe-ftp-stack-*.tar.gz*' -mtime +30 -print -delete
 ```
 

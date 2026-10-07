@@ -8,6 +8,25 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.22.2] - 2026-10-07
+
+O padrão das três pastas da stack deixa de ser a pasta do computador onde ela é desenvolvida e passa a ser `/srv/allsafe-ftp-stack`. Instalação que já existe não muda: o `.env` dela continua valendo.
+
+### Alterado
+
+- **Pastas padrão em `/srv/allsafe-ftp-stack`.** No `.env.example`, `DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR` passam a `/srv/allsafe-ftp-stack/data`, `/srv/allsafe-ftp-stack/backups` e `/srv/allsafe-ftp-stack/tmp`. Quem instala sem ser root cria a pasta de cima uma vez (`sudo install -d -o "$USER" /srv/allsafe-ftp-stack`) ou aponta as três para outro lugar no `.env`.
+- **`deploy.sh` diz o que fazer quando não consegue criar a pasta de dados**: a mensagem traz o comando que cria a pasta de cima para o usuário e a alternativa de trocar as três pastas. Nada é construído nem sobe antes disso.
+- **Guias sem caminho de um computador**: os comandos de [Backup e restauração](doc/backup.md), [Operação](doc/operacao.md) e [Solução de problemas](doc/solucao-de-problemas.md) leem `DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR` do `.env`, e [Configuração](doc/configuracao.md) mostra o padrão novo.
+
+### Adicionado
+
+- **`scripts/validate.sh` recusa pasta pessoal em arquivo do repositório**: caminho que só existe em um computador não é publicado. O `.env` local fica fora da conferência.
+- Caso 88 de segurança na bateria: o padrão do `.env.example`, a recusa do `validate.sh` com um arquivo plantado e a mensagem do `deploy.sh` para a pasta que não dá para criar.
+
+### Ao atualizar
+
+Nada a fazer. Instalação nova feita a partir desta versão usa `/srv/allsafe-ftp-stack`, salvo se o `.env` disser outro lugar.
+
 ## [0.22.1] - 2026-10-07
 
 A frente web ficou mais rápida, com medida de antes e depois na instância de teste: o painel passa a abrir em HTTP/2, o estilo vai comprimido e a conexão do navegador é mantida entre um clique e outro. Nenhuma tela, variável ou comando mudou.

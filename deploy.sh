@@ -353,8 +353,9 @@ if command -v ss >/dev/null 2>&1; then
 fi
 
 # Pastas dos dados (bind mount). O container ajusta dono e modo de cada uma ao subir.
+# O padrão fica em /srv, onde só o root grava: a pasta de cima é criada uma vez para quem instala.
 mkdir -p "$data_dir/dados" "$data_dir/auth" "$data_dir/certs" "$data_dir/painel" "$data_dir/nginx" \
-  || die "não foi possível criar as pastas em $data_dir; ajuste DATA_DIR em $env_file."
+  || die "não foi possível criar as pastas em $data_dir. Crie a pasta de cima uma vez para o seu usuário (sudo install -d -o $(id -un) $(dirname -- "$data_dir")) ou aponte DATA_DIR, BACKUP_DIR e TEMP_DIR para outro lugar em $env_file."
 
 # Senha do usuário inicial: gerada forte na primeira execução; nunca regravada se já existe.
 # Para usar uma senha específica, grave-a no arquivo antes de rodar.
