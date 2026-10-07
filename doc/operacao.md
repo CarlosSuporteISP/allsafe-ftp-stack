@@ -46,6 +46,8 @@ Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.m
 ./manage-user.sh add olt01 clientes/olt-01   # cria o usuário na pasta escolhida, /data/clientes/olt-01
 ./manage-user.sh passwd cliente01   # troca a senha (pede a nova)
 ./manage-user.sh pasta cliente01 clientes/olt-02   # troca a pasta; os arquivos da anterior continuam nela
+./manage-user.sh limites cliente01 sessoes=2 download=500 horario=0800-1800   # grava limites só dele
+./manage-user.sh limites cliente01  # mostra os limites dele
 ./manage-user.sh list               # lista os usuários do PureDB
 ./manage-user.sh del cliente01      # remove o usuário e MANTÉM a pasta dele
 ./manage-user.sh tls-dispensar olt-antiga   # deixa o usuário entrar sem TLS (só vale com FTP_TLS_EXCECOES=sim)
@@ -61,6 +63,7 @@ Regras:
 - Senha: mínimo de **12 caracteres** (recusada abaixo disso).
 - Pasta: sem o terceiro parâmetro, é `/data/<usuario>`. Com ele, fica sempre dentro de `/data` (`DATA_DIR/dados` no host), com até 4 níveis separados por `/`; cada nível tem letras, números, `_`, `-` e ponto, não começa com ponto e vai até 64 caracteres. A pasta é criada se não existir. Pasta que passa por link simbólico ou por um arquivo é recusada, e nada é criado.
 - `add` de um nome existente responde `Usuario ja existe`. Para mudar a pasta de quem já existe, use `pasta`, com as mesmas regras: vale na entrada seguinte, não troca a senha e não move nem apaga arquivo. Usuário que não existe: `Usuario nao existe: <nome>`.
+- `limites` aceita um ou mais pares `chave=valor`, e só mexe nas chaves informadas: `sessoes` (sessões ao mesmo tempo no FTP), `download` e `envio` (KB por segundo, de 1 a 10.000.000), `horario` (`HHMM-HHMM`, no fuso do `TZ`, podendo passar da meia-noite) e `baixar` (downloads ao mesmo tempo pelo painel, de 1 a 8). Valor vazio (`download=`) tira o limite; sem nenhum par, mostra os que o usuário tem. Vale na entrada seguinte dele no FTP. O que cada limite faz está em [Painel web](painel.md#limites).
 - `del` **não apaga arquivos** e responde com a pasta que ficou. Para tirar a pasta junto com o usuário, use o painel: Usuários ➜ **Remover**, com a caixa de apagar a pasta, em [Painel web](painel.md#usuarios). Depois do `del`, a pasta que ficou é apagada na aba Arquivos.
 - `tls-dispensar` e `tls-exigir` valem na entrada seguinte do usuário, sem reiniciar, e só para usuário que existe (`Usuario nao existe: <nome>`). A dispensa só tem efeito com `FTP_TLS_EXCECOES=sim`; com `nao`, fica guardada. O `del` tira o usuário da lista.
 
@@ -73,7 +76,7 @@ Regras:
 <details>
 <summary>Detalhe técnico — onde a mudança é gravada</summary>
 
-O `manage-user.sh` encapsula o [`ftp/usuario.sh`](../ftp/usuario.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo. A dispensa do TLS fica em `/auth/sem-tls.lista`, um nome por linha, lida pelo servidor a cada entrada.
+O `manage-user.sh` encapsula o [`ftp/usuario.sh`](../ftp/usuario.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo. A dispensa do TLS fica em `/auth/sem-tls.lista`, um nome por linha, lida pelo servidor a cada entrada. Os limites de sessões, de taxa e de horário ficam na própria linha do usuário no cadastro; o de downloads pelo painel, em `/auth/limites.lista`.
 
 </details>
 

@@ -8,6 +8,32 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.21.0] - 2026-10-07
+
+Cada usuário do FTP passa a ter limites próprios, gravados pelo administrador no painel: quantas sessões abre, a que velocidade baixa e envia, em que horário entra e quantos arquivos baixa por vez pelo painel. Vale para a conta de um equipamento e para a de uma pessoa.
+
+### Adicionado
+
+- **Limites por usuário, na tela Editar da aba Usuários.** O cartão **Limites** tem cinco campos, todos opcionais: sessões no FTP ao mesmo tempo, taxa de download e taxa de envio em KB/s, horário de entrada (início e fim, com janela que atravessa a meia-noite) e downloads ao mesmo tempo pelo painel. Campo em branco deixa o usuário sem aquele limite. Na lista, a marca **limites** mostra quem tem limite próprio e, ao passar o ponteiro, quais.
+- **Comando `./manage-user.sh limites <usuario>`.** Com pares `chave=valor` (`sessoes`, `download`, `envio`, `horario`, `baixar`), grava; sem par, mostra os limites do usuário; valor vazio tira o limite. É o mesmo comando que o painel chama.
+- **A taxa de download vale também no painel.** O arquivo que o usuário baixa em **Meus arquivos** sai na mesma taxa do FTP. O download do administrador não tem taxa.
+- **Evento `limites_alterados` na auditoria**, com o administrador, o usuário e os cinco valores, e a linha `Limites do usuário alterados` na aba Atividade.
+- **Módulo `limites.py` no painel**, que lê os limites, confere o formulário e monta o resumo da lista.
+- **Casos de teste 45 e 46 (funcional) e 84 (segurança).** A bateria passa a 46 casos funcionais, 84 de segurança e 13 de rede.
+
+### Alterado
+
+- **Quem aplica os limites do FTP é o próprio Pure-FTPd.** Sessões, taxas e horário ficam no cadastro dos usuários virtuais (`pure-pw usermod -y`, `-t`, `-T` e `-z`); o limite de downloads pelo painel fica em `/auth/limites.lista`, com dono `root` e modo `0600`. Os limites valem na próxima entrada do usuário.
+- **Limite do FTP trocado encerra a sessão do usuário no painel**, como já acontecia com a senha e com a pasta. Trocar só o limite de downloads pelo painel não encerra.
+- **Entrada no painel fora do horário ou com as sessões ocupadas.** Quem confere a senha do painel é o FTP: o usuário fora do horário dele, ou com todas as sessões dele ocupadas, recebe a mesma resposta de usuário ou senha errados.
+- **Limite de downloads ao mesmo tempo.** Continua em 2 por usuário do FTP quando o campo está em branco, e passa a ser o valor do campo, de 1 a 8, quando preenchido. Acima dele, a resposta continua `503` com `Retry-After`.
+- **Usuário removido sai da lista dos limites**, e os limites do usuário inicial atravessam o reinício do servidor.
+
+### Observações
+
+- **Taxa de envio e arquivo pequeno.** Com taxa de envio, o Pure-FTPd segura cada arquivo enviado por pelo menos 256 ÷ taxa segundos, seja qual for o tamanho: a 50 KB/s, cerca de 5 segundos por arquivo. Para equipamento que envia muitos arquivos pequenos, use taxa alta ou deixe o campo em branco.
+- **Fuso do horário.** O horário é conferido no relógio do servidor FTP, no fuso da variável `TZ`.
+
 ## [0.20.0] - 2026-10-06
 
 O painel passa a renomear e apagar arquivo e pasta, e a remover o usuário do FTP junto com a pasta dele. O que antes pedia um cliente de FTP ou o terminal do servidor agora é feito pelo navegador.

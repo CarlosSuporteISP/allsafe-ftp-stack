@@ -18,10 +18,10 @@ import time
 import urllib.parse
 
 from auditoria import auditar, limpo
-from config import (APAGAR_MAX, APAGAR_NIVEIS, APAGAR_PRAZO, CFG, DONO_DADOS, DOWNLOADS_MAX, DOWNLOADS_POR_USUARIO, LISTA_MAX,
-                    NIVEL, PASTA, PASTA_DADOS)
+from config import APAGAR_MAX, APAGAR_NIVEIS, APAGAR_PRAZO, CFG, DONO_DADOS, DOWNLOADS_MAX, LISTA_MAX, NIVEL, PASTA, PASTA_DADOS
 from confirmacao import campo_senha_atual, confirmacao_recusada
 from estado import limpar_cache, uso_da_pasta, usuarios
+from limites import downloads_e_taxa
 from pagina import e, pagina, quando, tamanho
 from sessao import quem
 
@@ -572,16 +572,18 @@ def baixar(pedido, sessao, consulta, formulario, token):
 
 def entregar(pedido, sessao, descritor, nome, registro):
     """Entrega como anexo um arquivo já aberto e registra o download. `registro` é o caminho que vai para a
-    auditoria, relativo à pasta dos dados. Vale o teto geral de downloads e, para usuário do FTP, o teto dele."""
+    auditoria, relativo à pasta dos dados. Vale o teto geral de downloads e, para usuário do FTP, o teto e a
+    taxa dele: os limites próprios, se ele tiver, ou os da stack."""
     if pedido.command == 'HEAD':  # só os cabeçalhos: nada é baixado, não ocupa vaga nem entra na auditoria
         with os.fdopen(descritor, 'rb', buffering=0) as arquivo:
             pedido.enviar_arquivo(arquivo, os.fstat(arquivo.fileno()).st_size, extras=(('Content-Disposition', anexo(nome)),))
         return None
     rota, tela = tela_de(sessao)
     usuario, limite = sessao['usuario'], ''
+    dele, taxa = downloads_e_taxa(usuario) if usuario else (0, 0)
     with TRAVA_CURSO:
-        if usuario and EM_CURSO.get(usuario, 0) >= DOWNLOADS_POR_USUARIO:
-            limite = f'Cada usuário baixa até {DOWNLOADS_POR_USUARIO} arquivos por vez.'
+        if usuario and EM_CURSO.get(usuario, 0) >= dele:
+            limite = f'O limite deste usuário é de {dele} arquivo(s) por vez.'
         elif not VAGAS.acquire(blocking=False):
             limite = f'O painel entrega até {DOWNLOADS_MAX} arquivos por vez.'
         elif usuario:
@@ -595,7 +597,7 @@ def entregar(pedido, sessao, descritor, nome, registro):
     try:
         with os.fdopen(descritor, 'rb', buffering=0) as arquivo:
             total = os.fstat(arquivo.fileno()).st_size
-            enviados = pedido.enviar_arquivo(arquivo, total, extras=(('Content-Disposition', anexo(nome)),))
+            enviados = pedido.enviar_arquivo(arquivo, total, extras=(('Content-Disposition', anexo(nome)),), taxa=taxa)
     finally:
         VAGAS.release()
         if usuario:

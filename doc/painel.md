@@ -74,7 +74,7 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 | Aba | O que mostra | O que dá para fazer |
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar |
-| Usuários | Um usuário por linha: pasta no host, com a marca **dividida** quando outro usuário também a alcança, espaço usado, quantidade de arquivos e último envio; com `FTP_TLS_EXCECOES=sim`, a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta, editar, para trocar a pasta, trocar a senha, remover, com a pasta dele ou sem ela, e abrir a pasta do usuário na aba Arquivos; com `FTP_TLS_EXCECOES=sim`, dispensar um usuário do TLS e voltar a exigir |
+| Usuários | Um usuário por linha: pasta no host, com a marca **dividida** quando outro usuário também a alcança, espaço usado, quantidade de arquivos e último envio; com `FTP_TLS_EXCECOES=sim`, a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta, editar, para trocar a pasta e os limites, trocar a senha, remover, com a pasta dele ou sem ela, e abrir a pasta do usuário na aba Arquivos; com `FTP_TLS_EXCECOES=sim`, dispensar um usuário do TLS e voltar a exigir |
 | Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
 | Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
 | Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
@@ -101,6 +101,7 @@ A foto de cada tela, com a explicação item por item, está em [Fotos da aplica
 | Criar um usuário | Usuários ➜ **Novo usuário** | Cria a conta e a pasta dela: `DATA_DIR/dados/<usuario>` com o campo **Pasta** em branco, ou a pasta escolhida. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
 | Trocar a senha | Usuários ➜ **Trocar senha** | A senha antiga deixa de valer no próximo login |
 | Trocar a pasta | Usuários ➜ **Editar** | O usuário passa a entrar na pasta nova na entrada seguinte. **Os arquivos da pasta anterior continuam nela**, sem serem movidos nem apagados |
+| Limitar um usuário | Usuários ➜ **Editar**, cartão **Limites** | Sessões ao mesmo tempo, taxa de download e de envio, horário de entrada e downloads ao mesmo tempo pelo painel, só para aquele usuário. Campo em branco: vale o limite da stack. Vale na entrada seguinte dele no FTP |
 | Remover um usuário | Usuários ➜ **Remover** | Pede confirmação. A conta some; **os arquivos da pasta são preservados** |
 | Remover um usuário e a pasta dele | Usuários ➜ **Remover**, com a caixa **Apagar também a pasta e tudo o que há nela** | Pede também a sua senha atual. A conta some e a pasta é apagada com tudo o que tem dentro, **sem lixeira**. A caixa só aparece quando a pasta é só dele |
 | Deixar um usuário entrar sem TLS | Usuários ➜ **Dispensar TLS** | Só existe com `FTP_TLS_EXCECOES=sim`. Pede confirmação e vale na entrada seguinte do usuário; os demais continuam obrigados a usar TLS |
@@ -119,6 +120,24 @@ Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
 - A pasta é escolhida na criação e trocada depois em **Editar**, com as mesmas regras. A troca não mexe na senha nem nos arquivos: o que estava na pasta anterior continua lá, e a pasta nova é criada se não existir.
 - O **usuário inicial** (`FTP_USER`) tem a senha e a pasta trocadas como os demais; só não pode ser removido. A senha trocada pelo painel vale até o arquivo `.secrets/ftp-usuario-inicial-senha.txt` ser alterado: na subida seguinte do FTP, passa a valer a do arquivo. Veja [Segredos](segredos.md#trocar-a-senha).
 
+<a name="limites"></a>
+
+Limites por usuário, no cartão **Limites** da tela **Editar**. Servem tanto para a conta de um equipamento, que só envia, quanto para a de uma pessoa, que entra, envia e baixa:
+
+| Limite | Onde vale | Valor | Em branco |
+|---|---|---|---|
+| Sessões ao mesmo tempo | FTP | De 1 ao `FTP_MAX_CLIENTS` da stack | Só os limites da stack: `FTP_MAX_CLIENTS` no total e `FTP_MAX_CLIENTS_PER_IP` por endereço |
+| Taxa de download | FTP e downloads dele pelo painel | De 1 a 10.000.000 KB por segundo | Sem teto |
+| Taxa de envio | FTP | De 1 a 10.000.000 KB por segundo | Sem teto |
+| Horário de entrada | FTP e entrada dele no painel | Início e fim, em horas e minutos; pode passar da meia-noite (`22:00` às `06:00`) | Entra a qualquer hora |
+| Downloads ao mesmo tempo | Painel | De 1 a 8 | 2 |
+
+**Resultado esperado:** a lista de usuários volta com o aviso `Limites gravados` e a marca **limites** ao lado do nome; passando o mouse sobre ela, aparece cada limite que o usuário tem. Para tirar um limite, apague o campo e grave de novo.
+
+> ⚠️ **O que muda para o usuário:** fora do horário, o FTP recusa a entrada como recusa senha errada, e com todas as sessões dele ocupadas, responde que não aceita mais conexões do mesmo usuário. Nos dois casos ele também não entra no painel, porque é o FTP que confere a senha.
+
+> ⚠️ **Taxa de envio e arquivo pequeno:** com a taxa de envio definida, o servidor segura cada arquivo enviado por cerca de `256 ÷ taxa` segundos, além do tempo do envio. Com 50 KB por segundo, um arquivo de 1 KB leva 5 segundos; com 1.000, um quarto de segundo. Para equipamento que manda muitos arquivos pequenos, use uma taxa alta ou deixe em branco.
+
 > ⚠️ **Pasta dividida:** dois usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro. O painel aceita, porque serve para uma conta de consulta na pasta de cima, e avisa: a lista marca a pasta com **dividida** e mostra quem mais a alcança, e a tela de remoção repete o aviso. Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.
 
 > ⚠️ **Apagar a pasta junto não tem volta:** o painel não tem lixeira, e o que sai dali só volta do [backup](backup.md). A tela de remoção mostra quantos arquivos a pasta tem antes de pedir a confirmação. A caixa não aparece, e o pedido é recusado, quando outro usuário usa a mesma pasta, uma de dentro ou uma de fora dela: remova antes os outros ou troque a pasta deles em **Editar**.
@@ -133,6 +152,21 @@ Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
 - Quem grava é o `allsafe-ftp-user`, o mesmo script do `manage-user.sh`, na `sem-tls.lista` de `DATA_DIR/auth`. O painel só lê a lista para montar as telas.
 - Remover o usuário tira o nome dele da lista: um usuário novo com o mesmo nome não herda a dispensa.
 - Cada alteração fica na auditoria, com o administrador e o usuário: `tls_dispensado` e `tls_exigido`.
+
+</details>
+
+<details>
+<summary>Detalhe técnico — os limites por usuário</summary>
+
+- `POST /usuarios/limites` grava todos de uma vez, com o token CSRF da sessão e os campos `usuario`, `sessoes`, `download`, `envio`, `inicio`, `fim` e `baixar`. Campo em branco tira o limite. Valor fora da regra, início sem fim ou início igual ao fim respondem `400`, com a tela de volta e o que foi digitado; usuário que não existe e nome fora da regra, `404`. Nada é gravado pela metade.
+- **Quem guarda e quem aplica:** sessões, taxas e horário ficam na linha do usuário em `/auth/pureftpd.passwd`, gravados com `pure-pw usermod`, e quem os aplica é o `pure-ftpd`, a cada entrada. O limite de downloads pelo painel fica em `/auth/limites.lista` (`0600`), e quem o aplica é o painel. Os dois são gravados pelo `allsafe-ftp-user limites`, o mesmo comando do [`manage-user.sh`](../manage-user.sh).
+- **Horário:** vale no fuso do container, o da variável `TZ`. O `pure-pw` guarda as horas sem os zeros da esquerda (`08:00` às `18:00` fica `800-1800`); o painel e o `manage-user.sh` mostram sempre com quatro dígitos.
+- **Taxa de download no painel:** os downloads que o próprio usuário faz na tela Meus arquivos saem na taxa dele. Os que o administrador faz na aba Arquivos, não.
+- **Sessão do usuário no painel:** trocar um limite que fica no cadastro do FTP muda a linha dele, e as sessões dele no painel são encerradas no pedido seguinte. Trocar só o limite de downloads pelo painel não encerra nada e vale no download seguinte.
+- **Entrada recusada pelo limite:** fora do horário, o FTP responde `530`, e o painel, `401`, como para senha errada: conta como erro de entrada. Com as sessões ocupadas, o FTP responde `421` depois de conferir a senha, e o painel, `401`, com `entrada_falha conferencia=ftp_indisponivel` na auditoria.
+- **Usuário inicial:** os limites dele ficam de uma subida para a outra; o serviço `ftp` só reaplica a senha.
+- Remover o usuário tira o nome dele da `limites.lista`: um usuário novo com o mesmo nome não herda o limite.
+- Cada gravação fica na auditoria como `limites_alterados`, com o administrador, o usuário e o valor de cada limite (`-` no que ficou em branco).
 
 </details>
 
@@ -236,9 +270,10 @@ O dono dos arquivos pega os próprios backups pelo navegador, sem depender de qu
 Regras:
 
 - Entra todo usuário do cadastro do FTP, inclusive o usuário inicial (`FTP_USER`), com a senha que vale no FTP naquele momento.
-- A sessão acompanha o cadastro: trocar a senha ou a pasta do usuário, ou removê-lo, pelo painel ou pelo `manage-user.sh`, encerra as sessões dele no pedido seguinte.
+- A sessão acompanha o cadastro: trocar a senha, a pasta ou um limite do FTP do usuário, ou removê-lo, pelo painel ou pelo `manage-user.sh`, encerra as sessões dele no pedido seguinte.
 - Nome igual ao de um administrador entra **só** como administrador, com a senha de administrador. Se um administrador é criado com o nome de um usuário do FTP, a sessão desse usuário é encerrada e ele deixa de entrar no painel; por FTP, nada muda.
-- Até **3 sessões** por usuário do FTP: a quarta entrada encerra a mais antiga. Até **2 downloads ao mesmo tempo** por usuário; o terceiro recebe a tela `Muitos downloads ao mesmo tempo` (`503`).
+- Até **3 sessões** por usuário do FTP: a quarta entrada encerra a mais antiga. Até **2 downloads ao mesmo tempo** por usuário, ou o número que o administrador gravou nos [limites](#limites) dele; o seguinte recebe a tela `Muitos downloads ao mesmo tempo` (`503`).
+- Os [limites](#limites) do usuário valem aqui também: os downloads saem na taxa de download dele, e fora do horário dele, ou com todas as sessões dele no FTP ocupadas, a entrada é recusada.
 - Cinco erros de usuário ou senha em 15 minutos bloqueiam o endereço, do mesmo jeito que na entrada do administrador.
 - Com o servidor FTP parado, quem já entrou continua navegando e baixando, e ninguém novo entra com conta do FTP; o administrador entra normalmente.
 
@@ -561,6 +596,7 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `sessao_encerrada` | A sessão de um usuário do FTP acabou antes da hora, com o usuário e o motivo: `cadastro_alterado` (senha ou pasta trocada, usuário removido), `nome_de_administrador` ou `acesso_desligado` |
 | `recusa_papel` | Um usuário do FTP pediu uma tela ou um formulário de administração, com o usuário e o caminho pedido |
 | `usuario_criado` · `senha_trocada` · `pasta_trocada` · `usuario_removido` | Alteração de usuário do FTP, com o administrador que fez; a criação leva também a pasta do usuário, a troca de pasta, a nova e a anterior, e a remoção, a pasta, quando ela foi apagada junto |
+| `limites_alterados` | Limites de um usuário do FTP gravados, com o administrador, o usuário e o valor de cada limite; `-` no que ficou em branco |
 | `tls_dispensado` · `tls_exigido` | Um administrador dispensou um usuário do TLS · voltou a exigir; com o administrador e o usuário |
 | `pasta_criada` | Pasta criada pela aba Arquivos, com o administrador e o caminho |
 | `item_renomeado` · `item_apagado` | Arquivo ou pasta com o nome trocado · apagado, pela aba Arquivos ou junto com o usuário; com o administrador, o tipo e o caminho. O renomeado leva o caminho de antes e o de depois; o apagado, a quantidade de itens removidos, `completo=nao` quando o pedido parou no limite e `usuario=` quando a pasta saiu junto com o dono |
@@ -644,7 +680,8 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, do administrador e do usuário do FTP, e saída |
 | [`conta_ftp.py`](../painel/conta_ftp.py) | Conta do usuário do FTP no painel: leitura do cadastro dele, conferência da senha no servidor FTP e os motivos que encerram a sessão |
 | [`aba_visao_geral.py`](../painel/aba_visao_geral.py) | Aba Visão geral |
-| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação com a pasta escolhida, troca de senha, remoção e a dispensa do TLS por usuário |
+| [`limites.py`](../painel/limites.py) | Limites próprios de cada usuário do FTP: leitura do cadastro e da `limites.lista`, conferência do formulário e o resumo da lista |
+| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação com a pasta escolhida, edição (pasta e limites), troca de senha, remoção e a dispensa do TLS por usuário |
 | [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta |
 | [`aba_meus_arquivos.py`](../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação e download dentro da pasta dele |
 | [`aba_administradores.py`](../painel/aba_administradores.py) | Aba Administradores: lista, criação, troca de senha, troca de nome e remoção |

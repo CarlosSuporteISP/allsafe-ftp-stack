@@ -221,13 +221,14 @@ def dias_restantes(info):
     return (info['vence'] - datetime.datetime.now(datetime.timezone.utc)).days
 
 
-def executar_usuario(acao, nome, senha=None, pasta=None):
+def executar_usuario(acao, nome, senha=None, pasta=None, pares=()):
     """Chama o allsafe-ftp-user, o mesmo do serviço ftp. A senha vai pela entrada padrão.
     O FTP_MAX_CLIENTS vai junto: é dele que sai o custo do hash da senha, o mesmo do serviço ftp.
-    O FTP_USER também: a troca da senha do usuário inicial deixa a marca que a partida do ftp respeita."""
+    O FTP_USER também: a troca da senha do usuário inicial deixa a marca que a partida do ftp respeita.
+    `pares` são os limites do usuário, um `chave=valor` por argumento."""
     try:
         resultado = subprocess.run(
-            [CMD_USUARIO, acao, nome] + ([pasta] if pasta else []), input=None if senha is None else senha + '\n',
+            [CMD_USUARIO, acao, nome] + ([pasta] if pasta else []) + list(pares), input=None if senha is None else senha + '\n',
             capture_output=True, text=True, timeout=30,
             env={'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LC_ALL': 'C',
                  'FTP_MAX_CLIENTS': CFG['ftp_clientes'], 'FTP_USER': CFG['ftp_usuario']})

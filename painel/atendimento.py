@@ -129,9 +129,10 @@ class Painel(http.server.BaseHTTPRequestHandler):
         if self.caminho != '/saude':
             print(f'{self.ip} {self.command} {limpo(self.caminho)} {codigo}', flush=True)
 
-    def enviar_arquivo(self, arquivo, total, extras=()):
+    def enviar_arquivo(self, arquivo, total, extras=(), taxa=0):
         """Entrega um arquivo já aberto, em blocos, sem carregá-lo na memória. Devolve quantos bytes saíram.
-        No HEAD saem só os cabeçalhos, com o tamanho do arquivo."""
+        No HEAD saem só os cabeçalhos, com o tamanho do arquivo. `taxa`, em KB por segundo, segura a entrega
+        no ritmo do limite do usuário: o bloco encolhe para caber em um segundo; 0 = sem teto."""
         self.send_response(200)
         self.send_header('Content-Type', 'application/octet-stream')
         self.send_header('Content-Length', str(total))
@@ -140,13 +141,17 @@ class Painel(http.server.BaseHTTPRequestHandler):
             self.send_header(nome, valor)
         self.end_headers()
         enviados = 0
+        por_vez = min(BLOCO_ARQUIVO, taxa * 1024) if taxa else BLOCO_ARQUIVO
+        inicio = time.monotonic()
         try:
             while self.command != 'HEAD' and enviados < total:
-                bloco = arquivo.read(min(BLOCO_ARQUIVO, total - enviados))
+                bloco = arquivo.read(min(por_vez, total - enviados))
                 if not bloco:
                     break
                 self.wfile.write(bloco)
                 enviados += len(bloco)
+                if taxa and enviados < total:
+                    time.sleep(max(0.0, enviados / (taxa * 1024) - (time.monotonic() - inicio)))
         except OSError:  # quem baixava fechou a conexão, ou o arquivo deixou de ser lido
             pass
         print(f'{self.ip} {self.command} {limpo(self.caminho)} 200 {enviados}/{total} bytes', flush=True)

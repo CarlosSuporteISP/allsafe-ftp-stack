@@ -1,14 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Usuários: lista, criação, edição (pasta), troca de senha e remoção dos usuários do FTP.
+"""Aba Usuários: lista, criação, edição (pasta e limites), troca de senha e remoção dos usuários do FTP.
 
 A remoção pode levar junto a pasta do usuário, quando nenhum outro a alcança; apagar pede a senha atual
 do administrador."""
 import secrets
 import urllib.parse
 
+import limites
 from aba_arquivos import Recusado, apagar_caminho, endereco, resposta_parcial
 from auditoria import auditar, limpo
-from config import CFG, NOME, PASTA, SENHA_MAX, SENHA_MIN
+from config import CFG, DOWNLOADS_POR_USUARIO, NOME, PASTA, SENHA_MAX, SENHA_MIN
 from confirmacao import campo_senha_atual, confirmacao_recusada
 from estado import executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, sem_tls, uso_da_pasta, usuarios, vizinhos
 from pagina import e, pagina, quando, tamanho
@@ -17,6 +18,7 @@ MENSAGENS = {
     'criado': '✅ Usuário criado.',
     'senha': '✅ Senha trocada.',
     'pasta': '✅ Pasta trocada. Os arquivos da pasta anterior continuam nela.',
+    'limites': '✅ Limites gravados. Valem na próxima entrada do usuário no FTP.',
     'removido': '✅ Usuário removido. Os arquivos continuam na pasta.',
     'removido_com_pasta': '✅ Usuário removido e pasta apagada.',
     'tls_dispensado': '⚠️ Usuário dispensado do TLS: a senha e os arquivos dele passam em texto puro.',
@@ -30,6 +32,7 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
     cadastro = usuarios()
     excecoes = CFG['tls_excecoes']
     marcados = sem_tls(cadastro) if excecoes else []
+    proprios = limites.todos()
     for nome, pasta in cadastro.items():
         uso = uso_da_pasta(pasta)
         destino = urllib.parse.quote(nome)
@@ -50,6 +53,9 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
         else:
             marca = ''
             remover = f' <a class="botao perigo" href="/usuarios/remover?usuario={destino}">🗑️ Remover</a>'
+        dele = limites.resumo(proprios[nome]) if nome in proprios else ''
+        if dele:
+            marca += f' <span class="etiqueta" title="Limites próprios: {e(dele)}">limites</span>'
         coluna_tls = ''
         if excecoes:
             if nome in marcados:
@@ -73,7 +79,8 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
 <thead><tr><th>Usuário</th><th>Pasta no host</th><th>Uso</th><th>Arquivos</th><th>Último envio</th>{'<th>TLS</th>' if excecoes else ''}<th>Ações</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
 <p class="suave">Cada usuário fica preso na pasta dele. Pasta marcada como <span class="etiqueta">dividida</span> é alcançada por
-mais de um usuário: um lê, grava e apaga os arquivos do outro. A alteração vale no próximo login, sem reiniciar o FTP.{nota_tls}</p></section>''',
+mais de um usuário: um lê, grava e apaga os arquivos do outro. <span class="etiqueta">limites</span> marca quem tem limite próprio,
+ajustado em Editar. A alteração vale no próximo login, sem reiniciar o FTP.{nota_tls}</p></section>''',
                             sessao, '/usuarios'))
 
 
@@ -180,7 +187,34 @@ def usuario_alteravel(pedido, sessao, nome, remover=False):
     return True
 
 
-def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, pasta=''):
+def cartao_limites(sessao, nome, dele, erro=''):
+    """Formulário dos limites do usuário. `dele` traz o que mostrar em cada campo: os limites gravados ou,
+    depois de uma recusa, o que foi digitado."""
+    def numero(chave, rotulo, nota):
+        return (f'<label for="{chave}">{rotulo} <span class="suave">({nota})</span></label>\n'
+                f'<input id="{chave}" name="{chave}" type="number" min="1" max="{limites.teto(chave)}" step="1" '
+                f'inputmode="numeric" value="{e(str(dele.get(chave, "")))}">')
+    return f'''<section class="cartao estreito" id="limites"><h2>⏱️ Limites</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
+<p>Campo vazio quer dizer <strong>sem limite próprio</strong>: vale o da stack.</p>
+<form method="post" action="/usuarios/limites" autocomplete="off">
+<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+<input type="hidden" name="usuario" value="{e(nome)}">
+{numero('sessoes', 'Sessões ao mesmo tempo no FTP', 'conexões abertas com este usuário')}
+{numero('download', 'Taxa de download, em KB por segundo', 'no FTP e nos downloads dele pelo painel')}
+{numero('envio', 'Taxa de envio, em KB por segundo', 'no FTP; cada arquivo enviado leva pelo menos 256 ÷ taxa segundos')}
+<label for="inicio">Horário em que o FTP aceita a entrada: das</label>
+<input id="inicio" name="inicio" type="time" value="{e(str(dele.get('inicio', '')))}">
+<label for="fim">até as</label>
+<input id="fim" name="fim" type="time" value="{e(str(dele.get('fim', '')))}">
+{numero('baixar', 'Downloads ao mesmo tempo pelo painel', f'vazio: {DOWNLOADS_POR_USUARIO}')}
+<p class="suave">Os limites valem na próxima entrada do usuário no FTP. Quando um limite do FTP muda, a sessão dele no
+painel é encerrada. Quem confere a senha do painel é o FTP: fora do horário, ou com todas as sessões dele ocupadas, o
+usuário também não entra no painel.</p>
+<button type="submit">Gravar limites</button> <a class="botao" href="/usuarios">Cancelar</a>
+</form></section>'''
+
+
+def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, pasta='', erro_limites='', digitado=None):
     nome = consulta.get('usuario', '')
     if not usuario_alteravel(pedido, sessao, nome):
         return
@@ -193,6 +227,11 @@ def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
     dividida = f' Também alcançada por: <strong>{e(", ".join(outros))}</strong>.' if outros else ''
     mais = ' ou mais' if uso['parcial'] else ''
     inicial = ' <span class="etiqueta">inicial</span>' if nome == CFG['ftp_usuario'] else ''
+    if digitado is None:
+        digitado = limites.ler(nome)
+        horario = digitado['horario']
+        digitado['inicio'] = f'{horario[:2]}:{horario[2:4]}' if horario else ''
+        digitado['fim'] = f'{horario[5:7]}:{horario[7:]}' if horario else ''
     pedido.enviar(codigo, pagina('Editar usuário', f'''<h1>✏️ Editar usuário</h1>
 <section class="cartao estreito">
 <p>Usuário <strong>{e(nome)}</strong>{inicial}. O nome não muda: é com ele que o equipamento entra no FTP.</p>
@@ -207,7 +246,25 @@ def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
 <p class="suave">Os arquivos da pasta atual <strong>não são movidos nem apagados</strong>: continuam onde estão, e o usuário deixa de
 alcançá-los. A troca vale no próximo login no FTP e encerra a sessão dele no painel.</p>
 <button type="submit">Trocar pasta</button> <a class="botao" href="/usuarios">Cancelar</a>
-</form></section>''', sessao, '/usuarios'))
+</form></section>
+{cartao_limites(sessao, nome, digitado, erro_limites)}''', sessao, '/usuarios'))
+
+
+def gravar_limites(pedido, sessao, consulta, formulario, token):
+    nome = formulario.get('usuario', '')
+    if not usuario_alteravel(pedido, sessao, nome):
+        return None
+    valores, erro = limites.do_formulario(formulario)
+    if erro:
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro_limites=erro, codigo=400, digitado=formulario)
+    feito, mensagem = executar_usuario('limites', nome, pares=limites.pares(valores))
+    if not feito:
+        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=gravar_limites usuario={nome}')
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro_limites='Não foi possível gravar: ' + mensagem,
+                           codigo=500, digitado=formulario)
+    gravados = ' '.join(f'{chave}={valores[chave] if valores[chave] != "" else "-"}' for chave in limites.CHAVES)
+    auditar(pedido.ip, 'limites_alterados', f'admin={sessao["admin"]} usuario={nome} {gravados}')
+    return pedido.redirecionar('/usuarios?m=limites')
 
 
 def trocar_pasta(pedido, sessao, consulta, formulario, token):

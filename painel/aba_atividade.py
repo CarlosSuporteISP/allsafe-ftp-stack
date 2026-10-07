@@ -13,6 +13,7 @@ EVENTOS = {
     'usuario_criado': '👤 Usuário criado',
     'senha_trocada': '🔑 Senha trocada',
     'pasta_trocada': '📁 Pasta do usuário trocada',
+    'limites_alterados': '⏱️ Limites do usuário alterados',
     'usuario_removido': '🗑️ Usuário removido',
     'tls_dispensado': '🔓 Usuário dispensado do TLS',
     'tls_exigido': '🔒 Usuário volta a exigir TLS',

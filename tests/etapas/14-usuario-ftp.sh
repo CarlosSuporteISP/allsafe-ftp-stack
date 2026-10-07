@@ -210,7 +210,7 @@ for n in 2 3; do
 done
 sleep 2
 r_3="$(c -b "$W/s14-4.jar" -D "$W/u14.cab" -o "$W/corpo" -w '%{http_code}' "$M/baixar?arquivo=diario/backup.cfg")"; espera="$(grep -i '^retry-after:' "$W/u14.cab" | tr -d '\r' | cut -d ' ' -f 2)"
-aviso="$(grep -c 'Cada usuário baixa até 2 arquivos por vez' "$W/corpo")"; tela_segue="$(aba -b "$W/s14-4.jar" "$M")"
+aviso="$(grep -c 'O limite deste usuário é de 2 arquivo(s) por vez' "$W/corpo")"; tela_segue="$(aba -b "$W/s14-4.jar" "$M")"
 r_viz="$(c -b "$W/v14.jar" -o "$W/u14.viz" -w '%{http_code}' "$M/baixar?arquivo=vizinho.cfg")"
 r_adm="$(c -b "$J" -o "$W/u14.adm" -w '%{http_code}' "$B/arquivos/baixar?arquivo=clientes14/olt-a/diario/backup.cfg")"
 kill "${lentos[@]}" 2>/dev/null; wait "${lentos[@]}" 2>/dev/null
