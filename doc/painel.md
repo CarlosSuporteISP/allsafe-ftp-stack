@@ -372,7 +372,7 @@ O painel mostra a logo da ALL-SAFE em quatro lugares e a autoria em um:
 
 Os seis arquivos ficam em [`web/marca/`](../web/marca/) e são entregues pelo nginx.
 
-> ⚠️ **Venda e revenda:** quem usa a stack para si pode manter a logo e o ícone. Quem vende, revende ou entrega como serviço sem contrato com a ALL-SAFE troca os dois e não liga o produto à empresa. A regra está em [Marca ALL-SAFE](../MARCA.md).
+> ⚠️ **Contrato ou venda para terceiros:** quem usa a stack para si pode manter a logo e o ícone. Quem a entrega em contrato ou a vende para terceiros tira ou troca os dois. É o único pedido da ALL-SAFE, explicado em [Marca ALL-SAFE](../MARCA.md).
 
 **Trocar a logo e o ícone:**
 

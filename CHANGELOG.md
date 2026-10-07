@@ -8,6 +8,21 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.18.8] - 2026-10-06
+
+A regra da marca fica com um pedido só: a stack é livre para usar e distribuir, e a logo da ALL-SAFE sai quando houver contrato ou venda para terceiros. Nenhum código da stack mudou.
+
+### Alterado
+
+- **[`MARCA.md`](MARCA.md) reescrito.** Usar, copiar, alterar e distribuir continua livre pela [Licença Apache 2.0](LICENSE), de graça ou cobrando, e não depende de contrato com a ALL-SAFE. O pedido é um: quem entrega a stack em contrato ou a vende para terceiros tira ou troca a logo e o ícone. No uso próprio e na distribuição de graça, os dois podem ficar.
+- **Linha de autoria do rodapé.** Continua vindo de fábrica no painel, mas deixa de ser pedida de quem altera o código. O [`NOTICE`](NOTICE) continua acompanhando toda cópia, como a licença determina.
+- **[`NOTICE`](NOTICE), seção Licença do [README](README.md#licenca) e [Marca do painel](doc/painel.md#marca)** com o mesmo texto.
+- **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados. O `NOTICE` entra nas três imagens: os três containers são recriados.
+
+## [0.18.7] - 2026-10-06
+
+Sem alteração. A tag `v0.18.7` foi criada por engano no commit da `0.18.6` e, como tag publicada não é apagada nem movida, a numeração seguiu para a `0.18.8`. Não tem Release.
+
 ## [0.18.6] - 2026-10-06
 
 Os créditos do README passam a citar o nginx e o Python, que a stack usa desde as versões `0.5.0` e `0.3.0`. Nenhum código da stack mudou.

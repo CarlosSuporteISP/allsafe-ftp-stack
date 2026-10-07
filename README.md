@@ -8,7 +8,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.18.6-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.18.8-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
@@ -39,7 +39,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/diagramas/)</sub>
 
-<sub><b>v0.18.6</b> · visão geral da stack · 2026-10-06</sub>
+<sub><b>v0.18.8</b> · visão geral da stack · 2026-10-06</sub>
 
 </div>
 
@@ -638,7 +638,7 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`CHANGELOG.md`](CHANGELOG.md) | Histórico de mudanças por versão |
 | [`LICENSE`](LICENSE) | Licença Apache 2.0: vale para o código, a configuração, os roteiros, os testes e a documentação |
 | [`NOTICE`](NOTICE) | Aviso de autoria, que acompanha toda cópia e toda versão derivada |
-| [`MARCA.md`](MARCA.md) | Regra de uso do nome, da logo e do ícone da ALL-SAFE: uso próprio, venda e revenda |
+| [`MARCA.md`](MARCA.md) | Pedido sobre a logo e o ícone da ALL-SAFE: ficam no uso próprio, saem em contrato ou venda para terceiros |
 | [`doc/`](doc/README.md) | Documentação, diagramas e fotos da aplicação |
 
 </details>
@@ -680,7 +680,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.18.6**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.18.8**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -729,14 +729,13 @@ A versão avança a cada publicação: `0.x` é a fase de construção, uma vers
 
 ## 📄 Licença
 
-O código, a configuração, os roteiros, os testes e a documentação são livres pela [Licença Apache 2.0](LICENSE): qualquer pessoa ou empresa pode usar, copiar, alterar e redistribuir, de graça ou cobrando, levando junto o `LICENSE` e o [`NOTICE`](NOTICE).
+O código, a configuração, os roteiros, os testes e a documentação são livres pela [Licença Apache 2.0](LICENSE): qualquer pessoa ou empresa pode usar, copiar, alterar e distribuir, de graça ou cobrando, levando junto o `LICENSE` e o [`NOTICE`](NOTICE).
 
-O nome ALL-SAFE, a logo e o ícone são marca da ALL-SAFE e não entram na licença do código:
+O nome ALL-SAFE, a logo e o ícone são marca da ALL-SAFE, e sobre eles há um pedido só:
 
-| Situação | Logo e ícone da ALL-SAFE | Linha `Desenvolvido pela allsafe.inf.br` |
-|---|---|---|
-| Uso próprio | Podem ficar | Mantida |
-| Venda ou revenda, com contrato com a ALL-SAFE | Conforme o contrato | Mantida |
-| Venda ou revenda, sem contrato com a ALL-SAFE | Trocados pelos de quem vende; ligar o produto à ALL-SAFE é proibido | Mantida |
+| Situação | Logo e ícone da ALL-SAFE |
+|---|---|
+| Uso próprio, ou distribuição de graça | Podem ficar |
+| Contrato ou venda para terceiros | Saem: são tirados ou trocados pelos de quem entrega |
 
-A regra completa está em [Marca ALL-SAFE](MARCA.md). A troca da logo e do ícone, em um comando, está em [Marca do painel](doc/painel.md#marca).
+O pedido completo está em [Marca ALL-SAFE](MARCA.md). A troca da logo e do ícone, em um comando, está em [Marca do painel](doc/painel.md#marca).

@@ -9,18 +9,17 @@ Este produto é distribuído sob a Licença Apache, Versão 2.0. O texto da
 licença está no arquivo LICENSE.
 
 Este arquivo acompanha toda cópia e toda versão derivada do projeto, como a
-licença determina (seção 4, item d). A linha "Desenvolvido pela
-allsafe.inf.br" é mantida também no rodapé do painel web.
+licença determina (seção 4, item d).
 
 Marca
 -----
 
+Usar, copiar, alterar e distribuir este projeto é livre, de graça ou cobrando.
 O nome ALL-SAFE, a logo e o ícone (os arquivos de web/marca/) são marca da
-ALL-SAFE e não fazem parte do que a Licença Apache concede (seção 6). O que
-pode e o que não pode ser feito com eles está em MARCA.md. Em resumo: no uso
-próprio a marca pode ficar; quem vende ou revende sem contrato com a ALL-SAFE
-troca a logo e o ícone e não liga o produto à empresa. A linha de autoria
-acima é mantida em todos os casos.
+ALL-SAFE e não fazem parte do que a Licença Apache concede (seção 6). A
+ALL-SAFE faz um pedido só, explicado em MARCA.md: quando o projeto for
+entregue em contrato ou vendido para terceiros, tire a logo e o ícone da
+ALL-SAFE. No uso próprio a marca pode ficar.
 
 Software de terceiros
 ---------------------
