@@ -166,6 +166,9 @@ input:not([type="hidden"]) {
   font: inherit;
 }
 input:focus-visible { border-color: var(--destaque); }
+/* Caixa de marcar: fica ao lado do texto, do tamanho dela, e não na largura do campo. */
+label.marcar { display: flex; align-items: center; gap: 8px; font-weight: 400; }
+label.marcar input { width: auto; flex: none; padding: 0; accent-color: var(--destaque); }
 
 button, .botao {
   display: inline-block;

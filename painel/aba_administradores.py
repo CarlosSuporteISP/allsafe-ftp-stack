@@ -1,17 +1,18 @@
 # SPDX-License-Identifier: Apache-2.0
 """Aba Administradores: quem entra no painel. Lista, criação, troca de senha, troca de nome e remoção.
 
-Toda alteração pede de novo a senha de quem está na sessão: um navegador esquecido aberto não basta
-para criar um administrador nem para trocar a senha de outro."""
+Toda alteração pede de novo a senha de quem está na sessão (confirmacao.py): um navegador esquecido aberto
+não basta para criar um administrador nem para trocar a senha de outro."""
 import urllib.parse
 
 import administradores
 from aba_usuarios import campos_de_senha, senha_do_formulario
-from auditoria import auditar, limpo
+from auditoria import auditar
 from config import ADMINS_MAX, NOME
+from confirmacao import campo_senha_atual, confirmacao_recusada
 from pagina import e, pagina
-from senha import gerar_hash, senha_confere
-from sessao import bloqueado, encerrar_sessoes_de, registrar_falha, renomear_sessoes, sessoes_por_admin
+from senha import gerar_hash
+from sessao import encerrar_sessoes_de, renomear_sessoes, sessoes_por_admin
 
 ABA = '/administradores'
 MENSAGENS = {
@@ -46,24 +47,6 @@ def lista(pedido, sessao, consulta, formulario, token):
 <p class="suave">Todos têm o mesmo acesso ao painel. Toda alteração pede a sua senha atual e fica na aba Atividade com o
 seu nome. Ninguém remove a própria conta: assim sempre sobra um administrador. Até {ADMINS_MAX} administradores.</p>
 </section>''', sessao, ABA))
-
-
-def campo_senha_atual(sessao):
-    return f'''<label for="senha_atual">Sua senha atual <span class="suave">(a de {e(sessao['admin'])}, para confirmar)</span></label>
-<input id="senha_atual" name="senha_atual" type="password" required autocomplete="current-password" maxlength="256">'''
-
-
-def confirmacao_recusada(pedido, sessao, formulario):
-    """Confere a senha atual de quem está na sessão. Devolve (código, erro); (0, '') quando confere."""
-    if bloqueado(pedido.ip):
-        auditar(pedido.ip, 'entrada_bloqueada')
-        return 429, 'Muitas tentativas. Aguarde alguns minutos e tente de novo.'
-    senha = formulario.get('senha_atual', '')
-    if not (0 < len(senha) <= 256 and senha_confere(senha, administradores.ler().get(sessao['admin']))):
-        registrar_falha(pedido.ip)
-        auditar(pedido.ip, 'admin_senha_atual_recusada', f'admin={sessao["admin"]} caminho={limpo(pedido.caminho)}')
-        return 403, 'A sua senha atual não confere. Nada foi alterado.'
-    return 0, ''
 
 
 def gravar(funcao):

@@ -1,10 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Usuários: lista, criação, edição (pasta), troca de senha e remoção dos usuários do FTP."""
+"""Aba Usuários: lista, criação, edição (pasta), troca de senha e remoção dos usuários do FTP.
+
+A remoção pode levar junto a pasta do usuário, quando nenhum outro a alcança; apagar pede a senha atual
+do administrador."""
 import secrets
 import urllib.parse
 
+from aba_arquivos import Recusado, apagar_caminho, endereco, resposta_parcial
 from auditoria import auditar, limpo
 from config import CFG, NOME, PASTA, SENHA_MAX, SENHA_MIN
+from confirmacao import campo_senha_atual, confirmacao_recusada
 from estado import executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, sem_tls, uso_da_pasta, usuarios, vizinhos
 from pagina import e, pagina, quando, tamanho
 
@@ -13,6 +18,7 @@ MENSAGENS = {
     'senha': '✅ Senha trocada.',
     'pasta': '✅ Pasta trocada. Os arquivos da pasta anterior continuam nela.',
     'removido': '✅ Usuário removido. Os arquivos continuam na pasta.',
+    'removido_com_pasta': '✅ Usuário removido e pasta apagada.',
     'tls_dispensado': '⚠️ Usuário dispensado do TLS: a senha e os arquivos dele passam em texto puro.',
     'tls_exigido': '✅ O usuário volta a ser obrigado a usar TLS.',
 }
@@ -262,41 +268,83 @@ def trocar_senha(pedido, sessao, consulta, formulario, token):
     return pedido.redirecionar('/usuarios?m=senha')
 
 
-def tela_remover(pedido, sessao, consulta, formulario=None, token=None):
+def tela_remover(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200):
     nome = consulta.get('usuario', '')
     if not usuario_alteravel(pedido, sessao, nome, remover=True):
         return
     cadastro = usuarios()
     pasta = cadastro.get(nome)
-    uso = uso_da_pasta(pasta)
+    uso = uso_da_pasta(pasta, validade=0)
+    mais = ' ou mais' if uso['parcial'] else ''
     onde = f"<code>{e(CFG['pasta_host'])}/{e(pasta)}</code>" if pasta else 'na pasta dele'
     outros = vizinhos(cadastro, nome)
-    dividida = f'<p class="suave">Esta pasta também é alcançada por: <strong>{e(", ".join(outros))}</strong>.</p>' if outros else ''
-    pedido.enviar(200, pagina('Remover usuário', f'''<h1>🗑️ Remover usuário</h1>
-<section class="cartao estreito">
+    if outros:
+        opcao = (f'<p class="suave">Esta pasta também é alcançada por: <strong>{e(", ".join(outros))}</strong>. Por isso ela não é '
+                 'apagada junto com o usuário: os arquivos continuam nela.</p>')
+    elif pasta:
+        opcao = f'''<label class="marcar"><input type="checkbox" name="apagar_pasta" value="sim"> Apagar também a pasta e tudo o que há nela</label>
+<p class="aviso">⚠️ O painel <strong>não tem lixeira</strong>: a pasta apagada só volta de uma cópia de segurança.
+Sem marcar a caixa, os arquivos continuam em {onde}.</p>
+{campo_senha_atual(sessao, obrigatoria=False, para='só para apagar a pasta')}'''
+    else:
+        opcao = ''
+    pedido.enviar(codigo, pagina('Remover usuário', f'''<h1>🗑️ Remover usuário</h1>
+<section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>Remover <strong>{e(nome)}</strong>? O login deixa de funcionar na hora.</p>
-<p class="aviso">📁 Os arquivos <strong>não são apagados</strong>: {uso['arquivos']} arquivo(s), {e(tamanho(uso['bytes']))},
-continuam em {onde}.</p>{dividida}
-<form method="post" action="/usuarios/remover">
+<p>📁 A pasta dele tem {uso['arquivos']}{mais} arquivo(s), {e(tamanho(uso['bytes']))}{mais}, em {onde}.</p>
+<form method="post" action="/usuarios/remover" autocomplete="off">
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
 <input type="hidden" name="usuario" value="{e(nome)}">
 <input type="hidden" name="confirmar" value="sim">
+{opcao}
 <button class="perigo" type="submit">Sim, remover o usuário</button> <a class="botao" href="/usuarios">Cancelar</a>
 </form></section>''', sessao, '/usuarios'))
 
 
 def remover_usuario(pedido, sessao, consulta, formulario, token):
+    """Remove o usuário do cadastro. Com a caixa marcada, apaga também a pasta dele, depois de conferir a senha
+    atual do administrador e que nenhum outro usuário alcança a mesma pasta, uma de dentro ou uma de fora."""
     nome = formulario.get('usuario', '')
     if not usuario_alteravel(pedido, sessao, nome, remover=True):
         return None
     if formulario.get('confirmar') != 'sim':
         return pedido.redirecionar('/usuarios/remover?usuario=' + urllib.parse.quote(nome))
+    com_pasta = formulario.get('apagar_pasta') == 'sim'
+    pasta = ''
+    if com_pasta:
+        cadastro = usuarios()
+        pasta = cadastro.get(nome)
+        if not pasta or vizinhos(cadastro, nome):
+            return tela_remover(pedido, sessao, {'usuario': nome}, erro='A pasta deste usuário não pode ser apagada junto: outro '
+                                'usuário a alcança, ou ela fica fora da pasta dos dados. Nada foi alterado.', codigo=409)
+        codigo, erro = confirmacao_recusada(pedido, sessao, formulario)
+        if codigo:
+            return tela_remover(pedido, sessao, {'usuario': nome}, erro=erro, codigo=codigo)
     feito, mensagem = executar_usuario('del', nome)
     if not feito:
         auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=remover usuario={nome}')
         return pedido.recusar(500, 'Não foi possível remover: ' + mensagem)
-    auditar(pedido.ip, 'usuario_removido', f'admin={sessao["admin"]} usuario={nome}')
-    return pedido.redirecionar('/usuarios?m=removido')
+    auditar(pedido.ip, 'usuario_removido', f'admin={sessao["admin"]} usuario={nome}' + (f' pasta={pasta}' if com_pasta else ''))
+    if not com_pasta:
+        return pedido.redirecionar('/usuarios?m=removido')
+    # O usuário já saiu do cadastro: ninguém mais grava na pasta enquanto ela é apagada.
+    try:
+        itens, parada = apagar_caminho(pasta)
+    except Recusado as motivo:
+        if motivo.codigo == 404:  # a pasta nunca chegou a existir
+            return pedido.redirecionar('/usuarios?m=removido_com_pasta')
+        itens, parada = 0, 'erro'
+    registro = f'admin={sessao["admin"]} tipo=pasta caminho={pasta}'
+    if not parada:
+        auditar(pedido.ip, 'item_apagado', f'{registro} itens={itens} usuario={nome}')
+        return pedido.redirecionar('/usuarios?m=removido_com_pasta')
+    if itens:
+        auditar(pedido.ip, 'item_apagado', f'{registro} itens={itens} completo=nao usuario={nome}')
+    else:
+        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=apagar caminho={pasta}')
+    # O usuário não existe mais: o que sobrou da pasta termina de ser apagado pela aba Arquivos.
+    return resposta_parcial(pedido, sessao, itens, parada, endereco('/arquivos/apagar', 'item', pasta),
+                            endereco('/arquivos', 'pasta', pasta), '/usuarios')
 
 
 def usuario_do_tls(pedido, sessao, nome):

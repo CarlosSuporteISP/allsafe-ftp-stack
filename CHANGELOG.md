@@ -8,6 +8,33 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.20.0] - 2026-10-06
+
+O painel passa a renomear e apagar arquivo e pasta, e a remover o usuário do FTP junto com a pasta dele. O que antes pedia um cliente de FTP ou o terminal do servidor agora é feito pelo navegador.
+
+### Adicionado
+
+- **Renomear, na aba Arquivos.** O botão **Renomear** de cada linha troca o nome do arquivo ou da pasta, dentro da mesma pasta. O nome novo segue a regra do nome de pasta, e renomear nunca substitui outro item: nome que já existe é recusado.
+- **Apagar, na aba Arquivos.** O botão **Apagar** abre a tela de confirmação, que mostra o que vai sair e, para pasta, quantos arquivos ela tem. Apagar pede a caixa de confirmação marcada e **a senha atual do administrador**. A pasta sai com tudo o que tem dentro. **Não há lixeira:** o que foi apagado só volta do backup.
+- **Remover o usuário com a pasta, na aba Usuários.** A tela **Remover** ganha a caixa **Apagar também a pasta e tudo o que há nela**, que também pede a senha atual. Sem a caixa, tudo continua como antes: a conta sai e os arquivos ficam.
+- **Eventos `item_renomeado` e `item_apagado` na auditoria**, com o administrador, o tipo e o caminho, e as linhas `Arquivo ou pasta renomeado` e `Arquivo ou pasta apagado` na aba Atividade. O `usuario_removido` passa a levar `pasta=` quando a pasta saiu junto.
+- **Casos de teste 43 e 44 (funcional) e 82 e 83 (segurança).** A bateria passa a 44 casos funcionais, 83 de segurança e 13 de rede.
+
+### Alterado
+
+- **Pasta de usuário do FTP só sai junto com o usuário.** A aba Arquivos não renomeia nem apaga a pasta que é a de um usuário, nem a que tem a de um usuário dentro: o cadastro ficaria apontando para uma pasta que não existe. O que está dentro dela é renomeado e apagado normalmente.
+- **Remoção com a pasta recusada em pasta dividida.** A caixa não aparece, e o pedido é recusado, quando outro usuário usa a mesma pasta, uma de dentro ou uma de fora dela.
+- **Limites do apagamento.** Um pedido apaga até 50.000 itens ou trabalha por até 20 segundos; pasta maior é apagada em mais de um pedido, com a tela `Apagado em parte` e o botão de repetir. O painel faz um apagamento por vez.
+- **Link simbólico e arquivo especial.** Continuam sem abrir nem baixar, e passam a poder ser renomeados e apagados. Apagar um link apaga só o link, nunca aquilo para onde ele aponta.
+- **Usuário do FTP no painel.** Nada muda para ele: continua só navegando e baixando na própria pasta.
+- **Código do painel.** A conferência da senha atual, que era da aba Administradores, vai para o módulo `confirmacao.py`, usado também por tudo o que apaga.
+- **Ao atualizar:** nada muda no `.env`, nos segredos nem nos dados. São recriados os três containers.
+
+### Segurança
+
+- O caminho de renomear e de apagar passa pelas mesmas conferências da leitura: `..`, caminho absoluto e byte nulo recebem `400`, e caminho por dentro de link simbólico, `403`. A ação é feita em relação à pasta já aberta, e o apagamento não segue link.
+- A senha atual errada em um apagamento conta para o bloqueio do endereço, como a da entrada: cinco erros em 15 minutos.
+
 ## [0.19.0] - 2026-10-06
 
 O painel passa a editar o usuário do FTP: troca a pasta de quem já existe e troca a senha e a pasta do usuário inicial, que antes só mudava pelo arquivo do segredo.

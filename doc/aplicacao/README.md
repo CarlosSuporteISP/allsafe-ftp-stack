@@ -237,6 +237,8 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 | Item da tela | O que faz |
 |---|---|
 | Aviso dos arquivos | Mostra quantos arquivos o usuário tem, quanto ocupam e em que pasta eles continuam; em pasta dividida, diz quem mais a alcança |
+| Caixa **Apagar também a pasta e tudo o que há nela** | Só aparece quando a pasta é só deste usuário. Marcada, a pasta sai junto com a conta, com tudo o que tem dentro e sem lixeira |
+| **Sua senha atual** | Pedida só quando a caixa está marcada: é a senha de quem está usando o painel |
 | **Sim, remover o usuário** | Apaga a conta: o login deixa de funcionar na hora |
 | **Cancelar** | Volta para a lista sem alterar nada |
 
@@ -244,7 +246,7 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 <sub><b>v0.18.4</b> · menu Usuários, depois da remoção · captura de 2026-10-05</sub>
 
-**Resultado esperado:** a lista volta com a mensagem `Usuário removido. Os arquivos continuam na pasta.` A pasta fica em `DATA_DIR/dados` até alguém apagá-la no servidor e continua visível na aba Arquivos.
+**Resultado esperado:** a lista volta com a mensagem `Usuário removido. Os arquivos continuam na pasta.` A pasta fica em `DATA_DIR/dados` e continua visível na aba Arquivos, onde o que está dentro dela pode ser apagado. Com a caixa marcada e a senha certa, a mensagem é `Usuário removido e pasta apagada.` e a pasta some.
 
 </details>
 
@@ -297,7 +299,7 @@ A coluna e os dois botões só existem com `FTP_TLS_EXCECOES=sim` no `.env`. Ser
 
 <sub><b>v0.18.4</b> · menu Arquivos · captura de 2026-10-05</sub>
 
-**Para que serve:** ver o que cada equipamento enviou, baixar um backup pelo navegador e criar a pasta de um usuário novo, sem cliente de FTP.
+**Para que serve:** ver o que cada equipamento enviou, baixar um backup pelo navegador, criar a pasta de um usuário novo, trocar o nome e apagar arquivo e pasta, sem cliente de FTP.
 
 **Como chegar:** menu do topo ➜ **Arquivos**. Na aba Usuários, o endereço da coluna **Pasta no host** abre direto a pasta daquele usuário.
 
@@ -307,10 +309,12 @@ A coluna e os dois botões só existem com `FTP_TLS_EXCECOES=sim` no `.env`. Ser
 | Nome de uma pasta | Entra na pasta |
 | Tamanho · Modificado | Tamanho do arquivo e data da última alteração |
 | **Baixar** | Entrega o arquivo ao navegador, com o nome original |
+| **Renomear** | Abre a tela que troca o nome do arquivo ou da pasta, dentro da mesma pasta; nome que já existe é recusado |
+| **Apagar** | Abre a tela de confirmação: mostra o que vai sair, pede a caixa marcada e a sua senha atual e apaga de vez, sem lixeira |
 | **Nova pasta** | Cria uma pasta vazia dentro da que está aberta |
 | **Novo usuário nesta pasta** | Dentro de uma pasta, abre o cadastro de usuário com o campo Pasta preenchido |
 
-O painel navega, baixa e cria pasta: enviar, renomear e apagar continuam sendo feitos por FTP.
+O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continua sendo feito por FTP. A pasta de um usuário do FTP não é renomeada nem apagada por aqui: sai junto com o usuário, em [Usuários ➜ Remover](#usuarios). As regras e os limites estão em [Painel web](../painel.md#arquivos).
 
 <details>
 <summary>Arquivos ➜ Pasta de um usuário e download — clique para expandir</summary>

@@ -143,8 +143,9 @@ def pastas_do_primeiro_nivel(limite=200):
     return sorted(nomes)
 
 
-def uso_da_pasta(pasta):
-    """Tamanho, quantidade e data do arquivo mais novo de /data/<pasta>, com limite de tempo e de itens."""
+def uso_da_pasta(pasta, validade=60):
+    """Tamanho, quantidade e data do arquivo mais novo de /data/<pasta>, com limite de tempo e de itens.
+    A medida vale por `validade` segundos; a tela que confirma um apagamento pede a de agora (0)."""
     def medir():
         total = arquivos = 0
         ultimo = 0.0
@@ -172,7 +173,7 @@ def uso_da_pasta(pasta):
             except OSError:
                 continue
         return {'bytes': total, 'arquivos': arquivos, 'ultimo': ultimo, 'parcial': parcial}
-    return com_cache(('uso', pasta), 60, medir)
+    return com_cache(('uso', pasta), validade, medir)
 
 
 def ftp_no_ar():

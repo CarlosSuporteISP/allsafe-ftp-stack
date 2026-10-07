@@ -19,6 +19,8 @@ EVENTOS = {
     'falha_comando': '⚠️ Alteração não concluída',
     'arquivo_baixado': '⬇️ Arquivo baixado',
     'pasta_criada': '📁 Pasta criada',
+    'item_renomeado': '✏️ Arquivo ou pasta renomeado',
+    'item_apagado': '🗑️ Arquivo ou pasta apagado',
     'arquivo_interrompido': '⚠️ Download interrompido',
     'admin_inicial_criado': '🛡️ Administrador inicial criado',
     'admin_criado': '🛡️ Administrador criado',
