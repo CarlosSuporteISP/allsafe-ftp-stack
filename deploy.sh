@@ -403,7 +403,7 @@ ftp-usuario-inicial-senha.txt
 painel-admin-inicial-senha.txt
   Senha inicial do primeiro administrador do painel web (o nome dele é PAINEL_ADMIN_USER, no .env),
   em texto, gerada na instalação. Serve para a primeira entrada e vale até ser trocada na aba
-  Administradores do painel: trocou, apague este arquivo. O ./scripts/painel-senha.sh apaga sozinho
+  Usuários do painel: trocou, apague este arquivo. O ./scripts/painel-senha.sh apaga sozinho
   quando redefine a senha desse administrador.
 
 painel-admin-inicial-senha-hash.txt
@@ -505,9 +505,9 @@ fi
 echo "Painel: https://$(env_valor PAINEL_BIND_IP 127.0.0.1):$(env_valor PAINEL_PORT 8443)  (pelo nginx; certificado autoassinado; $rede_texto, atrás de firewall)"
 if [[ -s "$painel_senha" ]]; then
   echo "        usuário '$painel_admin', senha inicial no arquivo $painel_senha"
-  echo "        (valem até serem trocados na aba Administradores do painel)"
+  echo "        (valem até serem trocados na aba Usuários do painel)"
 else
-  echo "        usuário e senha: os definidos na aba Administradores ou com ./scripts/painel-senha.sh"
+  echo "        usuário e senha: os definidos na aba Usuários ou com ./scripts/painel-senha.sh"
 fi
 echo "Segredos: $secrets_dir/LEIAME.txt diz para que serve cada arquivo."
 echo "Remover: ./deploy.sh --remover  (os dados ficam em $data_dir)"

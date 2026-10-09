@@ -42,7 +42,7 @@ flowchart LR
 | Arquivo | Quem gera | Você preenche? | Para quê |
 |---|---|---|---|
 | `ftp-usuario-inicial-senha.txt` | [`deploy.sh`](../deploy.sh), na primeira execução, se o arquivo não existir ou estiver vazio | Só se quiser uma senha própria | Senha do usuário inicial (`FTP_USER`) |
-| `painel-admin-inicial-senha.txt` | [`deploy.sh`](../deploy.sh), na primeira execução | Não | Senha **inicial** do primeiro administrador do painel (`PAINEL_ADMIN_USER`), em texto. Fica só no host e vale até ser trocada na aba Administradores; trocou, apague o arquivo |
+| `painel-admin-inicial-senha.txt` | [`deploy.sh`](../deploy.sh), na primeira execução | Não | Senha **inicial** do primeiro administrador do painel (`PAINEL_ADMIN_USER`), em texto. Fica só no host e vale até ser trocada na aba Usuários; trocou, apague o arquivo |
 | `painel-admin-inicial-senha-hash.txt` | [`deploy.sh`](../deploy.sh) e [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | Não | Hash `scrypt` dessa senha inicial. É o único arquivo da pasta que o painel enxerga, e só é usado para criar o primeiro administrador |
 | `backup-chave-privada.txt` | [`deploy.sh`](../deploy.sh), se nenhuma das duas chaves existir | Não | Chave que **abre** a cópia de segurança. Guarde uma cópia fora do servidor: sem ela nenhuma cópia restaura. Veja [Backup e restauração](backup.md#chave) |
 | `backup-chave-publica.txt` | [`deploy.sh`](../deploy.sh), a cada execução, a partir da privada | Não | Chave que **cifra** a cópia de segurança. Não abre nada e pode ficar no servidor |
@@ -93,7 +93,7 @@ A senha trocada pelo painel ou pelo `manage-user.sh passwd` sobrevive aos reiní
 
 ## 🖥️ Senha do painel
 
-Cada administrador do painel tem usuário e senha próprios. O primeiro nasce na instalação, com o nome de `PAINEL_ADMIN_USER` e a senha de `.secrets/painel-admin-inicial-senha.txt`. Troque essa senha logo depois do primeiro acesso, **pelo painel**, na aba Administradores, e apague o arquivo da senha inicial: [Administradores do painel](painel.md#administradores).
+Cada administrador do painel tem usuário e senha próprios. O primeiro nasce na instalação, com o nome de `PAINEL_ADMIN_USER` e a senha de `.secrets/painel-admin-inicial-senha.txt`. Troque essa senha logo depois do primeiro acesso, **pelo painel**, na aba Usuários, e apague o arquivo da senha inicial: [Administradores do painel](painel.md#administradores).
 
 Sem acesso ao painel, a senha é definida pelo host:
 

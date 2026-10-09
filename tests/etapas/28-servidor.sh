@@ -37,7 +37,7 @@ r_ftp="$(ftp_curl tls equip28 "$W/u28.senha" -T "$W/s28.bin" "$F/s28.bin")"
 cresceu28() { local agora; agora="$(recebido28)"; [[ "$agora" =~ ^[0-9]+$ && "$agora" -ge $((antes28 + 1048576)) ]]; }
 ate28 20 cresceu28; r_cresceu=$?; depois28="$(recebido28)"; linha28="$(estado28)"
 r_aba="$(c -o "$W/corpo" -D "$W/s28.cab" -w '%{http_code}' -b "$J" "$B/servidor")"; cp "$W/corpo" "$W/s28.html"
-servicos28="$(grep -o -E '</svg>(Servidor FTP|Painel|Frente web \(nginx\))<span class="saude bom">' "$W/s28.html" | wc -l)"
+servicos28="$(grep -o -E '</svg>(Servidor FTP|Painel|Frente web)<span class="saude bom">' "$W/s28.html" | wc -l)"
 # Cada container publica o que usa e o limite que recebeu; a tela escreve os três limites de cada um, e nenhum tem swap.
 limites_tela=0; sem_swap=0; publicados28=0
 for nome in "$FTP" "$PAINEL" "$NGINX"; do
@@ -99,7 +99,7 @@ de_volta28() { [[ "$(docker exec "$FTP" stat -c '%F' /auth/rede.estado 2>/dev/nu
 ate28 20 de_volta28; r_volta=$?
 # O mesmo com os recursos que o nginx publica, na única pasta em que ele escreve: doze campos com marcação, e depois
 # um link para o cadastro do FTP, que o painel enxerga. O cartão do nginx fica sem leitura e nada do arquivo vai à tela.
-sem28() { grep -o -E 'Frente web \(nginx\)<span class="saude [a-z]+">.{0,400}sem leitura: ela aparece' "$W/corpo" | wc -l; }
+sem28() { grep -o -E 'Frente web<span class="saude [a-z]+">.{0,400}sem leitura: ela aparece' "$W/corpo" | wc -l; }
 # O nginx pode publicar entre a troca e o pedido: a tela é pedida logo depois da troca, até três vezes.
 for _ in 1 2 3; do
   docker exec "$NGINX" sh -c 'printf "1 2 3 4 5 6 7 8 9 10 11 <b>marca28</b>\n" > /estado/recursos.estado'

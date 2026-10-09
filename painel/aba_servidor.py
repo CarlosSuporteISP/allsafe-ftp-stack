@@ -102,7 +102,7 @@ def periodo(series, teto, resumo):
 
 # ------------------------------------------------------------------ containers da stack
 
-SERVICOS = {'ftp': ('servidor', 'Servidor FTP'), 'painel': ('painel', 'Painel'), 'nginx': ('escudo', 'Frente web (nginx)')}
+SERVICOS = {'ftp': ('servidor', 'Servidor FTP'), 'painel': ('painel', 'Painel'), 'nginx': ('escudo', 'Frente web')}
 
 
 def container(nome, leitura, amostras, servidor_, no_ar, dados):
@@ -120,7 +120,7 @@ def container(nome, leitura, amostras, servidor_, no_ar, dados):
                 saude('atencao', 'Atenção') if cheia >= PARTE_ATENCAO or leitura['faltou'] else saude('bom', 'No ar'))
     if not leitura:
         return (f'<section class="cartao recurso"><h3>{icone(desenho)}{titulo}{selo}</h3>'
-                f'<p class="suave">serviço <code>{nome}</code> · sem leitura: ela aparece alguns segundos depois de o container iniciar</p>'
+                f'<p class="suave"><code>{nome}</code> · sem leitura: ela aparece alguns segundos depois de o container iniciar</p>'
                 f'{medida("Processador", None, "")}{medida("Memória", None, "")}{medida("Processos", None, "")}'
                 f'{pares(dados)}</section>')
     # Sem limite, o teto é o do servidor inteiro.
@@ -143,7 +143,7 @@ def container(nome, leitura, amostras, servidor_, no_ar, dados):
             if nome in amostra[4] and amostra[4][nome][0] is not None] if teto_nucleos else []
     historico = periodo((('info', usos),), escala(usos), f'processador, pico de {max(usos):.0f}%' if usos else '')
     return (f'<section class="cartao recurso"><h3>{icone(desenho)}{titulo}{selo}</h3>'
-            f'<p class="suave">serviço <code>{nome}</code> · no ar há {duracao(max(time.time() - leitura["inicio"], 0))}</p>'
+            f'<p class="suave"><code>{nome}</code> · no ar há {duracao(max(time.time() - leitura["inicio"], 0))}</p>'
             f'{processador_}{memoria_}{processos_}{historico}'
             + pares((('Limite de processador atingido', vezes(leitura['contido'])),
                      ('Encerrado por falta de memória', vezes(leitura['faltou']))) + tuple(dados)) + '</section>')

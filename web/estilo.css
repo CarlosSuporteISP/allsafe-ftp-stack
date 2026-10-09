@@ -358,10 +358,11 @@ p > strong.numero { margin: 0 6px 0 0; color: var(--texto); font-size: 1.25rem; 
 .resumo { max-width: none; margin: 0 0 10px; }
 .resumo strong { color: var(--texto); font-variant-numeric: tabular-nums; }
 .rodape-aba { max-width: 110ch; font-size: var(--texto-miudo); }
-.recursos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0 0 12px; }
-.recursos.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* Quantos cabem por linha é a largura da tela que diz: cada cartão tem pelo menos 236 px e os da linha dividem a
+   sobra. Linha que não enche deixa a vaga à direita, e os cartões das duas seções ficam da mesma largura. */
+.recursos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 236px), 1fr)); gap: 12px; margin: 0 0 12px; }
 .recursos > .cartao { display: flex; flex-direction: column; margin: 0; }
-.cartao.recurso { padding: 14px 16px; }
+.cartao.recurso { padding: 14px 12px; }
 .recurso h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 6px; font-size: 0.9375rem; }
 .recurso h3 > svg { width: 16px; height: 16px; color: var(--suave); }
 .recurso .numero { margin: 0; font-size: 1.375rem; }
@@ -387,6 +388,16 @@ p > strong.numero { margin: 0 6px 0 0; color: var(--texto); font-size: 1.25rem; 
 .medida p { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; max-width: none; margin: 0; font-size: var(--texto-miudo); }
 .medida .suave { margin-left: auto; font-size: inherit; font-variant-numeric: tabular-nums; text-align: right; }
 .medida strong { min-width: 2.75em; font-variant-numeric: tabular-nums; text-align: right; }
+/* Cartão estreito: a parte em uso fica ao lado do nome e o uso por escrito desce para a linha de baixo. Quem decide
+   é a largura do cartão, não a da tela. */
+.recurso { container-type: inline-size; }
+@container (max-width: 264px) {
+  .medida strong { order: 1; margin-left: auto; }
+  .medida .suave { order: 2; flex-basis: 100%; margin: 0; text-align: left; }
+  .recurso .saude { padding: 1px 6px; font-size: 0.6875rem; }
+  .recurso .saude svg { display: none; }
+  .recurso h3 { gap: 4px 6px; }
+}
 .medidas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 24px; }
 /* Na faixa de quatro medidas o nome ocupa a linha de cima; embaixo, o uso por escrito e a parte. */
 .medidas .medida p > span:first-child { flex-basis: 100%; color: var(--suave); }
@@ -528,6 +539,17 @@ input:focus-visible { border-color: var(--foco); }
 /* Caixa de marcar: fica ao lado do texto, do tamanho dela, e não na largura do campo. */
 label.marcar { display: flex; align-items: center; gap: 8px; min-height: 44px; margin: 4px 0; font-weight: 400; }
 label.marcar input { width: 20px; height: 20px; min-height: 0; flex: none; padding: 0; }
+/* Seletor de perfil: uma opção por linha, com o que ela permite ao lado do nome. */
+fieldset.perfis { min-width: 0; margin: 12px 0 0; padding: 4px 12px 8px; border: 1px solid var(--borda); border-radius: var(--raio); }
+fieldset.perfis legend { padding: 0 6px; font-weight: 600; }
+fieldset.perfis label.marcar { align-items: flex-start; padding: 10px 0; }
+fieldset.perfis label.marcar input { margin-top: 2px; }
+/* Perfil da conta na lista: embaixo do nome, sem tomar a largura de uma coluna. */
+td .perfil { display: block; color: var(--suave); font-size: var(--texto-rotulo); }
+/* Novo usuário: o que é só do FTP some com o perfil Administrador marcado, e a senha atual só aparece com ele.
+   Navegador sem :has() ignora a regra e mostra todos os campos; o painel confere só os do perfil escolhido. */
+form:has(#perfil-administrador:checked) .so-ftp,
+form:not(:has(#perfil-administrador:checked)) .so-admin { display: none; }
 
 button, .botao {
   display: inline-flex;
@@ -724,11 +746,6 @@ p > .botao { margin-top: 0; }
   .com-menu main { padding: 32px 32px 40px; }
 }
 
-/* Os quatro cartões do servidor na mesma linha quando o menu já está na lateral. */
-@media (min-width: 1340px) {
-  .recursos.quatro { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
 /* Ações da lista de usuários: uma por linha em tela estreita, duas por linha quando a coluna chega a 14.5rem
    ("Dispensar TLS" e "Remover" são o par mais largo) e todas na mesma linha a partir de 1560 px, que é quando a
    tabela de 1170 px cabe ao lado do menu. Faltando largura, a tabela rola dentro do cartão. */
@@ -742,7 +759,7 @@ p > .botao { margin-top: 0; }
 
 @media (max-width: 900px) {
   .situacao { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dupla, .recursos.tres { grid-template-columns: minmax(0, 1fr); }
+  .dupla { grid-template-columns: minmax(0, 1fr); }
   .medidas { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; }
   .entrada { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
   .entrada-marca { gap: 12px; padding: 20px 16px; }
@@ -761,7 +778,7 @@ p > .botao { margin-top: 0; }
   .barras { grid-template-columns: minmax(0, 1fr) auto; }
   .barras svg { grid-column: 1 / -1; grid-row: 2; }
   .cartao, .situacao > div { padding: 16px; }
-  .recursos, .medidas { grid-template-columns: minmax(0, 1fr); }
+  .medidas { grid-template-columns: minmax(0, 1fr); }
   .lista > :not(.rolagem) { margin: 16px; }
   .recentes li { flex-direction: column; align-items: flex-start; }
   .lista tr > :first-child { padding-left: 16px; }

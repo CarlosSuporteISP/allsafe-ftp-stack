@@ -145,7 +145,7 @@ sudo install -d -o "$USER" /srv/allsafe-ftp-stack   # pasta dos dados, das cópi
 
 O `deploy.sh` **gera uma senha forte** em `.secrets/ftp-usuario-inicial-senha.txt` (`0600`) se o arquivo estiver vazio: guarde-a para o cliente FTP. Para usar uma senha própria, grave-a nesse arquivo antes de rodar.
 
-No fim, o script mostra os endereços do FTP e do painel (`Painel: https://<IP>:8443`) e **em que arquivo** está cada senha, sem mostrá-las. O painel abre com o usuário de `PAINEL_ADMIN_USER` (`admin`, se não for trocado) e a senha inicial de `.secrets/painel-admin-inicial-senha.txt`; troque-a depois do primeiro acesso, na aba Administradores.
+No fim, o script mostra os endereços do FTP e do painel (`Painel: https://<IP>:8443`) e **em que arquivo** está cada senha, sem mostrá-las. O painel abre com o usuário de `PAINEL_ADMIN_USER` (`admin`, se não for trocado) e a senha inicial de `.secrets/painel-admin-inicial-senha.txt`; troque-a depois do primeiro acesso, na aba Usuários.
 
 Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.example)) e rode `./deploy.sh` de novo:
 
@@ -164,10 +164,11 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | Só validar, sem subir nada | `./deploy.sh --check-only` |
 | Atualizar os pacotes das imagens | `./deploy.sh --atualizar` |
 | Abrir o painel | `https://<PAINEL_BIND_IP>:8443` no navegador, com o usuário de `PAINEL_ADMIN_USER` e a senha de `.secrets/painel-admin-inicial-senha.txt` |
-| Trocar o usuário ou a senha do painel | pelo painel, aba Administradores |
-| Criar outro administrador do painel | pelo painel, aba Administradores, botão **Novo administrador** |
+| Trocar o usuário ou a senha do painel | pelo painel, aba Usuários, na linha do administrador |
+| Criar outro administrador do painel | pelo painel, aba Usuários, **Novo usuário** com o perfil Administrador |
 | Recuperar o acesso ao painel | `./scripts/painel-senha.sh --gerar` (outro administrador: `--usuario NOME`) |
 | Criar um usuário | pelo painel, aba Usuários, ou `./manage-user.sh add backup-olt` |
+| Limitar o que um usuário faz (só envia, ou só baixa) | pelo painel, aba Usuários, **Editar**, cartão **Perfil**, ou `./manage-user.sh perfil backup-olt envio`: veja [Perfis](doc/painel.md#perfis) |
 | Baixar um backup recebido | pelo painel, aba Arquivos, botão **Baixar** na linha do arquivo |
 | Deixar o dono dos arquivos baixar os dele | ele abre o painel com o usuário e a senha do FTP e vê só a própria pasta; para o painel aceitar só administradores, `PAINEL_ACESSO_USUARIOS_FTP=nao` no `.env` e `./deploy.sh` |
 | Criar uma pasta e prender um usuário a ela | pelo painel, aba Arquivos, **Nova pasta** e **Novo usuário nesta pasta**, ou `./manage-user.sh add olt01 clientes/olt-01` |
@@ -631,7 +632,7 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 55 casos funcionais, 98 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 57 casos funcionais, 102 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/scripts.md#testar).
 
 ---
 
@@ -649,7 +650,7 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`compose.yaml`](compose.yaml) | Definição dos serviços `ftp`, `painel` e `nginx`, volumes, rede, limites e healthchecks |
 | [`Dockerfile`](Dockerfile) | Imagens sobre o Debian 13 slim: alvos `ftp` e `painel`, com Pure-FTPd e o usuário `ftpdata`, e alvo `nginx` |
 | [`deploy.sh`](deploy.sh) | Instala, reaplica, atualiza ou remove a stack em um comando |
-| [`manage-user.sh`](manage-user.sh) | Atalho do host para `add` (com a pasta, se quiser), `passwd`, `pasta`, `del` e `list` de usuários |
+| [`manage-user.sh`](manage-user.sh) | Atalho do host para `add` (com a pasta e o perfil, se quiser), `passwd`, `pasta`, `perfil`, `del` e `list` de usuários |
 | [`ftp/entrypoint.sh`](ftp/entrypoint.sh) | Prepara o usuário inicial e o certificado e executa o `pure-ftpd` |
 | [`ftp/saude.sh`](ftp/saude.sh) | Healthcheck do FTP: abre a porta de controle e espera a saudação do servidor |
 | [`ftp/usuario.sh`](ftp/usuario.sh) | Gestão de usuários **dentro** dos containers (chamado pelo `manage-user.sh` e pelo painel) |

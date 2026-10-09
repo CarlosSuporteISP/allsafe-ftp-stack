@@ -112,7 +112,7 @@ p_1="$(POTE="$U" envio /usuarios/novo --data-urlencode "csrf=$UK" --data-urlenco
 p_2="$(POTE="$U" envio /usuarios/remover --data-urlencode "csrf=$UK" --data-urlencode 'usuario=vizinho14')"
 p_3="$(POTE="$U" envio /usuarios/senha --data-urlencode "csrf=$UK" --data-urlencode 'usuario=vizinho14' --data-urlencode "senha@$W/u14d.senha" --data-urlencode "confirmacao@$W/u14d.senha")"
 p_4="$(POTE="$U" envio /arquivos/pasta --data-urlencode "csrf=$UK" --data-urlencode 'pasta=' --data-urlencode 'nome=intrusa14')"
-p_5="$(POTE="$U" envio /administradores/novo --data-urlencode "csrf=$UK" --data-urlencode 'nome=intruso14' --data-urlencode "senha@$W/u14d.senha" --data-urlencode "confirmacao@$W/u14d.senha" --data-urlencode "senha_atual@$W/u14c.senha")"
+p_5="$(POTE="$U" envio /usuarios/novo --data-urlencode "csrf=$UK" --data-urlencode 'perfil=administrador' --data-urlencode 'usuario=intruso14' --data-urlencode "senha@$W/u14d.senha" --data-urlencode "confirmacao@$W/u14d.senha" --data-urlencode "senha_atual@$W/u14c.senha")"
 p_6="$(POTE="$U" envio /administradores/remover --data-urlencode "csrf=$UK" --data-urlencode "admin=$ADMIN" --data-urlencode "senha_atual@$W/u14c.senha")"
 p_sem="$(POTE="$U" envio /usuarios/remover --data-urlencode 'usuario=vizinho14')"
 vazou14="$(grep -c -a -F "$MARCA" "$W/u14.respostas")"; nomes="$(grep -c -a 'vizinho14' "$W/u14.respostas")"
@@ -161,13 +161,13 @@ ftp_homonimo="$(ftp_curl tls "$ADMIN" "$W/u14d.senha" -o "$W/u14.ftp" "$F/vizinh
 auditoria; f_depois="$(eventos entrada_falha)"; p_antes="$(grep -c ' evento=sessao_encerrada usuario=equip14 motivo=nome_de_administrador$' "$W/auditoria")"
 # Administrador criado com o nome de um usuário do FTP que está com sessão aberta: a sessão do usuário acaba.
 antes_adm="$(aba -b "$U" "$M")"
-r_novo="$(envio /administradores/novo --data-urlencode "csrf=$K" --data-urlencode 'nome=equip14' --data-urlencode "senha@$W/u14d.senha" --data-urlencode "confirmacao@$W/u14d.senha" --data-urlencode "senha_atual@$W/painel.senha")"
+r_novo="$(envio /usuarios/novo --data-urlencode "csrf=$K" --data-urlencode 'perfil=administrador' --data-urlencode 'usuario=equip14' --data-urlencode "senha@$W/u14d.senha" --data-urlencode "confirmacao@$W/u14d.senha" --data-urlencode "senha_atual@$W/painel.senha")"
 depois_adm="$(aba -b "$U" "$M")"
 r_rem="$(envio /administradores/remover --data-urlencode "csrf=$K" --data-urlencode 'admin=equip14' --data-urlencode "senha_atual@$W/painel.senha")"
 auditoria; por_nome="$(grep -c ' evento=sessao_encerrada usuario=equip14 motivo=nome_de_administrador$' "$W/auditoria")"
 [[ "$e_adm" == 303 && "$e_u" == 303 && "$e_errada" == 401 && "$e_ninguem" == 401 && "$e_admin" == 401 && "$tela_errada" == "$tela_ninguem" && "$tela_errada" == "$tela_admin" \
   && "$r_homonimo" == 0 && "$e_homonimo" == 401 && "$e_dono" == 303 && "$d_dono" == / && "$ftp_homonimo" == 0 && "$f_depois" == $((f_antes + 4)) \
-  && "$antes_adm" == "200 " && "$r_novo" == "303 /administradores?m=criado" && "$depois_adm" == "303 /entrar" && "$r_rem" == "303 /administradores?m=removido" && "$por_nome" == $((p_antes + 1)) ]]
+  && "$antes_adm" == "200 " && "$r_novo" == "303 /usuarios?m=admin_criado" && "$depois_adm" == "303 /entrar" && "$r_rem" == "303 /usuarios?m=admin_removido" && "$por_nome" == $((p_antes + 1)) ]]
 ok_a=$?
 
 # Servidor FTP parado: quem já entrou segue lendo a própria pasta (os arquivos vêm do disco); entrada nova não passa.

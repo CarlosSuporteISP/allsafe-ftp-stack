@@ -69,7 +69,7 @@ confere() { # <rótulo> <código esperado> <código recebido>: a tela que ficou 
 r="$(aba "$B/entrar")"; confere 'tela de entrada' 200 "$r"
 printf 'senha-errada-%s' "$RANDOM" > "$W/errada16.senha"
 r="$(COMO=ninguem16 entrar "$W/x16.jar" "$W/errada16.senha")"; cp "$W/entrada.corpo" "$W/corpo"; confere 'entrada recusada' 401 "$r"
-for caminho in / /usuarios /usuarios/novo /arquivos /administradores /seguranca /atividade; do
+for caminho in / /usuarios /usuarios/novo '/usuarios/novo?perfil=administrador' /arquivos /seguranca /atividade; do
   r="$(aba -b "$J" "$B$caminho")"; confere "administrador em $caminho" 200 "$r"
 done
 r="$(aba -b "$J" "$B/nao-existe-16")"; confere 'página que não existe' 404 "$r"

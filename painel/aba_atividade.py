@@ -16,6 +16,7 @@ EVENTOS = {
     'usuario_criado': ('usuario', 'Usuário criado'),
     'senha_trocada': ('chave', 'Senha trocada'),
     'pasta_trocada': ('pasta', 'Pasta do usuário trocada'),
+    'perfil_trocado': ('usuario', 'Perfil do usuário trocado'),
     'limites_alterados': ('relogio', 'Limites do usuário alterados'),
     'bloqueio_removido': ('cadeado-aberto', 'Bloqueio do usuário no FTP removido'),
     'usuario_removido': ('lixeira', 'Usuário removido'),

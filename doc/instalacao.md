@@ -125,7 +125,7 @@ FTP:    127.0.0.1:21, TLS explícito obrigatório no login, modo passivo 30000-3
         usuário 'transfer', senha no arquivo ./.secrets/ftp-usuario-inicial-senha.txt
 Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede privada, atrás de firewall)
         usuário 'admin', senha inicial no arquivo ./.secrets/painel-admin-inicial-senha.txt
-        (valem até serem trocados na aba Administradores do painel)
+        (valem até serem trocados na aba Usuários do painel)
 Segredos: ./.secrets/LEIAME.txt diz para que serve cada arquivo.
 Remover: ./deploy.sh --remover  (os dados ficam em <DATA_DIR>)
 Contato de segurança: não publicado. Para publicar, preencha SEGURANCA_CONTATO_EMAIL em .env

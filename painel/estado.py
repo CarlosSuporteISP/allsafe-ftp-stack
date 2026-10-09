@@ -38,6 +38,9 @@ def limpar_cache():
         CACHE.clear()
 
 
+UID_DO_PERFIL = {'10002': 'envio', '10003': 'leitura'}   # os demais são do perfil completo (ftpdata, 10000)
+
+
 def pasta_do_cadastro(casa):
     """Pasta do usuário como está no cadastro (/data/<pasta>/./), relativa à pasta dos dados.
     Devolve None se o cadastro aponta para a própria pasta dos dados ou para fora dela."""
@@ -62,6 +65,21 @@ def usuarios():
     except OSError:
         pass
     return dict(sorted(cadastro.items()))
+
+
+def perfis():
+    """Nome ➜ perfil de cada usuário: completo, envio ou leitura. O perfil é a identidade de sistema gravada no
+    cadastro (campo 3), a mesma que o allsafe-ftp-user grava: quem aplica o limite é o sistema de arquivos."""
+    cadastro = {}
+    try:
+        with open(ARQ_USUARIOS, encoding='utf-8', errors='replace') as arq:
+            for linha in arq:
+                campos = linha.rstrip('\n').split(':')
+                if len(campos) > 5 and NOME.fullmatch(campos[0]):
+                    cadastro[campos[0]] = UID_DO_PERFIL.get(campos[2], 'completo')
+    except OSError:
+        pass
+    return cadastro
 
 
 def senhas_de_custo_antigo():

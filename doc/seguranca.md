@@ -30,7 +30,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [Painel por proxy ou túnel](#painel-por-proxy) · [FTP sem TLS](#ftp-sem-tls) · [TLS por usuário](#tls-por-usuario) · [Bloqueio por tentativa](#bloqueio-por-tentativa) · [Boas práticas antes de produção](#boas-praticas) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Testes executados](#testes-executados) · [Sem senha, senha aleatória, exaustão e acesso direto ao cadastro](#sem-senha-e-exaustao) · [Custo das senhas do FTP](#custo-das-senhas) · [Contato de segurança e robôs de busca](#contato-de-seguranca) · [Conformidade com as RFCs](#conformidade-rfc) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
+[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [Painel por proxy ou túnel](#painel-por-proxy) · [FTP sem TLS](#ftp-sem-tls) · [TLS por usuário](#tls-por-usuario) · [Bloqueio por tentativa](#bloqueio-por-tentativa) · [Perfis de usuário](#perfis) · [Boas práticas antes de produção](#boas-praticas) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Testes executados](#testes-executados) · [Sem senha, senha aleatória, exaustão e acesso direto ao cadastro](#sem-senha-e-exaustao) · [Custo das senhas do FTP](#custo-das-senhas) · [Contato de segurança e robôs de busca](#contato-de-seguranca) · [Conformidade com as RFCs](#conformidade-rfc) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
 
 </details>
 
@@ -581,6 +581,38 @@ flowchart LR
 
 ---
 
+<a name="perfis"></a>
+
+## 🧑‍💼 Perfis de usuário: o mínimo que cada conta precisa
+
+Cada usuário do FTP tem um perfil, escolhido pelo administrador. Dê a cada conta o menor que resolve: o equipamento que só envia backup não precisa apagar, e quem só consulta não precisa gravar.
+
+| Perfil | Para quem | O que a conta não consegue |
+|---|---|---|
+| Completo | Quem administra a própria pasta | Sair da pasta dele |
+| Envio | Equipamento que só envia backup | Apagar, renomear e gravar por cima do que já chegou |
+| Leitura | Quem só consulta e baixa | Gravar, criar pasta, renomear e apagar |
+
+**O ganho:** a senha de um equipamento vazada não serve para apagar o histórico de backup (Envio) nem para gravar arquivo na pasta (Leitura). Como escolher e trocar: [Painel web](painel.md#perfis).
+
+> ⚠️ **Limite do perfil Envio:** entre o fim do envio e a entrega do arquivo ao servidor passa um instante, de milissegundos, em que o arquivo ainda é do usuário. A pasta que o próprio Envio criou continua dele enquanto está vazia. O perfil protege o que já foi recebido; não substitui a [cópia de segurança](backup.md).
+
+<details>
+<summary>Detalhe técnico — o que impõe o perfil</summary>
+
+- **O sistema de arquivos, e não uma lista de comandos:** o perfil é o uid e o gid com que o `pure-ftpd` atende a sessão, depois do `chroot`: `ftpdata` (Completo), `ftpenvio`, do mesmo grupo (Envio), e `ftpleitura`, de outro grupo (Leitura). `DELE`, `RNFR`, `RNTO`, `STOR`, `APPE`, `MKD` e `RMD` caem na mesma conferência do kernel; não há comando esquecido.
+- **Modo da pasta por quem a alcança:** `0750` só com Completo; com um Envio, o grupo grava e a pasta leva o bit de permanência (`1770`), de modo que cada um só troca o nome e apaga o que é dele; com um Leitura, os outros leem (`0755` ou `1775`). Os arquivos nascem `0644`: o grupo não grava neles.
+- **Entrega:** o vigia do FTP passa ao `ftpdata` cada arquivo recebido em pasta com Envio ou Leitura. A pasta é aberta nível por nível a partir de `/data`, sem seguir link simbólico, e o dono é trocado no que foi aberto, não no nome; só entra arquivo comum, com um nome só e ainda do `ftpenvio`. Depois da entrega, o arquivo é do `ftpdata`, e o bit de permanência impede o Envio de apagá-lo ou trocá-lo de nome.
+- **`/data` fechado:** `DATA_DIR/dados` é `0700` do `root` dentro do container. A leitura para os outros de uma pasta só vale para quem o `chroot` já prendeu dentro dela.
+- **Partida:** com Envio ou Leitura no cadastro, o entrypoint do `ftp` refaz os modos e entrega o que ficou sem entrega antes de aceitar sessão; se não conseguir, o container não sobe.
+- **Troca de perfil:** só um administrador, pelo painel (`POST /usuarios/perfil`), com token CSRF e origem conferidos, ou quem tem acesso ao Docker do servidor, pelo `manage-user.sh`. Fica na auditoria como `perfil_trocado`, e a sessão do usuário no painel é encerrada.
+- **Sem capacidade nova:** o container do `ftp` já tinha `CHOWN` e `FOWNER`; nenhum pacote entrou na imagem.
+- Os perfis, os limites e as tentativas de burlar são conferidos pela [bateria de testes](scripts.md#testar), em [`tests/etapas/29-perfis.sh`](../tests/etapas/29-perfis.sh).
+
+</details>
+
+---
+
 <a name="boas-praticas"></a>
 <a name="o-que-endurecer-antes-de-producao"></a>
 
@@ -794,6 +826,7 @@ Nenhuma versão é publicada sem a bateria inteira aprovada. Ela roda em um clon
 | Entrada no FTP | Entrar sem TLS, como anônimo, com senha errada, vazia ou sorteada, mandar comando antes do login, derrubar o `pure-authd` para ver se a entrada abre | 1, 2, 5, 7, 64 a 66, 70, 71, 89 |
 | Confinamento no FTP | Sair da pasta pelo `chroot`, ler a pasta de outro usuário, mudar permissão por `SITE CHMOD`, escapar da pasta escolhida | 3, 4, 6, 59 |
 | Bloqueio por tentativa | Burlar o bloqueio, desbloquear ou mudar limite sem sessão, sem token ou com valor fora da regra | 85, 86 |
+| Perfis de usuário | Apagar, renomear e gravar por cima com o perfil Envio; gravar, criar pasta e apagar com o perfil Leitura; conferir o modo das pastas depois de trocar perfil, trocar pasta e remover usuário; trocar perfil sem sessão, sem token, com a sessão de um usuário do FTP e com valor fora da lista | 99 a 102 |
 | Rede e exposição | Subir com o FTP em todas as interfaces ou em IP público, anunciar IP público, abrir o painel para rede pública, ligar a opção de IP público com valor inválido, sem TLS ou em "todos" | 16 a 21, 40 a 45 |
 | Painel por proxy ou túnel | Forjar o endereço do cliente por cabeçalho, com e sem proxy declarado; contar senha errada e sessão pelo endereço de quem não é o cliente; ler na tela de entrada como o painel foi publicado; ocultar o aviso de exposição | 93 a 96 |
 | Aba Servidor | Abrir sem sessão ou com a sessão de um usuário do FTP; trocar o arquivo da rede e o dos recursos do nginx por texto com marcação e por link para o cadastro do FTP; manter a sessão aberta só com a atualização automática | 97, 98 |
@@ -821,7 +854,7 @@ Além da bateria, cada versão passa por:
 ./tests/testar.sh
 ```
 
-**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 55 casos funcionais, 98 de segurança e 14 de rede. A bateria leva cerca de 45 minutos; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
+**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 57 casos funcionais, 102 de segurança e 14 de rede. A bateria leva cerca de 45 minutos; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
 
 > ⚠️ **Limite — o que a bateria não alcança:** ela roda no próprio servidor, contra a instância de teste. O firewall do host, o proxy ou o túnel da borda e o equipamento que envia o backup são de quem instala e não entram nela: confira-os pelo [passo a passo de produção](#boas-praticas).
 
@@ -996,8 +1029,8 @@ O `pure-ftpd` sobe como `root`, aplica `chroot` e **troca** para um usuário sem
 | Capability | Uso |
 |---|---|
 | `SYS_CHROOT` | `chroot()` de cada sessão |
-| `SETUID` e `SETGID` | Descer para o uid e gid do usuário virtual |
-| `CHOWN` e `FOWNER` | Ajustar dono e permissão dos diretórios criados (`-j`) |
+| `SETUID` e `SETGID` | Descer para o uid e gid do usuário virtual, que são os do [perfil](#perfis) dele |
+| `CHOWN` e `FOWNER` | Ajustar dono e permissão dos diretórios criados (`-j`) e, com [perfil](#perfis) Envio ou Leitura, das pastas dos usuários e dos arquivos recebidos |
 | `DAC_OVERRIDE` e `DAC_READ_SEARCH` | Ler e gravar nos diretórios dos usuários independentemente do bit de permissão |
 | `NET_BIND_SERVICE` | Exigida pelo `pure-ftpd` na partida, mesmo com o serviço em `2121` (porta não privilegiada): sem ela o servidor encerra e o container não sobe |
 | `SYS_NICE` | Prioridade de I/O das transferências |
@@ -1016,7 +1049,7 @@ O painel usa as mesmas diretivas do `ftp` (`read_only`, `tmpfs`, `cap_drop: [ALL
 |---|---|
 | `CHOWN` | Entregar ao `ftpdata` a pasta do usuário criado e ajustar o dono de `/painel` |
 | `FOWNER` | Ajustar a permissão da pasta do usuário depois de entregue ao `ftpdata` |
-| `DAC_OVERRIDE` | Ler o tamanho das pastas dos usuários e os arquivos da aba Arquivos, que pertencem ao `ftpdata` com modo `0750`, e renomear e apagar dentro delas |
+| `DAC_OVERRIDE` | Ler o tamanho das pastas dos usuários e os arquivos da aba Arquivos, que pertencem ao `ftpdata` com modo `0750` ou o que os [perfis](#perfis) pedem, e renomear e apagar dentro delas |
 
 O painel **não** tem `SYS_CHROOT`, `SETUID`, `SETGID` nem `NET_BIND_SERVICE`, e **não escuta em porta de rede**: atende por um soquete Unix, `/nginx/painel.sock`, que só o root do container e o grupo do nginx abrem (`0660`, dono `0:10001`). O endereço do cliente vem do nginx, em `X-Real-IP`; pedido que chegue ao soquete sem esse cabeçalho, com dois ou com valor que não é IP recebe `400`. Monta `DATA_DIR/dados` com escrita, porque é ele que cria a pasta de cada usuário novo e a pasta pedida na aba Arquivos; a aba abre tudo só para leitura, e a única rota que grava cria uma pasta vazia: nenhuma envia, renomeia ou apaga. Não monta `DATA_DIR/certs`: a chave privada do FTP fica fora do alcance dele. Para mostrar a impressão digital, lê `ftp-cert.pem`, a cópia **sem a chave** que o entrypoint do FTP grava em `DATA_DIR/auth`.
 

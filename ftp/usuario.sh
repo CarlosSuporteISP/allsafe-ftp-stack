@@ -3,7 +3,8 @@
 set -Eeuo pipefail
 
 usage() {
-  echo "Uso: $0 add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta]" >&2
+  echo "Uso: $0 add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]" >&2
+  echo "     $0 perfil <usuario> [completo|envio|leitura]" >&2
   echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]" >&2
   echo "     $0 bloqueios [usuario]" >&2
   echo "     $0 desbloquear <usuario> [origem]" >&2
@@ -13,6 +14,15 @@ action="${1:-}"
 user="${2:-}"
 pasta="${3:-$user}"
 passwd_file=/auth/pureftpd.passwd
+# Perfil do usuário: o que ele pode fazer na pasta. O Pure-FTPd não tem permissão por conta: o perfil é a
+# identidade de sistema gravada no cadastro (campos 3 e 4), e quem aplica o limite é o sistema de arquivos.
+#   completo  ftpdata:ftpdata        envia, baixa, renomeia e apaga;
+#   envio     ftpenvio:ftpdata       envia e baixa; o vigia do FTP passa cada arquivo recebido para o ftpdata,
+#                                    e daí em diante este perfil não o sobrescreve, não o renomeia e não o apaga;
+#   leitura   ftpleitura:ftpleitura  lista e baixa.
+declare -A dono_do_perfil=([completo]=ftpdata [envio]=ftpenvio [leitura]=ftpleitura)
+declare -A grupo_do_perfil=([completo]=ftpdata [envio]=ftpdata [leitura]=ftpleitura)
+uid_envio=10002 uid_leitura=10003
 # Quem entra sem TLS com o TLS por usuário valendo: um nome por linha. Quem lê é o porteiro do FTP, a cada
 # entrada, e a partida do serviço ftp, que só aceita sessão sem TLS enquanto houver nome aqui.
 lista_tls=/auth/sem-tls.lista
@@ -38,7 +48,8 @@ gravar_marca() { # <arquivo>: grava o nome do usuário inicial, só para o root
   ( umask 077; printf '%s\n' "$inicial" > "$1.novo" )
   mv -f "$1.novo" "$1"
 }
-[[ $# -le 2 || "$action" == add || "$action" == pasta || "$action" == limites || "$action" == desbloquear ]] || usage
+[[ $# -le 2 || "$action" == add || "$action" == pasta || "$action" == perfil || "$action" == limites || "$action" == desbloquear ]] || usage
+perfil_invalido() { echo "Perfil invalido: use completo, envio ou leitura" >&2; exit 1; }
 pasta_invalida() {
   echo "Pasta invalida: ate 4 niveis separados por /; letras, numeros, _ - e ponto; nenhum nivel comeca com ponto" >&2
   exit 1
@@ -79,8 +90,63 @@ preparar_pasta() {
     fi
     install -d -o ftpdata -g ftpdata -m 0750 "$atual"
   done
-  chown ftpdata:ftpdata "$atual"
-  chmod 0750 "$atual"
+}
+
+# Perfil gravado no cadastro para o usuário.
+perfil_de() {
+  local nome uid _
+  while IFS=: read -r nome _ uid _; do
+    [[ "$nome" == "$1" ]] || continue
+    case "$uid" in
+      "$uid_envio") echo envio ;;
+      "$uid_leitura") echo leitura ;;
+      *) echo completo ;;
+    esac
+    return 0
+  done < "$passwd_file"
+  return 1
+}
+
+# Dono e modo de cada pasta de usuário, pelo perfil de quem a alcança: quem tem a mesma pasta ou uma acima.
+#   só completo  0750  o dono faz tudo e ninguém mais entra;
+#   com envio    +g+w e o bit de permanência: o envio cria, e só o dono do arquivo o troca, renomeia ou apaga;
+#   com leitura  +o+rx: a leitura fica fora do grupo e entra pelo "outros". O /data é 0700 do root, então
+#                esse "outros" só existe para quem o Pure-FTPd já prendeu dentro da pasta.
+# As pastas de dentro acompanham a do usuário quando o modo muda. Os argumentos são pastas que saíram do
+# cadastro nesta alteração (a de quem foi removido, a anterior de quem trocou): voltam ao que o resto pede.
+ajustar_pastas() {
+  local nome uid casa outra par modo atual _
+  local -a pares=() casas=("$@")
+  while IFS=: read -r nome _ uid _ _ casa _; do
+    casa="${casa%/./}"; casa="${casa%/}"
+    [[ "$casa" == /data/* ]] || continue
+    pares+=("$uid:$casa")
+    casas+=("$casa")
+  done < "$passwd_file"
+  (( ${#casas[@]} > 0 )) || return 0
+  # Em ordem, a pasta de cima vem antes da de dentro: a de dentro fica com o modo dela por último.
+  while IFS= read -r casa; do
+    [[ "$casa" == /data/* && -d "$casa" && ! -L "$casa" ]] || continue
+    modo=0750
+    for par in "${pares[@]}"; do
+      uid="${par%%:*}" outra="${par#*:}"
+      [[ "$casa" == "$outra" || "$casa" == "$outra"/* ]] || continue
+      [[ "$uid" != "$uid_envio" ]] || modo=$(( modo | 01020 ))
+      [[ "$uid" != "$uid_leitura" ]] || modo=$(( modo | 0005 ))
+    done
+    printf -v modo '%o' "$modo"
+    atual="$(stat -c '%U:%G %a' "$casa")"
+    [[ "$atual" != "ftpdata:ftpdata $modo" ]] || continue
+    chown ftpdata:ftpdata "$casa"
+    if [[ "${atual#* }" == "$modo" ]]; then continue; fi
+    find "$casa" -xdev -type d -exec chmod "$modo" {} +
+  done < <(printf '%s\n' "${casas[@]}" | sort -u)
+}
+
+# Regrava o banco que o Pure-FTPd consulta, a partir do cadastro.
+gravar_banco() {
+  pure-pw mkdb /auth/pureftpd.pdb -f "$passwd_file"
+  chmod 0600 "$passwd_file" /auth/pureftpd.pdb
 }
 
 # Grava a lista de quem entra sem TLS, com ou sem o usuário. Vai para um arquivo ao lado e troca de nome,
@@ -207,6 +273,9 @@ case "$action" in
   add|passwd)
     [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || usage
     [[ "$action" != add || "$pasta" =~ $regra_pasta ]] || pasta_invalida
+    perfil="${4:-completo}"
+    [[ $# -le 4 && ( "$action" == add || $# -le 2 ) ]] || usage
+    [[ -n "${dono_do_perfil[$perfil]:-}" ]] || perfil_invalido
     [[ "$logins" =~ ^[1-9][0-9]{0,4}$ ]] || { echo "FTP_MAX_CLIENTS deve ser um inteiro maior que zero" >&2; exit 1; }
     IFS= read -r password
     [[ ${#password} -ge 12 ]] || { echo "Senha deve ter pelo menos 12 caracteres" >&2; exit 1; }
@@ -217,7 +286,8 @@ case "$action" in
       fi
       preparar_pasta "$pasta"
       printf '%s\n%s\n' "$password" "$password" | pure-pw useradd "$user" \
-        -f "$passwd_file" -u ftpdata -g ftpdata -d "/data/$pasta" -C "$logins"
+        -f "$passwd_file" -u "${dono_do_perfil[$perfil]}" -g "${grupo_do_perfil[$perfil]}" -d "/data/$pasta" -C "$logins"
+      ajustar_pastas
       avisar_divisao
       # Usuário inicial criado de novo depois de removido: fica com a senha informada aqui, como na troca de senha.
       [[ "$user" != "$inicial" ]] || { gravar_marca "$marca_inicial"; gravar_marca "$marca_criado"; }
@@ -227,8 +297,41 @@ case "$action" in
       tirar_bloqueios > /dev/null
       [[ "$user" != "$inicial" ]] || gravar_marca "$marca_inicial"
     fi
-    pure-pw mkdb /auth/pureftpd.pdb -f "$passwd_file"
-    chmod 0600 "$passwd_file" /auth/pureftpd.pdb
+    gravar_banco
+    ;;
+  perfil)
+    # Sem o perfil, mostra o do usuário. Com ele, troca: o que já está na pasta continua lá, e o modo das
+    # pastas acompanha. A sessão de FTP já aberta segue com o perfil anterior até sair.
+    [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ && $# -le 3 ]] || usage
+    perfil="${3:-}"
+    [[ -z "$perfil" || -n "${dono_do_perfil[$perfil]:-}" ]] || perfil_invalido
+    if [[ -z "$perfil" ]]; then
+      { [[ -f "$passwd_file" ]] && perfil_de "$user"; } || { echo "Usuario nao existe: $user" >&2; exit 1; }
+      exit 0
+    fi
+    travar
+    if ! { [[ -f "$passwd_file" ]] && pasta_de "$user" > /dev/null; }; then
+      echo "Usuario nao existe: $user" >&2; exit 1
+    fi
+    pure-pw usermod "$user" -f "$passwd_file" -u "${dono_do_perfil[$perfil]}" -g "${grupo_do_perfil[$perfil]}"
+    gravar_banco
+    ajustar_pastas
+    echo "Perfil do usuario $user: $perfil. Vale na proxima entrada no FTP."
+    ;;
+  ajustar)
+    # Uso da partida do serviço ftp, antes de o servidor aceitar sessão: refaz o modo das pastas pelos perfis
+    # e entrega ao ftpdata o que um envio deixou sem entrega (container parado entre o envio e a entrega).
+    # Com sessão aberta não serve: um envio em andamento perderia o arquivo que ainda está gravando.
+    [[ $# -eq 1 ]] || usage
+    travar
+    [[ -f "$passwd_file" ]] || exit 0
+    ajustar_pastas
+    while IFS=: read -r _ _ uid _ _ casa _; do
+      casa="${casa%/./}"; casa="${casa%/}"
+      [[ "$uid" == "$uid_envio" && "$casa" == /data/* && -d "$casa" && ! -L "$casa" ]] || continue
+      find "$casa" -xdev -type d -user ftpenvio -exec chmod --reference="$casa" {} + -exec chown ftpdata:ftpdata {} +
+      find "$casa" -xdev -type f -links 1 -user ftpenvio -exec chown ftpdata:ftpdata {} +
+    done < "$passwd_file"
     ;;
   pasta)
     # Troca a pasta do usuário. Os arquivos da pasta anterior não são movidos nem apagados.
@@ -240,8 +343,8 @@ case "$action" in
     fi
     preparar_pasta "$pasta"
     pure-pw usermod "$user" -f "$passwd_file" -d "/data/$pasta"
-    pure-pw mkdb /auth/pureftpd.pdb -f "$passwd_file"
-    chmod 0600 "$passwd_file" /auth/pureftpd.pdb
+    gravar_banco
+    ajustar_pastas "$anterior"
     avisar_divisao
     echo "Pasta do usuario $user: /data/$pasta. Os arquivos de ${anterior:-/data/$user} continuam la."
     ;;
@@ -255,8 +358,8 @@ case "$action" in
       gravar_marca "$marca_criado"
       rm -f "$marca_inicial"
     fi
-    pure-pw mkdb /auth/pureftpd.pdb -f "$passwd_file"
-    chmod 0600 "$passwd_file" /auth/pureftpd.pdb
+    gravar_banco
+    [[ -z "$casa" ]] || ajustar_pastas "$casa"
     # Um usuário novo com o mesmo nome não herda a dispensa do TLS, os limites nem os bloqueios.
     [[ ! -f "$lista_tls" ]] || gravar_lista_tls exigir
     [[ ! -f "$lista_limites" ]] || gravar_limite ""
@@ -314,8 +417,7 @@ case "$action" in
     regra_antes="$(mostrar_limites | grep -E '^(tentativas|minutos)=' || true)"
     if (( ${#opcoes[@]} > 0 )); then
       pure-pw usermod "$user" -f "$passwd_file" "${opcoes[@]}"
-      pure-pw mkdb /auth/pureftpd.pdb -f "$passwd_file"
-      chmod 0600 "$passwd_file" /auth/pureftpd.pdb
+      gravar_banco
     fi
     for chave in baixar tentativas minutos; do
       [[ -z "${da_lista[$chave]+tem}" ]] || gravar_limite "$chave" "${da_lista[$chave]}"

@@ -8,7 +8,7 @@
 # minutos o endereço fica bloqueado, inclusive para quem acerta. Por isso cada recusa desta etapa está
 # contada no comentário, o reinício do painel feito pelo painel-senha.sh (que zera a contagem) fica no
 # meio e o caso que estoura o limite de propósito é o último.
-A=/administradores
+A=/administradores; L=/usuarios   # as ações são de $A; a lista e a criação, da aba Usuários
 J2="$W/apoio.jar"; J3="$W/plantao.jar"; J4="$W/segunda.jar"; JR="$W/recusa.jar"
 for n in 1 3 4 5; do nova_senha "$W/a$n.senha"; done
 # Senhas em texto usadas por administradores nesta etapa: nenhuma pode aparecer no arquivo do painel.
@@ -22,11 +22,12 @@ soma_admins() { docker exec "$PAINEL" sha256sum /painel/administradores 2>/dev/n
 K="$(csrf)"; proibir "$K"
 
 # ------------------------------------------------------------------ pelo painel
-lista="$(aba -b "$J" "$B$A")"; voce="$(grep -o "<strong>$ADMIN</strong> <span class=\"etiqueta\">você</span>" "$W/corpo" | wc -l)"
-r_novo="$(envio $A/novo --data-urlencode "csrf=$K" --data-urlencode 'nome=apoio' --data-urlencode "senha@$W/a1.senha" --data-urlencode "confirmacao@$W/a1.senha" --data-urlencode "senha_atual@$W/painel.senha")"
+lista="$(aba -b "$J" "$B$L")"; voce="$(grep -o "<strong>$ADMIN</strong> <span class=\"etiqueta\">você</span>" "$W/corpo" | wc -l)"
+antiga="$(aba -b "$J" "$B$A")"   # depois da conferência da lista: cada pedido regrava o corpo
+r_novo="$(envio $L/novo --data-urlencode "csrf=$K" --data-urlencode 'perfil=administrador' --data-urlencode 'usuario=apoio' --data-urlencode "senha@$W/a1.senha" --data-urlencode "confirmacao@$W/a1.senha" --data-urlencode "senha_atual@$W/painel.senha")"
 e_apoio="$(COMO=apoio entrar "$J2" "$W/a1.senha")"; proibir "$(biscoito_de "$J2")"; quem_apoio="$(quem_entrou "$J2")"
 # Sem senha no formulário, o painel gera uma e mostra uma única vez.
-r_gerado="$(c -o "$W/gerada.corpo" -w '%{http_code}' -b "$J" -H "Origin: $B" --data-urlencode "csrf=$K" --data-urlencode 'nome=plantao' --data-urlencode "senha_atual@$W/painel.senha" "$B$A/novo")"
+r_gerado="$(c -o "$W/gerada.corpo" -w '%{http_code}' -b "$J" -H "Origin: $B" --data-urlencode "csrf=$K" --data-urlencode 'perfil=administrador' --data-urlencode 'usuario=plantao' --data-urlencode "senha_atual@$W/painel.senha" "$B$L/novo")"
 gerada_na_tela "$W/gerada.corpo" > "$W/a2.senha"; proibir "$(cat "$W/a2.senha")"
 e_plantao="$(COMO=plantao entrar "$J3" "$W/a2.senha")"; proibir "$(biscoito_de "$J3")"
 K3="$(POTE="$J3" csrf)"; proibir "$K3"
@@ -58,12 +59,12 @@ for texto in 'Administrador criado' 'Senha de administrador trocada' 'Administra
 done
 auditoria
 com_nome="$(grep -c -E " evento=admin_(criado|senha_trocada|renomeado|removido) admin=$ADMIN " "$W/auditoria")"
-[[ "$lista" == "200 " && "$voce" == 1 && "$r_novo" == "303 $A?m=criado" && "$e_apoio" == 303 && "$quem_apoio" == apoio \
-  && "$r_gerado" == 200 && -s "$W/a2.senha" && "$e_plantao" == 303 && "$r_senha" == "303 $A?m=senha" && "$e_velha" == 401 && "$e_nova" == 303 \
-  && "$r_nome" == "303 $A?m=nome" && "$e_antigo" == 401 && "$e_suporte" == 303 && "$quem_suporte" == suporte \
-  && "$r_remover" == "303 $A?m=removido" && "$e_removido" == 401 && "$r_propria" == "303 $A?m=senha" \
+[[ "$lista" == "200 " && "$voce" == 1 && "$antiga" == "303 $L" && "$r_novo" == "303 $L?m=admin_criado" && "$e_apoio" == 303 && "$quem_apoio" == apoio \
+  && "$r_gerado" == 200 && -s "$W/a2.senha" && "$e_plantao" == 303 && "$r_senha" == "303 $L?m=admin_senha" && "$e_velha" == 401 && "$e_nova" == 303 \
+  && "$r_nome" == "303 $L?m=admin_nome" && "$e_antigo" == 401 && "$e_suporte" == 303 && "$quem_suporte" == suporte \
+  && "$r_remover" == "303 $L?m=admin_removido" && "$e_removido" == 401 && "$r_propria" == "303 $L?m=admin_senha" \
   && "$(admins)" == "$ADMIN suporte " && "$r" == "200 " && "$ok" == 0 && "$com_nome" == 6 ]]
-caso $? testes 22 "Administradores pelo painel" "GET $A: $lista· '$ADMIN' marcado como você: $voce · novo 'apoio' com senha informada: $r_novo, entrada $e_apoio, nome no topo: ${quem_apoio:-nenhum} · novo 'plantao' com senha gerada pelo painel: $r_gerado, entrada com ela: $e_plantao · senha do 'apoio' trocada por '$ADMIN': $r_senha, antiga $e_velha, nova $e_nova · nome 'apoio' → 'suporte': $r_nome, nome antigo $e_antigo, nome novo $e_suporte · 'plantao' removido: $r_remover, entrada depois $e_removido · própria senha: $r_propria · administradores no fim: $(admins)· aba Atividade ($r): $ev eventos com admin=$ADMIN na auditoria: $com_nome de 6"
+caso $? testes 22 "Administradores pelo painel" "GET $L: $lista· GET $A, o endereço antigo da lista: $antiga · '$ADMIN' marcado como você: $voce · novo 'apoio' com senha informada: $r_novo, entrada $e_apoio, nome no topo: ${quem_apoio:-nenhum} · novo 'plantao' com senha gerada pelo painel: $r_gerado, entrada com ela: $e_plantao · senha do 'apoio' trocada por '$ADMIN': $r_senha, antiga $e_velha, nova $e_nova · nome 'apoio' → 'suporte': $r_nome, nome antigo $e_antigo, nome novo $e_suporte · 'plantao' removido: $r_remover, entrada depois $e_removido · própria senha: $r_propria · administradores no fim: $(admins)· aba Atividade ($r): $ev eventos com admin=$ADMIN na auditoria: $com_nome de 6"
 
 [[ "$s_senha" == "303 /entrar" && "$s_nome" == "303 /entrar" && "$s_removido" == "303 /entrar" && "$p_removido" == "303 /entrar" \
   && "$ftp_antes" == "$(usuarios_ftp)" && "$e_segunda" == 303 && "$s_atual" == "200 " && "$s_segunda" == "303 /entrar" ]]
@@ -127,7 +128,7 @@ caso $? testes 23 "Recuperação do acesso pelo host" "painel-senha.sh --gerar (
 antes="$(admins)"
 r_tela="$(aba -b "$J" "$B$A/remover?admin=$ADMIN")"
 r="$(envio $A/remover --data-urlencode "csrf=$K" --data-urlencode "admin=$ADMIN" --data-urlencode "senha_atual@$W/painel.senha")"
-aba -b "$J" "$B$A" > /dev/null
+aba -b "$J" "$B$L" > /dev/null
 link_proprio="$(grep -o "remover?admin=$ADMIN\"" "$W/corpo" | wc -l)"; link_outros="$(grep -o 'remover?admin=[a-z0-9_-]*"' "$W/corpo" | wc -l)"
 [[ "$r_tela" == "409 " && "$r" == "409 " && "$antes" == "$(admins)" && "$link_proprio" == 0 && "$link_outros" == 2 ]]
 caso $? seguranca 49 "Ninguém remove a própria conta" "GET $A/remover?admin=$ADMIN na sessão de '$ADMIN': $r_tela· POST com a senha atual certa: $r· administradores $([[ "$antes" == "$(admins)" ]] && echo inalterados || echo ALTERADOS): $(admins)· botão Remover na lista: $link_proprio para a própria conta, $link_outros para os outros"
@@ -149,7 +150,7 @@ caso $? seguranca 51 "Nome de administrador inválido" "PAINEL_ADMIN_USER=Admin 
 
 # ------------------------------------------------------------------ senha atual em toda alteração (por último: estoura o limite)
 antes="$(admins)"; soma_antes="$(soma_admins)"; auditoria; n_antes="$(eventos admin_senha_atual_recusada)"; b_antes="$(eventos entrada_bloqueada)"
-r_a="$(envio $A/novo --data-urlencode "csrf=$K" --data-urlencode 'nome=intruso' --data-urlencode "senha@$W/a1.senha" --data-urlencode "confirmacao@$W/a1.senha" --data-urlencode "senha_atual@$W/errada.senha")"   # recusa 1
+r_a="$(envio $L/novo --data-urlencode "csrf=$K" --data-urlencode 'perfil=administrador' --data-urlencode 'usuario=intruso' --data-urlencode "senha@$W/a1.senha" --data-urlencode "confirmacao@$W/a1.senha" --data-urlencode "senha_atual@$W/errada.senha")"   # recusa 1
 r_b="$(envio $A/senha --data-urlencode "csrf=$K" --data-urlencode 'admin=suporte' --data-urlencode "senha@$W/a1.senha" --data-urlencode "confirmacao@$W/a1.senha")"                                              # recusa 2
 r_c="$(envio $A/nome --data-urlencode "csrf=$K" --data-urlencode 'admin=suporte' --data-urlencode 'nome=intruso' --data-urlencode "senha_atual@$W/errada.senha")"                                               # recusa 3
 r_d="$(envio $A/remover --data-urlencode "csrf=$K" --data-urlencode 'admin=suporte' --data-urlencode "senha_atual@$W/errada.senha")"                                                                          # recusa 4

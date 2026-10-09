@@ -55,6 +55,12 @@ RUN apt-get update \
     && groupadd --gid 10000 ftpdata \
     && useradd --uid 10000 --gid ftpdata --home-dir /nonexistent \
        --shell /usr/sbin/nologin --no-create-home ftpdata \
+    # Perfis do FTP: o envio grava como outro usuário do mesmo grupo e a leitura fica fora do grupo.
+    && useradd --uid 10002 --gid ftpdata --home-dir /nonexistent \
+       --shell /usr/sbin/nologin --no-create-home ftpenvio \
+    && groupadd --gid 10003 ftpleitura \
+    && useradd --uid 10003 --gid ftpleitura --home-dir /nonexistent \
+       --shell /usr/sbin/nologin --no-create-home ftpleitura \
     && mkdir -p /data /auth /etc/ssl/private /usr/local/lib/allsafe /usr/share/doc/allsafe-ftp-stack \
     && rm -rf /var/lib/apt/lists/*
 
@@ -81,6 +87,11 @@ RUN apt-get update \
 
 # Os módulos do painel ficam lado a lado: o servidor.py é o ponto de entrada e importa os demais.
 COPY --chmod=0644 painel/*.py VERSION /opt/painel/
+# Marca do estilo: o começo do SHA-256 do web/estilo.css vai no endereço dele em cada página. Estilo novo é endereço
+# novo, e nem o navegador nem um proxy no caminho entregam o antigo. O arquivo não entra nesta imagem: é do nginx.
+RUN --mount=type=bind,source=web/estilo.css,target=/tmp/estilo.css \
+    sha256sum /tmp/estilo.css | cut -c1-12 > /opt/painel/ESTILO \
+    && chmod 0644 /opt/painel/ESTILO
 COPY --chmod=0755 painel/entrypoint.sh /usr/local/sbin/allsafe-painel-entrypoint
 
 # Sem EXPOSE: o painel não escuta em porta de rede, só no soquete Unix que o nginx abre.

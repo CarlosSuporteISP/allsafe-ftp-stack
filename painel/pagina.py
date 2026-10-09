@@ -8,8 +8,7 @@ from estado import dias_restantes, sem_tls
 from icones import desenhos, icone
 
 ABAS = (('/', 'painel', 'Visão geral'), ('/usuarios', 'usuarios', 'Usuários'), ('/arquivos', 'pasta', 'Arquivos'),
-        ('/servidor', 'pulso', 'Servidor'), ('/administradores', 'escudo', 'Administradores'),
-        ('/seguranca', 'cadeado', 'Segurança'), ('/atividade', 'atividade', 'Atividade'))
+        ('/servidor', 'pulso', 'Servidor'), ('/seguranca', 'cadeado', 'Segurança'), ('/atividade', 'atividade', 'Atividade'))
 ABAS_USUARIO = (('/meus-arquivos', 'pasta', 'Meus arquivos'),)
 # Menu lateral do administrador: o dia a dia em cima, o que cuida do próprio painel embaixo.
 GRUPOS = (('Operação', ABAS[:3]), ('Sistema', ABAS[3:]))
@@ -170,7 +169,7 @@ def pagina(titulo, miolo, sessao=None, ativa='', porta=False):
 <link rel="icon" href="/marca/icone-32.png" type="image/png" sizes="32x32">
 <link rel="icon" href="/marca/icone-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/marca/apple-touch-icon.png">
-<link rel="stylesheet" href="/estilo.css">
+<link rel="stylesheet" href="/estilo.css{'?v=' + CFG['estilo'] if CFG.get('estilo') else ''}">
 </head>
 <body{' class="porta"' if porta else ' class="com-menu"' if sessao else ''}>
 {corpo}{desenhos(corpo)}

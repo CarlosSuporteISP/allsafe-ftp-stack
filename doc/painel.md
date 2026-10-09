@@ -31,7 +31,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Servidor: containers e recursos](#servidor) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
+[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Perfis](#perfis) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Servidor: containers e recursos](#servidor) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
 
 </details>
 
@@ -74,14 +74,13 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 | Aba | O que mostra | O que dá para fazer |
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP, o modo de TLS do FTP, a faixa **Servidor e containers** (processador e memória do servidor e dos containers da stack, cada um com o uso contra o que há ou o que foi alocado), os arquivos recebidos por dia nos últimos 14 dias, o último envio de cada usuário, o espaço de cada pasta, os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) e os últimos registros da atividade | Só consultar; cada cartão termina no atalho para a aba do detalhe |
-| Usuários | Um usuário por linha: pasta, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta e, para equipamento sem suporte a TLS, já dispensado do TLS; editar, para trocar a pasta e os limites e tirar um bloqueio; trocar a senha; remover, com a pasta dele ou sem ela; abrir a pasta do usuário na aba Arquivos; dispensar um usuário do TLS e voltar a exigir |
+| Usuários | Todas as contas em uma lista, cada uma com o **perfil** embaixo do nome. Primeiro os administradores do painel, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas; depois os usuários do FTP, um por linha: pasta, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo o perfil (Administrador, Completo, Envio ou Leitura), a pasta e, para equipamento sem suporte a TLS, já dispensado do TLS; editar, para trocar o perfil, a pasta e os limites e tirar um bloqueio; trocar a senha; remover, com a pasta dele ou sem ela; abrir a pasta do usuário na aba Arquivos; dispensar um usuário do TLS e voltar a exigir; trocar a senha e o nome de um administrador e removê-lo |
 | Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
 | Servidor | Os três containers da stack (servidor FTP, painel e frente web), cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, e, separados, os recursos do servidor em que a stack roda: processador, memória, disco e rede do FTP, com o estado, a medida de agora e o histórico dos últimos minutos | Só consultar; **Atualizar sozinha** refaz a leitura a cada 10 s, sem contar como uso da sessão: veja [Servidor](#servidor) |
-| Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
 | Segurança | Conferência da instalação, com o resumo de quantos itens estão em ordem, pedem atenção ou são conferidos no servidor: se endereço público é aceito, se o painel está publicado por proxy ou túnel, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
 | Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads, pastas criadas e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
 
-O menu fica à esquerda em tela de 1280 px de largura ou mais: o símbolo e o nome, as abas em dois grupos (**Operação**, com Visão geral, Usuários e Arquivos, e **Sistema**, com Servidor, Administradores, Segurança e Atividade), a aba em uso marcada e, embaixo, o nome e o papel de quem entrou e o botão **Sair**, que encerra a sessão na hora. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada (endereço público aceito ou painel por proxy ou túnel), o administrador vê um sinal de alerta ao lado de **Segurança**, em qualquer aba em que estiver. Os gráficos são desenhados pelo próprio painel, sem script, e todo número do desenho está também escrito ao lado dele. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
+O menu fica à esquerda em tela de 1280 px de largura ou mais: o símbolo e o nome, as abas em dois grupos (**Operação**, com Visão geral, Usuários e Arquivos, e **Sistema**, com Servidor, Segurança e Atividade), a aba em uso marcada e, embaixo, o nome e o papel de quem entrou e o botão **Sair**, que encerra a sessão na hora. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada (endereço público aceito ou painel por proxy ou túnel), o administrador vê um sinal de alerta ao lado de **Segurança**, em qualquer aba em que estiver. Os gráficos são desenhados pelo próprio painel, sem script, e todo número do desenho está também escrito ao lado dele. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
 
 Quem entra com a conta do FTP não vê nenhuma dessas abas: vê uma tela só, **Meus arquivos**, descrita em [Usuário do FTP no painel](#usuario-ftp).
 
@@ -99,7 +98,8 @@ A foto de cada tela, com a explicação item por item, está em [Fotos da aplica
 
 | Quero | Onde | O que acontece |
 |---|---|---|
-| Criar um usuário | Usuários ➜ **Novo usuário** | Cria a conta e a pasta dela: `DATA_DIR/dados/<usuario>` com o campo **Pasta** em branco, ou a pasta escolhida. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
+| Criar um usuário | Usuários ➜ **Novo usuário** | Cria a conta, com o perfil marcado, e a pasta dela: `DATA_DIR/dados/<usuario>` com o campo **Pasta** em branco, ou a pasta escolhida. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
+| Escolher o que o usuário pode fazer | Usuários ➜ **Novo usuário**, campo **Perfil**; depois, **Editar**, cartão **Perfil** | O usuário passa a ter o perfil escolhido na entrada seguinte dele no FTP: veja [Perfis](#perfis) |
 | Criar um usuário para equipamento sem suporte a TLS | Usuários ➜ **Novo usuário**, com a caixa **Equipamento sem suporte a TLS** | O usuário já nasce dispensado do TLS e o equipamento entra em seguida. Sem marcar a caixa, o usuário só entra com TLS |
 | Trocar a senha | Usuários ➜ **Trocar senha** | A senha antiga deixa de valer no próximo login |
 | Trocar a pasta | Usuários ➜ **Editar** | O usuário passa a entrar na pasta nova na entrada seguinte. **Os arquivos da pasta anterior continuam nela**, sem serem movidos nem apagados |
@@ -121,6 +121,41 @@ Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
 - Pasta que passa por link simbólico, ou por um nome que já é de um arquivo, é recusada.
 - A pasta é escolhida na criação e trocada depois em **Editar**, com as mesmas regras. A troca não mexe na senha nem nos arquivos: o que estava na pasta anterior continua lá, e a pasta nova é criada se não existir.
 - O **usuário inicial** (`FTP_USER`) tem a senha e a pasta trocadas e é removido como os demais. Ele é criado uma vez, pela instalação: removido, não volta nas subidas seguintes do FTP, e para tê-lo de novo basta criar um usuário com o mesmo nome, que fica com a senha informada. A senha trocada pelo painel vale até o arquivo `.secrets/ftp-usuario-inicial-senha.txt` ser alterado: na subida seguinte do FTP, passa a valer a do arquivo. Veja [Segredos](segredos.md#trocar-a-senha).
+
+<a name="perfis"></a>
+
+Perfil de cada conta, escolhido em **Novo usuário** e trocado em **Editar**, cartão **Perfil**. O perfil vale no FTP e na entrada do usuário pelo painel:
+
+| Perfil | No FTP | No painel |
+|---|---|---|
+| Administrador | Não é conta do FTP | Todas as abas: veja [Administradores do painel](#administradores) |
+| Completo | Lista, baixa, envia, cria pasta, renomeia, apaga e grava por cima | Tela Meus arquivos: navega e baixa |
+| Envio | Lista, baixa, envia e cria pasta. Não apaga, não renomeia e não grava por cima do que já chegou | Tela Meus arquivos: navega e baixa |
+| Leitura | Só lista e baixa | Tela Meus arquivos: navega e baixa |
+
+- Usuário criado antes da `0.26.0`, ou sem perfil informado, é **Completo**: nada muda para quem já usa a stack.
+- **Envio guarda o que recebeu.** O arquivo passa a ser do servidor assim que termina de chegar: daí em diante o usuário não o apaga, não o renomeia e não grava por cima. Equipamento que envia sempre com o mesmo nome de arquivo precisa do perfil Completo, ou de um nome com data.
+- **Leitura não grava nada:** nem arquivo, nem pasta, em nenhum nível da pasta dele.
+- **Pasta dividida:** quem tem a mesma pasta, ou uma dentro da outra, alcança os arquivos do outro até onde o próprio perfil deixa. Um Leitura baixa o que o Envio mandou; um Envio não apaga o que o Completo gravou.
+- **Troca de perfil:** vale na entrada seguinte do usuário no FTP e encerra a sessão dele no painel. A sessão de FTP que já está aberta segue com o perfil anterior até sair.
+- **Administrador e usuário do FTP são cadastros separados**, com a senha guardada em lugares diferentes: não há troca de um para o outro. Remova a conta e crie a outra.
+
+Três limites do perfil Envio, para não contar com o que ele não faz:
+
+- Entre o fim do envio e a entrega ao servidor passa um instante, de milissegundos, em que o arquivo ainda é do usuário.
+- Pasta criada pelo próprio Envio continua dele enquanto está vazia: ele a remove ou renomeia até gravar o primeiro arquivo nela.
+- Pasta criada **por FTP** por um usuário Completo só recebe arquivo do Envio depois que o Completo grava o primeiro arquivo nela. Pasta criada pela aba Arquivos recebe na hora.
+
+<details>
+<summary>Detalhe técnico — como o perfil é aplicado</summary>
+
+- **Cadastro:** o perfil é a identidade de sistema da conta no PureDB, e não uma lista à parte: Completo é `ftpdata:ftpdata` (`10000:10000`), Envio é `ftpenvio:ftpdata` (`10002:10000`) e Leitura é `ftpleitura:ftpleitura` (`10003:10003`). Quem recusa o apagamento ou a gravação é o sistema de arquivos, para qualquer comando do FTP.
+- **Modo da pasta:** calculado por quem a alcança. Só Completo: `0750`. Com um Envio: `1770`, em que o grupo grava e cada um só apaga o que é dele. Com um Leitura: mais leitura para os outros (`0755` ou `1775`). As pastas de dentro acompanham quando o modo muda. `DATA_DIR/dados` fica `0700`, do `root`: nenhuma conta do FTP sai da própria pasta.
+- **Entrega:** a cada envio em pasta com Envio ou Leitura, o vigia do FTP passa o arquivo ao `ftpdata`, e as pastas do caminho, ao `ftpdata` com o modo da pasta do usuário. Só mexe em arquivo comum, com um nome só e ainda do `ftpenvio`. O que não pôde ser entregue fica no registro do `ftp` como `entrega nao feita`.
+- **Partida do `ftp`:** com Envio ou Leitura no cadastro, a subida refaz o modo das pastas e entrega o que ficou sem entrega, antes de aceitar a primeira sessão.
+- **Sessão do painel:** a marca da sessão do usuário do FTP é o resumo da linha dele no cadastro; a troca de perfil muda a linha, e a sessão acaba sozinha, com `sessao_encerrada` e o motivo `cadastro_alterado`.
+
+</details>
 
 <a name="limites"></a>
 
@@ -282,8 +317,8 @@ O dono dos arquivos pega os próprios backups pelo navegador, sem depender de qu
 | O usuário do FTP | No painel |
 |---|---|
 | Vê | Só a pasta do cadastro dele e o que há dentro dela: nome, tamanho e data. O caminho da pasta no servidor não aparece |
-| Faz | Navega e baixa. Enviar, renomear e apagar continuam sendo feitos por FTP |
-| Não alcança | Nenhuma aba de administração: Usuários, Arquivos de todos, Servidor, Administradores, Segurança e Atividade respondem `404` para ele |
+| Faz | Navega e baixa, em qualquer perfil. Enviar, renomear e apagar continuam sendo feitos por FTP, até onde o [perfil](#perfis) dele deixa |
+| Não alcança | Nenhuma aba de administração: Usuários, Arquivos de todos, Servidor, Segurança e Atividade respondem `404` para ele |
 | Divide com outro usuário | Só o que já divide no FTP: quem tem a mesma pasta, ou uma pasta dentro da outra, vê pelo painel os mesmos arquivos que vê por FTP |
 
 Regras:
@@ -327,7 +362,7 @@ PAINEL_ACESSO_USUARIOS_FTP=nao
 
 ## 📈 Servidor: containers e recursos
 
-A aba **Servidor** tem duas partes separadas: os containers desta stack, cada um com o que usa contra o que foi alocado a ele, e o servidor em que ela roda. Só administrador a abre.
+A aba **Servidor** tem duas partes separadas: os containers desta stack, cada um com o que usa contra o que foi alocado a ele, e o servidor em que ela roda. Só administrador a abre. Os cartões se arrumam sozinhos pela largura da tela: cada um tem pelo menos 236 px e cabem tantos por linha quantos a tela comporta, de um no celular a cinco em tela larga; os das duas partes ficam da mesma largura.
 
 **Containers da stack.** Uma linha no alto soma o que foi alocado aos três containers e o que eles usam agora, ao lado do que o servidor tem. Abaixo, um cartão por container:
 
@@ -378,16 +413,16 @@ A aba **Servidor** tem duas partes separadas: os containers desta stack, cada um
 
 ## 🛡️ Administradores do painel
 
-Cada pessoa que administra o painel tem o **próprio usuário e a própria senha**. Todos têm o mesmo acesso, e o que cada um faz fica na aba Atividade com o nome de quem fez. O primeiro administrador nasce na instalação, com o nome de `PAINEL_ADMIN_USER`; os outros são criados aqui.
+Cada pessoa que administra o painel tem o **próprio usuário e a própria senha**. Todos têm o mesmo acesso, e o que cada um faz fica na aba Atividade com o nome de quem fez. O primeiro administrador nasce na instalação, com o nome de `PAINEL_ADMIN_USER`; os outros são criados na aba Usuários, com o perfil **Administrador**. Os administradores ficam no começo da lista dessa aba, com as ações na linha de cada um.
 
 | Quero | Onde | O que acontece |
 |---|---|---|
-| Criar um administrador | Administradores ➜ **Novo administrador** | Cria a conta. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
-| Trocar a senha, a minha ou a de outro | Administradores ➜ **Trocar senha** | A senha antiga deixa de valer na hora e as outras sessões desse administrador são encerradas |
-| Trocar o nome, o meu ou o de outro | Administradores ➜ **Trocar nome** | A entrada passa a ser pelo nome novo; a senha continua a mesma |
-| Remover um administrador | Administradores ➜ **Remover** | A conta some e as sessões dela são encerradas |
+| Criar um administrador | Usuários ➜ **Novo usuário**, com o perfil **Administrador** | Cria a conta. Os campos de pasta e de TLS saem da tela, e entra o da sua senha atual. Com a senha em branco, o painel gera uma senha forte e a mostra **uma única vez** |
+| Trocar a senha, a minha ou a de outro | Usuários ➜ **Trocar senha**, na linha do administrador | A senha antiga deixa de valer na hora e as outras sessões desse administrador são encerradas |
+| Trocar o nome, o meu ou o de outro | Usuários ➜ **Trocar nome**, na linha do administrador | A entrada passa a ser pelo nome novo; a senha continua a mesma |
+| Remover um administrador | Usuários ➜ **Remover**, na linha do administrador | A conta some e as sessões dela são encerradas |
 
-**Resultado esperado:** a lista volta com o aviso da alteração (`Administrador criado.`, `Senha trocada.`, `Nome trocado.` ou `Administrador removido.`) e o administrador novo entra logo em seguida, sem reiniciar nada.
+**Resultado esperado:** a lista volta com o aviso da alteração (`Administrador criado.`, `Senha trocada.`, `Nome trocado.` ou `Administrador removido.`, com o aviso das sessões encerradas) e o administrador novo entra logo em seguida, sem reiniciar nada.
 
 Regras:
 
@@ -695,7 +730,8 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `saida` | Alguém clicou em **Sair**, administrador ou usuário do FTP |
 | `sessao_encerrada` | A sessão de um usuário do FTP acabou antes da hora, com o usuário e o motivo: `cadastro_alterado` (senha ou pasta trocada, usuário removido), `nome_de_administrador` ou `acesso_desligado` |
 | `recusa_papel` | Um usuário do FTP pediu uma tela ou um formulário de administração, com o usuário e o caminho pedido |
-| `usuario_criado` · `senha_trocada` · `pasta_trocada` · `usuario_removido` | Alteração de usuário do FTP, com o administrador que fez; a criação leva também a pasta do usuário, a troca de pasta, a nova e a anterior, e a remoção, a pasta, quando ela foi apagada junto |
+| `usuario_criado` · `senha_trocada` · `pasta_trocada` · `usuario_removido` | Alteração de usuário do FTP, com o administrador que fez; a criação leva também a pasta e o perfil do usuário, a troca de pasta, a nova e a anterior, e a remoção, a pasta, quando ela foi apagada junto |
+| `perfil_trocado` | Perfil de um usuário do FTP trocado, com o administrador, o usuário, o perfil novo e o anterior |
 | `limites_alterados` | Limites de um usuário do FTP gravados, com o administrador, o usuário e o valor de cada limite; `-` no que ficou em branco |
 | `bloqueio_removido` | Um administrador tirou o bloqueio por tentativa de um usuário no FTP, com o administrador, o usuário e a quantidade de endereços desbloqueados |
 | `tls_dispensado` · `tls_exigido` | Um administrador dispensou um usuário do TLS · voltou a exigir; com o administrador e o usuário |
@@ -728,6 +764,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 | Volume de pedidos | No nginx, por endereço: 20 pedidos por segundo (rajada de 40), 16 conexões, 16 KiB por pedido e 5 KiB por endereço ou cabeçalho, em HTTP/2 e em HTTP/1.1; o que passa disso recebe `429`, `413`, `414` ou `400`, ou tem a conexão HTTP/2 encerrada |
 | Entrada | Usuário e senha por administrador; senha de no mínimo 12 caracteres, guardada só como hash `scrypt`; a recusa não diz se o erro foi no usuário ou na senha; cinco erros bloqueiam o endereço por 15 minutos |
 | Usuário do FTP | Entra com o nome e a senha do FTP, conferidos pelo próprio servidor FTP, e alcança só a tela Meus arquivos, na pasta do cadastro, para navegar e baixar; as telas de administração respondem `404`; a sessão acaba quando o cadastro dele muda; `PAINEL_ACESSO_USUARIOS_FTP=nao` desliga esta entrada |
+| Perfis | O que cada usuário do FTP faz é limitado pelo perfil dele, aplicado pelo sistema de arquivos do servidor e não pela tela: Leitura não grava, Envio não apaga nem altera o que já chegou; a troca de perfil encerra a sessão dele no painel |
 | Administradores | Toda alteração de administrador pede a senha atual de quem está alterando; o administrador alterado tem as sessões encerradas; ninguém remove a própria conta |
 | Apagar | Todo apagamento, de arquivo, de pasta ou da pasta junto com o usuário, pede a caixa de confirmação e a senha atual de quem está apagando: um navegador esquecido aberto não apaga backup |
 | Sessão | Cookie `__Host-sessao` com `Secure`, `HttpOnly` e `SameSite=Strict`, presa ao endereço de origem; encerra com 15 minutos sem uso e, de qualquer forma, em 8 horas |
@@ -740,7 +777,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 <details>
 <summary>Detalhe técnico — implementação</summary>
 
-- **Código:** os módulos de [`painel/`](../painel/), só com a biblioteca padrão do Python 3.13 do Debian 13, listados [logo abaixo](#modulos); a aparência está em [`web/estilo.css`](../web/estilo.css) e a logo e o ícone em [`web/marca/`](../web/marca/), que o nginx entrega direto, sem passar pelo painel, como o [`web/robots.txt`](../web/robots.txt). O `/.well-known/security.txt` é o painel que monta, a cada pedido, com o e-mail de `SEGURANCA_CONTATO_EMAIL`: [Configuração](configuracao.md#contato-de-seguranca). Não há JavaScript, fonte nem imagem externa.
+- **Código:** os módulos de [`painel/`](../painel/), só com a biblioteca padrão do Python 3.13 do Debian 13, listados [logo abaixo](#modulos); a aparência está em [`web/estilo.css`](../web/estilo.css) e a logo e o ícone em [`web/marca/`](../web/marca/), que o nginx entrega direto, sem passar pelo painel, como o [`web/robots.txt`](../web/robots.txt). Cada página aponta para o estilo com a marca do conteúdo dele (`/estilo.css?v=` e os 12 primeiros dígitos do SHA-256 do arquivo, gravados na construção da imagem do painel): estilo novo é endereço novo, e nem o navegador nem um proxy no caminho entregam o antigo depois de uma atualização. O `/.well-known/security.txt` é o painel que monta, a cada pedido, com o e-mail de `SEGURANCA_CONTATO_EMAIL`: [Configuração](configuracao.md#contato-de-seguranca). Não há JavaScript, fonte nem imagem externa.
 - **Imagem:** alvo `painel` do [`Dockerfile`](../Dockerfile), sobre a mesma base do FTP (traz o `pure-pw` e o `allsafe-ftp-user`). Imagem `PAINEL_IMAGE`, container `PAINEL_CONTAINER_NAME`.
 - **Entrada do container:** [`painel/entrypoint.sh`](../painel/entrypoint.sh) recusa senha em variável, confere o `PAINEL_ADMIN_USER`, o IP e as redes privados, ajusta dono e modo de `/painel` e do arquivo de administradores, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
 - **Frente web:** alvo `nginx` do [`Dockerfile`](../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo). Com o navegador, o nginx fala HTTP/2, ou HTTP/1.1 se o navegador não pedir, e mantém a conexão parada por 60 segundos; com o painel, HTTP/1.1, uma conexão por pedido. O `estilo.css` vai comprimido para quem aceita gzip, a partir da cópia feita na construção da imagem; página do painel nunca é comprimida. Em HTTP/2, o download de arquivo grande usa mais processador por byte: 300 MiB levaram 0,69 s, contra 0,45 s em HTTP/1.1, medidos com o nginx no limite de meio processador, os dois acima do que uma rede de 1 Gbit/s entrega. O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [Segurança](seguranca.md#painel).
@@ -786,12 +823,12 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`conta_ftp.py`](../painel/conta_ftp.py) | Conta do usuário do FTP no painel: leitura do cadastro dele, conferência da senha no servidor FTP e os motivos que encerram a sessão |
 | [`aba_visao_geral.py`](../painel/aba_visao_geral.py) | Aba Visão geral |
 | [`limites.py`](../painel/limites.py) | Limites próprios de cada usuário do FTP: leitura do cadastro e da `limites.lista`, conferência do formulário e o resumo da lista |
-| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação com a pasta escolhida, edição (pasta, limites e bloqueios), troca de senha, remoção e a dispensa do TLS por usuário |
+| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista única de administradores e usuários do FTP, criação com o perfil e a pasta escolhidos, edição (perfil, pasta, limites e bloqueios), troca de senha, remoção e a dispensa do TLS por usuário |
 | [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta |
 | [`aba_meus_arquivos.py`](../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação e download dentro da pasta dele |
 | [`recursos.py`](../painel/recursos.py) | Recursos do servidor e de cada container da stack: leitura do processador, da memória e da rede do FTP, do grupo de controle do painel e do que o ftp e o nginx publicam, e o histórico dos últimos 10 minutos, guardado na memória |
 | [`aba_servidor.py`](../painel/aba_servidor.py) | Aba Servidor: os containers da stack, com o uso contra o alocado, os cartões de processador, memória, disco e rede do servidor, e a faixa de resumo da Visão geral |
-| [`aba_administradores.py`](../painel/aba_administradores.py) | Aba Administradores: lista, criação, troca de senha, troca de nome e remoção |
+| [`aba_administradores.py`](../painel/aba_administradores.py) | Administradores do painel: criação pelo formulário de Novo usuário, troca de senha, troca de nome e remoção; a lista é a da aba Usuários |
 | [`aba_seguranca.py`](../painel/aba_seguranca.py) | Aba Segurança |
 | [`aba_atividade.py`](../painel/aba_atividade.py) | Aba Atividade |
 

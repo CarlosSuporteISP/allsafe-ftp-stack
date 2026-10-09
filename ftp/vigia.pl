@@ -21,7 +21,7 @@
 # de ler, o Pure-FTPd trava ao registrar. Se o vigia sair, o entrypoint encerra o container.
 use strict;
 use warnings;
-use Fcntl qw(:flock);
+use Fcntl qw(:DEFAULT :flock);
 use Socket qw(AF_UNIX SOCK_DGRAM pack_sockaddr_un);
 use Time::HiRes ();
 
@@ -34,6 +34,10 @@ my $REDE      = '/auth/rede.estado';
 my $RECURSOS  = '/auth/recursos.estado';
 my $CGROUP    = '/sys/fs/cgroup';
 my $TRAVA     = '/auth/.lock';
+my $DADOS     = '/data';
+my $PASTA     = qr{[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(?:/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,3}};
+# Identidades de sistema dos perfis, as mesmas do allsafe-ftp-user: o perfil é o uid gravado no cadastro.
+my ($UID_DADOS, $GID_DADOS, $UID_ENVIO, $UID_LEITURA) = (10000, 10000, 10002, 10003);
 my $NOME      = qr/[a-z_][a-z0-9_-]{0,31}/;
 my $ENDERECO  = qr/[0-9a-fA-F.:]{2,45}/;
 my $CHAVES_MAX    = 10000;   # contagens guardadas na memória
@@ -78,15 +82,22 @@ sub interno {
 }
 
 # Cadastro e limites próprios, relidos só quando o arquivo muda (inode, tamanho e data).
-my (%existe, %proprio);
+my (%existe, %proprio, %perfil, %casa);
 my ($visto_cadastro, $visto_limites) = ('?', '?');
 sub marca { my @s = stat($_[0]); return @s ? "$s[1]:$s[7]:$s[9]" : ''; }
 sub atualizar {
     my $agora = marca($CADASTRO);
     if ($agora ne $visto_cadastro) {
-        %existe = ();
+        %existe = %perfil = %casa = ();
         if (open(my $arq, '<', $CADASTRO)) {
-            while (my $linha = <$arq>) { $existe{$1} = 1 if $linha =~ /^($NOME):/; }
+            while (my $linha = <$arq>) {
+                next unless $linha =~ /^($NOME):/;
+                $existe{$1} = 1;
+                my @campos = split /:/, $linha;
+                next unless @campos > 5 && $campos[2] =~ /^\d{1,10}$/ && $campos[5] =~ m{^$DADOS/($PASTA)/\./$};
+                $casa{$campos[0]} = $1;
+                $perfil{$campos[0]} = $campos[2] == $UID_ENVIO ? 'envio' : $campos[2] == $UID_LEITURA ? 'leitura' : 'completo';
+            }
             close $arq;
         }
         $visto_cadastro = $agora;
@@ -178,6 +189,66 @@ sub entrada_certa {
     my ($ip, $nome) = @_;
     delete $falhas{"$nome\@$ip"};
     registrar("entrada: usuario=$nome origem=$ip");
+    # A pasta que o servidor acabou de criar para a conta (sumiu e a conta entrou) nasce dela: volta ao ftpdata.
+    atualizar();
+    entregar($nome) if ($perfil{$nome} // 'completo') ne 'completo';
+}
+
+# Modo da pasta de um usuário, pelo perfil de quem a alcança (quem tem a mesma pasta ou uma acima): a mesma
+# conta do allsafe-ftp-user. Com envio, o grupo grava e vale o bit de permanência; com leitura, "outros" entra.
+sub modo_da_pasta {
+    my ($pasta) = @_;
+    my $modo = 0750;
+    for my $nome (keys %casa) {
+        next unless $pasta eq $casa{$nome} || index($pasta, "$casa{$nome}/") == 0;
+        $modo |= 01020 if $perfil{$nome} eq 'envio';
+        $modo |= 00005 if $perfil{$nome} eq 'leitura';
+    }
+    return $modo;
+}
+
+# Entrega: o que uma conta de envio acabou de gravar passa para o ftpdata, e as pastas do caminho ficam com o
+# modo da pasta do usuário. Depois disso a conta de envio não troca, não renomeia e não apaga o arquivo: no
+# FTP ela só é dona do que ainda não foi entregue. O caminho vem do aviso do servidor, com o nome que o cliente
+# escolheu: é aberto nível por nível a partir do /data, sem seguir link simbólico, e o dono e o modo são
+# trocados no que foi aberto, não no nome. Sem arquivo, só a pasta do usuário é conferida.
+sub entregar {
+    my ($conta, $caminho) = @_;
+    my $pasta = $casa{$conta} // return;
+    my $modo = modo_da_pasta($pasta);
+    return if $modo == 0750;   # só perfil completo alcança a pasta: nada a entregar
+    my (@niveis, $arquivo);
+    if (defined $caminho) {
+        $caminho =~ s{/{2,}}{/}g;
+        return unless index($caminho, "$DADOS/$pasta/") == 0;
+        @niveis = split m{/}, substr($caminho, length("$DADOS/$pasta/")), -1;
+        $arquivo = pop @niveis;
+        return if !defined $arquivo || grep { $_ eq '' || $_ eq '.' || $_ eq '..' } @niveis, $arquivo;
+    }
+    my @acima = split m{/}, $pasta;
+    my $feito = eval {
+        chdir($DADOS) or die "pasta de dados\n";
+        my $nivel = 0;
+        for my $nome (@acima, @niveis) {
+            sysopen(my $aberta, $nome, O_RDONLY | O_NOFOLLOW | O_DIRECTORY) or die "pasta\n";
+            chdir($aberta) or die "pasta\n";
+            next if ++$nivel < @acima;   # acima da pasta do usuário nada muda
+            my @estado = stat($aberta) or die "pasta\n";
+            if ($estado[4] != $UID_DADOS || $estado[5] != $GID_DADOS) { chown($UID_DADOS, $GID_DADOS, $aberta) or die "dono da pasta\n"; }
+            if (($estado[2] & 07777) != $modo) { chmod($modo, $aberta) or die "modo da pasta\n"; }
+        }
+        if (defined $arquivo) {
+            sysopen(my $aberto, $arquivo, O_RDONLY | O_NOFOLLOW | O_NONBLOCK) or die "arquivo\n";
+            my @estado = stat($aberto) or die "arquivo\n";
+            if (-f _ && $estado[3] == 1 && $estado[4] == $UID_ENVIO) { chown($UID_DADOS, $GID_DADOS, $aberto) or die "dono do arquivo\n"; }
+        }
+        1;
+    };
+    my $motivo = $@;
+    chdir('/');
+    return if $feito;
+    chomp $motivo;
+    registrar("entrega nao feita ($motivo): usuario=$conta" . (defined $caminho ? ' arquivo=' . limpo($caminho, 400) : ''));
 }
 
 # Nome de arquivo vem do cliente: antes de ir para o registro, perde o que quebraria a linha ou comandaria o
@@ -207,7 +278,9 @@ sub arquivo {
     return registrar("apagado: $quem arquivo=" . limpo($1, 400)) if $texto =~ /^Deleted (.+)$/s;
     return registrar("renomeado: $quem nomes=" . limpo($1, 800)) if $texto =~ /^File successfully renamed or moved: (\[.+\]->\[.+\])$/s;
     if ($texto =~ m{^(/.+) (uploaded|downloaded)  \((\d{1,20}) bytes, [\d.]+KB/sec\)$}s) {
-        return registrar(($2 eq 'uploaded' ? 'envio' : 'download') . ": $quem bytes=$3 arquivo=" . limpo($1, 400));
+        my ($caminho, $sentido, $bytes) = ($1, $2, $3);
+        if ($sentido eq 'uploaded') { atualizar(); entregar($conta, $caminho); }
+        return registrar(($sentido eq 'uploaded' ? 'envio' : 'download') . ": $quem bytes=$bytes arquivo=" . limpo($caminho, 400));
     }
 }
 

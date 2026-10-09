@@ -48,8 +48,8 @@ lista="$(aba -b "$J" "$B/usuarios")"; divididas="$(grep -o 'class="etiqueta" tit
 link_a="$(grep -o 'href="/arquivos?pasta=clientes/olt-01"' "$W/corpo" | wc -l)"; link_e="$(grep -c 'href="/arquivos?pasta=eq13e"' "$W/corpo")"
 remover="$(aba -b "$J" "$B/usuarios/remover?usuario=olt13a")"; na_remocao="$(grep -c 'clientes/olt-01' "$W/corpo")"; quem_mais="$(grep -c 'também é alcançada por' "$W/corpo")"
 da_pasta="$(aba -b "$J" "$B/arquivos?pasta=clientes/olt-01")"; donos="$(grep -c 'Pasta do usuário do FTP: <strong>olt13a, olt13b</strong>' "$W/corpo")"
-auditoria; registro="$(grep -c " evento=usuario_criado admin=$ADMIN usuario=olt13a credencial=informada pasta=clientes/olt-01\$" "$W/auditoria")"
-registro_e="$(grep -c " evento=usuario_criado admin=$ADMIN usuario=eq13e credencial=informada pasta=eq13e\$" "$W/auditoria")"
+auditoria; registro="$(grep -c " evento=usuario_criado admin=$ADMIN usuario=olt13a credencial=informada pasta=clientes/olt-01 perfil=completo\$" "$W/auditoria")"
+registro_e="$(grep -c " evento=usuario_criado admin=$ADMIN usuario=eq13e credencial=informada pasta=eq13e perfil=completo\$" "$W/auditoria")"
 [[ "$r_a" == "303 /usuarios?m=criado" && "$r_b" == "303 /usuarios?m=criado" && "$r_e" == "303 /usuarios?m=criado" && "$r_c" == 0 && "$r_d" == 0 && "$avisos" == 3 && "$r_del" == 0 && "$removido" == 1 \
   && "$d_c" == "ftpdata:ftpdata 750 directory" && "$d_c1" == "ftpdata:ftpdata 750 directory" \
   && "$p_a" == /data/clientes/olt-01/./ && "$p_b" == /data/clientes/olt-01/./ && "$p_c" == /data/clientes/olt-02/diario/./ && "$p_d" == /data/clientes/./ && "$p_e" == /data/eq13e/./ \

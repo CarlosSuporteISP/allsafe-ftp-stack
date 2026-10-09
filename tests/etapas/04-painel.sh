@@ -24,11 +24,12 @@ r="$(c -D "$W/estatico.cab" -o "$W/estatico.corpo" -w '%{http_code}' "$B/estilo.
 for cabecalho in 'content-type: text/css' 'content-security-policy:' 'x-content-type-options: nosniff' 'strict-transport-security:' 'etag:'; do
   grep -q -i "^$cabecalho" "$W/estatico.cab" || faltam+=" $cabecalho"
 done
-na_pagina="$(c "$B/entrar" | grep -c 'href="/estilo.css"')"
+marca="$(sha256sum web/estilo.css | cut -c1-12)"; na_pagina="$(c "$B/entrar" | grep -c "href=\"/estilo.css?v=$marca\"")"
+r_marca="$(c -o "$W/estatico.marca" -w '%{http_code}' "$B/estilo.css?v=$marca")"
 no_painel="$(docker exec "$PAINEL" find /opt /usr/share -name 'estilo.css' 2>/dev/null | wc -l)"
 r_post="$(c -o /dev/null -w '%{http_code}' -X POST "$B/estilo.css")"; r_fora="$(c -o /dev/null -w '%{http_code}' "$B/estilo.css/../nginx.conf")"
-[[ "$r" == 200 && -z "$faltam" && "$no_painel" == 0 && "$na_pagina" -ge 1 && "$r_post" != 200 && "$r_fora" != 200 ]] && cmp -s web/estilo.css "$W/estatico.corpo"
-caso $? testes 20 "Arquivos estáticos pelo nginx" "GET /estilo.css sem sessão: $r, $(grep -i '^content-type:' "$W/estatico.cab" | tr -d '\r') · igual a web/estilo.css: $(cmp -s web/estilo.css "$W/estatico.corpo" && echo sim || echo NÃO) · cabeçalhos faltando:${faltam:- nenhum} · tela de entrada aponta para ele: $na_pagina · cópias dentro do container do painel: $no_painel · POST: $r_post · caminho com ../: $r_fora"
+[[ "$r" == 200 && -z "$faltam" && "$no_painel" == 0 && "$na_pagina" -ge 1 && "$r_marca" == 200 && "$r_post" != 200 && "$r_fora" != 200 ]] && cmp -s web/estilo.css "$W/estatico.corpo" && cmp -s web/estilo.css "$W/estatico.marca"
+caso $? testes 20 "Arquivos estáticos pelo nginx" "GET /estilo.css sem sessão: $r, $(grep -i '^content-type:' "$W/estatico.cab" | tr -d '\r') · igual a web/estilo.css: $(cmp -s web/estilo.css "$W/estatico.corpo" && echo sim || echo NÃO) · cabeçalhos faltando:${faltam:- nenhum} · tela de entrada aponta para ele com a marca do conteúdo (?v=$marca): $na_pagina · pedido com a marca: $r_marca · cópias dentro do container do painel: $no_painel · POST: $r_post · caminho com ../: $r_fora"
 
 http="$(curl -s --max-time 6 -o "$W/puro" -w '%{http_code}' "http://$IP:$PAINEL_PORTA/entrar")"; form_http="$(grep -c 'name="senha"' "$W/puro" 2>/dev/null)"
 https="$(c -o "$W/corpo" -w '%{http_code}' "$B/entrar")"; form_https="$(grep -c 'name="senha"' "$W/corpo")"

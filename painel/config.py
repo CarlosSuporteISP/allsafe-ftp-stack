@@ -152,6 +152,13 @@ def configuracao():
             versao = arq.read().strip()
     except OSError:
         versao = '?'
+    try:
+        with open(os.path.join(RAIZ, 'ESTILO'), encoding='ascii') as arq:
+            estilo = arq.read(64).strip()
+    except (OSError, ValueError):
+        estilo = ''
+    if not re.fullmatch(r'[0-9a-f]{12}', estilo):
+        estilo = ''
     return {
         'ip_publico': publico,
         'redes': redes,
@@ -178,6 +185,7 @@ def configuracao():
         'ftp_passiva': f"{amb('FTP_PASSIVE_PORT_START', '30000')}–{amb('FTP_PASSIVE_PORT_END', '30049')}",
         'pasta_host': amb('PAINEL_PASTA_DADOS', 'DATA_DIR/dados').rstrip('/'),
         'versao': versao,
+        'estilo': estilo,
     }
 
 

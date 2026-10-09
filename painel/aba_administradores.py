@@ -1,53 +1,29 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Administradores: quem entra no painel. Lista, criação, troca de senha, troca de nome e remoção.
+"""Administradores: quem entra no painel. Criação, troca de senha, troca de nome e remoção; a lista é a da aba Usuários,
+onde o administrador aparece com o perfil dele.
 
 Toda alteração pede de novo a senha de quem está na sessão (confirmacao.py): um navegador esquecido aberto
 não basta para criar um administrador nem para trocar a senha de outro."""
 import urllib.parse
 
+import aba_usuarios
 import administradores
 from aba_usuarios import campos_de_senha, senha_do_formulario
 from auditoria import auditar
 from config import ADMINS_MAX, NOME
 from confirmacao import campo_senha_atual, confirmacao_recusada
-from icones import icone
-from pagina import cabeca, e, pagina
+from pagina import e, pagina
 from senha import gerar_hash
-from sessao import encerrar_sessoes_de, renomear_sessoes, sessoes_por_admin
+from sessao import encerrar_sessoes_de, renomear_sessoes
 
 ABA = '/administradores'
-MENSAGENS = {
-    'criado': 'Administrador criado.',
-    'senha': 'Senha trocada. As outras sessões desse administrador foram encerradas.',
-    'nome': 'Nome trocado. As outras sessões desse administrador foram encerradas.',
-    'removido': 'Administrador removido. As sessões dele foram encerradas.',
-}
+LISTA = '/usuarios'         # os administradores aparecem na lista de usuários, com o perfil Administrador
 SUMIU = 'A sua conta de administrador não existe mais. Saia e entre de novo.'
 
 
 def lista(pedido, sessao, consulta, formulario, token):
-    aviso = MENSAGENS.get(consulta.get('m', ''), '')
-    abertas = sessoes_por_admin()
-    linhas = []
-    for nome in administradores.ler():
-        destino = urllib.parse.quote(nome)
-        proprio = nome == sessao['admin']
-        acoes = (f'<a class="botao" href="{ABA}/senha?admin={destino}">Trocar senha</a> '
-                 f'<a class="botao" href="{ABA}/nome?admin={destino}">Trocar nome</a>')
-        if not proprio:
-            acoes += f' <a class="botao perigo" href="{ABA}/remover?admin={destino}">Remover</a>'
-        marca = ' <span class="etiqueta">você</span>' if proprio else ''
-        linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}</td><td>{abertas.get(nome, 0)}</td>'
-                      f'<td class="acoes">{acoes}</td></tr>')
-    pedido.enviar(200, pagina('Administradores', f'''{cabeca('Administradores', 'Quem entra neste painel. Todos têm o mesmo acesso.',
-        f'<a class="botao principal" href="{ABA}/novo">{icone("mais")}Novo administrador</a>')}
-{f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}
-<section class="cartao lista"><div class="rolagem"><table>
-<thead><tr><th>Administrador</th><th>Sessões abertas</th><th>Ações</th></tr></thead>
-<tbody>{''.join(linhas)}</tbody></table></div>
-<p class="suave">Toda alteração pede a sua senha atual e fica na aba Atividade com o
-seu nome. Ninguém remove a própria conta: assim sempre sobra um administrador. Até {ADMINS_MAX} administradores.</p>
-</section>''', sessao, ABA))
+    """O endereço antigo da lista de administradores leva à lista de usuários."""
+    return pedido.redirecionar(LISTA)
 
 
 def gravar(funcao):
@@ -64,7 +40,7 @@ def alvo_existente(pedido, sessao, nome):
     if NOME.fullmatch(nome) and nome in administradores.ler():
         return True
     pedido.enviar(404, pagina('Administrador não encontrado', '<section class="cartao"><h1>Administrador não encontrado</h1>'
-                            f'<p><a href="{ABA}">Voltar para a lista</a></p></section>', sessao, ABA))
+                            f'<p><a href="{LISTA}">Voltar para a lista</a></p></section>', sessao, LISTA))
     return False
 
 
@@ -74,25 +50,18 @@ def tela_senha_gerada(pedido, sessao, nome, senha, titulo):
 <p class="segredo"><code>{e(senha)}</code></p>
 <p class="aviso">Copie agora para o seu cofre de senhas ou entregue a quem vai usar. Ela <strong>não será mostrada de novo</strong>:
 o painel guarda só o hash.</p>
-<p><a class="botao principal" href="{ABA}">Já copiei: voltar para a lista</a></p></section>''', sessao, ABA))
+<p><a class="botao principal" href="{LISTA}">Já copiei: voltar para a lista</a></p></section>''', sessao, LISTA))
 
 
 def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='', codigo=200, nome=''):
-    pedido.enviar(codigo, pagina('Novo administrador', f'''<h1>Novo administrador</h1>
-<section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
-<form method="post" action="{ABA}/novo" autocomplete="off">
-<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
-<label for="nome">Nome do administrador</label>
-<input id="nome" name="nome" required maxlength="32" pattern="[a-z_][a-z0-9_\\-]*" value="{e(nome)}" autocapitalize="none" spellcheck="false">
-<p class="suave">Letras minúsculas, números, <code>_</code> e <code>-</code>; começa com letra ou <code>_</code>; até 32 caracteres.</p>
-{campos_de_senha()}
-{campo_senha_atual(sessao)}
-<button type="submit">Criar administrador</button> <a class="botao" href="{ABA}">Cancelar</a>
-</form></section>''', sessao, ABA))
+    """O formulário é o de Novo usuário, com o perfil Administrador marcado."""
+    if not erro:
+        return pedido.redirecionar(LISTA + '/novo?perfil=administrador')
+    return aba_usuarios.tela_novo(pedido, sessao, erro=erro, codigo=codigo, nome=nome, perfil='administrador')
 
 
 def criar(pedido, sessao, consulta, formulario, token):
-    nome = formulario.get('nome', '').strip()
+    nome = formulario.get('usuario', '').strip()
     if not NOME.fullmatch(nome):
         return tela_novo(pedido, sessao, erro='Nome inválido. Veja a regra abaixo do campo.', codigo=400)
     if nome in administradores.ler():
@@ -120,7 +89,14 @@ def criar(pedido, sessao, consulta, formulario, token):
     auditar(pedido.ip, 'admin_criado', f'admin={sessao["admin"]} novo={nome} credencial={"gerada" if gerada else "informada"}')
     if gerada:
         return tela_senha_gerada(pedido, sessao, nome, senha, 'Administrador criado')
-    return pedido.redirecionar(ABA + '?m=criado')
+    return pedido.redirecionar(LISTA + '?m=admin_criado')
+
+
+def criar_conta(pedido, sessao, consulta, formulario, token):
+    """Recebe o formulário de Novo usuário: o perfil Administrador cria a conta do painel; os outros, a do FTP."""
+    if formulario.get('perfil') == 'administrador':
+        return criar(pedido, sessao, consulta, formulario, token)
+    return aba_usuarios.criar_usuario(pedido, sessao, consulta, formulario, token)
 
 
 def tela_trocar_senha(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200):
@@ -136,8 +112,8 @@ def tela_trocar_senha(pedido, sessao, consulta, formulario=None, token=None, err
 <input type="hidden" name="admin" value="{e(nome)}">
 {campos_de_senha()}
 {campo_senha_atual(sessao)}
-<button type="submit">Trocar senha</button> <a class="botao" href="{ABA}">Cancelar</a>
-</form></section>''', sessao, ABA))
+<button type="submit">Trocar senha</button> <a class="botao" href="{LISTA}">Cancelar</a>
+</form></section>''', sessao, LISTA))
 
 
 def trocar_senha(pedido, sessao, consulta, formulario, token):
@@ -166,7 +142,7 @@ def trocar_senha(pedido, sessao, consulta, formulario, token):
     auditar(pedido.ip, 'admin_senha_trocada', f'admin={sessao["admin"]} alvo={nome} credencial={"gerada" if gerada else "informada"}')
     if gerada:
         return tela_senha_gerada(pedido, sessao, nome, senha, 'Senha trocada')
-    return pedido.redirecionar(ABA + '?m=senha')
+    return pedido.redirecionar(LISTA + '?m=admin_senha')
 
 
 def tela_trocar_nome(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, novo=''):
@@ -183,8 +159,8 @@ def tela_trocar_nome(pedido, sessao, consulta, formulario=None, token=None, erro
 <input id="nome" name="nome" required maxlength="32" pattern="[a-z_][a-z0-9_\\-]*" value="{e(novo)}" autocapitalize="none" spellcheck="false">
 <p class="suave">Letras minúsculas, números, <code>_</code> e <code>-</code>; começa com letra ou <code>_</code>; até 32 caracteres.</p>
 {campo_senha_atual(sessao)}
-<button type="submit">Trocar nome</button> <a class="botao" href="{ABA}">Cancelar</a>
-</form></section>''', sessao, ABA))
+<button type="submit">Trocar nome</button> <a class="botao" href="{LISTA}">Cancelar</a>
+</form></section>''', sessao, LISTA))
 
 
 def trocar_nome(pedido, sessao, consulta, formulario, token):
@@ -220,7 +196,7 @@ def trocar_nome(pedido, sessao, consulta, formulario, token):
     encerrar_sessoes_de(nome, menos=sessao)
     renomear_sessoes(nome, novo)
     auditar(pedido.ip, 'admin_renomeado', f'admin={quem} de={nome} para={novo}')
-    return pedido.redirecionar(ABA + '?m=nome')
+    return pedido.redirecionar(LISTA + '?m=admin_nome')
 
 
 def propria_conta(pedido, sessao, nome):
@@ -230,7 +206,7 @@ def propria_conta(pedido, sessao, nome):
     pedido.enviar(409, pagina('Remover administrador', '<section class="cartao"><h1>Esta é a sua conta</h1>'
                             '<p>Ninguém remove a própria conta, para o painel nunca ficar sem administrador. '
                             'Peça a outro administrador para removê-la.</p>'
-                            f'<p><a href="{ABA}">Voltar para a lista</a></p></section>', sessao, ABA))
+                            f'<p><a href="{LISTA}">Voltar para a lista</a></p></section>', sessao, LISTA))
     return True
 
 
@@ -246,8 +222,8 @@ Os usuários do FTP e os arquivos não mudam.</p>
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
 <input type="hidden" name="admin" value="{e(nome)}">
 {campo_senha_atual(sessao)}
-<button class="perigo" type="submit">Sim, remover o administrador</button> <a class="botao" href="{ABA}">Cancelar</a>
-</form></section>''', sessao, ABA))
+<button class="perigo" type="submit">Sim, remover o administrador</button> <a class="botao" href="{LISTA}">Cancelar</a>
+</form></section>''', sessao, LISTA))
 
 
 def remover(pedido, sessao, consulta, formulario, token):
@@ -270,4 +246,4 @@ def remover(pedido, sessao, consulta, formulario, token):
         return pedido.recusar(codigo, erro)
     encerrar_sessoes_de(nome)
     auditar(pedido.ip, 'admin_removido', f'admin={sessao["admin"]} alvo={nome}')
-    return pedido.redirecionar(ABA + '?m=removido')
+    return pedido.redirecionar(LISTA + '?m=admin_removido')

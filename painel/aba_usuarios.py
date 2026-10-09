@@ -1,19 +1,35 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Usuários: lista, criação, edição (pasta, TLS, limites e bloqueios), troca de senha e remoção dos usuários do FTP.
+"""Aba Usuários: todas as contas em uma lista, cada uma com o seu perfil. Os administradores entram no painel; os
+usuários do FTP têm o perfil Completo, Envio ou Leitura. Aqui ficam a lista, a criação, a edição (perfil, pasta, TLS,
+limites e bloqueios), a troca de senha e a remoção dos usuários do FTP; as alterações de administrador ficam em
+aba_administradores.py.
 
 A remoção pode levar junto a pasta do usuário, quando nenhum outro a alcança; apagar pede a senha atual
 do administrador."""
 import secrets
 import urllib.parse
 
+import administradores
 import limites
 from aba_arquivos import Recusado, apagar_caminho, endereco, resposta_parcial
 from auditoria import auditar, limpo
-from config import CFG, DOWNLOADS_POR_USUARIO, NOME, PASTA, SENHA_MAX, SENHA_MIN
+from config import ADMINS_MAX, CFG, DOWNLOADS_POR_USUARIO, NOME, PASTA, SENHA_MAX, SENHA_MIN
 from confirmacao import campo_senha_atual, confirmacao_recusada
-from estado import bloqueios, executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, sem_tls, uso_da_pasta, usuarios, vizinhos, vizinhos_de_todos
+from estado import (bloqueios, executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, perfis, sem_tls, uso_da_pasta,
+                    usuarios, vizinhos, vizinhos_de_todos)
 from icones import icone
 from pagina import cabeca, e, pagina, quando, tamanho
+from sessao import sessoes_por_admin
+
+# Perfil ➜ nome na tela e o que a conta pode fazer. O administrador é do painel; os outros três são do FTP.
+PERFIS = (
+    ('administrador', 'Administrador', 'entra no painel e administra tudo; não é conta do FTP'),
+    ('completo', 'Completo', 'envia, baixa, renomeia e apaga'),
+    ('envio', 'Envio', 'envia e baixa; não apaga nem altera o que já enviou'),
+    ('leitura', 'Leitura', 'só lista e baixa'),
+)
+PERFIS_FTP = tuple(chave for chave, _, _ in PERFIS[1:])
+NOME_DO_PERFIL = {chave: rotulo for chave, rotulo, _ in PERFIS}
 
 MENSAGENS = {
     'criado': 'Usuário criado.',
@@ -21,12 +37,17 @@ MENSAGENS = {
     'criado_tls_falhou': 'Usuário criado, mas a dispensa do TLS não foi gravada: ele só entra com TLS. Tente de novo em Editar.',
     'senha': 'Senha trocada.',
     'pasta': 'Pasta trocada. Os arquivos da pasta anterior continuam nela.',
+    'perfil': 'Perfil trocado. Vale na próxima entrada do usuário no FTP.',
     'limites': 'Limites gravados. Valem na próxima entrada do usuário no FTP.',
     'desbloqueado': 'Bloqueio removido. O usuário volta a poder entrar no FTP.',
     'removido': 'Usuário removido. Os arquivos continuam na pasta.',
     'removido_com_pasta': 'Usuário removido e pasta apagada.',
     'tls_dispensado': 'Usuário dispensado do TLS: a senha e os arquivos dele passam em texto puro.',
     'tls_exigido': 'O usuário volta a ser obrigado a usar TLS.',
+    'admin_criado': 'Administrador criado.',
+    'admin_senha': 'Senha trocada. As outras sessões desse administrador foram encerradas.',
+    'admin_nome': 'Nome trocado. As outras sessões desse administrador foram encerradas.',
+    'admin_removido': 'Administrador removido. As sessões dele foram encerradas.',
 }
 
 ALERTA_SEM_TLS = ('A senha e os arquivos deste usuário passam a trafegar em texto puro e podem ser lidos por quem estiver '
@@ -43,6 +64,22 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
     proprios = limites.todos()
     presos = bloqueios()
     divididas = vizinhos_de_todos(cadastro)
+    papeis = perfis()
+    abertas = sessoes_por_admin()
+    colunas = 7 if excecoes else 6
+    for nome in administradores.ler():
+        destino = urllib.parse.quote(nome)
+        proprio = nome == sessao['admin']
+        acoes = (f'<a class="botao" href="/administradores/senha?admin={destino}">Trocar senha</a> '
+                 f'<a class="botao" href="/administradores/nome?admin={destino}">Trocar nome</a>')
+        if not proprio:
+            acoes += f' <a class="botao perigo" href="/administradores/remover?admin={destino}">Remover</a>'
+        quantas = abertas.get(nome, 0)
+        marca = ' <span class="etiqueta">você</span>' if proprio else ''
+        linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}<span class="perfil">{NOME_DO_PERFIL["administrador"]}</span></td>'
+                      f'<td class="suave" colspan="{colunas - 2}">Painel inteiro; '
+                      f'{quantas} {"sessão aberta" if quantas == 1 else "sessões abertas"}</td>'
+                      f'<td class="acoes">{acoes}</td></tr>')
     for nome, pasta in cadastro.items():
         uso = uso_da_pasta(pasta)
         destino = urllib.parse.quote(nome)
@@ -75,23 +112,29 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
                 coluna_tls = '<td>obrigatório</td>'
                 acoes += f' <a class="botao" href="/usuarios/tls?usuario={destino}">Dispensar TLS</a>'
         acoes += remover
-        linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}</td>'
+        linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}'
+                      f'<span class="perfil">{NOME_DO_PERFIL[papeis.get(nome, "completo")]}</span></td>'
                       f'<td class="pasta">{celula}</td>'
                       f'<td>{e(tamanho(uso["bytes"]))}{mais}</td><td>{uso["arquivos"]}{mais}</td>'
                       f'<td>{e(quando(uso["ultimo"]))}</td>{coluna_tls}<td class="acoes">{acoes}</td></tr>')
-    corpo = ''.join(linhas) or f'<tr><td colspan="{7 if excecoes else 6}" class="suave">Nenhum usuário ainda.</td></tr>'
+    corpo = ''.join(linhas) or f'<tr><td colspan="{colunas}" class="suave">Nenhum usuário ainda.</td></tr>'
     nota_tls = ('<li><span class="etiqueta atencao">sem TLS</span> Dispensado do TLS pelo administrador, em Editar ou ao criar: '
                 'a senha e os arquivos desse usuário trafegam em texto puro.</li>') if excecoes else ''
-    pedido.enviar(200, pagina('Usuários', f'''{cabeca('Usuários', 'As contas que os equipamentos usam para entrar no FTP, cada uma presa na própria pasta.',
+    pedido.enviar(200, pagina('Usuários', f'''{cabeca('Usuários', 'As contas do painel e do FTP, cada uma com o seu perfil.',
         f'<a class="botao principal" href="/usuarios/novo">{icone("mais")}Novo usuário</a>')}
 {f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}
 <section class="cartao lista"><div class="rolagem"><table>
-<thead><tr><th>Usuário</th><th>Pasta</th><th>Uso</th><th>Arquivos</th><th>Último envio</th>{'<th>TLS</th>' if excecoes else ''}<th>Ações</th></tr></thead>
+<thead><tr><th>Usuário e perfil</th><th>Pasta</th><th>Uso</th><th>Arquivos</th><th>Último envio</th>{'<th>TLS</th>' if excecoes else ''}<th>Ações</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
 <ul class="legenda">
-<li>Cada usuário fica preso na pasta dele, dentro de <code>{e(CFG['pasta_host'])}</code> no servidor. Toda alteração vale no próximo
-login, sem reiniciar o FTP.</li>
-<li><span class="etiqueta">dividida</span> Pasta alcançada por mais de um usuário: um lê, grava e apaga os arquivos do outro.</li>
+<li><strong>Administrador</strong> entra neste painel e administra tudo; não é conta do FTP. Alterar administrador pede a sua senha
+atual, e ninguém remove a própria conta. Até {ADMINS_MAX} administradores.</li>
+<li><strong>Completo</strong> envia, baixa, renomeia e apaga. <strong>Envio</strong> envia e baixa, sem apagar nem alterar o que já
+enviou. <strong>Leitura</strong> só lista e baixa. O perfil vale no FTP e na entrada do usuário pelo painel.</li>
+<li>Cada usuário do FTP fica preso na pasta dele, dentro de <code>{e(CFG['pasta_host'])}</code> no servidor. Toda alteração vale no
+próximo login, sem reiniciar o FTP.</li>
+<li><span class="etiqueta">dividida</span> Pasta alcançada por mais de um usuário: cada um mexe nos arquivos do outro até onde o
+perfil dele deixa.</li>
 <li><span class="etiqueta">limites</span> Limite próprio, ajustado em Editar.</li>
 <li><span class="etiqueta ruim">bloqueado</span> Recusado pelo FTP por senhas erradas demais vindas de um endereço: o bloqueio sai
 sozinho no fim do prazo, ou em Editar.</li>
@@ -140,8 +183,8 @@ def campo_da_pasta(rotulo, pasta, obrigatoria=False):
 <datalist id="pastas">{sugestoes}</datalist>
 <p class="suave">Fica dentro de <code>{e(CFG['pasta_host'])}</code> e é criada se não existir. Até 4 níveis separados por <code>/</code>;
 letras, números, <code>_</code>, <code>-</code> e ponto; nenhum nível começa com ponto.</p>
-<p class="aviso">Usuários com a mesma pasta, ou com uma dentro da outra, leem, gravam e apagam os arquivos um do outro.
-Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.</p>'''
+<p class="aviso">Usuários com a mesma pasta, ou com uma dentro da outra, alcançam os arquivos um do outro, cada um até onde o
+perfil dele deixa. Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.</p>'''
 
 
 def campo_do_tls(marcado=False):
@@ -152,19 +195,35 @@ def campo_do_tls(marcado=False):
 <p class="aviso">{ALERTA_SEM_TLS} Sem marcar a caixa, o usuário só entra com TLS (FTPS explícito).</p>'''
 
 
-def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='', codigo=200, nome='', pasta='', sem_tls_marcado=False):
+def campo_do_perfil(marcado, com_administrador=True, legenda='Perfil'):
+    """Seletor do perfil, uma opção por linha com o que ela permite. Em Editar o administrador fica de fora: a conta
+    dele é outra, guardada em outro arquivo."""
+    opcoes = ''.join(
+        f'<label class="marcar"><input type="radio" id="perfil-{chave}" name="perfil" value="{chave}"{" checked" if chave == marcado else ""}> '
+        f'<span><strong>{rotulo}</strong>: {e(nota)}.</span></label>'
+        for chave, rotulo, nota in PERFIS if com_administrador or chave != 'administrador')
+    return f'<fieldset class="perfis"><legend>{legenda}</legend>{opcoes}</fieldset>'
+
+
+def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='', codigo=200, nome='', pasta='', sem_tls_marcado=False,
+              perfil=''):
     if not pasta and consulta and PASTA.fullmatch(consulta.get('pasta', '')):
         pasta = consulta['pasta']  # vindo da aba Arquivos: novo usuário nesta pasta
+    perfil = perfil or (consulta or {}).get('perfil', '')
+    if perfil not in NOME_DO_PERFIL:
+        perfil = 'completo'
     pedido.enviar(codigo, pagina('Novo usuário', f'''<h1>Novo usuário</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <form method="post" action="/usuarios/novo" autocomplete="off">
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+{campo_do_perfil(perfil)}
 <label for="usuario">Nome do usuário</label>
 <input id="usuario" name="usuario" required maxlength="32" pattern="[a-z_][a-z0-9_\\-]*" value="{e(nome)}" autocapitalize="none" spellcheck="false">
 <p class="suave">Letras minúsculas, números, <code>_</code> e <code>-</code>; começa com letra ou <code>_</code>; até 32 caracteres.</p>
-{campo_da_pasta('Pasta <span class="suave">(deixe em branco para usar o nome do usuário)</span>', pasta)}
+<div class="so-ftp">{campo_da_pasta('Pasta <span class="suave">(deixe em branco para usar o nome do usuário)</span>', pasta)}</div>
 {campos_de_senha()}
-{campo_do_tls(sem_tls_marcado)}
+<div class="so-ftp">{campo_do_tls(sem_tls_marcado)}</div>
+<div class="so-admin">{campo_senha_atual(sessao, obrigatoria=False, para='pedida para criar administrador')}</div>
 <button type="submit">Criar usuário</button> <a class="botao" href="/usuarios">Cancelar</a>
 </form></section>''', sessao, '/usuarios'))
 
@@ -173,27 +232,31 @@ def criar_usuario(pedido, sessao, consulta, formulario, token):
     nome = formulario.get('usuario', '').strip()
     # A caixa só existe com o TLS por usuário valendo: fora disso o campo é ignorado, e não recusado.
     dispensar = CFG['tls_excecoes'] and formulario.get('sem_tls') == 'sim'
+    perfil = formulario.get('perfil', 'completo')
+    if perfil not in PERFIS_FTP:
+        return tela_novo(pedido, sessao, erro='Perfil inválido.', codigo=400, sem_tls_marcado=dispensar)
     if not NOME.fullmatch(nome):
-        return tela_novo(pedido, sessao, erro='Nome inválido. Veja a regra abaixo do campo.', codigo=400, sem_tls_marcado=dispensar)
+        return tela_novo(pedido, sessao, erro='Nome inválido. Veja a regra abaixo do campo.', codigo=400, sem_tls_marcado=dispensar,
+                         perfil=perfil)
     informada = formulario.get('pasta', '').strip()
     pasta = informada or nome
     if nome in usuarios():
         return tela_novo(pedido, sessao, erro='Já existe um usuário com este nome.', codigo=409, nome=nome, pasta=informada,
-                         sem_tls_marcado=dispensar)
+                         sem_tls_marcado=dispensar, perfil=perfil)
     impedimento = impedimento_da_pasta(pasta) if PASTA.fullmatch(pasta) else 'Pasta inválida. Veja a regra abaixo do campo.'
     if impedimento:
         auditar(pedido.ip, 'recusa_caminho', f'admin={sessao["admin"]} caminho={limpo(pasta, 120)}')
-        return tela_novo(pedido, sessao, erro=impedimento, codigo=400, nome=nome, sem_tls_marcado=dispensar)
+        return tela_novo(pedido, sessao, erro=impedimento, codigo=400, nome=nome, sem_tls_marcado=dispensar, perfil=perfil)
     senha, gerada, erro = senha_do_formulario(formulario)
     if erro:
-        return tela_novo(pedido, sessao, erro=erro, codigo=400, nome=nome, pasta=informada, sem_tls_marcado=dispensar)
-    feito, mensagem = executar_usuario('add', nome, senha, pasta)
+        return tela_novo(pedido, sessao, erro=erro, codigo=400, nome=nome, pasta=informada, sem_tls_marcado=dispensar, perfil=perfil)
+    feito, mensagem = executar_usuario('add', nome, senha, pasta, pares=(perfil,))
     if not feito:
         auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=criar usuario={nome}')
         return tela_novo(pedido, sessao, erro='Não foi possível criar: ' + mensagem, codigo=500, nome=nome, pasta=informada,
-                         sem_tls_marcado=dispensar)
+                         sem_tls_marcado=dispensar, perfil=perfil)
     auditar(pedido.ip, 'usuario_criado',
-            f'admin={sessao["admin"]} usuario={nome} credencial={"gerada" if gerada else "informada"} pasta={pasta}')
+            f'admin={sessao["admin"]} usuario={nome} credencial={"gerada" if gerada else "informada"} pasta={pasta} perfil={perfil}')
     resultado = 'criado'
     if dispensar:
         # O usuário já existe: se a dispensa falhar, ele fica obrigado a usar TLS, que é o lado seguro.
@@ -276,6 +339,21 @@ ele também é recusado, até o fim do prazo.</p>
 </form></section>'''
 
 
+def cartao_perfil(sessao, nome, atual, erro=''):
+    """Formulário do perfil do usuário do FTP."""
+    return f'''<section class="cartao estreito" id="perfil"><h2>Perfil</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
+<form method="post" action="/usuarios/perfil" autocomplete="off">
+<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+<input type="hidden" name="usuario" value="{e(nome)}">
+{campo_do_perfil(atual, com_administrador=False, legenda='O que este usuário pode fazer')}
+<p class="suave">O perfil vale no FTP e na entrada do usuário pelo painel. A troca vale no próximo login no FTP e encerra a sessão
+dele no painel; sessão de FTP que já está aberta segue com o perfil anterior até sair.</p>
+<p class="suave">No perfil Envio, o arquivo passa a ser do servidor assim que termina de chegar: daí em diante o usuário não o
+apaga, não o renomeia e não grava por cima. Equipamento que envia sempre com o mesmo nome de arquivo precisa do perfil Completo.</p>
+<button type="submit">Gravar perfil</button> <a class="botao" href="/usuarios">Cancelar</a>
+</form></section>'''
+
+
 def cartao_tls(nome):
     """Como o usuário entra no FTP e o caminho para mudar; com o TLS por usuário sem efeito, o motivo."""
     destino = urllib.parse.quote(nome)
@@ -297,7 +375,7 @@ ser lidos por quem estiver na mesma rede. Com TLS ele continua entrando normalme
 
 
 def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, pasta='', erro_limites='', digitado=None,
-                erro_bloqueio=''):
+                erro_bloqueio='', erro_perfil=''):
     nome = consulta.get('usuario', '')
     if not usuario_alteravel(pedido, sessao, nome):
         return
@@ -321,6 +399,7 @@ def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
 <p><a class="botao" href="/usuarios/senha?usuario={destino}">Trocar senha</a> <a class="botao" href="/usuarios">Voltar para a lista</a></p>
 </section>
 {cartao_bloqueios(sessao, nome, erro_bloqueio)}
+{cartao_perfil(sessao, nome, perfis().get(nome, 'completo'), erro_perfil)}
 <section class="cartao estreito"><h2>Pasta</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>Pasta atual: {onde}, com {uso['arquivos']}{mais} arquivo(s), {e(tamanho(uso['bytes']))}{mais}.{dividida}</p>
 <form method="post" action="/usuarios/pasta" autocomplete="off">
@@ -363,6 +442,24 @@ def desbloquear(pedido, sessao, consulta, formulario, token):
         return tela_editar(pedido, sessao, {'usuario': nome}, erro_bloqueio='Não foi possível desbloquear: ' + mensagem, codigo=500)
     auditar(pedido.ip, 'bloqueio_removido', f'admin={sessao["admin"]} usuario={nome} origens={origens}')
     return pedido.redirecionar('/usuarios?m=desbloqueado')
+
+
+def trocar_perfil(pedido, sessao, consulta, formulario, token):
+    nome = formulario.get('usuario', '')
+    if not usuario_alteravel(pedido, sessao, nome):
+        return None
+    perfil = formulario.get('perfil', '')
+    anterior = perfis().get(nome, 'completo')
+    if perfil not in PERFIS_FTP:
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro_perfil='Perfil inválido.', codigo=400)
+    if perfil == anterior:
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro_perfil='Este já é o perfil do usuário.', codigo=409)
+    feito, mensagem = executar_usuario('perfil', nome, pares=(perfil,))
+    if not feito:
+        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=trocar_perfil usuario={nome}')
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro_perfil='Não foi possível trocar: ' + mensagem, codigo=500)
+    auditar(pedido.ip, 'perfil_trocado', f'admin={sessao["admin"]} usuario={nome} perfil={perfil} anterior={anterior}')
+    return pedido.redirecionar('/usuarios?m=perfil')
 
 
 def trocar_pasta(pedido, sessao, consulta, formulario, token):

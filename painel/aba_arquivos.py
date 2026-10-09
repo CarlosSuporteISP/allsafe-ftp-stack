@@ -263,10 +263,13 @@ def criar_pasta(pedido, sessao, consulta, formulario, token):
         return recusa(pedido, sessao, erro, novo)
     try:
         dono = pwd.getpwnam(DONO_DADOS)
+        # Dentro de outra pasta, a nova acompanha o modo dela: é ele que diz o que cada perfil de usuário do FTP
+        # alcança ali (grupo que grava e bit de permanência para o envio, "outros" para a leitura).
+        modo = (os.fstat(descritor).st_mode & 0o1775) | 0o750 if lista else 0o750
         os.mkdir(nome, 0o750, dir_fd=descritor)
         feita = os.open(nome, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=descritor)
         try:
-            os.fchmod(feita, 0o750)
+            os.fchmod(feita, modo)
             os.fchown(feita, dono.pw_uid, dono.pw_gid)
         finally:
             os.close(feita)

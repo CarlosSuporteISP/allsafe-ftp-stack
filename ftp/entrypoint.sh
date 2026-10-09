@@ -58,7 +58,9 @@ fi
 
 # As pastas vêm do host por bind mount: o dono e o modo são normalizados a cada subida.
 chown root:root /data /auth /etc/ssl/private
-chmod 0755 /data
+# Só o root atravessa o /data: o Pure-FTPd prende cada sessão na pasta do usuário antes de largar o root, e
+# a pasta que um perfil de leitura alcança (aberta a "outros") não fica ao alcance de outra conta do servidor.
+chmod 0700 /data
 chmod 0750 /auth
 chmod 0700 /etc/ssl/private
 # Mesma trava do allsafe-ftp-user: o painel pode estar alterando usuários agora.
@@ -151,6 +153,11 @@ fi
 [[ ! -L /auth/bloqueios ]] || die "/auth/bloqueios é link simbólico: remova-o"
 install -d -o root -g root -m 0700 /auth/bloqueios
 exec 9>&-  # solta a trava: o descritor não pode ir para o pure-ftpd
+# Com perfil de envio ou de leitura no cadastro, as pastas voltam ao modo que os perfis pedem e o que um envio
+# deixou sem entrega é entregue, antes de o servidor aceitar sessão. Sem esses perfis, nada é percorrido.
+if grep -qE '^[^:]+:[^:]*:1000[23]:' /auth/pureftpd.passwd; then
+  /usr/local/sbin/allsafe-ftp-user ajustar || die "não foi possível ajustar as pastas aos perfis dos usuários"
+fi
 
 certificate=/etc/ssl/private/pure-ftpd.pem
 if [[ ! -s "$certificate" ]]; then
