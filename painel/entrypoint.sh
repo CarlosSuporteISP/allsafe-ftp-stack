@@ -115,6 +115,11 @@ install -d -o root -g "$gid_nginx" -m 0750 /nginx/tls
 install -o root -g "$gid_nginx" -m 0644 "$certificado" /nginx/tls/painel-cert.pem
 install -o root -g "$gid_nginx" -m 0640 "$chave" /nginx/tls/painel-key.pem
 rm -f /nginx/painel.sock
+# Única pasta em que o nginx grava: os recursos do container dele, que a aba Servidor lê. É dele e só dele; o
+# painel a lê como root e não confia no conteúdo (recursos.py).
+install -d -m 0700 /nginx/estado
+chown 10001:"$gid_nginx" /nginx/estado
+chmod 0700 /nginx/estado
 
 aviso_ip_publico >&2
 aviso_proxy >&2

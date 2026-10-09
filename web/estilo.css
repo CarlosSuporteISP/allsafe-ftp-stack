@@ -58,6 +58,7 @@
   --marca-realce: var(--azul-78);
   --sombra: none;
 
+  --texto-miudo: 0.8125rem;
   --texto-rotulo: 0.875rem;
   --texto-base: 1rem;
   --texto-destaque: 1.2rem;
@@ -241,10 +242,11 @@ footer .autoria { margin-top: 4px; }
 .lista tr > :first-child { padding-left: 20px; }
 .lista tr > :last-child { padding-right: 20px; }
 /* Dois cartões lado a lado, na mesma altura. */
-.dupla { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; margin: 0 0 16px; }
-.dupla > .cartao { display: flex; flex-direction: column; margin: 0; }
+.dupla { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px; margin: 0 0 12px; }
+.dupla > .cartao { display: flex; flex-direction: column; margin: 0; padding: 14px 16px; font-size: var(--texto-rotulo); }
+.dupla + .cartao, .situacao + .cartao { margin-bottom: 12px; }
 .recentes { margin: 0; padding: 0; list-style: none; }
-.recentes li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 16px; padding: 8px 0; border-bottom: 1px solid var(--borda); }
+.recentes li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 16px; padding: 5px 0; border-bottom: 1px solid var(--borda); }
 .recentes li:last-child { border-bottom: 0; }
 /* Na lista curta o endereço desce inteiro para a linha de baixo e só parte se nem assim couber (IPv6 em celular). */
 .recentes li > * { min-width: 0; }
@@ -254,37 +256,41 @@ footer .autoria { margin-top: 4px; }
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   overflow: hidden;
   border: 1px solid var(--borda);
   border-radius: var(--raio-cartao);
   background: var(--borda);
   box-shadow: var(--sombra);
 }
-.situacao > div { display: flex; flex-direction: column; min-width: 0; padding: 20px; background: var(--superficie); }
-.situacao h2 { color: var(--suave); font-size: var(--texto-rotulo); }
+.situacao > div { display: flex; flex-direction: column; min-width: 0; padding: 12px 16px; background: var(--superficie); }
+.situacao h2 { margin-bottom: 6px; color: var(--suave); font-size: var(--texto-miudo); }
+.situacao h2 > svg { width: 16px; height: 16px; }
+.situacao .numero { font-size: 1.25rem; }
+.situacao .numero.menor { font-size: 1.0625rem; }
+.situacao .suave, .situacao .atalho { margin-bottom: 0; font-size: var(--texto-miudo); }
+.situacao .atalho { padding-top: 4px; }
 .situacao .estado {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto auto 1fr auto;
   align-items: center;
   gap: 0 16px;
   color: var(--texto);
 }
-.estado h2 { grid-column: 1 / 3; margin-bottom: 4px; }
-.estado p { margin: 0; }
-.estado .atalho { grid-column: 3; grid-row: 1 / 3; padding: 0; }
+.situacao .estado h2, .estado p { margin: 0; }
+.situacao .estado .atalho { padding: 0; }
 .estado.bom { background: color-mix(in oklab, var(--bom) 7%, var(--superficie)); }
 .estado.ruim { background: color-mix(in oklab, var(--ruim) 9%, var(--superficie)); }
-.estado .numero { display: flex; align-items: center; gap: 12px; margin-left: 4px; }
+.situacao .estado .numero { display: flex; align-items: center; gap: 10px; margin-left: 4px; font-size: 1.125rem; }
 .estado .numero::before {
   content: "";
   flex: none;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 0 4px color-mix(in oklab, currentColor 22%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, currentColor 22%, transparent);
 }
 .estado.bom .numero { color: var(--bom); }
 .estado.ruim .numero { color: var(--ruim); }
@@ -295,6 +301,8 @@ footer .autoria { margin-top: 4px; }
 .atalho a::after { content: " →"; }
 
 .numero { margin: 0 0 4px; font-size: var(--titulo); font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+/* O número dentro de uma frase: fica na linha do texto que o explica. */
+p > strong.numero { margin: 0 6px 0 0; color: var(--texto); font-size: 1.25rem; }
 .numero.menor { display: flex; align-items: center; gap: 8px; font-size: var(--texto-destaque); letter-spacing: -0.01em; }
 .bom { color: var(--bom); }
 .atencao { color: var(--atencao); }
@@ -309,18 +317,18 @@ footer .autoria { margin-top: 4px; }
 .info { color: var(--link); }
 
 /* Colunas por dia: o valor em cima, a coluna e o dia embaixo. A de hoje é a mais forte e leva o nome. */
-.colunas { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0 6px; margin: 12px 0; padding: 0; list-style: none; font-variant-numeric: tabular-nums; }
+.colunas { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0 6px; margin: 8px 0; padding: 0; list-style: none; font-variant-numeric: tabular-nums; }
 .colunas li { display: flex; flex-direction: column; align-items: center; min-width: 0; }
-.colunas .valor, .colunas .dia { font-size: var(--texto-rotulo); line-height: 1.6; white-space: nowrap; }
+.colunas .valor, .colunas .dia { font-size: var(--texto-miudo); line-height: 1.5; white-space: nowrap; }
 .colunas .valor { font-weight: 600; }
 .colunas .vazio .valor, .colunas .dia { color: var(--suave); }
-.colunas svg { display: block; align-self: stretch; height: 112px; border-bottom: 1px solid var(--borda-campo); }
+.colunas svg { display: block; align-self: stretch; height: 64px; border-bottom: 1px solid var(--borda-campo); }
 .colunas rect { fill: color-mix(in oklab, var(--link) 45%, var(--superficie)); }
 .colunas .hoje rect { fill: var(--link); }
 .colunas .hoje .dia { color: var(--texto); font-weight: 600; }
 
 /* Barra dividida em partes, com a legenda: o quadrado da cor, o número e o nome da parte. */
-.faixa { display: block; width: 100%; height: 12px; margin: 4px 0 12px; border-radius: 999px; background: var(--superficie-2); }
+.faixa { display: block; width: 100%; height: 8px; margin: 4px 0 10px; border-radius: 999px; background: var(--superficie-2); }
 .faixa rect { fill: currentColor; }
 .chaves { display: flex; flex-wrap: wrap; gap: 6px 24px; margin: 0 0 12px; padding: 0; list-style: none; color: var(--suave); font-size: var(--texto-rotulo); }
 .chaves strong { color: var(--texto); font-variant-numeric: tabular-nums; }
@@ -328,26 +336,71 @@ footer .autoria { margin-top: 4px; }
 
 /* Barras deitadas: nome, barra e valor. As três colunas são as mesmas em todas as linhas. */
 .barras { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) auto; margin: 0; padding: 0; list-style: none; }
-.barras li { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: center; gap: 4px 16px; padding: 8px 0; border-bottom: 1px solid var(--borda); }
+.barras li { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: center; gap: 4px 16px; padding: 5px 0; border-bottom: 1px solid var(--borda); }
 .barras li:last-child { border-bottom: 0; }
-.barras svg { display: block; width: 100%; height: 8px; border-radius: 999px; background: var(--superficie-2); }
+.barras svg { display: block; width: 100%; height: 6px; border-radius: 999px; background: var(--superficie-2); }
 .barras rect { fill: color-mix(in oklab, var(--link) 70%, var(--superficie)); }
 .barras .valor { color: var(--suave); font-size: var(--texto-rotulo); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
 .barras a > code { padding: 0; border: 0; background: none; }
 
-/* Linha de um período (aba Servidor): o desenho estica na largura do cartão e o traço mantém a espessura. A cor é a
-   do tom da série; a segunda série sai tracejada, para a cor não ser o único sinal. */
-.linha { display: block; width: 100%; height: 96px; margin: 12px 0 4px; overflow: visible; border-bottom: 1px solid var(--borda-campo); }
-.linha polyline { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.linha polyline ~ polyline { stroke-dasharray: 4 3; }
-.linha polygon { fill: currentColor; opacity: 0.14; }
-.eixo { display: flex; justify-content: space-between; gap: 12px; max-width: none; margin: 0 0 8px; color: var(--suave); font-size: var(--texto-rotulo); }
+/* Linha de um período: o desenho estica na largura do cartão e o traço mantém a espessura. Cada série fica num grupo
+   com a cor do tom dela: a linha e, na primeira, a área embaixo, que clareia até a base. A segunda série sai
+   tracejada, para a cor não ser o único sinal. */
+.linha { display: block; width: 100%; height: 36px; margin: 6px 0 2px; overflow: visible; border-bottom: 1px solid var(--borda); }
+.linha polyline { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.linha g ~ g polyline { stroke-dasharray: 4 3; }
+.linha stop { stop-color: currentColor; }
+.eixo { max-width: none; margin: 0 0 6px; color: var(--suave); font-size: var(--texto-miudo); }
 
-/* Aba Servidor: um cartão por recurso, dois por linha; os números que o desenho não escreve ficam no pé do cartão. */
-.recursos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0 0 16px; }
+/* Cartões de recurso (aba Servidor e a faixa da Visão geral): compactos, com letra miúda. Título com o selo do
+   estado, cada medida numa linha com a barra fina embaixo, o desenho e os números em linhas com fio. */
+.secao { margin: 20px 0 2px; font-size: var(--texto-base); }
+.resumo { max-width: none; margin: 0 0 10px; }
+.resumo strong { color: var(--texto); font-variant-numeric: tabular-nums; }
+.rodape-aba { max-width: 110ch; font-size: var(--texto-miudo); }
+.recursos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0 0 12px; }
+.recursos.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .recursos > .cartao { display: flex; flex-direction: column; margin: 0; }
-.recurso .dados { margin-top: auto; padding-top: 12px; }
-.saude { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: var(--texto-rotulo); font-weight: 400; white-space: nowrap; }
+.cartao.recurso { padding: 14px 16px; }
+.recurso h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 6px; font-size: 0.9375rem; }
+.recurso h3 > svg { width: 16px; height: 16px; color: var(--suave); }
+.recurso .numero { margin: 0; font-size: 1.375rem; }
+.recurso > .suave { max-width: none; margin: 0 0 8px; font-size: var(--texto-miudo); }
+.recurso .faixa { height: 4px; margin: 3px 0 8px; }
+.recurso .seta { margin-right: 4px; font-weight: 400; }
+.recurso .fluxo { display: flex; flex-wrap: wrap; gap: 0 12px; font-size: 1.0625rem; line-height: 1.6; }
+.recurso .fluxo > span { white-space: nowrap; }
+.saude {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 1px 8px 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in oklab, currentColor 14%, var(--superficie));
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.saude svg { width: 12px; height: 12px; }
+/* Medida contra o teto: o nome, o uso e o teto por escrito e a parte em uso, na mesma linha; a barra vem embaixo. */
+.medida p { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; max-width: none; margin: 0; font-size: var(--texto-miudo); }
+.medida .suave { margin-left: auto; font-size: inherit; font-variant-numeric: tabular-nums; text-align: right; }
+.medida strong { min-width: 2.75em; font-variant-numeric: tabular-nums; text-align: right; }
+.medidas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 24px; }
+/* Na faixa de quatro medidas o nome ocupa a linha de cima; embaixo, o uso por escrito e a parte. */
+.medidas .medida p > span:first-child { flex-basis: 100%; color: var(--suave); }
+.medidas .medida .suave { margin: 0 auto 0 0; color: var(--texto); text-align: left; }
+.medidas .faixa { margin-bottom: 0; }
+/* Título do cartão com o atalho na mesma linha. */
+.topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px; margin: 0 0 10px; }
+.topo h2, .topo .atalho { margin: 0; padding: 0; }
+.topo .atalho { font-size: var(--texto-miudo); }
+/* O valor não parte no meio da palavra: quem cede a largura é o nome, que desce de linha. */
+.pares { margin: 2px 0 0; font-size: var(--texto-miudo); }
+.pares div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 4px 0; border-top: 1px solid var(--borda); }
+.pares dt { flex: 1 1 auto; color: var(--suave); }
+.pares dd { flex: 0 1 auto; margin: 0; font-variant-numeric: tabular-nums; text-align: right; }
 
 /* ------------------------------------------------------------ avisos */
 
@@ -671,6 +724,11 @@ p > .botao { margin-top: 0; }
   .com-menu main { padding: 32px 32px 40px; }
 }
 
+/* Os quatro cartões do servidor na mesma linha quando o menu já está na lateral. */
+@media (min-width: 1340px) {
+  .recursos.quatro { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
 /* Ações da lista de usuários: uma por linha em tela estreita, duas por linha quando a coluna chega a 14.5rem
    ("Dispensar TLS" e "Remover" são o par mais largo) e todas na mesma linha a partir de 1560 px, que é quando a
    tabela de 1170 px cabe ao lado do menu. Faltando largura, a tabela rola dentro do cartão. */
@@ -684,7 +742,8 @@ p > .botao { margin-top: 0; }
 
 @media (max-width: 900px) {
   .situacao { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dupla, .recursos { grid-template-columns: minmax(0, 1fr); }
+  .dupla, .recursos.tres { grid-template-columns: minmax(0, 1fr); }
+  .medidas { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; }
   .entrada { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
   .entrada-marca { gap: 12px; padding: 20px 16px; }
   .entrada-nome { gap: 12px; font-size: var(--texto-destaque); }
@@ -702,6 +761,7 @@ p > .botao { margin-top: 0; }
   .barras { grid-template-columns: minmax(0, 1fr) auto; }
   .barras svg { grid-column: 1 / -1; grid-row: 2; }
   .cartao, .situacao > div { padding: 16px; }
+  .recursos, .medidas { grid-template-columns: minmax(0, 1fr); }
   .lista > :not(.rolagem) { margin: 16px; }
   .recentes li { flex-direction: column; align-items: flex-start; }
   .lista tr > :first-child { padding-left: 16px; }
@@ -714,7 +774,7 @@ p > .botao { margin-top: 0; }
   .quem span { display: none; }
   .situacao { grid-template-columns: minmax(0, 1fr); }
   .situacao .estado { display: flex; align-items: flex-start; gap: 4px; }
-  .estado .atalho { padding-top: 8px; }
+  .situacao .estado .atalho { padding-top: 8px; }
 }
 
 @media (hover: hover) {

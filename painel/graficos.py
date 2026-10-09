@@ -6,7 +6,10 @@ A política de conteúdo do painel não aceita `style=""`: a medida de cada barr
 desenho: o gráfico mostra a proporção, e quem usa leitor de tela recebe os mesmos valores.
 """
 
+import itertools
+
 DESENHO = 'preserveAspectRatio="none" aria-hidden="true" focusable="false"'
+AREAS = itertools.count(1)      # cada área leva um nome só dela: a página pode ter vários desenhos de linha
 
 
 def numero(valor):
@@ -57,21 +60,27 @@ def tira(partes, total=None):
     return f'<svg class="faixa" viewBox="0 0 100 4" {DESENHO}>{barras_}</svg>'
 
 
-def linha(series, teto, lugares):
-    """Linhas de um período, com a amostra mais nova encostada na direita. `series`: (tom, valores), da mais antiga
-    para a mais nova; `teto` é o valor do topo do desenho e `lugares`, quantas amostras cabem na largura: com menos
-    que isso, a esquerda fica vazia. A primeira série leva a área embaixo da linha; a segunda sai tracejada.
+def linha(series, teto):
+    """Linhas de um período, da amostra mais antiga, na esquerda, à mais nova, na direita: o que há ocupa a largura
+    toda, e quem chama escreve de quanto tempo é. `series`: (tom, valores); `teto` é o valor do topo do desenho.
+    A primeira série leva a área embaixo da linha, na cor do tom e mais clara perto da base; a segunda sai tracejada.
     """
-    passo = 100 / (lugares - 1)
     desenho = ''
     for posicao, (tom, valores) in enumerate(series):
-        valores = valores[-lugares:]
-        inicio = 100 - passo * (len(valores) - 1)
-        pontos = ' '.join(f'{inicio + passo * vez:.2f},{40 - 40 * min(max(valor, 0), teto) / teto:.2f}'
+        if len(valores) < 2:
+            continue
+        passo = 100 / (len(valores) - 1)
+        # A linha do zero fica um pouco acima da base, para o traço não ser cortado pela borda do desenho.
+        pontos = ' '.join(f'{passo * vez:.2f},{38 - 36 * min(max(valor, 0), teto) / teto:.2f}'
                           for vez, valor in enumerate(valores))
+        desenho += f'<g class="{tom}">'
         if posicao == 0:
-            desenho += f'<polygon class="{tom}" points="{inicio:.2f},40 {pontos} 100,40"/>'
-        desenho += f'<polyline class="{tom}" points="{pontos}"/>'
+            # O degradê fica dentro do grupo do tom, que é de onde vem a cor dele.
+            area = f'area-{next(AREAS)}'
+            desenho += (f'<linearGradient id="{area}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="40">'
+                        '<stop offset="0" stop-opacity="0.4"/><stop offset="1" stop-opacity="0.03"/></linearGradient>'
+                        f'<polygon fill="url(#{area})" points="0,40 {pontos} 100,40"/>')
+        desenho += f'<polyline points="{pontos}"/></g>'
     return f'<svg class="linha" viewBox="0 0 100 40" {DESENHO}>{desenho}</svg>'
 
 

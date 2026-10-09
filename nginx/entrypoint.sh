@@ -55,6 +55,58 @@ while IFS= read -r linha; do
 done < "$modelo" > "$configuracao"
 
 nginx -e stderr -q -t -c "$configuracao" || die "configuração do nginx recusada"
+
+# Recursos deste container, para a aba Servidor do painel, que só enxerga os dele. O container lê o próprio cgroup e
+# grava uma linha de doze números em /estado, a única pasta em que o nginx escreve; o painel a lê sem confiar nela.
+# Os campos são os mesmos que o vigia do ftp publica (ftp/vigia.pl): instante, instante de início, milissegundos do
+# intervalo, microssegundos de processador gastos nele, cota e período do limite de processador, memória em uso e
+# limite, processos e limite, vezes em que o limite de processador segurou o container e vezes em que faltou memória.
+# Container parado publica uma vez por minuto; com uso, a cada 5 s. Sem /estado, o nginx sobe do mesmo jeito.
+publicar_recursos() {
+  local cg=/sys/fs/cgroup destino=/estado/recursos.estado inicio=$EPOCHSECONDS
+  local antes_ms=0 vezes=0 g_cpu=0 g_memoria=0 g_processos=0 g_contido=0 g_faltou=0
+  local agora_ms cpu contido cota periodo memoria inativa limite processos teto faltou nome valor intervalo gasto diferenca campo
+  while :; do
+    agora_ms=$(( ${EPOCHREALTIME/[.,]/} / 1000 ))
+    cpu=0 contido=0 cota=0 periodo=0 memoria=0 inativa=0 limite=0 processos=0 teto=0 faltou=0
+    while read -r nome valor; do
+      case "$nome" in usage_usec) cpu=$valor ;; nr_throttled) contido=$valor ;; esac
+    done < "$cg/cpu.stat"
+    read -r cota periodo < "$cg/cpu.max"
+    read -r memoria < "$cg/memory.current"
+    while read -r nome valor; do
+      [[ "$nome" == inactive_file ]] && { inativa=$valor; break; }
+    done < "$cg/memory.stat"
+    read -r limite < "$cg/memory.max"
+    read -r processos < "$cg/pids.current"
+    read -r teto < "$cg/pids.max"
+    while read -r nome valor; do
+      [[ "$nome" == oom_kill ]] && faltou=$valor
+    done < "$cg/memory.events"
+    # "max" (sem limite) e qualquer coisa que não seja número viram 0.
+    for campo in cpu contido cota periodo memoria inativa limite processos teto faltou; do
+      [[ "${!campo}" =~ ^[0-9]{1,18}$ ]] || printf -v "$campo" 0
+    done
+    memoria=$(( memoria > inativa ? memoria - inativa : 0 ))
+    intervalo=$(( antes_ms ? agora_ms - antes_ms : 0 ))
+    gasto=$(( vezes && cpu > g_cpu ? cpu - g_cpu : 0 ))
+    diferenca=$(( memoria > g_memoria ? memoria - g_memoria : g_memoria - memoria ))
+    if (( vezes < 2 || intervalo >= 60000 || gasto >= intervalo * 10 || diferenca >= 1048576
+          || processos != g_processos || contido != g_contido || faltou != g_faltou )); then
+      if printf '%s\n' "$(( agora_ms / 1000 )) $inicio $intervalo $gasto $cota $periodo $memoria $limite $processos $teto $contido $faltou" \
+           > "$destino.novo" && mv -f "$destino.novo" "$destino"; then
+        antes_ms=$agora_ms g_cpu=$cpu g_memoria=$memoria g_processos=$processos g_contido=$contido g_faltou=$faltou
+        (( vezes < 2 )) && vezes=$(( vezes + 1 ))
+      fi
+    fi
+    sleep 5
+  done
+}
+if [[ -d /estado && -w /estado ]]; then
+  ( set +Eeu; umask 077; publicar_recursos ) 2>/dev/null &
+else
+  echo "aviso: /estado ausente ou sem escrita: a aba Servidor do painel fica sem os recursos do nginx" >&2
+fi
 aviso_ip_publico >&2
 aviso_proxy >&2
 echo "nginx pronto em 8443/tcp (HTTPS), à frente do painel; redes permitidas: ${PAINEL_REDES_PERMITIDAS}; proxy ou túnel aceito: ${PAINEL_PROXY_CONFIAVEL:-nenhum}"

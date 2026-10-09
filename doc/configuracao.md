@@ -207,10 +207,10 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 | `PAINEL_CERT_CN` | Nome interno ou IP privado a mais no certificado autoassinado do painel | Nome em minúsculas ou IP **privado** (IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim`); vazio para nenhum | vazio |
 | `PAINEL_PROXY_CONFIAVEL` | Publicar **só o painel** por um proxy ou túnel, sem expor o FTP: os endereços dos quais o nginx aceita o `X-Forwarded-For` como endereço de quem acessa. É opcional e é escolha de quem instala. Leia o [alerta](#painel-proxy-confiavel) antes de preencher | Até 8 endereços IPv4 separados por vírgula, um a um, sem máscara; cada um privado (público, só com `REDE_PERMITIR_IP_PUBLICO=sim`) e dentro de `PAINEL_REDES_PERMITIDAS`; vazio para não usar | vazio |
 | `PAINEL_AVISO_EXPOSICAO` | Aviso de exposição na tela do painel. Com `sim`, quando `REDE_PERMITIR_IP_PUBLICO=sim` ou `PAINEL_PROXY_CONFIAVEL` está preenchida, o administrador lê como a instalação está publicada em três lugares: no sinal ao lado de **Segurança** no menu, no começo da aba Segurança e no rodapé. Com `nao`, os três somem. A tela de entrada e as telas do usuário do FTP nunca dizem como o painel foi publicado. As linhas **Endereço público** e **Painel por proxy ou túnel** da aba Segurança, que só administrador vê, continuam mostrando o estado, e o alerta continua na saída do `deploy.sh` e no registro dos containers | `sim` ou `nao` | `sim` |
-| `PAINEL_MEMORY_LIMIT` | `mem_limit` do painel | exemplo: `192M` | `192M` |
+| `PAINEL_MEMORY_LIMIT` | `mem_limit` do painel, sem swap | exemplo: `192M` | `192M` |
 | `PAINEL_CPU_LIMIT` | `cpus` do painel | exemplo: `0.5` | `0.5` |
 | `PAINEL_PIDS_LIMIT` | `pids_limit` do painel | inteiro | `64` |
-| `NGINX_MEMORY_LIMIT` | `mem_limit` do nginx | exemplo: `64M` | `64M` |
+| `NGINX_MEMORY_LIMIT` | `mem_limit` do nginx, sem swap | exemplo: `64M` | `64M` |
 | `NGINX_CPU_LIMIT` | `cpus` do nginx | exemplo: `0.5` | `0.5` |
 | `NGINX_PIDS_LIMIT` | `pids_limit` do nginx | inteiro | `32` |
 
@@ -286,7 +286,7 @@ O que mais fica aberto sem senha, e por quê: [Segurança](seguranca.md#contato-
 
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
-| `FTP_MEMORY_LIMIT` | `mem_limit` do serviço | exemplo: `256M`, `512M` | `256M` |
+| `FTP_MEMORY_LIMIT` | `mem_limit` do serviço, sem swap: é o teto de verdade, e a aba Servidor mostra o uso contra ele | exemplo: `256M`, `512M` | `256M` |
 | `FTP_CPU_LIMIT` | `cpus` do serviço | exemplo: `0.5`, `1.0`, `2` | `1.0` |
 | `FTP_PIDS_LIMIT` | `pids_limit` (barreira contra _fork bomb_) | inteiro | `128` |
 | `FTP_NOFILE` | `ulimit nofile` (soft igual a hard) | inteiro | `16384` |

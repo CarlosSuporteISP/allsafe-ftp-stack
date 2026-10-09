@@ -31,7 +31,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Servidor: serviços e recursos](#servidor) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
+[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Servidor: containers e recursos](#servidor) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
 
 </details>
 
@@ -73,10 +73,10 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 
 | Aba | O que mostra | O que dá para fazer |
 |---|---|---|
-| Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP, o modo de TLS do FTP, os arquivos recebidos por dia nos últimos 14 dias, o último envio de cada usuário, o espaço de cada pasta, os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) e os últimos registros da atividade | Só consultar; cada cartão termina no atalho para a aba do detalhe |
+| Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP, o modo de TLS do FTP, a faixa **Servidor e containers** (processador e memória do servidor e dos containers da stack, cada um com o uso contra o que há ou o que foi alocado), os arquivos recebidos por dia nos últimos 14 dias, o último envio de cada usuário, o espaço de cada pasta, os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) e os últimos registros da atividade | Só consultar; cada cartão termina no atalho para a aba do detalhe |
 | Usuários | Um usuário por linha: pasta, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta e, para equipamento sem suporte a TLS, já dispensado do TLS; editar, para trocar a pasta e os limites e tirar um bloqueio; trocar a senha; remover, com a pasta dele ou sem ela; abrir a pasta do usuário na aba Arquivos; dispensar um usuário do TLS e voltar a exigir |
 | Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
-| Servidor | Os serviços da stack (servidor FTP, painel, frente web e bloqueios de entrada) e os recursos da máquina em que ela roda: processador, memória, disco dos backups e rede do FTP, cada um com o estado, a medida de agora e o gráfico dos últimos 10 minutos | Só consultar; **Atualizar sozinha** refaz a leitura a cada 10 s, sem contar como uso da sessão: veja [Servidor](#servidor) |
+| Servidor | Os três containers da stack (servidor FTP, painel e frente web), cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, e, separados, os recursos do servidor em que a stack roda: processador, memória, disco e rede do FTP, com o estado, a medida de agora e o histórico dos últimos minutos | Só consultar; **Atualizar sozinha** refaz a leitura a cada 10 s, sem contar como uso da sessão: veja [Servidor](#servidor) |
 | Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
 | Segurança | Conferência da instalação, com o resumo de quantos itens estão em ordem, pedem atenção ou são conferidos no servidor: se endereço público é aceito, se o painel está publicado por proxy ou túnel, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
 | Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads, pastas criadas e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
@@ -325,28 +325,47 @@ PAINEL_ACESSO_USUARIOS_FTP=nao
 
 <a name="servidor"></a>
 
-## 📈 Servidor: serviços e recursos
+## 📈 Servidor: containers e recursos
 
-A aba **Servidor** mostra, numa tela só, se a stack está de pé e como está a máquina em que ela roda. Só administrador a abre.
+A aba **Servidor** tem duas partes separadas: os containers desta stack, cada um com o que usa contra o que foi alocado a ele, e o servidor em que ela roda. Só administrador a abre.
 
-| Parte da tela | O que mostra | Quando pede atenção |
+**Containers da stack.** Uma linha no alto soma o que foi alocado aos três containers e o que eles usam agora, ao lado do que o servidor tem. Abaixo, um cartão por container:
+
+| No cartão | O que mostra | Quando pede atenção |
 |---|---|---|
-| Serviços da stack | Servidor FTP no ar ou fora, há quanto tempo o painel está no ar e quanta memória o container dele usa, a frente web com a validade do certificado e quantos bloqueios de entrada estão em vigor | FTP fora do ar, certificado perto do fim ou bloqueio em vigor |
-| Processador | Uso de agora, média do último minuto, núcleos, carga em 1, 5 e 15 minutos, há quanto tempo o servidor está ligado e o modelo | Média do último minuto em 80% ou mais; problema em 95% ou mais |
-| Memória | Em uso, disponível, em cache e swap | Menos de 15% disponível; problema com menos de 5% |
-| Disco dos backups | Em uso e livre no disco em que fica a pasta dos dados do FTP, com a parte que é das pastas do FTP | Menos de 15% livre; problema com menos de 5% |
-| Rede do FTP | Velocidade de agora, recebendo e enviando, o total desde que o serviço do FTP iniciou e os erros e descartes | Só informa |
+| Estado | No ar ou fora do ar, o nome do serviço no `compose.yaml` e há quanto tempo o container está no ar | Fora do ar |
+| Processador | Núcleos em uso contra os alocados (`*_CPU_LIMIT`), com a parte em % e a barra | Barra em outra cor a partir de 80% e de 95% |
+| Memória | Memória em uso contra a alocada (`*_MEMORY_LIMIT`) | **Atenção** a partir de 80%; **Memória no limite** a partir de 95% |
+| Processos | Processos de agora contra o teto (`*_PIDS_LIMIT`) | Barra em outra cor a partir de 80% e de 95% |
+| Histórico | O uso do processador nos últimos minutos, em % do que foi alocado, com o pico escrito embaixo | Só informa |
+| Limite de processador atingido | Quantas vezes o limite segurou o container desde que ele subiu | Só informa: acontece em toda rajada curta |
+| Encerrado por falta de memória | Quantas vezes o sistema encerrou um processo do container por falta de memória | **Atenção** quando não é `nunca` |
+| Linha própria | No servidor FTP, os bloqueios de entrada em vigor; no painel, as sessões de administrador abertas; na frente web, a validade do certificado | Bloqueio em vigor ou certificado perto do fim |
 
-- Processador, memória e disco são os do servidor inteiro, e não só os da stack. A rede é só a do serviço do FTP: é por ela que os backups dos equipamentos chegam.
-- O gráfico de cada cartão cobre os últimos 10 minutos, com uma leitura a cada 5 s. O histórico fica na memória do painel e recomeça quando ele reinicia. Todo número do desenho está escrito ao lado dele.
+**Recursos do servidor.** A máquina inteira, e não só o que a stack usa dela:
+
+| Cartão | O que mostra | Quando pede atenção |
+|---|---|---|
+| Processador | Uso de agora, núcleos em uso contra os que o servidor tem, média do último minuto, carga média (1, 5 e 15 minutos), há quanto tempo o servidor está ligado e o modelo | Média do último minuto em 80% ou mais; problema em 95% ou mais |
+| Memória | Em uso contra o total, disponível, em cache e swap | Menos de 15% disponível; problema com menos de 5% |
+| Disco | Em uso contra o total do disco em que fica a pasta dos dados, com a parte que é das pastas do FTP, os outros dados e o livre | Menos de 15% livre; problema com menos de 5% |
+| Rede do FTP | Velocidade de agora, recebendo e enviando, o pico do período, o total desde que o serviço do FTP iniciou e os erros e descartes | Só informa |
+
+- A rede é só a do serviço do FTP: é por ela que os backups dos equipamentos chegam. No desenho, a linha cheia é o que chega e a tracejada, o que sai.
+- O histórico cobre até os últimos 10 minutos, com uma leitura a cada 5 s. Ele fica na memória do painel e recomeça quando o painel reinicia. Cada desenho vai de zero até pouco acima do pico do período, para a linha ter forma mesmo com uso baixo; o pico está escrito embaixo.
+- Os containers não têm swap: o limite de memória de cada um é o teto de verdade. A memória em uso não conta o cache de arquivo que o sistema solta quando precisa, como no `docker stats`.
 - **Atualizar sozinha** refaz a leitura a cada 10 s; **Parar a atualização** volta ao normal. A atualização automática não conta como uso do painel: a sessão encerra depois do tempo de `PAINEL_SESSAO_MINUTOS` sem ação de quem está na tela.
+- A **Visão geral** traz o resumo em quatro medidas (processador e memória do servidor e dos containers), com o atalho para esta aba.
 
 <details>
 <summary>Detalhe técnico — de onde vêm os números</summary>
 
-- **Processador e memória:** o painel lê `/proc/stat`, `/proc/meminfo`, `/proc/loadavg`, `/proc/uptime` e `/proc/cpuinfo`, que o container dele já enxerga. A memória do próprio painel vem do grupo de controle do container. O disco é o da pasta `/data`.
-- **Rede:** o container do painel só enxerga a rede dele. Quem lê a do FTP é o vigia do serviço ftp, a cada 5 s, em `/proc/net/dev` do container dele, e publica uma linha de sete números em `/auth/rede.estado` (`0600`): instante, intervalo, bytes recebidos e enviados no total e no intervalo, e erros e descartes. Ele grava por troca de nome, com a trava do cadastro, só quando os contadores mudam e mais uma vez quando o tráfego para.
-- **Leitura sem confiança:** o painel abre o arquivo sem seguir link simbólico e só aceita sete números. Qualquer outra coisa vira **sem leitura** no cartão, e nada do arquivo vai para a tela. Leitura com mais de 12 s quer dizer rede parada.
+- **Servidor:** o painel lê `/proc/stat`, `/proc/meminfo`, `/proc/loadavg`, `/proc/uptime` e `/proc/cpuinfo`, que o container dele já enxerga. O disco é o da pasta `/data`.
+- **Containers:** cada container lê o próprio grupo de controle (`/sys/fs/cgroup`), a cada 5 s. O painel lê o dele direto. O vigia do serviço ftp publica em `/auth/recursos.estado` (`0600`, do `root`) e o nginx, em `/estado/recursos.estado` (`0600`, do usuário dele), que é a única pasta em que o nginx grava (`DATA_DIR/nginx/estado`, `0700`).
+- **A linha publicada:** doze números: instante, instante em que o container iniciou, milissegundos do intervalo, microssegundos de processador gastos nele, cota e período do limite de processador, memória em uso e limite, processos e limite, vezes em que o limite de processador segurou o container e vezes em que faltou memória. Limite `0` quer dizer sem limite.
+- **Quando publica:** nas duas primeiras leituras, e depois quando o uso muda (1% de um núcleo, 1 MiB de memória, processos ou contadores) ou a cada minuto. A gravação é por troca de nome. Leitura com mais de 90 s não vale: o cartão fica **sem leitura**.
+- **Rede:** quem lê a do FTP é o vigia do serviço ftp, a cada 5 s, em `/proc/net/dev` do container dele, e publica uma linha de sete números em `/auth/rede.estado` (`0600`): instante, intervalo, bytes recebidos e enviados no total e no intervalo, e erros e descartes. Ele grava com a trava do cadastro, só quando os contadores mudam e mais uma vez quando o tráfego para. Leitura com mais de 12 s quer dizer rede parada.
+- **Leitura sem confiança:** o painel abre cada arquivo sem seguir link simbólico, não espera por arquivo que não seja comum, lê só o começo e só aceita a quantidade certa de números. Qualquer outra coisa vira **sem leitura** no cartão, e nada do arquivo vai para a tela.
 - **O que não foi usado:** nenhum soquete do Docker, nenhuma pasta do servidor montada a mais e nenhum script. A atualização é o cabeçalho `Refresh`, que só sai em `GET /servidor?auto=1`.
 - **Sessão:** `GET /servidor?auto=1` não renova o tempo de uso da sessão. Sem sessão, a rota manda para a entrada; com a sessão de um usuário do FTP, responde `404` e grava `recusa_papel`.
 - A versão do núcleo do sistema não aparece na tela.
@@ -770,8 +789,8 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação com a pasta escolhida, edição (pasta, limites e bloqueios), troca de senha, remoção e a dispensa do TLS por usuário |
 | [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta |
 | [`aba_meus_arquivos.py`](../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação e download dentro da pasta dele |
-| [`recursos.py`](../painel/recursos.py) | Recursos da máquina: leitura do processador, da memória e da rede do FTP, e o histórico dos últimos 10 minutos, guardado na memória |
-| [`aba_servidor.py`](../painel/aba_servidor.py) | Aba Servidor: os serviços da stack e os cartões de processador, memória, disco e rede |
+| [`recursos.py`](../painel/recursos.py) | Recursos do servidor e de cada container da stack: leitura do processador, da memória e da rede do FTP, do grupo de controle do painel e do que o ftp e o nginx publicam, e o histórico dos últimos 10 minutos, guardado na memória |
+| [`aba_servidor.py`](../painel/aba_servidor.py) | Aba Servidor: os containers da stack, com o uso contra o alocado, os cartões de processador, memória, disco e rede do servidor, e a faixa de resumo da Visão geral |
 | [`aba_administradores.py`](../painel/aba_administradores.py) | Aba Administradores: lista, criação, troca de senha, troca de nome e remoção |
 | [`aba_seguranca.py`](../painel/aba_seguranca.py) | Aba Segurança |
 | [`aba_atividade.py`](../painel/aba_atividade.py) | Aba Atividade |

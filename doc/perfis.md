@@ -121,7 +121,7 @@ Esse mínimo é só o que o container do FTP pode ocupar. O host de referência 
 | `FTP_MAX_CLIENTS` | opção `-c` do `pure-ftpd`: teto de conexões simultâneas. Também é a opção `-C` do `pure-pw`, que define o custo da senha gravada: [Segurança](seguranca.md#custo-das-senhas) |
 | `FTP_MAX_CLIENTS_PER_IP` | opção `-C`: teto por IP de origem |
 | `FTP_PASSIVE_PORT_START` e `FTP_PASSIVE_PORT_END` | faixa de portas de dados (modo passivo), publicada **1:1** no host |
-| `FTP_MEMORY_LIMIT` e `FTP_CPU_LIMIT` | `mem_limit` e `cpus` do serviço |
+| `FTP_MEMORY_LIMIT` e `FTP_CPU_LIMIT` | `mem_limit` (sem swap) e `cpus` do serviço |
 | `FTP_PIDS_LIMIT` | `pids_limit` (barreira contra _fork bomb_) |
 | `FTP_NOFILE` | `ulimit nofile` (soft igual a hard) |
 

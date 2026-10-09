@@ -210,11 +210,11 @@ escutas() { # <container> → portas TCP em escuta, fora o DNS interno do Docker
   echo "${saida:-nenhuma }"
 }
 e_ftp="$(escutas "$FTP")"; e_painel="$(escutas "$PAINEL")"; e_nginx="$(escutas "$NGINX")"; publica="$(docker port "$PAINEL" 2>/dev/null | wc -l)"
-[[ "$m_nginx" == "/nginx(ro) " && "$m_ftp" != */painel* && "$ve_nginx" == 0 && "$ve_ftp" == 0 \
+[[ "$m_nginx" == "/estado(rw) /nginx(ro) " && "$m_ftp" != */painel* && "$ve_nginx" == 0 && "$ve_ftp" == 0 \
   && "$modos_ftp" == "/auth root:root 750 /auth/pureftpd.passwd root:root 600 /auth/pureftpd.pdb root:root 600 " \
   && "$modos_painel" == "/painel root:root 700 /painel/administradores root:root 600 /painel/auditoria.log root:root 600 " \
   && "$tipos_ftp" == "argon2id " && "$tipos_painel" == "scrypt " && "$negados" == 4 && "$e_ftp" == "$FTP_PORTA " && "$e_painel" == "nenhuma " && "$e_nginx" == "8443 " && "$publica" == 0 ]]
-caso $? seguranca 79 "Cadastro fora do alcance dos outros containers e do host" "montagens do nginx: $m_nginx· do ftp: $m_ftp· do painel: $m_painel· pastas /auth, /painel, /data e /run/secrets dentro do nginx: $ve_nginx · /painel e /nginx dentro do ftp: $ve_ftp · $modos_ftp· $modos_painel· formato das senhas no cadastro do FTP: $tipos_ftp· no dos administradores: $tipos_painel· $no_host · portas em escuta (fora o DNS interno do Docker): ftp $e_ftp· painel $e_painel· nginx $e_nginx· portas publicadas pelo painel: $publica"
+caso $? seguranca 79 "Cadastro fora do alcance dos outros containers e do host" "montagens do nginx (a configuração só para leitura e a pasta de estado dele, a única em que grava): $m_nginx· do ftp: $m_ftp· do painel: $m_painel· pastas /auth, /painel, /data e /run/secrets dentro do nginx: $ve_nginx · /painel e /nginx dentro do ftp: $ve_ftp · $modos_ftp· $modos_painel· formato das senhas no cadastro do FTP: $tipos_ftp· no dos administradores: $tipos_painel· $no_host · portas em escuta (fora o DNS interno do Docker): ftp $e_ftp· painel $e_painel· nginx $e_nginx· portas publicadas pelo painel: $publica"
 
 # ------------------------------------------------------------------ senha aleatória e exaustão: FTP
 # Este caso mede o custo da conferência da senha. O bloqueio por tentativa (etapa 24) barraria a rajada na

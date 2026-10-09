@@ -105,7 +105,8 @@ flowchart LR
 | Quem | Usa | Como |
 |---|---|---|
 | nginx | `DATA_DIR/nginx` | lê o soquete e o certificado, somente leitura |
-| Painel web | `DATA_DIR/nginx` | cria o soquete e copia o certificado, a cada subida |
+| nginx | `DATA_DIR/nginx/estado` | grava os recursos do container dele, a única pasta em que escreve |
+| Painel web | `DATA_DIR/nginx` | cria o soquete, copia o certificado e prepara a pasta `estado` do nginx, a cada subida |
 | Painel web | `DATA_DIR/painel` | grava o certificado, os administradores e a auditoria |
 | Painel web | `DATA_DIR/dados` | cria pasta, renomeia, apaga e lê os arquivos para o download |
 | Painel web | Pure-FTPd | confere a senha do usuário do FTP que entra no painel, pela rede interna da stack |
@@ -141,7 +142,7 @@ O mapa mostra as peças e os volumes. A configuração, os segredos e o registro
 | Entrypoint | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-ftp-entrypoint` | Provisiona usuário e certificado, sobe o vigia, o `pure-authd` e o `pure-ftpd` e encerra o container se um deles sair |
 | Gestão de usuários | [`ftp/usuario.sh`](../ftp/usuario.sh), instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user` | `add`, `passwd`, `pasta`, `limites`, `del` e `list` no PureDB, os bloqueios por tentativa (`bloqueios`, `desbloquear`) e a lista de quem entra sem TLS (`tls-dispensar`, `tls-exigir`, `tls-lista`), chamado de fora por [`manage-user.sh`](../manage-user.sh) e, dentro do painel, pelo servidor web |
 | Porteiro | [`ftp/porteiro.sh`](../ftp/porteiro.sh), instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-porteiro` | É chamado pelo `pure-authd` a cada entrada, antes da conferência da senha: recusa o usuário bloqueado por senhas erradas e, com o [TLS por usuário](seguranca.md#tls-por-usuario) valendo, a sessão sem TLS de quem não foi dispensado pelo administrador |
-| Vigia | [`ftp/vigia.pl`](../ftp/vigia.pl), instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-vigia` | Lê em `/dev/log` o que o `pure-ftpd` registra, conta as senhas erradas de cada endereço para cada usuário, grava o [bloqueio por tentativa](seguranca.md#bloqueio-por-tentativa) em `/auth/bloqueios`, escreve no registro do container cada entrada e cada transferência e publica em `/auth/rede.estado` os contadores de rede do container, que a aba Servidor do painel mostra. Em Perl, só com o `perl-base` da imagem base |
+| Vigia | [`ftp/vigia.pl`](../ftp/vigia.pl), instalado na imagem do FTP como `/usr/local/sbin/allsafe-ftp-vigia` | Lê em `/dev/log` o que o `pure-ftpd` registra, conta as senhas erradas de cada endereço para cada usuário, grava o [bloqueio por tentativa](seguranca.md#bloqueio-por-tentativa) em `/auth/bloqueios`, escreve no registro do container cada entrada e cada transferência e publica em `/auth/rede.estado` os contadores de rede do container e em `/auth/recursos.estado` o processador, a memória e os processos que ele usa e os limites que recebeu, que a aba Servidor do painel mostra. Em Perl, só com o `perl-base` da imagem base |
 | Painel web | Módulos Python de [`painel/`](../painel/), em `/opt/painel`; o ponto de entrada é o [`painel/servidor.py`](../painel/servidor.py) | Servidor em Python, só com a biblioteca padrão e sem JavaScript: telas do administrador, tela do usuário do FTP, sessão, auditoria e download dos arquivos, um assunto por módulo ([lista](painel.md#modulos)). Atende só o nginx, por soquete Unix |
 | Entrypoint do painel | [`painel/entrypoint.sh`](../painel/entrypoint.sh), instalado como `/usr/local/sbin/allsafe-painel-entrypoint` | Confere a rede privada, gera o certificado, entrega a cópia dele ao nginx e faz `exec` do servidor |
 | Frente web | [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo), [`nginx/cabecalhos.conf`](../nginx/cabecalhos.conf) e as páginas de erro de [`nginx/erro/`](../nginx/erro/) | nginx sem root: fecha o HTTPS, fala HTTP/2 com o navegador, recusa quem está fora das redes permitidas, limita taxa de pedidos, conexões e tamanho do pedido, entrega os arquivos estáticos e repassa o resto ao painel. O download de arquivo passa por ele no ritmo do navegador, sem arquivo temporário |
@@ -159,10 +160,10 @@ O que cada script faz, com parâmetros e saída: [Scripts](scripts.md). Uso e pr
 | Pasta no host | Monta em | Quem monta | Guarda |
 |---|---|---|---|
 | `DATA_DIR/dados` | `/data` | `ftp` e `painel` | Arquivos dos usuários: cada usuário preso (`chroot`) na pasta do cadastro, `/data/<usuario>` ou a pasta escolhida na criação. O `ftp` grava; o `painel` cria a pasta de cada usuário e, na aba Arquivos, lê, cria pasta vazia, renomeia e apaga |
-| `DATA_DIR/auth` | `/auth` | `ftp` e `painel` | Base **PureDB**: `pureftpd.passwd` (texto, com o hash das senhas) e `pureftpd.pdb` (compilada), ambos `0600`; `ftp-cert.pem`, cópia do certificado do FTP **sem a chave**; `sem-tls.lista` (`0600`), os usuários dispensados do TLS, quando houver; `limites.lista` (`0600`), os limites próprios de cada usuário que não ficam no cadastro, quando houver; `bloqueios/` (`0700`), um arquivo por bloqueio por tentativa em vigor; `rede.estado` (`0600`), os contadores de rede do serviço ftp, para a aba Servidor do painel; `.lock`, a trava das alterações |
+| `DATA_DIR/auth` | `/auth` | `ftp` e `painel` | Base **PureDB**: `pureftpd.passwd` (texto, com o hash das senhas) e `pureftpd.pdb` (compilada), ambos `0600`; `ftp-cert.pem`, cópia do certificado do FTP **sem a chave**; `sem-tls.lista` (`0600`), os usuários dispensados do TLS, quando houver; `limites.lista` (`0600`), os limites próprios de cada usuário que não ficam no cadastro, quando houver; `bloqueios/` (`0700`), um arquivo por bloqueio por tentativa em vigor; `rede.estado` e `recursos.estado` (`0600`), os contadores de rede e os recursos do container do serviço ftp, para a aba Servidor do painel; `.lock`, a trava das alterações |
 | `DATA_DIR/certs` | `/etc/ssl/private` | só `ftp` | `pure-ftpd.pem`: chave e certificado concatenados, `0600` |
 | `DATA_DIR/painel` | `/painel` | só `painel` | `tls/painel-cert.pem`, `tls/painel-key.pem` (`0600`), `administradores` (`0600`, o nome e o hash `scrypt` da senha de cada administrador) e `auditoria.log` (`0600`); pasta `0700` |
-| `DATA_DIR/nginx` | `/nginx` | `painel` (grava) e `nginx` (somente leitura) | `painel.sock`, o soquete Unix do painel, e `tls/`, a cópia do certificado e da chave (`0640`) para o nginx; pasta `0750`, do grupo `10001`. Refeita a cada subida |
+| `DATA_DIR/nginx` | `/nginx` | `painel` (grava) e `nginx` (somente leitura) | `painel.sock`, o soquete Unix do painel, e `tls/`, a cópia do certificado e da chave (`0640`) para o nginx; pasta `0750`, do grupo `10001`. Refeita a cada subida. Dentro dela, `estado/` (`0700`, do usuário do nginx), montada à parte no nginx como `/estado`, com gravação: é onde ele publica `recursos.estado`, os recursos do container dele |
 | segredo `ftp_usuario_inicial_senha` (`SECRETS_DIR/ftp-usuario-inicial-senha.txt`) | `/run/secrets/ftp_usuario_inicial_senha` (somente leitura) | só `ftp` | Senha do usuário inicial |
 | segredo `painel_admin_inicial_senha_hash` (`SECRETS_DIR/painel-admin-inicial-senha-hash.txt`) | `/run/secrets/painel_admin_inicial_senha_hash` (somente leitura) | só `painel` | Hash `scrypt` da senha inicial do primeiro administrador do painel, usado só enquanto não existe nenhum |
 
@@ -366,7 +367,7 @@ interval: 20s   timeout: 8s   retries: 5   start_period: 20s
 | Uma porta só para o painel | só o `nginx` publica porta; o `painel` atende por soquete Unix |
 | Sem controle do Docker | nenhum container monta o socket do Docker |
 | Sem ganho de privilégio | `no-new-privileges: true` |
-| Limites de recurso | `pids_limit`, `mem_limit`, `cpus`, `ulimits.nofile` |
+| Limites de recurso | `pids_limit`, `mem_limit`, `memswap_limit` igual ao de memória (sem swap), `cpus`, `ulimits.nofile` |
 | Log com rotação | `logging: local`, 10 MB × 3 |
 
 Justificativa de cada diretiva e de cada `cap_add`: [Segurança](seguranca.md#hardening-do-compose-yaml-linha-a-linha).

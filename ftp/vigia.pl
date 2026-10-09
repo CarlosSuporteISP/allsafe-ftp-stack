@@ -23,6 +23,7 @@ use strict;
 use warnings;
 use Fcntl qw(:flock);
 use Socket qw(AF_UNIX SOCK_DGRAM pack_sockaddr_un);
+use Time::HiRes ();
 
 my $SOQUETE   = '/dev/log';
 my $BLOQUEIOS = '/auth/bloqueios';
@@ -30,13 +31,16 @@ my $RECUSAS   = '/run/allsafe/recusa';
 my $CADASTRO  = '/auth/pureftpd.passwd';
 my $LIMITES   = '/auth/limites.lista';
 my $REDE      = '/auth/rede.estado';
+my $RECURSOS  = '/auth/recursos.estado';
+my $CGROUP    = '/sys/fs/cgroup';
 my $TRAVA     = '/auth/.lock';
 my $NOME      = qr/[a-z_][a-z0-9_-]{0,31}/;
 my $ENDERECO  = qr/[0-9a-fA-F.:]{2,45}/;
 my $CHAVES_MAX    = 10000;   # contagens guardadas na memória
 my $BLOQUEIOS_MAX = 4096;    # arquivos de bloqueio
 my $RECUSA_VALE   = 30;      # segundos em que a marca de recusa do porteiro ainda explica uma falha
-my $REDE_CADA     = 5;       # segundos entre duas leituras dos contadores de rede
+my $REDE_CADA     = 5;       # segundos entre duas leituras dos contadores de rede e dos recursos do container
+my $RECURSOS_VALE = 60;      # segundos: container parado publica os recursos uma vez nesse tempo
 
 sub registrar { print STDERR "vigia: $_[0]\n"; }
 
@@ -281,15 +285,63 @@ sub publicar_rede {
     my $gravar = !@rede_antes || $rede_ativa || grep { $soma[$_] != $antes[$_] } 0 .. 2;
     ($rede_quando, $rede_ativa, @rede_antes) = ($agora, ($recebeu || $enviou) ? 1 : 0, @soma);
     return unless $gravar;
-    # A cópia de segurança lê /auth com a trava do cadastro: gravar com ela faz a cópia nunca ver o arquivo de passagem.
-    # Trava ocupada: esta leitura não é publicada, e a seguinte sai no próximo ciclo.
-    # Ela é solta quando a função termina.
+    publicar($REDE, "$agora $intervalo $soma[0] $soma[1] $recebeu $enviou $soma[2]");
+}
+
+# Recursos deste container, para a aba Servidor do painel, que só enxerga os dele. O container lê o próprio cgroup:
+# não há soquete do Docker nem pasta do servidor montada para isso. Uma linha de doze números: instante, instante
+# em que o vigia iniciou, milissegundos do intervalo, microssegundos de processador gastos nele, cota e período do
+# limite de processador (cota 0 = sem limite), memória em uso e limite dela (0 = sem limite), processos e limite
+# deles (0 = sem limite), vezes em que o limite de processador segurou o container e vezes em que faltou memória.
+# A memória em uso não conta o cache de arquivo que o sistema solta quando precisa. Container parado publica uma
+# vez por minuto; com uso, a cada leitura.
+my $INICIO = time;
+my ($rec_quando, $rec_vezes, @rec_gravado) = (0, 0);
+sub do_cgroup {
+    my ($nome, $chave) = @_;
+    open(my $arq, '<', "$CGROUP/$nome") or return 0;
+    local $/;
+    my $texto = <$arq>;
+    close $arq;
+    return 0 unless defined $texto;
+    return $texto =~ /^\Q$chave\E (\d{1,20})$/m ? $1 + 0 : 0 if defined $chave;
+    return $texto =~ /^(\d{1,20})(?: (\d{1,20}))?$/m ? (wantarray ? ($1 + 0, ($2 // 0) + 0) : $1 + 0) : 0;
+}
+sub publicar_recursos {
+    my $agora = Time::HiRes::time();
+    my $cpu = do_cgroup('cpu.stat', 'usage_usec');
+    my ($cota, $periodo) = do_cgroup('cpu.max');
+    my $memoria = do_cgroup('memory.current') - do_cgroup('memory.stat', 'inactive_file');
+    $memoria = 0 if $memoria < 0;
+    my @agora = ($cpu, $memoria, scalar do_cgroup('pids.current'), do_cgroup('cpu.stat', 'nr_throttled'),
+                 do_cgroup('memory.events', 'oom_kill'));
+    my $intervalo = $rec_quando ? int(($agora - $rec_quando) * 1000) : 0;
+    my $gasto = @rec_gravado && $cpu > $rec_gravado[0] ? $cpu - $rec_gravado[0] : 0;
+    # Vale publicar: as duas primeiras leituras (a segunda é a primeira que traz o uso do processador), um minuto
+    # sem publicar, 1% de um núcleo em uso, 1 MiB de diferença na memória, ou mudança nos processos e nos contadores.
+    my $gravar = $rec_vezes < 2 || $intervalo >= $RECURSOS_VALE * 1000 || $gasto >= $intervalo * 10
+        || abs($memoria - $rec_gravado[1]) >= 1048576 || grep { $agora[$_] != $rec_gravado[$_] } 2 .. 4;
+    return unless $gravar;
+    my $linha = join(' ', int($agora), $INICIO, $intervalo, $gasto, $cota, $periodo || 0, $memoria,
+                     scalar do_cgroup('memory.max'), $agora[2], scalar do_cgroup('pids.max'), @agora[3, 4]);
+    return unless publicar($RECURSOS, $linha);
+    ($rec_quando, @rec_gravado) = ($agora, @agora);
+    $rec_vezes++ if $rec_vezes < 2;
+}
+
+# Grava um arquivo de estado de uma linha, por arquivo de passagem e troca de nome. A cópia de segurança lê /auth
+# com a trava do cadastro: gravar com ela faz a cópia nunca ver o arquivo de passagem. Trava ocupada: esta leitura
+# não é publicada, e a seguinte sai no próximo ciclo. A trava é solta quando a função termina.
+sub publicar {
+    my ($arquivo, $linha) = @_;
     my $trava;
-    if (open($trava, '<', $TRAVA)) { flock($trava, LOCK_EX | LOCK_NB) or return; }
-    my $novo = "$REDE.novo";
-    open(my $saida, '>', $novo) or return;
-    print $saida "$agora $intervalo $soma[0] $soma[1] $recebeu $enviou $soma[2]\n";
-    close($saida) && rename($novo, $REDE) or unlink $novo;
+    if (open($trava, '<', $TRAVA)) { flock($trava, LOCK_EX | LOCK_NB) or return 0; }
+    my $novo = "$arquivo.novo";
+    open(my $saida, '>', $novo) or return 0;
+    print $saida "$linha\n";
+    return 1 if close($saida) && rename($novo, $arquivo);
+    unlink $novo;
+    return 0;
 }
 
 $SIG{TERM} = $SIG{INT} = sub { exit 0 };
@@ -313,6 +365,7 @@ while (1) {
     }
     if (time >= $proxima_rede) {
         publicar_rede();
+        publicar_recursos();
         $proxima_rede = time + $REDE_CADA;
     }
     if (time >= $proxima) {

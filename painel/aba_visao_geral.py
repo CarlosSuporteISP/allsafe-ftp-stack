@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Visão geral: situação do FTP, o que chegou nos últimos dias, quem parou de enviar e os dados do equipamento."""
+"""Aba Visão geral: situação do FTP, o servidor e os containers em quatro medidas, o que chegou nos últimos dias,
+quem parou de enviar e os dados do equipamento."""
 import datetime
 import shutil
 import time
 import urllib.parse
 
 from aba_atividade import recentes
+from aba_servidor import resumo
 from config import ARQ_CERT_FTP, CFG, PASTA_DADOS
 from estado import DIAS_DO_GRAFICO, certificado, dias_restantes, ftp_no_ar, pastas_distintas, sem_tls, uso_da_pasta, usuarios
 from graficos import barras, colunas, faixa, numero
@@ -26,8 +28,7 @@ def recebidos(usos):
     parcial = (' A contagem está incompleta: há pasta grande demais para ser lida inteira.'
                if any(uso['parcial'] for uso in usos) else '')
     return f'''<section class="cartao"><h2>{icone('envio')}Arquivos recebidos por dia</h2>
-<p class="numero">{numero(sum(por_dia))}</p>
-<p class="suave">com data de {datas[0]:%d/%m} até hoje, em todas as pastas</p>
+<p class="suave"><strong class="numero">{numero(sum(por_dia))}</strong> com data de {datas[0]:%d/%m} até hoje, em todas as pastas</p>
 {colunas(por_dia, rotulos, 'arquivos')}
 <p class="suave">Conta o que está nas pastas agora, pela data de cada arquivo: o que foi apagado ou substituído não entra.{parcial}</p>
 </section>'''
@@ -118,6 +119,7 @@ def visao_geral(pedido, sessao, consulta, formulario, token):
 <p class="suave">{e(nota_cert)}</p>
 <p class="atalho"><a href="/seguranca">conferir a impressão digital</a></p></div>
 </section>
+{resumo()}
 <div class="dupla">
 {recebidos(usos)}
 {ultimos_envios(nomes)}

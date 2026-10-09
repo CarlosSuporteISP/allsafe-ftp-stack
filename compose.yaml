@@ -72,6 +72,8 @@ services:
       - no-new-privileges:true
     pids_limit: ${FTP_PIDS_LIMIT:-128}
     mem_limit: ${FTP_MEMORY_LIMIT:-256M}
+    # Sem swap: o limite de memória é o teto de verdade (sem esta linha, o container usaria o dobro, em swap).
+    memswap_limit: ${FTP_MEMORY_LIMIT:-256M}
     cpus: ${FTP_CPU_LIMIT:-1.0}
     ulimits:
       nofile:
@@ -175,6 +177,8 @@ services:
       - no-new-privileges:true
     pids_limit: ${PAINEL_PIDS_LIMIT:-64}
     mem_limit: ${PAINEL_MEMORY_LIMIT:-192M}
+    # Sem swap: o limite de memória é o teto de verdade (sem esta linha, o container usaria o dobro, em swap).
+    memswap_limit: ${PAINEL_MEMORY_LIMIT:-192M}
     cpus: ${PAINEL_CPU_LIMIT:-0.5}
     stop_grace_period: 10s
     healthcheck:
@@ -226,6 +230,13 @@ services:
         read_only: true
         bind:
           create_host_path: false
+      # Única pasta em que o nginx grava: uma linha com os recursos do container dele, para a aba Servidor do painel.
+      # Quem a cria e entrega ao usuário do nginx é o painel, que sobe antes (painel/entrypoint.sh).
+      - type: bind
+        source: ${DATA_DIR}/nginx/estado
+        target: /estado
+        bind:
+          create_host_path: true
     read_only: true
     tmpfs:
       - /run/nginx:rw,noexec,nosuid,nodev,size=1m,uid=10001,gid=10001,mode=0700
@@ -236,6 +247,8 @@ services:
       - no-new-privileges:true
     pids_limit: ${NGINX_PIDS_LIMIT:-32}
     mem_limit: ${NGINX_MEMORY_LIMIT:-64M}
+    # Sem swap: o limite de memória é o teto de verdade (sem esta linha, o container usaria o dobro, em swap).
+    memswap_limit: ${NGINX_MEMORY_LIMIT:-64M}
     cpus: ${NGINX_CPU_LIMIT:-0.5}
     stop_grace_period: 10s
     healthcheck:
