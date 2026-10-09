@@ -29,10 +29,12 @@ O painel foi redesenhado: ícones desenhados no lugar dos emojis, paleta medida 
 - **Aba Atividade**: a data e o endereço de origem aparecem inteiros na linha, sem quebra, com largura para endereço IPv6. A data passa a `dd/mm/aaaa hh:mm:ss`, o registro feito pelo próprio painel mostra `no servidor` no lugar do traço, e o detalhe ganhou nomes legíveis (administrador, usuário, versão, tamanho) no lugar de `chave=valor`. O arquivo de auditoria não mudou de formato.
 - **Tabelas de borda a borda no cartão**, com a linha de títulos em faixa, e página até 1392 px de largura: em tela de 1280 px ou mais, nenhuma tabela precisa de rolagem lateral com o cadastro de exemplo.
 - **Aba Usuários**: a coluna da pasta mostra só a pasta do usuário, e o caminho do servidor aparece uma vez, na legenda; as marcas ganharam legenda de uma linha cada; as ações da linha ficaram discretas e não quebram de linha em tela larga; a pasta aparece inteira e, se faltar largura, quem desce de linha é a marca.
+- **Cartão Bloqueios da tela Editar mais largo**: a origem, inclusive um endereço IPv6, as senhas erradas e as duas datas cabem sem rolagem lateral.
 - **Tamanho e data não quebram de linha** entre o número e a unidade nem entre o dia e a hora.
 - **Fonte do sistema mantida**: nenhuma fonte é baixada.
 - **Repositório oficial na documentação**: a instalação, a política de segurança e a seção Versão apontam para `github.com/allsafe-inf/allsafe-ftp-stack`, onde as versões saem primeiro e onde issues e pull requests são recebidos; a cópia na conta pessoal é espelho.
 - **Documentação com os nomes das telas novas**: abas citadas sem emoji e a coluna **Pasta** da aba Usuários com o nome que a tela mostra.
+- **Fotos da aplicação refeitas**: as 45 capturas mostram as telas novas, e o guia de [fotos](doc/aplicacao/README.md) descreve a tela de entrada, a Atividade recente, a legenda da aba Usuários e a linha do proxy na aba Segurança.
 - **Caso de teste funcional 28**: a conferência do menu do usuário do FTP conta só os links, e não o endereço interno do ícone.
 
 ## [0.25.2] - 2026-10-09

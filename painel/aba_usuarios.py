@@ -262,7 +262,7 @@ def cartao_bloqueios(sessao, nome, erro=''):
         return ''
     linhas = ''.join(f'<tr><td class="origem"><code>{e(origem)}</code></td><td>{erradas}</td><td>{e(quando(desde))}</td><td>{e(quando(expira))}</td></tr>'
                      for origem, expira, desde, erradas in dele)
-    return f'''<section class="cartao estreito" id="bloqueios"><h2>Bloqueios</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
+    return f'''<section class="cartao medio" id="bloqueios"><h2>Bloqueios</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>O FTP está recusando este usuário quando ele chega dos endereços abaixo, por senhas erradas demais. Com a senha certa
 ele também é recusado, até o fim do prazo.</p>
 <div class="rolagem"><table>

@@ -226,6 +226,7 @@ footer .autoria { margin-top: 4px; }
 }
 .cartao > :last-child { margin-bottom: 0; }
 .cartao.estreito { max-width: 560px; }
+.cartao.medio { max-width: 800px; }   /* tabela com endereço: cabe um IPv6 inteiro sem rolar */
 /* Cartão de lista: a tabela vai de borda a borda, com a linha de títulos em faixa; o que vem depois dela volta à margem. */
 .cartao.lista { padding: 0; overflow: hidden; }
 .lista > :not(.rolagem) { margin: 16px 20px; }

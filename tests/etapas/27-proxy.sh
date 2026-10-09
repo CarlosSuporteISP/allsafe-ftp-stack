@@ -25,10 +25,10 @@ opcao_0="$(env_file="$ENVA" env_valor PAINEL_PROXY_CONFIAVEL)"; aceitos_0="$(ace
 r_limpo="$(errar27)"; origem27="$(de27)"
 r_forjado="$(errar27 -H 'X-Forwarded-For: 198.51.100.7' -H 'X-Cliente-IP: 198.51.100.8' -H 'X-Real-IP: 198.51.100.9' -H 'Forwarded: for=198.51.100.10')"
 de_forjado="$(de27)"; forjado_1="$(forjado27)"
-nota_0="$(c "$B/entrar" | grep -c 'De fábrica, uso só em rede privada, atrás de firewall')"
+nota_0="$(c "$B/entrar" | grep -c -i -E 'publicado por proxy ou túnel|PAINEL_PROXY_CONFIAVEL')"  # a etapa 10 deixa o aviso de IP público na tela: confere só o do proxy
 ip_privado "$origem27" && [[ -z "$opcao_0" && "$aceitos_0" == 0 && "$r_limpo" == 401 && "$r_forjado" == 401 && "$de_forjado" == "$origem27" \
-  && "$forjado_0" == "$forjado_1" && "$nota_0" == 1 ]]
-caso $? seguranca 93 "Endereço escrito pelo cliente em cabeçalho é ignorado" "PAINEL_PROXY_CONFIAVEL vazio, endereços de proxy na configuração do nginx: $aceitos_0 · entrada com senha errada, sem cabeçalho a mais: $r_limpo, na auditoria com o endereço $origem27 · a mesma entrada com X-Forwarded-For, X-Cliente-IP, X-Real-IP e Forwarded apontando para 198.51.100.x: $r_forjado, na auditoria com o endereço $de_forjado · linhas da auditoria com o endereço forjado: $forjado_0 → $forjado_1 · tela de entrada com a nota do uso em rede privada: $nota_0"
+  && "$forjado_0" == "$forjado_1" && "$nota_0" == 0 ]]
+caso $? seguranca 93 "Endereço escrito pelo cliente em cabeçalho é ignorado" "PAINEL_PROXY_CONFIAVEL vazio, endereços de proxy na configuração do nginx: $aceitos_0 · entrada com senha errada, sem cabeçalho a mais: $r_limpo, na auditoria com o endereço $origem27 · a mesma entrada com X-Forwarded-For, X-Cliente-IP, X-Real-IP e Forwarded apontando para 198.51.100.x: $r_forjado, na auditoria com o endereço $de_forjado · linhas da auditoria com o endereço forjado: $forjado_0 → $forjado_1 · linhas da tela de entrada que falam do proxy: $nota_0"
 
 # ------------------------------------------------------------------ o que a opção recusa, antes de mexer em qualquer coisa
 PRIV27="127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
