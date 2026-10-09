@@ -21,6 +21,7 @@
 # de ler, o Pure-FTPd trava ao registrar. Se o vigia sair, o entrypoint encerra o container.
 use strict;
 use warnings;
+use Fcntl qw(:flock);
 use Socket qw(AF_UNIX SOCK_DGRAM pack_sockaddr_un);
 
 my $SOQUETE   = '/dev/log';
@@ -28,11 +29,14 @@ my $BLOQUEIOS = '/auth/bloqueios';
 my $RECUSAS   = '/run/allsafe/recusa';
 my $CADASTRO  = '/auth/pureftpd.passwd';
 my $LIMITES   = '/auth/limites.lista';
+my $REDE      = '/auth/rede.estado';
+my $TRAVA     = '/auth/.lock';
 my $NOME      = qr/[a-z_][a-z0-9_-]{0,31}/;
 my $ENDERECO  = qr/[0-9a-fA-F.:]{2,45}/;
 my $CHAVES_MAX    = 10000;   # contagens guardadas na memória
 my $BLOQUEIOS_MAX = 4096;    # arquivos de bloqueio
 my $RECUSA_VALE   = 30;      # segundos em que a marca de recusa do porteiro ainda explica uma falha
+my $REDE_CADA     = 5;       # segundos entre duas leituras dos contadores de rede
 
 sub registrar { print STDERR "vigia: $_[0]\n"; }
 
@@ -253,6 +257,41 @@ sub limpar {
     }
 }
 
+# Contadores de rede deste container, para a aba Servidor do painel, que não enxerga a rede daqui. Uma linha de
+# sete números: instante, segundos do intervalo, bytes recebidos e enviados desde que o container subiu, bytes
+# recebidos e enviados no intervalo, e erros e descartes. Só grava quando os contadores mudam, e mais uma vez
+# quando o tráfego para: FTP parado não escreve em disco. Falha aqui nunca derruba o vigia.
+my ($rede_quando, $rede_ativa, @rede_antes) = (0, 0);
+sub publicar_rede {
+    my $agora = time;
+    open(my $arq, '<', '/proc/net/dev') or return;
+    my @soma = (0, 0, 0);
+    while (my $linha = <$arq>) {
+        next unless $linha =~ /^\s*([^\s:]+):\s*(.+)$/ && $1 ne 'lo';
+        my @c = split ' ', $2;
+        next if @c < 12 || grep { !/^\d{1,20}$/ } @c[0, 2, 3, 8, 10, 11];
+        $soma[0] += $c[0];
+        $soma[1] += $c[8];
+        $soma[2] += $c[2] + $c[3] + $c[10] + $c[11];
+    }
+    close $arq;
+    my @antes = @rede_antes ? @rede_antes : @soma;
+    my $intervalo = $rede_quando ? $agora - $rede_quando : 0;
+    my ($recebeu, $enviou) = map { $soma[$_] > $antes[$_] ? $soma[$_] - $antes[$_] : 0 } 0, 1;
+    my $gravar = !@rede_antes || $rede_ativa || grep { $soma[$_] != $antes[$_] } 0 .. 2;
+    ($rede_quando, $rede_ativa, @rede_antes) = ($agora, ($recebeu || $enviou) ? 1 : 0, @soma);
+    return unless $gravar;
+    # A cópia de segurança lê /auth com a trava do cadastro: gravar com ela faz a cópia nunca ver o arquivo de passagem.
+    # Trava ocupada: esta leitura não é publicada, e a seguinte sai no próximo ciclo.
+    # Ela é solta quando a função termina.
+    my $trava;
+    if (open($trava, '<', $TRAVA)) { flock($trava, LOCK_EX | LOCK_NB) or return; }
+    my $novo = "$REDE.novo";
+    open(my $saida, '>', $novo) or return;
+    print $saida "$agora $intervalo $soma[0] $soma[1] $recebeu $enviou $soma[2]\n";
+    close($saida) && rename($novo, $REDE) or unlink $novo;
+}
+
 $SIG{TERM} = $SIG{INT} = sub { exit 0 };
 umask 0077;
 ler_redes();
@@ -264,12 +303,17 @@ registrar('pronto: ' . ($PADRAO_TENTATIVAS
     : 'bloqueio por tentativa desligado na stack (FTP_BLOQUEIO_TENTATIVAS=0); vale o limite de cada usuário')
     . '; limite próprio do usuário em Editar, na aba Usuários do painel');
 my $proxima = time + 60;
+my $proxima_rede = time;
 while (1) {
     my $pronto = '';
     vec($pronto, fileno($escuta), 1) = 1;
     if (select($pronto, undef, undef, 5) > 0) {
         my $linha = '';
         tratar($linha) if defined recv($escuta, $linha, 8192, 0);
+    }
+    if (time >= $proxima_rede) {
+        publicar_rede();
+        $proxima_rede = time + $REDE_CADA;
     }
     if (time >= $proxima) {
         limpar();

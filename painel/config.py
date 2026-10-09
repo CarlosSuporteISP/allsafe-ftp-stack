@@ -17,6 +17,7 @@ ARQ_USUARIOS = '/auth/pureftpd.passwd'
 ARQ_CERT_FTP = '/auth/ftp-cert.pem'
 ARQ_SEM_TLS = '/auth/sem-tls.lista'   # quem entra sem TLS com o TLS por usuário valendo; quem grava é o allsafe-ftp-user
 ARQ_LIMITES = '/auth/limites.lista'   # limites por usuário que o painel aplica; quem grava é o allsafe-ftp-user
+ARQ_REDE = '/auth/rede.estado'        # contadores de rede do container do ftp, para a aba Servidor; quem grava é o vigia do ftp
 PASTA_BLOQUEIOS = '/auth/bloqueios'   # bloqueios por tentativa no FTP, um arquivo por usuário e endereço; quem grava é o vigia do ftp
 CMD_USUARIO = '/usr/local/sbin/allsafe-ftp-user'
 PASTA_DADOS = '/data'

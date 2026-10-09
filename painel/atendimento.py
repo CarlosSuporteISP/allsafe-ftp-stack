@@ -277,7 +277,9 @@ class Painel(http.server.BaseHTTPRequestHandler):
             return entrada.entrar(self, metodo, formulario)
 
         token = self.token_do_cookie()
-        sessao = buscar_sessao(token, self.ip) if token else None
+        # Atualização automática da aba Servidor: quem pede é o navegador, sozinho, e isso não conta como uso da sessão.
+        sozinho = metodo == 'GET' and self.caminho == '/servidor' and consulta.get('auto') == '1'
+        sessao = buscar_sessao(token, self.ip, renovar=not sozinho) if token else None
         if sessao is None:
             return self.redirecionar('/entrar')
         if sessao['usuario']:

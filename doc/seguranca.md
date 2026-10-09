@@ -758,7 +758,7 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 | Limite de tentativas | Cinco erros em 15 minutos, somando entrada recusada, de administrador ou de usuário do FTP, e senha atual recusada, bloqueiam o endereço do cliente, mesmo para a senha certa. O endereço é o da conexão; com o painel [por proxy ou túnel](#painel-por-proxy), o que o proxy escolhido informa |
 | Usuário do FTP só na pasta dele | Com `PAINEL_ACESSO_USUARIOS_FTP=sim`, o usuário do FTP entra com o nome e a senha do FTP, conferidos pelo próprio servidor FTP na rede interna da stack, em TLS e com o certificado conferido. Ele só navega e baixa na pasta do cadastro: não ganha nada que já não tenha por FTP, e perde o envio e a remoção. Com `FTP_TLS_MODE=0`, essa conferência vai em texto puro, sem sair da rede interna da stack |
 | Alteração de administrador confirmada | Criar, trocar senha, trocar nome e remover pedem a senha atual de quem está na sessão; as sessões do administrador alterado são encerradas; ninguém remove a própria conta |
-| Sessão curta | 15 minutos sem uso (`PAINEL_SESSAO_MINUTOS`) e teto de 8 horas; presa ao endereço do cliente; encerrada em **Sair** e quando o painel reinicia |
+| Sessão curta | 15 minutos sem uso (`PAINEL_SESSAO_MINUTOS`) e teto de 8 horas; a atualização automática da aba Servidor não conta como uso; presa ao endereço do cliente; encerrada em **Sair** e quando o painel reinicia |
 | Formulário protegido | Token CSRF por sessão e conferência do `Origin` em todo envio; `Referrer-Policy: same-origin` para o navegador informar a origem só ao próprio painel |
 | Página fechada | Sem JavaScript, sem conteúdo de terceiros, sem ser embutida em outra página (`Content-Security-Policy`) |
 | Arquivos sem envio | A aba Arquivos lê, cria pasta vazia, renomeia e apaga, só dentro de `DATA_DIR/dados`, e não recebe arquivo: caminho que tenta sair da pasta recebe `400`, link simbólico não é seguido (`403`) e o arquivo sai sempre como anexo, nunca aberto no navegador. No máximo 8 downloads ao mesmo tempo, 2 por usuário do FTP ou o limite próprio dele, para as telas continuarem respondendo |
@@ -796,6 +796,7 @@ Nenhuma versão é publicada sem a bateria inteira aprovada. Ela roda em um clon
 | Bloqueio por tentativa | Burlar o bloqueio, desbloquear ou mudar limite sem sessão, sem token ou com valor fora da regra | 85, 86 |
 | Rede e exposição | Subir com o FTP em todas as interfaces ou em IP público, anunciar IP público, abrir o painel para rede pública, ligar a opção de IP público com valor inválido, sem TLS ou em "todos" | 16 a 21, 40 a 45 |
 | Painel por proxy ou túnel | Forjar o endereço do cliente por cabeçalho, com e sem proxy declarado; contar senha errada e sessão pelo endereço de quem não é o cliente; ler na tela de entrada como o painel foi publicado; ocultar o aviso de exposição | 93 a 96 |
+| Aba Servidor | Abrir sem sessão ou com a sessão de um usuário do FTP; trocar o arquivo da rede por texto com marcação e por link para o cadastro do FTP; manter a sessão aberta só com a atualização automática | 97, 98 |
 | Entrada e sessão do painel | Abrir rota sem sessão ou com cookie inventado, senha errada e sorteada até o bloqueio, descobrir se um administrador existe, alterar conta sem a senha atual, usar sessão já encerrada, remover a própria conta | 22 a 24, 28, 37, 46 a 49, 51, 69, 72 |
 | Pedido forjado | Enviar sem token CSRF, com `Origin` de fora, com `Origin: null` e com `Host` inesperado | 25 a 27, 38 |
 | Transporte | Falar HTTP sem TLS, negociar TLS antigo, conferir os cabeçalhos de segurança, repetir os limites em HTTP/2 e com compressão | 29 a 31, 87 |
@@ -820,7 +821,7 @@ Além da bateria, cada versão passa por:
 ./tests/testar.sh
 ```
 
-**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 54 casos funcionais, 96 de segurança e 14 de rede. A bateria leva cerca de 45 minutos; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
+**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 55 casos funcionais, 98 de segurança e 14 de rede. A bateria leva cerca de 45 minutos; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
 
 > ⚠️ **Limite — o que a bateria não alcança:** ela roda no próprio servidor, contra a instância de teste. O firewall do host, o proxy ou o túnel da borda e o equipamento que envia o backup são de quem instala e não entram nela: confira-os pelo [passo a passo de produção](#boas-praticas).
 

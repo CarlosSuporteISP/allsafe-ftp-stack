@@ -96,6 +96,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **Rede privada por padrão** | Feita para rede interna, atrás de firewall; endereço público só por uma opção explícita, com alerta |
 | **Só o painel publicado, se quiser** | O painel pode ser aberto por um proxy ou túnel do próprio servidor, com o FTP fechado na rede privada; o endereço do cliente só é aceito do proxy declarado |
 | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão de 15 minutos, bloqueio depois de cinco senhas erradas e registro de cada ação |
+| **Saúde do servidor no painel** | A aba Servidor mostra os serviços da stack e o processador, a memória, o disco dos backups e a rede do FTP, com o gráfico dos últimos 10 minutos |
 | **nginx na frente do painel** | Só o nginx publica a porta do painel: TLS 1.2 e 1.3, HTTP/2, lista de redes permitidas, limite de pedidos e de conexões por endereço; o painel fica sem porta de rede |
 | **Containers endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs; o nginx roda sem `root` e sem nenhuma `capability` |
 | **Segredos em arquivo** | As senhas ficam em `.secrets/`, nunca na imagem nem no `compose.yaml`; a do painel, só como hash |
@@ -630,7 +631,7 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 54 casos funcionais, 96 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 55 casos funcionais, 98 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/scripts.md#testar).
 
 ---
 

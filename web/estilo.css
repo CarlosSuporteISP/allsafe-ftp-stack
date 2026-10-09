@@ -335,6 +335,20 @@ footer .autoria { margin-top: 4px; }
 .barras .valor { color: var(--suave); font-size: var(--texto-rotulo); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
 .barras a > code { padding: 0; border: 0; background: none; }
 
+/* Linha de um período (aba Servidor): o desenho estica na largura do cartão e o traço mantém a espessura. A cor é a
+   do tom da série; a segunda série sai tracejada, para a cor não ser o único sinal. */
+.linha { display: block; width: 100%; height: 96px; margin: 12px 0 4px; overflow: visible; border-bottom: 1px solid var(--borda-campo); }
+.linha polyline { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.linha polyline ~ polyline { stroke-dasharray: 4 3; }
+.linha polygon { fill: currentColor; opacity: 0.14; }
+.eixo { display: flex; justify-content: space-between; gap: 12px; max-width: none; margin: 0 0 8px; color: var(--suave); font-size: var(--texto-rotulo); }
+
+/* Aba Servidor: um cartão por recurso, dois por linha; os números que o desenho não escreve ficam no pé do cartão. */
+.recursos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0 0 16px; }
+.recursos > .cartao { display: flex; flex-direction: column; margin: 0; }
+.recurso .dados { margin-top: auto; padding-top: 12px; }
+.saude { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: var(--texto-rotulo); font-weight: 400; white-space: nowrap; }
+
 /* ------------------------------------------------------------ avisos */
 
 /* O selo da esquerda é desenhado aqui: o sinal não depende só da cor e não custa nada ao HTML. */
@@ -670,7 +684,7 @@ p > .botao { margin-top: 0; }
 
 @media (max-width: 900px) {
   .situacao { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dupla { grid-template-columns: minmax(0, 1fr); }
+  .dupla, .recursos { grid-template-columns: minmax(0, 1fr); }
   .entrada { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
   .entrada-marca { gap: 12px; padding: 20px 16px; }
   .entrada-nome { gap: 12px; font-size: var(--texto-destaque); }

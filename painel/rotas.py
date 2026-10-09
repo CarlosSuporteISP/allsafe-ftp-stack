@@ -9,6 +9,7 @@ import aba_arquivos
 import aba_atividade
 import aba_meus_arquivos
 import aba_seguranca
+import aba_servidor
 import aba_usuarios
 import aba_visao_geral
 import entrada
@@ -45,6 +46,7 @@ ROTAS = {
     ('GET', '/administradores/remover'): aba_administradores.tela_remover,
     ('POST', '/administradores/remover'): aba_administradores.remover,
     ('GET', '/seguranca'): aba_seguranca.seguranca,
+    ('GET', '/servidor'): aba_servidor.servidor,
     ('GET', '/atividade'): aba_atividade.atividade,
     ('POST', '/sair'): entrada.sair,
 }

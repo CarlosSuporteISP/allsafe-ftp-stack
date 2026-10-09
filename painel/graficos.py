@@ -38,17 +38,41 @@ def faixa(partes):
 
     O tom é a classe de cor (bom, info, atencao, ruim, neutro). Parte com zero não é desenhada, mas fica na legenda.
     """
-    total = sum(quantidade for _, quantidade, _ in partes)
+    legenda = ''.join(f'<li><span class="chave {tom}"></span><strong>{numero(quantidade)}</strong> {texto}</li>'
+                      for tom, quantidade, texto in partes)
+    return f'{tira([(tom, quantidade) for tom, quantidade, _ in partes])}<ul class="chaves">{legenda}</ul>'
+
+
+def tira(partes, total=None):
+    """Só a barra dividida em partes: (tom, quantidade). Sem `total`, as partes enchem a barra; com ele, o que falta
+    para o total fica vazio, que é o caso da medida de uso (processador, memória, disco)."""
+    total = total or sum(quantidade for _, quantidade in partes)
     barras_, inicio = '', 0.0
-    for tom, quantidade, _ in partes:
-        if quantidade:
-            largura = 100 * quantidade / total
+    for tom, quantidade in partes:
+        if quantidade > 0 and total:
+            largura = min(100 * quantidade / total, 100 - inicio)
             # O vão entre duas partes é o fundo da barra aparecendo.
             barras_ += f'<rect class="{tom}" x="{inicio:.2f}" y="0" width="{max(largura - 0.5, 0.5):.2f}" height="4"/>'
             inicio += largura
-    legenda = ''.join(f'<li><span class="chave {tom}"></span><strong>{numero(quantidade)}</strong> {texto}</li>'
-                      for tom, quantidade, texto in partes)
-    return f'<svg class="faixa" viewBox="0 0 100 4" {DESENHO}>{barras_}</svg><ul class="chaves">{legenda}</ul>'
+    return f'<svg class="faixa" viewBox="0 0 100 4" {DESENHO}>{barras_}</svg>'
+
+
+def linha(series, teto, lugares):
+    """Linhas de um período, com a amostra mais nova encostada na direita. `series`: (tom, valores), da mais antiga
+    para a mais nova; `teto` é o valor do topo do desenho e `lugares`, quantas amostras cabem na largura: com menos
+    que isso, a esquerda fica vazia. A primeira série leva a área embaixo da linha; a segunda sai tracejada.
+    """
+    passo = 100 / (lugares - 1)
+    desenho = ''
+    for posicao, (tom, valores) in enumerate(series):
+        valores = valores[-lugares:]
+        inicio = 100 - passo * (len(valores) - 1)
+        pontos = ' '.join(f'{inicio + passo * vez:.2f},{40 - 40 * min(max(valor, 0), teto) / teto:.2f}'
+                          for vez, valor in enumerate(valores))
+        if posicao == 0:
+            desenho += f'<polygon class="{tom}" points="{inicio:.2f},40 {pontos} 100,40"/>'
+        desenho += f'<polyline class="{tom}" points="{pontos}"/>'
+    return f'<svg class="linha" viewBox="0 0 100 40" {DESENHO}>{desenho}</svg>'
 
 
 def barras(itens):

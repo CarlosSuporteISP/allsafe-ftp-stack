@@ -55,7 +55,8 @@ rodape() { # <arquivo com a tela> → "autoria site github versão outros-endere
   autoria="$(grep -c -F '<p class="autoria">Desenvolvido pela <a href="https://allsafe.inf.br" target="_blank" rel="noopener noreferrer">allsafe.inf.br</a>' "$1")"
   site="$(grep -o -F 'href="https://allsafe.inf.br"' "$1" | wc -l)"
   github="$(grep -o -F '<a href="https://github.com/allsafe-inf" target="_blank" rel="noopener noreferrer">github.com/allsafe-inf</a>' "$1" | wc -l)"
-  com_versao="$(grep -c -F "<p>allsafe-ftp-stack v$versao · " "$1")"
+  # Depois da versão vem o estado da rede só para quem pode ler: a entrada e o usuário do FTP de instalação publicada não leem.
+  com_versao="$(grep -c -E "^<p>allsafe-ftp-stack v${versao//./\\.}( · [^<]+)?</p>$" "$1")"
   fora="$(grep -o -E '(href|src|action)="[a-z]+:[^"]*"' "$1" | grep -v -c -F -e '"https://allsafe.inf.br"' -e '"https://github.com/allsafe-inf"' || true)"
   echo "$autoria $site $github $com_versao $fora"
 }

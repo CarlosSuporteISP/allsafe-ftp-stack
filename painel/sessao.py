@@ -50,7 +50,9 @@ def sessao_vencida(sessao, agora):
     return agora - sessao['uso'] > CFG['inatividade'] or agora - sessao['criada'] > SESSAO_ABSOLUTA
 
 
-def buscar_sessao(token, ip):
+def buscar_sessao(token, ip, renovar=True):
+    """A sessão do token, se ainda vale para este endereço. `renovar` falso é o pedido que o navegador faz sozinho
+    (atualização automática de uma tela): ele é atendido, mas não empurra o prazo de inatividade."""
     agora = time.time()
     with TRAVA:
         chave = resumo_token(token)
@@ -60,7 +62,8 @@ def buscar_sessao(token, ip):
         if sessao_vencida(sessao, agora) or sessao['ip'] != ip:
             del SESSOES[chave]
             return None
-        sessao['uso'] = agora
+        if renovar:
+            sessao['uso'] = agora
         return sessao
 
 

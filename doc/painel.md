@@ -31,7 +31,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
+[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Servidor: serviços e recursos](#servidor) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
 
 </details>
 
@@ -55,7 +55,7 @@ Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede priv
 cat .secrets/painel-admin-inicial-senha.txt
 ```
 
-**Resultado esperado:** a tela **Visão geral**, com o FTP `🟢 No ar` e, no topo, o nome do administrador que entrou.
+**Resultado esperado:** a tela **Visão geral**, com o FTP `No ar` e, no menu, o nome do administrador que entrou.
 
 Impressão digital do certificado do painel, para comparar com a que o navegador mostra:
 
@@ -76,17 +76,18 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP, o modo de TLS do FTP, os arquivos recebidos por dia nos últimos 14 dias, o último envio de cada usuário, o espaço de cada pasta, os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) e os últimos registros da atividade | Só consultar; cada cartão termina no atalho para a aba do detalhe |
 | Usuários | Um usuário por linha: pasta, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta e, para equipamento sem suporte a TLS, já dispensado do TLS; editar, para trocar a pasta e os limites e tirar um bloqueio; trocar a senha; remover, com a pasta dele ou sem ela; abrir a pasta do usuário na aba Arquivos; dispensar um usuário do TLS e voltar a exigir |
 | Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
+| Servidor | Os serviços da stack (servidor FTP, painel, frente web e bloqueios de entrada) e os recursos da máquina em que ela roda: processador, memória, disco dos backups e rede do FTP, cada um com o estado, a medida de agora e o gráfico dos últimos 10 minutos | Só consultar; **Atualizar sozinha** refaz a leitura a cada 10 s, sem contar como uso da sessão: veja [Servidor](#servidor) |
 | Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
 | Segurança | Conferência da instalação, com o resumo de quantos itens estão em ordem, pedem atenção ou são conferidos no servidor: se endereço público é aceito, se o painel está publicado por proxy ou túnel, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
 | Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads, pastas criadas e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
 
-O menu fica à esquerda em tela de 1280 px de largura ou mais: o símbolo e o nome, as abas em dois grupos (**Operação**, com Visão geral, Usuários e Arquivos, e **Sistema**, com Administradores, Segurança e Atividade), a aba em uso marcada e, embaixo, o nome e o papel de quem entrou e o botão **Sair**, que encerra a sessão na hora. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada (endereço público aceito ou painel por proxy ou túnel), o administrador vê um sinal de alerta ao lado de **Segurança**, em qualquer aba em que estiver. Os gráficos são desenhados pelo próprio painel, sem script, e todo número do desenho está também escrito ao lado dele. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
+O menu fica à esquerda em tela de 1280 px de largura ou mais: o símbolo e o nome, as abas em dois grupos (**Operação**, com Visão geral, Usuários e Arquivos, e **Sistema**, com Servidor, Administradores, Segurança e Atividade), a aba em uso marcada e, embaixo, o nome e o papel de quem entrou e o botão **Sair**, que encerra a sessão na hora. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada (endereço público aceito ou painel por proxy ou túnel), o administrador vê um sinal de alerta ao lado de **Segurança**, em qualquer aba em que estiver. Os gráficos são desenhados pelo próprio painel, sem script, e todo número do desenho está também escrito ao lado dele. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
 
 Quem entra com a conta do FTP não vê nenhuma dessas abas: vê uma tela só, **Meus arquivos**, descrita em [Usuário do FTP no painel](#usuario-ftp).
 
 A foto de cada tela, com a explicação item por item, está em [Fotos da aplicação](aplicacao/README.md).
 
-> ⚠️ Com `FTP_TLS_MODE` em `0` ou `1`, as abas Visão geral e Segurança abrem com um alerta no topo: o FTP está aceitando senha e arquivo em texto puro. O alerta só some quando a variável volta para `2` ou `3`. Veja [Segurança](seguranca.md#ftp-sem-tls).
+> ⚠️ Com `FTP_TLS_MODE` em `0` ou `1`, as abas Visão geral e Segurança abrem com um alerta no começo da tela: o FTP está aceitando senha e arquivo em texto puro. O alerta só some quando a variável volta para `2` ou `3`. Veja [Segurança](seguranca.md#ftp-sem-tls).
 
 > ⚠️ Com pelo menos um usuário dispensado do TLS, as mesmas abas abrem com o alerta de quantos e quais usuários entram no FTP sem TLS. Ele some quando o último volta a ser obrigado a usar TLS. Veja [Segurança](seguranca.md#tls-por-usuario).
 
@@ -282,7 +283,7 @@ O dono dos arquivos pega os próprios backups pelo navegador, sem depender de qu
 |---|---|
 | Vê | Só a pasta do cadastro dele e o que há dentro dela: nome, tamanho e data. O caminho da pasta no servidor não aparece |
 | Faz | Navega e baixa. Enviar, renomear e apagar continuam sendo feitos por FTP |
-| Não alcança | Nenhuma aba de administração: Usuários, Arquivos de todos, Administradores, Segurança e Atividade respondem `404` para ele |
+| Não alcança | Nenhuma aba de administração: Usuários, Arquivos de todos, Servidor, Administradores, Segurança e Atividade respondem `404` para ele |
 | Divide com outro usuário | Só o que já divide no FTP: quem tem a mesma pasta, ou uma pasta dentro da outra, vê pelo painel os mesmos arquivos que vê por FTP |
 
 Regras:
@@ -317,6 +318,38 @@ PAINEL_ACESSO_USUARIOS_FTP=nao
 - **Caminho:** sempre relativo à pasta do cadastro, que é a raiz dele. Passa pelas mesmas conferências da [aba Arquivos](#arquivos): parte por parte, sem `..`, sem seguir link simbólico, só arquivo comum, entrega como anexo, em blocos e sem retomada. Na auditoria, o caminho vai inteiro, a partir da pasta dos dados.
 - **Pasta ainda não criada:** a pasta de um usuário novo nasce no primeiro login por FTP; antes disso, a tela mostra a lista vazia.
 - **Sessões cheias:** quando o painel chega ao teto de 50 sessões, sai primeiro a sessão menos usada de usuário do FTP; a entrada de um usuário não derruba a de um administrador.
+
+</details>
+
+---
+
+<a name="servidor"></a>
+
+## 📈 Servidor: serviços e recursos
+
+A aba **Servidor** mostra, numa tela só, se a stack está de pé e como está a máquina em que ela roda. Só administrador a abre.
+
+| Parte da tela | O que mostra | Quando pede atenção |
+|---|---|---|
+| Serviços da stack | Servidor FTP no ar ou fora, há quanto tempo o painel está no ar e quanta memória o container dele usa, a frente web com a validade do certificado e quantos bloqueios de entrada estão em vigor | FTP fora do ar, certificado perto do fim ou bloqueio em vigor |
+| Processador | Uso de agora, média do último minuto, núcleos, carga em 1, 5 e 15 minutos, há quanto tempo o servidor está ligado e o modelo | Média do último minuto em 80% ou mais; problema em 95% ou mais |
+| Memória | Em uso, disponível, em cache e swap | Menos de 15% disponível; problema com menos de 5% |
+| Disco dos backups | Em uso e livre no disco em que fica a pasta dos dados do FTP, com a parte que é das pastas do FTP | Menos de 15% livre; problema com menos de 5% |
+| Rede do FTP | Velocidade de agora, recebendo e enviando, o total desde que o serviço do FTP iniciou e os erros e descartes | Só informa |
+
+- Processador, memória e disco são os do servidor inteiro, e não só os da stack. A rede é só a do serviço do FTP: é por ela que os backups dos equipamentos chegam.
+- O gráfico de cada cartão cobre os últimos 10 minutos, com uma leitura a cada 5 s. O histórico fica na memória do painel e recomeça quando ele reinicia. Todo número do desenho está escrito ao lado dele.
+- **Atualizar sozinha** refaz a leitura a cada 10 s; **Parar a atualização** volta ao normal. A atualização automática não conta como uso do painel: a sessão encerra depois do tempo de `PAINEL_SESSAO_MINUTOS` sem ação de quem está na tela.
+
+<details>
+<summary>Detalhe técnico — de onde vêm os números</summary>
+
+- **Processador e memória:** o painel lê `/proc/stat`, `/proc/meminfo`, `/proc/loadavg`, `/proc/uptime` e `/proc/cpuinfo`, que o container dele já enxerga. A memória do próprio painel vem do grupo de controle do container. O disco é o da pasta `/data`.
+- **Rede:** o container do painel só enxerga a rede dele. Quem lê a do FTP é o vigia do serviço ftp, a cada 5 s, em `/proc/net/dev` do container dele, e publica uma linha de sete números em `/auth/rede.estado` (`0600`): instante, intervalo, bytes recebidos e enviados no total e no intervalo, e erros e descartes. Ele grava por troca de nome, com a trava do cadastro, só quando os contadores mudam e mais uma vez quando o tráfego para.
+- **Leitura sem confiança:** o painel abre o arquivo sem seguir link simbólico e só aceita sete números. Qualquer outra coisa vira **sem leitura** no cartão, e nada do arquivo vai para a tela. Leitura com mais de 12 s quer dizer rede parada.
+- **O que não foi usado:** nenhum soquete do Docker, nenhuma pasta do servidor montada a mais e nenhum script. A atualização é o cabeçalho `Refresh`, que só sai em `GET /servidor?auto=1`.
+- **Sessão:** `GET /servidor?auto=1` não renova o tempo de uso da sessão. Sem sessão, a rota manda para a entrada; com a sessão de um usuário do FTP, responde `404` e grava `recusa_papel`.
+- A versão do núcleo do sistema não aparece na tela.
 
 </details>
 
@@ -726,7 +759,7 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`confirmacao.py`](../painel/confirmacao.py) | Confirmação pela senha atual de quem está na sessão, pedida nas alterações de administrador e em tudo o que apaga arquivo ou pasta |
 | [`pagina.py`](../painel/pagina.py) | Moldura das telas, com o menu, o símbolo e a autoria no rodapé, e os textos que mais de uma aba usa |
 | [`icones.py`](../painel/icones.py) | Os ícones do painel, desenhados em linha: saem dentro do HTML de cada tela, sem arquivo de imagem |
-| [`graficos.py`](../painel/graficos.py) | Os gráficos (colunas por dia, faixa dividida e barras), em SVG montado no servidor, sem script e sem estilo dentro do HTML; os números ficam também em texto |
+| [`graficos.py`](../painel/graficos.py) | Os gráficos (colunas por dia, faixa dividida, barras e linha do tempo), em SVG montado no servidor, sem script e sem estilo dentro do HTML; os números ficam também em texto |
 | [`cena.py`](../painel/cena.py) | A cena em três dimensões da tela de entrada, só com HTML e CSS |
 | [`atendimento.py`](../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF), roteamento por papel (administrador ou usuário do FTP) e a entrega de arquivo em blocos |
 | [`rotas.py`](../painel/rotas.py) | Tabelas de método e caminho para a função que responde: uma para o administrador e outra para o usuário do FTP |
@@ -737,6 +770,8 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista, criação com a pasta escolhida, edição (pasta, limites e bloqueios), troca de senha, remoção e a dispensa do TLS por usuário |
 | [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta |
 | [`aba_meus_arquivos.py`](../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação e download dentro da pasta dele |
+| [`recursos.py`](../painel/recursos.py) | Recursos da máquina: leitura do processador, da memória e da rede do FTP, e o histórico dos últimos 10 minutos, guardado na memória |
+| [`aba_servidor.py`](../painel/aba_servidor.py) | Aba Servidor: os serviços da stack e os cartões de processador, memória, disco e rede |
 | [`aba_administradores.py`](../painel/aba_administradores.py) | Aba Administradores: lista, criação, troca de senha, troca de nome e remoção |
 | [`aba_seguranca.py`](../painel/aba_seguranca.py) | Aba Segurança |
 | [`aba_atividade.py`](../painel/aba_atividade.py) | Aba Atividade |

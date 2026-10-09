@@ -52,7 +52,7 @@ flowchart LR
 | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado, sobe o vigia, o `pure-authd` e o `pure-ftpd` e encerra o container se um deles sair |
 | [`ftp/saude.sh`](../ftp/saude.sh) | container | Healthcheck: abre a porta de controle e espera a saudação do servidor |
 | [`ftp/porteiro.sh`](../ftp/porteiro.sh) | container | Decide a cada entrada, antes da conferência da senha, se ela pode seguir: recusa o usuário bloqueado por senhas erradas e, com o TLS por usuário valendo, a sessão sem TLS de quem não foi dispensado |
-| [`ftp/vigia.pl`](../ftp/vigia.pl) | container | Conta as senhas erradas de cada endereço para cada usuário e grava o bloqueio que o porteiro aplica |
+| [`ftp/vigia.pl`](../ftp/vigia.pl) | container | Conta as senhas erradas de cada endereço para cada usuário, grava o bloqueio que o porteiro aplica e publica a rede do container para a aba Servidor do painel |
 | [`painel/entrypoint.sh`](../painel/entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel, entrega a cópia dele ao nginx e executa o painel |
 | [`nginx/entrypoint.sh`](../nginx/entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
 | [`nginx/saude.sh`](../nginx/saude.sh) | container do nginx | Healthcheck: pede `/saude` ao painel passando pelo nginx |
@@ -433,7 +433,7 @@ Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; 
 
 ## 👁️ `ftp/vigia.pl`
 
-É o vigia das entradas do FTP, instalado na imagem como `/usr/local/sbin/allsafe-ftp-vigia`. Não é chamado direto: o entrypoint o sobe antes do servidor. Ele conta as senhas erradas de cada endereço para cada usuário, grava o bloqueio que o porteiro aplica e escreve no log do container cada entrada e cada transferência.
+É o vigia das entradas do FTP, instalado na imagem como `/usr/local/sbin/allsafe-ftp-vigia`. Não é chamado direto: o entrypoint o sobe antes do servidor. Ele conta as senhas erradas de cada endereço para cada usuário, grava o bloqueio que o porteiro aplica e escreve no log do container cada entrada e cada transferência. Também publica os contadores de rede do container, que a aba Servidor do painel mostra.
 
 **Resultado esperado:** na subida, `vigia: pronto: 5 senhas erradas do mesmo endereço bloqueiam o usuário para ele por 15 min; limite próprio do usuário em Editar, na aba Usuários do painel`, com os valores do `.env`. Depois, uma linha por entrada e por transferência no log do container:
 
@@ -460,6 +460,7 @@ Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; 
 - **Limite e prazo:** os do usuário, em `/auth/limites.lista` (`tentativas=` e `minutos=`), ou os da stack (`FTP_BLOQUEIO_TENTATIVAS` e `FTP_BLOQUEIO_MINUTOS`). O cadastro e a lista são relidos quando o arquivo muda.
 - **Contagem:** na memória, por usuário e endereço, só das senhas erradas mais novas que os minutos de bloqueio; até 10.000 pares. Reiniciar o container zera a contagem em andamento e não tira bloqueio.
 - **Bloqueio:** o arquivo `/auth/bloqueios/<usuario>@<endereco>`, `0600`, gravado por troca de nome, com até quando vale, desde quando e quantas senhas erradas; até 4.096 arquivos. De minuto em minuto, o vigia apaga os vencidos e os inválidos.
+- **Rede:** a cada 5 s, soma os contadores das interfaces do container em `/proc/net/dev`, fora a `lo`, e grava uma linha de sete números em `/auth/rede.estado` (`0600`): instante, segundos do intervalo, bytes recebidos e enviados desde que o container subiu, bytes recebidos e enviados no intervalo, e erros e descartes. Grava por troca de nome, com a trava do cadastro (`/auth/.lock`), só quando os contadores mudam e mais uma vez quando o tráfego para; com a trava ocupada, aquela leitura não é publicada. Falha na leitura ou na gravação não para o vigia.
 - **O que não conta:** endereço da rede interna da stack, recusa do porteiro por falta de TLS, tentativa durante o bloqueio, nome fora do cadastro e nome fora da regra.
 - **Por que Perl:** a imagem do FTP não tem Python, e o `perl-base` já vem na imagem base do Debian. O vigia usa só os módulos dele, sem pacote novo.
 - **Transferências:** o `pure-ftpd` avisa pelo mesmo registro de cada arquivo enviado, baixado, renomeado e apagado, e o vigia escreve a linha. O nome do arquivo vai por último, e o tamanho é lido do fim do aviso: um nome escolhido pelo cliente não se passa por outro campo. O aviso é reconhecido pelo começo, que é do servidor: um arquivo apagado cujo nome imita o fim de um envio continua registrado como apagado. Caractere de controle e de direção do texto vira `?`; nome em UTF-8 passa; o caminho é cortado em 400 caracteres. O que foi feito pelo painel fica na auditoria dele, não aqui.

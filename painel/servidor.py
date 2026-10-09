@@ -17,6 +17,7 @@ import socket
 import sys
 
 import administradores
+import recursos
 from atendimento import Painel, Servidor
 from auditoria import auditar, limpo
 from config import ARQ_ADMINS, ARQ_HASH, ARQ_SOQUETE, CFG, NOME, SENHA_MIN, configuracao, falha
@@ -88,6 +89,7 @@ def principal():
         if criado:
             auditar('-', 'admin_inicial_criado', f'admin={CFG["admin_inicial"]}')
     servidor = Servidor(ARQ_SOQUETE, Painel)
+    recursos.iniciar()
     auditar('-', 'painel_iniciado', f'versao={limpo(CFG["versao"])}')
     print(f'Painel pronto no soquete {ARQ_SOQUETE}, atrás do nginx; sessão de {CFG["inatividade"] // 60} min; '
           f'redes permitidas: {", ".join(str(r) for r in CFG["redes"])}', flush=True)

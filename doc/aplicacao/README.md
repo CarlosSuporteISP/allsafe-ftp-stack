@@ -6,7 +6,7 @@
 
 Todas as telas do painel web, menu por menu, com a foto de cada uma e a explicação do que dá para fazer nela. As fotos são capturas reais da versão **0.26.0**, em tema escuro (o único do painel), com usuários de exemplo, como `olt-centro`, `switch-core` e `roteador-borda`. Clique em qualquer foto para abri-la em tamanho real.
 
-O painel tem uma tela de entrada, seis abas para quem administra (Visão geral, Usuários, Arquivos, Administradores, Segurança e Atividade) e uma tela para o usuário do FTP baixar os próprios backups (Meus arquivos). Como abrir, criar administradores e o que protege o painel está em [Painel web](../painel.md).
+O painel tem uma tela de entrada, sete abas para quem administra (Visão geral, Usuários, Arquivos, Servidor, Administradores, Segurança e Atividade) e uma tela para o usuário do FTP baixar os próprios backups (Meus arquivos). Como abrir, criar administradores e o que protege o painel está em [Painel web](../painel.md).
 
 > 🧱 **Uso só em rede privada:** por padrão, o painel abre apenas em IP privado, atrás de firewall, fora da internet. Veja [Segurança](../seguranca.md#rede-privada).
 
@@ -37,7 +37,7 @@ O painel tem uma tela de entrada, seis abas para quem administra (Visão geral, 
 | **Senha** | Recebe a senha da conta. A do primeiro administrador está em `.secrets/painel-admin-inicial-senha.txt`; a do usuário do FTP é a mesma que o equipamento usa |
 | **Entrar** | Confere a conta: o administrador vai para a aba Visão geral e o usuário do FTP, para a tela Meus arquivos |
 | Texto abaixo do título | Diz quem entra por esta tela. Com `PAINEL_ACESSO_USUARIOS_FTP=nao`, passa a ser `Painel de administração da stack.` |
-| Nota abaixo do botão | De fábrica, lembra que o uso é só em rede privada, atrás de firewall. Com `REDE_PERMITIR_IP_PUBLICO=sim` ou `PAINEL_PROXY_CONFIAVEL` preenchido, vira o aviso de endereço público aceito ou de painel publicado por proxy ou túnel; `PAINEL_AVISO_EXPOSICAO=nao` oculta esses dois avisos |
+| Nota abaixo do botão | Lembra que o uso é restrito a quem foi autorizado e que as tentativas de entrada ficam registradas. A tela de entrada não diz como a instalação está publicada: isso só o administrador lê, depois de entrar |
 | Lado esquerdo | Apresenta a stack: a chamada, três pontos (cada equipamento preso na própria pasta, painel só por HTTPS e o tempo de sessão sem uso) e a cena em que roteador, switch, OLT e rádio mandam o backup por FTPS para as pastas. Em tela estreita, ficam só a logo e a chamada |
 | **Pausar movimento** | Para a animação da cena e a retoma; com o sistema configurado para reduzir movimento, a cena já abre parada |
 
@@ -81,7 +81,7 @@ O painel tem uma tela de entrada, seis abas para quem administra (Visão geral, 
 
 **Para que serve:** ver de uma vez se o FTP está no ar e quais dados digitar no equipamento que vai mandar o backup.
 
-**Como chegar:** é a primeira tela do administrador depois da entrada; menu do topo ➜ **Visão geral**.
+**Como chegar:** é a primeira tela do administrador depois da entrada; menu ➜ **Visão geral**.
 
 | Item da tela | O que mostra |
 |---|---|
@@ -89,12 +89,15 @@ O painel tem uma tela de entrada, seis abas para quem administra (Visão geral, 
 | **Usuários** | Quantidade de usuários do FTP, com atalho para a aba Usuários |
 | **Espaço usado** | Soma das pastas dos usuários e o espaço livre no disco, com atalho para as pastas, na aba Arquivos |
 | **Último envio** | Data do arquivo mais novo entre todas as pastas, com atalho para a aba Arquivos |
-| **Certificado do FTP** | Validade do certificado, com atalho para a impressão digital, na aba Segurança |
+| **Certificado do FTP** | A data em que o certificado vence e quantos dias faltam, com atalho para a impressão digital, na aba Segurança |
+| **Arquivos recebidos por dia** | Uma coluna por dia dos últimos 14 dias, com o total do período em cima. Conta o que está nas pastas agora, pela data de cada arquivo: o que foi apagado ou substituído não entra |
+| **Último envio por usuário** | Os usuários divididos pela data do arquivo mais novo da pasta de cada um: nas últimas 24 horas, entre 1 e 7 dias, há mais de 7 dias e sem arquivo na pasta. Embaixo, a lista de quem está há mais de 7 dias sem enviar, com atalho para a aba Usuários |
+| **Espaço por pasta** | As pastas que mais ocupam, da maior para a menor, cada uma com a barra, o tamanho e a quantidade de arquivos, e o atalho para a pasta na aba Arquivos |
 | **Dados para configurar o equipamento** | Servidor, porta de controle, portas passivas, protocolo e de onde vem o usuário: o que preencher no equipamento |
 | **Atividade recente** | Os seis últimos registros do painel, com a hora e o endereço de quem fez, e o atalho para a aba Atividade |
-| Topo de todas as telas | A logo, as seis abas, cada uma com o seu ícone e a aba em uso marcada por um traço, o nome do administrador da sessão e o botão **Sair**. Em tela estreita, as abas ficam numa linha que rola para o lado |
+| Menu de todas as telas | À esquerda, em tela de 1280 px de largura ou mais: o símbolo e o nome, as sete abas em dois grupos (**Operação** e **Sistema**), cada uma com o seu ícone e a aba em uso marcada, e, embaixo, o nome e o papel de quem entrou e o botão **Sair**. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada, um sinal de alerta fica ao lado de **Segurança** |
 | Título de cada aba | O nome da aba e uma frase que diz para que ela serve |
-| Rodapé de todas as telas | A versão da stack, o lembrete de rede privada, a autoria e o endereço do repositório oficial |
+| Rodapé de todas as telas | A versão da stack, o lembrete de rede privada (ou, só para o administrador, como a instalação está publicada), a autoria e o endereço do repositório oficial |
 
 Nada é alterado por esta aba.
 
@@ -107,7 +110,7 @@ Nada é alterado por esta aba.
 
 <sub><b>v0.26.0</b> · menu Visão geral, alerta de usuário sem TLS · captura de 2026-10-09</sub>
 
-| Alerta no topo | Quando aparece | Como some |
+| Alerta no começo da tela | Quando aparece | Como some |
 |---|---|---|
 | Quantos e quais usuários entram no FTP sem TLS | Com pelo menos um usuário dispensado do TLS | Quando o último volta a ser obrigado a usar TLS, em [Usuários ➜ Exigir TLS](#usuarios) |
 | O FTP aceita senha e arquivo em texto puro | Com `FTP_TLS_MODE` em `0` ou `1` | Quando a variável volta para `2` ou `3` |
@@ -138,7 +141,7 @@ O mesmo alerta abre a aba Segurança. As condições para dispensar um usuário 
 
 **Para que serve:** criar a conta de cada equipamento ou pessoa, escolher e trocar a pasta em que ela fica presa, trocar a senha, dar limites próprios, tirar o bloqueio por senha errada e remover a conta, com ou sem a pasta, sem linha de comando.
 
-**Como chegar:** menu do topo ➜ **Usuários**.
+**Como chegar:** menu ➜ **Usuários**.
 
 | Item da tela | O que faz |
 |---|---|
@@ -426,7 +429,7 @@ Na tela **Editar**, o cartão **TLS** diz como o usuário entra e traz o botão 
 
 **Para que serve:** ver o que cada equipamento enviou, baixar um backup pelo navegador, criar a pasta de um usuário novo, trocar o nome e apagar arquivo e pasta, sem cliente de FTP.
 
-**Como chegar:** menu do topo ➜ **Arquivos**. Na aba Usuários, o endereço da coluna **Pasta** abre direto a pasta daquele usuário.
+**Como chegar:** menu ➜ **Arquivos**. Na aba Usuários, o endereço da coluna **Pasta** abre direto a pasta daquele usuário.
 
 | Item da tela | O que faz |
 |---|---|
@@ -592,7 +595,7 @@ A pasta de um usuário do FTP, e a pasta que tem a de um usuário dentro, não �
 | **Baixar** | Entrega o arquivo ao navegador, com o nome original |
 | **Sair** | Encerra a sessão na hora |
 
-O usuário vê só a pasta do cadastro dele e o que há dentro dela. O caminho da pasta no servidor não aparece, e o topo traz só a aba **Meus arquivos**, sem as de administração.
+O usuário vê só a pasta do cadastro dele e o que há dentro dela. O caminho da pasta no servidor não aparece, e o menu traz só a aba **Meus arquivos**, sem as de administração, com o nome do usuário e o papel **Usuário do FTP**.
 
 <details>
 <summary>Meus arquivos ➜ Dentro de uma pasta — clique para expandir</summary>
@@ -640,7 +643,7 @@ O usuário vê só a pasta do cadastro dele e o que há dentro dela. O caminho d
 
 **Para que serve:** dar a cada pessoa que administra o painel o próprio usuário e a própria senha, e trocar o usuário e a senha do primeiro administrador depois da instalação.
 
-**Como chegar:** menu do topo ➜ **Administradores**.
+**Como chegar:** menu ➜ **Administradores**.
 
 | Item da tela | O que faz |
 |---|---|
@@ -762,11 +765,11 @@ Trocar o nome do primeiro administrador pelo painel não mexe no `.env`: o `PAIN
 
 **Para que serve:** conferir, em uma tela, se a instalação está dentro do que a stack exige: rede privada, TLS, certificados válidos, painel isolado e contato de segurança publicado.
 
-**Como chegar:** menu do topo ➜ **Segurança**.
+**Como chegar:** menu ➜ **Segurança**.
 
 | Item da tela | O que mostra |
 |---|---|
-| Endereço público | Se a stack recusa endereço público (o padrão) ou se ele foi aceito com `REDE_PERMITIR_IP_PUBLICO=sim`; com `PAINEL_AVISO_EXPOSICAO=nao`, é aqui que fica dito que o aviso da tela de entrada e do rodapé está oculto |
+| Endereço público | Se a stack recusa endereço público (o padrão) ou se ele foi aceito com `REDE_PERMITIR_IP_PUBLICO=sim`; com `PAINEL_AVISO_EXPOSICAO=nao`, é aqui que fica dito que o aviso do menu, do começo da aba e do rodapé está oculto |
 | Painel por proxy ou túnel | Se o painel aceita o endereço do cliente informado por um proxy ou túnel (`PAINEL_PROXY_CONFIAVEL`) e de quais endereços ele aceita; em branco, que é o padrão, a linha diz que o painel não está publicado por esse caminho |
 | Endereço do FTP · IP anunciado no modo passivo | Onde o FTP escuta e o IP que ele informa ao cliente, com a indicação de privado ou público |
 | TLS do FTP | O modo em uso (`FTP_TLS_MODE`), se a exceção por usuário está ligada e quem está dispensado |
@@ -822,7 +825,7 @@ Com pelo menos um usuário dispensado do TLS, a aba abre com o alerta e a linha 
 
 **Para que serve:** saber quem entrou no painel, de onde, o que foi alterado e quem baixou cada arquivo.
 
-**Como chegar:** menu do topo ➜ **Atividade**.
+**Como chegar:** menu ➜ **Atividade**.
 
 | Coluna | O que mostra |
 |---|---|

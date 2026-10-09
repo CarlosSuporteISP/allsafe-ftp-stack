@@ -8,8 +8,8 @@ from estado import dias_restantes, sem_tls
 from icones import desenhos, icone
 
 ABAS = (('/', 'painel', 'Visão geral'), ('/usuarios', 'usuarios', 'Usuários'), ('/arquivos', 'pasta', 'Arquivos'),
-        ('/administradores', 'escudo', 'Administradores'), ('/seguranca', 'cadeado', 'Segurança'),
-        ('/atividade', 'atividade', 'Atividade'))
+        ('/servidor', 'pulso', 'Servidor'), ('/administradores', 'escudo', 'Administradores'),
+        ('/seguranca', 'cadeado', 'Segurança'), ('/atividade', 'atividade', 'Atividade'))
 ABAS_USUARIO = (('/meus-arquivos', 'pasta', 'Meus arquivos'),)
 # Menu lateral do administrador: o dia a dia em cima, o que cuida do próprio painel embaixo.
 GRUPOS = (('Operação', ABAS[:3]), ('Sistema', ABAS[3:]))
