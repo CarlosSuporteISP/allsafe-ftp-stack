@@ -1,9 +1,9 @@
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     origem@{ shape: lin-cyl, label: "DATA_DIR<br>dados, auth, certs e painel" }
-    backup@{ shape: console, label: "scripts/backup.sh<br>lê por container sem rede" }
-    copia@{ shape: doc, label: "BACKUP_DIR<br>cópia .tar.gz e soma sha256" }
-    restaurar@{ shape: console, label: "scripts/restaurar.sh<br>para, guarda o atual e troca" }
+    backup@{ shape: console, label: "scripts/backup.sh<br>lê e cifra, sem rede" }
+    copia@{ shape: doc, label: "BACKUP_DIR<br>cópia cifrada e soma sha256" }
+    restaurar@{ shape: console, label: "scripts/restaurar.sh<br>abre, guarda o atual e troca" }
     destino@{ shape: lin-cyl, label: "DATA_DIR<br>conteúdo da cópia" }
     fim@{ shape: stadium, label: "stack de volta" }
 

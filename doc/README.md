@@ -94,7 +94,7 @@ flowchart LR
 | Configuração | `.env`, na pasta do projeto | variáveis de ambiente |
 | Logs | driver `local` do Docker, 10 MB × 3 | `stdout` |
 
-`DATA_DIR` é uma pasta do host definida no `.env` (padrão `/srv/allsafe-ftp-stack/data`). As cópias de segurança vão para `BACKUP_DIR` ([Backup e restauração](backup.md)) e os temporários para `TEMP_DIR`: veja [Configuração](configuracao.md#pastas-e-nomes). A stack não cria volume nomeado.
+`DATA_DIR` é uma pasta do host definida no `.env` (padrão `/srv/allsafe-ftp-stack/data`). As cópias de segurança vão cifradas para `BACKUP_DIR` ([Backup e restauração](backup.md)) e os temporários para `TEMP_DIR`: veja [Configuração](configuracao.md#pastas-e-nomes). A stack não cria volume nomeado.
 
 ---
 

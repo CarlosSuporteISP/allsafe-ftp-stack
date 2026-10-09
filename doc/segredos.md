@@ -4,7 +4,7 @@
 
 ## 💡 Em poucas palavras
 
-As senhas da stack moram na pasta `.secrets/`, que nunca vai para o Git nem para dentro da imagem. São duas: a do usuário inicial do FTP e a do painel web. O script de instalação cria as duas sozinho na primeira vez, cada uma em um arquivo cujo nome diz o que ele guarda, e deixa na pasta um `LEIAME.txt` que explica um por um. O servidor FTP lê a dele ao subir e guarda apenas o hash; o painel recebe **só o hash** da dele, nunca a senha.
+As senhas da stack moram na pasta `.secrets/`, que nunca vai para o Git nem para dentro da imagem. São duas: a do usuário inicial do FTP e a do painel web. Na mesma pasta fica o par de chaves que cifra e abre a cópia de segurança. O script de instalação cria tudo sozinho na primeira vez, cada uma em um arquivo cujo nome diz o que ele guarda, e deixa na pasta um `LEIAME.txt` que explica um por um. O servidor FTP lê a dele ao subir e guarda apenas o hash; o painel recebe **só o hash** da dele, nunca a senha.
 
 <!-- diagrama: diagramas/segredos-diagrama.mmd -->
 ```mermaid
@@ -44,10 +44,12 @@ flowchart LR
 | `ftp-usuario-inicial-senha.txt` | [`deploy.sh`](../deploy.sh), na primeira execução, se o arquivo não existir ou estiver vazio | Só se quiser uma senha própria | Senha do usuário inicial (`FTP_USER`) |
 | `painel-admin-inicial-senha.txt` | [`deploy.sh`](../deploy.sh), na primeira execução | Não | Senha **inicial** do primeiro administrador do painel (`PAINEL_ADMIN_USER`), em texto. Fica só no host e vale até ser trocada na aba Administradores; trocou, apague o arquivo |
 | `painel-admin-inicial-senha-hash.txt` | [`deploy.sh`](../deploy.sh) e [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | Não | Hash `scrypt` dessa senha inicial. É o único arquivo da pasta que o painel enxerga, e só é usado para criar o primeiro administrador |
+| `backup-chave-privada.txt` | [`deploy.sh`](../deploy.sh), se nenhuma das duas chaves existir | Não | Chave que **abre** a cópia de segurança. Guarde uma cópia fora do servidor: sem ela nenhuma cópia restaura. Veja [Backup e restauração](backup.md#chave) |
+| `backup-chave-publica.txt` | [`deploy.sh`](../deploy.sh), a cada execução, a partir da privada | Não | Chave que **cifra** a cópia de segurança. Não abre nada e pode ficar no servidor |
 | `LEIAME.txt` | [`deploy.sh`](../deploy.sh), a cada execução | Não | Diz para que serve cada arquivo da pasta. Não guarda segredo nenhum |
 | `.gitkeep` | já vem no repositório | Não | Mantém a pasta no clone |
 
-O nome de cada arquivo segue a mesma ordem: **de quem é** a senha (`ftp-usuario-inicial`, `painel-admin-inicial`) e **o que** está gravado (`senha` em texto ou `senha-hash`).
+O nome de cada arquivo segue a mesma ordem: **de quem é** o segredo (`ftp-usuario-inicial`, `painel-admin-inicial`, `backup`) e **o que** está gravado (`senha` em texto, `senha-hash`, `chave-privada` ou `chave-publica`).
 
 Ver as senhas geradas, para configurar o equipamento e para entrar no painel pela primeira vez:
 
@@ -156,7 +158,7 @@ Com `./deploy.sh --check-only` nada é alterado: sai só o aviso `AVISO: esta in
 | Cópia da chave TLS do painel, para o nginx | pasta `DATA_DIR/nginx/tls`, arquivo `painel-key.pem` | `0640`, grupo `10001` (o do nginx), pasta `0750`; refeita a cada subida e montada no nginx só para leitura |
 | Registro de auditoria do painel | pasta `DATA_DIR/painel`, arquivo `auditoria.log` | `0600`; não guarda senha, mas mostra nomes de usuário e endereços |
 | Hash das senhas dos usuários | pasta `DATA_DIR/auth`, arquivos `pureftpd.passwd` e `pureftpd.pdb` | `0600`, fora do repositório |
-| Cópias de segurança feitas pelo `scripts/backup.sh` | pasta `BACKUP_DIR` | `0600`, pasta `0700`, fora do repositório; contêm o hash das senhas e as chaves privadas dos certificados |
+| Cópias de segurança feitas pelo `scripts/backup.sh` | pasta `BACKUP_DIR` | Cifradas com a chave pública de `.secrets/`, `0600`, pasta `0700`, fora do repositório; contêm o hash das senhas, as chaves privadas dos certificados e os arquivos dos equipamentos |
 
 <details>
 <summary>Detalhe técnico — geração, montagem e descarte</summary>
@@ -169,6 +171,7 @@ Com `./deploy.sh --check-only` nada é alterado: sai só o aviso `AVISO: esta in
 - **Criado uma vez:** ao criar o usuário inicial, o entrypoint grava `/auth/usuario-inicial.criado` (`0600`), só com o nome dele. Com a marca presente e o usuário fora do cadastro, ele não é recriado, e o log diz `removido pelo administrador; não é recriado`. Instalação anterior à `0.23.0` ganha a marca na primeira subida, com o usuário que já existe. A marca entra no backup, com o cadastro.
 - **Descarte:** antes do `exec` do `pure-ftpd`, o entrypoint faz `unset` da variável interna da senha.
 - **Painel:** o hash é `scrypt` (N=2^15, r=8, p=1, sal aleatório de 16 bytes), calculado dentro da imagem do painel, em um container descartável sem rede. O segredo `painel_admin_inicial_senha_hash` chega **só** ao serviço `painel`, em `/run/secrets/painel_admin_inicial_senha_hash`, somente leitura, e só é lido na subida em que ainda não existe nenhum administrador. A senha atual de cada administrador fica como hash em `DATA_DIR/painel/administradores` (`0600`, do `root`), fora de `.secrets/`. O `painel-admin-inicial-senha.txt` nunca é montado em container.
+- **Chave da cópia de segurança:** par `age` (X25519), gerado por `age-keygen` dentro da imagem do FTP, em um container descartável sem rede; nada é instalado no host. O `deploy.sh` só cria o par quando **nenhum** dos dois arquivos existe, nunca regrava a privada e, a cada execução, refaz a pública a partir dela. Só com a pública, o servidor faz cópia e não restaura. Nenhuma das duas é montada nos serviços: a pública vai ao container da cópia, e a privada, só ao da restauração, somente leitura.
 - **Git:** o [`.gitignore`](../.gitignore) ignora `.env` e tudo o que está em `.secrets/`, mantendo só o `.gitkeep`.
 - **`LEIAME.txt`:** regravado pelo `deploy.sh` a cada execução, com modo `0600`. Traz só o nome e a função de cada arquivo; nunca é montado em container.
 - **Imagem:** o [`.dockerignore`](../.dockerignore) deixa `.env` e `.secrets` fora do contexto de build.

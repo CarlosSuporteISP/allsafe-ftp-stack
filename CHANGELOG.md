@@ -8,6 +8,39 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.25.0] - 2026-10-09
+
+A cópia de segurança passa a sair cifrada: quem pegar o arquivo não lê nada dele sem a chave privada, que fica em `.secrets/` e deve ser guardada também fora do servidor.
+
+### Adicionado
+
+- **Cópia de segurança cifrada**: o `scripts/backup.sh` grava `<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age`, cifrado com `age` para a chave pública de `.secrets/backup-chave-publica.txt`. A cifra é feita em fluxo, dentro do container da cópia: nada sem cifra chega ao disco. Não há opção para desligar.
+- **Par de chaves da cópia em `.secrets/`**: o `deploy.sh` cria `backup-chave-privada.txt` e `backup-chave-publica.txt` (`0600`) quando nenhum dos dois existe, nunca regrava a privada e refaz a pública a partir dela a cada execução. Com só a pública no servidor, ele faz cópia e não restaura.
+- **Restauração com a chave**: o `scripts/restaurar.sh` abre a cópia inteira com `.secrets/backup-chave-privada.txt` antes de tocar em qualquer coisa. Sem a chave, com a chave de outra instalação, com a cópia cortada ou com um byte trocado, para com `Nada foi tocado.`
+- Caso 53 da bateria funcional e casos 90, 91 e 92 de segurança: cópia cifrada e ilegível sem a chave, recusas da restauração, cópia antiga sem cifra e regras das chaves. O caso 77 de segurança passa a pedir pela web também a chave privada da cópia, e os casos 14, 39 e 10 de segurança e o 21 funcional contam os dois arquivos novos de `.secrets/`.
+
+### Alterado
+
+- **Cópia antiga, sem cifra, continua restaurando**, com o aviso `esta cópia não é cifrada`, e o `--listar` a marca com `(sem cifra: feita antes da 0.25.0)`.
+- **Saída do `backup.sh`**: a linha `Cópia gravada` mostra o tamanho e `cifrada`, sem a contagem de itens, e uma linha nova lembra de guardar a chave privada fora do servidor. A contagem de itens segue na saída do `restaurar.sh`.
+- **O `tar` deixa de ser exigido no host pelo `backup.sh`**: o empacotamento já era feito no container.
+- **Imagem do FTP com o pacote `age` do Debian**: de 208 MB para 218 MB. As imagens do painel e do nginx não mudam e nada novo é instalado no host.
+
+### Corrigido
+
+- **Erros do container da cópia apareciam pela metade**: uma linha do `backup.sh` descartava as mensagens de erro do `tar` dali em diante. Agora o motivo da falha aparece inteiro.
+
+### Segurança
+
+- Uma cópia que saia do servidor (mídia perdida, outra máquina, pasta de rede) deixa de entregar os hashes das senhas, as chaves privadas dos certificados e os arquivos dos equipamentos. Cada bloco da cópia é autenticado: alteração ou corte faz a abertura falhar.
+
+### Ao atualizar
+
+- Rode `./deploy.sh`: ele reconstrói a imagem do FTP, com o `age`, e cria o par de chaves da cópia. Nada muda no `.env` nem nos dados.
+- **Guarde `.secrets/backup-chave-privada.txt` fora do servidor**, em um cofre de senhas, separada das cópias. Sem ela nenhuma cópia cifrada abre, e não há como recuperá-la.
+- As cópias feitas antes desta versão ficam como estão em `BACKUP_DIR`, sem cifra. Faça uma cópia nova e apague as antigas.
+- Rotina que procura as cópias por `*.tar.gz` passa a procurar por `*.tar.gz.age`; o padrão `*.tar.gz*` da documentação pega os dois.
+
 ## [0.24.2] - 2026-10-09
 
 Revisão de usabilidade do painel: o topo deixa de repetir o nome da aba, todo cartão da Visão geral leva ao detalhe, e as telas ficam confortáveis no celular.

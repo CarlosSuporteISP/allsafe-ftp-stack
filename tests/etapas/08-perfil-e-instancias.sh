@@ -21,6 +21,7 @@ preparar "$ENVB" -b "$((FTP_PORTA + 1))" "$((PAINEL_PORTA + 1))" "$((PASSIVA + 1
 a_ids="$(ids)"
 ENV_FILE="$ENVB" ./deploy.sh < /dev/null > "$W/deploy-b.log" 2>&1; r=$?
 for arquivo in "$T/segredos-b"/*-senha*.txt; do [[ -f "$arquivo" ]] && proibir "$(head -1 "$arquivo")"; done
+proibir "$(grep -m 1 '^AGE-SECRET-KEY-' "$T/segredos-b/backup-chave-privada.txt" 2>/dev/null)"
 tr -d '\r\n' < "$T/segredos-b/ftp-usuario-inicial-senha.txt" > "$W/inicial-b.senha" 2>/dev/null
 saude_b="$(saude "$NOME-b" "$NOME-b-painel" "$NOME-b-nginx")"; saude_a="$(saude "$FTP" "$PAINEL" "$NGINX")"
 FB="ftp://$IP:$((FTP_PORTA + 1))"
@@ -41,14 +42,14 @@ ENV_FILE="$ENVB" ./deploy.sh --check-only < /dev/null > "$W/migra-conferir.log" 
 so_aviso="$([[ "$(grep -c '^AVISO: esta instalação usa nomes antigos' "$W/migra-conferir.log")" == 1 && -f "$SB/ftp_password.txt" && "$(grep -c '^FTP_PUBLIC_IP=' "$ENVB")" == 1 && ! -e "$T/copias-b" ]] && echo 'avisa e não altera' || echo 'ALTEROU OU NÃO AVISOU')"
 ENV_FILE="$ENVB" ./deploy.sh < /dev/null > "$W/migra.log" 2>&1; r_m=$?
 convertidos="$(grep -c '^Convertido: ' "$W/migra.log")"
-nomes_b="$(find "$SB" -maxdepth 1 -type f -printf '%f\n' | sort | tr '\n' ' ')"
+nomes_b="$(find "$SB" -maxdepth 1 -type f -printf '%f\n' | LC_ALL=C sort | tr '\n' ' ')"
 soma_depois="$(cat "$SB/ftp-usuario-inicial-senha.txt" "$SB/painel-admin-inicial-senha.txt" "$SB/painel-admin-inicial-senha-hash.txt" 2>/dev/null | sha256sum | cut -c1-64)"
 copia_env="$(find "$T/copias-b" -mindepth 2 -maxdepth 2 -path '*-antes-da-migracao-de-nomes/env' 2>/dev/null | head -1)"
 na_copia="$(find "$T/copias-b" -type f 2>/dev/null | wc -l)"; modo_copia="$(stat -c '%a' "${copia_env:-/nonexistent}" 2>/dev/null)"
 r_mb="$(ftp_curl tls "$USUARIO" "$W/inicial-b.senha" "$FB/")"
 ftp_curl tls "$USUARIO" "$W/inicial-b.senha" --disable-epsv "$FB/" > /dev/null; pasv_b="$(grep -a -c "^< 227 .*(${IP//./,}," "$W/curl.err")"
 [[ "$r_c" == 0 && "$so_aviso" == 'avisa e não altera' && "$r_m" == 0 && "$convertidos" == 4 \
-  && "$nomes_b" == "LEIAME.txt ftp-usuario-inicial-senha.txt painel-admin-inicial-senha-hash.txt painel-admin-inicial-senha.txt " \
+  && "$nomes_b" == "LEIAME.txt backup-chave-privada.txt backup-chave-publica.txt ftp-usuario-inicial-senha.txt painel-admin-inicial-senha-hash.txt painel-admin-inicial-senha.txt " \
   && "$soma_antes" == "$soma_depois" && "$(grep -c '^FTP_PASSIVE_IP=' "$ENVB")" == 1 && "$(grep -c '^FTP_PUBLIC_IP=' "$ENVB")" == 0 \
   && "$(env_file="$ENVB" env_valor FTP_PASSIVE_IP)" == "$IP" && -n "$copia_env" && "$na_copia" == 1 && "$modo_copia" == 600 \
   && "$(grep -c '^FTP_PUBLIC_IP=' "$copia_env")" == 1 && "$(segredos_em "$W/migra.log")" == 0 \

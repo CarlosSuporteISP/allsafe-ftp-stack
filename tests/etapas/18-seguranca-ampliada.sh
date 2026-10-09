@@ -140,12 +140,12 @@ achado seguranca "Custo do argon2id das senhas do FTP" "Sem a opção -C, o pure
 
 # ------------------------------------------------------------------ cadastro e segredos fora do alcance da web
 alvos=(/auth/pureftpd.passwd /auth/pureftpd.pdb /pureftpd.passwd /painel/administradores /painel/auditoria.log /auditoria.log
-  /.env /.secrets/ftp-usuario-inicial-senha.txt /run/secrets/painel_admin_inicial_senha_hash /.git/config /compose.yaml /nginx/tls/painel-key.pem
+  /.env /.secrets/ftp-usuario-inicial-senha.txt /.secrets/backup-chave-privada.txt /run/secrets/painel_admin_inicial_senha_hash /.git/config /compose.yaml /nginx/tls/painel-key.pem
   /etc/passwd /proc/self/environ /marca/../../auth/pureftpd.passwd /%2e%2e/%2e%2e/auth/pureftpd.passwd /arquivos/..%2f..%2fauth/pureftpd.passwd)
 entregou=0; vazou=0; ev_sem=""; ev_com=""
 for alvo in "${alvos[@]}"; do
-  sem="$(tela --path-as-is "$B$alvo")"; vazou=$((vazou + $(tem 'argon2id|scrypt\$|BEGIN |root:x:|FTP_USER=')))
-  com="$(tela --path-as-is -b "$J" "$B$alvo")"; vazou=$((vazou + $(tem 'argon2id|scrypt\$|BEGIN |root:x:|FTP_USER=')))
+  sem="$(tela --path-as-is "$B$alvo")"; vazou=$((vazou + $(tem 'argon2id|scrypt\$|BEGIN |AGE-SECRET-KEY-|root:x:|FTP_USER=')))
+  com="$(tela --path-as-is -b "$J" "$B$alvo")"; vazou=$((vazou + $(tem 'argon2id|scrypt\$|BEGIN |AGE-SECRET-KEY-|root:x:|FTP_USER=')))
   [[ "${sem%% *}" =~ ^(303|400|404)$ && "${com%% *}" =~ ^(400|404)$ ]] || entregou=$((entregou + 1))
   ev_sem+="${sem%% *} "; ev_com+="${com%% *} "
 done

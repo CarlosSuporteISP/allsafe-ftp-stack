@@ -404,6 +404,16 @@ painel-admin-inicial-senha-hash.txt
   enquanto não existe nenhum. Não é a senha e não entra no campo de senha. Os administradores e o
   hash da senha atual de cada um ficam em DATA_DIR/painel/administradores, alterado pelo painel.
 
+backup-chave-privada.txt
+  Chave que abre as cópias de segurança (./scripts/restaurar.sh). Gerada na instalação e nunca
+  regravada. GUARDE UMA CÓPIA FORA DESTE SERVIDOR: sem ela nenhuma cópia abre, e ela não tem como
+  ser recuperada. Quem só faz a cópia não precisa dela: pode ficar só no cofre e voltar para cá
+  na hora de restaurar.
+
+backup-chave-publica.txt
+  Chave que cifra as cópias de segurança (./scripts/backup.sh). Sai da chave privada e é regravada
+  pelo ./deploy.sh enquanto a privada estiver aqui. Não é segredo: com ela só se cifra, não se abre.
+
 Perdeu a senha do painel: ./scripts/painel-senha.sh --gerar   (outro administrador: --usuario NOME)
 Estes arquivos não entram na cópia do ./scripts/backup.sh: guarde-os no seu cofre de senhas.
 LEIAME
@@ -431,6 +441,32 @@ if [[ ! -s "$painel_hash" ]]; then
   ENV_FILE="$env_file" scripts/painel-senha.sh --inicial < "$painel_senha"
 fi
 chmod 0600 "$painel_hash"
+
+# Chaves da cópia de segurança (age): a pública cifra, só a privada abre. O par nasce na primeira
+# execução, pelo age-keygen da imagem recém-construída, e a privada nunca é regravada. Com a privada
+# presente, a pública é sempre tirada dela; só com a pública, o servidor faz cópia e não restaura.
+chave_privada="$secrets_dir/backup-chave-privada.txt"
+chave_publica="$secrets_dir/backup-chave-publica.txt"
+imagem_ftp="$(env_valor FTP_IMAGE allsafe-ftp:local)"
+age_keygen() {
+  docker run --rm -i --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true \
+    --entrypoint age-keygen "$imagem_ftp" "$@"
+}
+if [[ ! -s "$chave_privada" && ! -s "$chave_publica" ]]; then
+  if ! erro="$(age_keygen 2>&1 > "$chave_privada" < /dev/null)"; then
+    rm -f -- "$chave_privada"
+    die "não foi possível gerar a chave da cópia de segurança: $erro"
+  fi
+  echo "Gerada a chave da cópia de segurança em $chave_privada (0600)."
+  echo "GUARDE UMA CÓPIA DELA FORA DESTE SERVIDOR: sem ela nenhuma cópia de segurança abre (doc/backup.md)."
+fi
+if [[ -s "$chave_privada" ]]; then
+  chmod 0600 "$chave_privada"
+  age_keygen -y < "$chave_privada" > "$chave_publica.novo" \
+    || { rm -f -- "$chave_publica.novo"; die "$chave_privada não é uma chave age válida. Ponha de volta a chave guardada no cofre; nada foi alterado nela."; }
+  mv -f -- "$chave_publica.novo" "$chave_publica"
+fi
+chmod 0600 "$chave_publica"
 
 # Sobe e espera os três containers ficarem healthy; só então informa onde acessar. O Docker publica
 # as portas passivas uma a uma: nos perfis grandes a subida leva minutos, e a espera acompanha.

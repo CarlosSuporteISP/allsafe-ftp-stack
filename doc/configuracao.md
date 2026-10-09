@@ -92,9 +92,9 @@ A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../.env.e
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
 | `DATA_DIR` | Pasta do host com os dados da stack: `dados/` (arquivos enviados), `auth/` (PureDB), `certs/` (TLS do FTP), `painel/` (certificado e auditoria do painel) e `nginx/` (o soquete e a cópia do certificado que o nginx lê). Montada por _bind mount_; a stack não cria volume nomeado | Caminho absoluto | `/srv/allsafe-ftp-stack/data` |
-| `BACKUP_DIR` | Pasta do host onde o `scripts/backup.sh` grava as cópias de segurança e o `scripts/restaurar.sh` as procura. Nasce com modo `0700` e tem de ficar fora de `DATA_DIR`: [Backup e restauração](backup.md) | Caminho absoluto | `/srv/allsafe-ftp-stack/backups` |
+| `BACKUP_DIR` | Pasta do host onde o `scripts/backup.sh` grava as cópias de segurança, cifradas, e o `scripts/restaurar.sh` as procura. Nasce com modo `0700` e tem de ficar fora de `DATA_DIR`: [Backup e restauração](backup.md) | Caminho absoluto | `/srv/allsafe-ftp-stack/backups` |
 | `TEMP_DIR` | Pasta do host para temporários: instância de teste, coleta de diagnóstico | Caminho absoluto | `/srv/allsafe-ftp-stack/tmp` |
-| `SECRETS_DIR` | Pasta dos segredos, um arquivo por segredo, modo `0700` | Caminho absoluto ou relativo à pasta do projeto | `./.secrets` |
+| `SECRETS_DIR` | Pasta dos segredos, um arquivo por segredo, modo `0700`: as senhas iniciais e o par de chaves da cópia de segurança | Caminho absoluto ou relativo à pasta do projeto | `./.secrets` |
 | `STACK_NAME` | Nome do projeto no Compose | Minúsculas, números e hífen | `allsafe-ftp-stack` |
 | `FTP_CONTAINER_NAME` | Nome do container e do host do FTP | Nome de container | `allsafe-ftp` |
 | `PAINEL_CONTAINER_NAME` | Nome do container e do host do painel | Nome de container | `allsafe-ftp-painel` |

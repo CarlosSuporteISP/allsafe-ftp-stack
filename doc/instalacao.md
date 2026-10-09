@@ -132,7 +132,7 @@ Contato de segurança: não publicado. Para publicar, preencha SEGURANCA_CONTATO
         e rode ./deploy.sh de novo (política do projeto: SECURITY.md).
 ```
 
-O resumo diz **onde** está cada senha e nunca a mostra. O `LEIAME.txt` da pasta `.secrets/` explica para que serve cada arquivo dela. Na primeira vez aparecem também `Gerada uma senha forte em .secrets/ftp-usuario-inicial-senha.txt (0600). Guarde-a para o cliente FTP.` e `Gerada uma senha forte para o painel em .secrets/painel-admin-inicial-senha.txt (0600).`
+O resumo diz **onde** está cada senha e nunca a mostra. O `LEIAME.txt` da pasta `.secrets/` explica para que serve cada arquivo dela. Na primeira vez aparecem também `Gerada uma senha forte em .secrets/ftp-usuario-inicial-senha.txt (0600). Guarde-a para o cliente FTP.`, `Gerada uma senha forte para o painel em .secrets/painel-admin-inicial-senha.txt (0600).` e `Gerada a chave da cópia de segurança em .secrets/backup-chave-privada.txt (0600).`, com o lembrete de guardar essa chave fora do servidor: [Backup e restauração](backup.md#chave).
 
 Abra o endereço do painel no navegador e entre com o usuário `admin` (o de `PAINEL_ADMIN_USER`) e a senha de `.secrets/painel-admin-inicial-senha.txt`. O primeiro acesso, o aviso de certificado e a troca do usuário e da senha estão em [Painel web](painel.md#abrir).
 
@@ -154,7 +154,7 @@ O [`deploy.sh`](../deploy.sh), nesta ordem:
 7. cria as pastas `dados/`, `auth/`, `certs/`, `painel/` e `nginx/` em `DATA_DIR` (sem permissão para criar, para com `ERRO: não foi possível criar as pastas em ...` e o comando que cria a pasta de cima), gera a senha em `.secrets/ftp-usuario-inicial-senha.txt` se o arquivo estiver vazio e grava o `.secrets/LEIAME.txt`;
 8. roda `docker compose --env-file .env config --quiet`, que falha cedo se a configuração estiver inválida;
 9. `docker compose build`, que constrói as três imagens (com `--atualizar`, `build --no-cache`);
-10. gera a senha inicial do painel e grava o hash dela, se ainda não houver hash;
+10. gera a senha inicial do painel e grava o hash dela, se ainda não houver hash, e cria o par de chaves da cópia de segurança, se nenhuma das duas existir (com a privada presente, só refaz a pública);
 11. `docker compose up -d --wait`, que só volta com os três containers `healthy` (limite de 180 s mais um quarto de segundo por porta passiva);
 12. `docker compose ps`, o resumo com os endereços, o modo de TLS e o lugar de cada senha e, nos modos `0` e `1`, o aviso de FTP sem criptografia.
 

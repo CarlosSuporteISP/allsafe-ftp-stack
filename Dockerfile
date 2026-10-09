@@ -93,6 +93,11 @@ LABEL org.opencontainers.image.title="AllSafe FTP" \
       org.opencontainers.image.description="Pure-FTPd isolado com usuarios virtuais presos a propria pasta" \
       org.opencontainers.image.vendor="AllSafe"
 
+# age cifra e abre a cópia de segurança (scripts/backup.sh e scripts/restaurar.sh), que rodam nesta imagem.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends age \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --chmod=0755 ftp/entrypoint.sh /usr/local/sbin/allsafe-ftp-entrypoint
 COPY --chmod=0755 ftp/saude.sh /usr/local/sbin/allsafe-ftp-saude
 COPY --chmod=0755 ftp/porteiro.sh /usr/local/sbin/allsafe-ftp-porteiro

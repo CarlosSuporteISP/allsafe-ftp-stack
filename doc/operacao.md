@@ -120,18 +120,18 @@ docker compose restart ftp
 Um comando guarda os arquivos dos equipamentos, os usuários, os certificados e a auditoria do painel em um arquivo de `BACKUP_DIR`; outro devolve a stack ao estado de uma cópia:
 
 ```bash
-./scripts/backup.sh                                              # grava a cópia, com a stack no ar
-./scripts/backup.sh --listar                                     # mostra as cópias que existem
-./scripts/restaurar.sh allsafe-ftp-stack-AAAAMMDD-HHMMSS.tar.gz  # volta ao estado da cópia
+./scripts/backup.sh                                                  # grava a cópia cifrada, com a stack no ar
+./scripts/backup.sh --listar                                         # mostra as cópias que existem
+./scripts/restaurar.sh allsafe-ftp-stack-AAAAMMDD-HHMMSS.tar.gz.age  # volta ao estado da cópia
 ```
 
-**Resultado esperado:** `Cópia gravada: <BACKUP_DIR>/allsafe-ftp-stack-AAAAMMDD-HHMMSS.tar.gz (...)` no primeiro comando e, na restauração, `Restaurado e no ar (healthy).`
+**Resultado esperado:** `Cópia gravada: <BACKUP_DIR>/allsafe-ftp-stack-AAAAMMDD-HHMMSS.tar.gz.age (<tamanho>, cifrada)` no primeiro comando e, na restauração, `Restaurado e no ar (healthy).`
 
-O que entra na cópia, como desfazer uma restauração, como restaurar em outro servidor e como agendar a cópia estão em [Backup e restauração](backup.md).
+O que entra na cópia, como guardar a chave que a abre, como desfazer uma restauração, como restaurar em outro servidor e como agendar a cópia estão em [Backup e restauração](backup.md).
 
 Para pegar **um arquivo só**, enviado por um equipamento, use a aba Arquivos do painel: [Arquivos e download](painel.md#arquivos). O dono dos arquivos pega os dele do mesmo jeito, entrando no painel com o usuário e a senha do FTP: [Usuário do FTP no painel](painel.md#usuario-ftp). No host, o mesmo arquivo está na pasta do usuário, dentro de `DATA_DIR/dados`: a aba Usuários mostra o caminho de cada um.
 
-> ⚠️ A cópia contém o hash das senhas e as chaves privadas dos certificados: trate como dado sensível e leve-a também para fora do servidor. O `.env` e os arquivos de `.secrets/` não entram na cópia: guarde-os à parte, em um cofre de senhas.
+> ⚠️ A cópia contém o hash das senhas e as chaves privadas dos certificados, e por isso sai cifrada: leve-a também para fora do servidor. Só `.secrets/backup-chave-privada.txt` a abre: guarde essa chave em um cofre de senhas, separada das cópias, junto com o `.env` e os outros arquivos de `.secrets/`, que também não entram na cópia.
 
 ---
 
