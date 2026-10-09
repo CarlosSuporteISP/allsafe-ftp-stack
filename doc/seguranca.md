@@ -30,7 +30,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [FTP sem TLS](#ftp-sem-tls) · [TLS por usuário](#tls-por-usuario) · [Bloqueio por tentativa](#bloqueio-por-tentativa) · [Antes de produção](#o-que-endurecer-antes-de-producao) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Sem senha, senha aleatória, exaustão e acesso direto ao cadastro](#sem-senha-e-exaustao) · [Custo das senhas do FTP](#custo-das-senhas) · [Contato de segurança e robôs de busca](#contato-de-seguranca) · [Conformidade com as RFCs](#conformidade-rfc) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
+[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [Painel por proxy ou túnel](#painel-por-proxy) · [FTP sem TLS](#ftp-sem-tls) · [TLS por usuário](#tls-por-usuario) · [Bloqueio por tentativa](#bloqueio-por-tentativa) · [Antes de produção](#o-que-endurecer-antes-de-producao) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Sem senha, senha aleatória, exaustão e acesso direto ao cadastro](#sem-senha-e-exaustao) · [Custo das senhas do FTP](#custo-das-senhas) · [Contato de segurança e robôs de busca](#contato-de-seguranca) · [Conformidade com as RFCs](#conformidade-rfc) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
 
 </details>
 
@@ -40,7 +40,7 @@ flowchart LR
 
 ## 🧱 Só em rede privada, atrás de firewall
 
-> ⚠️ **Esta stack não é para a internet.** FTP é um protocolo antigo, o que passa por ele aqui são configurações inteiras de rede, e o painel web administra os usuários. Use **apenas em rede interna**, com IP privado, atrás de firewall. Endereço público só entra por uma opção explícita, com alerta: [IP público](#ip-publico).
+> ⚠️ **De fábrica, esta stack não vai para a internet.** FTP é um protocolo antigo, o que passa por ele aqui são configurações inteiras de rede, e o painel web administra os usuários. O uso previsto é **em rede interna**, com IP privado, atrás de firewall. Publicar é opcional e é escolha de quem instala, por dois caminhos independentes, cada um com o seu alerta: aceitar [IP público](#ip-publico) no FTP e no painel, ou publicar [só o painel por proxy ou túnel](#painel-por-proxy), sem expor o FTP.
 
 | Regra | O que fazer |
 |---|---|
@@ -75,9 +75,9 @@ Além do firewall, o `deploy.sh` e os containers **recusam por código**, por pa
 
 <a name="ip-publico"></a>
 
-## 🌐 IP público: só por escolha, com firewall
+## 🌐 IP público: opcional, por escolha de quem instala, com firewall
 
-> ⚠️ **Alerta: ligar esta opção põe o FTP e o painel na internet.** Servidor exposto é varrido e recebe tentativa de senha o tempo todo, e por esta stack passam configurações inteiras de rede. O padrão, `REDE_PERMITIR_IP_PUBLICO=nao`, recusa qualquer endereço público. Ligue só quando não houver como chegar por rede interna ou por VPN, e **só com firewall no servidor**. Sem firewall, o risco é de quem ligou a opção.
+> ⚠️ **Alerta: ligar esta opção põe o FTP e o painel na internet.** Servidor exposto é varrido e recebe tentativa de senha o tempo todo, e por esta stack passam configurações inteiras de rede. O padrão, `REDE_PERMITIR_IP_PUBLICO=nao`, recusa qualquer endereço público. Ligar é opcional: a decisão é de quem instala o serviço, e a stack não impede, só avisa. A recomendação é ligar apenas quando não houver como chegar por rede interna ou por VPN, e **só com firewall no servidor**. A escolha e o risco são de quem ligou a opção. Para publicar só o painel, sem o FTP, use o [proxy ou túnel](#painel-por-proxy).
 
 A opção existe para o servidor que só tem endereço público, como uma VPS, e para o equipamento que chega por um endereço fora das faixas privadas, como o do CGNAT (`100.64.0.0/10`).
 
@@ -94,7 +94,7 @@ A opção existe para o servidor que só tem endereço público, como uma VPS, e
 ./deploy.sh
 ```
 
-**Resultado esperado:** o `--check-only` termina com `OK: perfil '<perfil>', endereço público aceito, recursos do servidor e compose validados; nada foi alterado.`, seguido do `ALERTA: REDE_PERMITIR_IP_PUBLICO=sim: a stack aceita endereço público.` O `deploy.sh` sobe os três containers e fecha com o mesmo `ALERTA`, que também fica no registro de cada container e no painel: na tela de entrada, no rodapé e na linha **Endereço público** da aba Segurança.
+**Resultado esperado:** o `--check-only` termina com `OK: perfil '<perfil>', endereço público aceito, recursos do servidor e compose validados; nada foi alterado.`, seguido do `ALERTA: REDE_PERMITIR_IP_PUBLICO=sim: a stack aceita endereço público, por opção de quem instalou.` O `deploy.sh` sobe os três containers e fecha com o mesmo `ALERTA`, que também fica no registro de cada container e no painel: na tela de entrada, no rodapé e na linha **Endereço público** da aba Segurança.
 
 | Com a opção ligada | O que acontece |
 |---|---|
@@ -113,6 +113,103 @@ A opção existe para o servidor que só tem endereço público, como uma VPS, e
 - Com a opção ligada, o painel aceita ser aberto por qualquer endereço IPv4 digitado no lugar do nome; por nome, continua valendo só `localhost` e o `PAINEL_CERT_CN`.
 - O limite de tentativas de senha, a sessão curta e os limites de pedidos do nginx continuam valendo, mas não substituem o firewall: reduzem a velocidade do ataque, não a exposição.
 - As recusas e o alerta são conferidos pela [bateria de testes](scripts.md#testar); as mensagens estão em [Solução de problemas](solucao-de-problemas.md#o-container-nao-sobe).
+
+</details>
+
+---
+
+<a name="painel-por-proxy"></a>
+
+## 🔌 Só o painel publicado, por proxy ou túnel
+
+> ⚠️ **Alerta: preencher `PAINEL_PROXY_CONFIAVEL` põe a tela de entrada do painel ao alcance de quem chega ao proxy ou ao túnel.** É opcional e é escolha de quem instala. Quem pode chegar à tela passa a ser decidido lá: restrinja o acesso no proxy ou no túnel. O FTP não passa por ele e continua só nos endereços da stack.
+
+Serve para quem quer abrir o painel de fora sem expor o FTP: um nginx de borda, um túnel (como o da Cloudflare) ou outro proxy HTTPS recebe o acesso e repassa ao painel, que continua em IP privado. `REDE_PERMITIR_IP_PUBLICO` fica em `nao`.
+
+Sem a opção, um proxy na frente já funciona, mas todo acesso chega com o endereço do proxy: o bloqueio por senha errada passa a valer para todos de uma vez, e a sessão, a auditoria e os limites de pedidos deixam de separar uma pessoa da outra. A opção resolve isso: o nginx da stack passa a usar o endereço que o proxy informa em `X-Forwarded-For`, e **só** quando a conexão vem de um endereço da lista.
+
+**Passo a passo:**
+
+1. Suba o proxy ou o túnel apontando para o painel (`https://<PAINEL_BIND_IP>:<PAINEL_PORT>`), repassando o `Host` como o navegador mandou e acrescentando o endereço de quem acessa ao `X-Forwarded-For`.
+2. Descubra com que endereço ele chega ao nginx da stack: faça um acesso por ele e leia o primeiro campo da última linha do registro.
+
+```bash
+docker compose logs --tail 5 nginx
+```
+
+**Resultado esperado:** uma linha como `172.29.1.1 GET /entrar 200`. Proxy ou túnel no **mesmo servidor** chega com o primeiro endereço da `FTP_SUBNET` (`172.29.1.1`, no padrão); em outro servidor, com o IP privado dele.
+
+3. No `.env`, ponha esse endereço em `PAINEL_PROXY_CONFIAVEL` e o nome público em `PAINEL_CERT_CN`; depois, confira e aplique:
+
+```bash
+./deploy.sh --check-only
+./deploy.sh
+```
+
+**Resultado esperado:** os dois comandos fecham com `ALERTA: PAINEL_PROXY_CONFIAVEL=<endereço>: o painel está publicado por proxy ou túnel, por opção de quem instalou.` O mesmo alerta fica no registro dos containers do painel e do nginx e no painel: na tela de entrada, no rodapé e na linha **Painel por proxy ou túnel** da aba Segurança.
+
+4. Abra o painel pelo nome público, entre e confira na aba Atividade que a coluna **De onde** mostra o seu endereço, e não o do proxy.
+
+| Com a opção preenchida | O que acontece |
+|---|---|
+| Conexão vinda de um endereço da lista | Vale o **último** endereço do `X-Forwarded-For`, o que o proxy acrescentou; o que o cliente escreveu antes é descartado |
+| Conexão vinda de qualquer outro endereço | O cabeçalho é ignorado: vale o endereço da conexão |
+| Cabeçalho ausente ou com valor que não é endereço | Vale o endereço da conexão, que é o do proxy |
+| `PAINEL_REDES_PERMITIDAS` | Continua conferindo quem **abriu a conexão**: o proxy tem de estar nela, e quem acessa por ele não |
+| Limite de tentativas de senha, sessão, auditoria e limites de pedidos | Passam a contar pelo endereço de quem acessa |
+| Rede inteira (`10.0.0.0/8`), `0.0.0.0`, mais de 8 endereços, endereço fora de `PAINEL_REDES_PERMITIDAS` | Recusados: o proxy é sempre um endereço escolhido |
+| Endereço público na lista | Recusado, a não ser com `REDE_PERMITIR_IP_PUBLICO=sim` |
+
+**Cuidados de quem publica:**
+
+- **Restrinja no proxy ou no túnel** quem chega à tela de entrada: lista de endereços, autenticação na borda ou os dois. O limite de tentativas e a sessão curta do painel reduzem a velocidade do ataque, não a exposição.
+- **Confira o certificado do painel no proxy**, em vez de desligar a conferência: o painel usa certificado autoassinado, válido para o `PAINEL_CERT_CN`, e a parte pública dele fica em `DATA_DIR/painel/tls/painel-cert.pem`.
+- **Com o proxy no mesmo servidor**, todo acesso feito de dentro do servidor chega pelo mesmo endereço e passa a ser tratado como vindo do proxy. Quem tem terminal no servidor já está dentro do limite de confiança da stack.
+- **Reduza `PAINEL_REDES_PERMITIDAS`** à rede do proxy e à de quem administra por dentro.
+- **Preencha o contato de segurança** (`SEGURANCA_CONTATO_EMAIL`): veja [Contato de segurança](#contato-de-seguranca).
+
+<details>
+<summary>Detalhe técnico — exemplos de borda e onde a opção é conferida</summary>
+
+Exemplo de nginx de borda, no mesmo servidor, com o nome `painel.exemplo.com.br` (troque pelos valores reais):
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name painel.exemplo.com.br;
+    ssl_certificate     /etc/ssl/painel.exemplo.com.br/certificado.pem;
+    ssl_certificate_key /etc/ssl/painel.exemplo.com.br/chave.pem;
+
+    allow 203.0.113.10;          # quem pode chegar à tela de entrada
+    deny  all;
+
+    location / {
+        proxy_pass https://127.0.0.1:8443;
+        proxy_set_header Host $http_host;                               # o nome e a porta que o navegador usou
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;    # acrescenta o endereço de quem acessa
+        proxy_ssl_trusted_certificate /etc/ssl/painel-cert.pem;         # cópia de DATA_DIR/painel/tls/painel-cert.pem
+        proxy_ssl_verify on;
+        proxy_ssl_name painel.exemplo.com.br;
+        proxy_ssl_server_name on;
+    }
+}
+```
+
+**Resultado esperado:** com `PAINEL_CERT_CN=painel.exemplo.com.br` e `PAINEL_PROXY_CONFIAVEL=172.29.1.1`, o painel abre pelo nome público, a entrada funciona e a auditoria registra o endereço de quem acessou.
+
+> O exemplo foi exercitado neste projeto com um nginx de borda no mesmo servidor, em porta alta e com nome de teste: a entrada, a sessão e o endereço na auditoria foram conferidos, e um `X-Forwarded-For` escrito pelo cliente foi descartado. Com `Host $host`, que tira a porta, a entrada por porta diferente de `443` é recusada com `403`, porque a origem do envio deixa de bater; por isso o exemplo usa `$http_host`.
+
+Túnel: aponte o serviço do túnel para `https://127.0.0.1:8443`, com o nome do servidor de origem igual ao `PAINEL_CERT_CN` e a cópia do `painel-cert.pem` como autoridade aceita, sem desligar a conferência de TLS. No túnel da Cloudflare, isso corresponde a `originServerName` e `caPool` em `originRequest`, e a restrição de quem acessa é feita na política de acesso da própria Cloudflare.
+
+> A opção **não foi testada com um túnel real** neste projeto: o que está provado é o comportamento do nginx da stack e do painel diante de um proxy que repassa `Host` e `X-Forwarded-For`. O proxy da Cloudflare **sem** túnel chega por faixas públicas inteiras e fica fora desta opção, que só aceita endereço escolhido.
+
+Onde a opção é conferida:
+
+- A variável chega aos containers do painel e do nginx pelo [`compose.yaml`](../compose.yaml). A função `exigir_proxies`, de [`scripts/rede-privada.sh`](../scripts/rede-privada.sh), é chamada pelo [`deploy.sh`](../deploy.sh) e pelos dois entrypoints; o painel confere de novo em [`painel/config.py`](../painel/config.py).
+- No [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo), a lista vira um bloco `geo`, e o endereço de quem acessa (`$cliente`) é o último do `X-Forwarded-For` só quando a conexão vem da lista. O módulo `realip` fica de fora de propósito: com ele, o `allow` e o `deny` passariam a valer sobre o endereço informado, e não sobre quem abriu a conexão.
+- O nginx manda ao painel o endereço da conexão (`X-Real-IP`) e o de quem acessa (`X-Cliente-IP`), sempre regravados por ele. O painel só usa o segundo quando o primeiro está na lista ([`painel/atendimento.py`](../painel/atendimento.py)); os dois escritos pelo cliente não chegam ao painel.
+- O endereço informado pode ser IPv4 ou IPv6. Os endereços da lista são IPv4.
+- As recusas, o alerta e o endereço forjado são conferidos pela [bateria de testes](scripts.md#testar).
 
 </details>
 
@@ -517,7 +614,7 @@ flowchart LR
 | 9 | Adivinhação do usuário e da senha do painel | Senha inicial de 48 caracteres, guardada só como hash `scrypt`; a recusa é a mesma para usuário que não existe e para senha errada; cinco erros em 15 minutos bloqueiam o endereço (`429`); antes disso, o nginx limita os pedidos por endereço |
 | 10 | Ação forjada no painel (CSRF, _clickjacking_) | Token CSRF por sessão, conferência do `Origin`, cookie `SameSite=Strict`, `frame-ancestors 'none'` e `X-Frame-Options: DENY` |
 | 11 | Roubo da sessão do painel | Só HTTPS, fechado no nginx (TLS 1.2 ou 1.3); cookie `__Host-` com `Secure` e `HttpOnly`; sessão presa ao endereço do cliente, 15 minutos sem uso e teto de 8 horas |
-| 12 | Painel exposto fora da rede interna | Bind só em IP privado; lista de redes permitidas aplicada pelo nginx e conferida de novo pelo painel; conferência do `Host`; o `deploy.sh` e os containers recusam valor público, a não ser com `REDE_PERMITIR_IP_PUBLICO=sim` |
+| 12 | Painel exposto fora da rede interna | Bind só em IP privado; lista de redes permitidas aplicada pelo nginx e conferida de novo pelo painel; conferência do `Host`; o `deploy.sh` e os containers recusam valor público, a não ser com `REDE_PERMITIR_IP_PUBLICO=sim`. Publicar só o painel por [proxy ou túnel](#painel-por-proxy) é opção de quem instala, com alerta |
 | 13 | Painel comprometido atingir o host | Sem socket do Docker, raiz somente leitura, três capabilities, só a biblioteca padrão do Python e nenhum JavaScript |
 | 14 | Enxurrada de pedidos ou pedido malformado no painel | O nginx recebe primeiro: 20 pedidos por segundo por endereço (rajada de 40), 16 conexões por endereço, pedido de até 16 KiB e prazos de 15 s. O que passa disso recebe `429`, `413` ou `400` sem chegar ao painel |
 | 15 | Falha no servidor web exposto | O painel não publica porta nem escuta na rede: só o nginx fica exposto, e ele roda sem root, sem nenhuma capability, com raiz somente leitura, enxergando só `DATA_DIR/nginx` em leitura, sem a senha e sem o hash |
@@ -533,6 +630,7 @@ flowchart LR
 | 25 | Apagar ou renomear, pelo painel, o que está fora das pastas dos dados, ou apagar backup com um navegador esquecido aberto ou por pedido forjado | O caminho passa pelas mesmas conferências da leitura (`400` para `..`, caminho absoluto e byte nulo; `403` por dentro de link simbólico) e a ação é feita em relação à pasta já aberta. O apagamento não segue link: o link sai, o destino fica. Renomear não muda o item de pasta nem substitui outro. Apagar pede a caixa de confirmação e a senha atual do administrador, além da sessão, do token do formulário e do `Origin`; a senha errada conta para o bloqueio do endereço. A pasta de um usuário do FTP só sai junto com ele. O usuário do FTP não tem essas rotas (`404`) |
 | 26 | Adivinhação da senha de um usuário pelo FTP, ou senhas erradas de propósito para tirar a entrada dele | [Bloqueio por tentativa](#bloqueio-por-tentativa): 5 senhas erradas do mesmo endereço em 15 minutos bloqueiam o usuário para aquele endereço, com limite próprio por usuário no painel. O bloqueio vale só para o endereço que errou: o equipamento que chega de outro endereço continua entrando. Nome que não está no cadastro não vira contagem nem arquivo, e o bloqueio inválido ou vencido não bloqueia. Se o processo que conta ou o que recusa parar, o container do FTP encerra em vez de seguir sem o bloqueio |
 | 27 | Leitura de uma cópia de segurança que saiu do servidor (mídia perdida, outra máquina, pasta de rede) | A cópia é cifrada pelo `scripts/backup.sh` com a chave pública de `.secrets/`, e nada sem cifra chega ao disco; só a chave privada a abre. Cada bloco é autenticado: cópia alterada ou cortada não restaura, e a recusa vem antes de qualquer mudança na stack: [Backup e restauração](backup.md#chave) |
+| 28 | Endereço do cliente forjado por cabeçalho, para escapar do bloqueio por tentativa ou tomar a sessão de outro | `X-Forwarded-For` é ignorado de fábrica; com `PAINEL_PROXY_CONFIAVEL`, só vale o último endereço, e só em conexão vinda do proxy escolhido. `X-Real-IP` e `X-Cliente-IP` são sempre regravados pelo nginx |
 
 > ⚠️ **Limite da ameaça nº 1:** no modo `2`, o conteúdo do arquivo só é criptografado se o cliente pedir proteção do canal de dados (`PROT P`). Um equipamento que negocia TLS no login e envia os dados sem proteção é aceito. Só o modo `3` recusa esse caso. A troca do padrão está registrada no plano do projeto.
 
@@ -571,7 +669,7 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 | Página nunca comprimida | O nginx comprime um arquivo só, o `estilo.css`, que é fixo, igual para todos e sem segredo. As páginas do painel saem sempre inteiras, mesmo quando o navegador aceita compressão: elas trazem o token do formulário, e página com segredo comprimida deixa adivinhar o segredo pelo tamanho da resposta (ataque BREACH) |
 | Usuário e senha por administrador | Cada administrador entra com o próprio nome; a senha fica só como hash `scrypt`, em `DATA_DIR/painel/administradores` (`0600`, do `root`); o container nunca vê a senha inicial em texto |
 | Entrada que não revela nomes | Usuário que não existe e senha errada recebem a mesma resposta, depois da mesma conta; o nome digitado não vai para a auditoria nem para os logs |
-| Limite de tentativas | Cinco erros em 15 minutos, somando entrada recusada, de administrador ou de usuário do FTP, e senha atual recusada, bloqueiam o endereço do cliente, mesmo para a senha certa |
+| Limite de tentativas | Cinco erros em 15 minutos, somando entrada recusada, de administrador ou de usuário do FTP, e senha atual recusada, bloqueiam o endereço do cliente, mesmo para a senha certa. O endereço é o da conexão; com o painel [por proxy ou túnel](#painel-por-proxy), o que o proxy escolhido informa |
 | Usuário do FTP só na pasta dele | Com `PAINEL_ACESSO_USUARIOS_FTP=sim`, o usuário do FTP entra com o nome e a senha do FTP, conferidos pelo próprio servidor FTP na rede interna da stack, em TLS e com o certificado conferido. Ele só navega e baixa na pasta do cadastro: não ganha nada que já não tenha por FTP, e perde o envio e a remoção. Com `FTP_TLS_MODE=0`, essa conferência vai em texto puro, sem sair da rede interna da stack |
 | Alteração de administrador confirmada | Criar, trocar senha, trocar nome e remover pedem a senha atual de quem está na sessão; as sessões do administrador alterado são encerradas; ninguém remove a própria conta |
 | Sessão curta | 15 minutos sem uso (`PAINEL_SESSAO_MINUTOS`) e teto de 8 horas; presa ao endereço do cliente; encerrada em `🚪 Sair` e quando o painel reinicia |

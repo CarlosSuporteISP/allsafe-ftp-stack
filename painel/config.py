@@ -95,6 +95,20 @@ def configuracao():
             if rede.prefixlen < 8 or not 1 <= int(rede.network_address) >> 24 <= 223:
                 falha(f'PAINEL_REDES_PERMITIDAS: {rede} não é uma rede aceita (prefixo de /8 a /32; "todo mundo" é recusado)')
         redes.append(rede)
+    # Painel publicado por proxy ou túnel: os endereços de onde o nginx aceita o endereço do cliente.
+    proxies = []
+    for texto in filter(None, (t.strip() for t in amb('PAINEL_PROXY_CONFIAVEL', '').split(','))):
+        try:
+            proxy = ipaddress.ip_address(texto)
+        except ValueError:
+            falha(f'PAINEL_PROXY_CONFIAVEL: "{texto}" não é um endereço IPv4 (um a um, sem máscara)')
+        if proxy.version != 4 or not (privado(proxy) or (publico and 1 <= int(proxy) >> 24 <= 223)):
+            falha(f'PAINEL_PROXY_CONFIAVEL: {proxy} não é IP privado. Endereço público só com REDE_PERMITIR_IP_PUBLICO=sim.')
+        if not any(proxy in rede for rede in redes):
+            falha(f'PAINEL_PROXY_CONFIAVEL: {proxy} está fora de PAINEL_REDES_PERMITIDAS: o nginx recusaria o proxy antes do painel')
+        proxies.append(proxy)
+    if len(proxies) > 8:
+        falha('PAINEL_PROXY_CONFIAVEL aceita até 8 endereços')
     admin = amb('PAINEL_ADMIN_USER', 'admin')
     if not NOME.fullmatch(admin):
         falha('PAINEL_ADMIN_USER inválido: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres')
@@ -135,6 +149,7 @@ def configuracao():
     return {
         'ip_publico': publico,
         'redes': redes,
+        'proxies': proxies,
         'admin_inicial': admin,
         'acesso_usuarios': amb('PAINEL_ACESSO_USUARIOS_FTP', 'sim') == 'sim',
         'inatividade': int(minutos) * 60,

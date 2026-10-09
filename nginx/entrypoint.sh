@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
 # Entrada do container do nginx, a frente web do painel. Por padrão, só para rede privada.
-# Roda sem root: gera a configuração em /run/nginx a partir do modelo e das redes permitidas.
+# Roda sem root: gera a configuração em /run/nginx a partir do modelo, das redes permitidas e dos proxies aceitos.
 set -Eeuo pipefail
 
 die() { echo "FALHA: $*" >&2; exit 1; }
@@ -26,6 +26,14 @@ for rede in "${redes[@]}"; do
   exigir_rede PAINEL_REDES_PERMITIDAS "$rede" || exit 1
   regras+="        allow ${rede};"$'\n'
 done
+# Painel publicado por proxy ou túnel: os endereços de onde X-Forwarded-For é aceito. Vazio = de nenhum.
+PAINEL_PROXY_CONFIAVEL="${PAINEL_PROXY_CONFIAVEL:-}"
+exigir_proxies "$PAINEL_PROXY_CONFIAVEL" "$PAINEL_REDES_PERMITIDAS" || exit 1
+proxies=""
+IFS=',' read -r -a confiaveis <<< "$PAINEL_PROXY_CONFIAVEL"
+for proxy in "${confiaveis[@]}"; do
+  [[ -n "${proxy// /}" ]] && proxies+="        ${proxy// /} 1;"$'\n'
+done
 
 # O painel sobe antes: cria o soquete e entrega a cópia do certificado. Espera curta, para o caso de
 # os dois containers serem iniciados juntos pelo Docker (reinício do host).
@@ -39,6 +47,8 @@ done
 while IFS= read -r linha; do
   if [[ "$linha" == "@REDES@" ]]; then
     printf '%s' "$regras"
+  elif [[ "$linha" == "@PROXIES@" ]]; then
+    printf '%s' "$proxies"
   else
     printf '%s\n' "$linha"
   fi
@@ -46,5 +56,6 @@ done < "$modelo" > "$configuracao"
 
 nginx -e stderr -q -t -c "$configuracao" || die "configuração do nginx recusada"
 aviso_ip_publico >&2
-echo "nginx pronto em 8443/tcp (HTTPS), à frente do painel; redes permitidas: ${PAINEL_REDES_PERMITIDAS}"
+aviso_proxy >&2
+echo "nginx pronto em 8443/tcp (HTTPS), à frente do painel; redes permitidas: ${PAINEL_REDES_PERMITIDAS}; proxy ou túnel aceito: ${PAINEL_PROXY_CONFIAVEL:-nenhum}"
 exec nginx -e stderr -c "$configuracao"

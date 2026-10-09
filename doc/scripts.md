@@ -103,6 +103,7 @@ A pasta [`scripts/`](../scripts/) tem o que roda fora dos containers: no servido
 - Diz, no fim do resumo, se o contato de segurança está publicado: `Contato de segurança: <e-mail>, publicado em /.well-known/security.txt do painel.` ou, com `SEGURANCA_CONTATO_EMAIL` vazia, `Contato de segurança: não publicado.`, com o que preencher. Não bloqueia a instalação.
 - Recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env` e, por padrão, qualquer `FTP_BIND_IP`, `FTP_PASSIVE_IP`, `PAINEL_BIND_IP`, `PAINEL_REDES_PERMITIDAS` ou `PAINEL_CERT_CN` (em forma de IP) fora de rede privada.
 - **Opção de IP público:** `REDE_PERMITIR_IP_PUBLICO` diferente de `nao` e de `sim` para com `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` e código `1`. Com `sim`, aceita IPv4 público de servidor e rede de `/8` a `/32`, continua recusando `0.0.0.0` e rede mais larga, exige `FTP_TLS_MODE` em `2` ou `3` (`ERRO: REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3`) e mostra o `ALERTA` ao final, também no `--check-only`.
+- **Painel por proxy ou túnel:** `PAINEL_PROXY_CONFIAVEL` vazia não muda nada. Preenchida, cada endereço tem de ser IPv4, um a um, privado (ou público com a opção de IP público) e estar dentro de `PAINEL_REDES_PERMITIDAS`, até 8; fora disso, para com `FALHA: PAINEL_PROXY_CONFIAVEL: …` e código `1`. Aceita, o `--check-only` e o fim do deploy fecham com `ALERTA: PAINEL_PROXY_CONFIAVEL=…: o painel está publicado por proxy ou túnel, por opção de quem instalou.` Veja [Segurança](seguranca.md#painel-por-proxy).
 - Se `.secrets/painel-admin-inicial-senha-hash.txt` não existir, gera a senha inicial do painel em `.secrets/painel-admin-inicial-senha.txt` (`0600`) e grava o hash dela, chamando o `scripts/painel-senha.sh --inicial` depois de construir a imagem.
 - Confere a `PAINEL_ACESSO_USUARIOS_FTP` antes de agir: valor diferente de `sim` e de `nao` para com `ERRO: PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'; ...` e código `1`.
 - Confere o `PAINEL_ADMIN_USER` antes de agir: nome fora da regra para com `ERRO: PAINEL_ADMIN_USER inválido em .env: ...` e código `1`. No resumo, mostra o usuário e o arquivo da senha inicial enquanto esse arquivo existir; depois, `usuário e senha: os definidos na aba Administradores ou com ./scripts/painel-senha.sh`.
@@ -491,6 +492,7 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 | `FALHA: segredo /run/secrets/painel_admin_inicial_senha_hash ausente` | `.secrets/painel-admin-inicial-senha-hash.txt` não existe: rode o `deploy.sh` |
 | `FALHA: PAINEL_BIND_IP=… não é IP privado` (ou `PAINEL_CERT_CN`) | endereço fora das faixas privadas, com a opção de IP público em `nao` |
 | `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é rede privada` | a lista tem rede pública ou `0.0.0.0/0`, com a opção de IP público em `nao` |
+| `FALHA: PAINEL_PROXY_CONFIAVEL: …` | a lista de proxies tem rede inteira, valor que não é IPv4, endereço público sem a opção de IP público, endereço fora de `PAINEL_REDES_PERMITIDAS` ou mais de 8 endereços |
 | `FALHA: PAINEL_BIND_IP=… não é um endereço IPv4 de servidor` (ou `PAINEL_CERT_CN`) | com a opção em `sim`, o valor é `0.0.0.0`, multicast ou reservado |
 | `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é uma rede IPv4 aceita` | com a opção em `sim`, a rede é mais larga que `/8`, como `0.0.0.0/0` |
 | `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` | a opção tem outro valor |
@@ -533,6 +535,7 @@ Roda a cada início do container do nginx, já como usuário sem privilégio (`1
 | `FALHA: o nginx desta stack não roda como root: confira 'user' no compose.yaml` | o serviço foi alterado para subir como root |
 | `FALHA: PAINEL_REDES_PERMITIDAS está vazia` | a variável chegou vazia ao container |
 | `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é rede privada. Por padrão esta stack é só para rede interna.` | a lista tem rede pública ou `0.0.0.0/0`, com a opção de IP público em `nao` |
+| `FALHA: PAINEL_PROXY_CONFIAVEL: …` | a lista de proxies tem rede inteira, valor que não é IPv4, endereço público sem a opção de IP público, endereço fora de `PAINEL_REDES_PERMITIDAS` ou mais de 8 endereços |
 | `FALHA: PAINEL_REDES_PERMITIDAS: '…' não é uma rede IPv4 aceita` | com a opção em `sim`, a rede é mais larga que `/8`, como `0.0.0.0/0` |
 | `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` | a opção tem outro valor |
 | `FALHA: soquete do painel ausente em /nginx/painel.sock: o serviço painel está no ar?` | o painel não subiu ou `DATA_DIR/nginx` não está montada nos dois containers |

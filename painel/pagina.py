@@ -72,11 +72,18 @@ def validade(info):
 
 
 def aviso_rede():
+    """Como esta instalação está publicada. Expor à internet é opção de quem instala, e a tela diz quando está ligada."""
+    avisos = ''
     if CFG.get('ip_publico'):
-        return ('<p class="aviso">Endereço público aceito (<code>REDE_PERMITIR_IP_PUBLICO=sim</code>). FTP e painel na internet '
-                'são alvo de varredura e de tentativa de senha o tempo todo: mantenha o firewall do servidor liberando só os '
-                'endereços dos equipamentos e de quem administra.</p>')
-    return '<p class="nota">Uso só em rede privada, atrás de firewall. FTP e painel recusam, por código, escutar em IP público.</p>'
+        avisos += ('<p class="aviso">Endereço público aceito (<code>REDE_PERMITIR_IP_PUBLICO=sim</code>), por opção de quem '
+                   'instalou. FTP e painel na internet são alvo de varredura e de tentativa de senha o tempo todo: mantenha o '
+                   'firewall do servidor liberando só os endereços dos equipamentos e de quem administra.</p>')
+    if CFG.get('proxies'):
+        avisos += ('<p class="aviso">Painel publicado por proxy ou túnel (<code>PAINEL_PROXY_CONFIAVEL</code>), por opção de '
+                   'quem instalou. Quem chega a esta tela é decidido lá: restrinja o acesso no proxy ou no túnel. O FTP não '
+                   'passa por ele.</p>')
+    return avisos or ('<p class="nota">De fábrica, uso só em rede privada, atrás de firewall. Publicar o painel ou o FTP na '
+                      'internet é opção de quem instala, e fica avisado aqui quando está ligada.</p>')
 
 
 def cabeca(titulo, resumo, acao=''):
@@ -99,7 +106,9 @@ def pagina(titulo, miolo, sessao=None, ativa='', porta=False):
                     f'{e(nome)}</span><button type="submit">{icone("sair")}Sair</button></form>')
         topo = ('<header><span class="marca-topo"><img src="/marca/simbolo-64.png" alt="" width="28" height="28">AllSafe FTP</span>'
                 f'{menu}</header>\n')
-    rede = 'endereço público aceito: confira o firewall' if CFG.get('ip_publico') else 'só para rede privada, atrás de firewall'
+    rede = ' · '.join(filter(None, ('endereço público aceito: confira o firewall' if CFG.get('ip_publico') else '',
+                                    'painel publicado por proxy ou túnel' if CFG.get('proxies') else ''))) \
+        or 'só para rede privada, atrás de firewall'
     corpo = f"""<a class="pular" href="#conteudo">Pular para o conteúdo</a>
 {topo}<main id="conteudo">
 {miolo}

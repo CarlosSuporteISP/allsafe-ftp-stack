@@ -225,6 +225,9 @@ IFS=',' read -r -a redes_painel <<< "$(env_valor PAINEL_REDES_PERMITIDAS 127.0.0
 for rede in "${redes_painel[@]}"; do
   exigir_rede PAINEL_REDES_PERMITIDAS "${rede// /}" || exit 1
 done
+# Painel publicado por proxy ou túnel: opção de quem instala; vazio = o endereço do cliente é sempre o da conexão.
+PAINEL_PROXY_CONFIAVEL="$(env_valor PAINEL_PROXY_CONFIAVEL)"
+exigir_proxies "$PAINEL_PROXY_CONFIAVEL" "$(env_valor PAINEL_REDES_PERMITIDAS 127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16)" || exit 1
 # TLS do FTP: 0 e 1 deixam passar senha em texto puro e só existem para equipamento antigo.
 tls_modo="$(env_valor FTP_TLS_MODE 2)"
 case "$tls_modo" in
@@ -318,6 +321,7 @@ if [[ "$check_only" == true ]]; then
   echo "OK: perfil '$perfil_nome', $rede_texto, recursos do servidor e compose validados; nada foi alterado."
   aviso_tls
   aviso_ip_publico
+  aviso_proxy
   exit 0
 fi
 
@@ -508,3 +512,4 @@ aviso_contato
 aviso_tls
 aviso_dispensados
 aviso_ip_publico
+aviso_proxy

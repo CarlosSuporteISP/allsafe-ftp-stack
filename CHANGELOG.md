@@ -6,9 +6,17 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 ## [Não lançado]
 
-O painel foi redesenhado: ícones desenhados no lugar dos emojis, paleta medida nos dois temas e uma tela de entrada nova.
+O painel foi redesenhado: ícones desenhados no lugar dos emojis, paleta medida nos dois temas e uma tela de entrada nova. Quem quiser pode publicar só o painel por proxy ou túnel, sem expor o FTP.
+
+### Adicionado
+
+- **Só o painel publicado, por proxy ou túnel** (`PAINEL_PROXY_CONFIAVEL`, vazia por padrão): com o endereço do proxy ou do túnel na variável, o nginx passa a usar o último endereço do `X-Forwarded-For` como endereço de quem acessa, e só em conexão vinda desse proxy. O limite de tentativas de senha, a sessão, a auditoria e os limites de pedidos contam por quem acessa, e não pelo proxy. O FTP não passa por ele. É opção de quem instala: o `deploy.sh`, os containers do painel e do nginx e o painel (tela de entrada, rodapé e aba Segurança) avisam quando está ligada. O passo a passo, com o exemplo de nginx de borda, está em `doc/seguranca.md`.
+- **Casos de teste** de segurança 93 a 95 e de rede 14: cabeçalho de endereço escrito pelo cliente ignorado, só o proxy aceito informa o endereço, senha errada e sessão contam pelo endereço de quem acessa, e as recusas do `deploy.sh` e dos containers a rede inteira, endereço público, `0.0.0.0`, mais de oito endereços e endereço fora das redes permitidas.
 
 ### Alterado
+
+- **IP público é opção de quem instala**: os avisos do `deploy.sh`, dos containers, do painel e da documentação passam a dizer que aceitar endereço público (`REDE_PERMITIR_IP_PUBLICO=sim`) é escolha de quem instala o serviço. O padrão continua `nao`, e as exigências com a opção ligada não mudaram.
+- **Limites de pedidos e registro do nginx pelo endereço de quem acessa**: sem proxy configurado, é o mesmo endereço da conexão de antes.
 
 - **Ícones próprios no lugar dos emojis**: 31 desenhos de linha, em grade de 24, saem dentro do HTML da própria tela (`painel/icones.py`). Nenhum arquivo de imagem, fonte ou script é pedido a mais, e a política de conteúdo do painel não muda.
 - **Paleta em OKLCH**, com papéis nomeados (fundo, superfície, texto, ação, estados) e contraste calculado nos temas claro e escuro. As misturas de cor dos avisos e das marcas são feitas em OKLab.

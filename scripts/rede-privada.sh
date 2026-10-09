@@ -4,6 +4,7 @@
 # Por padrão a stack só publica em IPv4 privado: 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12 e 192.168.0.0/16.
 # CGNAT (100.64.0.0/10) e qualquer IP público só passam com REDE_PERMITIR_IP_PUBLICO=sim, por escolha
 # de quem instala. IPv6 e 0.0.0.0 ficam de fora sempre: o endereço é escolhido, nunca "todos".
+# Publicar só o painel, por proxy ou túnel, é a outra opção de quem instala: PAINEL_PROXY_CONFIAVEL.
 
 # ipv4_valido <ip>: verdadeiro para um IPv4 bem formado; os octetos ficam em IPV4_A a IPV4_D.
 ipv4_valido() {
@@ -85,11 +86,63 @@ exigir_rede() {
   return 1
 }
 
+# ip_na_rede <ip> <ip/prefixo>: verdadeiro quando o endereço IPv4 está dentro da rede.
+ip_na_rede() {
+  local ip rede prefixo="${2#*/}" mascara
+  ipv4_valido "${1:-}" || return 1
+  ip=$(( (IPV4_A << 24) | (IPV4_B << 16) | (IPV4_C << 8) | IPV4_D ))
+  [[ "${2:-}" == */* && "$prefixo" =~ ^[0-9]{1,2}$ ]] && (( 10#$prefixo <= 32 )) && ipv4_valido "${2%/*}" || return 1
+  rede=$(( (IPV4_A << 24) | (IPV4_B << 16) | (IPV4_C << 8) | IPV4_D ))
+  mascara=$(( (0xFFFFFFFF << (32 - 10#$prefixo)) & 0xFFFFFFFF ))
+  (( (ip & mascara) == (rede & mascara) ))
+}
+
+# exigir_proxies <lista> <redes permitidas>: confere PAINEL_PROXY_CONFIAVEL, os endereços de onde o nginx aceita
+# o endereço do cliente em X-Forwarded-For. Vazio = nenhum. Só endereço, um a um e no máximo oito: rede inteira
+# não entra, porque qualquer máquina dela poderia se passar por outro cliente. Cada um tem de estar em uma das
+# redes de PAINEL_REDES_PERMITIDAS: fora delas o nginx recusaria o próprio proxy.
+exigir_proxies() {
+  local item rede dentro; local -a itens redes
+  [[ -n "${1// /}" ]] || return 0
+  IFS=',' read -r -a itens <<< "$1"
+  IFS=',' read -r -a redes <<< "${2:-}"
+  if (( ${#itens[@]} > 8 )); then
+    echo "FALHA: PAINEL_PROXY_CONFIAVEL aceita até 8 endereços; tem ${#itens[@]}." >&2
+    return 1
+  fi
+  for item in "${itens[@]}"; do
+    item="${item// /}"
+    if ! ipv4_valido "$item"; then
+      echo "FALHA: PAINEL_PROXY_CONFIAVEL: '$item' não é um endereço IPv4. Informe o endereço do proxy ou do túnel," >&2
+      echo "       um a um, sem máscara: rede inteira não é aceita." >&2
+      return 1
+    fi
+    exigir_ip PAINEL_PROXY_CONFIAVEL "$item" || return 1
+    dentro=nao
+    for rede in "${redes[@]}"; do
+      ip_na_rede "$item" "${rede// /}" && dentro=sim
+    done
+    if [[ "$dentro" == nao ]]; then
+      echo "FALHA: PAINEL_PROXY_CONFIAVEL: $item está fora de PAINEL_REDES_PERMITIDAS: o nginx recusaria o proxy." >&2
+      return 1
+    fi
+  done
+}
+
 # aviso_ip_publico: alerta fixo, mostrado sempre que a opção está ligada.
 aviso_ip_publico() {
   ip_publico_permitido || return 0
-  echo "ALERTA: REDE_PERMITIR_IP_PUBLICO=sim: a stack aceita endereço público. FTP e painel na internet são alvo"
-  echo "        de varredura e de tentativa de senha o tempo todo. Só use com firewall no servidor liberando apenas"
-  echo "        os endereços dos equipamentos e de quem administra, com TLS obrigatório e senhas geradas."
-  echo "        Sem firewall, o risco é de quem ligou a opção."
+  echo "ALERTA: REDE_PERMITIR_IP_PUBLICO=sim: a stack aceita endereço público, por opção de quem instalou. FTP e"
+  echo "        painel na internet são alvo de varredura e de tentativa de senha o tempo todo. Use com firewall no"
+  echo "        servidor liberando apenas os endereços dos equipamentos e de quem administra, com TLS obrigatório"
+  echo "        e senhas geradas. A escolha e o risco são de quem ligou a opção."
+}
+
+# aviso_proxy: alerta fixo, mostrado sempre que o painel está publicado por proxy ou túnel.
+aviso_proxy() {
+  [[ -n "${PAINEL_PROXY_CONFIAVEL// /}" ]] || return 0
+  echo "ALERTA: PAINEL_PROXY_CONFIAVEL=${PAINEL_PROXY_CONFIAVEL// /}: o painel está publicado por proxy ou túnel, por opção de"
+  echo "        quem instalou. O endereço de quem acessa passa a ser o que esse proxy informa em X-Forwarded-For, e"
+  echo "        quem pode chegar à tela de entrada é decidido lá: restrinja o acesso no proxy ou no túnel. O FTP não"
+  echo "        passa por ele e continua só nos endereços desta stack."
 }

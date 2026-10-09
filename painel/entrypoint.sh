@@ -18,6 +18,7 @@ done
 PAINEL_BIND_IP="${PAINEL_BIND_IP:-127.0.0.1}"
 PAINEL_REDES_PERMITIDAS="${PAINEL_REDES_PERMITIDAS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
 PAINEL_CERT_CN="${PAINEL_CERT_CN:-}"
+PAINEL_PROXY_CONFIAVEL="${PAINEL_PROXY_CONFIAVEL:-}"
 PAINEL_ADMIN_USER="${PAINEL_ADMIN_USER:-admin}"
 
 conferir_opcao_ip_publico
@@ -28,6 +29,7 @@ for rede in "${redes[@]}"; do
   rede="${rede// /}"
   exigir_rede PAINEL_REDES_PERMITIDAS "$rede" || exit 1
 done
+exigir_proxies "$PAINEL_PROXY_CONFIAVEL" "$PAINEL_REDES_PERMITIDAS" || exit 1
 [[ -z "$PAINEL_CERT_CN" || "$PAINEL_CERT_CN" =~ ^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$ ]] \
   || die "PAINEL_CERT_CN inválido: use um nome em minúsculas ou um endereço IPv4"
 [[ "$PAINEL_ADMIN_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] \
@@ -115,5 +117,6 @@ install -o root -g "$gid_nginx" -m 0640 "$chave" /nginx/tls/painel-key.pem
 rm -f /nginx/painel.sock
 
 aviso_ip_publico >&2
+aviso_proxy >&2
 
 exec python3 /opt/painel/servidor.py

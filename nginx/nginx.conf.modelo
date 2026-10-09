@@ -2,7 +2,8 @@
 # Modelo da configuração do nginx da allsafe-ftp-stack. Por padrão, só para rede privada, atrás de firewall.
 # O nginx é a única porta publicada do painel: fecha o HTTPS, limita redes e taxa, serve os arquivos
 # estáticos e repassa o resto ao painel por soquete Unix. A entrada do container (nginx/entrypoint.sh) troca a
-# linha que contém só o marcador das redes pelas redes de PAINEL_REDES_PERMITIDAS e grava o resultado em /run/nginx/nginx.conf.
+# linha que contém só o marcador das redes pelas redes de PAINEL_REDES_PERMITIDAS, a do marcador dos proxies pelos
+# endereços de PAINEL_PROXY_CONFIAVEL, e grava o resultado em /run/nginx/nginx.conf.
 daemon off;
 pid /run/nginx/nginx.pid;
 error_log stderr warn;
@@ -25,7 +26,7 @@ http {
     # Registro: só o que o próprio nginx respondeu sem passar ao painel (rede fora da lista, taxa,
     # pedido malformado); o que chega ao painel é registrado pelo painel. Sem a parte da consulta
     # (?...) e sem cabeçalho: nenhuma senha passa por aqui.
-    log_format painel '$remote_addr $request_method $caminho $status';
+    log_format painel '$cliente $request_method $caminho $status';
     map $request_uri $caminho {
         "~^(?<trecho>[^?]+)" $trecho;
         default "-";
@@ -36,9 +37,26 @@ http {
     }
     access_log /dev/stdout painel if=$registrar;
 
+    # Endereço do cliente. Sem PAINEL_PROXY_CONFIAVEL é sempre o da conexão, e X-Forwarded-For é ignorado. Com
+    # ela, quando a conexão vem de um proxy ou túnel da lista, vale o último endereço de X-Forwarded-For, que é o
+    # que esse proxy acrescentou; o que veio antes dele foi escrito pelo cliente e não conta. O módulo realip fica
+    # de fora de propósito: as regras allow e deny continuam valendo sobre quem abriu a conexão.
+    geo $via_proxy {
+        default 0;
+@PROXIES@
+    }
+    map $http_x_forwarded_for $encaminhado {
+        "~(?:^|[ ,])(?<ultimo>(?:[0-9]{1,3}\.){3}[0-9]{1,3}|[0-9A-Fa-f:]{2,39})\s*$" $ultimo;
+        default "";
+    }
+    map "$via_proxy$encaminhado" $cliente {
+        "~^1(?<do_proxy>.+)$" $do_proxy;
+        default $remote_addr;
+    }
+
     # Limites por endereço do cliente.
-    limit_req_zone $binary_remote_addr zone=pedidos:1m rate=20r/s;
-    limit_conn_zone $binary_remote_addr zone=conexoes:1m;
+    limit_req_zone $cliente zone=pedidos:1m rate=20r/s;
+    limit_conn_zone $cliente zone=conexoes:1m;
     limit_req_status 429;
     limit_conn_status 429;
     # A recusa por taxa já sai na linha de registro acima; sem uma segunda linha de erro por pedido.
@@ -153,8 +171,10 @@ http {
             proxy_http_version 1.1;
             proxy_set_header Connection close;
             proxy_set_header Host $http_host;
-            # Endereço real do cliente: sempre o que o nginx viu, nunca o que o cliente mandou.
+            # Quem abriu a conexão: sempre o que o nginx viu, nunca o que o cliente mandou. X-Cliente-IP é o
+            # endereço do cliente decidido acima; o painel só o usa quando a conexão vem de um proxy aceito.
             proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Cliente-IP $cliente;
             proxy_set_header X-Forwarded-For "";
             proxy_set_header Forwarded "";
             # Download de arquivo pela aba Arquivos: sem arquivo temporário (o /tmp/nginx é pequeno e fica na

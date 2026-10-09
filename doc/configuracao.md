@@ -111,7 +111,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
-| `REDE_PERMITIR_IP_PUBLICO` | Aceitar endereço público no FTP e no painel. Leia o [alerta](#rede-permitir-ip-publico) antes de ligar | `nao` ou `sim` | `nao` |
+| `REDE_PERMITIR_IP_PUBLICO` | Aceitar endereço público no FTP e no painel. É opcional e é escolha de quem instala. Leia o [alerta](#rede-permitir-ip-publico) antes de ligar | `nao` ou `sim` | `nao` |
 | `FTP_BIND_IP` | IP do **host** onde a porta de controle e a faixa passiva escutam | IP privado do host; `0.0.0.0` é sempre recusado; IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.1` |
 | `FTP_PORT` | Porta de controle publicada no host (mapeada para `2121` no container) | `1` a `65535` | `21` |
 | `FTP_PASSIVE_IP` | IP que o servidor **anuncia** ao cliente no modo passivo (resposta `PASV`): o IP **interno** pelo qual os equipamentos chegam ao servidor (nota abaixo) | IP privado, alcançável pelo cliente; IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.1` |
@@ -122,7 +122,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 
 <a name="rede-permitir-ip-publico"></a>
 
-> ⚠️ **Alerta — `REDE_PERMITIR_IP_PUBLICO=sim` põe o FTP e o painel na internet.** Servidor exposto é varrido e recebe tentativa de senha o tempo todo. Ligue só com firewall no servidor liberando as portas apenas para os endereços dos equipamentos e de quem administra, com `FTP_TLS_MODE` em `2` ou `3` (com a opção, `0` e `1` são recusados), senhas geradas e `PAINEL_REDES_PERMITIDAS` reduzida. Mesmo com `sim`, `0.0.0.0` e rede mais larga que `/8` continuam recusados. Sem firewall, o risco é de quem ligou a opção. O passo a passo está em [Segurança](seguranca.md#ip-publico).
+> ⚠️ **Alerta — `REDE_PERMITIR_IP_PUBLICO=sim` põe o FTP e o painel na internet.** De fábrica a opção vem desligada; ligar é escolha de quem instala. Servidor exposto é varrido e recebe tentativa de senha o tempo todo. Ligue só com firewall no servidor liberando as portas apenas para os endereços dos equipamentos e de quem administra, com `FTP_TLS_MODE` em `2` ou `3` (com a opção, `0` e `1` são recusados), senhas geradas e `PAINEL_REDES_PERMITIDAS` reduzida. Mesmo com `sim`, `0.0.0.0` e rede mais larga que `/8` continuam recusados. Sem firewall, o risco é de quem ligou a opção. O passo a passo está em [Segurança](seguranca.md#ip-publico). Para publicar **só o painel**, sem expor o FTP, o caminho é outro: [`PAINEL_PROXY_CONFIAVEL`](#painel-proxy-confiavel).
 
 > ⚠️ A faixa passiva é publicada **1:1** (mesma porta no host e no container). Ao ampliá-la, ajuste também o firewall do host.
 
@@ -205,6 +205,7 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 | `PAINEL_SESSAO_MINUTOS` | Minutos sem uso até a sessão encerrar (o teto de 8 horas não muda) | `1` a `120` | `15` |
 | `PAINEL_ACESSO_USUARIOS_FTP` | Entrada dos usuários do FTP no painel. Com `sim`, cada usuário do FTP entra com o nome e a senha do FTP e só navega e baixa na própria pasta, sem nenhuma tela de administração; com `nao`, só administrador entra. Quem confere a senha é o servidor FTP, pela rede interna da stack: [Usuário do FTP no painel](painel.md#usuario-ftp) | `sim` ou `nao` | `sim` |
 | `PAINEL_CERT_CN` | Nome interno ou IP privado a mais no certificado autoassinado do painel | Nome em minúsculas ou IP **privado** (IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim`); vazio para nenhum | vazio |
+| `PAINEL_PROXY_CONFIAVEL` | Publicar **só o painel** por um proxy ou túnel, sem expor o FTP: os endereços dos quais o nginx aceita o `X-Forwarded-For` como endereço de quem acessa. É opcional e é escolha de quem instala. Leia o [alerta](#painel-proxy-confiavel) antes de preencher | Até 8 endereços IPv4 separados por vírgula, um a um, sem máscara; cada um privado (público, só com `REDE_PERMITIR_IP_PUBLICO=sim`) e dentro de `PAINEL_REDES_PERMITIDAS`; vazio para não usar | vazio |
 | `PAINEL_MEMORY_LIMIT` | `mem_limit` do painel | exemplo: `192M` | `192M` |
 | `PAINEL_CPU_LIMIT` | `cpus` do painel | exemplo: `0.5` | `0.5` |
 | `PAINEL_PIDS_LIMIT` | `pids_limit` do painel | inteiro | `64` |
@@ -213,6 +214,10 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 | `NGINX_PIDS_LIMIT` | `pids_limit` do nginx | inteiro | `32` |
 
 > 🧱 **Rede privada:** por padrão o painel é só para rede interna, atrás de firewall. `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e um `PAINEL_CERT_CN` em forma de IP têm de ser privados: o [`deploy.sh`](../deploy.sh) e os containers do painel e do nginx param com `não é IP privado` ou `não é rede privada` para qualquer outro valor. Endereço e rede públicos só passam com a opção [`REDE_PERMITIR_IP_PUBLICO`](#rede-permitir-ip-publico).
+
+<a name="painel-proxy-confiavel"></a>
+
+> ⚠️ **Alerta — `PAINEL_PROXY_CONFIAVEL` preenchida põe a tela de entrada do painel ao alcance de quem chega ao proxy ou ao túnel.** Com a variável vazia, que é o padrão, o endereço de quem acessa é sempre o da conexão e o `X-Forwarded-For` é ignorado. Preenchida, o nginx passa a usar o **último** endereço desse cabeçalho, só quando a conexão vem de um endereço da lista, para o limite de tentativas de senha, a sessão, a auditoria e os limites de pedidos. Quem pode chegar à tela passa a ser decidido no proxy ou no túnel: restrinja o acesso lá. O FTP não passa por ele e continua só nos endereços da stack. O nome público pelo qual o painel é aberto vai em `PAINEL_CERT_CN`. O passo a passo está em [Segurança](seguranca.md#painel-por-proxy).
 
 A senha do painel **não** é variável: a inicial fica em `.secrets/`, e a de cada administrador, só como hash, em `DATA_DIR/painel/administradores`. O `deploy.sh` e o container recusam `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`, e param com `PAINEL_ADMIN_USER inválido` para um nome fora da regra. Veja [Segredos](segredos.md#senha-do-painel) e [Administradores do painel](painel.md#administradores).
 

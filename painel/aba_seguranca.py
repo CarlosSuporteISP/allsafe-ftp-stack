@@ -54,7 +54,16 @@ def seguranca(pedido, sessao, consulta, formulario, token):
         linha('atencao' if CFG['ip_publico'] else 'bom', 'Endereço público',
               ('<strong>Aceito</strong> (<code>REDE_PERMITIR_IP_PUBLICO=sim</code>): a proteção contra a internet passa a ser o '
                'firewall do servidor, o TLS obrigatório e as senhas geradas.') if CFG['ip_publico']
-              else 'Recusado por código (<code>REDE_PERMITIR_IP_PUBLICO=nao</code>): FTP e painel só escutam em IP privado.'),
+              else 'Recusado por código (<code>REDE_PERMITIR_IP_PUBLICO=nao</code>): FTP e painel só escutam em IP privado. '
+                   'Aceitar é opção de quem instala.'),
+        linha('atencao' if CFG['proxies'] else 'neutro', 'Painel por proxy ou túnel',
+              ('<strong>Em uso</strong> (<code>PAINEL_PROXY_CONFIAVEL='
+               + e(','.join(str(proxy) for proxy in CFG['proxies'])) + '</code>): o endereço de quem acessa é o que o proxy '
+               'informa em <code>X-Forwarded-For</code>, e é ele que conta as senhas erradas, prende a sessão e vai para a '
+               'auditoria. Quem pode chegar à tela de entrada é decidido no proxy ou no túnel. O FTP não passa por ele.')
+              if CFG['proxies'] else
+              'Não usado (<code>PAINEL_PROXY_CONFIAVEL</code> vazio): o endereço do cliente é sempre o da conexão, e '
+              '<code>X-Forwarded-For</code> é ignorado. Publicar só o painel por proxy ou túnel é opção de quem instala.'),
         linha(marca_ip(CFG['ftp_bind']), 'Endereço do FTP', f'<code>{e(CFG["ftp_bind"])}:{e(CFG["ftp_porta"])}</code> — {local(CFG["ftp_bind"])}.'),
         linha(marca_ip(CFG['ftp_anunciado']), 'IP anunciado no modo passivo', f'<code>{e(CFG["ftp_anunciado"])}</code> — '
               + ('IP privado.' if endereco_privado(CFG['ftp_anunciado']) else '<strong>IP público</strong>.')),

@@ -232,12 +232,12 @@ class Painel(http.server.BaseHTTPRequestHandler):
         except ValueError:
             consulta = {}
 
-        # O endereço do cliente é o que o nginx viu: ele sempre sobrescreve X-Real-IP. Pedido sem o
+        # Quem abriu a conexão é o que o nginx viu: ele sempre sobrescreve X-Real-IP. Pedido sem o
         # cabeçalho, com mais de um ou com valor que não é IP não veio pelo nginx e é recusado.
         enderecos = self.headers.get_all('X-Real-IP') or []
         self.ip = enderecos[0].strip() if len(enderecos) == 1 else ''
         try:
-            ipaddress.ip_address(self.ip)
+            conexao = ipaddress.ip_address(self.ip)
         except ValueError:
             self.ip = '-'
             return self.enviar(400, 'pedido sem o endereço do cliente\n', 'text/plain; charset=utf-8')
@@ -245,6 +245,15 @@ class Painel(http.server.BaseHTTPRequestHandler):
         if not self.rede_permitida():
             auditar(self.ip, 'recusa_rede')
             return self.enviar(403, 'cliente fora das redes permitidas\n', 'text/plain; charset=utf-8')
+        # Painel publicado por proxy ou túnel (PAINEL_PROXY_CONFIAVEL): só quando a conexão vem de um deles o
+        # endereço do cliente é o que o proxy informou, já escolhido pelo nginx. Daqui em diante é esse endereço
+        # que conta as falhas de entrada, prende a sessão e vai para a auditoria. Valor que não é IP não é usado.
+        if conexao in CFG['proxies']:
+            informados = self.headers.get_all('X-Cliente-IP') or []
+            try:
+                self.ip = str(ipaddress.ip_address(informados[0].strip())) if len(informados) == 1 else self.ip
+            except ValueError:
+                pass
         if not self.host_valido():
             auditar(self.ip, 'recusa_host', f'host={limpo(self.headers.get("Host", ""))}')
             return self.enviar(400, 'endereço não aceito\n', 'text/plain; charset=utf-8')
