@@ -60,13 +60,13 @@ def seguranca(pedido, sessao, consulta, formulario, token):
               + ('IP privado.' if endereco_privado(CFG['ftp_anunciado']) else '<strong>IP público</strong>.')),
         linha(marca_tls, 'TLS do FTP', f'Modo <code>{e(CFG["ftp_tls"])}</code>: {texto_tls}'),
         linha(marca_ftp, 'Certificado do FTP', f'{e(validade_ftp)}<br><span class="suave">SHA-256</span> '
-              f'<code class="digital">{e(cert_ftp["digital"] if cert_ftp else "—")}</code>'),
+              f'<code>{e(cert_ftp["digital"] if cert_ftp else "—")}</code>'),
         linha(marca_ip(CFG['painel_bind']), 'Endereço do painel', f'<code>{e(CFG["painel_bind"])}:{e(CFG["painel_porta"])}</code> — só HTTPS, '
               f'{local(CFG["painel_bind"])}.'),
         linha('✅', 'Frente web', 'O navegador fala com o nginx, a única porta publicada do painel: ele fecha o HTTPS, '
               'limita redes e taxa de pedidos e repassa por soquete Unix. O painel não escuta em porta de rede.'),
         linha(marca_painel, 'Certificado do painel', f'{e(validade_painel)}<br><span class="suave">SHA-256</span> '
-              f'<code class="digital">{e(cert_painel["digital"] if cert_painel else "—")}</code>'),
+              f'<code>{e(cert_painel["digital"] if cert_painel else "—")}</code>'),
         linha('⚠️' if redes_publicas else '✅', 'Quem pode abrir o painel',
               f'Clientes de <code>{e(redes)}</code>; os demais são recusados pelo nginx, antes de chegar ao painel.'
               + (f' <strong>Rede pública na lista: {e(", ".join(redes_publicas))}.</strong>' if redes_publicas else '')),

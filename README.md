@@ -8,7 +8,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.25.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.25.1-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
@@ -22,7 +22,7 @@ Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsaf
 
 <a href="doc/imagens/painel-principal.png"><img src="doc/imagens/painel-principal.png" alt="Aba Visão geral com os cartões Servidor FTP, Usuários, Espaço usado, Último envio e Certificado do FTP, cada um com o atalho para o detalhe, e os dados para configurar o equipamento" width="100%"></a>
 
-<sub><b>v0.24.2</b> · painel web, aba Visão geral · captura de 2026-10-09</sub>
+<sub><b>v0.25.1</b> · painel web, aba Visão geral · captura de 2026-10-09</sub>
 
 <!-- diagrama: doc/diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -117,7 +117,7 @@ O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página,
 | <a href="doc/imagens/aba-atividade.png"><img src="doc/imagens/aba-atividade.png" alt="Aba Atividade com os registros do painel: data, endereço de origem, o que aconteceu e o detalhe, como arquivo baixado, pasta criada, administrador criado e tela de administração pedida por usuário do FTP" width="100%"></a> | <a href="doc/imagens/aba-meus-arquivos.png"><img src="doc/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, com as pastas 2026-09 e 2026-10, um arquivo de configuração com o botão Baixar e, no topo, só o nome do usuário e o botão Sair" width="100%"></a> |
 | **Atividade** — quem entrou, de onde, o que baixou e o que foi alterado | **Meus arquivos** — o usuário do FTP baixa os próprios backups, e só eles |
 
-<sub><b>v0.24.2</b> · painel web, uma foto por aba · capturas de 2026-10-09</sub>
+<sub><b>v0.25.1</b> · painel web, uma foto por aba · capturas de 2026-10-09</sub>
 
 Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplicação](doc/aplicacao/README.md).
 
@@ -718,7 +718,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.25.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.25.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

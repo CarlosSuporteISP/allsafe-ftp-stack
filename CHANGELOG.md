@@ -8,6 +8,19 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.25.1] - 2026-10-09
+
+As marcas de estado das tabelas e a impressão digital dos certificados deixam de ser o menor texto do painel.
+
+### Corrigido
+
+- **Marcas de estado em 12 px**: as marcas ao lado do nome nas tabelas (`sem TLS`, `bloqueado`, `limites`, `inicial`, `dividida`, `você`) sobem para 14 px, o tamanho do resto do texto de tabela. Medido antes da troca, com a linha mais carregada da aba Usuários: a tabela continua cabendo em janelas de 1024, 1280 e 1440 px, e a página segue sem rolagem lateral em qualquer largura.
+- **Impressão digital dos certificados em 12 px**, na aba Segurança: passa aos 14 px dos demais valores em código, e a classe que só servia para encolher o texto sai do painel e da folha de estilo.
+
+### Alterado
+
+- **Fotos da aplicação refeitas** nesta versão, com as marcas no tamanho novo.
+
 ## [0.25.0] - 2026-10-09
 
 A cópia de segurança passa a sair cifrada: quem pegar o arquivo não lê nada dele sem a chave privada, que fica em `.secrets/` e deve ser guardada também fora do servidor.

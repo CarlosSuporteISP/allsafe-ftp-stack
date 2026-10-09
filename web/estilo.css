@@ -154,7 +154,6 @@ tbody tr:last-child > * { border-bottom: 0; }
 td:first-child strong { white-space: nowrap; }
 td.origem code { overflow-wrap: normal; white-space: nowrap; }
 .conferencia .marca { width: 1%; font-size: 1.1rem; }
-.digital { font-size: 0.75rem; }
 
 .trilha { overflow-wrap: anywhere; }
 
@@ -171,7 +170,7 @@ td.origem code { overflow-wrap: normal; white-space: nowrap; }
   border: 1px solid var(--borda);
   border-radius: 999px;
   color: var(--suave);
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   white-space: nowrap;
 }
 
