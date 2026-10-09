@@ -212,8 +212,8 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
 }
 declare -A ESPERADOS=(
   [testes]="$(seq -s ' ' 1 54)"
-  [seguranca]="$(seq -s ' ' 1 92)"
-  [rede]="$(seq -s ' ' 1 13)"
+  [seguranca]="$(seq -s ' ' 1 96)"
+  [rede]="$(seq -s ' ' 1 14)"
 )
 ARQUIVOS=()
 LIMPEZA="instância mantida no ar (--manter)"

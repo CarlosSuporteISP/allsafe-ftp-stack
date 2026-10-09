@@ -79,7 +79,23 @@ s_admin="$(aba -b "$J" "$B/usuarios")"
   && "$s_mesmo" == "200 " && "$s_troca" == "303 /entrar" && "$s_volta" == "303 /entrar" && "$s_admin" == "200 " ]]
 caso $? seguranca 95 "Painel por proxy: senha errada e sessão contam pelo endereço do cliente" "cinco senhas erradas vindas de 198.51.100.20 pelo proxy: $ev· a sexta: $sexta · a senha certa do mesmo endereço: $certa_bloqueado · a senha certa de 198.51.100.21, pelo mesmo proxy: $certa_outro, na auditoria com $de_outro · a sessão aberta, usada de 198.51.100.21: $s_mesmo· usada de 198.51.100.22: $s_troca · de volta a 198.51.100.21, já encerrada: $s_volta · a sessão do administrador que entrou sem X-Forwarded-For continua: $s_admin"
 
+# ------------------------------------------------------------------ aviso na tela: quem instala pode ocultar
+rec_aviso="$(recusa_deploy PAINEL_AVISO_EXPOSICAO=talvez)"
+gravar_env "$ENVA" PAINEL_AVISO_EXPOSICAO nao
+dep; r_oc=$?
+saude_oc="$(saude "$FTP" "$PAINEL" "$NGINX")"; alerta_oc="$(grep -c '^ALERTA: PAINEL_PROXY_CONFIAVEL=' "$W/deploy.log")"
+entrada_oc="$(c "$B/entrar" | grep -c -i -E 'publicado por proxy ou túnel|PAINEL_PROXY_CONFIAVEL')"
+r_oc_e="$(entrar "$J" "$W/painel.senha")"; proibir "$(biscoito_de "$J")"
+seg_oc="$(aba -b "$J" "$B/seguranca")"
+topo_oc="$(grep -c -i 'painel publicado por proxy ou túnel' "$W/corpo")"
+linha_oc="$(grep -c 'Painel por proxy ou túnel</th><td><strong>Em uso</strong>' "$W/corpo")"; dito_oc="$(grep -c 'PAINEL_AVISO_EXPOSICAO=nao' "$W/corpo")"
+recusou "$rec_aviso" "PAINEL_AVISO_EXPOSICAO deve ser 'sim' ou 'nao'" \
+  && [[ "$r_oc" == 0 && "$saude_oc" == "healthy healthy healthy " && "$alerta_oc" == 1 && "$entrada_oc" == 0 && "$r_oc_e" == 303 \
+  && "$seg_oc" == "200 " && "$topo_oc" == 0 && "$linha_oc" == 1 && "$dito_oc" == 1 ]]
+caso $? seguranca 96 "Aviso de exposição oculto por opção: a tela não diz, a aba Segurança e o deploy dizem" "deploy.sh com PAINEL_AVISO_EXPOSICAO=talvez: $rec_aviso · com PAINEL_AVISO_EXPOSICAO=nao e o proxy aceito: saída $r_oc, saúde $saude_oc· alerta na saída do deploy.sh: $alerta_oc · linhas da tela de entrada que falam do proxy: $entrada_oc · entrada do administrador: $r_oc_e · aba Segurança ($seg_oc): aviso no topo e no rodapé $topo_oc, linha 'Em uso' $linha_oc, linha que diz que o aviso está oculto $dito_oc"
+
 # ------------------------------------------------------------------ de volta ao padrão
+gravar_env "$ENVA" PAINEL_AVISO_EXPOSICAO sim
 gravar_env "$ENVA" PAINEL_PROXY_CONFIAVEL ""
 dep; r_fim=$?
 saude_fim="$(saude "$FTP" "$PAINEL" "$NGINX")"; aceitos_fim="$(aceitos27)"

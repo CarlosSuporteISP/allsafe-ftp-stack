@@ -302,6 +302,9 @@ fi
 acesso_usuarios="$(env_valor PAINEL_ACESSO_USUARIOS_FTP sim)"
 [[ "$acesso_usuarios" == sim || "$acesso_usuarios" == nao ]] \
   || die "PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'; em $env_file está '$acesso_usuarios'."
+aviso_exposicao="$(env_valor PAINEL_AVISO_EXPOSICAO sim)"
+[[ "$aviso_exposicao" == sim || "$aviso_exposicao" == nao ]] \
+  || die "PAINEL_AVISO_EXPOSICAO deve ser 'sim' ou 'nao'; em $env_file está '$aviso_exposicao'."
 painel_admin="$(env_valor PAINEL_ADMIN_USER admin)"
 [[ "$painel_admin" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] \
   || die "PAINEL_ADMIN_USER inválido em $env_file: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres."

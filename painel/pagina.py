@@ -71,8 +71,18 @@ def validade(info):
     return ('atencao' if dias < 30 else 'bom'), f'válido até {data} ({dias} dias)'
 
 
+def aviso_oculto():
+    """A instalação está publicada e quem instalou pediu que a tela não avise (PAINEL_AVISO_EXPOSICAO=nao)."""
+    return not CFG.get('aviso_exposicao', True) and bool(CFG.get('ip_publico') or CFG.get('proxies'))
+
+
 def aviso_rede():
-    """Como esta instalação está publicada. Expor à internet é opção de quem instala, e a tela diz quando está ligada."""
+    """Como esta instalação está publicada. Expor à internet é opção de quem instala, e a tela diz quando está ligada.
+
+    Com PAINEL_AVISO_EXPOSICAO=nao a tela não diz: o estado continua na aba Segurança e na saída do deploy.sh.
+    """
+    if aviso_oculto():
+        return ''
     avisos = ''
     if CFG.get('ip_publico'):
         avisos += ('<p class="aviso">Endereço público aceito (<code>REDE_PERMITIR_IP_PUBLICO=sim</code>), por opção de quem '
@@ -109,12 +119,13 @@ def pagina(titulo, miolo, sessao=None, ativa='', porta=False):
     rede = ' · '.join(filter(None, ('endereço público aceito: confira o firewall' if CFG.get('ip_publico') else '',
                                     'painel publicado por proxy ou túnel' if CFG.get('proxies') else ''))) \
         or 'só para rede privada, atrás de firewall'
+    rede = '' if aviso_oculto() else f' · {rede}'
     corpo = f"""<a class="pular" href="#conteudo">Pular para o conteúdo</a>
 {topo}<main id="conteudo">
 {miolo}
 </main>
 <footer>
-<p>allsafe-ftp-stack v{e(CFG.get('versao', '?'))} · {rede}</p>
+<p>allsafe-ftp-stack v{e(CFG.get('versao', '?'))}{rede}</p>
 <p class="autoria">{AUTORIA}</p>
 </footer>
 """

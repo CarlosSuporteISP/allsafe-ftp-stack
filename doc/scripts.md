@@ -106,6 +106,7 @@ A pasta [`scripts/`](../scripts/) tem o que roda fora dos containers: no servido
 - **Painel por proxy ou túnel:** `PAINEL_PROXY_CONFIAVEL` vazia não muda nada. Preenchida, cada endereço tem de ser IPv4, um a um, privado (ou público com a opção de IP público) e estar dentro de `PAINEL_REDES_PERMITIDAS`, até 8; fora disso, para com `FALHA: PAINEL_PROXY_CONFIAVEL: …` e código `1`. Aceita, o `--check-only` e o fim do deploy fecham com `ALERTA: PAINEL_PROXY_CONFIAVEL=…: o painel está publicado por proxy ou túnel, por opção de quem instalou.` Veja [Segurança](seguranca.md#painel-por-proxy).
 - Se `.secrets/painel-admin-inicial-senha-hash.txt` não existir, gera a senha inicial do painel em `.secrets/painel-admin-inicial-senha.txt` (`0600`) e grava o hash dela, chamando o `scripts/painel-senha.sh --inicial` depois de construir a imagem.
 - Confere a `PAINEL_ACESSO_USUARIOS_FTP` antes de agir: valor diferente de `sim` e de `nao` para com `ERRO: PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'; ...` e código `1`.
+- Confere a `PAINEL_AVISO_EXPOSICAO` antes de agir: valor diferente de `sim` e de `nao` para com `ERRO: PAINEL_AVISO_EXPOSICAO deve ser 'sim' ou 'nao'`.
 - Confere o `PAINEL_ADMIN_USER` antes de agir: nome fora da regra para com `ERRO: PAINEL_ADMIN_USER inválido em .env: ...` e código `1`. No resumo, mostra o usuário e o arquivo da senha inicial enquanto esse arquivo existir; depois, `usuário e senha: os definidos na aba Administradores ou com ./scripts/painel-senha.sh`.
 - Confere o `SEGURANCA_CONTATO_EMAIL` antes de agir: preenchido com algo que não é um endereço de e-mail só, para com `ERRO: SEGURANCA_CONTATO_EMAIL inválido em .env: um endereço de e-mail só, como seguranca@exemplo.com.br, ou vazio.` e código `1`. Vazio é aceito: o `security.txt` não é publicado.
 - Opção desconhecida ou perfil inexistente: mensagem `Opção inválida: ...` ou `ERRO: perfil inexistente: ...` e código `64`.
@@ -498,6 +499,7 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 | `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'` | a opção tem outro valor |
 | `FALHA: PAINEL_REDES_PERMITIDAS está vazia` | a variável chegou vazia ao container |
 | `FALHA: PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'` | a entrada dos usuários do FTP tem outro valor |
+| `FALHA: PAINEL_AVISO_EXPOSICAO deve ser 'sim' ou 'nao'` | o aviso de exposição na tela tem outro valor |
 | `FALHA: FTP_TLS_EXCECOES deve ser 'nao' ou 'sim'` | a exceção de TLS por usuário tem valor inválido, a mesma conferência do container do FTP |
 | `FALHA: PAINEL_ADMIN_USER inválido: ...` | o nome do primeiro administrador tem maiúscula, espaço, mais de 32 caracteres ou caractere fora de `a-z`, `0-9`, `_` e `-` |
 | `FALHA: SEGURANCA_CONTATO_EMAIL inválido: ...` | o contato de segurança está preenchido e não é um endereço de e-mail só: tem `mailto:`, espaço, dois endereços, `%`, ou domínio sem ponto |

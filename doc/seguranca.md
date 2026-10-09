@@ -148,6 +148,8 @@ docker compose logs --tail 5 nginx
 
 **Resultado esperado:** os dois comandos fecham com `ALERTA: PAINEL_PROXY_CONFIAVEL=<endereço>: o painel está publicado por proxy ou túnel, por opção de quem instalou.` O mesmo alerta fica no registro dos containers do painel e do nginx e no painel: na tela de entrada, no rodapé e na linha **Painel por proxy ou túnel** da aba Segurança.
 
+O aviso da tela pode ser ocultado por quem instala, com `PAINEL_AVISO_EXPOSICAO=nao` no `.env` e um `./deploy.sh`: a tela de entrada e o rodapé deixam de dizer como o painel foi publicado, o que também tira essa informação de quem chega pelo endereço público. A linha da aba Segurança e o alerta do `deploy.sh` continuam.
+
 4. Abra o painel pelo nome público, entre e confira na aba Atividade que a coluna **De onde** mostra o seu endereço, e não o do proxy.
 
 | Com a opção preenchida | O que acontece |

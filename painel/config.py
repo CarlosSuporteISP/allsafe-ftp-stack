@@ -116,6 +116,8 @@ def configuracao():
         falha("PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'")
     if amb('FTP_TLS_EXCECOES', 'sim') not in ('nao', 'sim'):
         falha("FTP_TLS_EXCECOES deve ser 'nao' ou 'sim'")
+    if amb('PAINEL_AVISO_EXPOSICAO', 'sim') not in ('nao', 'sim'):
+        falha("PAINEL_AVISO_EXPOSICAO deve ser 'sim' ou 'nao'")
     # O TLS por usuário só vale sobre o modo 2 e sem IP público aceito; fora disso a opção fica sem efeito,
     # como no serviço ftp, e o painel diz o motivo no lugar dos botões.
     if amb('FTP_TLS_EXCECOES', 'sim') == 'nao':
@@ -150,6 +152,7 @@ def configuracao():
         'ip_publico': publico,
         'redes': redes,
         'proxies': proxies,
+        'aviso_exposicao': amb('PAINEL_AVISO_EXPOSICAO', 'sim') == 'sim',
         'admin_inicial': admin,
         'acesso_usuarios': amb('PAINEL_ACESSO_USUARIOS_FTP', 'sim') == 'sim',
         'inatividade': int(minutos) * 60,
