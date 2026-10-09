@@ -73,14 +73,14 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 
 | Aba | O que mostra | O que dá para fazer |
 |---|---|---|
-| Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP, o modo de TLS do FTP, os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) e os últimos registros da atividade | Só consultar; cada cartão termina no atalho para a aba do detalhe |
+| Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP, o modo de TLS do FTP, os arquivos recebidos por dia nos últimos 14 dias, o último envio de cada usuário, o espaço de cada pasta, os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) e os últimos registros da atividade | Só consultar; cada cartão termina no atalho para a aba do detalhe |
 | Usuários | Um usuário por linha: pasta, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta e, para equipamento sem suporte a TLS, já dispensado do TLS; editar, para trocar a pasta e os limites e tirar um bloqueio; trocar a senha; remover, com a pasta dele ou sem ela; abrir a pasta do usuário na aba Arquivos; dispensar um usuário do TLS e voltar a exigir |
 | Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
 | Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
-| Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
+| Segurança | Conferência da instalação, com o resumo de quantos itens estão em ordem, pedem atenção ou são conferidos no servidor: se endereço público é aceito, se o painel está publicado por proxy ou túnel, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
 | Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads, pastas criadas e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
 
-No topo ficam as abas, com a aba em uso marcada, o nome do administrador da sessão e o botão **Sair**, que encerra a sessão na hora. Em tela estreita, as abas ficam numa linha que rola para o lado, e o nome da aba aparece também como título da página. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
+O menu fica à esquerda em tela de 1280 px de largura ou mais: o símbolo e o nome, as abas em dois grupos (**Operação**, com Visão geral, Usuários e Arquivos, e **Sistema**, com Administradores, Segurança e Atividade), a aba em uso marcada e, embaixo, o nome e o papel de quem entrou e o botão **Sair**, que encerra a sessão na hora. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada (endereço público aceito ou painel por proxy ou túnel), o administrador vê um sinal de alerta ao lado de **Segurança**, em qualquer aba em que estiver. Os gráficos são desenhados pelo próprio painel, sem script, e todo número do desenho está também escrito ao lado dele. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
 
 Quem entra com a conta do FTP não vê nenhuma dessas abas: vê uma tela só, **Meus arquivos**, descrita em [Usuário do FTP no painel](#usuario-ftp).
 
@@ -447,7 +447,7 @@ O painel mostra a logo da ALL-SAFE em quatro lugares e a autoria em um:
 |---|---|---|
 | Aba do navegador e favoritos | Ícone | `favicon.ico`, `icone-32.png` e `icone-192.png` |
 | Atalho na tela inicial do celular | Ícone | `apple-touch-icon.png` |
-| Topo de todas as telas | Símbolo, ao lado do nome | `simbolo-64.png` |
+| Menu de todas as telas | Símbolo, ao lado do nome | `simbolo-64.png` |
 | Tela de entrada | Logo completa | `logo-320.png` |
 | Rodapé de todas as telas | `Desenvolvido pela allsafe.inf.br`, com o endereço do site e o do GitHub | texto do painel |
 
@@ -671,7 +671,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 | Camada | Proteção |
 |---|---|
 | Frente web | O nginx é a única porta publicada do painel; o painel atende só por soquete Unix e não escuta em porta de rede |
-| Rede | Por padrão, bind só em IP privado e `PAINEL_REDES_PERMITIDAS` só com redes privadas, aplicada pelo nginx e conferida de novo pelo painel; `deploy.sh` e os dois containers recusam o resto. Com `REDE_PERMITIR_IP_PUBLICO=sim`, o painel mostra o alerta na entrada, no rodapé e na aba Segurança |
+| Rede | Por padrão, bind só em IP privado e `PAINEL_REDES_PERMITIDAS` só com redes privadas, aplicada pelo nginx e conferida de novo pelo painel; `deploy.sh` e os dois containers recusam o resto. Com `REDE_PERMITIR_IP_PUBLICO=sim`, o painel mostra o alerta só ao administrador: no menu, na aba Segurança e no rodapé |
 | Transporte | Só HTTPS, TLS 1.2 ou 1.3, em HTTP/2 ou HTTP/1.1; HTTP puro recebe `400` |
 | Volume de pedidos | No nginx, por endereço: 20 pedidos por segundo (rajada de 40), 16 conexões, 16 KiB por pedido e 5 KiB por endereço ou cabeçalho, em HTTP/2 e em HTTP/1.1; o que passa disso recebe `429`, `413`, `414` ou `400`, ou tem a conexão HTTP/2 encerrada |
 | Entrada | Usuário e senha por administrador; senha de no mínimo 12 caracteres, guardada só como hash `scrypt`; a recusa não diz se o erro foi no usuário ou na senha; cinco erros bloqueiam o endereço por 15 minutos |
@@ -697,7 +697,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 - **Tela de entrada:** o formulário leva um token assinado (HMAC) com validade curta, para a entrada também não aceitar pedido forjado por outro site.
 - **Origem do envio:** todo `POST` tem de trazer `Origin` igual ao endereço do painel (`https://` mais o `Host`). A política `Referrer-Policy: same-origin` faz o navegador mandar a origem real no envio que parte do próprio painel e `Origin: null` no que parte de outro endereço; `null` e origem de fora recebem `403` e o evento `recusa_origem`.
 - **Nome de host:** o cabeçalho `Host` tem de ser um IP privado, `localhost` ou o `PAINEL_CERT_CN`; outro nome recebe `400`. Com `REDE_PERMITIR_IP_PUBLICO=sim`, qualquer endereço IPv4 é aceito no lugar do nome.
-- **Endereço de quem acessa:** é o da conexão que chega ao nginx. `X-Forwarded-For` é ignorado, a não ser com `PAINEL_PROXY_CONFIAVEL`: aí vale o último endereço do cabeçalho, só em conexão vinda do proxy escolhido, e o painel mostra o aviso na entrada, no rodapé e na aba Segurança. Veja [Só o painel publicado](seguranca.md#painel-por-proxy).
+- **Endereço de quem acessa:** é o da conexão que chega ao nginx. `X-Forwarded-For` é ignorado, a não ser com `PAINEL_PROXY_CONFIAVEL`: aí vale o último endereço do cabeçalho, só em conexão vinda do proxy escolhido, e o painel mostra o aviso só ao administrador: no menu, na aba Segurança e no rodapé. Veja [Só o painel publicado](seguranca.md#painel-por-proxy).
 - **Usuários do FTP:** o painel monta as mesmas pastas `DATA_DIR/auth` e `DATA_DIR/dados` do serviço `ftp` e chama o mesmo `allsafe-ftp-user`, com `flock` em `/auth/.lock`. Por isso não precisa do socket do Docker.
 - **Arquivos:** a aba Arquivos lê a mesma pasta `DATA_DIR/dados`, sempre com abertura só para leitura; as gravações são a pasta vazia de `POST /arquivos/pasta`, a troca de nome e o apagamento, as três em relação à pasta aberta e nenhuma com conteúdo vindo do navegador. Detalhe em [Arquivos e download](#arquivos).
 - **Usuário do FTP no painel:** a senha é conferida por um login no serviço `ftp`, pela rede do Compose, e a sessão dele só tem as rotas de `/meus-arquivos` e a saída. Detalhe em [Usuário do FTP no painel](#usuario-ftp).
@@ -724,7 +724,10 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`auditoria.py`](../painel/auditoria.py) | Gravação e leitura do `auditoria.log` |
 | [`estado.py`](../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados, quem entra sem TLS) e a chamada do `allsafe-ftp-user` |
 | [`confirmacao.py`](../painel/confirmacao.py) | Confirmação pela senha atual de quem está na sessão, pedida nas alterações de administrador e em tudo o que apaga arquivo ou pasta |
-| [`pagina.py`](../painel/pagina.py) | Moldura das telas, com o símbolo no topo e a autoria no rodapé, e os textos que mais de uma aba usa |
+| [`pagina.py`](../painel/pagina.py) | Moldura das telas, com o menu, o símbolo e a autoria no rodapé, e os textos que mais de uma aba usa |
+| [`icones.py`](../painel/icones.py) | Os ícones do painel, desenhados em linha: saem dentro do HTML de cada tela, sem arquivo de imagem |
+| [`graficos.py`](../painel/graficos.py) | Os gráficos (colunas por dia, faixa dividida e barras), em SVG montado no servidor, sem script e sem estilo dentro do HTML; os números ficam também em texto |
+| [`cena.py`](../painel/cena.py) | A cena em três dimensões da tela de entrada, só com HTML e CSS |
 | [`atendimento.py`](../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF), roteamento por papel (administrador ou usuário do FTP) e a entrega de arquivo em blocos |
 | [`rotas.py`](../painel/rotas.py) | Tabelas de método e caminho para a função que responde: uma para o administrador e outra para o usuário do FTP |
 | [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, do administrador e do usuário do FTP, e saída |

@@ -94,7 +94,7 @@ A opção existe para o servidor que só tem endereço público, como uma VPS, e
 ./deploy.sh
 ```
 
-**Resultado esperado:** o `--check-only` termina com `OK: perfil '<perfil>', endereço público aceito, recursos do servidor e compose validados; nada foi alterado.`, seguido do `ALERTA: REDE_PERMITIR_IP_PUBLICO=sim: a stack aceita endereço público, por opção de quem instalou.` O `deploy.sh` sobe os três containers e fecha com o mesmo `ALERTA`, que também fica no registro de cada container e no painel: na tela de entrada, no rodapé e na linha **Endereço público** da aba Segurança.
+**Resultado esperado:** o `--check-only` termina com `OK: perfil '<perfil>', endereço público aceito, recursos do servidor e compose validados; nada foi alterado.`, seguido do `ALERTA: REDE_PERMITIR_IP_PUBLICO=sim: a stack aceita endereço público, por opção de quem instalou.` O `deploy.sh` sobe os três containers e fecha com o mesmo `ALERTA`, que também fica no registro de cada container e no painel, só para administrador: no sinal ao lado de **Segurança** no menu, no começo da aba Segurança e no rodapé, além da linha **Endereço público** da mesma aba. A tela de entrada não diz como a instalação foi publicada.
 
 | Com a opção ligada | O que acontece |
 |---|---|
@@ -146,9 +146,9 @@ docker compose logs --tail 5 nginx
 ./deploy.sh
 ```
 
-**Resultado esperado:** os dois comandos fecham com `ALERTA: PAINEL_PROXY_CONFIAVEL=<endereço>: o painel está publicado por proxy ou túnel, por opção de quem instalou.` O mesmo alerta fica no registro dos containers do painel e do nginx e no painel: na tela de entrada, no rodapé e na linha **Painel por proxy ou túnel** da aba Segurança.
+**Resultado esperado:** os dois comandos fecham com `ALERTA: PAINEL_PROXY_CONFIAVEL=<endereço>: o painel está publicado por proxy ou túnel, por opção de quem instalou.` O mesmo alerta fica no registro dos containers do painel e do nginx e no painel, só para administrador: no sinal ao lado de **Segurança** no menu, no começo da aba Segurança e no rodapé, além da linha **Painel por proxy ou túnel** da mesma aba. Quem abre a tela de entrada pelo endereço público não lê como o painel foi publicado.
 
-O aviso da tela pode ser ocultado por quem instala, com `PAINEL_AVISO_EXPOSICAO=nao` no `.env` e um `./deploy.sh`: a tela de entrada e o rodapé deixam de dizer como o painel foi publicado, o que também tira essa informação de quem chega pelo endereço público. A linha da aba Segurança e o alerta do `deploy.sh` continuam.
+O aviso da tela pode ser ocultado por quem instala, com `PAINEL_AVISO_EXPOSICAO=nao` no `.env` e um `./deploy.sh`: o sinal do menu, o aviso do começo da aba Segurança e o texto do rodapé somem. As linhas da aba Segurança e o alerta do `deploy.sh` continuam.
 
 4. Abra o painel pelo nome público, entre e confira na aba Atividade que a coluna **De onde** mostra o seu endereço, e não o do proxy.
 
@@ -270,7 +270,7 @@ A stack não deixa o modo passar despercebido. Enquanto ele estiver ligado, o al
 | Fim do `./deploy.sh` e do `./deploy.sh --check-only` | O `AVISO` de três linhas acima |
 | Resumo do `./deploy.sh` | `SEM TLS (texto puro)` ou `TLS explícito opcional (aceita texto puro)` na linha do FTP |
 | Registro do container (`docker compose logs ftp`) | A cada subida: `AVISO: FTP_TLS_MODE=0, FTP sem TLS: senhas e arquivos trafegam em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada.` |
-| Painel, telas Visão geral e Segurança | Faixa de alerta no topo e o item `TLS do FTP` marcado com |
+| Painel, telas Visão geral e Segurança | Faixa de alerta no começo da tela e o item `TLS do FTP` marcado com |
 
 O aviso informa, não bloqueia: a decisão é de quem opera o servidor. O painel web **não** é afetado por esta variável e continua só em HTTPS.
 
@@ -329,7 +329,7 @@ Onde a dispensa aparece:
 | Resumo do `./deploy.sh` | `equipamento sem suporte a TLS: o administrador dispensa o usuário dele na aba Usuários do painel`, abaixo da linha do FTP |
 | Registro do container (`docker compose logs ftp`) | Na linha `FTP pronto`: `TLS por usuário: nenhum dispensado, sessão sem TLS recusada antes da senha` ou `com exceção por usuário (<n> dispensado(s) do TLS)`, esta com o `AVISO` de texto puro; a cada mudança de lado da lista, `TLS por usuário: a lista dos dispensados mudou`; a cada recusa, `porteiro: entrada sem TLS recusada: usuario=<nome> origem=<ip> (a senha enviada passou em texto puro: troque-a)` |
 | Painel, aba Usuários | A coluna **TLS**, com `obrigatório` ou `sem TLS` em cada linha |
-| Painel, abas Visão geral e Segurança | Com pelo menos um usuário dispensado, a faixa de alerta no topo, com a quantidade e os nomes; na aba Segurança, o item `TLS do FTP` |
+| Painel, abas Visão geral e Segurança | Com pelo menos um usuário dispensado, a faixa de alerta no começo da tela, com a quantidade e os nomes; na aba Segurança, o item `TLS do FTP` |
 | Painel, aba Atividade | `Usuário dispensado do TLS` e `Usuário volta a exigir TLS`, com o administrador que fez |
 
 <details>
@@ -795,7 +795,7 @@ Nenhuma versão é publicada sem a bateria inteira aprovada. Ela roda em um clon
 | Confinamento no FTP | Sair da pasta pelo `chroot`, ler a pasta de outro usuário, mudar permissão por `SITE CHMOD`, escapar da pasta escolhida | 3, 4, 6, 59 |
 | Bloqueio por tentativa | Burlar o bloqueio, desbloquear ou mudar limite sem sessão, sem token ou com valor fora da regra | 85, 86 |
 | Rede e exposição | Subir com o FTP em todas as interfaces ou em IP público, anunciar IP público, abrir o painel para rede pública, ligar a opção de IP público com valor inválido, sem TLS ou em "todos" | 16 a 21, 40 a 45 |
-| Painel por proxy ou túnel | Forjar o endereço do cliente por cabeçalho, com e sem proxy declarado; contar senha errada e sessão pelo endereço de quem não é o cliente; ocultar o aviso de exposição | 93 a 96 |
+| Painel por proxy ou túnel | Forjar o endereço do cliente por cabeçalho, com e sem proxy declarado; contar senha errada e sessão pelo endereço de quem não é o cliente; ler na tela de entrada como o painel foi publicado; ocultar o aviso de exposição | 93 a 96 |
 | Entrada e sessão do painel | Abrir rota sem sessão ou com cookie inventado, senha errada e sorteada até o bloqueio, descobrir se um administrador existe, alterar conta sem a senha atual, usar sessão já encerrada, remover a própria conta | 22 a 24, 28, 37, 46 a 49, 51, 69, 72 |
 | Pedido forjado | Enviar sem token CSRF, com `Origin` de fora, com `Origin: null` e com `Host` inesperado | 25 a 27, 38 |
 | Transporte | Falar HTTP sem TLS, negociar TLS antigo, conferir os cabeçalhos de segurança, repetir os limites em HTTP/2 e com compressão | 29 a 31, 87 |

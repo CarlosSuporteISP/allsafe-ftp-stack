@@ -6,13 +6,16 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 ## [Não lançado]
 
-O painel foi redesenhado: ícones desenhados no lugar dos emojis, paleta medida nos dois temas e uma tela de entrada nova. Quem quiser pode publicar só o painel por proxy ou túnel, sem expor o FTP.
+O painel foi redesenhado: menu na lateral, gráficos na Visão geral, ícones desenhados no lugar dos emojis, paleta medida nos dois temas e uma tela de entrada nova. Quem quiser pode publicar só o painel por proxy ou túnel, sem expor o FTP.
 
 ### Adicionado
 
-- **Atividade recente na Visão geral**: os últimos registros do painel, ao lado dos dados para configurar o equipamento, com o atalho para a aba Atividade. A tela lê só o fim do arquivo de auditoria.
+- **Menu na lateral**: em tela de 1280 px de largura ou mais, as abas ficam à esquerda, em dois grupos (Operação e Sistema), com o nome e o papel de quem entrou e o botão Sair embaixo. Em tela mais estreita, o menu vira a faixa de cima, com as abas numa linha que rola para o lado. O usuário do FTP vê só a aba Meus arquivos.
+- **Gráficos na Visão geral**: arquivos recebidos por dia nos últimos 14 dias, o último envio de cada usuário e o espaço de cada pasta. São SVG montados pelo painel (`painel/graficos.py`), sem script e sem estilo dentro do HTML, e todo número do desenho está também escrito ao lado dele.
+- **Resumo da conferência na aba Segurança**: quantos itens estão em ordem, quantos pedem atenção e quantos são conferidos no servidor, em uma faixa dividida com a legenda.
+- **Atividade recente na Visão geral**: os últimos registros do painel, com o atalho para a aba Atividade. A tela lê só o fim do arquivo de auditoria.
 - **Só o painel publicado, por proxy ou túnel** (`PAINEL_PROXY_CONFIAVEL`, vazia por padrão): com o endereço do proxy ou do túnel na variável, o nginx passa a usar o último endereço do `X-Forwarded-For` como endereço de quem acessa, e só em conexão vinda desse proxy. O limite de tentativas de senha, a sessão, a auditoria e os limites de pedidos contam por quem acessa, e não pelo proxy. O FTP não passa por ele. É opção de quem instala: o `deploy.sh`, os containers do painel e do nginx e o painel (tela de entrada, rodapé e aba Segurança) avisam quando está ligada. O passo a passo, com o exemplo de nginx de borda, está em `doc/seguranca.md`.
-- **Aviso de exposição na tela é opção de quem instala** (`PAINEL_AVISO_EXPOSICAO`, `sim` por padrão): com `nao`, a tela de entrada, o topo da aba Segurança e o rodapé deixam de dizer que o painel está publicado por proxy, por túnel ou em endereço público. O estado continua nas linhas da aba Segurança, que só administrador vê, e o alerta continua na saída do `deploy.sh` e no registro dos containers. Caso de teste de segurança 96.
+- **Aviso de exposição só para administrador, e opção de quem instala** (`PAINEL_AVISO_EXPOSICAO`, `sim` por padrão): com o painel publicado por proxy, por túnel ou em endereço público, o administrador lê isso em três lugares: no sinal ao lado de Segurança no menu, no começo da aba Segurança e no rodapé. A tela de entrada e as telas do usuário do FTP não dizem como a instalação foi publicada. Com `nao`, os três avisos somem. O estado continua nas linhas da aba Segurança, que só administrador vê, e o alerta continua na saída do `deploy.sh` e no registro dos containers. Caso de teste de segurança 96.
 - **Casos de teste** de segurança 93 a 95 e de rede 14: cabeçalho de endereço escrito pelo cliente ignorado, só o proxy aceito informa o endereço, senha errada e sessão contam pelo endereço de quem acessa, e as recusas do `deploy.sh` e dos containers a rede inteira, endereço público, `0.0.0.0`, mais de oito endereços e endereço fora das redes permitidas.
 - **Boas práticas antes de produção, em fluxograma**, no guia de [Segurança](doc/seguranca.md#boas-praticas): as quatro decisões de quem instala (onde o FTP escuta, equipamento sem TLS, por onde o painel é aberto, para onde vai a cópia), com o caminho recomendado e a opção de cada uma.
 - **Testes executados**, no guia de [Segurança](doc/seguranca.md#testes-executados): o que a bateria de segurança tenta, alvo por alvo, com o número de cada caso, e o que cada versão passa além da bateria.
@@ -24,11 +27,11 @@ O painel foi redesenhado: ícones desenhados no lugar dos emojis, paleta medida 
 - **Ícones próprios no lugar dos emojis**: 33 desenhos de linha, em grade de 24, saem dentro do HTML da própria tela (`painel/icones.py`). Nenhum arquivo de imagem, fonte ou script é pedido a mais, e a política de conteúdo do painel não muda.
 - **Paleta em OKLCH**, com papéis nomeados (fundo, superfície, texto, ação, estados) e contraste calculado nos temas claro e escuro. As misturas de cor dos avisos e das marcas são feitas em OKLab.
 - **Tela de entrada nova**, sem a barra de cima: de um lado a marca, o que o servidor faz e uma cena em três dimensões do caminho do backup (os equipamentos, o FTPS e a pasta de cada um); do outro, o formulário. A cena é HTML e CSS do próprio painel, sem script nem imagem, e só anima `transform` e `opacity`. Tem botão de pausar, que funciona pelo teclado, e já chega parada no navegador configurado para movimento reduzido. No celular a marca vira uma faixa curta acima do formulário, sem a cena.
-- **Cada aba começa pelo título, por uma linha que diz o que a tela mostra e pela ação principal**, à direita. A aba em que se está fica marcada por um traço no menu.
-- **Visão geral** com o estado do servidor em uma faixa e as quatro medidas lado a lado, cada uma com o atalho para a aba dela.
+- **Cada aba começa pelo título, por uma linha que diz o que a tela mostra e pela ação principal**, à direita. A aba em que se está fica marcada no menu.
+- **Visão geral** com o estado do servidor em uma faixa e as quatro medidas lado a lado, cada uma com o atalho para a aba dela; a do certificado mostra a data de validade e, embaixo, quantos dias faltam.
 - **Aba Atividade**: a data e o endereço de origem aparecem inteiros na linha, sem quebra, com largura para endereço IPv6. A data passa a `dd/mm/aaaa hh:mm:ss`, o registro feito pelo próprio painel mostra `no servidor` no lugar do traço, e o detalhe ganhou nomes legíveis (administrador, usuário, versão, tamanho) no lugar de `chave=valor`. O arquivo de auditoria não mudou de formato.
-- **Tabelas de borda a borda no cartão**, com a linha de títulos em faixa, e página até 1392 px de largura: em tela de 1280 px ou mais, nenhuma tabela precisa de rolagem lateral com o cadastro de exemplo.
-- **Aba Usuários**: a coluna da pasta mostra só a pasta do usuário, e o caminho do servidor aparece uma vez, na legenda; as marcas ganharam legenda de uma linha cada; as ações da linha ficaram discretas e não quebram de linha em tela larga; a pasta aparece inteira e, se faltar largura, quem desce de linha é a marca.
+- **Tabelas de borda a borda no cartão**, com a linha de títulos em faixa, e página até 1392 px de largura: em tela de 1024 px ou mais, nenhuma tabela precisa de rolagem lateral com o cadastro de exemplo.
+- **Aba Usuários**: a coluna da pasta mostra só a pasta do usuário, e o caminho do servidor aparece uma vez, na legenda; as marcas ganharam legenda de uma linha cada; as ações da linha ficaram discretas, duas por linha, e em linha única a partir de 1560 px de tela; a pasta aparece inteira e, se faltar largura, quem desce de linha é a marca.
 - **Cartão Bloqueios da tela Editar mais largo**: a origem, inclusive um endereço IPv6, as senhas erradas e as duas datas cabem sem rolagem lateral.
 - **Tamanho e data não quebram de linha** entre o número e a unidade nem entre o dia e a hora.
 - **Fonte do sistema mantida**: nenhuma fonte é baixada.
@@ -36,6 +39,7 @@ O painel foi redesenhado: ícones desenhados no lugar dos emojis, paleta medida 
 - **Documentação com os nomes das telas novas**: abas citadas sem emoji e a coluna **Pasta** da aba Usuários com o nome que a tela mostra.
 - **Fotos da aplicação refeitas**: as 45 capturas mostram as telas novas, e o guia de [fotos](doc/aplicacao/README.md) descreve a tela de entrada, a Atividade recente, a legenda da aba Usuários e a linha do proxy na aba Segurança.
 - **Caso de teste funcional 28**: a conferência do menu do usuário do FTP conta só os links, e não o endereço interno do ícone.
+- **Casos de teste de segurança 45, 93, 94 e 96**: passam a conferir que a tela de entrada não diz como a instalação foi publicada e que o sinal do menu aparece só com a instalação publicada e o aviso ligado.
 
 ## [0.25.2] - 2026-10-09
 

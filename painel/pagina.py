@@ -11,6 +11,8 @@ ABAS = (('/', 'painel', 'Visão geral'), ('/usuarios', 'usuarios', 'Usuários'),
         ('/administradores', 'escudo', 'Administradores'), ('/seguranca', 'cadeado', 'Segurança'),
         ('/atividade', 'atividade', 'Atividade'))
 ABAS_USUARIO = (('/meus-arquivos', 'pasta', 'Meus arquivos'),)
+# Menu lateral do administrador: o dia a dia em cima, o que cuida do próprio painel embaixo.
+GRUPOS = (('Operação', ABAS[:3]), ('Sistema', ABAS[3:]))
 # Estado de um item conferido ➜ (ícone, o que o leitor de tela diz). A cor acompanha, mas nunca é o único sinal.
 ESTADOS = {'bom': ('ok', 'em ordem'), 'atencao': ('alerta', 'atenção'), 'ruim': ('erro', 'problema'),
            'neutro': ('neutro', 'não se aplica'), 'manual': ('muro', 'conferir no servidor')}
@@ -76,10 +78,17 @@ def aviso_oculto():
     return not CFG.get('aviso_exposicao', True) and bool(CFG.get('ip_publico') or CFG.get('proxies'))
 
 
-def aviso_rede():
-    """Como esta instalação está publicada. Expor à internet é opção de quem instala, e a tela diz quando está ligada.
+def publicado():
+    """A instalação aceita endereço público ou está atrás de proxy, e o aviso disso não foi ocultado."""
+    return bool(CFG.get('ip_publico') or CFG.get('proxies')) and not aviso_oculto()
 
-    Com PAINEL_AVISO_EXPOSICAO=nao a tela não diz: o estado continua na aba Segurança e na saída do deploy.sh.
+
+def aviso_rede():
+    """Como esta instalação está publicada, para o administrador: começo da aba Segurança.
+
+    Expor à internet é opção de quem instala. A tela de entrada não diz nada disso: quem ainda não entrou não fica
+    sabendo como o painel está publicado. Com PAINEL_AVISO_EXPOSICAO=nao o aviso some também daqui, do menu e do
+    rodapé: o estado continua nas linhas da aba Segurança e na saída do deploy.sh.
     """
     if aviso_oculto():
         return ''
@@ -90,10 +99,9 @@ def aviso_rede():
                    'firewall do servidor liberando só os endereços dos equipamentos e de quem administra.</p>')
     if CFG.get('proxies'):
         avisos += ('<p class="aviso">Painel publicado por proxy ou túnel (<code>PAINEL_PROXY_CONFIAVEL</code>), por opção de '
-                   'quem instalou. Quem chega a esta tela é decidido lá: restrinja o acesso no proxy ou no túnel. O FTP não '
-                   'passa por ele.</p>')
-    return avisos or ('<p class="nota">De fábrica, uso só em rede privada, atrás de firewall. Publicar o painel ou o FTP na '
-                      'internet é opção de quem instala, e fica avisado aqui quando está ligada.</p>')
+                   'quem instalou. Quem chega à tela de entrada é decidido lá: restrinja o acesso no proxy ou no túnel. O FTP '
+                   'não passa por ele.</p>')
+    return avisos
 
 
 def cabeca(titulo, resumo, acao=''):
@@ -101,25 +109,44 @@ def cabeca(titulo, resumo, acao=''):
     return (f'<div class="cabeca"><div><h1 class="titulo-aba">{titulo}</h1><p class="suave">{resumo}</p></div>{acao}</div>')
 
 
+def menu_lateral(sessao, ativa):
+    """Menu, quem está na sessão e a saída. Em tela larga fica na lateral; na estreita, vira a faixa de cima."""
+    admin = not sessao['usuario']
+    grupos = GRUPOS if admin else (('', ABAS_USUARIO),)
+    links = ''
+    for grupo, abas in grupos:
+        links += f'<span class="grupo">{grupo}</span>' if grupo else ''
+        for caminho, desenho, rotulo in abas:
+            # Instalação publicada: o administrador vê a marca na aba que explica, em qualquer tela em que estiver.
+            # É um desenho, e não uma etiqueta escrita: cabe no menu estreito e na faixa de cima sem cortar.
+            sinal = ('<span class="sinal" title="Esta instalação está publicada fora da rede privada: veja como nesta aba">'
+                     f'{icone("alerta")}<span class="so-leitor"> (instalação publicada)</span></span>'
+                     ) if caminho == '/seguranca' and publicado() else ''
+            links += (f'<a href="{caminho}"' + (' class="ativa" aria-current="page"' if caminho == ativa else '')
+                      + f'>{icone(desenho)}{rotulo}{sinal}</a>')
+    nome, papel = (sessao['admin'], 'Administrador') if admin else (sessao['usuario'], 'Usuário do FTP')
+    return (f'<nav aria-label="Abas do painel">{links}</nav><form class="sair" method="post" action="/sair">'
+            f'<input type="hidden" name="csrf" value="{e(sessao["csrf"])}"><span class="quem">{e(nome)}<span>{papel}</span>'
+            f'</span><button type="submit">{icone("sair")}Sair</button></form>')
+
+
 def pagina(titulo, miolo, sessao=None, ativa='', porta=False):
-    """Moldura de toda tela. `porta` é a tela de entrada: sem o topo, com a marca dentro dela."""
+    """Moldura de toda tela. `porta` é a tela de entrada: sem o menu, com a marca dentro dela.
+
+    Com sessão, o corpo leva `com-menu`: é o que deixa o menu na lateral em tela larga. Tela de recusa sem sessão
+    fica só com a marca em cima.
+    """
     topo = ''
     if not porta:
-        menu = ''
-        if sessao:
-            abas, nome, papel = ((ABAS_USUARIO, sessao['usuario'], 'Usuário do FTP desta sessão') if sessao['usuario']
-                                 else (ABAS, sessao['admin'], 'Administrador desta sessão'))
-            links = ''.join(f'<a href="{caminho}"' + (' class="ativa" aria-current="page"' if caminho == ativa else '')
-                            + f'>{icone(desenho)}{rotulo}</a>' for caminho, desenho, rotulo in abas)
-            menu = (f'<nav aria-label="Abas do painel">{links}</nav><form class="sair" method="post" action="/sair">'
-                    f'<input type="hidden" name="csrf" value="{e(sessao["csrf"])}"><span class="quem" title="{papel}">'
-                    f'{e(nome)}</span><button type="submit">{icone("sair")}Sair</button></form>')
         topo = ('<header><span class="marca-topo"><img src="/marca/simbolo-64.png" alt="" width="28" height="28">AllSafe FTP</span>'
-                f'{menu}</header>\n')
-    rede = ' · '.join(filter(None, ('endereço público aceito: confira o firewall' if CFG.get('ip_publico') else '',
-                                    'painel publicado por proxy ou túnel' if CFG.get('proxies') else ''))) \
-        or 'só para rede privada, atrás de firewall'
-    rede = '' if aviso_oculto() else f' · {rede}'
+                f'{menu_lateral(sessao, ativa) if sessao else ""}</header>\n')
+    # Como a instalação está publicada só vai ao rodapé do administrador: quem não entrou e o usuário do FTP não leem.
+    rede = ''
+    if not (CFG.get('ip_publico') or CFG.get('proxies')):
+        rede = ' · só para rede privada, atrás de firewall'
+    elif sessao and not sessao['usuario'] and not aviso_oculto():
+        rede = ' · ' + ' · '.join(filter(None, ('endereço público aceito: confira o firewall' if CFG.get('ip_publico') else '',
+                                                 'painel publicado por proxy ou túnel' if CFG.get('proxies') else '')))
     corpo = f"""<a class="pular" href="#conteudo">Pular para o conteúdo</a>
 {topo}<main id="conteudo">
 {miolo}
@@ -145,7 +172,7 @@ def pagina(titulo, miolo, sessao=None, ativa='', porta=False):
 <link rel="apple-touch-icon" href="/marca/apple-touch-icon.png">
 <link rel="stylesheet" href="/estilo.css">
 </head>
-<body{' class="porta"' if porta else ''}>
+<body{' class="porta"' if porta else ' class="com-menu"' if sessao else ''}>
 {corpo}{desenhos(corpo)}
 </body>
 </html>

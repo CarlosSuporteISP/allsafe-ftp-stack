@@ -32,7 +32,7 @@ t0="$(tempo)"; e_usu="$(entra equip14 "$U" "$W/u14a.senha")"; t_usu="$(duracao "
 raiz="$(aba -b "$U" "$B/")"
 tela="$(aba -b "$U" "$M")"; UK="$(sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' "$W/corpo" | head -1)"; proibir "$UK"
 menu="$(grep -o '<nav.*</nav>' "$W/corpo" | grep -o '<a href="[^"]*"' | cut -d ' ' -f 2 | tr '\n' ' ')"  # só os links: o ícone também tem href
-quem_e="$(grep -c 'title="Usuário do FTP desta sessão">equip14<' "$W/corpo")"
+quem_e="$(grep -c 'class="quem">equip14<span>Usuário do FTP<' "$W/corpo")"
 adm_na_tela="$(grep -o -E 'href="/(usuarios|arquivos|administradores|atividade|seguranca)|action="/arquivos/pasta"' "$W/corpo" | wc -l)"
 caminho_real="$(grep -c -E "clientes14|olt-a|/data|$T" "$W/corpo")"; pasta_diario="$(grep -c 'href="/meus-arquivos?pasta=diario"' "$W/corpo")"
 sub="$(aba -b "$U" "$M?pasta=diario")"; link="$(grep -c 'href="/meus-arquivos/baixar?arquivo=diario/backup.cfg"' "$W/corpo")"; trilha="$(grep -c '<a href="/meus-arquivos">Início</a> / <strong>diario</strong>' "$W/corpo")"

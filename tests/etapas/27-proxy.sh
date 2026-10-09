@@ -25,10 +25,10 @@ opcao_0="$(env_file="$ENVA" env_valor PAINEL_PROXY_CONFIAVEL)"; aceitos_0="$(ace
 r_limpo="$(errar27)"; origem27="$(de27)"
 r_forjado="$(errar27 -H 'X-Forwarded-For: 198.51.100.7' -H 'X-Cliente-IP: 198.51.100.8' -H 'X-Real-IP: 198.51.100.9' -H 'Forwarded: for=198.51.100.10')"
 de_forjado="$(de27)"; forjado_1="$(forjado27)"
-nota_0="$(c "$B/entrar" | grep -c -i -E 'publicado por proxy ou túnel|PAINEL_PROXY_CONFIAVEL')"  # a etapa 10 deixa o aviso de IP público na tela: confere só o do proxy
+nota_0="$(c "$B/entrar" | grep -c -i -E 'endereço público|publicado por proxy ou túnel|PAINEL_PROXY_CONFIAVEL|REDE_PERMITIR_IP_PUBLICO')"
 ip_privado "$origem27" && [[ -z "$opcao_0" && "$aceitos_0" == 0 && "$r_limpo" == 401 && "$r_forjado" == 401 && "$de_forjado" == "$origem27" \
   && "$forjado_0" == "$forjado_1" && "$nota_0" == 0 ]]
-caso $? seguranca 93 "Endereço escrito pelo cliente em cabeçalho é ignorado" "PAINEL_PROXY_CONFIAVEL vazio, endereços de proxy na configuração do nginx: $aceitos_0 · entrada com senha errada, sem cabeçalho a mais: $r_limpo, na auditoria com o endereço $origem27 · a mesma entrada com X-Forwarded-For, X-Cliente-IP, X-Real-IP e Forwarded apontando para 198.51.100.x: $r_forjado, na auditoria com o endereço $de_forjado · linhas da auditoria com o endereço forjado: $forjado_0 → $forjado_1 · linhas da tela de entrada que falam do proxy: $nota_0"
+caso $? seguranca 93 "Endereço escrito pelo cliente em cabeçalho é ignorado" "PAINEL_PROXY_CONFIAVEL vazio, endereços de proxy na configuração do nginx: $aceitos_0 · entrada com senha errada, sem cabeçalho a mais: $r_limpo, na auditoria com o endereço $origem27 · a mesma entrada com X-Forwarded-For, X-Cliente-IP, X-Real-IP e Forwarded apontando para 198.51.100.x: $r_forjado, na auditoria com o endereço $de_forjado · linhas da auditoria com o endereço forjado: $forjado_0 → $forjado_1 · linhas da tela de entrada que falam da exposição: $nota_0"
 
 # ------------------------------------------------------------------ o que a opção recusa, antes de mexer em qualquer coisa
 PRIV27="127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
@@ -53,7 +53,9 @@ done
 r_e="$(entrar "$J" "$W/painel.senha")"; proibir "$(biscoito_de "$J")"; de_admin="$(de27)"
 seg="$(aba -b "$J" "$B/seguranca")"
 no_topo="$(grep -c 'Painel publicado por proxy ou túnel' "$W/corpo")"; na_linha="$(grep -c 'Painel por proxy ou túnel</th><td><strong>Em uso</strong>' "$W/corpo")"
-rodape="$(grep -c 'painel publicado por proxy ou túnel' "$W/corpo")"
+rodape="$(grep -c 'painel publicado por proxy ou túnel' "$W/corpo")"; marcador="$(grep -c -F '<span class="so-leitor"> (instalação publicada)</span>' "$W/corpo")"
+# Com o painel publicado, o aviso é do administrador: a tela de entrada continua sem dizer nada.
+entrada_px="$(c "$B/entrar" | grep -c -i -E 'endereço público|publicado por proxy ou túnel|PAINEL_PROXY_CONFIAVEL|REDE_PERMITIR_IP_PUBLICO')"
 r_1="$(errar27 -H 'X-Forwarded-For: 198.51.100.7')"; de_1="$(de27)"
 r_2="$(errar27 -H 'X-Forwarded-For: 203.0.113.99, 198.51.100.8')"; de_2="$(de27)"
 r_3="$(errar27 -H 'X-Forwarded-For: 198.51.100.9' -H 'X-Cliente-IP: 203.0.113.77' -H 'X-Real-IP: 203.0.113.78')"; de_3="$(de27)"
@@ -61,9 +63,10 @@ r_4="$(errar27 -H 'X-Forwarded-For: nao-e-endereco')"; de_4="$(de27)"
 r_5="$(errar27 -H 'X-Cliente-IP: 198.51.100.11')"; de_5="$(de27)"
 [[ "$r" == 0 && "$saude_p" == "healthy healthy healthy " && "$aceitos_1" == 1 && "$alerta_deploy" == 1 && "$alertas" == 2 && "$r_e" == 303 \
   && "$de_admin" == "$origem27" && "$seg" == "200 " && "$no_topo" -ge 1 && "$na_linha" == 1 && "$rodape" == 1 \
+  && "$marcador" == 1 && "$entrada_px" == 0 \
   && "$r_1" == 401 && "$de_1" == 198.51.100.7 && "$r_2" == 401 && "$de_2" == 198.51.100.8 && "$r_3" == 401 && "$de_3" == 198.51.100.9 \
   && "$r_4" == 401 && "$de_4" == "$origem27" && "$r_5" == 401 && "$de_5" == "$origem27" ]]
-caso $? seguranca 94 "Painel por proxy: só o proxy aceito informa o endereço do cliente" "deploy.sh com PAINEL_PROXY_CONFIAVEL=$origem27: saída $r, saúde $saude_p· endereços de proxy na configuração do nginx: $aceitos_1 · alerta na saída do deploy.sh: $alerta_deploy · no registro dos containers: $ev· entrada do administrador sem X-Forwarded-For: $r_e, na auditoria com $de_admin · aba Segurança ($seg): aviso no topo $no_topo, linha 'Em uso' $na_linha, rodapé $rodape · senha errada com X-Forwarded-For 198.51.100.7: $r_1, auditoria $de_1 · com '203.0.113.99, 198.51.100.8' (o primeiro é o que o cliente escreveu): $r_2, auditoria $de_2 · com X-Forwarded-For 198.51.100.9 mais X-Cliente-IP e X-Real-IP forjados: $r_3, auditoria $de_3 · com valor que não é endereço: $r_4, auditoria $de_4 · só com X-Cliente-IP forjado: $r_5, auditoria $de_5"
+caso $? seguranca 94 "Painel por proxy: só o proxy aceito informa o endereço do cliente" "deploy.sh com PAINEL_PROXY_CONFIAVEL=$origem27: saída $r, saúde $saude_p· endereços de proxy na configuração do nginx: $aceitos_1 · alerta na saída do deploy.sh: $alerta_deploy · no registro dos containers: $ev· entrada do administrador sem X-Forwarded-For: $r_e, na auditoria com $de_admin · aba Segurança ($seg): aviso no topo $no_topo, linha 'Em uso' $na_linha, rodapé $rodape, sinal de instalação publicada no menu $marcador · linhas da tela de entrada que falam da exposição: $entrada_px · senha errada com X-Forwarded-For 198.51.100.7: $r_1, auditoria $de_1 · com '203.0.113.99, 198.51.100.8' (o primeiro é o que o cliente escreveu): $r_2, auditoria $de_2 · com X-Forwarded-For 198.51.100.9 mais X-Cliente-IP e X-Real-IP forjados: $r_3, auditoria $de_3 · com valor que não é endereço: $r_4, auditoria $de_4 · só com X-Cliente-IP forjado: $r_5, auditoria $de_5"
 
 # ------------------------------------------------------------------ senha errada e sessão pelo endereço que o proxy informou
 ev=""
@@ -84,15 +87,16 @@ rec_aviso="$(recusa_deploy PAINEL_AVISO_EXPOSICAO=talvez)"
 gravar_env "$ENVA" PAINEL_AVISO_EXPOSICAO nao
 dep; r_oc=$?
 saude_oc="$(saude "$FTP" "$PAINEL" "$NGINX")"; alerta_oc="$(grep -c '^ALERTA: PAINEL_PROXY_CONFIAVEL=' "$W/deploy.log")"
-entrada_oc="$(c "$B/entrar" | grep -c -i -E 'publicado por proxy ou túnel|PAINEL_PROXY_CONFIAVEL')"
+entrada_oc="$(c "$B/entrar" | grep -c -i -E 'endereço público|publicado por proxy ou túnel|PAINEL_PROXY_CONFIAVEL|REDE_PERMITIR_IP_PUBLICO')"
 r_oc_e="$(entrar "$J" "$W/painel.senha")"; proibir "$(biscoito_de "$J")"
 seg_oc="$(aba -b "$J" "$B/seguranca")"
 topo_oc="$(grep -c -i 'painel publicado por proxy ou túnel' "$W/corpo")"
 linha_oc="$(grep -c 'Painel por proxy ou túnel</th><td><strong>Em uso</strong>' "$W/corpo")"; dito_oc="$(grep -c 'PAINEL_AVISO_EXPOSICAO=nao' "$W/corpo")"
+marcador_oc="$(grep -c -F '<span class="so-leitor"> (instalação publicada)</span>' "$W/corpo")"
 recusou "$rec_aviso" "PAINEL_AVISO_EXPOSICAO deve ser 'sim' ou 'nao'" \
   && [[ "$r_oc" == 0 && "$saude_oc" == "healthy healthy healthy " && "$alerta_oc" == 1 && "$entrada_oc" == 0 && "$r_oc_e" == 303 \
-  && "$seg_oc" == "200 " && "$topo_oc" == 0 && "$linha_oc" == 1 && "$dito_oc" == 1 ]]
-caso $? seguranca 96 "Aviso de exposição oculto por opção: a tela não diz, a aba Segurança e o deploy dizem" "deploy.sh com PAINEL_AVISO_EXPOSICAO=talvez: $rec_aviso · com PAINEL_AVISO_EXPOSICAO=nao e o proxy aceito: saída $r_oc, saúde $saude_oc· alerta na saída do deploy.sh: $alerta_oc · linhas da tela de entrada que falam do proxy: $entrada_oc · entrada do administrador: $r_oc_e · aba Segurança ($seg_oc): aviso no topo e no rodapé $topo_oc, linha 'Em uso' $linha_oc, linha que diz que o aviso está oculto $dito_oc"
+  && "$seg_oc" == "200 " && "$topo_oc" == 0 && "$marcador_oc" == 0 && "$linha_oc" == 1 && "$dito_oc" == 1 ]]
+caso $? seguranca 96 "Aviso de exposição oculto por opção: a tela não diz, a aba Segurança e o deploy dizem" "deploy.sh com PAINEL_AVISO_EXPOSICAO=talvez: $rec_aviso · com PAINEL_AVISO_EXPOSICAO=nao e o proxy aceito: saída $r_oc, saúde $saude_oc· alerta na saída do deploy.sh: $alerta_oc · linhas da tela de entrada que falam da exposição: $entrada_oc · entrada do administrador: $r_oc_e · aba Segurança ($seg_oc): aviso no topo e no rodapé $topo_oc, sinal no menu $marcador_oc, linha 'Em uso' $linha_oc, linha que diz que o aviso está oculto $dito_oc"
 
 # ------------------------------------------------------------------ de volta ao padrão
 gravar_env "$ENVA" PAINEL_AVISO_EXPOSICAO sim

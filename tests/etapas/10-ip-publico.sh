@@ -23,11 +23,13 @@ done
 r_e="$(entrar "$J" "$W/painel.senha")"; proibir "$(awk '$6 == "__Host-sessao" {print $7}' "$J")"
 seg="$(aba -b "$J" "$B/seguranca")"
 no_painel="$(grep -c 'Endereço público aceito' "$W/corpo")"; linha_publico="$(grep -c 'Endereço público</' "$W/corpo")"; rede_na_aba="$(grep -c -F '203.0.113.0/24' "$W/corpo")"
-rodape="$(grep -c 'endereço público aceito: confira o firewall' "$W/corpo")"
+rodape="$(grep -c 'endereço público aceito: confira o firewall' "$W/corpo")"; marcador="$(grep -c -F '<span class="so-leitor"> (instalação publicada)</span>' "$W/corpo")"
+# A tela de entrada é de quem ainda não entrou: não diz como a instalação está publicada.
+na_entrada="$(c "$B/entrar" | grep -c -i -E 'endereço público|publicado por proxy ou túnel|PAINEL_PROXY_CONFIAVEL|REDE_PERMITIR_IP_PUBLICO')"
 r_l="$(ftp_curl tls "$USUARIO" "$W/inicial.senha" "$F/")"
 [[ "$r" == 0 && "$saude_j" == "healthy healthy healthy " && "$alerta_deploy" == 1 && "$alertas" == 3 && "$r_e" == 303 && "$seg" == "200 " \
-  && "$no_painel" -ge 1 && "$linha_publico" -ge 1 && "$rede_na_aba" -ge 1 && "$rodape" == 1 && "$r_l" == 0 ]]
-caso $? seguranca 45 "Alerta de IP público em execução" "deploy.sh com REDE_PERMITIR_IP_PUBLICO=sim: saída $r, saúde $saude_j· alerta na saída do deploy.sh: $alerta_deploy · no registro dos containers: $ev· painel, aba Segurança ($seg): aviso no topo $no_painel, linha 'Endereço público' $linha_publico, rede pública listada $rede_na_aba, rodapé com o alerta $rodape · FTPS depois da troca: login $r_l"
+  && "$no_painel" -ge 1 && "$linha_publico" -ge 1 && "$rede_na_aba" -ge 1 && "$rodape" == 1 && "$marcador" == 1 && "$na_entrada" == 0 && "$r_l" == 0 ]]
+caso $? seguranca 45 "Alerta de IP público em execução" "deploy.sh com REDE_PERMITIR_IP_PUBLICO=sim: saída $r, saúde $saude_j· alerta na saída do deploy.sh: $alerta_deploy · no registro dos containers: $ev· painel, aba Segurança ($seg): aviso no topo $no_painel, linha 'Endereço público' $linha_publico, rede pública listada $rede_na_aba, rodapé com o alerta $rodape, sinal de instalação publicada no menu $marcador · linhas da tela de entrada que falam da exposição: $na_entrada · FTPS depois da troca: login $r_l"
 
 depois_l="$(liberada)"; depois_p="$(permitidas)"
 de_dentro="$(c -o /dev/null -w '%{http_code}' "$B/saude")"

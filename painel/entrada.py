@@ -6,7 +6,7 @@ from auditoria import auditar
 from cena import cena
 from config import CFG, NOME
 from icones import icone
-from pagina import aviso_rede, e, pagina
+from pagina import e, pagina
 from senha import senha_confere
 from sessao import (bloqueado, buscar_sessao, criar_sessao, encerrar_sessao, quem, registrar_falha, token_formulario,
                     token_formulario_valido)
@@ -47,7 +47,7 @@ def tela_entrada(pedido, codigo=200, erro=''):
 <input id="senha" name="senha" type="password" required autocomplete="current-password" maxlength="256">
 <button type="submit">Entrar</button>
 </form>
-{aviso_rede()}
+<p class="nota">Uso restrito a quem foi autorizado. As tentativas de entrada ficam registradas.</p>
 </section>
 </div>''', porta=True))
 

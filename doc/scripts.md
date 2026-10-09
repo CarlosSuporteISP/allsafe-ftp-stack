@@ -263,7 +263,7 @@ MARCA_PLACA='#f0f3f6' ./scripts/gerar-marca.sh  # outra cor de placa, no formato
 | `icone-32.png` | 32 pixels | `allsafe-simbolo-512.png` | Ícone da aba do navegador |
 | `icone-192.png` | 192 pixels | `allsafe-simbolo-512.png` | Ícone em tela de alta densidade e em atalho |
 | `apple-touch-icon.png` | 180 pixels | `allsafe-simbolo-512.png` | Atalho na tela inicial do celular |
-| `simbolo-64.png` | 64 pixels | `allsafe-simbolo-512.png` | Símbolo no topo de todas as telas |
+| `simbolo-64.png` | 64 pixels | `allsafe-simbolo-512.png` | Símbolo no menu de todas as telas |
 | `logo-320.png` | 320 pixels | `allsafe-logo-2048.png` | Logo da tela de entrada |
 
 - **Placa clara:** a arte é escura em fundo transparente e o painel tem fundo escuro. Cada arquivo sai com a arte, nas cores originais, sobre uma placa de cantos arredondados, que aparece igual em aba clara ou escura do navegador. `MARCA_PLACA` troca a cor da placa; o padrão é `#ffffff`.

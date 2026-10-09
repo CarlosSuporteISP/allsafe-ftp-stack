@@ -4,6 +4,8 @@ import os
 
 from config import ARQ_CERT, ARQ_CERT_FTP, CFG, FALHAS_MAX, PRIVADAS, endereco_privado
 from estado import bloqueios, certificado, sem_tls, senhas_de_custo_antigo
+from graficos import faixa
+from icones import icone
 from pagina import alerta_tls, aviso_rede, cabeca, e, marca, pagina, validade
 
 
@@ -48,11 +50,14 @@ def seguranca(pedido, sessao, consulta, formulario, token):
         return 'bom' if endereco_privado(ip) else 'atencao'
     redes_publicas = [str(rede) for rede in CFG['redes'] if not any(rede.subnet_of(p) for p in PRIVADAS)]
 
+    estados = []
+
     def linha(estado, item, situacao):
+        estados.append(estado)
         return f'<tr><td class="marca">{marca(estado)}</td><th scope="row">{item}</th><td>{situacao}</td></tr>'
     # Aviso de exposição oculto por opção de quem instalou: a linha da própria opção diz que ele está oculto.
     oculto = ('' if CFG['aviso_exposicao'] else
-              ' O aviso na tela de entrada e no rodapé está oculto (<code>PAINEL_AVISO_EXPOSICAO=nao</code>).')
+              ' O aviso do menu, do rodapé e do começo desta aba está oculto (<code>PAINEL_AVISO_EXPOSICAO=nao</code>).')
     itens = [
         linha('atencao' if CFG['ip_publico'] else 'bom', 'Endereço público',
               ('<strong>Aceito</strong> (<code>REDE_PERMITIR_IP_PUBLICO=sim</code>): a proteção contra a internet passa a ser o '
@@ -119,6 +124,11 @@ def seguranca(pedido, sessao, consulta, formulario, token):
     pedido.enviar(200, pagina('Segurança', f'''{cabeca('Segurança', 'O que protege o servidor nesta instalação, conferido agora.')}
 {aviso_rede()}
 {alerta_tls()}
+<section class="cartao" aria-label="Resumo da conferência"><h2>{icone('escudo')}{len(estados)} itens conferidos</h2>
+{faixa((('bom', estados.count('bom'), 'em ordem'), ('atencao', estados.count('atencao'), 'pedem atenção'),
+        ('ruim', estados.count('ruim'), 'com problema'),
+        ('neutro', estados.count('neutro') + estados.count('manual'), 'que o painel não confere ou não se aplicam')))}
+</section>
 <section class="cartao lista"><div class="rolagem"><table class="conferencia"><tbody>{''.join(itens)}</tbody></table></div></section>
 <p class="suave">Confira a impressão digital com a que o navegador e o cliente FTP mostram antes de aceitar o certificado.</p>''',
                             sessao, '/seguranca'))

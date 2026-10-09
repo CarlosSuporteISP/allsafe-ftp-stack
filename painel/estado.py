@@ -17,6 +17,7 @@ CACHE = {}
 CUSTO = re.compile(r'\$argon2id\$v=\d+\$m=(\d+),t=\d+,p=\d+\$')
 # Endereço de origem no nome do arquivo de um bloqueio: o mesmo formato que o vigia e o porteiro do ftp aceitam.
 ORIGEM = re.compile(r'[0-9a-fA-F.:]{2,45}')
+DIAS_DO_GRAFICO = 14        # dias do gráfico de arquivos recebidos, na Visão geral
 BLOQUEIOS_LIDOS = 5000      # arquivos de bloqueio lidos por tela; o vigia guarda no máximo 4096
 
 
@@ -203,11 +204,14 @@ def pastas_do_primeiro_nivel(limite=200):
 
 def uso_da_pasta(pasta, validade=60):
     """Tamanho, quantidade e data do arquivo mais novo de /data/<pasta>, com limite de tempo e de itens.
+    `dias` conta os arquivos pela data de cada um: hoje, ontem e assim até DIAS_DO_GRAFICO - 1 dias atrás.
     A medida vale por `validade` segundos; a tela que confirma um apagamento pede a de agora (0)."""
     def medir():
         total = arquivos = 0
         ultimo = 0.0
         parcial = False
+        dias = [0] * DIAS_DO_GRAFICO
+        fim_de_hoje = time.mktime(time.localtime()[:3] + (0, 0, 0, 0, 0, -1)) + 86400
         prazo = time.monotonic() + 2
         pilha = [os.path.join(PASTA_DADOS, pasta)] if pasta else []
         while pilha:
@@ -222,6 +226,9 @@ def uso_da_pasta(pasta, validade=60):
                                 total += dados.st_size
                                 arquivos += 1
                                 ultimo = max(ultimo, dados.st_mtime)
+                                atras = int((fim_de_hoje - dados.st_mtime) // 86400)
+                                if 0 <= atras < DIAS_DO_GRAFICO:
+                                    dias[atras] += 1
                         except OSError:
                             continue
                         if arquivos >= 50000 or time.monotonic() > prazo:
@@ -230,7 +237,7 @@ def uso_da_pasta(pasta, validade=60):
                             break
             except OSError:
                 continue
-        return {'bytes': total, 'arquivos': arquivos, 'ultimo': ultimo, 'parcial': parcial}
+        return {'bytes': total, 'arquivos': arquivos, 'ultimo': ultimo, 'parcial': parcial, 'dias': dias}
     return com_cache(('uso', pasta), validade, medir)
 
 
