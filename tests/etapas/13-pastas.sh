@@ -58,6 +58,29 @@ registro_e="$(grep -c " evento=usuario_criado admin=$ADMIN usuario=eq13e credenc
   && "$da_pasta" == "200 " && "$donos" == 1 && "$registro" == 1 && "$registro_e" == 1 ]]
 caso $? testes 27 "Pasta escolhida e pasta dividida" "pelo painel, olt13a e olt13b na pasta clientes/olt-01: $r_a e $r_b · usuário sem pasta informada (eq13e): $r_e, pasta no cadastro: $p_e · pela linha de comando, cli13c em clientes/olt-02/diario (saída $r_c; níveis criados: $d_c1 e $d_c) e cli13d em clientes (saída $r_d, avisos de pasta dividida: $avisos); a remoção de um usuário de clientes/olt-03 informa a pasta real: $removido · pasta no cadastro: olt13a $p_a, olt13b $p_b, cli13c $p_c, cli13d $p_d · olt13a envia por FTPS (saída $r_envio), olt13b baixa o mesmo arquivo (saída $r_outro, $(cmp -s "$W/envio.bin" "$W/dividido.baixado" && echo idêntico || echo DIFERENTE)), o painel entrega de clientes/olt-01 ($r_web, $(cmp -s "$W/envio.bin" "$W/dividido.web" && echo idêntico || echo DIFERENTE)) · aba Usuários: $divididas pastas marcadas como dividida, link para a pasta real: $link_a (olt13a e olt13b) e $link_e (eq13e) · tela de remoção mostra a pasta real ($na_remocao) e quem mais a alcança ($quem_mais) · aba Arquivos mostra de quem é a pasta: $donos · usuario_criado com a pasta na auditoria: $registro e $registro_e"
 
+# ------------------------------------------------------------------ pasta dividida em cadastro grande
+# A lista de usuários e a soma da Visão geral respondem em uma passada pelo cadastro. A referência é a comparação
+# de todos com todos, linha a linha: vizinhos() para cada usuário e a busca de pasta dentro de pasta.
+grande="$(docker exec -i -w /opt/painel "$PAINEL" python3 - 2>&1 <<'PY'
+from estado import pastas_distintas, vizinhos, vizinhos_de_todos
+
+cadastro = {'par13a': 'olt', 'par13b': 'olt-01', 'par13c': 'olt/01'}
+for i in range(2000):
+    grupo = f'clientes/c{i % 40:02d}'
+    cadastro[f'eq13-{i:05d}'] = grupo if i % 7 == 0 else '' if i % 11 == 0 else f'{grupo}/e{i:05d}'
+cadastro = dict(sorted(cadastro.items()))
+todos = vizinhos_de_todos(cadastro)
+unicas = sorted({pasta for pasta in cadastro.values() if pasta})
+esperadas = [pasta for pasta in unicas if not any(pasta.startswith(outra + '/') for outra in unicas)]
+diferentes = sum(1 for nome in cadastro if todos.get(nome) != vizinhos(cadastro, nome))
+print(f'usuarios={len(cadastro)} divididas={sum(1 for outros in todos.values() if outros)} sem_pasta={sum(1 for p in cadastro.values() if not p)}',
+      f'distintas={len(pastas_distintas(cadastro))} par={",".join(todos["par13a"])}/{",".join(todos["par13b"])}',
+      f'divergencias={diferentes + (pastas_distintas(cadastro) != esperadas) + (list(todos) != list(cadastro))}')
+PY
+)"
+[[ "$grande" == "usuarios=2003 divididas=1846 sem_pasta=156 distintas=42 par=par13c/ divergencias=0" ]]
+caso $? testes 54 "Pasta dividida em cadastro grande" "dentro do container do painel, cadastro de 2003 usuários montado em memória (pasta própria, pasta dentro da de outro, pasta repetida, usuário fora da pasta dos dados e os nomes olt, olt-01 e olt/01): a resposta em uma passada comparada com a de todos contra todos, usuário por usuário e pasta por pasta: ${grande:-sem resposta}"
+
 # ------------------------------------------------------------------ criar pasta sem sessão e sem token
 antes="$(arvore)"; auditoria; n_antes="$(eventos recusa_csrf)"; o_antes="$(eventos recusa_origem)"
 campos=(--data-urlencode 'pasta=clientes' --data-urlencode 'nome=sem-sessao')

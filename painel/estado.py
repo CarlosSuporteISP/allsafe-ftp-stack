@@ -138,10 +138,33 @@ def vizinhos(cadastro, nome):
             if outro != nome and dele and (dele == pasta or dele.startswith(pasta + '/') or pasta.startswith(dele + '/'))]
 
 
+def pastas_acima(pasta):
+    """Pastas que contêm esta: de 'a/b/c', 'a' e 'a/b'."""
+    return [pasta[:corte] for corte, letra in enumerate(pasta) if letra == '/' and corte]
+
+
+def vizinhos_de_todos(cadastro):
+    """O mesmo que vizinhos(), para o cadastro inteiro em uma passada: usuário ➜ quem alcança a pasta dele.
+    É o que a lista de usuários usa: chamar vizinhos() em cada linha compara todos com todos."""
+    donos = {}
+    for nome, pasta in cadastro.items():
+        if pasta:
+            donos.setdefault(pasta, []).append(nome)
+    achados = {nome: [] for nome in cadastro}
+    for pasta, nomes in donos.items():
+        de_cima = [outro for acima in pastas_acima(pasta) for outro in donos.get(acima, ())]
+        for nome in nomes:
+            achados[nome] += [outro for outro in nomes if outro != nome] + de_cima
+        for outro in de_cima:
+            achados[outro] += nomes
+    ordem = {nome: posicao for posicao, nome in enumerate(cadastro)}
+    return {nome: sorted(outros, key=ordem.__getitem__) for nome, outros in achados.items()}
+
+
 def pastas_distintas(cadastro):
     """Pastas dos usuários sem repetição e sem a que fica dentro de outra, para a soma não contar duas vezes."""
-    unicas = sorted({pasta for pasta in cadastro.values() if pasta})
-    return [pasta for pasta in unicas if not any(pasta.startswith(outra + '/') for outra in unicas)]
+    unicas = {pasta for pasta in cadastro.values() if pasta}
+    return sorted(pasta for pasta in unicas if not any(acima in unicas for acima in pastas_acima(pasta)))
 
 
 def impedimento_da_pasta(pasta):

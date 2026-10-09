@@ -11,7 +11,7 @@ from aba_arquivos import Recusado, apagar_caminho, endereco, resposta_parcial
 from auditoria import auditar, limpo
 from config import CFG, DOWNLOADS_POR_USUARIO, NOME, PASTA, SENHA_MAX, SENHA_MIN
 from confirmacao import campo_senha_atual, confirmacao_recusada
-from estado import bloqueios, executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, sem_tls, uso_da_pasta, usuarios, vizinhos
+from estado import bloqueios, executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, sem_tls, uso_da_pasta, usuarios, vizinhos, vizinhos_de_todos
 from pagina import e, pagina, quando, tamanho
 
 MENSAGENS = {
@@ -41,13 +41,14 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
     marcados = sem_tls(cadastro) if excecoes else []
     proprios = limites.todos()
     presos = bloqueios()
+    divididas = vizinhos_de_todos(cadastro)
     for nome, pasta in cadastro.items():
         uso = uso_da_pasta(pasta)
         destino = urllib.parse.quote(nome)
         if pasta:
             celula = (f'<a href="/arquivos?pasta={urllib.parse.quote(pasta, safe="/")}" title="Abrir na aba Arquivos">'
                       f'<code>{e(CFG["pasta_host"])}/{e(pasta)}</code></a>')
-            outros = vizinhos(cadastro, nome)
+            outros = divididas[nome]
             if outros:
                 celula += f' <span class="etiqueta" title="Também alcançada por: {e(", ".join(outros))}">dividida</span>'
         else:

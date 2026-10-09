@@ -8,7 +8,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.25.1-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.25.2-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
@@ -538,6 +538,7 @@ Medido em 2026-10-05, na versão `0.18.4`, com os três containers em repouso, n
 - **Tamanho do código:** 3358 linhas de Python em 21 módulos, 202 de CSS, 5784 de Bash e 278 de Perl, contando a bateria de testes.
 - **De onde vem o peso das imagens:** da base `debian:13-slim`, com 119 MB, comum às três.
 - **Imagem do FTP, medida em 2026-10-09, na versão `0.25.0`:** passou de 208 MB para 218 MB com o `age`, que cifra a cópia de segurança. As outras duas não mudaram, e nada novo é instalado no host.
+- **Painel com centenas de usuários, medido em 2026-10-09, na versão `0.25.2`:** com 501 usuários no cadastro, a aba Usuários (297 KB de página) responde em 8,5 ms e a Visão geral em 5,1 ms, na mediana de 30 pedidos; antes eram 33,2 ms e 17,0 ms, porque a pasta de cada usuário era comparada com a de todos os outros. A leitura do cadastro leva 1,2 ms e continua sendo feita a cada pedido.
 
 </details>
 
@@ -718,7 +719,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.25.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.25.2**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

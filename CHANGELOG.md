@@ -8,6 +8,19 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.25.2] - 2026-10-09
+
+A lista de usuários e a Visão geral deixam de comparar a pasta de cada usuário com a de todos os outros, o que pesava em instalação com centenas de usuários.
+
+### Alterado
+
+- **Pasta dividida conferida em uma passada**: para marcar `dividida` na aba Usuários, o painel comparava a pasta de cada usuário com a de todos os outros, e a Visão geral fazia o mesmo para somar o uso sem contar duas vezes a pasta que fica dentro de outra. O custo crescia com o quadrado do cadastro. Agora as duas telas percorrem o cadastro uma vez. Medido com 501 usuários, na mediana de 30 pedidos: a aba Usuários foi de 33,2 ms para 8,5 ms e a Visão geral de 17,0 ms para 5,1 ms. O que a tela mostra não muda.
+- **Releitura do cadastro mantida**: o painel continua lendo o arquivo de usuários a cada pedido, sem cópia em memória. Medido com 501 usuários, a leitura leva 1,2 ms; guardar em memória traria o risco de mostrar cadastro velho por um ganho que não aparece na tela.
+
+### Adicionado
+
+- **Caso de teste** `Pasta dividida em cadastro grande` (funcional 54): um cadastro de 2003 usuários, montado em memória dentro do container do painel, com a resposta nova comparada com a conferência de todos contra todos, usuário por usuário e pasta por pasta.
+
 ## [0.25.1] - 2026-10-09
 
 As marcas de estado das tabelas e a impressão digital dos certificados deixam de ser o menor texto do painel.
