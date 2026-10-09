@@ -52,7 +52,7 @@ def atividade(pedido, sessao, consulta, formulario, token):
         linhas.append(f'<tr><td>{e(momento)}</td><td><code>{e(ip)}</code></td><td>{e(EVENTOS.get(evento, evento))}</td>'
                       f'<td>{e(" ".join(campos[3:]))}</td></tr>')
     corpo = ''.join(linhas) or '<tr><td colspan="4" class="suave">Nada registrado ainda.</td></tr>'
-    pedido.enviar(200, pagina('Atividade', f'''<h1>📜 Atividade</h1>
+    pedido.enviar(200, pagina('Atividade', f'''<h1 class="titulo-aba">Atividade</h1>
 <section class="cartao"><div class="rolagem"><table>
 <thead><tr><th>Quando</th><th>De onde</th><th>O que aconteceu</th><th>Detalhe</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>

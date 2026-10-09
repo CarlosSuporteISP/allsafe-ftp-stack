@@ -103,7 +103,7 @@ def seguranca(pedido, sessao, consulta, formulario, token):
               + ('. <strong>Com endereço público aceito, é o firewall que separa a stack da internet.</strong>' if CFG['ip_publico']
                  else ', e nenhuma delas pode ser redirecionada da internet.')),
     ]
-    pedido.enviar(200, pagina('Segurança', f'''<h1>🔐 Segurança</h1>
+    pedido.enviar(200, pagina('Segurança', f'''<h1 class="titulo-aba">Segurança</h1>
 {aviso_rede()}
 {alerta_tls()}
 <section class="cartao"><div class="rolagem"><table class="conferencia"><tbody>{''.join(itens)}</tbody></table></div></section>

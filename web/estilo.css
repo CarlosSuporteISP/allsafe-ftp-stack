@@ -12,7 +12,14 @@
   --bom: #3fb950;
   --atencao: #d29922;
   --ruim: #f85149;
+  --botao: #21262d;
+  --botao-realce: #30363d;
+  --acao: #238636;
+  --acao-realce: #2ea043;
+  --perigo: #da3633;
   --raio: 8px;
+  --raio-cartao: 12px;
+  --largura: 1280px;
   color-scheme: dark;
 }
 
@@ -36,6 +43,11 @@ a:hover { text-decoration: underline; }
 :focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
 
 h1 { margin: 0 0 16px; font-size: 1.5rem; }
+/* Título das abas do menu: em tela larga a aba ativa já diz onde se está, e o título fica só para o leitor de tela.
+   Em tela estreita as abas rolam para o lado e a ativa pode ficar fora da vista: ali o título aparece. */
+@media (min-width: 1280px) {
+  .titulo-aba { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
 h2 { margin: 0 0 8px; font-size: 0.95rem; font-weight: 600; color: var(--suave); }
 p { margin: 0 0 12px; }
 
@@ -55,8 +67,9 @@ header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 24px;
-  padding: 12px 16px;
+  gap: 4px 24px;
+  /* O topo acompanha a coluna do conteúdo: marca e saída ficam nas mesmas margens das telas, sem vão no meio. */
+  padding: 8px max(16px, calc(50% - var(--largura) / 2 + 16px));
   border-bottom: 1px solid var(--borda);
   background: var(--cartao);
 }
@@ -65,21 +78,20 @@ header {
 .marca-topo img { display: block; }
 
 nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; flex: 1; }
-nav a { padding: 6px 12px; border-radius: var(--raio); color: var(--texto); }
+nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: var(--raio); color: var(--texto); white-space: nowrap; }
 nav a:hover { background: var(--fundo); text-decoration: none; }
 nav a.ativa { background: var(--fundo); box-shadow: inset 0 -2px 0 var(--destaque); font-weight: 600; }
-nav form { display: flex; align-items: center; gap: 8px; margin: 0 0 0 auto; }
-nav .quem { color: var(--suave); font-size: 0.875rem; }
-nav button { margin: 0; background: transparent; color: var(--suave); border-color: var(--borda); }
-nav button:hover { color: var(--texto); background: var(--fundo); }
+.sair { display: flex; align-items: center; gap: 12px; margin: 0; }
+.sair .quem { color: var(--suave); font-size: 0.875rem; }
+.sair button { margin: 0; }
 
-main { flex: 1; width: 100%; max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
+main { flex: 1; width: 100%; max-width: var(--largura); margin: 0 auto; padding: 24px 16px; }
 
 footer {
   padding: 12px 16px;
   border-top: 1px solid var(--borda);
   color: var(--suave);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   text-align: center;
 }
 footer p { margin: 0; }
@@ -91,7 +103,7 @@ footer .autoria { margin-top: 4px; }
   margin: 0 0 16px;
   padding: 16px;
   border: 1px solid var(--borda);
-  border-radius: var(--raio);
+  border-radius: var(--raio-cartao);
   background: var(--cartao);
 }
 .cartao > :last-child { margin-bottom: 0; }
@@ -101,7 +113,12 @@ footer .autoria { margin-top: 4px; }
 .logo-entrada { display: block; margin: 0 auto 12px; }
 
 .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 0 0 16px; }
-.grade .cartao { margin: 0; }
+.grade .cartao { display: flex; flex-direction: column; margin: 0; }
+/* Atalho do cartão: todo cartão da Visão geral termina no link da aba que detalha o número, na mesma altura. */
+.atalho { margin: 0; font-size: 0.9375rem; font-weight: 600; }
+.grade .atalho { margin-top: auto; padding-top: 8px; }
+.atalho a { display: inline-block; padding: 4px 0; }
+.atalho a::after { content: " →"; }
 
 .numero { margin: 0 0 4px; font-size: 1.75rem; font-weight: 700; line-height: 1.2; }
 .numero.menor { font-size: 1.05rem; }
@@ -112,15 +129,14 @@ footer .autoria { margin-top: 4px; }
 /* ------------------------------------------------------------ avisos */
 
 .aviso, .erro, .ok {
-  padding: 10px 12px;
+  padding: 12px;
   border: 1px solid var(--borda);
-  border-left-width: 4px;
   border-radius: var(--raio);
   background: var(--campo);
 }
-.aviso { border-left-color: var(--atencao); }
-.erro { border-left-color: var(--ruim); }
-.ok { border-left-color: var(--bom); }
+.aviso { border-color: color-mix(in oklab, var(--atencao) 60%, var(--borda)); }
+.erro { border-color: color-mix(in oklab, var(--ruim) 60%, var(--borda)); }
+.ok { border-color: color-mix(in oklab, var(--bom) 60%, var(--borda)); }
 
 .segredo { margin: 16px 0; }
 .segredo code { display: block; padding: 12px; font-size: 1.05rem; user-select: all; }
@@ -130,7 +146,7 @@ footer .autoria { margin-top: 4px; }
 .rolagem { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 8px 12px; border-bottom: 1px solid var(--borda); text-align: left; vertical-align: top; }
-thead th { color: var(--suave); font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
+thead th { color: var(--suave); font-size: 0.875rem; font-weight: 600; white-space: nowrap; }
 tbody th { width: 1%; font-weight: 600; white-space: nowrap; }
 tbody tr:last-child > * { border-bottom: 0; }
 .acoes { min-width: 12rem; }
@@ -141,6 +157,13 @@ td.origem code { overflow-wrap: normal; white-space: nowrap; }
 .digital { font-size: 0.75rem; }
 
 .trilha { overflow-wrap: anywhere; }
+
+/* Chave e valor: o rótulo fica em cima do valor, e os pares curtos vão lado a lado, sem coluna vazia entre os dois. */
+.dados { display: flex; flex-wrap: wrap; gap: 12px 40px; margin: 0; }
+.dados .larga { flex-basis: 100%; }
+.dados dt { color: var(--suave); font-size: 0.875rem; }
+.dados dd { margin: 2px 0 0; }
+.dados code { overflow-wrap: normal; white-space: nowrap; }
 
 .etiqueta {
   margin-left: 6px;
@@ -159,7 +182,8 @@ label .suave { font-weight: 400; }
 
 input:not([type="hidden"]) {
   width: 100%;
-  padding: 8px 10px;
+  min-height: 44px;
+  padding: 8px 12px;
   border: 1px solid var(--borda);
   border-radius: var(--raio);
   background: var(--campo);
@@ -169,34 +193,47 @@ input:not([type="hidden"]) {
 input:focus-visible { border-color: var(--destaque); }
 /* Caixa de marcar: fica ao lado do texto, do tamanho dela, e não na largura do campo. */
 label.marcar { display: flex; align-items: center; gap: 8px; font-weight: 400; }
-label.marcar input { width: auto; flex: none; padding: 0; accent-color: var(--destaque); }
+label.marcar { min-height: 44px; margin: 4px 0; }
+label.marcar input { width: 20px; height: 20px; min-height: 0; flex: none; padding: 0; accent-color: var(--destaque); }
 
 button, .botao {
   display: inline-block;
   margin: 12px 0 0;
-  padding: 7px 14px;
+  min-height: 44px;
+  padding: 10px 16px;
   border: 1px solid var(--borda);
   border-radius: var(--raio);
-  background: #21262d;
+  background: var(--botao);
   color: var(--texto);
   font: inherit;
   font-weight: 600;
   line-height: 1.4;
   cursor: pointer;
 }
-button:hover, .botao:hover { background: #30363d; text-decoration: none; }
-form button[type="submit"], .botao.principal { border-color: #2ea043; background: #238636; color: #fff; }
-form button[type="submit"]:hover, .botao.principal:hover { background: #2ea043; }
-form button.perigo, .botao.perigo { border-color: var(--borda); background: #21262d; color: var(--ruim); }
-form button.perigo:hover, .botao.perigo:hover { border-color: var(--ruim); background: #da3633; color: #fff; }
-nav form button[type="submit"] { border-color: var(--borda); background: transparent; color: var(--suave); font-weight: 400; }
-nav form button[type="submit"]:hover { background: var(--fundo); color: var(--texto); }
-td .botao { margin: 0; padding: 3px 10px; font-size: 0.875rem; font-weight: 400; }
+button:hover, .botao:hover { background: var(--botao-realce); text-decoration: none; }
+form button[type="submit"], .botao.principal { border-color: var(--acao-realce); background: var(--acao); color: #fff; }
+form button[type="submit"]:hover, .botao.principal:hover { background: var(--acao-realce); }
+form button.perigo, .botao.perigo { border-color: var(--borda); background: var(--botao); color: var(--ruim); }
+form button.perigo:hover, .botao.perigo:hover { border-color: var(--ruim); background: var(--perigo); color: #fff; }
+form.sair button[type="submit"] { border-color: var(--borda); background: transparent; color: var(--suave); font-weight: 400; }
+form.sair button[type="submit"]:hover { background: var(--fundo); color: var(--texto); }
+/* Botão de linha de tabela: denso com o mouse; no toque, a altura sobe para 44px. */
+td .botao { margin: 0; min-height: 0; padding: 4px 12px; font-size: 0.875rem; font-weight: 400; }
 p > .botao { margin-top: 0; }
+@media (pointer: coarse) {
+  td .botao { min-height: 44px; padding: 10px 12px; }
+  .atalho a { padding: 12px 0; }
+}
+
+/* Tela estreita: marca e saída na primeira linha; as abas ganham a linha de baixo inteira e rolam para o lado. */
+@media (max-width: 1279px) {
+  .sair { margin-left: auto; }
+  nav { order: 1; flex: 0 0 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+  nav a { flex: none; }
+}
 
 @media (max-width: 640px) {
   main { padding: 16px 12px; }
-  nav form { margin-left: 0; }
   .acoes { min-width: 0; }
   .acoes .botao, .etiqueta { white-space: normal; }
 }

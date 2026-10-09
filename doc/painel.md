@@ -73,14 +73,14 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 
 | Aba | O que mostra | O que dá para fazer |
 |---|---|---|
-| Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar |
+| Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP, o modo de TLS do FTP e os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) | Só consultar; cada cartão termina no atalho para a aba do detalhe |
 | Usuários | Um usuário por linha: pasta no host, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo a pasta e, para equipamento sem suporte a TLS, já dispensado do TLS; editar, para trocar a pasta e os limites e tirar um bloqueio; trocar a senha; remover, com a pasta dele ou sem ela; abrir a pasta do usuário na aba Arquivos; dispensar um usuário do TLS e voltar a exigir |
 | Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
 | Administradores | Um administrador por linha, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas | Criar, trocar a senha, trocar o nome e remover |
 | Segurança | Conferência da instalação: se endereço público é aceito, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
 | Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads, pastas criadas e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
 
-No topo ficam o nome do administrador da sessão e o botão **Sair**, que encerra a sessão na hora. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
+No topo ficam as abas, com a aba em uso marcada, o nome do administrador da sessão e o botão **Sair**, que encerra a sessão na hora. Em tela estreita, as abas ficam numa linha que rola para o lado, e o nome da aba aparece também como título da página. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
 
 Quem entra com a conta do FTP não vê nenhuma dessas abas: vê uma tela só, **Meus arquivos**, descrita em [Usuário do FTP no painel](#usuario-ftp).
 

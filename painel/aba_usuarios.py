@@ -80,7 +80,7 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
     corpo = ''.join(linhas) or f'<tr><td colspan="{7 if excecoes else 6}" class="suave">Nenhum usuário ainda.</td></tr>'
     nota_tls = (' <span class="etiqueta">⚠️ sem TLS</span> marca quem o administrador dispensou do TLS '
                 'em Editar ou ao criar: a senha e os arquivos desse usuário trafegam em texto puro.') if excecoes else ''
-    pedido.enviar(200, pagina('Usuários', f'''<h1>👥 Usuários</h1>
+    pedido.enviar(200, pagina('Usuários', f'''<h1 class="titulo-aba">Usuários</h1>
 {f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}
 <p><a class="botao principal" href="/usuarios/novo">➕ Novo usuário</a></p>
 <section class="cartao"><div class="rolagem"><table>

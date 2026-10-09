@@ -74,9 +74,9 @@ def pagina(titulo, miolo, sessao=None, ativa=''):
                              else (ABAS, sessao['admin'], 'Administrador desta sessão'))
         links = ''.join(f'<a href="{caminho}"' + (' class="ativa" aria-current="page"' if caminho == ativa else '') + f'>{rotulo}</a>'
                         for caminho, rotulo in abas)
-        menu = (f'<nav aria-label="Abas do painel">{links}<form method="post" action="/sair">'
+        menu = (f'<nav aria-label="Abas do painel">{links}</nav><form class="sair" method="post" action="/sair">'
                 f'<input type="hidden" name="csrf" value="{e(sessao["csrf"])}"><span class="quem" title="{papel}">'
-                f'{e(nome)}</span><button type="submit">🚪 Sair</button></form></nav>')
+                f'{e(nome)}</span><button type="submit">🚪 Sair</button></form>')
     return f'''<!doctype html>
 <html lang="pt-BR">
 <head>

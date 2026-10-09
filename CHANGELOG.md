@@ -8,6 +8,26 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Nada ainda.
 
+## [0.24.2] - 2026-10-09
+
+Revisão de usabilidade do painel: o topo deixa de repetir o nome da aba, todo cartão da Visão geral leva ao detalhe, e as telas ficam confortáveis no celular.
+
+### Corrigido
+
+- **Título repetido nas abas**: em tela larga, o título da página dizia o mesmo que a aba marcada no topo, com o mesmo ícone. O título continua no documento para leitor de tela e aparece em tela estreita, onde as abas rolam para o lado.
+- **Cartões da Visão geral sem saída**: só Usuários e Certificado levavam ao detalhe. Agora os cinco cartões terminam num atalho, com o mesmo peso e na mesma posição: Segurança, Usuários e Arquivos.
+- **Atalho "ver a lista" pequeno demais**: os atalhos dos cartões ganharam tamanho de texto normal, peso e seta.
+- **Dados para configurar o equipamento**: a tabela esticava o valor para longe do rótulo; virou uma lista de rótulo e valor juntos, e o endereço do servidor não quebra mais no meio.
+- **Topo no celular**: a marca e a saída ficam numa linha e as abas em outra, rolando para o lado, em vez de empilhar em várias linhas. Em tela larga, o topo se alinha à coluna do conteúdo.
+- **Alvos de toque**: abas, botões e campos passam a ter 44 px de altura; os botões das tabelas ganham essa altura em tela de toque.
+
+### Alterado
+
+- **Avisos, erros e confirmações** deixam a faixa colorida na lateral e ficam com a borda inteira na cor do estado.
+- **Texto do rodapé e do cabeçalho das tabelas** sobe para 14 px, e os cartões ficam com cantos de 12 px.
+- **Cores dos botões e larguras** passam a variáveis da folha de estilo, sem valor solto repetido.
+- **Fotos da aplicação refeitas** nesta versão, com o topo e a Visão geral novos.
+
 ## [0.24.1] - 2026-10-07
 
 Duas correções de leitura nas telas de usuário do painel, e a documentação revisada de ponta a ponta: fotos refeitas, guia da aplicação com as telas novas e diagramas redesenhados.

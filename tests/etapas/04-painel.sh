@@ -45,10 +45,10 @@ biscoito="$(grep -i '^set-cookie:' "$W/entrada.cab" | tr -d '\r')"
 proibir "$(awk '$6 == "__Host-sessao" {print $7}' "$J")"
 K="$(csrf)"; proibir "$K"
 geral="$(aba -b "$J" "$B/")"
-[[ "$codigo" == 303 && "$destino_entrada" == / && "$geral" == "200 " ]] && grep -q '<h1>.*Visão geral</h1>' "$W/corpo"
+[[ "$codigo" == 303 && "$destino_entrada" == / && "$geral" == "200 " ]] && grep -q '<h1[^>]*>Visão geral</h1>' "$W/corpo"
 quem="$(sed -n 's/.*class="quem"[^>]*>\([^<]*\)<.*/\1/p' "$W/corpo" | head -1)"; auditoria
 [[ "$quem" == "$ADMIN" && "$(eventos admin_inicial_criado)" == 1 ]] || false
-caso $? testes 12 "Entrada" "POST /entrar com o usuário '$ADMIN' (PAINEL_ADMIN_USER) e a senha inicial: $codigo → $destino_entrada · GET / com a sessão: $geral· $(grep -o '<h1>[^<]*</h1>' "$W/corpo" | head -1 | sed 's/<[^>]*>//g') · administrador mostrado no topo: ${quem:-nenhum} · admin_inicial_criado na auditoria: $(eventos admin_inicial_criado)"
+caso $? testes 12 "Entrada" "POST /entrar com o usuário '$ADMIN' (PAINEL_ADMIN_USER) e a senha inicial: $codigo → $destino_entrada · GET / com a sessão: $geral· $(grep -o '<h1[^>]*>[^<]*</h1>' "$W/corpo" | head -1 | sed 's/<[^>]*>//g') · administrador mostrado no topo: ${quem:-nenhum} · admin_inicial_criado na auditoria: $(eventos admin_inicial_criado)"
 ok=0; for atributo in '__Host-sessao=' 'Path=/' 'Secure' 'HttpOnly' 'SameSite=Strict'; do [[ "$biscoito" == *"$atributo"* ]] || ok=1; done
 caso $ok seguranca 28 "Atributos do cookie" "$(sed -E 's/(__Host-sessao=)[^;]+/\1<REDACTED>/' <<< "$biscoito")"
 

@@ -210,7 +210,7 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
     de_quem = f'<p class="suave">Pasta do usuário do FTP: <strong>{e(", ".join(donos))}</strong>.</p>' if donos else ''
     novo_usuario = (f' <a class="botao" href="{e(endereco("/usuarios/novo", "pasta", caminho))}">👤 Novo usuário nesta pasta</a>'
                     if PASTA.fullmatch(caminho) else '')
-    pedido.enviar(200, pagina('Arquivos', f'''<h1>📁 Arquivos</h1>
+    pedido.enviar(200, pagina('Arquivos', f'''<h1 class="titulo-aba">Arquivos</h1>
 {f'<p class="ok" role="status">{e(feito)}</p>' if feito else ''}
 <p class="trilha">{trilha(lista)}{novo_usuario}</p>
 {de_quem}{aviso}<section class="cartao"><div class="rolagem"><table>

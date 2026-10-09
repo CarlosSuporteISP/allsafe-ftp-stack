@@ -38,7 +38,7 @@ def lista(pedido, sessao, consulta, formulario, token):
         marca = ' <span class="etiqueta">você</span>' if proprio else ''
         linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}</td><td>{abertas.get(nome, 0)}</td>'
                       f'<td class="acoes">{acoes}</td></tr>')
-    pedido.enviar(200, pagina('Administradores', f'''<h1>🛡️ Administradores</h1>
+    pedido.enviar(200, pagina('Administradores', f'''<h1 class="titulo-aba">Administradores</h1>
 {f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}
 <p><a class="botao principal" href="{ABA}/novo">➕ Novo administrador</a></p>
 <section class="cartao"><div class="rolagem"><table>
