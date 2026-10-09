@@ -53,7 +53,7 @@ ok=0; for atributo in '__Host-sessao=' 'Path=/' 'Secure' 'HttpOnly' 'SameSite=St
 caso $ok seguranca 28 "Atributos do cookie" "$(sed -E 's/(__Host-sessao=)[^;]+/\1<REDACTED>/' <<< "$biscoito")"
 
 no_ar="$(grep -c 'No ar' "$W/corpo")"; contagem="$(sed -n 's/.*Usuários<\/h2><p class="numero">\([0-9]*\)<.*/\1/p' "$W/corpo" | head -1)"
-certificado="$(sed -n 's/.*Certificado do FTP<\/h2><p class="numero menor">\([^<]*\)<.*/\1/p' "$W/corpo" | head -1)"
+certificado="$(sed -n 's/.*Certificado do FTP<\/h2><p class="numero menor"><svg[^>]*><use[^>]*><\/svg>\([^<]*\)<.*/\1/p' "$W/corpo" | head -1)"
 reais="$(usuarios_ftp | wc -w)"
 [[ "$no_ar" -ge 1 && -n "$contagem" && "$contagem" == "$reais" && -n "$certificado" ]]
 caso $? testes 13 "Visão geral" "servidor FTP: $([[ "$no_ar" -ge 1 ]] && echo 'No ar' || echo 'FORA DO AR') · usuários na aba: ${contagem:-?}, no PureDB: $reais · certificado do FTP: ${certificado:-ausente}"

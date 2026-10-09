@@ -70,7 +70,7 @@ v_bloqueio="$(vigia24 "entrada bloqueada: usuario=blq24 origem=$ORIGEM24 senhas_
 v_entradas="$(vigia24 "entrada: usuario=blq24 origem=$ORIGEM24")"; nos_logs="$(segredos_em "$W/ftp.log")"
 # O bloqueio é só deste usuário e só para aquele endereço: outro usuário do mesmo endereço entra, e ele entra no painel.
 l_outro="$(login24 outro24 "$W/o24.senha")"; e_painel="$(COMO=blq24 entrar "$U24" "$W/u24.senha")"; proibir "$(biscoito_de "$U24")"
-aba -b "$J" "$B/usuarios" > /dev/null; etiqueta_b="$(contar24 "title=\"Senhas erradas demais no FTP, vindas de: $ORIGEM24\">⛔ bloqueado")"
+aba -b "$J" "$B/usuarios" > /dev/null; etiqueta_b="$(contar24 "title=\"Senhas erradas demais no FTP, vindas de: $ORIGEM24\">bloqueado")"
 aba -b "$J" "$B/usuarios/editar?usuario=blq24" > /dev/null; cartao_1="$(contar24 'id="bloqueios"')"; linha_1="$(contar24 "<td class=\"origem\"><code>$ORIGEM24</code></td><td>3</td>")"; botao_1="$(contar24 'action="/usuarios/desbloquear"')"
 aba -b "$J" "$B/seguranca" > /dev/null; seg_1="$(contar24 'Bloqueado agora: blq24\.')"; seg_regra="$(contar24 '5 senhas erradas do mesmo endereço bloqueiam o usuário para aquele endereço por 15 minutos')"
 r_desb="$(desbloquear24 blq24)"; b_fim="$(de24 blq24)"; l_4="$(login24 blq24 "$W/u24.senha")"

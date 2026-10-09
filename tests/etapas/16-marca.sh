@@ -30,9 +30,10 @@ c "$B/entrar" > "$W/entrada.html"
 na_entrada=0
 for trecho in '<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">' '<link rel="icon" href="/marca/icone-32.png" type="image/png" sizes="32x32">' \
   '<link rel="icon" href="/marca/icone-192.png" type="image/png" sizes="192x192">' '<link rel="apple-touch-icon" href="/marca/apple-touch-icon.png">' \
-  '<img class="logo-entrada" src="/marca/logo-320.png" alt="ALL-SAFE" width="128" height="128">' '<img src="/marca/simbolo-64.png" alt="" width="28" height="28">AllSafe FTP'; do
+  '<img src="/marca/logo-320.png" alt="ALL-SAFE" width="56" height="56">AllSafe FTP' '<h1>Entrar no painel</h1>'; do
   grep -q -F "$trecho" "$W/entrada.html" && na_entrada=$((na_entrada + 1))
 done
+topo_na_entrada="$(grep -c -E '<header>|simbolo-64' "$W/entrada.html")"
 visao="$(aba -b "$J" "$B/")"; no_topo="$(grep -c -F '<img src="/marca/simbolo-64.png" alt="" width="28" height="28">AllSafe FTP' "$W/corpo")"; sem_logo_grande="$(grep -c 'logo-320' "$W/corpo")"
 # Toda imagem e todo ícone que as duas telas pedem existe.
 pedidos="$(cat "$W/entrada.html" "$W/corpo" | grep -o -E '(src|href)="/(marca/[^"]*|favicon[^"]*)"' | cut -d '"' -f 2 | sort -u)"; quebrados=0
@@ -41,9 +42,9 @@ antigo="$(aba "$B/favicon.svg")"; no_codigo="$(docker exec "$PAINEL" grep -c -r 
 no_painel="$(docker exec "$PAINEL" find / -xdev \( -name 'favicon.ico' -o -name 'icone-*.png' -o -name 'apple-touch-icon.png' -o -name 'simbolo-64.png' -o -name 'logo-320.png' \) 2>/dev/null | wc -l)"
 fontes="$(docker exec "$NGINX" find / -xdev \( -name 'allsafe-logo-2048.png' -o -name 'allsafe-simbolo-512.png' -o -name 'fonte' \) 2>/dev/null | wc -l)"
 na_imagem="$(docker exec "$NGINX" sh -c 'ls /usr/share/allsafe-nginx/web/marca | wc -l')"
-[[ "$ok" == 0 && "$e_adm" == 303 && "$na_entrada" == 6 && "$visao" == "200 " && "$no_topo" == 1 && "$sem_logo_grande" == 0 && "$(wc -w <<< "$pedidos")" == 6 && "$quebrados" == 0 \
+[[ "$ok" == 0 && "$e_adm" == 303 && "$na_entrada" == 6 && "$topo_na_entrada" == 0 && "$visao" == "200 " && "$no_topo" == 1 && "$sem_logo_grande" == 0 && "$(wc -w <<< "$pedidos")" == 6 && "$quebrados" == 0 \
   && "$antigo" == "303 /entrar" && "$no_codigo" == 0 && "$no_painel" == 0 && "$fontes" == 0 && "$na_imagem" == 6 ]]
-caso $? testes 33 "Logo e ícone do painel entregues pelo nginx" "sem sessão: $ev· tela de entrada com os 4 ícones, a logo e o símbolo no topo: $na_entrada de 6 · Visão geral: $visao· símbolo no topo: $no_topo, logo grande fora da tela de entrada: $sem_logo_grande · imagens e ícones pedidos pelas duas telas: $(wc -w <<< "$pedidos"), quebrados: $quebrados · ícone antigo /favicon.svg: $antigo, citações no código do painel: $no_codigo · cópias da marca dentro do container do painel: $no_painel · arquivos em web/marca do nginx: $na_imagem, fontes da marca na imagem: $fontes"
+caso $? testes 33 "Logo e ícone do painel entregues pelo nginx" "sem sessão: $ev· tela de entrada com os 4 ícones, a logo com o nome e o título: $na_entrada de 6, barra de cima nela: $topo_na_entrada · Visão geral: $visao· símbolo no topo: $no_topo, logo grande fora da tela de entrada: $sem_logo_grande · imagens e ícones pedidos pelas duas telas: $(wc -w <<< "$pedidos"), quebrados: $quebrados · ícone antigo /favicon.svg: $antigo, citações no código do painel: $no_codigo · cópias da marca dentro do container do painel: $no_painel · arquivos em web/marca do nginx: $na_imagem, fontes da marca na imagem: $fontes"
 
 # ------------------------------------------------------------------ autoria no rodapé
 nova_senha "$W/u16.senha"; mu add equip16 "$W/u16.senha"

@@ -6,7 +6,18 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 ## [Não lançado]
 
-Nada ainda.
+O painel foi redesenhado: ícones desenhados no lugar dos emojis, paleta medida nos dois temas e uma tela de entrada nova.
+
+### Alterado
+
+- **Ícones próprios no lugar dos emojis**: 31 desenhos de linha, em grade de 24, saem dentro do HTML da própria tela (`painel/icones.py`). Nenhum arquivo de imagem, fonte ou script é pedido a mais, e a política de conteúdo do painel não muda.
+- **Paleta em OKLCH**, com papéis nomeados (fundo, superfície, texto, ação, estados) e contraste calculado nos temas claro e escuro. As misturas de cor dos avisos e das marcas são feitas em OKLab.
+- **Tela de entrada nova**, sem a barra de cima: de um lado a marca, o que o servidor faz e o caminho do backup (equipamento, FTPS, pasta); do outro, o formulário. No celular a marca vira uma faixa curta acima do formulário.
+- **Cada aba começa pelo título, por uma linha que diz o que a tela mostra e pela ação principal**, à direita. A aba em que se está fica marcada por um traço no menu.
+- **Visão geral** com o estado do servidor em uma faixa e as quatro medidas lado a lado, cada uma com o atalho para a aba dela.
+- **Aba Usuários**: a coluna da pasta mostra só a pasta do usuário, e o caminho do servidor aparece uma vez, na legenda; as marcas ganharam legenda de uma linha cada; as ações da linha ficaram discretas e não quebram de linha em tela larga.
+- **Tamanho e data não quebram de linha** entre o número e a unidade nem entre o dia e a hora.
+- **Fonte do sistema mantida**: nenhuma fonte é baixada.
 
 ## [0.25.2] - 2026-10-09
 

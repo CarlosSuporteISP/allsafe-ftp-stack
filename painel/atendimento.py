@@ -161,7 +161,7 @@ class Painel(http.server.BaseHTTPRequestHandler):
         self.enviar(303, '', extras=(('Location', destino),) + tuple(extras))
 
     def recusar(self, codigo, texto):
-        self.enviar(codigo, pagina('Pedido recusado', f'<section class="cartao"><h1>⛔ Pedido recusado</h1><p>{e(texto)}</p>'
+        self.enviar(codigo, pagina('Pedido recusado', f'<section class="cartao"><h1>Pedido recusado</h1><p>{e(texto)}</p>'
                                    '<p><a href="/">Voltar ao painel</a></p></section>'))
 
     # ------------------------------------------------------------ conferências antes de qualquer tela
@@ -286,6 +286,6 @@ class Painel(http.server.BaseHTTPRequestHandler):
         if rota is None:
             if sessao['usuario'] and (metodo, self.caminho) in ROTAS:
                 auditar(self.ip, 'recusa_papel', f'usuario={sessao["usuario"]} caminho={limpo(self.caminho)}')
-            return self.enviar(404, pagina('Não encontrado', '<section class="cartao"><h1>🔎 Página não encontrada</h1>'
+            return self.enviar(404, pagina('Não encontrado', '<section class="cartao"><h1>Página não encontrada</h1>'
                                            '<p><a href="/">Voltar ao painel</a></p></section>', sessao))
         return rota(self, sessao, consulta, formulario, token)

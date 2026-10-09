@@ -8,7 +8,7 @@ import os
 
 from aba_arquivos import (Recusado, abrir, aviso_de_corte, conteudo, endereco, entregar, linhas_da_lista, parametro,
                           partes, recusa, visivel)
-from pagina import e, pagina
+from pagina import cabeca, e, pagina
 
 
 def inicio(pedido, sessao, consulta, formulario, token):
@@ -46,7 +46,7 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
             pass
         finally:
             os.close(descritor)
-    pedido.enviar(200, pagina('Meus arquivos', f'''<h1 class="titulo-aba">Meus arquivos</h1>
+    pedido.enviar(200, pagina('Meus arquivos', f'''{cabeca('Meus arquivos', 'Os arquivos da sua pasta no FTP, para navegar e baixar.')}
 <p class="trilha">{trilha(lista)}</p>
 {aviso_de_corte(cortado)}<section class="cartao"><div class="rolagem"><table>
 <thead><tr><th>Nome</th><th>Tamanho</th><th>Modificado</th><th>Ações</th></tr></thead>

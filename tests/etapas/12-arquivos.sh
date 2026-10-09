@@ -26,8 +26,8 @@ soma_envio="$(soma_de "$W/envio.bin")"; soma_grande="$(soma_de "$W/grande.bin")"
 
 # ------------------------------------------------------------------ navegação e download
 auditoria; n_antes="$(eventos arquivo_baixado)"
-raiz="$(aba -b "$J" "$Q")"; na_raiz="$(grep -c 'href="/arquivos?pasta=equip12"' "$W/corpo")"; menu="$(grep -c '<a href="/arquivos"[^>]*>📁 Arquivos</a>' "$W/corpo")"
-pasta="$(aba -b "$J" "$Q?pasta=equip12")"; no_link="$(grep -c 'href="/arquivos/baixar?arquivo=equip12/arquivos.cfg"' "$W/corpo")"; tam="$(grep -c '64,0 KiB' "$W/corpo")"
+raiz="$(aba -b "$J" "$Q")"; na_raiz="$(grep -c 'href="/arquivos?pasta=equip12"' "$W/corpo")"; menu="$(grep -c '<a href="/arquivos"[^>]*><svg[^>]*><use href="#i-pasta"/></svg>Arquivos</a>' "$W/corpo")"
+pasta="$(aba -b "$J" "$Q?pasta=equip12")"; no_link="$(grep -c 'href="/arquivos/baixar?arquivo=equip12/arquivos.cfg"' "$W/corpo")"; tam="$(grep -c '64,0[^<]*KiB' "$W/corpo")"
 r="$(baixa "$W/baixado.cfg" equip12/arquivos.cfg)"; tipo="$(cab content-type)"; comprimento="$(cab content-length)"; disposicao="$(cab content-disposition)"
 auditoria; n_depois="$(eventos arquivo_baixado)"; registro="$(grep -c " evento=arquivo_baixado admin=$ADMIN arquivo=equip12/arquivos.cfg bytes=65536" "$W/auditoria")"
 atividade="$(aba -b "$J" "$B/atividade")"; na_atividade="$(grep -c 'Arquivo baixado' "$W/corpo")"

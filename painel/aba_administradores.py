@@ -10,16 +10,17 @@ from aba_usuarios import campos_de_senha, senha_do_formulario
 from auditoria import auditar
 from config import ADMINS_MAX, NOME
 from confirmacao import campo_senha_atual, confirmacao_recusada
-from pagina import e, pagina
+from icones import icone
+from pagina import cabeca, e, pagina
 from senha import gerar_hash
 from sessao import encerrar_sessoes_de, renomear_sessoes, sessoes_por_admin
 
 ABA = '/administradores'
 MENSAGENS = {
-    'criado': '✅ Administrador criado.',
-    'senha': '✅ Senha trocada. As outras sessões desse administrador foram encerradas.',
-    'nome': '✅ Nome trocado. As outras sessões desse administrador foram encerradas.',
-    'removido': '✅ Administrador removido. As sessões dele foram encerradas.',
+    'criado': 'Administrador criado.',
+    'senha': 'Senha trocada. As outras sessões desse administrador foram encerradas.',
+    'nome': 'Nome trocado. As outras sessões desse administrador foram encerradas.',
+    'removido': 'Administrador removido. As sessões dele foram encerradas.',
 }
 SUMIU = 'A sua conta de administrador não existe mais. Saia e entre de novo.'
 
@@ -31,20 +32,20 @@ def lista(pedido, sessao, consulta, formulario, token):
     for nome in administradores.ler():
         destino = urllib.parse.quote(nome)
         proprio = nome == sessao['admin']
-        acoes = (f'<a class="botao" href="{ABA}/senha?admin={destino}">🔑 Trocar senha</a> '
-                 f'<a class="botao" href="{ABA}/nome?admin={destino}">✏️ Trocar nome</a>')
+        acoes = (f'<a class="botao" href="{ABA}/senha?admin={destino}">Trocar senha</a> '
+                 f'<a class="botao" href="{ABA}/nome?admin={destino}">Trocar nome</a>')
         if not proprio:
-            acoes += f' <a class="botao perigo" href="{ABA}/remover?admin={destino}">🗑️ Remover</a>'
+            acoes += f' <a class="botao perigo" href="{ABA}/remover?admin={destino}">Remover</a>'
         marca = ' <span class="etiqueta">você</span>' if proprio else ''
         linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}</td><td>{abertas.get(nome, 0)}</td>'
                       f'<td class="acoes">{acoes}</td></tr>')
-    pedido.enviar(200, pagina('Administradores', f'''<h1 class="titulo-aba">Administradores</h1>
+    pedido.enviar(200, pagina('Administradores', f'''{cabeca('Administradores', 'Quem entra neste painel. Todos têm o mesmo acesso.',
+        f'<a class="botao principal" href="{ABA}/novo">{icone("mais")}Novo administrador</a>')}
 {f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}
-<p><a class="botao principal" href="{ABA}/novo">➕ Novo administrador</a></p>
 <section class="cartao"><div class="rolagem"><table>
 <thead><tr><th>Administrador</th><th>Sessões abertas</th><th>Ações</th></tr></thead>
 <tbody>{''.join(linhas)}</tbody></table></div>
-<p class="suave">Todos têm o mesmo acesso ao painel. Toda alteração pede a sua senha atual e fica na aba Atividade com o
+<p class="suave">Toda alteração pede a sua senha atual e fica na aba Atividade com o
 seu nome. Ninguém remove a própria conta: assim sempre sobra um administrador. Até {ADMINS_MAX} administradores.</p>
 </section>''', sessao, ABA))
 
@@ -62,7 +63,7 @@ def alvo_existente(pedido, sessao, nome):
     """Confere o nome recebido; responde com o erro e devolve False se o administrador não existe."""
     if NOME.fullmatch(nome) and nome in administradores.ler():
         return True
-    pedido.enviar(404, pagina('Administrador não encontrado', '<section class="cartao"><h1>🔎 Administrador não encontrado</h1>'
+    pedido.enviar(404, pagina('Administrador não encontrado', '<section class="cartao"><h1>Administrador não encontrado</h1>'
                             f'<p><a href="{ABA}">Voltar para a lista</a></p></section>', sessao, ABA))
     return False
 
@@ -71,13 +72,13 @@ def tela_senha_gerada(pedido, sessao, nome, senha, titulo):
     pedido.enviar(200, pagina(titulo, f'''<h1>{e(titulo)}</h1>
 <section class="cartao"><p>Administrador <strong>{e(nome)}</strong>. Senha gerada pelo painel:</p>
 <p class="segredo"><code>{e(senha)}</code></p>
-<p class="aviso">⚠️ Copie agora para o seu cofre de senhas ou entregue a quem vai usar. Ela <strong>não será mostrada de novo</strong>:
+<p class="aviso">Copie agora para o seu cofre de senhas ou entregue a quem vai usar. Ela <strong>não será mostrada de novo</strong>:
 o painel guarda só o hash.</p>
 <p><a class="botao principal" href="{ABA}">Já copiei: voltar para a lista</a></p></section>''', sessao, ABA))
 
 
 def tela_novo(pedido, sessao, consulta=None, formulario=None, token=None, erro='', codigo=200, nome=''):
-    pedido.enviar(codigo, pagina('Novo administrador', f'''<h1>➕ Novo administrador</h1>
+    pedido.enviar(codigo, pagina('Novo administrador', f'''<h1>Novo administrador</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <form method="post" action="{ABA}/novo" autocomplete="off">
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
@@ -118,7 +119,7 @@ def criar(pedido, sessao, consulta, formulario, token):
         return tela_novo(pedido, sessao, erro=erro, codigo=codigo, nome=nome)
     auditar(pedido.ip, 'admin_criado', f'admin={sessao["admin"]} novo={nome} credencial={"gerada" if gerada else "informada"}')
     if gerada:
-        return tela_senha_gerada(pedido, sessao, nome, senha, '✅ Administrador criado')
+        return tela_senha_gerada(pedido, sessao, nome, senha, 'Administrador criado')
     return pedido.redirecionar(ABA + '?m=criado')
 
 
@@ -127,7 +128,7 @@ def tela_trocar_senha(pedido, sessao, consulta, formulario=None, token=None, err
     if not alvo_existente(pedido, sessao, nome):
         return
     de_quem = 'A sua senha' if nome == sessao['admin'] else f'A senha de <strong>{e(nome)}</strong>'
-    pedido.enviar(codigo, pagina('Trocar senha', f'''<h1>🔑 Trocar senha de administrador</h1>
+    pedido.enviar(codigo, pagina('Trocar senha', f'''<h1>Trocar senha de administrador</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>{de_quem} antiga deixa de valer na hora e as outras sessões desse administrador são encerradas.</p>
 <form method="post" action="{ABA}/senha" autocomplete="off">
@@ -164,7 +165,7 @@ def trocar_senha(pedido, sessao, consulta, formulario, token):
     encerrar_sessoes_de(nome, menos=sessao)
     auditar(pedido.ip, 'admin_senha_trocada', f'admin={sessao["admin"]} alvo={nome} credencial={"gerada" if gerada else "informada"}')
     if gerada:
-        return tela_senha_gerada(pedido, sessao, nome, senha, '✅ Senha trocada')
+        return tela_senha_gerada(pedido, sessao, nome, senha, 'Senha trocada')
     return pedido.redirecionar(ABA + '?m=senha')
 
 
@@ -172,7 +173,7 @@ def tela_trocar_nome(pedido, sessao, consulta, formulario=None, token=None, erro
     nome = consulta.get('admin', '')
     if not alvo_existente(pedido, sessao, nome):
         return
-    pedido.enviar(codigo, pagina('Trocar nome', f'''<h1>✏️ Trocar nome de administrador</h1>
+    pedido.enviar(codigo, pagina('Trocar nome', f'''<h1>Trocar nome de administrador</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>Administrador <strong>{e(nome)}</strong>. A senha continua a mesma; o nome antigo deixa de entrar na hora.</p>
 <form method="post" action="{ABA}/nome" autocomplete="off">
@@ -226,7 +227,7 @@ def propria_conta(pedido, sessao, nome):
     """Ninguém remove a própria conta: responde com o motivo e devolve True quando é o caso."""
     if nome != sessao['admin']:
         return False
-    pedido.enviar(409, pagina('Remover administrador', '<section class="cartao"><h1>🛡️ Esta é a sua conta</h1>'
+    pedido.enviar(409, pagina('Remover administrador', '<section class="cartao"><h1>Esta é a sua conta</h1>'
                             '<p>Ninguém remove a própria conta, para o painel nunca ficar sem administrador. '
                             'Peça a outro administrador para removê-la.</p>'
                             f'<p><a href="{ABA}">Voltar para a lista</a></p></section>', sessao, ABA))
@@ -237,7 +238,7 @@ def tela_remover(pedido, sessao, consulta, formulario=None, token=None, erro='',
     nome = consulta.get('admin', '')
     if not alvo_existente(pedido, sessao, nome) or propria_conta(pedido, sessao, nome):
         return
-    pedido.enviar(codigo, pagina('Remover administrador', f'''<h1>🗑️ Remover administrador</h1>
+    pedido.enviar(codigo, pagina('Remover administrador', f'''<h1>Remover administrador</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>Remover <strong>{e(nome)}</strong>? Ele deixa de entrar no painel na hora e as sessões abertas dele são encerradas.
 Os usuários do FTP e os arquivos não mudam.</p>
