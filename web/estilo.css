@@ -64,7 +64,7 @@
   --titulo: 1.44rem;
   --raio: 8px;
   --raio-cartao: 12px;
-  --largura: 1280px;
+  --largura: 1392px;
   --passo: 150ms;
   color-scheme: dark light;
   accent-color: var(--acao);
@@ -226,6 +226,20 @@ footer .autoria { margin-top: 4px; }
 }
 .cartao > :last-child { margin-bottom: 0; }
 .cartao.estreito { max-width: 560px; }
+/* Cartão de lista: a tabela vai de borda a borda, com a linha de títulos em faixa; o que vem depois dela volta à margem. */
+.cartao.lista { padding: 0; overflow: hidden; }
+.lista > :not(.rolagem) { margin: 16px 20px; }
+.lista thead th { background: color-mix(in oklab, var(--superficie-2) 50%, var(--superficie)); }
+.lista tr > :first-child { padding-left: 20px; }
+.lista tr > :last-child { padding-right: 20px; }
+/* Dois cartões lado a lado, na mesma altura. */
+.dupla { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; }
+.dupla > .cartao { display: flex; flex-direction: column; margin: 0; }
+.recentes { margin: 0; padding: 0; list-style: none; }
+.recentes li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 16px; padding: 8px 0; border-bottom: 1px solid var(--borda); }
+.recentes li:last-child { border-bottom: 0; }
+/* Na lista curta o endereço desce inteiro para a linha de baixo e só parte se nem assim couber (IPv6 em celular). */
+.recentes li > * { min-width: 0; }
 
 /* Visão geral: uma superfície só, dividida por linhas. O estado do FTP é a faixa de cima; as quatro medidas, a de baixo. */
 .situacao {
@@ -330,7 +344,13 @@ tbody tr { transition: background-color var(--passo); }
 .acoes .botao { white-space: nowrap; }
 thead th:last-child { padding-left: 12px; }
 td:first-child strong { white-space: nowrap; }
-td.origem code { overflow-wrap: normal; white-space: nowrap; }
+/* Data, endereço e pasta ficam inteiros: um IPv6 tem até 39 caracteres e não pode partir no meio. Quando falta
+   largura, a etiqueta da pasta desce para a linha de baixo e, por último, a tabela rola para o lado. */
+td.quando, td.origem { white-space: nowrap; }
+td.origem code, td.pasta code { overflow-wrap: normal; white-space: nowrap; }
+td.detalhe { min-width: 12rem; overflow-wrap: anywhere; }
+.par { margin-right: 12px; }
+.par > span { color: var(--suave); font-size: var(--texto-rotulo); }
 /* Legenda das etiquetas de uma tabela: uma por linha, a etiqueta e o que ela quer dizer. */
 .legenda { display: grid; gap: 6px; margin: 16px 0 0; padding: 0; list-style: none; color: var(--suave); font-size: var(--texto-rotulo); }
 .legenda .etiqueta { margin: 0 6px 0 0; }
@@ -340,6 +360,8 @@ td a > code { padding: 0; border: 0; background: none; }
 /* Linha de lista: o ícone diz se é pasta, arquivo ou atalho; em evento da Atividade, de que tipo foi. */
 .item { display: inline-flex; align-items: center; gap: 8px; }
 .item .i { color: var(--suave); }
+.item .i.ruim { color: var(--ruim); }
+.item .i.atencao { color: var(--atencao); }
 a.item .i { color: inherit; }
 
 .trilha { max-width: none; overflow-wrap: anywhere; }
@@ -467,15 +489,86 @@ p > .botao { margin-top: 0; }
 .entrada-pontos { display: grid; gap: 12px; padding: 0; color: var(--marca-suave); list-style: none; }
 .entrada-pontos li { display: flex; align-items: center; gap: 12px; }
 .entrada-pontos .i { color: var(--marca-realce); }
-/* O desenho: equipamento, FTPS, pasta. Os nomes usam o tamanho de rótulo; abaixo da largura em que ele encolhe, o desenho sai. */
-.caminho { width: 100%; max-width: 528px; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.caminho .fio { stroke: var(--marca-traco); }
-.caminho .destino, .caminho .portao { stroke: var(--marca-realce); }
-.caminho .portao { fill: var(--marca-fundo); }
-.caminho .tranca { stroke: var(--marca-texto); }
-.caminho text { fill: var(--marca-suave); stroke: none; font-size: 14px; }
-.caminho .pasta { font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", "DejaVu Sans Mono", monospace; }
-.caminho .sigla { fill: var(--marca-texto); font-size: 12px; font-weight: 700; text-anchor: middle; }
+/* A cena: equipamento, FTPS, pasta, em três dimensões. O palco é um plano deitado e cada peça sobe dele; as medidas
+   saem de uma unidade só (--u), que acompanha a largura da tela. O movimento só mexe em transform e opacity. */
+.vitrine { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.cena {
+  --topo: oklch(0.52 0.11 256);
+  --lado: oklch(0.4 0.1 257);
+  --frente: oklch(0.32 0.085 258);
+  --u: clamp(11px, 1.2vw, 22px);
+  order: -1;
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  height: 19em;
+  font-size: var(--u);
+  perspective: 80em;
+}
+.palco { position: relative; width: 22em; height: 15em; transform: rotateX(56deg) rotateZ(-32deg); transform-style: preserve-3d; animation: giro 18s ease-in-out infinite alternate; }
+.palco > * { position: absolute; transform-style: preserve-3d; }
+.chao {
+  inset: -1.25em;
+  border: 1px solid color-mix(in oklab, var(--marca-traco) 55%, transparent);
+  border-radius: 1em;
+  background: radial-gradient(circle, color-mix(in oklab, var(--marca-traco) 55%, transparent) 0.06em, transparent 0.08em) 0 0 / 1.75em 1.75em, color-mix(in oklab, var(--marca-fundo) 70%, transparent);
+}
+.trilhos { inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--marca-traco); stroke-width: 0.09; stroke-linecap: round; transform: translateZ(0.02em); }
+.l1 { --y: calc(var(--u) * 2.25); --atraso: -0.4s; }
+.l2 { --y: calc(var(--u) * 5.75); --atraso: -3.1s; }
+.l3 { --y: calc(var(--u) * 9.25); --atraso: -1.7s; }
+.l4 { --y: calc(var(--u) * 12.75); --atraso: -4.6s; }
+/* Peça: a face de cima é o próprio elemento, erguido; as duas faces que a câmera vê descem dela até o chão. */
+.bloco { top: calc(var(--y) - 1.1em); width: 3em; height: 2.2em; border-radius: 0.2em; background: var(--topo); transform: translateZ(var(--h)); }
+.bloco::before, .bloco::after { content: ""; position: absolute; }
+.bloco::before { top: 100%; left: 0; width: 100%; height: var(--h); background: var(--frente); transform-origin: 50% 0; transform: rotateX(-90deg); }
+.bloco::after { top: 0; right: 100%; width: var(--h); height: 100%; background: var(--lado); transform-origin: 100% 50%; transform: rotateY(-90deg); }
+.eq { --h: 0.9em; left: 0; background: linear-gradient(90deg, transparent 0.5em, var(--marca-realce) 0.5em 0.8em, transparent 0.8em 1.1em, var(--marca-realce) 1.1em 1.4em, transparent 1.4em) 0 0.45em / 100% 0.3em no-repeat, var(--topo); }
+.gaveta { --h: 0.45em; left: 19em; display: grid; place-items: center; color: var(--marca-texto); }
+.gaveta .i { width: 1.5em; height: 1.5em; }
+.muro { --h: 3.2em; top: -0.4em; left: 9.9em; width: 2.2em; height: 15.8em; background: var(--topo); }
+.muro::after { background: linear-gradient(90deg, transparent 0 1em, var(--lado) 1em), repeating-linear-gradient(180deg, var(--lado) 0 2.15em, var(--marca-fundo-2) 2.15em 3.15em, var(--lado) 3.15em 3.5em); }
+.pacote { top: calc(var(--y) - 0.35em); left: 3em; width: 0.7em; height: 0.7em; border-radius: 0.15em; background: var(--marca-texto); transform: translate3d(3.4em, 0, 0.45em); animation: envio 6s linear var(--atraso) infinite; }
+.pacote.outro { animation-delay: calc(var(--atraso) - 3s); }
+/* Placa: fica de pé, virada para a câmera, com o nome no tamanho de rótulo da página. */
+.placa { color: var(--marca-suave); font-size: var(--texto-rotulo); line-height: 1.2; white-space: nowrap; }
+.placa.de { top: var(--y); left: calc(var(--u) * -0.6); transform-origin: 100% 50%; transform: translate3d(-100%, -50%, 6px) rotateZ(32deg) rotateX(-56deg); }
+.placa.para { top: var(--y); left: calc(var(--u) * 23); font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", "DejaVu Sans Mono", monospace; transform-origin: 0 50%; transform: translate3d(0, -50%, 12px) rotateZ(32deg) rotateX(-56deg); }
+.placa.selo {
+  top: calc(var(--u) * 7.5);
+  left: calc(var(--u) * 11);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 8px;
+  border: 1px solid var(--marca-realce);
+  border-radius: 999px;
+  background: var(--marca-fundo-2);
+  color: var(--marca-texto);
+  font-weight: 700;
+  transform-origin: 50% 100%;
+  transform: translate3d(-50%, -100%, calc(var(--u) * 4.4)) rotateZ(32deg) rotateX(-56deg);
+  animation: flutua 3.5s ease-in-out infinite alternate;
+}
+.selo .i { color: var(--marca-realce); }
+@keyframes giro { from { transform: rotateX(56deg) rotateZ(-36deg); } to { transform: rotateX(56deg) rotateZ(-28deg); } }
+@keyframes flutua { from { transform: translate3d(-50%, -100%, calc(var(--u) * 4.1)) rotateZ(32deg) rotateX(-56deg); } to { transform: translate3d(-50%, -100%, calc(var(--u) * 4.8)) rotateZ(32deg) rotateX(-56deg); } }
+/* O pacote some dentro do muro e reaparece do outro lado. */
+@keyframes envio {
+  0% { opacity: 0; transform: translate3d(0, 0, 0.45em); }
+  5%, 39% { opacity: 1; }
+  43%, 57% { opacity: 0; }
+  61%, 95% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(15.3em, 0, 0.45em); }
+}
+/* Pausar sem script: a caixa de marcar vem antes da cena e para tudo o que se mexe nela. */
+.pausa { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; }
+.pausa-rotulo { display: inline-flex; margin: 0; padding: 6px 12px 6px 8px; border: 1px solid color-mix(in oklab, var(--marca-traco) 70%, transparent); border-radius: 999px; color: var(--marca-suave); font-size: var(--texto-rotulo); font-weight: 400; cursor: pointer; transition: border-color var(--passo), color var(--passo); }
+.pausa-rotulo span { display: inline-flex; align-items: center; gap: 6px; }
+.pausa-rotulo .parada, .pausa:checked + .pausa-rotulo .roda { display: none; }
+.pausa:checked + .pausa-rotulo .parada { display: inline-flex; }
+.pausa:focus-visible + .pausa-rotulo { outline: 2px solid var(--marca-realce); outline-offset: 2px; }
+.pausa:checked ~ .cena .palco, .pausa:checked ~ .cena .palco > * { animation-play-state: paused; }
 .entrada-acesso { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; }
 .entrada-acesso > * { width: 100%; max-width: 400px; }
 .entrada-acesso h1 { margin-bottom: 8px; }
@@ -498,18 +591,23 @@ p > .botao { margin-top: 0; }
 
 @media (max-width: 900px) {
   .situacao { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dupla { grid-template-columns: minmax(0, 1fr); }
   .entrada { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
   .entrada-marca { gap: 12px; padding: 20px 16px; }
   .entrada-nome { gap: 12px; font-size: var(--texto-destaque); }
   .entrada-nome img { width: 44px; height: 44px; border-radius: 10px; }
   .entrada-chamada { max-width: none; font-size: var(--texto-base); font-weight: 400; letter-spacing: 0; line-height: 1.5; color: var(--marca-suave); }
-  .entrada-pontos, .caminho { display: none; }
+  .entrada-pontos, .vitrine { display: none; }
   .entrada-acesso { justify-content: flex-start; padding: 32px 16px; }
 }
 
 @media (max-width: 640px) {
   main { padding: 16px 16px 24px; }
   .cartao, .situacao > div { padding: 16px; }
+  .lista > :not(.rolagem) { margin: 16px; }
+  .recentes li { flex-direction: column; align-items: flex-start; }
+  .lista tr > :first-child { padding-left: 16px; }
+  .lista tr > :last-child { padding-right: 16px; }
   .acoes { min-width: 0; }
   .acoes .botao, .etiqueta { white-space: normal; }
 }
@@ -520,7 +618,21 @@ p > .botao { margin-top: 0; }
   .estado .atalho { padding-top: 8px; }
 }
 
+@media (hover: hover) {
+  .pausa-rotulo:hover { border-color: var(--marca-realce); color: var(--marca-texto); }
+}
+
+/* Movimento reduzido: nada desliza nem gira. A cena da entrada fica parada, inteira, e o botão de pausar sai. */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after { transition: none !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  .palco, .palco > * { animation: none !important; }
+  .pausa, .pausa-rotulo { display: none; }
   button:active, .botao:active { transform: none; }
 }

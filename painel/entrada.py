@@ -3,6 +3,7 @@
 import administradores
 import conta_ftp
 from auditoria import auditar
+from cena import cena
 from config import CFG, NOME
 from icones import icone
 from pagina import aviso_rede, e, pagina
@@ -15,26 +16,6 @@ COOKIE_VAZIO = '__Host-sessao=; Path=/; Secure; HttpOnly; SameSite=Strict; Max-A
 
 def cookie(token):
     return f'__Host-sessao={token}; Path=/; Secure; HttpOnly; SameSite=Strict'
-
-
-# Desenho do lado da marca: cada equipamento chega pelo FTPS e cai na própria pasta. É enfeite (o texto ao lado diz o mesmo),
-# feito aqui mesmo, no traço da logo, sem pedido de rede.
-def _caminho():
-    linhas = (28, 76, 124, 172)
-    entra = ('M96 28H146l42 42h12', 'M96 76H174l14 14h12', 'M96 124H174l14-14h12', 'M96 172H146l42-42h12')
-    sai = ('M248 70h12l42-42H352', 'M248 90h12l14-14H352', 'M248 110h12l14 14H352', 'M248 130h12l42 42H352')
-    pontas = ''.join(f'M12 {y}a4 4 0 1 1-8 0 4 4 0 0 1 8 0z' for y in linhas)
-    pastas = ''.join(f'M360 {y - 5}a2 2 0 0 1 2-2h3.5l2 2.5h6.5a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2z' for y in linhas)
-    nomes = ''.join(f'<text x="22" y="{y + 5}">{nome}</text>' for y, nome in zip(linhas, ('roteador', 'switch', 'OLT', 'rádio')))
-    destinos = ''.join(f'<text class="pasta" x="386" y="{y + 5}">{nome}</text>' for y, nome in zip(linhas, ('roteador', 'switch', 'olt', 'radio')))
-    return ('<svg class="caminho" viewBox="0 0 464 200" aria-hidden="true">'
-            f'<path class="fio" d="{"".join(entra + sai)}{pontas}"/><path class="destino" d="{pastas}"/>'
-            '<rect class="portao" x="200" y="52" width="48" height="96" rx="12"/>'
-            '<path class="tranca" d="M217 92h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-14a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zM219 92v-4a5 5 0 0 1 10 0v4"/>'
-            f'<text class="sigla" x="224" y="128">FTPS</text>{nomes}{destinos}</svg>')
-
-
-CAMINHO = _caminho()
 
 
 def tela_entrada(pedido, codigo=200, erro=''):
@@ -52,7 +33,7 @@ def tela_entrada(pedido, codigo=200, erro=''):
 <li>{icone('relogio')}Sessão encerrada depois de {CFG['inatividade'] // 60} minutos sem uso</li>
 </ul>
 </div>
-{CAMINHO}
+{cena()}
 </section>
 <section class="entrada-acesso">
 <h1>Entrar no painel</h1>

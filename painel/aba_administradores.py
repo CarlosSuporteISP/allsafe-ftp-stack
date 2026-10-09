@@ -42,7 +42,7 @@ def lista(pedido, sessao, consulta, formulario, token):
     pedido.enviar(200, pagina('Administradores', f'''{cabeca('Administradores', 'Quem entra neste painel. Todos têm o mesmo acesso.',
         f'<a class="botao principal" href="{ABA}/novo">{icone("mais")}Novo administrador</a>')}
 {f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}
-<section class="cartao"><div class="rolagem"><table>
+<section class="cartao lista"><div class="rolagem"><table>
 <thead><tr><th>Administrador</th><th>Sessões abertas</th><th>Ações</th></tr></thead>
 <tbody>{''.join(linhas)}</tbody></table></div>
 <p class="suave">Toda alteração pede a sua senha atual e fica na aba Atividade com o

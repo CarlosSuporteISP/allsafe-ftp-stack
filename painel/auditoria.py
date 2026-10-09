@@ -39,6 +39,19 @@ def auditar(ip, evento, detalhe=''):
     print(linha, flush=True)
 
 
+def fim_da_auditoria(limite=6, janela=8192):
+    """Os últimos registros, lendo só o fim do arquivo atual: é o que a Visão geral mostra a cada abertura."""
+    try:
+        with open(ARQ_AUDITORIA, 'rb') as arq:
+            inicio = max(0, arq.seek(0, os.SEEK_END) - janela)
+            arq.seek(inicio)
+            linhas = arq.read().decode('utf-8', 'replace').splitlines()
+    except OSError:
+        return []
+    # Leitura que começou no meio do arquivo: a primeira linha pode estar cortada.
+    return (linhas[1:] if inicio else linhas)[-limite:][::-1]
+
+
 def ler_auditoria(limite=300):
     linhas = []
     for caminho in (ARQ_AUDITORIA + '.1', ARQ_AUDITORIA):

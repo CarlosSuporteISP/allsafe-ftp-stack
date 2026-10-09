@@ -2,6 +2,7 @@
 """Aba Visão geral: situação do FTP e os dados para configurar o equipamento."""
 import shutil
 
+from aba_atividade import recentes
 from config import ARQ_CERT_FTP, CFG, PASTA_DADOS
 from estado import certificado, ftp_no_ar, pastas_distintas, sem_tls, uso_da_pasta, usuarios
 from icones import icone
@@ -41,6 +42,7 @@ def visao_geral(pedido, sessao, consulta, formulario, token):
 <div><h2>{icone('certificado')}Certificado do FTP</h2><p class="numero menor">{marca(estado_cert)}{e(texto_cert)}</p>
 <p class="atalho"><a href="/seguranca">conferir a impressão digital</a></p></div>
 </section>
+<div class="dupla">
 <section class="cartao"><h2>{icone('equipamento')}Dados para configurar o equipamento</h2>
 <dl class="dados">
 <div><dt>Servidor</dt><dd><code>{e(CFG['ftp_anunciado'])}</code></dd></div>
@@ -48,4 +50,8 @@ def visao_geral(pedido, sessao, consulta, formulario, token):
 <div><dt>Portas passivas</dt><dd><code>{e(CFG['ftp_passiva'])}</code>/tcp</dd></div>
 <div class="larga"><dt>Protocolo</dt><dd>{e(protocolo.get(CFG['ftp_tls'], 'FTPS explícito (FTP com TLS), modo passivo'))}</dd></div>
 <div class="larga"><dt>Usuário e senha</dt><dd>um usuário por equipamento ou por grupo, criado em <a href="/usuarios">Usuários</a></dd></div>
-</dl></section>''', sessao, '/'))
+</dl></section>
+<section class="cartao"><h2>{icone('atividade')}Atividade recente</h2>
+<ul class="recentes">{recentes()}</ul>
+<p class="atalho"><a href="/atividade">ver toda a atividade</a></p></section>
+</div>''', sessao, '/'))

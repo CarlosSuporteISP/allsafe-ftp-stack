@@ -48,7 +48,7 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
             os.close(descritor)
     pedido.enviar(200, pagina('Meus arquivos', f'''{cabeca('Meus arquivos', 'Os arquivos da sua pasta no FTP, para navegar e baixar.')}
 <p class="trilha">{trilha(lista)}</p>
-{aviso_de_corte(cortado)}<section class="cartao"><div class="rolagem"><table>
+{aviso_de_corte(cortado)}<section class="cartao lista"><div class="rolagem"><table>
 <thead><tr><th>Nome</th><th>Tamanho</th><th>Modificado</th><th>Ações</th></tr></thead>
 <tbody>{linhas_da_lista('/meus-arquivos', caminho, pastas, arquivos)}</tbody></table></div>
 <p class="suave">Arquivos da pasta do usuário <strong>{e(sessao['usuario'])}</strong> no FTP. Aqui você navega e baixa:

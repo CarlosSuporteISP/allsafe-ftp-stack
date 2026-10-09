@@ -76,7 +76,7 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
                 acoes += f' <a class="botao" href="/usuarios/tls?usuario={destino}">Dispensar TLS</a>'
         acoes += remover
         linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}</td>'
-                      f'<td>{celula}</td>'
+                      f'<td class="pasta">{celula}</td>'
                       f'<td>{e(tamanho(uso["bytes"]))}{mais}</td><td>{uso["arquivos"]}{mais}</td>'
                       f'<td>{e(quando(uso["ultimo"]))}</td>{coluna_tls}<td class="acoes">{acoes}</td></tr>')
     corpo = ''.join(linhas) or f'<tr><td colspan="{7 if excecoes else 6}" class="suave">Nenhum usuário ainda.</td></tr>'
@@ -85,7 +85,7 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
     pedido.enviar(200, pagina('Usuários', f'''{cabeca('Usuários', 'As contas que os equipamentos usam para entrar no FTP, cada uma presa na própria pasta.',
         f'<a class="botao principal" href="/usuarios/novo">{icone("mais")}Novo usuário</a>')}
 {f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}
-<section class="cartao"><div class="rolagem"><table>
+<section class="cartao lista"><div class="rolagem"><table>
 <thead><tr><th>Usuário</th><th>Pasta</th><th>Uso</th><th>Arquivos</th><th>Último envio</th>{'<th>TLS</th>' if excecoes else ''}<th>Ações</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
 <ul class="legenda">

@@ -115,6 +115,6 @@ def seguranca(pedido, sessao, consulta, formulario, token):
     pedido.enviar(200, pagina('Segurança', f'''{cabeca('Segurança', 'O que protege o servidor nesta instalação, conferido agora.')}
 {aviso_rede()}
 {alerta_tls()}
-<section class="cartao"><div class="rolagem"><table class="conferencia"><tbody>{''.join(itens)}</tbody></table></div></section>
+<section class="cartao lista"><div class="rolagem"><table class="conferencia"><tbody>{''.join(itens)}</tbody></table></div></section>
 <p class="suave">Confira a impressão digital com a que o navegador e o cliente FTP mostram antes de aceitar o certificado.</p>''',
                             sessao, '/seguranca'))

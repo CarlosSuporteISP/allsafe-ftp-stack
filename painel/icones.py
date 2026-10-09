@@ -39,6 +39,8 @@ TRACOS = {
     'inicio': 'M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0',
     'terminal': 'M4 5h16v14H4zM7.5 9.5l3 2.5-3 2.5M13 15h3.5',
     'relogio': 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
+    'pausa': 'M9 5v14M15 5v14',
+    'tocar': 'M7 5l12 7-12 7z',
 }
 USO = re.compile(r'<use href="#i-([a-z-]+)"/>')
 

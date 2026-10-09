@@ -10,6 +10,7 @@ O painel foi redesenhado: ícones desenhados no lugar dos emojis, paleta medida 
 
 ### Adicionado
 
+- **Atividade recente na Visão geral**: os últimos registros do painel, ao lado dos dados para configurar o equipamento, com o atalho para a aba Atividade. A tela lê só o fim do arquivo de auditoria.
 - **Só o painel publicado, por proxy ou túnel** (`PAINEL_PROXY_CONFIAVEL`, vazia por padrão): com o endereço do proxy ou do túnel na variável, o nginx passa a usar o último endereço do `X-Forwarded-For` como endereço de quem acessa, e só em conexão vinda desse proxy. O limite de tentativas de senha, a sessão, a auditoria e os limites de pedidos contam por quem acessa, e não pelo proxy. O FTP não passa por ele. É opção de quem instala: o `deploy.sh`, os containers do painel e do nginx e o painel (tela de entrada, rodapé e aba Segurança) avisam quando está ligada. O passo a passo, com o exemplo de nginx de borda, está em `doc/seguranca.md`.
 - **Casos de teste** de segurança 93 a 95 e de rede 14: cabeçalho de endereço escrito pelo cliente ignorado, só o proxy aceito informa o endereço, senha errada e sessão contam pelo endereço de quem acessa, e as recusas do `deploy.sh` e dos containers a rede inteira, endereço público, `0.0.0.0`, mais de oito endereços e endereço fora das redes permitidas.
 
@@ -17,13 +18,14 @@ O painel foi redesenhado: ícones desenhados no lugar dos emojis, paleta medida 
 
 - **IP público é opção de quem instala**: os avisos do `deploy.sh`, dos containers, do painel e da documentação passam a dizer que aceitar endereço público (`REDE_PERMITIR_IP_PUBLICO=sim`) é escolha de quem instala o serviço. O padrão continua `nao`, e as exigências com a opção ligada não mudaram.
 - **Limites de pedidos e registro do nginx pelo endereço de quem acessa**: sem proxy configurado, é o mesmo endereço da conexão de antes.
-
-- **Ícones próprios no lugar dos emojis**: 31 desenhos de linha, em grade de 24, saem dentro do HTML da própria tela (`painel/icones.py`). Nenhum arquivo de imagem, fonte ou script é pedido a mais, e a política de conteúdo do painel não muda.
+- **Ícones próprios no lugar dos emojis**: 33 desenhos de linha, em grade de 24, saem dentro do HTML da própria tela (`painel/icones.py`). Nenhum arquivo de imagem, fonte ou script é pedido a mais, e a política de conteúdo do painel não muda.
 - **Paleta em OKLCH**, com papéis nomeados (fundo, superfície, texto, ação, estados) e contraste calculado nos temas claro e escuro. As misturas de cor dos avisos e das marcas são feitas em OKLab.
-- **Tela de entrada nova**, sem a barra de cima: de um lado a marca, o que o servidor faz e o caminho do backup (equipamento, FTPS, pasta); do outro, o formulário. No celular a marca vira uma faixa curta acima do formulário.
+- **Tela de entrada nova**, sem a barra de cima: de um lado a marca, o que o servidor faz e uma cena em três dimensões do caminho do backup (os equipamentos, o FTPS e a pasta de cada um); do outro, o formulário. A cena é HTML e CSS do próprio painel, sem script nem imagem, e só anima `transform` e `opacity`. Tem botão de pausar, que funciona pelo teclado, e já chega parada no navegador configurado para movimento reduzido. No celular a marca vira uma faixa curta acima do formulário, sem a cena.
 - **Cada aba começa pelo título, por uma linha que diz o que a tela mostra e pela ação principal**, à direita. A aba em que se está fica marcada por um traço no menu.
 - **Visão geral** com o estado do servidor em uma faixa e as quatro medidas lado a lado, cada uma com o atalho para a aba dela.
-- **Aba Usuários**: a coluna da pasta mostra só a pasta do usuário, e o caminho do servidor aparece uma vez, na legenda; as marcas ganharam legenda de uma linha cada; as ações da linha ficaram discretas e não quebram de linha em tela larga.
+- **Aba Atividade**: a data e o endereço de origem aparecem inteiros na linha, sem quebra, com largura para endereço IPv6. A data passa a `dd/mm/aaaa hh:mm:ss`, o registro feito pelo próprio painel mostra `no servidor` no lugar do traço, e o detalhe ganhou nomes legíveis (administrador, usuário, versão, tamanho) no lugar de `chave=valor`. O arquivo de auditoria não mudou de formato.
+- **Tabelas de borda a borda no cartão**, com a linha de títulos em faixa, e página até 1392 px de largura: em tela de 1280 px ou mais, nenhuma tabela precisa de rolagem lateral com o cadastro de exemplo.
+- **Aba Usuários**: a coluna da pasta mostra só a pasta do usuário, e o caminho do servidor aparece uma vez, na legenda; as marcas ganharam legenda de uma linha cada; as ações da linha ficaram discretas e não quebram de linha em tela larga; a pasta aparece inteira e, se faltar largura, quem desce de linha é a marca.
 - **Tamanho e data não quebram de linha** entre o número e a unidade nem entre o dia e a hora.
 - **Fonte do sistema mantida**: nenhuma fonte é baixada.
 

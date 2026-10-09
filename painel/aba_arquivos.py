@@ -214,7 +214,7 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
     pedido.enviar(200, pagina('Arquivos', f'''{cabeca('Arquivos', 'O que os equipamentos já enviaram, pasta por pasta.')}
 {f'<p class="ok" role="status">{e(feito)}</p>' if feito else ''}
 <p class="trilha">{trilha(lista)}{novo_usuario}</p>
-{de_quem}{aviso}<section class="cartao"><div class="rolagem"><table>
+{de_quem}{aviso}<section class="cartao lista"><div class="rolagem"><table>
 <thead><tr><th>Nome</th><th>Tamanho</th><th>Modificado</th><th>Ações</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
 <p class="suave">O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continua sendo feito por FTP.
