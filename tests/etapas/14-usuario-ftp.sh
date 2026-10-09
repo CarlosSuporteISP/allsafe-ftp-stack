@@ -31,7 +31,7 @@ auditoria; n_antes="$(eventos 'arquivo_baixado usuario=equip14 ')"
 t0="$(tempo)"; e_usu="$(entra equip14 "$U" "$W/u14a.senha")"; t_usu="$(duracao "$t0")"; d_usu="$(destino)"; proibir "$(biscoito_de "$U")"
 raiz="$(aba -b "$U" "$B/")"
 tela="$(aba -b "$U" "$M")"; UK="$(sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' "$W/corpo" | head -1)"; proibir "$UK"
-menu="$(grep -o '<nav.*</nav>' "$W/corpo" | grep -o 'href="[^"]*"' | tr '\n' ' ')"
+menu="$(grep -o '<nav.*</nav>' "$W/corpo" | grep -o '<a href="[^"]*"' | cut -d ' ' -f 2 | tr '\n' ' ')"  # só os links: o ícone também tem href
 quem_e="$(grep -c 'title="Usuário do FTP desta sessão">equip14<' "$W/corpo")"
 adm_na_tela="$(grep -o -E 'href="/(usuarios|arquivos|administradores|atividade|seguranca)|action="/arquivos/pasta"' "$W/corpo" | wc -l)"
 caminho_real="$(grep -c -E "clientes14|olt-a|/data|$T" "$W/corpo")"; pasta_diario="$(grep -c 'href="/meus-arquivos?pasta=diario"' "$W/corpo")"

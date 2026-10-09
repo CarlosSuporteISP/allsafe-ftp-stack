@@ -24,7 +24,7 @@ Achou uma falha de segurança? Avise em particular, antes de divulgar. Este arqu
 | Onde está a falha | Para quem avisar |
 |---|---|
 | Em uma instalação: o FTP, o painel ou o servidor de uma empresa | O contato que a própria instalação publica em `/.well-known/security.txt` |
-| No código da stack: algo que vale para qualquer instalação | Quem entregou a stack; no repositório de onde ela veio, uma issue pedindo um canal privado, sem os detalhes da falha |
+| No código da stack: algo que vale para qualquer instalação | Quem entregou a stack; no repositório oficial, [github.com/allsafe-inf/allsafe-ftp-stack](https://github.com/allsafe-inf/allsafe-ftp-stack), uma issue pedindo um canal privado, sem os detalhes da falha |
 
 1. Leia o contato da instalação, de uma máquina das redes permitidas ao painel:
 

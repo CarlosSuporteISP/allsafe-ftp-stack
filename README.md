@@ -47,6 +47,8 @@ flowchart LR
 
 > 🧱 **Uso só em rede privada.** Por padrão, esta stack é para rede interna: escuta **apenas em IP privado** (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` ou `127.0.0.1`), **atrás de firewall**, e não deve ser publicada na internet nem receber redirecionamento de porta da borda. Endereço público só entra por escolha de quem instala, com `REDE_PERMITIR_IP_PUBLICO=sim` e firewall no servidor: leia antes o [alerta](doc/seguranca.md#ip-publico). Detalhes em [doc/seguranca.md](doc/seguranca.md#rede-privada).
 
+> 📌 **Repositório oficial:** [github.com/allsafe-inf/allsafe-ftp-stack](https://github.com/allsafe-inf/allsafe-ftp-stack). As versões saem nele primeiro, e é nele que issues e pull requests são recebidos. A cópia em `github.com/CarlosSuporteISP/allsafe-ftp-stack` é um espelho, atualizado depois.
+
 ---
 
 <details>
@@ -92,6 +94,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **Bloqueio por tentativa no FTP** | Cinco senhas erradas do mesmo endereço bloqueiam o usuário para ele por 15 minutos; o administrador ajusta o limite de cada usuário e desbloqueia pelo painel |
 | **Bind local por padrão** | Sobe em `127.0.0.1`; você abre só um IP **privado** dedicado, com firewall no host |
 | **Rede privada por padrão** | Feita para rede interna, atrás de firewall; endereço público só por uma opção explícita, com alerta |
+| **Só o painel publicado, se quiser** | O painel pode ser aberto por um proxy ou túnel do próprio servidor, com o FTP fechado na rede privada; o endereço do cliente só é aceito do proxy declarado |
 | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão de 15 minutos, bloqueio depois de cinco senhas erradas e registro de cada ação |
 | **nginx na frente do painel** | Só o nginx publica a porta do painel: TLS 1.2 e 1.3, HTTP/2, lista de redes permitidas, limite de pedidos e de conexões por endereço; o painel fica sem porta de rede |
 | **Containers endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs; o nginx roda sem `root` e sem nenhuma `capability` |
@@ -128,7 +131,7 @@ Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplica�
 ## 🚀 Instalação rápida
 
 ```bash
-git clone https://github.com/CarlosSuporteISP/allsafe-ftp-stack.git
+git clone https://github.com/allsafe-inf/allsafe-ftp-stack.git
 cd allsafe-ftp-stack
 sudo install -d -o "$USER" /srv/allsafe-ftp-stack   # pasta dos dados, das cópias e dos temporários; como root, pule
 ./deploy.sh        # cria o .env, gera as senhas, sobe o FTP, o painel e o nginx e espera ficarem healthy
@@ -163,7 +166,7 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | Trocar o usuário ou a senha do painel | pelo painel, aba Administradores |
 | Criar outro administrador do painel | pelo painel, aba Administradores, botão **Novo administrador** |
 | Recuperar o acesso ao painel | `./scripts/painel-senha.sh --gerar` (outro administrador: `--usuario NOME`) |
-| Criar um usuário | pelo painel, aba `👥 Usuários`, ou `./manage-user.sh add backup-olt` |
+| Criar um usuário | pelo painel, aba Usuários, ou `./manage-user.sh add backup-olt` |
 | Baixar um backup recebido | pelo painel, aba Arquivos, botão **Baixar** na linha do arquivo |
 | Deixar o dono dos arquivos baixar os dele | ele abre o painel com o usuário e a senha do FTP e vê só a própria pasta; para o painel aceitar só administradores, `PAINEL_ACESSO_USUARIOS_FTP=nao` no `.env` e `./deploy.sh` |
 | Criar uma pasta e prender um usuário a ela | pelo painel, aba Arquivos, **Nova pasta** e **Novo usuário nesta pasta**, ou `./manage-user.sh add olt01 clientes/olt-01` |
@@ -594,6 +597,7 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 
 - **Rede privada por padrão:** IP privado, atrás de firewall, sem redirecionamento de porta da internet. Veja [rede privada e firewall](doc/seguranca.md#rede-privada).
 - **IP público só por escolha:** `REDE_PERMITIR_IP_PUBLICO=sim` aceita endereço público e exige TLS obrigatório; a stack alerta disso no `deploy.sh`, no registro dos containers e no painel. Só com firewall no servidor. Veja [IP público](doc/seguranca.md#ip-publico).
+- **Só o painel publicado, sem expor o FTP:** `PAINEL_PROXY_CONFIAVEL` declara o proxy ou o túnel que roda no próprio servidor. O painel passa a contar a senha errada e a sessão pelo endereço do cliente que ele informa, e o endereço escrito em cabeçalho por qualquer outro é ignorado. Veja [painel por proxy ou túnel](doc/seguranca.md#painel-por-proxy).
 <details>
 <summary>Proteções aplicadas, uma a uma — clique para expandir</summary>
 
@@ -612,7 +616,7 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 
 </details>
 
-Modelo de ameaça e o endurecimento linha a linha em [doc/seguranca.md](doc/seguranca.md).
+O caminho mais seguro para cada decisão de quem instala, em fluxograma, está em [boas práticas antes de produção](doc/seguranca.md#boas-praticas); o que é atacado a cada versão, em [testes executados](doc/seguranca.md#testes-executados). Modelo de ameaça e o endurecimento linha a linha em [doc/seguranca.md](doc/seguranca.md).
 
 ---
 
@@ -626,7 +630,7 @@ Modelo de ameaça e o endurecimento linha a linha em [doc/seguranca.md](doc/segu
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. Os detalhes estão em [Scripts](doc/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 54 casos funcionais, 96 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/scripts.md#testar).
 
 ---
 
@@ -719,7 +723,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.25.2**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no repositório.
+**0.25.2**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

@@ -14,6 +14,8 @@ O painel foi redesenhado: ícones desenhados no lugar dos emojis, paleta medida 
 - **Só o painel publicado, por proxy ou túnel** (`PAINEL_PROXY_CONFIAVEL`, vazia por padrão): com o endereço do proxy ou do túnel na variável, o nginx passa a usar o último endereço do `X-Forwarded-For` como endereço de quem acessa, e só em conexão vinda desse proxy. O limite de tentativas de senha, a sessão, a auditoria e os limites de pedidos contam por quem acessa, e não pelo proxy. O FTP não passa por ele. É opção de quem instala: o `deploy.sh`, os containers do painel e do nginx e o painel (tela de entrada, rodapé e aba Segurança) avisam quando está ligada. O passo a passo, com o exemplo de nginx de borda, está em `doc/seguranca.md`.
 - **Aviso de exposição na tela é opção de quem instala** (`PAINEL_AVISO_EXPOSICAO`, `sim` por padrão): com `nao`, a tela de entrada, o topo da aba Segurança e o rodapé deixam de dizer que o painel está publicado por proxy, por túnel ou em endereço público. O estado continua nas linhas da aba Segurança, que só administrador vê, e o alerta continua na saída do `deploy.sh` e no registro dos containers. Caso de teste de segurança 96.
 - **Casos de teste** de segurança 93 a 95 e de rede 14: cabeçalho de endereço escrito pelo cliente ignorado, só o proxy aceito informa o endereço, senha errada e sessão contam pelo endereço de quem acessa, e as recusas do `deploy.sh` e dos containers a rede inteira, endereço público, `0.0.0.0`, mais de oito endereços e endereço fora das redes permitidas.
+- **Boas práticas antes de produção, em fluxograma**, no guia de [Segurança](doc/seguranca.md#boas-praticas): as quatro decisões de quem instala (onde o FTP escuta, equipamento sem TLS, por onde o painel é aberto, para onde vai a cópia), com o caminho recomendado e a opção de cada uma.
+- **Testes executados**, no guia de [Segurança](doc/seguranca.md#testes-executados): o que a bateria de segurança tenta, alvo por alvo, com o número de cada caso, e o que cada versão passa além da bateria.
 
 ### Alterado
 
@@ -29,6 +31,9 @@ O painel foi redesenhado: ícones desenhados no lugar dos emojis, paleta medida 
 - **Aba Usuários**: a coluna da pasta mostra só a pasta do usuário, e o caminho do servidor aparece uma vez, na legenda; as marcas ganharam legenda de uma linha cada; as ações da linha ficaram discretas e não quebram de linha em tela larga; a pasta aparece inteira e, se faltar largura, quem desce de linha é a marca.
 - **Tamanho e data não quebram de linha** entre o número e a unidade nem entre o dia e a hora.
 - **Fonte do sistema mantida**: nenhuma fonte é baixada.
+- **Repositório oficial na documentação**: a instalação, a política de segurança e a seção Versão apontam para `github.com/allsafe-inf/allsafe-ftp-stack`, onde as versões saem primeiro e onde issues e pull requests são recebidos; a cópia na conta pessoal é espelho.
+- **Documentação com os nomes das telas novas**: abas citadas sem emoji e a coluna **Pasta** da aba Usuários com o nome que a tela mostra.
+- **Caso de teste funcional 28**: a conferência do menu do usuário do FTP conta só os links, e não o endereço interno do ícone.
 
 ## [0.25.2] - 2026-10-09
 

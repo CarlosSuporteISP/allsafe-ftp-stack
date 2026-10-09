@@ -140,7 +140,7 @@ O mesmo alerta abre a aba Segurança. As condições para dispensar um usuário 
 |---|---|
 | **Novo usuário** | Abre o formulário de cadastro |
 | Usuário | Nome da conta. A etiqueta `inicial` marca o usuário criado na instalação (`FTP_USER`) |
-| Pasta no host | Onde os arquivos desse usuário ficam no servidor. O endereço abre a pasta na aba Arquivos |
+| Pasta | Onde os arquivos desse usuário ficam no servidor. O endereço abre a pasta na aba Arquivos |
 | Etiqueta `dividida` | A pasta é alcançada por mais de um usuário: um lê, grava e apaga os arquivos do outro |
 | Etiqueta `limites` | O usuário tem limite próprio, gravado em **Editar**; passando o mouse, aparece cada um |
 | Etiqueta `bloqueado` | O FTP está recusando o usuário por senhas erradas demais vindas de um endereço; sai sozinha no fim do prazo, ou em **Editar** |
@@ -421,7 +421,7 @@ Na tela **Editar**, o cartão **TLS** diz como o usuário entra e traz o botão 
 
 **Para que serve:** ver o que cada equipamento enviou, baixar um backup pelo navegador, criar a pasta de um usuário novo, trocar o nome e apagar arquivo e pasta, sem cliente de FTP.
 
-**Como chegar:** menu do topo ➜ **Arquivos**. Na aba Usuários, o endereço da coluna **Pasta no host** abre direto a pasta daquele usuário.
+**Como chegar:** menu do topo ➜ **Arquivos**. Na aba Usuários, o endereço da coluna **Pasta** abre direto a pasta daquele usuário.
 
 | Item da tela | O que faz |
 |---|---|

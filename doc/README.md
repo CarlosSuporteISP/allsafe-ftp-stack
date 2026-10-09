@@ -46,7 +46,7 @@ flowchart LR
 | 2 | [Configuração](configuracao.md) | Todas as variáveis do `.env`: nome, para que serve, valores válidos e padrão |
 | 3 | [Perfis](perfis.md) | Perfis `small`, `medium`, `large`, `xlarge` e `extended`: dimensionamento por porte, o que o servidor precisa ter e o impacto na faixa passiva |
 | 4 | [Arquitetura](arquitetura.md) | Containers, imagens, entrypoints, volumes, rede e as opções do `pure-ftpd` |
-| 5 | [Segurança](seguranca.md) | Rede privada e firewall, a opção de IP público e o alerta dela, o modo sem TLS para equipamento antigo, modelo de ameaça, superfície exposta, proteções do painel e do nginx, conformidade com as RFCs e o endurecimento do Compose linha a linha |
+| 5 | [Segurança](seguranca.md) | Rede privada e firewall, a opção de IP público e o alerta dela, só o painel publicado por proxy ou túnel, o modo sem TLS para equipamento antigo, as boas práticas antes de produção em fluxograma, os testes executados a cada versão, modelo de ameaça, superfície exposta, proteções do painel e do nginx, conformidade com as RFCs e o endurecimento do Compose linha a linha |
 | 6 | [Segredos](segredos.md) | O que fica em `.secrets/`, quem gera cada arquivo e como trocar as senhas do FTP e do painel |
 | 7 | [Scripts](scripts.md) | O que cada script faz, parâmetros e saída esperada |
 | 8 | [Operação](operacao.md) | Usuários, certificado real, logs e atualização da imagem |
@@ -69,7 +69,7 @@ flowchart LR
 | Baixar os próprios arquivos com a conta do FTP | [Usuário do FTP no painel](painel.md#usuario-ftp) |
 | Criar uma pasta ou escolher a pasta de um usuário | [Usuários pelo painel](painel.md#usuarios) ➜ [Arquivos e download](painel.md#arquivos) |
 | Ver as telas do painel antes de instalar | [Fotos da aplicação](aplicacao/README.md) |
-| Antes de produção | [Rede privada e firewall](seguranca.md#rede-privada) ➜ [Segurança](seguranca.md) ➜ [Operação](operacao.md#certificado-real-de-producao) ➜ [Backup e restauração](backup.md#automatica) |
+| Antes de produção | [Rede privada e firewall](seguranca.md#rede-privada) ➜ [Boas práticas antes de produção](seguranca.md#boas-praticas) ➜ [Operação](operacao.md#certificado-real-de-producao) ➜ [Backup e restauração](backup.md#automatica) |
 | Equipamento antigo que não fala TLS | [Equipamento sem TLS](seguranca.md#ftp-sem-tls) ➜ [Configuração](configuracao.md#tls) ➜ [Solução de problemas](solucao-de-problemas.md#ftp-sem-tls) |
 | Trocar a logo, entregar em contrato ou vender | [Marca do painel](painel.md#marca) ➜ [Marca ALL-SAFE](../MARCA.md) |
 | Avisar de uma falha de segurança | [Política de segurança](../SECURITY.md) ➜ [Contato de segurança](configuracao.md#contato-de-seguranca) |
@@ -115,6 +115,7 @@ Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com o
 | [seguranca-diagrama.mmd](diagramas/seguranca-diagrama.mmd) | 1 | [Segurança](seguranca.md) |
 | [tls-por-usuario-fluxograma.mmd](diagramas/tls-por-usuario-fluxograma.mmd) | 2 | [Segurança](seguranca.md#tls-por-usuario) |
 | [bloqueio-por-tentativa-fluxograma.mmd](diagramas/bloqueio-por-tentativa-fluxograma.mmd) | 2 | [Segurança](seguranca.md#bloqueio-por-tentativa) |
+| [boas-praticas-fluxograma.mmd](diagramas/boas-praticas-fluxograma.mmd) | 2 | [Segurança](seguranca.md#boas-praticas) |
 | [segredos-diagrama.mmd](diagramas/segredos-diagrama.mmd) | 1 | [Segredos](segredos.md) |
 | [scripts-diagrama.mmd](diagramas/scripts-diagrama.mmd) | 1 | [Scripts](scripts.md) |
 | [usuarios-diagrama.mmd](diagramas/usuarios-diagrama.mmd) | 1 | [Operação](operacao.md) |

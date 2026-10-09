@@ -30,7 +30,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [Painel por proxy ou túnel](#painel-por-proxy) · [FTP sem TLS](#ftp-sem-tls) · [TLS por usuário](#tls-por-usuario) · [Bloqueio por tentativa](#bloqueio-por-tentativa) · [Antes de produção](#o-que-endurecer-antes-de-producao) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Sem senha, senha aleatória, exaustão e acesso direto ao cadastro](#sem-senha-e-exaustao) · [Custo das senhas do FTP](#custo-das-senhas) · [Contato de segurança e robôs de busca](#contato-de-seguranca) · [Conformidade com as RFCs](#conformidade-rfc) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
+[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [Painel por proxy ou túnel](#painel-por-proxy) · [FTP sem TLS](#ftp-sem-tls) · [TLS por usuário](#tls-por-usuario) · [Bloqueio por tentativa](#bloqueio-por-tentativa) · [Boas práticas antes de produção](#boas-praticas) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Testes executados](#testes-executados) · [Sem senha, senha aleatória, exaustão e acesso direto ao cadastro](#sem-senha-e-exaustao) · [Custo das senhas do FTP](#custo-das-senhas) · [Contato de segurança e robôs de busca](#contato-de-seguranca) · [Conformidade com as RFCs](#conformidade-rfc) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
 
 </details>
 
@@ -581,9 +581,93 @@ flowchart LR
 
 ---
 
+<a name="boas-praticas"></a>
 <a name="o-que-endurecer-antes-de-producao"></a>
 
-## 🏭 Antes de produção
+## 🏭 Boas práticas antes de produção
+
+A instalação nasce fechada: FTP e painel em `127.0.0.1`, TLS obrigatório, senhas geradas e cópia de segurança cifrada. O que sobra para quem instala são quatro decisões, e a ordem delas é a do fluxograma: onde o FTP escuta, o que fazer com o equipamento que não fala TLS, por onde o painel é aberto e para onde vai a cópia. Cada resposta tem o caminho mais seguro e a opção de quem precisa de outro, sempre com aviso no `./deploy.sh`, no registro dos containers e no painel.
+
+| Decisão | Recomendado | Quando não der |
+|---|---|---|
+| Onde o FTP escuta | IP privado dedicado, com o firewall do host liberando só as redes que enviam backup: [rede privada](#rede-privada) | Endereço público por opção, com TLS obrigatório para todos: [IP público](#ip-publico) |
+| Equipamento sem TLS | Nenhum: `FTP_TLS_MODE` em `2`, ou em `3` para cifrar também o arquivo | Dispensar só o usuário daquele equipamento: [TLS por usuário](#tls-por-usuario) |
+| Por onde o painel é aberto | Só da rede de administração, em `PAINEL_REDES_PERMITIDAS` | Só o painel publicado, por proxy ou túnel, com o FTP fechado: [painel por proxy](#painel-por-proxy) |
+| Para onde vai a cópia | Cifrada, fora do servidor, com a chave privada guardada longe dela: [Backup e restauração](backup.md#chave) | Não há alternativa: cópia sem cifra não é gerada |
+
+<details>
+<summary>Fluxograma das boas práticas, com a sequência escrita — clique para expandir</summary>
+
+<!-- diagrama: diagramas/boas-praticas-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph INSTALA["Quem instala"]
+        instalador@{ shape: person, label: "Usuário<br>quem instala" }
+    end
+    subgraph REDE["Rede do FTP"]
+        rede@{ shape: diam, label: "FTP só em<br>rede privada?" }
+        publico@{ shape: rect, label: "IP público por opção<br>REDE_PERMITIR_IP_PUBLICO=sim" }
+        tls@{ shape: diam, label: "todo equipamento<br>fala TLS?" }
+        dispensa@{ shape: rect, label: "TLS por usuário<br>dispensa só o antigo" }
+    end
+    subgraph PAINEL["Painel"]
+        painel@{ shape: diam, label: "painel aberto<br>fora da rede?" }
+        proxy@{ shape: rect, label: "proxy ou túnel<br>PAINEL_PROXY_CONFIAVEL" }
+    end
+    subgraph GUARDA["Segredos e cópia"]
+        copia@{ shape: rect, label: "backup.sh<br>cópia cifrada" }
+        segredos@{ shape: folder, label: ".secrets<br>senhas e chaves, 0600" }
+        confere@{ shape: diam, label: "validate.sh<br>no ar, tudo OK?" }
+    end
+    subgraph RESULTADO["Resultado"]
+        pronto@{ shape: stadium, label: "instalação protegida<br>pronta para uso" }
+        corrige@{ shape: stadium, label: "corrigir<br>antes de usar" }
+    end
+
+    instalador -- "1 · escolhe FTP_BIND_IP" --> rede
+    rede -- "2a · sim: IP privado e firewall" --> tls
+    rede -- "2b · não: escolha de quem instala" --> publico
+    tls -- "3a · sim: FTP_TLS_MODE 2 ou 3" --> painel
+    tls -- "3b · não" --> dispensa
+    dispensa -- "4 · os demais seguem com TLS" --> painel
+    publico -- "5 · TLS obrigatório para todos" --> painel
+    painel -- "6a · não: só a rede de administração" --> copia
+    painel -- "6b · sim" --> proxy
+    proxy -- "7 · FTP continua fechado" --> copia
+    copia -- "8 · cópia levada para fora" --> confere
+    confere -- "9a · sim" --> pronto
+    confere -- "9b · não" --> corrige
+    copia -. "cifra com a chave pública" .-> segredos
+```
+
+<sub>Nível 2 · Mapa · [fonte](diagramas/)</sub>
+
+| Nº | De ➜ Para | O que acontece |
+|---|---|---|
+| 1 | Usuário ➜ FTP só em rede privada? | Quem instala escolhe o endereço em que o FTP escuta, em `FTP_BIND_IP`; sem escolha, fica em `127.0.0.1` |
+| 2a | FTP só em rede privada? ➜ todo equipamento fala TLS? | Sim: IP privado dedicado e regra no firewall do host liberando só as redes que enviam backup |
+| 2b | FTP só em rede privada? ➜ IP público por opção | Não: o endereço público só é aceito com `REDE_PERMITIR_IP_PUBLICO=sim`, escolha de quem instala |
+| 3a | todo equipamento fala TLS? ➜ painel aberto fora da rede? | Sim: `FTP_TLS_MODE` em `2`, que protege a senha, ou em `3`, que protege também o arquivo |
+| 3b | todo equipamento fala TLS? ➜ TLS por usuário | Não: o administrador dispensa do TLS só o usuário do equipamento antigo, pelo painel |
+| 4 | TLS por usuário ➜ painel aberto fora da rede? | Os demais usuários continuam obrigados a usar TLS, e a sessão sem TLS de quem não foi dispensado é recusada |
+| 5 | IP público por opção ➜ painel aberto fora da rede? | Com endereço público o TLS é obrigatório para todos: `FTP_TLS_MODE` em `0` ou `1` é recusado e a dispensa por usuário fica sem efeito. O firewall do servidor é de quem instala |
+| 6a | painel aberto fora da rede? ➜ backup.sh | Não: o painel fica em IP privado e só atende as redes de `PAINEL_REDES_PERMITIDAS`, reduzida à rede de administração |
+| 6b | painel aberto fora da rede? ➜ proxy ou túnel | Sim: só o painel é publicado, por um proxy ou túnel que roda no próprio servidor e é declarado em `PAINEL_PROXY_CONFIAVEL` |
+| 7 | proxy ou túnel ➜ backup.sh | O FTP continua em rede privada, e o painel passa a contar a senha errada e a sessão pelo endereço do cliente que o proxy informa |
+| 8 | backup.sh ➜ validate.sh | A cópia de segurança é levada para fora do servidor, e a chave privada que a abre fica guardada longe dela. Por fim, `./scripts/validate.sh --runtime` confere a instalação no ar |
+| 9a | validate.sh ➜ instalação protegida | Sim: os três serviços respondem `running, healthy` e a instalação pode receber os equipamentos |
+| 9b | validate.sh ➜ corrigir antes de usar | Não: a mensagem diz o que falta; o caminho de cada uma está em [Solução de problemas](solucao-de-problemas.md) |
+
+**Apoio**
+
+| Quem | Usa | Como |
+|---|---|---|
+| backup.sh | .secrets (`SECRETS_DIR`) | cifra com a chave pública; nada sem cifra chega ao disco |
+
+</details>
+
+O passo a passo, na ordem em que é feito:
 
 1. **Certificado real** no lugar do autoassinado: [Operação](operacao.md#certificado-real-de-producao).
 2. `FTP_BIND_IP` com o IP **privado** dedicado e **regra no firewall** do host liberando só as origens de backup: [rede privada](#rede-privada).
@@ -674,7 +758,7 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 | Limite de tentativas | Cinco erros em 15 minutos, somando entrada recusada, de administrador ou de usuário do FTP, e senha atual recusada, bloqueiam o endereço do cliente, mesmo para a senha certa. O endereço é o da conexão; com o painel [por proxy ou túnel](#painel-por-proxy), o que o proxy escolhido informa |
 | Usuário do FTP só na pasta dele | Com `PAINEL_ACESSO_USUARIOS_FTP=sim`, o usuário do FTP entra com o nome e a senha do FTP, conferidos pelo próprio servidor FTP na rede interna da stack, em TLS e com o certificado conferido. Ele só navega e baixa na pasta do cadastro: não ganha nada que já não tenha por FTP, e perde o envio e a remoção. Com `FTP_TLS_MODE=0`, essa conferência vai em texto puro, sem sair da rede interna da stack |
 | Alteração de administrador confirmada | Criar, trocar senha, trocar nome e remover pedem a senha atual de quem está na sessão; as sessões do administrador alterado são encerradas; ninguém remove a própria conta |
-| Sessão curta | 15 minutos sem uso (`PAINEL_SESSAO_MINUTOS`) e teto de 8 horas; presa ao endereço do cliente; encerrada em `🚪 Sair` e quando o painel reinicia |
+| Sessão curta | 15 minutos sem uso (`PAINEL_SESSAO_MINUTOS`) e teto de 8 horas; presa ao endereço do cliente; encerrada em **Sair** e quando o painel reinicia |
 | Formulário protegido | Token CSRF por sessão e conferência do `Origin` em todo envio; `Referrer-Policy: same-origin` para o navegador informar a origem só ao próprio painel |
 | Página fechada | Sem JavaScript, sem conteúdo de terceiros, sem ser embutida em outra página (`Content-Security-Policy`) |
 | Arquivos sem envio | A aba Arquivos lê, cria pasta vazia, renomeia e apaga, só dentro de `DATA_DIR/dados`, e não recebe arquivo: caminho que tenta sair da pasta recebe `400`, link simbólico não é seguido (`403`) e o arquivo sai sempre como anexo, nunca aberto no navegador. No máximo 8 downloads ao mesmo tempo, 2 por usuário do FTP ou o limite próprio dele, para as telas continuarem respondendo |
@@ -688,6 +772,57 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 O que cada proteção significa na prática e o fluxograma da decisão: [Painel web](painel.md#protecoes).
 
 > Tudo acima foi conferido nos portões de validação das versões `0.3.0` (painel), `0.5.0` (nginx na frente), `0.12.0` (administradores), `0.13.0` (aba Arquivos), `0.14.0` (pastas), `0.15.0` (entrada do usuário do FTP), `0.16.0` (TLS por usuário), `0.17.0` (logo e ícone entregues pelo nginx), `0.18.0` (`robots.txt` e `security.txt`), `0.18.1` (sem senha, senha aleatória, exaustão e acesso direto ao cadastro), `0.19.0` (edição de usuário), `0.20.0` (renomear e apagar pelo painel), `0.21.0` (limites por usuário), `0.22.0` (bloqueio por tentativa no FTP), `0.22.1` (HTTP/2 e compressão do estilo) e `0.24.0` (TLS por usuário pelo painel), em instância de teste. O firewall do host continua sendo de quem opera o servidor.
+
+---
+
+<a name="testes-executados"></a>
+
+## 🔬 Testes executados
+
+Nenhuma versão é publicada sem a bateria inteira aprovada. Ela roda em um clone limpo do código, sobe uma instância de teste separada, em `127.0.0.2`, com senhas geradas na hora, e a remove ao terminar: a instalação em uso não é tocada. Um desvio em qualquer caso reprova a versão.
+
+| Bateria | Casos | O que responde |
+|---|---|---|
+| Funcional | 54 | A instalação faz o que promete: instalar em um comando, enviar e baixar, usuários pelo terminal e pelo painel, reinício sem perda, cópia e restauração |
+| Segurança | 96 | O que deveria ser recusado é recusado: cada caso tenta uma coisa que não pode acontecer e confere a recusa |
+| Rede | 14 | Só o que foi configurado fica aberto: portas, endereço de escuta, modo passivo, sub-rede e redes aceitas pelo painel |
+
+**O que a bateria de segurança tenta**, por alvo. O número é o do caso, o mesmo que aparece na saída do `./tests/testar.sh`:
+
+| Alvo | O que é tentado | Casos |
+|---|---|---|
+| Entrada no FTP | Entrar sem TLS, como anônimo, com senha errada, vazia ou sorteada, mandar comando antes do login, derrubar o `pure-authd` para ver se a entrada abre | 1, 2, 5, 7, 64 a 66, 70, 71, 89 |
+| Confinamento no FTP | Sair da pasta pelo `chroot`, ler a pasta de outro usuário, mudar permissão por `SITE CHMOD`, escapar da pasta escolhida | 3, 4, 6, 59 |
+| Bloqueio por tentativa | Burlar o bloqueio, desbloquear ou mudar limite sem sessão, sem token ou com valor fora da regra | 85, 86 |
+| Rede e exposição | Subir com o FTP em todas as interfaces ou em IP público, anunciar IP público, abrir o painel para rede pública, ligar a opção de IP público com valor inválido, sem TLS ou em "todos" | 16 a 21, 40 a 45 |
+| Painel por proxy ou túnel | Forjar o endereço do cliente por cabeçalho, com e sem proxy declarado; contar senha errada e sessão pelo endereço de quem não é o cliente; ocultar o aviso de exposição | 93 a 96 |
+| Entrada e sessão do painel | Abrir rota sem sessão ou com cookie inventado, senha errada e sorteada até o bloqueio, descobrir se um administrador existe, alterar conta sem a senha atual, usar sessão já encerrada, remover a própria conta | 22 a 24, 28, 37, 46 a 49, 51, 69, 72 |
+| Pedido forjado | Enviar sem token CSRF, com `Origin` de fora, com `Origin: null` e com `Host` inesperado | 25 a 27, 38 |
+| Transporte | Falar HTTP sem TLS, negociar TLS antigo, conferir os cabeçalhos de segurança, repetir os limites em HTTP/2 e com compressão | 29 a 31, 87 |
+| Entrada maliciosa | Nome de usuário com comando embutido, senha fraca, corpo grande demais, pedido malformado, limite fora da regra | 32 a 34, 75, 84 |
+| Arquivos pelo painel | Sair da pasta dos dados pelo caminho, por link simbólico e pelo nome da pasta; baixar, criar, trocar, renomear e apagar sem sessão, sem token e sem senha; abrir arquivo no navegador em vez de baixar | 52 a 55, 57, 58, 81 a 83 |
+| Usuário do FTP no painel | Alcançar a administração, sair da própria pasta, abrir brecha pela entrada, passar dos próprios limites | 60 a 63 |
+| Exaustão | Rajada de pedidos e de conexões, conexão lenta ou parada, downloads ao mesmo tempo além do limite | 56, 73, 74, 76 |
+| Segredos e cadastro | Achar senha na imagem, no Git, no `.env`, em variável de ambiente ou na auditoria; ler o segredo de outro serviço; ler o cadastro pela web, pelo FTP, por outro container e pelo host; conferir permissões, hash e custo das senhas | 9 a 15, 36, 39, 50, 77 a 80 |
+| Containers | Conferir o endurecimento de cada um e a ausência do socket do Docker | 8, 35 |
+| Arquivos abertos sem senha | Pedir qualquer coisa além dos seis arquivos da marca, do `robots.txt` e do `security.txt`; alcançar a pasta pessoal | 67, 68, 88 |
+| Cópia de segurança | Achar dado sem cifra na cópia, abrir com chave errada ou cópia adulterada, conferir as chaves | 90 a 92 |
+
+Além da bateria, cada versão passa por:
+
+- **Conferência sem subir nada:** `./scripts/validate.sh` confere a sintaxe dos scripts, os módulos do painel, o Compose de cada porte e os arquivos de licença, marca e política de segurança.
+- **Revisão do código por classe de falha:** injeção, travessia de caminho, pedido forjado, sessão, segredo em lugar errado, exaustão e exposição de rede, uma a uma, com o que mudou na versão. O relatório fica no plano do projeto.
+- **Painel por proxy, com proxy de verdade:** a publicação só do painel foi conferida com um nginx de borda e com um túnel de saída no mesmo servidor: o nome público abre a tela de entrada, o envio de outra origem é recusado e o endereço forjado em cabeçalho é ignorado.
+
+**Para repetir:**
+
+```bash
+./tests/testar.sh
+```
+
+**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 54 casos funcionais, 96 de segurança e 14 de rede. A bateria leva cerca de 45 minutos; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
+
+> ⚠️ **Limite — o que a bateria não alcança:** ela roda no próprio servidor, contra a instância de teste. O firewall do host, o proxy ou o túnel da borda e o equipamento que envia o backup são de quem instala e não entram nela: confira-os pelo [passo a passo de produção](#boas-praticas).
 
 ---
 

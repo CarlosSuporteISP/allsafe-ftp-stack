@@ -186,7 +186,7 @@ docker compose logs ftp | grep 'vigia:'
 
 **Resultado esperado:** uma linha por entrada, por recusa e por transferência, sem senha; quem está bloqueado agora sai em `./manage-user.sh bloqueios`. Para ver só o que um usuário enviou e baixou: `docker compose logs ftp | grep -E 'vigia: (envio|download): usuario=<nome> '`.
 
-O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos, arquivos baixados) fica no `auditoria.log`, visível na aba `📜 Atividade`: veja [Painel web](painel.md#auditoria).
+O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos, arquivos baixados) fica no `auditoria.log`, visível na aba Atividade: veja [Painel web](painel.md#auditoria).
 
 Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](../compose.yaml)).
 
