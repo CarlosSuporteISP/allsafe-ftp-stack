@@ -127,6 +127,7 @@ Revisão de usabilidade do painel: o topo deixa de repetir o nome da aba, todo c
 ### Alterado
 
 - **Avisos, erros e confirmações** deixam a faixa colorida na lateral e ficam com a borda inteira na cor do estado.
+- **Telas que acompanham a largura e o zoom**: com o menu na lateral, o conteúdo usa toda a largura que sobra ao lado dele; antes parava em 1392 px e ficava no meio, com margem vazia dos dois lados, quando a janela era mais larga ou o zoom do navegador era reduzido. Tabelas, gráficos e faixas se alargam; na aba Servidor, as duas partes ficam lado a lado a partir de 2080 px, numa linha só de sete cartões; em **Editar usuário**, os formulários se distribuem em duas ou três colunas, e em cinco a partir de 2560 px, em vez de uma coluna estreita à esquerda. Aumentando o zoom, as mesmas telas voltam a uma coluna e ao menu em cima. A tela de entrada não muda.
 - **Texto do rodapé e do cabeçalho das tabelas** sobe para 14 px, e os cartões ficam com cantos de 12 px.
 - **Cores dos botões e larguras** passam a variáveis da folha de estilo, sem valor solto repetido.
 - **Fotos da aplicação refeitas** nesta versão, com o topo e a Visão geral novos.

@@ -394,6 +394,7 @@ def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
         digitado['inicio'] = f'{horario[:2]}:{horario[2:4]}' if horario else ''
         digitado['fim'] = f'{horario[5:7]}:{horario[7:]}' if horario else ''
     pedido.enviar(codigo, pagina('Editar usuário', f'''<h1>Editar usuário</h1>
+<div class="fichas">
 <section class="cartao estreito">
 <p>Usuário <strong>{e(nome)}</strong>{inicial}. O nome não muda: é com ele que o equipamento entra no FTP.</p>
 <p><a class="botao" href="/usuarios/senha?usuario={destino}">Trocar senha</a> <a class="botao" href="/usuarios">Voltar para a lista</a></p>
@@ -411,7 +412,8 @@ alcançá-los. A troca vale no próximo login no FTP e encerra a sessão dele no
 <button type="submit">Trocar pasta</button> <a class="botao" href="/usuarios">Cancelar</a>
 </form></section>
 {cartao_tls(nome)}
-{cartao_limites(sessao, nome, digitado, erro_limites)}''', sessao, '/usuarios'))
+{cartao_limites(sessao, nome, digitado, erro_limites)}
+</div>''', sessao, '/usuarios'))
 
 
 def gravar_limites(pedido, sessao, consulta, formulario, token):

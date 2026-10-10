@@ -369,7 +369,7 @@ PAINEL_ACESSO_USUARIOS_FTP=nao
 
 ## 📈 Servidor: containers e recursos
 
-A aba **Servidor** tem duas partes separadas: os containers desta stack, cada um com o que usa contra o que foi alocado a ele, e o servidor em que ela roda. Só administrador a abre. Os cartões se arrumam sozinhos pela largura da tela: cada um tem pelo menos 236 px e cabem tantos por linha quantos a tela comporta, de um no celular a cinco em tela larga; os das duas partes ficam da mesma largura.
+A aba **Servidor** tem duas partes separadas: os containers desta stack, cada um com o que usa contra o que foi alocado a ele, e o servidor em que ela roda. Só administrador a abre. Os cartões se arrumam sozinhos pela largura da tela: cada um tem pelo menos 236 px e cabem tantos por linha quantos a tela comporta, de um no celular a seis numa tela de 1920 px; os das duas partes ficam da mesma largura. A partir de 2080 px de largura, que é também o que se vê ao diminuir o zoom do navegador, as duas partes ficam lado a lado, numa linha só de sete cartões.
 
 **Containers da stack.** Uma linha no alto soma o que foi alocado aos três containers e o que eles usam agora, ao lado do que o servidor tem. Abaixo, um cartão por container:
 

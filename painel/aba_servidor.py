@@ -326,6 +326,7 @@ def servidor(pedido, sessao, consulta, formulario, token):
              f'encerra depois de {CFG["inatividade"] // 60} min sem ação sua.' if sozinha else
              'Para acompanhar sem recarregar a página, ligue <strong>Atualizar sozinha</strong>.')
     pedido.enviar(200, pagina('Servidor', f"""{cabeca('Servidor', 'Os containers desta stack e o servidor em que ela roda.', acao)}
+<div class="lado">
 {containers(amostras, servidor_)}
 <section aria-labelledby="t-servidor"><h2 class="secao" id="t-servidor">Recursos do servidor</h2>
 <p class="suave resumo">A máquina inteira, e não só o que a stack usa dela.</p>
@@ -335,6 +336,7 @@ def servidor(pedido, sessao, consulta, formulario, token):
 {disco()}
 {rede(amostras)}
 </div></section>
+</div>
 <p class="suave rodape-aba">Lido às {time.strftime('%H:%M:%S')}. {ritmo} Cada container lê o próprio uso e os limites que recebeu no <code>compose.yaml</code> (<code>*_CPU_LIMIT</code>, <code>*_MEMORY_LIMIT</code> e <code>*_PIDS_LIMIT</code> no <code>.env</code>), sem swap; a memória em uso não conta o cache de arquivo que o sistema solta quando precisa. O histórico guarda os últimos {duracao(recursos.AMOSTRAS * recursos.INTERVALO)}, com uma leitura a cada {recursos.INTERVALO} s, e recomeça quando o painel reinicia; cada desenho vai de zero até pouco acima do pico do período. Na rede, a linha cheia é o que chega e a tracejada, o que sai, e os totais contam desde que o serviço do FTP iniciou; o disco é o da pasta dos dados.</p>""",
                               sessao, '/servidor'),
                   extras=(('Refresh', f'{ATUALIZA}; url=/servidor?auto=1'),) if sozinha else ())

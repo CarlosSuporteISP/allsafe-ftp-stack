@@ -235,6 +235,12 @@ footer .autoria { margin-top: 4px; }
 .cartao > :last-child { margin-bottom: 0; }
 .cartao.estreito { max-width: 560px; }
 .cartao.medio { max-width: 800px; }   /* tabela com endereço: cabe um IPv6 inteiro sem rolar */
+/* Tela com vários formulários (Editar usuário): os cartões se distribuem em até três colunas de pelo menos 440 px,
+   conforme a largura, empilhados para a altura das colunas ficar parecida. O cartão com a tabela de endereços
+   atravessa as colunas. */
+.fichas { columns: 3 440px; column-gap: 12px; }
+.fichas > .cartao { max-width: none; margin-bottom: 12px; break-inside: avoid; }
+.fichas > .cartao.medio { max-width: 800px; column-span: all; }
 /* Cartão de lista: a tabela vai de borda a borda, com a linha de títulos em faixa; o que vem depois dela volta à margem. */
 .cartao.lista { padding: 0; overflow: hidden; }
 .lista > :not(.rolagem) { margin: 16px 20px; }
@@ -737,7 +743,9 @@ p > .botao { margin-top: 0; }
   .com-menu nav a.ativa::after { top: 10px; right: auto; bottom: 10px; left: 0; width: 3px; height: auto; border-radius: 0 3px 3px 0; }
   .com-menu nav .sinal { margin-left: auto; }
   .com-menu .sair { flex-direction: column; align-items: stretch; margin: 0; padding: 16px 12px 0; border-top: 1px solid var(--borda); }
-  .com-menu main { grid-area: 1 / 2; padding: 24px 20px 32px; }
+  /* O conteúdo usa a largura que sobra ao lado do menu, sem teto: diminuir o zoom ou alargar a janela dá mais
+     colunas e tabelas mais largas, em vez de margem vazia dos dois lados. */
+  .com-menu main { grid-area: 1 / 2; max-width: none; padding: 24px 20px 32px; }
   .com-menu footer { grid-area: 2 / 2; }
 }
 
@@ -751,6 +759,21 @@ p > .botao { margin-top: 0; }
    tabela de 1170 px cabe ao lado do menu. Faltando largura, a tabela rola dentro do cartão. */
 @media (min-width: 1064px) {
   .acoes { min-width: 14.5rem; }
+}
+
+/* Tela bem larga (ou zoom reduzido): as duas seções da aba Servidor ficam lado a lado, numa linha só de sete cartões
+   da mesma largura, com os títulos e os resumos alinhados. */
+@media (min-width: 2080px) {
+  .lado { display: grid; grid-template-columns: calc((100% - 72px) * 3 / 7 + 24px) minmax(0, 1fr); grid-template-rows: auto auto 1fr; gap: 0 12px; }
+  .lado > section { display: grid; grid-row: span 3; grid-template-rows: subgrid; }
+  .lado .recursos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lado .recursos.quatro { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* A partir daqui cabem os cinco formulários de Editar usuário lado a lado, um por coluna. */
+@media (min-width: 2560px) {
+  .fichas { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); align-items: start; gap: 0 12px; columns: auto; }
+  .fichas > .cartao.medio { grid-column: 1 / -1; }
 }
 
 @media (min-width: 1560px) {
