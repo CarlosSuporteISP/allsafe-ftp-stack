@@ -10,6 +10,7 @@ import threading
 import time
 
 from config import ARQ_SEM_TLS, ARQ_USUARIOS, CFG, CMD_USUARIO, NIVEL, NOME, PASTA, PASTA_BLOQUEIOS, PASTA_DADOS
+from idioma import N, t
 
 TRAVA_CACHE = threading.Lock()
 CACHE = {}
@@ -206,11 +207,11 @@ def impedimento_da_pasta(pasta):
         except FileNotFoundError:
             return ''
         except OSError:
-            return 'Não foi possível conferir a pasta.'
+            return t('Não foi possível conferir a pasta.')
         if stat.S_ISLNK(modo):
-            return 'A pasta passa por um link simbólico, que não é aceito.'
+            return t('A pasta passa por um link simbólico, que não é aceito.')
         if not stat.S_ISDIR(modo):
-            return 'Já existe um arquivo com este nome no caminho da pasta.'
+            return t('Já existe um arquivo com este nome no caminho da pasta.')
     return ''
 
 
@@ -325,9 +326,9 @@ def executar_usuario(acao, nome, senha=None, pasta=None, pares=()):
             env={'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LC_ALL': 'C',
                  'FTP_MAX_CLIENTS': CFG['ftp_clientes'], 'FTP_USER': CFG['ftp_usuario']})
     except (OSError, subprocess.SubprocessError):
-        return False, 'O comando de usuários não respondeu.'
+        return False, N('O comando de usuários não respondeu.')
     limpar_cache()
     if resultado.returncode != 0:
-        ultima = (resultado.stderr.strip().splitlines() or ['erro sem mensagem'])[-1]
+        ultima = (resultado.stderr.strip().splitlines() or [N('erro sem mensagem')])[-1]
         return False, ultima[:200]
     return True, ''

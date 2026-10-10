@@ -4,12 +4,14 @@ em que ela roda, com o histórico dos últimos minutos."""
 import shutil
 import time
 
+import idioma
 import recursos
 from config import ARQ_CERT, CFG, PASTA_DADOS
 from estado import bloqueios, certificado, ftp_no_ar, pastas_distintas, uso_da_pasta, usuarios
 from graficos import linha, numero, tira
 from icones import icone
-from pagina import ESTADOS, cabeca, como, e, pagina, tamanho, validade
+from idioma import N, t
+from pagina import ESTADOS, cabeca, como, data_inteira, e, pagina, tamanho, validade
 from sessao import sessoes_por_admin
 
 ATUALIZA = 10                           # segundos entre duas atualizações automáticas da tela
@@ -21,7 +23,7 @@ TETO_REDE = 1250                        # bytes por segundo do topo do desenho d
 
 
 def decimal(valor):
-    return f'{valor:.1f}'.replace('.', ',')
+    return idioma.decimal(f'{valor:.1f}')
 
 
 def velocidade(bytes_por_segundo):
@@ -46,12 +48,21 @@ def duracao(segundos):
 
 def nucleos(valor, unidade=True):
     """Núcleos de processador: até duas casas, sem zero sobrando."""
-    texto = f'{valor:.2f}'.rstrip('0').rstrip('.').replace('.', ',')
-    return f'{texto} {"núcleos" if valor >= 2 else "núcleo"}' if unidade else texto
+    texto = idioma.decimal(f'{valor:.2f}'.rstrip('0').rstrip('.'))
+    if not unidade:
+        return texto
+    # Em português o plural começa em 2; em inglês, só 1 fica no singular.
+    varios = valor != 1 if idioma.atual() == 'en' else valor >= 2
+    return f'{texto}\u00a0{t("núcleos") if varios else t("núcleo")}'
+
+
+def de(parte, todo):
+    """Uma parte contra o todo dela, por escrito."""
+    return t('{parte} de {todo}', parte=parte, todo=todo)
 
 
 def vezes(quantas):
-    return 'nunca' if not quantas else '1\u00a0vez' if quantas == 1 else f'{numero(quantas)}\u00a0vezes'
+    return t('nunca') if not quantas else f'{numero(quantas)}\u00a0{t("vez") if quantas == 1 else t("vezes")}'
 
 
 def por_folga(livre):
@@ -62,7 +73,7 @@ def por_folga(livre):
 def saude(estado, texto=''):
     """Selo do estado, ao lado do título: o desenho e a palavra, que é quem diz o estado."""
     desenho, rotulo = ESTADOS[estado]
-    return f'<span class="saude {estado}">{icone(desenho)}{texto or rotulo}</span>'
+    return f'<span class="saude {estado}">{icone(desenho)}{texto or t(rotulo)}</span>'
 
 
 def pares(itens):
@@ -96,13 +107,14 @@ def periodo(series, teto, resumo):
     """O desenho do histórico e, embaixo, de quanto tempo ele é e o que ele mostra."""
     quantas = len(series[0][1])
     if quantas < 2:
-        return '<p class="eixo">O histórico aparece alguns segundos depois de o painel iniciar.</p>'
-    return f'{linha(series, teto)}<p class="eixo">últimos {duracao((quantas - 1) * recursos.INTERVALO)} · {resumo}</p>'
+        return f'<p class="eixo">{t("O histórico aparece alguns segundos depois de o painel iniciar.")}</p>'
+    return (f'{linha(series, teto)}<p class="eixo">'
+            f'{t("últimos {tempo}", tempo=duracao((quantas - 1) * recursos.INTERVALO))} · {resumo}</p>')
 
 
 # ------------------------------------------------------------------ containers da stack
 
-SERVICOS = {'ftp': ('servidor', 'Servidor FTP'), 'painel': ('painel', 'Painel'), 'nginx': ('escudo', 'Frente web')}
+SERVICOS = {'ftp': ('servidor', N('Servidor FTP')), 'painel': ('painel', N('Painel')), 'nginx': ('escudo', N('Frente web'))}
 
 
 def container(nome, leitura, amostras, servidor_, no_ar, dados):
@@ -111,42 +123,46 @@ def container(nome, leitura, amostras, servidor_, no_ar, dados):
     desenho, titulo = SERVICOS[nome]
     nucleos_host, memoria_host = servidor_
     if not no_ar:
-        selo = saude('ruim', 'Fora do ar')
+        selo = saude('ruim', t('Fora do ar'))
     elif not leitura:
-        selo = saude('bom', 'No ar')
+        selo = saude('bom', t('No ar'))
     else:
         cheia = 100 * leitura['memoria'] / leitura['memoria_max'] if leitura['memoria_max'] else 0
-        selo = (saude('ruim', 'Memória no limite') if cheia >= PARTE_RUIM else
-                saude('atencao', 'Atenção') if cheia >= PARTE_ATENCAO or leitura['faltou'] else saude('bom', 'No ar'))
+        selo = (saude('ruim', t('Memória no limite')) if cheia >= PARTE_RUIM else
+                saude('atencao', t('Atenção')) if cheia >= PARTE_ATENCAO or leitura['faltou'] else saude('bom', t('No ar')))
     if not leitura:
-        return (f'<section class="cartao recurso"><h3>{icone(desenho)}{titulo}{selo}</h3>'
-                f'<p class="suave"><code>{nome}</code> · sem leitura: ela aparece alguns segundos depois de o container iniciar</p>'
-                f'{medida("Processador", None, "")}{medida("Memória", None, "")}{medida("Processos", None, "")}'
+        return (f'<section class="cartao recurso"><h3>{icone(desenho)}{t(titulo)}{selo}</h3>'
+                f'<p class="suave"><code>{nome}</code> · '
+                f'{t("sem leitura: ela aparece alguns segundos depois de o container iniciar")}</p>'
+                f'{medida(t("Processador"), None, "")}{medida(t("Memória"), None, "")}{medida(t("Processos"), None, "")}'
                 f'{pares(dados)}</section>')
     # Sem limite, o teto é o do servidor inteiro.
     teto_nucleos = leitura['nucleos'] or nucleos_host
     teto_memoria = leitura['memoria_max'] or memoria_host
-    sem_limite = ' do servidor (sem limite)'
+    sem_limite = ' ' + t('do servidor (sem limite)')
+    todo_nucleos = nucleos(teto_nucleos) + ('' if leitura['nucleos'] else sem_limite)
     if leitura['cpu'] is None:
-        processador_ = medida('Processador', None, f'de {nucleos(teto_nucleos)}{"" if leitura["nucleos"] else sem_limite} · lendo')
+        processador_ = medida(t('Processador'), None, t('de {todo}', todo=todo_nucleos) + ' · ' + t('lendo'))
     else:
-        processador_ = medida('Processador', 100 * leitura['cpu'] / teto_nucleos if teto_nucleos else None,
-                              f'{nucleos(leitura["cpu"], False)} de {nucleos(teto_nucleos)}{"" if leitura["nucleos"] else sem_limite}')
-    memoria_ = medida('Memória', 100 * leitura['memoria'] / teto_memoria if teto_memoria else None,
-                      f'{e(tamanho(leitura["memoria"]))} de {e(tamanho(teto_memoria))}{"" if leitura["memoria_max"] else sem_limite}')
+        processador_ = medida(t('Processador'), 100 * leitura['cpu'] / teto_nucleos if teto_nucleos else None,
+                              de(nucleos(leitura['cpu'], False), todo_nucleos))
+    memoria_ = medida(t('Memória'), 100 * leitura['memoria'] / teto_memoria if teto_memoria else None,
+                      de(e(tamanho(leitura['memoria'])), e(tamanho(teto_memoria)) + ('' if leitura['memoria_max'] else sem_limite)))
     if leitura['processos_max']:
-        processos_ = medida('Processos', 100 * leitura['processos'] / leitura['processos_max'],
-                            f'{numero(leitura["processos"])} de {numero(leitura["processos_max"])}')
+        processos_ = medida(t('Processos'), 100 * leitura['processos'] / leitura['processos_max'],
+                            de(numero(leitura['processos']), numero(leitura['processos_max'])))
     else:
-        processos_ = medida('Processos', None, f'{numero(leitura["processos"])}, sem limite')
+        processos_ = medida(t('Processos'), None, f'{numero(leitura["processos"])}, {t("sem limite")}')
     usos = [100 * amostra[4][nome][0] / teto_nucleos for amostra in amostras
             if nome in amostra[4] and amostra[4][nome][0] is not None] if teto_nucleos else []
-    historico = periodo((('info', usos),), escala(usos), f'processador, pico de {max(usos):.0f}%' if usos else '')
-    return (f'<section class="cartao recurso"><h3>{icone(desenho)}{titulo}{selo}</h3>'
-            f'<p class="suave"><code>{nome}</code> · no ar há {duracao(max(time.time() - leitura["inicio"], 0))}</p>'
+    historico = periodo((('info', usos),), escala(usos),
+                        t('processador, pico de {pico}%', pico=f'{max(usos):.0f}') if usos else '')
+    return (f'<section class="cartao recurso"><h3>{icone(desenho)}{t(titulo)}{selo}</h3>'
+            f'<p class="suave"><code>{nome}</code> · '
+            f'{t("no ar há {tempo}", tempo=duracao(max(time.time() - leitura["inicio"], 0)))}</p>'
             f'{processador_}{memoria_}{processos_}{historico}'
-            + pares((('Limite de processador atingido', vezes(leitura['contido'])),
-                     ('Encerrado por falta de memória', vezes(leitura['faltou']))) + tuple(dados)) + '</section>')
+            + pares(((t('Limite de processador atingido'), vezes(leitura['contido'])),
+                     (t('Encerrado por falta de memória'), vezes(leitura['faltou']))) + tuple(dados)) + '</section>')
 
 
 def somas(leituras):
@@ -170,12 +186,13 @@ def alocado(leituras, servidor_):
     nucleos_host, memoria_host = servidor_
     partes = []
     if cota and teto:
-        partes.append(f'Alocado aos {quantos} containers: <strong>{nucleos(cota)}</strong> e '
-                      f'<strong>{e(tamanho(teto))}</strong> de memória')
-    partes.append((f'em uso agora: <strong>{nucleos(cpu)}</strong> e ' if cpu is not None else 'em uso agora: ')
-                  + f'<strong>{e(tamanho(em_uso))}</strong>')
+        partes.append(t('Alocado aos {quantos} containers: <strong>{nucleos}</strong> e <strong>{memoria}</strong> de memória',
+                        quantos=quantos, nucleos=nucleos(cota), memoria=e(tamanho(teto))))
+    partes.append(t('em uso agora: <strong>{nucleos}</strong> e <strong>{memoria}</strong>',
+                    nucleos=nucleos(cpu), memoria=e(tamanho(em_uso))) if cpu is not None
+                  else t('em uso agora: <strong>{memoria}</strong>', memoria=e(tamanho(em_uso))))
     if nucleos_host and memoria_host:
-        partes.append(f'o servidor tem {nucleos(nucleos_host)} e {e(tamanho(memoria_host))}')
+        partes.append(t('o servidor tem {nucleos} e {memoria}', nucleos=nucleos(nucleos_host), memoria=e(tamanho(memoria_host))))
     return f'<p class="suave resumo">{" · ".join(partes)}.</p>'
 
 
@@ -183,17 +200,20 @@ def containers(amostras, servidor_):
     leituras = recursos.containers()
     estado_cert, texto_cert = validade(certificado(ARQ_CERT))
     presos = sum(len(lista) for lista in bloqueios().values())
-    regra = (f'<a href="/usuarios">{numero(presos)} em vigor</a>' if presos else
-             'nenhum' if CFG['bloqueio_tentativas'] else 'desligado na stack')
-    extras = {'ftp': ((('Bloqueios de entrada', regra),), ftp_no_ar()),
-              'painel': ((('<a href="/atividade">Sessões de administrador</a>', numero(sum(sessoes_por_admin().values()))),), True),
-              # Este pedido chegou pelo nginx: se ele não estivesse no ar, a tela não abriria.
-              'nginx': ((('<a href="/seguranca">Certificado</a>', f'<span class="{estado_cert}">{e(texto_cert.split(" (")[0])}</span>'),), True)}
+    regra = (f'<a href="/usuarios">{t("{quantos} em vigor", quantos=numero(presos))}</a>' if presos else
+             t('nenhum') if CFG['bloqueio_tentativas'] else t('desligado na stack'))
+    extras = {'ftp': (((t('Bloqueios de entrada'), regra),), ftp_no_ar()),
+              'painel': (((f'<a href="/atividade">{t("Sessões de administrador")}</a>',
+                           numero(sum(sessoes_por_admin().values()))),), True),
+              # Este pedido chegou pelo nginx: se ele não estivesse no ar, a tela não abriria. Do texto da validade
+              # fica só o começo, até a data: o que vem entre parênteses não cabe na linha.
+              'nginx': (((f'<a href="/seguranca">{t("Certificado")}</a>',
+                          f'<span class="{estado_cert}">{data_inteira(e(texto_cert.split(" (")[0]))}</span>'),), True)}
     cartoes = ''
     for nome, leitura in leituras:
         dados, no_ar = extras[nome]
         cartoes += container(nome, leitura, amostras, servidor_, no_ar, dados)
-    return (f'<section aria-labelledby="t-containers"><h2 class="secao" id="t-containers">Containers da stack</h2>'
+    return (f'<section aria-labelledby="t-containers"><h2 class="secao" id="t-containers">{t("Containers da stack")}</h2>'
             f'{alocado(leituras, servidor_)}<div class="recursos tres">{cartoes}</div></section>')
 
 
@@ -202,40 +222,41 @@ def containers(amostras, servidor_):
 def processador(amostras, lido):
     usos = [amostra[0] for amostra in amostras if amostra[0] is not None]
     if not lido:
-        return cartao('processador', 'Processador', saude('neutro', 'sem leitura'), '—',
-                      'O painel não conseguiu ler o uso do processador neste servidor.', '', ())
+        return cartao('processador', t('Processador'), saude('neutro', t('sem leitura')), '—',
+                      t('O painel não conseguiu ler o uso do processador neste servidor.'), '', ())
     media = sum(usos[-MINUTO:]) / len(usos[-MINUTO:]) if usos else None
     estado = 'neutro' if media is None else 'ruim' if media >= USO_RUIM else 'atencao' if media >= USO_ATENCAO else 'bom'
     cargas = recursos.carga()
     ligado = recursos.ligado_ha()
     if usos:
         medida_ = f'{usos[-1]:.0f}%'
-        nota = f'{nucleos(usos[-1] * lido[2] / 100, False)} de {nucleos(lido[2])} em uso'
-        miolo = tira((('info', usos[-1]),), 100) + periodo((('info', usos),), escala(usos), f'pico de {max(usos):.0f}%')
+        nota = t('{parte} de {todo} em uso', parte=nucleos(usos[-1] * lido[2] / 100, False), todo=nucleos(lido[2]))
+        miolo = (tira((('info', usos[-1]),), 100)
+                 + periodo((('info', usos),), escala(usos), t('pico de {pico}%', pico=f'{max(usos):.0f}')))
     else:
-        medida_, nota, miolo = '—', f'{nucleos(lido[2])} · a primeira leitura sai em alguns segundos', ''
-    return cartao('processador', 'Processador', saude(estado, '' if usos else 'lendo'), medida_, nota, miolo, (
-        ('Média de 1 min', f'{media:.0f}%' if usos else ''),
-        ('Carga média', ' · '.join(f'{valor:.2f}'.replace('.', ',') for valor in cargas) if cargas else ''),
-        ('Ligado há', duracao(ligado) if ligado else ''),
-        ('Modelo', e(recursos.modelo()))))
+        medida_, nota, miolo = '—', f'{nucleos(lido[2])} · {t("a primeira leitura sai em alguns segundos")}', ''
+    return cartao('processador', t('Processador'), saude(estado, '' if usos else t('lendo')), medida_, nota, miolo, (
+        (t('Média de 1 min'), f'{media:.0f}%' if usos else ''),
+        (t('Carga média'), '\u00a0·\u00a0'.join(idioma.decimal(f'{valor:.2f}') for valor in cargas) if cargas else ''),
+        (t('Ligado há'), duracao(ligado) if ligado else ''),
+        (t('Modelo'), e(recursos.modelo()))))
 
 
 def memoria(amostras, lida):
     usos = [amostra[1] for amostra in amostras if amostra[1] is not None]
     if not lida:
-        return cartao('memoria', 'Memória', saude('neutro', 'sem leitura'), '—',
-                      'O painel não conseguiu ler a memória deste servidor.', '', ())
+        return cartao('memoria', t('Memória'), saude('neutro', t('sem leitura')), '—',
+                      t('O painel não conseguiu ler a memória deste servidor.'), '', ())
     usada = lida['total'] - lida['disponivel']
     parte = 100 * usada / lida['total']
-    swap = (f'{e(tamanho(lida["swap_total"] - lida["swap_livre"]))} de {e(tamanho(lida["swap_total"]))}'
-            if lida['swap_total'] else 'o servidor não tem')
-    return cartao('memoria', 'Memória', saude(por_folga(100 - parte)), f'{parte:.0f}%',
-                  f'{e(tamanho(usada))} de {e(tamanho(lida["total"]))} em uso',
+    swap = (de(e(tamanho(lida['swap_total'] - lida['swap_livre'])), e(tamanho(lida['swap_total'])))
+            if lida['swap_total'] else t('o servidor não tem'))
+    return cartao('memoria', t('Memória'), saude(por_folga(100 - parte)), f'{parte:.0f}%',
+                  t('{parte} de {todo} em uso', parte=e(tamanho(usada)), todo=e(tamanho(lida['total']))),
                   tira((('info', parte),), 100)
-                  + periodo((('info', usos),), escala(usos), f'pico de {max(usos):.0f}%' if usos else ''), (
-                      ('Disponível', e(tamanho(lida['disponivel']))),
-                      ('Em cache', e(tamanho(lida['cache']))),
+                  + periodo((('info', usos),), escala(usos), t('pico de {pico}%', pico=f'{max(usos):.0f}') if usos else ''), (
+                      (t('Disponível'), e(tamanho(lida['disponivel']))),
+                      (t('Em cache'), e(tamanho(lida['cache']))),
                       ('Swap', swap)))
 
 
@@ -243,27 +264,28 @@ def disco():
     try:
         uso = shutil.disk_usage(PASTA_DADOS)
     except OSError:
-        return cartao('disco', 'Disco', saude('neutro', 'sem leitura'), '—',
-                      'O painel não conseguiu ler o disco da pasta dos dados.', '', ())
+        return cartao('disco', t('Disco'), saude('neutro', t('sem leitura')), '—',
+                      t('O painel não conseguiu ler o disco da pasta dos dados.'), '', ())
     # Como o df: o que o sistema de arquivos reserva para si não entra na conta do que dá para usar.
     total = uso.used + uso.free
     parte = 100 * uso.used / total if total else 0
     usos = [uso_da_pasta(pasta) for pasta in pastas_distintas(usuarios())]
     do_ftp = min(sum(item['bytes'] for item in usos), uso.used)
-    incompleta = ' (soma incompleta: há pasta grande demais para ser lida inteira)' if any(item['parcial'] for item in usos) else ''
-    return cartao('disco', 'Disco', saude(por_folga(100 - parte)), f'{parte:.0f}%',
-                  f'{e(tamanho(uso.used))} de {e(tamanho(total))} em uso',
+    incompleta = (' ' + t('(soma incompleta: há pasta grande demais para ser lida inteira)')
+                  if any(item['parcial'] for item in usos) else '')
+    return cartao('disco', t('Disco'), saude(por_folga(100 - parte)), f'{parte:.0f}%',
+                  t('{parte} de {todo} em uso', parte=e(tamanho(uso.used)), todo=e(tamanho(total))),
                   tira((('info', do_ftp), ('neutro', uso.used - do_ftp)), total), (
-                      ('<span class="chave info"></span><a href="/arquivos">Pastas do FTP</a>', e(tamanho(do_ftp)) + incompleta),
-                      ('<span class="chave neutro"></span>Outros dados', e(tamanho(uso.used - do_ftp))),
-                      ('Livre', e(tamanho(uso.free)))))
+                      (f'<span class="chave info"></span><a href="/arquivos">{t("Pastas do FTP")}</a>', e(tamanho(do_ftp)) + incompleta),
+                      ('<span class="chave neutro"></span>' + t('Outros dados'), e(tamanho(uso.used - do_ftp))),
+                      (t('Livre'), e(tamanho(uso.free)))))
 
 
 def rede(amostras):
     lida = recursos.ler_rede()
     if not lida:
-        return cartao('rede', 'Rede do FTP', saude('neutro', 'sem leitura'), '—',
-                      'O serviço do FTP ainda não publicou a leitura da rede dele. Ela aparece alguns segundos depois de ele iniciar.',
+        return cartao('rede', t('Rede do FTP'), saude('neutro', t('sem leitura')), '—',
+                      t('O serviço do FTP ainda não publicou a leitura da rede dele. Ela aparece alguns segundos depois de ele iniciar.'),
                       '', ())
     recebendo, enviando = recursos.velocidade(lida)
     recebe, envia = [amostra[2] for amostra in amostras], [amostra[3] for amostra in amostras]
@@ -272,17 +294,17 @@ def rede(amostras):
     teto = max(pico_recebe, pico_envia, TETO_REDE)
     parada = time.time() - lida['quando']
     fluxo = '<span><span class="seta {}" aria-hidden="true">{}</span>{}</span>'
-    return cartao('rede', 'Rede do FTP', saude('bom', 'lendo'),
+    return cartao('rede', t('Rede do FTP'), saude('bom', t('lendo')),
                   f'<span class="fluxo">{fluxo.format("info", "↓", e(velocidade(recebendo)))}'
                   f'{fluxo.format("bom", "↑", e(velocidade(enviando)))}</span>',
-                  'recebendo e enviando agora',
-                  periodo((('info', recebe), ('bom', envia)), teto, f'topo em {e(velocidade(teto))}'), (
-                      ('Pico recebendo', e(velocidade(pico_recebe))),
-                      ('Pico enviando', e(velocidade(pico_envia))),
-                      ('Total recebido', e(tamanho(lida['recebido']))),
-                      ('Total enviado', e(tamanho(lida['enviado']))),
-                      ('Erros e descartes', numero(lida['erros'])),
-                      ('Sem tráfego há', duracao(parada) if parada > recursos.REDE_VALE else '')))
+                  t('recebendo e enviando agora'),
+                  periodo((('info', recebe), ('bom', envia)), teto, t('topo em {velocidade}', velocidade=e(velocidade(teto)))), (
+                      (t('Pico recebendo'), e(velocidade(pico_recebe))),
+                      (t('Pico enviando'), e(velocidade(pico_envia))),
+                      (t('Total recebido'), e(tamanho(lida['recebido']))),
+                      (t('Total enviado'), e(tamanho(lida['enviado']))),
+                      (t('Erros e descartes'), numero(lida['erros'])),
+                      (t('Sem tráfego há'), duracao(parada) if parada > recursos.REDE_VALE else '')))
 
 
 def resumo():
@@ -294,24 +316,24 @@ def resumo():
     uso = next((amostra[0] for amostra in reversed(amostras) if amostra[0] is not None), None)
     medidas = ''
     if lido and uso is not None:
-        medidas += medida('Processador do servidor', uso, f'{nucleos(uso * lido[2] / 100, False)} de {nucleos(lido[2])}')
+        medidas += medida(t('Processador do servidor'), uso, de(nucleos(uso * lido[2] / 100, False), nucleos(lido[2])))
     else:
-        medidas += medida('Processador do servidor', None, 'lendo' if lido else 'sem leitura')
+        medidas += medida(t('Processador do servidor'), None, t('lendo') if lido else t('sem leitura'))
     if lida:
         usada = lida['total'] - lida['disponivel']
-        medidas += medida('Memória do servidor', 100 * usada / lida['total'], f'{e(tamanho(usada))} de {e(tamanho(lida["total"]))}')
+        medidas += medida(t('Memória do servidor'), 100 * usada / lida['total'], de(e(tamanho(usada)), e(tamanho(lida['total']))))
     else:
-        medidas += medida('Memória do servidor', None, 'sem leitura')
+        medidas += medida(t('Memória do servidor'), None, t('sem leitura'))
     if cpu is not None and cota:
-        medidas += medida('Processador dos containers', 100 * cpu / cota, f'{nucleos(cpu, False)} de {nucleos(cota)}')
+        medidas += medida(t('Processador dos containers'), 100 * cpu / cota, de(nucleos(cpu, False), nucleos(cota)))
     else:
-        medidas += medida('Processador dos containers', None, 'lendo' if quantos else 'sem leitura')
+        medidas += medida(t('Processador dos containers'), None, t('lendo') if quantos else t('sem leitura'))
     if quantos and teto:
-        medidas += medida('Memória dos containers', 100 * em_uso / teto, f'{e(tamanho(em_uso))} de {e(tamanho(teto))}')
+        medidas += medida(t('Memória dos containers'), 100 * em_uso / teto, de(e(tamanho(em_uso)), e(tamanho(teto))))
     else:
-        medidas += medida('Memória dos containers', None, e(tamanho(em_uso)) if quantos else 'sem leitura')
-    return (f'<section class="cartao recurso"><div class="topo"><h2>{icone("pulso")}Servidor e containers</h2>'
-            f'<p class="atalho"><a href="/servidor">ver o servidor</a></p></div><div class="medidas">{medidas}</div></section>')
+        medidas += medida(t('Memória dos containers'), None, e(tamanho(em_uso)) if quantos else t('sem leitura'))
+    return (f'<section class="cartao recurso"><div class="topo"><h2>{icone("pulso")}{t("Servidor e containers")}</h2>'
+            f'<p class="atalho"><a href="/servidor">{t("ver o servidor")}</a></p></div><div class="medidas">{medidas}</div></section>')
 
 
 def servidor(pedido, sessao, consulta, formulario, token):
@@ -319,17 +341,24 @@ def servidor(pedido, sessao, consulta, formulario, token):
     amostras = recursos.historico()
     lido, lida = recursos.ler_processador(), recursos.ler_memoria()
     servidor_ = (lido[2] if lido else 0, lida['total'] if lida else 0)
-    acao = (f'<a class="botao" href="/servidor">{icone("pausa")}Parar a atualização</a>' if sozinha else
-            f'<a class="botao" href="/servidor?auto=1">{icone("tocar")}Atualizar sozinha</a>')
+    acao = (f'<a class="botao" href="/servidor">{icone("pausa")}{t("Parar a atualização")}</a>' if sozinha else
+            f'<a class="botao" href="/servidor?auto=1">{icone("tocar")}{t("Atualizar sozinha")}</a>')
     # A atualização automática parte do navegador, não de quem usa: o pedido dela não renova a sessão (atendimento.py).
-    ritmo = (f'A tela se atualiza a cada {ATUALIZA} s. A atualização automática não conta como uso do painel: a sessão '
-             f'encerra depois de {CFG["inatividade"] // 60} min sem ação sua.' if sozinha else
-             'Para acompanhar sem recarregar a página, ligue <strong>Atualizar sozinha</strong>.')
-    pedido.enviar(200, pagina('Servidor', f"""{cabeca('Servidor', 'Os containers desta stack e o servidor em que ela roda.', acao, quieta=sozinha)}
+    ritmo = (t('A tela se atualiza a cada {segundos} s. A atualização automática não conta como uso do painel: a sessão '
+               'encerra depois de {minutos} min sem ação sua.', segundos=ATUALIZA, minutos=CFG['inatividade'] // 60) if sozinha else
+             t('Para acompanhar sem recarregar a página, ligue <strong>Atualizar sozinha</strong>.'))
+    leitura = t('Cada container lê o próprio uso e os limites que recebeu no <code>compose.yaml</code> (<code>*_CPU_LIMIT</code>, '
+                '<code>*_MEMORY_LIMIT</code> e <code>*_PIDS_LIMIT</code> no <code>.env</code>), sem swap; a memória em uso não '
+                'conta o cache de arquivo que o sistema solta quando precisa. O histórico guarda os últimos {periodo}, com uma '
+                'leitura a cada {intervalo} s, e recomeça quando o painel reinicia; cada desenho vai de zero até pouco acima do '
+                'pico do período. Na rede, a linha cheia é o que chega e a tracejada, o que sai, e os totais contam desde que o '
+                'serviço do FTP iniciou; o disco é o da pasta dos dados.',
+                periodo=duracao(recursos.AMOSTRAS * recursos.INTERVALO), intervalo=recursos.INTERVALO)
+    pedido.enviar(200, pagina(t('Servidor'), f"""{cabeca('Servidor', t('Os containers desta stack e o servidor em que ela roda.'), acao, quieta=sozinha)}
 <div class="lado">
 {containers(amostras, servidor_)}
-<section aria-labelledby="t-servidor"><h2 class="secao" id="t-servidor">Recursos do servidor</h2>
-<p class="suave resumo">A máquina inteira, e não só o que a stack usa dela.</p>
+<section aria-labelledby="t-servidor"><h2 class="secao" id="t-servidor">{t('Recursos do servidor')}</h2>
+<p class="suave resumo">{t('A máquina inteira, e não só o que a stack usa dela.')}</p>
 <div class="recursos quatro">
 {processador(amostras, lido)}
 {memoria(amostras, lida)}
@@ -337,7 +366,7 @@ def servidor(pedido, sessao, consulta, formulario, token):
 {rede(amostras)}
 </div></section>
 </div>
-<p class="suave rodape-aba">Lido às {time.strftime('%H:%M:%S')}. {ritmo}</p>
-{como('Como estas medidas são lidas', f'''<p class="suave">Cada container lê o próprio uso e os limites que recebeu no <code>compose.yaml</code> (<code>*_CPU_LIMIT</code>, <code>*_MEMORY_LIMIT</code> e <code>*_PIDS_LIMIT</code> no <code>.env</code>), sem swap; a memória em uso não conta o cache de arquivo que o sistema solta quando precisa. O histórico guarda os últimos {duracao(recursos.AMOSTRAS * recursos.INTERVALO)}, com uma leitura a cada {recursos.INTERVALO} s, e recomeça quando o painel reinicia; cada desenho vai de zero até pouco acima do pico do período. Na rede, a linha cheia é o que chega e a tracejada, o que sai, e os totais contam desde que o serviço do FTP iniciou; o disco é o da pasta dos dados.</p>''')}""",
+<p class="suave rodape-aba">{t('Lido às {hora}.', hora=time.strftime('%H:%M:%S'))} {ritmo}</p>
+{como(t('Como estas medidas são lidas'), f'<p class="suave">{leitura}</p>')}""",
                               sessao, '/servidor'),
                   extras=(('Refresh', f'{ATUALIZA}; url=/servidor?auto=1'),) if sozinha else ())

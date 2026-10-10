@@ -12,7 +12,7 @@ P27="$W/p27.jar"; S27="$W/s27.jar"
 # [opções do curl...] → código HTTP de uma entrada com a senha errada
 errar27() {
   local formulario
-  formulario="$(c -c "$P27" "$@" "$B/entrar" | sed -n 's/.*name="token" value="\([^"]*\)".*/\1/p')"
+  formulario="$(c -c "$P27" "$@" "$B/entrar" | sed -n 's/.*name="token" value="\([^"]*\)".*/\1/p' | head -1)"
   c -o /dev/null -w '%{http_code}' -b "$P27" -H "Origin: $B" "$@" --data-urlencode "token=$formulario" \
     --data-urlencode "usuario=$ADMIN" --data-urlencode "senha@$W/errada27.senha" "$B/entrar"
 }

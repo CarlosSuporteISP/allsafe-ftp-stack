@@ -11,14 +11,18 @@ import threading
 import time
 import urllib.parse
 
+import administradores
 import conta_ftp
 import entrada
+import idioma
 from auditoria import auditar, limpo
 from config import BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, GID_NGINX, TEMPO_CONEXAO, VALIDADE_CONTATO, privado
 from enderecos import bloqueado as endereco_bloqueado
+from estado import usuarios
+from idioma import t
 from pagina import e, pagina
 from rotas import ROTAS, ROTAS_USUARIO
-from sessao import buscar_sessao, encerrar_sessao
+from sessao import buscar_sessao, encerrar_sessao, trocar_idioma
 
 CABECALHOS = (
     ('Content-Security-Policy', "default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; "
@@ -162,8 +166,8 @@ class Painel(http.server.BaseHTTPRequestHandler):
         self.enviar(303, '', extras=(('Location', destino),) + tuple(extras))
 
     def recusar(self, codigo, texto):
-        self.enviar(codigo, pagina('Pedido recusado', f'<section class="cartao"><h1>Pedido recusado</h1><p>{e(texto)}</p>'
-                                   '<p><a href="/">Voltar ao painel</a></p></section>'))
+        self.enviar(codigo, pagina(t('Pedido recusado'), f'<section class="cartao"><h1>{t("Pedido recusado")}</h1><p>{e(texto)}</p>'
+                                   f'<p><a href="/">{t("Voltar ao painel")}</a></p></section>'))
 
     # ------------------------------------------------------------ conferências antes de qualquer tela
 
@@ -207,25 +211,55 @@ class Painel(http.server.BaseHTTPRequestHandler):
         """Devolve o formulário como dicionário, ou None depois de já ter respondido com o erro."""
         comprimento = self.headers.get('Content-Length', '')
         if not comprimento.isdigit():
-            self.recusar(411, 'Envio sem tamanho declarado.')
+            self.recusar(411, t('Envio sem tamanho declarado.'))
             return None
         if int(comprimento) > CORPO_MAX:
-            self.recusar(413, 'Envio grande demais.')
+            self.recusar(413, t('Envio grande demais.'))
             return None
         if self.headers.get('Content-Type', '').split(';')[0].strip().lower() != 'application/x-www-form-urlencoded':
-            self.recusar(415, 'Formato de envio não aceito.')
+            self.recusar(415, t('Formato de envio não aceito.'))
             return None
         try:
             campos = urllib.parse.parse_qs(self.rfile.read(int(comprimento)).decode('utf-8'),
                                            keep_blank_values=True, max_num_fields=12, strict_parsing=False)
         except (ValueError, UnicodeDecodeError):
-            self.recusar(400, 'Envio malformado.')
+            self.recusar(400, t('Envio malformado.'))
             return None
         return {nome: valores[0] for nome, valores in campos.items()}
+
+    # ------------------------------------------------------------ idioma das telas
+
+    def tela_de_origem(self, sessao):
+        """Caminho da tela que enviou o formulário, se ela é uma tela do papel da sessão; senão, o começo do painel.
+        O destino sai só do caminho e da consulta do Referer, e o caminho tem de estar na tabela de rotas: o pedido
+        não leva o navegador para outro lugar."""
+        try:
+            url = urllib.parse.urlsplit(self.headers.get('Referer', ''))
+            consulta = [(n, v) for n, v in urllib.parse.parse_qsl(url.query, max_num_fields=5) if n != 'm']
+        except ValueError:
+            return '/'
+        if ('GET', url.path) not in (ROTAS_USUARIO[sessao['perfil']] if sessao['usuario'] else ROTAS):
+            return '/'
+        return url.path + ('?' + urllib.parse.urlencode(consulta) if consulta else '')
+
+    def escolher_idioma(self, sessao, formulario):
+        """A conta da sessão troca o idioma das telas: a escolha é gravada, vale para todas as sessões dela e o
+        navegador volta para a tela em que estava."""
+        novo = formulario.get('idioma', '')
+        if novo not in idioma.IDIOMAS:
+            return self.recusar(400, t('Idioma não aceito.'))
+        conta = ('usuario', sessao['usuario']) if sessao['usuario'] else ('admin', sessao['admin'])
+        contas = {('admin', nome) for nome in administradores.ler()} | {('usuario', nome) for nome in usuarios()} | {conta}
+        if not idioma.escolher(*conta, novo, contas):
+            return self.recusar(500, t('Não foi possível gravar o idioma.'))
+        trocar_idioma(sessao, novo)
+        return self.redirecionar(self.tela_de_origem(sessao), (('Set-Cookie', idioma.cookie(novo)),))
 
     # ------------------------------------------------------------ roteamento
 
     def tratar(self, metodo):
+        # Antes da entrada o idioma é o que o navegador guardou; com sessão, passa a ser o da conta.
+        idioma.usar(idioma.do_cookie(self.headers.get('Cookie', '')))
         url = urllib.parse.urlsplit(self.path)
         self.caminho = url.path
         try:
@@ -241,11 +275,11 @@ class Painel(http.server.BaseHTTPRequestHandler):
             conexao = ipaddress.ip_address(self.ip)
         except ValueError:
             self.ip = '-'
-            return self.enviar(400, 'pedido sem o endereço do cliente\n', 'text/plain; charset=utf-8')
+            return self.enviar(400, t('pedido sem o endereço do cliente') + '\n', 'text/plain; charset=utf-8')
 
         if not self.rede_permitida():
             auditar(self.ip, 'recusa_rede')
-            return self.enviar(403, 'cliente fora das redes permitidas\n', 'text/plain; charset=utf-8')
+            return self.enviar(403, t('cliente fora das redes permitidas') + '\n', 'text/plain; charset=utf-8')
         # Painel publicado por proxy ou túnel (PAINEL_PROXY_CONFIAVEL): só quando a conexão vem de um deles o
         # endereço do cliente é o que o proxy informou, já escolhido pelo nginx. Daqui em diante é esse endereço
         # que conta as falhas de entrada, prende a sessão e vai para a auditoria. Valor que não é IP não é usado.
@@ -259,16 +293,16 @@ class Painel(http.server.BaseHTTPRequestHandler):
         # com sessão aberta. Quem libera é outro administrador, na aba Bloqueios, ou o manage-user.sh no servidor.
         if endereco_bloqueado(self.ip):
             auditar(self.ip, 'recusa_endereco')
-            return self.enviar(403, 'endereço bloqueado por excesso de erros de usuário e senha\n', 'text/plain; charset=utf-8')
+            return self.enviar(403, t('endereço bloqueado por excesso de erros de usuário e senha') + '\n', 'text/plain; charset=utf-8')
         if not self.host_valido():
             auditar(self.ip, 'recusa_host', f'host={limpo(self.headers.get("Host", ""))}')
-            return self.enviar(400, 'endereço não aceito\n', 'text/plain; charset=utf-8')
+            return self.enviar(400, t('endereço não aceito') + '\n', 'text/plain; charset=utf-8')
 
         if metodo == 'GET' and self.caminho == '/saude':
             return self.enviar(200, 'ok\n', 'text/plain; charset=utf-8')
         if metodo == 'GET' and self.caminho == '/.well-known/security.txt':
             texto = security_txt()
-            return self.enviar(200 if texto else 404, texto or 'contato de segurança não configurado\n', 'text/plain; charset=utf-8')
+            return self.enviar(200 if texto else 404, texto or t('contato de segurança não configurado') + '\n', 'text/plain; charset=utf-8')
 
         formulario = {}
         if metodo == 'POST':
@@ -277,7 +311,7 @@ class Painel(http.server.BaseHTTPRequestHandler):
                 return None
             if not self.origem_valida():
                 auditar(self.ip, 'recusa_origem', f'caminho={limpo(self.caminho)}')
-                return self.recusar(403, 'O envio não partiu deste painel.')
+                return self.recusar(403, t('O envio não partiu deste painel.'))
 
         if self.caminho == '/entrar':
             return entrada.entrar(self, metodo, formulario)
@@ -287,7 +321,10 @@ class Painel(http.server.BaseHTTPRequestHandler):
         sozinho = metodo == 'GET' and self.caminho == '/servidor' and consulta.get('auto') == '1'
         sessao = buscar_sessao(token, self.ip, renovar=not sozinho) if token else None
         if sessao is None:
+            if metodo == 'POST' and self.caminho == '/idioma':
+                return entrada.idioma_da_entrada(self, formulario)
             return self.redirecionar('/entrar')
+        idioma.usar(sessao['idioma'])
         if sessao['usuario']:
             motivo = conta_ftp.motivo_do_fim(sessao)
             if motivo:
@@ -296,7 +333,10 @@ class Painel(http.server.BaseHTTPRequestHandler):
                 return self.redirecionar('/entrar', (('Set-Cookie', entrada.COOKIE_VAZIO),))
         if metodo == 'POST' and not hmac.compare_digest(formulario.get('csrf', ''), sessao['csrf']):
             auditar(self.ip, 'recusa_csrf', f'caminho={limpo(self.caminho)}')
-            return self.recusar(403, 'Formulário sem token válido. Abra a página de novo e repita.')
+            return self.recusar(403, t('Formulário sem token válido. Abra a página de novo e repita.'))
+
+        if metodo == 'POST' and self.caminho == '/idioma':
+            return self.escolher_idioma(sessao, formulario)
 
         # Cada papel tem a tabela dele: para o usuário do FTP, as telas de administração não existem, nem as ações
         # que o perfil dele não tem.
@@ -305,6 +345,6 @@ class Painel(http.server.BaseHTTPRequestHandler):
             if sessao['usuario'] and ((metodo, self.caminho) in ROTAS or (metodo, self.caminho) in ROTAS_USUARIO['completo']):
                 auditar(self.ip, 'recusa_papel', f'usuario={sessao["usuario"]} caminho={limpo(self.caminho)} '
                                                  f'perfil={sessao["perfil"]}')
-            return self.enviar(404, pagina('Não encontrado', '<section class="cartao"><h1>Página não encontrada</h1>'
-                                           '<p><a href="/">Voltar ao painel</a></p></section>', sessao))
+            return self.enviar(404, pagina(t('Não encontrado'), f'<section class="cartao"><h1>{t("Página não encontrada")}</h1>'
+                                           f'<p><a href="/">{t("Voltar ao painel")}</a></p></section>', sessao))
         return rota(self, sessao, consulta, formulario, token)

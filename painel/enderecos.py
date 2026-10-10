@@ -19,10 +19,11 @@ import time
 from auditoria import auditar
 from config import CFG, PASTA_ENDERECOS
 from estado import com_cache, executar_usuario
+from idioma import N
 
 # IPv4 escrito de um jeito só: é o nome do arquivo do bloqueio. A mesma regra do vigia, do porteiro e do allsafe-ftp-user.
 IPV4 = re.compile(r'(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])')
-QUEM = {'ftp': 'FTP', 'painel': 'Painel', 'manual': 'Administrador'}
+QUEM = {'ftp': N('FTP'), 'painel': N('Painel'), 'manual': N('Administrador')}
 ENDERECOS_LIDOS = 10000     # arquivos lidos por tela; é o teto de endereços bloqueados
 CONTAGENS_MAX = 5000        # endereços com erro guardados na memória
 TRAVA = threading.Lock()

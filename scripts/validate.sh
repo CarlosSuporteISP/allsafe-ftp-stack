@@ -29,6 +29,102 @@ for arquivo in sys.argv[1:]:
 sys.exit(falha)
 PY
   echo "painel OK: $(find painel -maxdepth 1 -name '*.py' | wc -l) módulos Python"
+  # Idioma das telas: cada texto que o painel passa por t(), tn() ou N() tem tradução no catálogo do inglês, com os
+  # mesmos nomes entre chaves, as mesmas marcas do HTML e as mesmas aspas; nenhuma tradução sobra; e cada mensagem
+  # de erro do allsafe-ftp-user que o painel mostra tem a sua.
+  python3 - <<'PY'
+import ast
+import collections
+import pathlib
+import re
+import sys
+
+MARCADOR = re.compile(r'\{([a-z_]+)\}')
+MARCA = re.compile(r'</?[a-z]+[^>]*>')
+ENTIDADE = re.compile(r'&[a-z]+;')
+MENSAGEM = re.compile(r'echo "([^"]+)" >&2')
+falhas = []
+
+
+def texto(no):
+    return no.value if isinstance(no, ast.Constant) and isinstance(no.value, str) else None
+
+
+# O catálogo é lido como texto: nada é importado nem gravado.
+catalogo, regras = {}, []
+for no in ast.parse(pathlib.Path('painel/idioma_en.py').read_text(encoding='utf-8')).body:
+    if isinstance(no, ast.Assign) and no.targets[0].id == 'EN':
+        pares = [(texto(chave), texto(valor)) for chave, valor in zip(no.value.keys, no.value.values)]
+        repetidas = [chave for chave, vezes in collections.Counter(chave for chave, _ in pares).items() if vezes > 1]
+        if repetidas:
+            falhas.append(f'idioma_en.py: chave repetida: {repetidas[0][:60]!r}')
+        catalogo = dict(pares)
+    elif isinstance(no, ast.Assign) and no.targets[0].id == 'COMANDO':
+        regras = [(re.compile(texto(par.elts[0])), texto(par.elts[1])) for par in no.value.args[0].generators[0].iter.elts]
+
+# Todo texto de t(), tn() e N() do painel, com o lugar da primeira chamada e os nomes dos valores de cada chamada.
+do_codigo = {}
+for arquivo in sorted(pathlib.Path('painel').glob('*.py')):
+    for no in ast.walk(ast.parse(arquivo.read_text(encoding='utf-8'))):
+        if not isinstance(no, ast.Call):
+            continue
+        nome = no.func.id if isinstance(no.func, ast.Name) else no.func.attr if isinstance(no.func, ast.Attribute) else ''
+        if nome not in ('t', 'tn', 'N'):
+            continue
+        onde = f'{arquivo}:{no.lineno}'
+        alvos = [texto(alvo) for alvo in (no.args[1:3] if nome == 'tn' else no.args[:1])]
+        if nome != 't' and None in alvos:
+            falhas.append(f'{onde}: {nome}() recebe o texto escrito na chamada, para ele entrar no catálogo')
+        aberto = any(valor.arg is None for valor in no.keywords)
+        if nome == 'tn' and any(valor.arg == 'n' for valor in no.keywords):
+            falhas.append(f'{onde}: tn() já entrega a quantidade em {{n}}: o valor n não é passado')
+        dados = {valor.arg for valor in no.keywords if valor.arg} | ({'n'} if nome == 'tn' else set())
+        for chave in filter(None, alvos):
+            do_codigo.setdefault(chave, onde)
+            pedidos = set(MARCADOR.findall(chave))
+            if nome != 'N' and not aberto and not pedidos <= dados:
+                falhas.append(f'{onde}: faltam valores para {sorted(pedidos - dados)} em {chave[:60]!r}')
+        if nome != 'N' and not aberto and all(alvos):
+            sobram = dados - {'n'} - {marcador for chave in alvos for marcador in MARCADOR.findall(chave)}
+            if sobram:
+                falhas.append(f'{onde}: valores sem lugar no texto: {sorted(sobram)}')
+
+for chave, onde in do_codigo.items():
+    if chave not in catalogo:
+        falhas.append(f'{onde}: texto sem tradução em painel/idioma_en.py: {chave[:60]!r}')
+for chave, ingles in catalogo.items():
+    if chave not in do_codigo:
+        falhas.append(f'idioma_en.py: tradução de texto que o painel não usa mais: {chave[:60]!r}')
+        continue
+    if not ingles or set(MARCADOR.findall(chave)) != set(MARCADOR.findall(ingles)):
+        falhas.append(f'idioma_en.py: nomes entre chaves diferentes na tradução de {chave[:60]!r}')
+    for nome, regra in (('marcas do HTML', MARCA), ('entidades do HTML', ENTIDADE)):
+        if collections.Counter(regra.findall(chave)) != collections.Counter(regra.findall(ingles or '')):
+            falhas.append(f'idioma_en.py: {nome} diferentes na tradução de {chave[:60]!r}')
+    if chave.count('"') != (ingles or '').count('"'):
+        falhas.append(f'idioma_en.py: aspas diferentes na tradução de {chave[:60]!r}')
+    if '{' in MARCADOR.sub('', ingles or '') or '}' in MARCADOR.sub('', ingles or ''):
+        falhas.append(f'idioma_en.py: chave solta, fora de um nome, na tradução de {chave[:60]!r}')
+
+# Mensagens de erro do allsafe-ftp-user: cada uma tem a sua regra, e nenhuma regra sobra.
+mensagens = []
+for linha in pathlib.Path('ftp/usuario.sh').read_text(encoding='utf-8').splitlines():
+    for mensagem in MENSAGEM.findall(linha):
+        if not re.match(r'Uso:|\s+\$0 |AVISO:', mensagem):
+            mensagens.append(re.sub(r'\$\{?[A-Za-z_0-9]+\}?', '7', mensagem))
+for mensagem in sorted(set(mensagens)):
+    if not any(regra.fullmatch(mensagem) for regra, _ in regras):
+        falhas.append(f'ftp/usuario.sh: mensagem de erro sem tradução em COMANDO (idioma_en.py): {mensagem[:70]!r}')
+for regra, _ in regras:
+    if not any(regra.fullmatch(mensagem) for mensagem in mensagens):
+        falhas.append(f'idioma_en.py: regra de COMANDO que não casa com mensagem do ftp/usuario.sh: {regra.pattern[:70]!r}')
+
+for falha in falhas:
+    print(f'ERRO: {falha}', file=sys.stderr)
+if falhas:
+    sys.exit(1)
+print(f'idioma OK: {len(catalogo)} textos do painel com tradução em inglês, {len(regras)} mensagens do comando de usuários')
+PY
 fi
 # Toda variável do .env.example tem comentário na linha de cima e está explicada no guia de configuração.
 awk -v guia=doc/configuracao.md '

@@ -8,13 +8,15 @@ desenho: o gráfico mostra a proporção, e quem usa leitor de tela recebe os me
 
 import itertools
 
+from idioma import milhar
+
 DESENHO = 'preserveAspectRatio="none" aria-hidden="true" focusable="false"'
 AREAS = itertools.count(1)      # cada área leva um nome só dela: a página pode ter vários desenhos de linha
 
 
 def numero(valor):
-    """Inteiro com o ponto de milhar."""
-    return f'{valor:,}'.replace(',', '.')
+    """Inteiro com o separador de milhar do idioma do pedido."""
+    return milhar(valor)
 
 
 def colunas(valores, rotulos, unidade):

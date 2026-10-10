@@ -15,20 +15,21 @@ from aba_arquivos import (MENSAGENS, Recusado, Vista, abrir, aviso_de_corte, con
                           linhas_da_lista, parametro, partes, recusa, trilha)
 from config import CFG
 from icones import icone
+from idioma import N, t
 from pagina import cabeca, como, e, pagina
 
 # perfil ➜ (linha de cima da tela, o que a tela diz que esta conta faz)
 PODE = {
-    'leitura': ('Os arquivos da sua pasta no FTP, para navegar e baixar.',
-                'Aqui você navega e baixa. O perfil desta conta é de leitura: ela não cria, não envia, não renomeia e não '
-                'apaga nada, nem aqui nem por FTP. Todo download fica registrado.'),
-    'envio': ('Os arquivos da sua pasta no FTP, para navegar, baixar e criar pasta.',
-              'Aqui você navega, baixa e cria pasta; enviar arquivo continua sendo feito por FTP. O perfil desta conta é de '
-              'envio: o que já foi enviado não é renomeado nem apagado por ela. Todo download e toda pasta criada ficam '
-              'registrados.'),
-    'completo': ('Os arquivos da sua pasta no FTP, para navegar, baixar e organizar.',
-                 'Aqui você navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continua sendo feito por FTP. '
-                 'Apagar pede a sua senha do FTP e não tem lixeira. Todo download e toda alteração ficam registrados.'),
+    'leitura': (N('Os arquivos da sua pasta no FTP, para navegar e baixar.'),
+                N('Aqui você navega e baixa. O perfil desta conta é de leitura: ela não cria, não envia, não renomeia e não '
+                  'apaga nada, nem aqui nem por FTP. Todo download fica registrado.')),
+    'envio': (N('Os arquivos da sua pasta no FTP, para navegar, baixar e criar pasta.'),
+              N('Aqui você navega, baixa e cria pasta; enviar arquivo continua sendo feito por FTP. O perfil desta conta é de '
+                'envio: o que já foi enviado não é renomeado nem apagado por ela. Todo download e toda pasta criada ficam '
+                'registrados.')),
+    'completo': (N('Os arquivos da sua pasta no FTP, para navegar, baixar e organizar.'),
+                 N('Aqui você navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continua sendo feito por FTP. '
+                   'Apagar pede a sua senha do FTP e não tem lixeira. Todo download e toda alteração ficam registrados.')),
 }
 
 
@@ -58,43 +59,45 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
     resumo, texto = PODE[perfil]
     feito = MENSAGENS.get(consulta.get('m', ''), '')
     nova_pasta = formulario_nova_pasta(sessao, caminho) if existe and perfil != 'leitura' else ''
-    pedido.enviar(200, pagina('Meus arquivos', f'''{cabeca('Meus arquivos', resumo)}
-{f'<p class="ok" role="status">{e(feito)}</p>' if feito else ''}
+    da_pasta = t('Arquivos da pasta do usuário <strong>{usuario}</strong> no FTP.', usuario=e(sessao['usuario']))
+    pedido.enviar(200, pagina(t('Meus arquivos'), f'''{cabeca('Meus arquivos', t(resumo))}
+{f'<p class="ok" role="status">{e(t(feito))}</p>' if feito else ''}
 <p class="trilha">{trilha(v, lista)}</p>
 {aviso_de_corte(cortado)}<section class="cartao lista"><div class="rolagem"><table class="blocos itens">
-<thead><tr><th>Nome</th><th>Tamanho</th><th>Modificado</th><th>Ações</th></tr></thead>
+<thead><tr><th>{t('Nome')}</th><th>{t('Tamanho')}</th><th>{t('Modificado')}</th><th>{t('Ações')}</th></tr></thead>
 <tbody>{linhas_da_lista(v.rota, caminho, pastas, arquivos, gerir=perfil == 'completo')}</tbody></table></div>
-{como('O que esta conta pode fazer', f'''<p class="suave">Arquivos da pasta do usuário <strong>{e(sessao['usuario'])}</strong> no FTP. {texto}</p>''')}</section>
+{como(t('O que esta conta pode fazer'), f'<p class="suave">{da_pasta} {t(texto)}</p>')}</section>
 {nova_pasta}''', sessao, v.rota))
 
 
 def so_envio(pedido, sessao, consulta, formulario, token):
     """Tela do perfil só envio: o que a conta faz e os dados para o equipamento enviar. Não lê a pasta do usuário."""
-    protocolo = {'0': 'FTP sem TLS (texto puro), modo passivo',
-                 '1': 'FTPS explícito (FTP com TLS) ou, só para equipamento sem TLS, FTP em texto puro; modo passivo',
-                 '3': 'FTPS explícito (FTP com TLS), também no canal de dados; modo passivo'}
-    pedido.enviar(200, pagina('Envio de arquivos', f'''{cabeca('Envio de arquivos', 'Esta conta só envia: o que chega fica guardado no servidor.')}
-<section class="cartao"><h2>{icone('envio')}O caminho de cada arquivo</h2>
+    protocolo = {'0': t('FTP sem TLS (texto puro), modo passivo'),
+                 '1': t('FTPS explícito (FTP com TLS) ou, só para equipamento sem TLS, FTP em texto puro; modo passivo'),
+                 '3': t('FTPS explícito (FTP com TLS), também no canal de dados; modo passivo')}
+    usuario = e(sessao['usuario'])
+    pedido.enviar(200, pagina(t('Envio de arquivos'), f'''{cabeca('Envio de arquivos', t('Esta conta só envia: o que chega fica guardado no servidor.'))}
+<section class="cartao"><h2>{icone('envio')}{t('O caminho de cada arquivo')}</h2>
 <ol class="passos">
-<li>{icone('equipamento')}<strong>O equipamento envia</strong><span class="suave">por FTP, com o usuário e a senha desta conta</span></li>
-<li>{icone('servidor')}<strong>O servidor recebe</strong><span class="suave">em uma área de entrada que é só desta conta</span></li>
-<li>{icone('cadeado')}<strong>O arquivo é guardado</strong><span class="suave">na pasta do usuário, fora do alcance desta conta</span></li>
+<li>{icone('equipamento')}<strong>{t('O equipamento envia')}</strong><span class="suave">{t('por FTP, com o usuário e a senha desta conta')}</span></li>
+<li>{icone('servidor')}<strong>{t('O servidor recebe')}</strong><span class="suave">{t('em uma área de entrada que é só desta conta')}</span></li>
+<li>{icone('cadeado')}<strong>{t('O arquivo é guardado')}</strong><span class="suave">{t('na pasta do usuário, fora do alcance desta conta')}</span></li>
 </ol></section>
-<section class="cartao"><h2>{icone('equipamento')}Dados para enviar por FTP</h2>
+<section class="cartao"><h2>{icone('equipamento')}{t('Dados para enviar por FTP')}</h2>
 <dl class="dados">
-<div><dt>Servidor</dt><dd><code>{e(CFG['ftp_anunciado'])}</code></dd></div>
-<div><dt>Porta de controle</dt><dd><code>{e(CFG['ftp_porta'])}</code>/tcp</dd></div>
-<div><dt>Portas passivas</dt><dd><code>{e(CFG['ftp_passiva'])}</code>/tcp</dd></div>
-<div><dt>Protocolo</dt><dd>{e(protocolo.get(CFG['ftp_tls'], 'FTPS explícito (FTP com TLS), modo passivo'))}</dd></div>
-<div><dt>Usuário e senha</dt><dd><strong>{e(sessao['usuario'])}</strong>, com a mesma senha desta entrada</dd></div>
+<div><dt>{t('Servidor')}</dt><dd><code>{e(CFG['ftp_anunciado'])}</code></dd></div>
+<div><dt>{t('Porta de controle')}</dt><dd><code>{e(CFG['ftp_porta'])}</code>/tcp</dd></div>
+<div><dt>{t('Portas passivas')}</dt><dd><code>{e(CFG['ftp_passiva'])}</code>/tcp</dd></div>
+<div><dt>{t('Protocolo')}</dt><dd>{e(protocolo.get(CFG['ftp_tls']) or t('FTPS explícito (FTP com TLS), modo passivo'))}</dd></div>
+<div><dt>{t('Usuário e senha')}</dt><dd>{t('<strong>{usuario}</strong>, com a mesma senha desta entrada', usuario=usuario)}</dd></div>
 </dl></section>
-<section class="cartao"><h2>{icone('escudo')}O que esta conta faz</h2>
-<p>Ela envia arquivo por FTP e mais nada. Cada arquivo que termina de chegar é guardado na pasta do usuário
-<strong>{e(sessao['usuario'])}</strong> no servidor, fora do alcance desta conta: ela não lista, não baixa, não renomeia
-e não apaga o que já enviou, nem por FTP nem por aqui.</p>
-<p class="suave">Depois de enviar, a pasta da sessão volta a ficar vazia: é o esperado. Arquivo enviado com um nome que já
-existe não substitui o anterior: o novo é guardado com a data e a hora no nome. Quem precisa conferir ou baixar o que
-foi enviado pede a um administrador ou usa uma conta de outro perfil.</p></section>''', sessao, '/meus-arquivos'))
+<section class="cartao"><h2>{icone('escudo')}{t('O que esta conta faz')}</h2>
+<p>{t('Ela envia arquivo por FTP e mais nada. Cada arquivo que termina de chegar é guardado na pasta do usuário '
+      '<strong>{usuario}</strong> no servidor, fora do alcance desta conta: ela não lista, não baixa, não renomeia '
+      'e não apaga o que já enviou, nem por FTP nem por aqui.', usuario=usuario)}</p>
+<p class="suave">{t('Depois de enviar, a pasta da sessão volta a ficar vazia: é o esperado. Arquivo enviado com um nome que já '
+                    'existe não substitui o anterior: o novo é guardado com a data e a hora no nome. Quem precisa conferir ou '
+                    'baixar o que foi enviado pede a um administrador ou usa uma conta de outro perfil.')}</p></section>''', sessao, '/meus-arquivos'))
 
 
 def baixar(pedido, sessao, consulta, formulario, token):

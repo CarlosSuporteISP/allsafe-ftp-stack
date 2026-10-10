@@ -963,6 +963,7 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 | Alteração de administrador confirmada | Criar, trocar senha, trocar nome e remover pedem a senha atual de quem está na sessão; as sessões do administrador alterado são encerradas; ninguém remove a própria conta |
 | Sessão curta | 15 minutos sem uso (`PAINEL_SESSAO_MINUTOS`) e teto de 8 horas; a atualização automática da aba Servidor não conta como uso; presa ao endereço do cliente; encerrada em **Sair** e quando o painel reinicia |
 | Formulário protegido | Token CSRF por sessão e conferência do `Origin` em todo envio; `Referrer-Policy: same-origin` para o navegador informar a origem só ao próprio painel |
+| Idioma sem atalho | A troca de idioma só acontece por `POST`, com o token da sessão ou, antes da entrada, o do formulário de entrada; o cookie `__Host-idioma` só leva `pt` ou `en`, não vale como sessão e valor fora disso é ignorado; depois da troca, o navegador só volta para tela do próprio painel |
 | Página fechada | Sem JavaScript, sem conteúdo de terceiros, sem ser embutida em outra página (`Content-Security-Policy`) |
 | Arquivos sem envio | A aba Arquivos lê, cria pasta vazia, renomeia e apaga, só dentro de `DATA_DIR/dados`, e não recebe arquivo: caminho que tenta sair da pasta recebe `400`, link simbólico não é seguido (`403`) e o arquivo sai sempre como anexo, nunca aberto no navegador. No máximo 8 downloads ao mesmo tempo, 2 por usuário do FTP ou o limite próprio dele, para as telas continuarem respondendo |
 | Apagamento confirmado e contido | Apagar arquivo, pasta ou a pasta junto com o usuário pede a caixa de confirmação e a senha atual de quem está na sessão. A pasta é esvaziada pelo descritor dela, sem seguir link simbólico; um pedido apaga até 50.000 itens ou trabalha 20 segundos, e só um apagamento corre por vez, para as telas continuarem respondendo. Pasta de usuário do FTP, ou com a de um usuário dentro, não é renomeada nem apagada pela aba Arquivos (`409`); a remoção do usuário com a pasta é recusada quando outro usuário a alcança |
@@ -987,8 +988,8 @@ Nenhuma versão é publicada sem a bateria inteira aprovada. Ela roda em um clon
 
 | Bateria | Casos | O que responde |
 |---|---|---|
-| Funcional | 62 | A instalação faz o que promete: instalar em um comando, enviar e baixar, usuários pelo terminal e pelo painel, reinício sem perda, cópia e restauração |
-| Segurança | 112 | O que deveria ser recusado é recusado: cada caso tenta uma coisa que não pode acontecer e confere a recusa |
+| Funcional | 65 | A instalação faz o que promete: instalar em um comando, enviar e baixar, usuários pelo terminal e pelo painel, reinício sem perda, cópia e restauração |
+| Segurança | 114 | O que deveria ser recusado é recusado: cada caso tenta uma coisa que não pode acontecer e confere a recusa |
 | Rede | 14 | Só o que foi configurado fica aberto: portas, endereço de escuta, modo passivo, sub-rede e redes aceitas pelo painel |
 
 **O que a bateria de segurança tenta**, por alvo. O número é o do caso, o mesmo que aparece na saída do `./tests/testar.sh`:
@@ -1005,6 +1006,7 @@ Nenhuma versão é publicada sem a bateria inteira aprovada. Ela roda em um clon
 | Aba Servidor | Abrir sem sessão ou com a sessão de um usuário do FTP; trocar o arquivo da rede e o dos recursos do nginx por texto com marcação e por link para o cadastro do FTP; manter a sessão aberta só com a atualização automática | 97, 98 |
 | Entrada e sessão do painel | Abrir rota sem sessão ou com cookie inventado, senha errada e sorteada até o bloqueio, descobrir se um administrador existe, alterar conta sem a senha atual, usar sessão já encerrada, remover a própria conta | 22 a 24, 28, 37, 46 a 49, 51, 69, 72 |
 | Pedido forjado | Enviar sem token CSRF, com `Origin` de fora, com `Origin: null` e com `Host` inesperado | 25 a 27, 38 |
+| Idioma das telas | Trocar o idioma sem token, com token inventado ou de outra sessão, de outra origem, por `GET` e para idioma que não existe; trocar o idioma de outra conta; usar o cookie de idioma como sessão ou com marcação no valor; fazer a volta da troca levar a outro site ou a tela de outro papel | 113, 114 |
 | Transporte | Falar HTTP sem TLS, negociar TLS antigo, conferir os cabeçalhos de segurança, repetir os limites em HTTP/2 e com compressão | 29 a 31, 87 |
 | Entrada maliciosa | Nome de usuário com comando embutido, senha fraca, corpo grande demais, pedido malformado, limite fora da regra | 32 a 34, 75, 84 |
 | Arquivos pelo painel | Sair da pasta dos dados pelo caminho, por link simbólico e pelo nome da pasta; baixar, criar, trocar, renomear e apagar sem sessão, sem token e sem senha; abrir arquivo no navegador em vez de baixar | 52 a 55, 57, 58, 81 a 83 |
@@ -1027,7 +1029,7 @@ Além da bateria, cada versão passa por:
 ./tests/testar.sh
 ```
 
-**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 62 casos funcionais, 112 de segurança e 14 de rede. A bateria leva cerca de 1 hora; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
+**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 65 casos funcionais, 114 de segurança e 14 de rede. A bateria leva cerca de 1 hora; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
 
 > ⚠️ **Limite — o que a bateria não alcança:** ela roda no próprio servidor, contra a instância de teste. O firewall do host, o proxy ou o túnel da borda e o equipamento que envia o backup são de quem instala e não entram nela: confira-os pelo [passo a passo de produção](#boas-praticas).
 

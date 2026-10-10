@@ -44,7 +44,7 @@ flowchart LR
 | `dados/` | Arquivos enviados pelos equipamentos, uma pasta por usuário, e `.entrada/`, a área de entrada das contas de perfil Só envio, vazia fora do instante de cada envio | Sim |
 | `auth/` | Usuários do FTP, com o hash de cada senha, os limites próprios de cada um, a lista de quem está dispensado do TLS e os bloqueios em vigor, por tentativa e por endereço | Sim |
 | `certs/` | Certificado e chave privada do FTP | Sim |
-| `painel/` | Certificado e chave privada do painel, os administradores (nome e hash da senha) e o `auditoria.log` | Sim |
+| `painel/` | Certificado e chave privada do painel, os administradores (nome e hash da senha), o `auditoria.log` e o idioma das telas escolhido por cada conta | Sim |
 | `nginx/` | Soquete do painel e cópia do certificado, refeitos a cada subida | Não |
 
 Ficam fora, e precisam ser guardados à parte: o `.env` e a pasta `.secrets/`, onde está a chave que abre a cópia. Veja [A chave da cópia](#chave) e [Guardar o `.env` e os segredos](#segredos).

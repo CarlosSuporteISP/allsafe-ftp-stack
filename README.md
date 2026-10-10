@@ -484,7 +484,7 @@ O mapa mostra as peças e os volumes. A configuração, os segredos e o registro
 | Pasta `DATA_DIR/auth` | Banco PureDB dos usuários virtuais, dividido pelo FTP e pelo painel | — | `/auth` |
 | Pasta `DATA_DIR/dados` | Arquivos enviados, uma pasta por usuário | — | `/data` |
 | Pasta `DATA_DIR/certs` | Chave e certificado TLS do FTP (`pure-ftpd.pem`) | — | `/etc/ssl/private` |
-| Pasta `DATA_DIR/painel` | Certificado do painel, administradores (nome e hash da senha) e `auditoria.log` | — | `/painel` |
+| Pasta `DATA_DIR/painel` | Certificado do painel, administradores (nome e hash da senha), `auditoria.log` e o idioma escolhido por cada conta (`idiomas`) | — | `/painel` |
 | Pasta `DATA_DIR/nginx` | Soquete do painel e cópia do certificado, refeitos a cada subida; o nginx só lê | — | `/nginx` |
 | Segredo `ftp_usuario_inicial_senha` | Senha do usuário inicial (`.secrets/ftp-usuario-inicial-senha.txt`), somente leitura | — | `/run/secrets/ftp_usuario_inicial_senha` |
 | Segredo `painel_admin_inicial_senha_hash` | Hash da senha inicial do primeiro administrador do painel (`.secrets/painel-admin-inicial-senha-hash.txt`), somente leitura | — | `/run/secrets/painel_admin_inicial_senha_hash` |
@@ -629,11 +629,11 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 
 | Quero | Comando | Resultado esperado |
 |---|---|---|
-| Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `painel OK: <n> módulos Python`, `marca OK: 6 arquivos em web/marca/`, `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` para os cinco perfis e `Validacao FTP concluida.` |
+| Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `painel OK: <n> módulos Python`, `idioma OK: <n> textos do painel com tradução em inglês, <n> mensagens do comando de usuários`, `marca OK: 6 arquivos em web/marca/`, `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` para os cinco perfis e `Validacao FTP concluida.` |
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 62 casos funcionais, 112 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 65 casos funcionais, 114 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/scripts.md#testar).
 
 ---
 

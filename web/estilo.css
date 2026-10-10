@@ -237,6 +237,15 @@ nav a .sinal .i, nav a.ativa .sinal .i { color: var(--ambar-82); }
 .quem { display: flex; flex-direction: column; min-width: 0; font-size: var(--texto-rotulo); font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
 .quem span { color: var(--marca-suave); font-weight: 400; }
 .sair button { margin: 0; }
+/* Idioma das telas: dois botões colados, com o do idioma em uso marcado. No menu, que é escuro nos dois temas, as
+   cores são as da marca; na tela de entrada, as do tema. */
+.idioma { --idioma-traco: color-mix(in oklab, var(--marca-traco) 70%, transparent); --idioma-texto: var(--marca-suave); --idioma-marcado: var(--marca-toque); --idioma-forte: var(--marca-texto); margin: 0 0 0 auto; }
+.idioma + .sair { margin-left: 0; }
+.idioma div { display: inline-flex; overflow: hidden; border: 1px solid var(--idioma-traco); border-radius: var(--raio); }
+form.idioma button[type="submit"] { width: auto; min-width: 40px; min-height: 32px; margin: 0; padding: 4px 10px; border: 0; border-radius: 0; background: transparent; color: var(--idioma-texto); font-size: var(--texto-rotulo); font-weight: 400; letter-spacing: 0.04em; }
+form.idioma button + button { border-left: 1px solid var(--idioma-traco); }
+form.idioma button[aria-pressed="true"] { background: var(--idioma-marcado); color: var(--idioma-forte); font-weight: 600; }
+form.idioma button:focus-visible { outline-offset: -2px; }
 
 main { flex: 1; width: 100%; max-width: var(--largura); margin: 0 auto; padding: 24px 16px 32px; }
 
@@ -511,6 +520,8 @@ td:first-child strong { white-space: nowrap; }
 /* Data, endereço e pasta ficam inteiros: um IPv6 tem até 39 caracteres e não pode partir no meio. Quando falta
    largura, a etiqueta da pasta desce para a linha de baixo e, por último, a tabela rola para o lado. */
 td.quando, td.origem { white-space: nowrap; }
+/* Data ano-mês-dia no meio de uma frase: a linha dobra antes dela, e não no hífen. */
+.data { white-space: nowrap; }
 td.origem code, td.pasta code { overflow-wrap: normal; white-space: nowrap; }
 td.detalhe { min-width: 12rem; overflow-wrap: anywhere; }
 .par { margin-right: 12px; }
@@ -666,11 +677,13 @@ p > .botao { margin-top: 0; }
   form button[type="submit"]:hover, .botao.principal:hover { border-color: transparent; background: var(--acao-realce); }
   form button.perigo:hover, .botao.perigo:hover { border-color: transparent; background: var(--perigo); color: var(--sobre-acao); }
   form.sair button[type="submit"]:hover { border-color: var(--marca-realce); background: var(--marca-toque); color: var(--marca-texto); }
+  form.idioma button[type="submit"]:hover { background: var(--idioma-marcado); color: var(--idioma-forte); }
   .cabeca .botao:not(.principal):hover { border-color: var(--marca-realce); background: oklch(1 0 0 / 0.14); }
 }
 
 @media (pointer: coarse) {
   td .botao { min-height: 44px; padding: 8px 12px; }
+  form.idioma button[type="submit"] { min-width: 44px; min-height: 44px; }
   .atalho a { padding: 12px 0; }
 }
 
@@ -800,6 +813,7 @@ p > .botao { margin-top: 0; }
 .entrada-acesso h1 { margin-bottom: 8px; }
 .entrada-acesso button { width: 100%; margin-top: 20px; }
 .entrada-acesso .nota, .entrada-acesso .aviso { margin: 24px 0 0; }
+.entrada-acesso .idioma { --idioma-traco: var(--borda); --idioma-texto: var(--suave); --idioma-marcado: var(--superficie-2); --idioma-forte: var(--texto); margin: 16px 0 0; }
 
 /* ------------------------------------------------------------ larguras */
 
@@ -835,6 +849,7 @@ p > .botao { margin-top: 0; }
   .com-menu nav .sinal { margin-left: auto; }
   .com-menu .sair { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; margin: 0; padding: 16px 12px 0; border-top: 1px solid color-mix(in oklab, var(--marca-traco) 40%, transparent); }
   .com-menu .sair button { grid-column: 1 / -1; }
+  .com-menu .idioma { margin: 0; padding: 0 12px; }
   /* O conteúdo usa a largura que sobra ao lado do menu, sem teto: diminuir o zoom ou alargar a janela dá mais
      colunas e tabelas mais largas, em vez de margem vazia dos dois lados. */
   .com-menu main { grid-area: 1 / 2; max-width: none; padding: 24px 20px 32px; }
@@ -876,6 +891,8 @@ p > .botao { margin-top: 0; }
   .contas th, .contas td { padding-inline: 6px; }
   .lista .contas tr > :last-child { padding-right: 12px; }
   .contas .acoes { min-width: 18rem; padding-left: 2px; }
+  /* Em inglês os rótulos são mais largos: "Change password" e "Change name" são o par que a coluna tem de caber. */
+  :lang(en) .contas .acoes { min-width: 21rem; }
 }
 
 /* Listas da aba Bloqueios entre o celular e 1096 px: cada bloqueio vira um bloco em grade, com o endereço (ou o
@@ -937,6 +954,13 @@ p > .botao { margin-top: 0; }
 @media (min-width: 1360px) {
   .contas .acoes { min-width: 20.5rem; }
   .contas .acoes .botao { min-width: 9.25rem; }
+}
+
+/* O mesmo em inglês, em que o botão mais largo é "Change password": só até 1600 px, de onde os botões voltam à
+   própria largura, todos na mesma linha. */
+@media (min-width: 1360px) and (max-width: 1599px) {
+  :lang(en) .contas .acoes { min-width: 23.5rem; }
+  :lang(en) .contas .acoes .botao { min-width: 10.75rem; }
 }
 
 /* Tela bem larga (ou zoom reduzido): as duas seções da aba Servidor ficam lado a lado, numa linha só de sete cartões

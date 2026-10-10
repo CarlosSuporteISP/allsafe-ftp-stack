@@ -8,10 +8,11 @@ imagem nem pedido de rede. A caixa de marcar antes da cena é o botão de pausar
 navegador com movimento reduzido já recebe a cena parada (web/estilo.css).
 """
 from icones import icone
+from idioma import N, t
 
 FAIXAS = ('l1', 'l2', 'l3', 'l4')
-EQUIPAMENTOS = ('roteador', 'switch', 'OLT', 'rádio')
-PASTAS = ('roteador', 'switch', 'olt', 'radio')
+EQUIPAMENTOS = (N('roteador'), N('switch'), N('OLT'), N('rádio'))
+PASTAS = (N('/roteador'), N('/switch'), N('/olt'), N('/radio'))
 # Os trilhos, na medida do palco (22 por 15): do equipamento ao muro e do muro à pasta, uma linha por faixa.
 TRILHOS = ''.join(f'M3 {y}H9.9M12.1 {y}H19' for y in ('2.25', '5.75', '9.25', '12.75'))
 
@@ -29,11 +30,11 @@ def miniatura(quieta=False):
 def cena():
     blocos = ''.join(f'<i class="bloco eq {f}"></i><i class="bloco gaveta {f}">{icone("pasta")}</i>'
                      f'<i class="pacote {f}"></i><i class="pacote outro {f}"></i>' for f in FAIXAS)
-    nomes = ''.join(f'<span class="placa de {f}">{nome}</span>' for f, nome in zip(FAIXAS, EQUIPAMENTOS))
-    destinos = ''.join(f'<span class="placa para {f}">/{nome}</span>' for f, nome in zip(FAIXAS, PASTAS))
+    nomes = ''.join(f'<span class="placa de {f}">{t(nome)}</span>' for f, nome in zip(FAIXAS, EQUIPAMENTOS))
+    destinos = ''.join(f'<span class="placa para {f}">{t(nome)}</span>' for f, nome in zip(FAIXAS, PASTAS))
     return ('<div class="vitrine"><input class="pausa" id="pausa" type="checkbox">'
-            f'<label class="pausa-rotulo" for="pausa"><span class="roda">{icone("pausa")}Pausar movimento</span>'
-            f'<span class="parada">{icone("tocar")}Retomar movimento</span></label>'
+            f'<label class="pausa-rotulo" for="pausa"><span class="roda">{icone("pausa")}{t("Pausar movimento")}</span>'
+            f'<span class="parada">{icone("tocar")}{t("Retomar movimento")}</span></label>'
             '<div class="cena" aria-hidden="true"><div class="palco"><i class="chao"></i>'
             f'<svg class="trilhos" viewBox="0 0 22 15"><path d="{TRILHOS}"/></svg>'
             f'{blocos}<i class="bloco muro"></i>{nomes}{destinos}'

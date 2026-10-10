@@ -148,7 +148,7 @@ sem_tls="$(curl -s --max-time 10 --http2-prior-knowledge -o /dev/null -w '%{http
 a_outro="$(alpn25 spdy/3)"; t_10="$(tls_painel tls1)"; t_11="$(tls_painel tls1_1)"; t_12="$(tls_painel tls1_2)"; t_13="$(tls_painel tls1_3)"
 r_sessao="$(aba -b "$J" "$B/usuarios")"; s_fim="$(saude "$FTP" "$PAINEL" "$NGINX")"
 
-[[ "$ok" == 0 && "$c_campo" == 1 && "$com_token" == 1 && "$sem_tls" != 200 && "$a_outro" == "No ALPN negotiated" && "$t_10" == recusado && "$t_11" == recusado \
+[[ "$ok" == 0 && "$c_campo" == 1 && "$com_token" == 2 && "$sem_tls" != 200 && "$a_outro" == "No ALPN negotiated" && "$t_10" == recusado && "$t_11" == recusado \
   && "$t_12" == "New, TLSv1.2" && "$t_13" == "New, TLSv1.3" && "$r_sessao" == "200 " && "$s_fim" == "healthy healthy healthy " && "$REINICIOS25" == "$(reinicios25)" ]]
 caso $? seguranca 87 "HTTP/2 e compressão não abrem nada: página com token inteira e limites nos dois protocolos" "aceitando gzip, deflate, br e zstd, nenhuma resposta além do estilo vem comprimida: $ev· tela de entrada pedida com compressão traz o token legível: $com_token · a cópia comprimida não tem endereço (nenhuma resposta pode ser 200 nem trazer arquivo gzip): $ev_n· limites: $ev_l· HTTP/2 sem TLS na porta do painel: $sem_tls · aperto de mão oferecendo só um protocolo que o nginx não fala (spdy/3): $a_outro · TLS 1.0: $t_10, TLS 1.1: $t_11, TLS 1.2: $t_12, TLS 1.3: $t_13 · sessão do administrador depois de tudo, em /usuarios: $r_sessao· saúde: $s_fim· reinícios antes e depois: $REINICIOS25/ $(reinicios25)"
 

@@ -42,7 +42,7 @@ t11="$(tls_painel tls1_1)"; t12="$(tls_painel tls1_2)"; t13="$(tls_painel tls1_3
 caso $? seguranca 31 "TLS antigo" "TLS 1.0: $(tls_painel tls1) · TLS 1.1: $t11 · TLS 1.2: $t12 · TLS 1.3: $t13"
 
 codigo="$(entrar "$J" "$W/painel.senha")"; destino_entrada="$(grep -i '^location:' "$W/entrada.cab" | tr -d '\r' | cut -d' ' -f2)"
-biscoito="$(grep -i '^set-cookie:' "$W/entrada.cab" | tr -d '\r')"
+biscoito="$(grep -i '^set-cookie: __Host-sessao=' "$W/entrada.cab" | tr -d '\r')"
 proibir "$(awk '$6 == "__Host-sessao" {print $7}' "$J")"
 K="$(csrf)"; proibir "$K"
 geral="$(aba -b "$J" "$B/")"

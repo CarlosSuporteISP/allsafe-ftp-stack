@@ -11,9 +11,9 @@ from config import (CFG, FALHAS_MAX, JANELA_FALHAS, SESSAO_ABSOLUTA, SESSOES_MAX
 
 CHAVE_PROCESSO = secrets.token_bytes(32)  # assina o formulário de entrada; some ao reiniciar
 TRAVA = threading.Lock()
-# sha256 do token → {'criada', 'uso', 'csrf', 'ip', 'admin', 'usuario', 'marca', 'pasta', 'perfil'}. A sessão é
-# de um administrador ('admin' com o nome, 'usuario' None) ou de um usuário do FTP ('usuario' com o nome, 'admin'
-# None, mais a marca, a pasta e o perfil do cadastro dele na hora da entrada).
+# sha256 do token → {'criada', 'uso', 'csrf', 'ip', 'admin', 'usuario', 'marca', 'pasta', 'perfil', 'idioma'}. A
+# sessão é de um administrador ('admin' com o nome, 'usuario' None) ou de um usuário do FTP ('usuario' com o nome,
+# 'admin' None, mais a marca, a pasta e o perfil do cadastro dele na hora da entrada). 'idioma' é o das telas.
 SESSOES = {}
 FALHAS = {}    # ip → [instantes das falhas]
 
@@ -22,7 +22,7 @@ def resumo_token(token):
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def criar_sessao(ip, admin=None, usuario=None, marca=None, pasta=None, perfil=None):
+def criar_sessao(ip, admin=None, usuario=None, marca=None, pasta=None, perfil=None, idioma='pt'):
     token = secrets.token_urlsafe(32)
     agora = time.time()
     with TRAVA:
@@ -38,7 +38,7 @@ def criar_sessao(ip, admin=None, usuario=None, marca=None, pasta=None, perfil=No
             del SESSOES[min(candidatas, key=lambda c: SESSOES[c]['uso'])]
         SESSOES[resumo_token(token)] = {'criada': agora, 'uso': agora, 'csrf': secrets.token_urlsafe(32), 'ip': ip,
                                          'admin': admin, 'usuario': usuario, 'marca': marca, 'pasta': pasta,
-                                         'perfil': perfil}
+                                         'perfil': perfil, 'idioma': idioma}
     return token
 
 
@@ -95,6 +95,15 @@ def renomear_sessoes(antigo, novo):
         for sessao in SESSOES.values():
             if sessao['admin'] and sessao['admin'] == antigo:
                 sessao['admin'] = novo
+
+
+def trocar_idioma(sessao, idioma):
+    """A conta escolheu outro idioma: todas as sessões dela passam a usá-lo, e não só a que pediu."""
+    campo = 'usuario' if sessao['usuario'] else 'admin'
+    with TRAVA:
+        for outra in SESSOES.values():
+            if outra[campo] and outra[campo] == sessao[campo]:
+                outra['idioma'] = idioma
 
 
 def bloqueado(ip):

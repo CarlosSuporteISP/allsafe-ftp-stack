@@ -50,7 +50,7 @@ partida30() { docker logs --since "$(docker inspect -f '{{.State.StartedAt}}' "$
 # [opções do curl...] → código HTTP de uma entrada no painel com a senha errada do administrador
 errar30() {
   local formulario
-  formulario="$(c -c "$P30" "$@" "$B/entrar" | sed -n 's/.*name="token" value="\([^"]*\)".*/\1/p')"
+  formulario="$(c -c "$P30" "$@" "$B/entrar" | sed -n 's/.*name="token" value="\([^"]*\)".*/\1/p' | head -1)"
   c -o /dev/null -w '%{http_code}' -b "$P30" -H "Origin: $B" "$@" --data-urlencode "token=$formulario" \
     --data-urlencode "usuario=$ADMIN" --data-urlencode "senha@$W/errada30.senha" "$B/entrar"
 }

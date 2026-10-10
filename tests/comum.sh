@@ -118,7 +118,7 @@ c() { sleep 0.05; curl -sk --max-time 20 "$@"; }
 # Administrador da entrada: $COMO (sem ele, o inicial, $ADMIN). Sessão dos envios: $POTE (sem ele, a principal, $J).
 entrar() { # <pote de cookies> <arquivo da senha> [opções do curl a mais...] → código HTTP
   local pote="$1" senha="$2" formulario; shift 2
-  formulario="$(c -c "$pote" "$B/entrar" | sed -n 's/.*name="token" value="\([^"]*\)".*/\1/p')"
+  formulario="$(c -c "$pote" "$B/entrar" | sed -n 's/.*name="token" value="\([^"]*\)".*/\1/p' | head -1)"
   c -o "$W/entrada.corpo" -D "$W/entrada.cab" -w '%{http_code}' -b "$pote" -c "$pote" -H "Origin: $B" "$@" \
     --data-urlencode "token=$formulario" --data-urlencode "usuario=${COMO:-$ADMIN}" --data-urlencode "senha@$senha" "$B/entrar"
 }
@@ -213,8 +213,8 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
   printf '%-9s %s → %s\n' "$tipo" "$resultado" "$arquivo"
 }
 declare -A ESPERADOS=(
-  [testes]="$(seq -s ' ' 1 62)"
-  [seguranca]="$(seq -s ' ' 1 112)"
+  [testes]="$(seq -s ' ' 1 65)"
+  [seguranca]="$(seq -s ' ' 1 114)"
   [rede]="$(seq -s ' ' 1 14)"
 )
 ARQUIVOS=()

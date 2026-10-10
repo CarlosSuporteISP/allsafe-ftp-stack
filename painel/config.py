@@ -5,6 +5,8 @@ import os
 import re
 import sys
 
+from idioma import N
+
 # Soquete Unix na pasta que o painel divide com o nginx; o grupo é o do nginx (alvo `nginx` do Dockerfile).
 ARQ_SOQUETE = '/nginx/painel.sock'
 GID_NGINX = 10001
@@ -127,11 +129,11 @@ def configuracao():
     # O TLS por usuário só vale sobre o modo 2 e sem IP público aceito; fora disso a opção fica sem efeito,
     # como no serviço ftp, e o painel diz o motivo no lugar dos botões.
     if amb('FTP_TLS_EXCECOES', 'sim') == 'nao':
-        sem_excecao = 'a opção está desligada (<code>FTP_TLS_EXCECOES=nao</code>)'
+        sem_excecao = N('a opção está desligada (<code>FTP_TLS_EXCECOES=nao</code>)')
     elif amb('FTP_TLS_MODE', '2') != '2':
-        sem_excecao = 'ela só vale com <code>FTP_TLS_MODE=2</code>, e o FTP está em outro modo'
+        sem_excecao = N('ela só vale com <code>FTP_TLS_MODE=2</code>, e o FTP está em outro modo')
     elif publico:
-        sem_excecao = 'ela não vale com <code>REDE_PERMITIR_IP_PUBLICO=sim</code>: FTP sem TLS na internet entrega a senha a quem escuta'
+        sem_excecao = N('ela não vale com <code>REDE_PERMITIR_IP_PUBLICO=sim</code>: FTP sem TLS na internet entrega a senha a quem escuta')
     else:
         sem_excecao = ''
     contato = amb('SEGURANCA_CONTATO_EMAIL', '')

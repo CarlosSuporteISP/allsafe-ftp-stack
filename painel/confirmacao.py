@@ -10,22 +10,27 @@ import administradores
 import conta_ftp
 import enderecos
 from auditoria import auditar, limpo
+from idioma import t
 from pagina import e
 from senha import senha_confere
 from sessao import bloqueado, quem, registrar_falha
 
 
-def campo_senha_atual(sessao, obrigatoria=True, para='para confirmar'):
-    rotulo, dono = ('Sua senha do FTP', sessao['usuario']) if sessao['usuario'] else ('Sua senha atual', sessao['admin'])
-    return f'''<label for="senha_atual">{rotulo} <span class="suave">(a de {e(dono)}, {para})</span></label>
+def campo_senha_atual(sessao, obrigatoria=True, para=''):
+    """`para` diz para que a senha é pedida, já no idioma da tela; sem ele, é para confirmar."""
+    rotulo, dono = ((t('Sua senha do FTP'), sessao['usuario']) if sessao['usuario'] else
+                    (t('Sua senha atual'), sessao['admin']))
+    nota = t('(a de {dono}, {para})', dono=e(dono), para=para or t('para confirmar'))
+    return f'''<label for="senha_atual">{rotulo} <span class="suave">{nota}</span></label>
 <input id="senha_atual" name="senha_atual" type="password"{' required' if obrigatoria else ''} autocomplete="current-password" maxlength="256">'''
 
 
-def confirmacao_recusada(pedido, sessao, formulario):
-    """Confere a senha atual de quem está na sessão. Devolve (código, erro); (0, '') quando confere."""
+def confirmacao_recusada(pedido, sessao, formulario, apagando=False):
+    """Confere a senha atual de quem está na sessão. Devolve (código, erro); (0, '') quando confere.
+    `apagando` muda o fim do erro: o pedido recusado era de apagar, e não de alterar."""
     if bloqueado(pedido.ip):
         auditar(pedido.ip, 'entrada_bloqueada')
-        return 429, 'Muitas tentativas. Aguarde alguns minutos e tente de novo.'
+        return 429, t('Muitas tentativas. Aguarde alguns minutos e tente de novo.')
     senha = formulario.get('senha_atual', '')
     serve = 0 < len(senha) <= 256
     if sessao['usuario']:
@@ -33,7 +38,9 @@ def confirmacao_recusada(pedido, sessao, formulario):
         conta, motivo = conta_ftp.conferir(sessao['usuario'], senha) if serve else (None, '')
         if motivo:
             auditar(pedido.ip, 'falha_comando', f'{quem(sessao)} acao=confirmar_senha motivo={motivo}')
-            return 503, 'Não foi possível conferir a sua senha agora. Nada foi alterado. Tente de novo em instantes.'
+            return 503, (t('Não foi possível conferir a sua senha agora. Nada foi apagado. Tente de novo em instantes.')
+                         if apagando else
+                         t('Não foi possível conferir a sua senha agora. Nada foi alterado. Tente de novo em instantes.'))
         confere = conta is not None and hmac.compare_digest(conta['marca'], sessao['marca'])
         evento = 'usuario_senha_atual_recusada'
     else:
@@ -43,5 +50,6 @@ def confirmacao_recusada(pedido, sessao, formulario):
         registrar_falha(pedido.ip)
         auditar(pedido.ip, evento, f'{quem(sessao)} caminho={limpo(pedido.caminho)}')
         enderecos.erro_de_entrada(pedido.ip)
-        return 403, 'A sua senha atual não confere. Nada foi alterado.'
+        return 403, (t('A sua senha atual não confere. Nada foi apagado.') if apagando else
+                     t('A sua senha atual não confere. Nada foi alterado.'))
     return 0, ''

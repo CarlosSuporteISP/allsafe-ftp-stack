@@ -31,7 +31,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Usuários pelo painel](#usuarios) · [Perfis](#perfis) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Servidor: containers e recursos](#servidor) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
+[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Idioma das telas](#idioma) · [Usuários pelo painel](#usuarios) · [Perfis](#perfis) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Servidor: containers e recursos](#servidor) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
 
 </details>
 
@@ -81,7 +81,7 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 | Bloqueios | Os endereços com [bloqueio por endereço](seguranca.md#bloqueio-por-endereco): a regra em vigor, o total e, por endereço, quem bloqueou (o FTP, o painel ou o administrador), com quantos erros, desde quando e até quando. Embaixo, quando há, os usuários com bloqueio por tentativa no FTP | Procurar um endereço, **Mudar prazo**, para bloquear por mais tempo ou encurtar, e **Desbloquear**; abrir o usuário que está com bloqueio por tentativa |
 | Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads, pastas criadas e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
 
-O menu fica à esquerda em tela de 1280 px de largura ou mais: o símbolo e o nome, as abas em dois grupos (**Operação**, com Visão geral, Usuários e Arquivos, e **Sistema**, com Servidor, Segurança, Bloqueios e Atividade), a aba em uso marcada e, embaixo, o nome e o papel de quem entrou e o botão **Sair**, que encerra a sessão na hora. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada (endereço público aceito ou painel por proxy ou túnel), o administrador vê um sinal de alerta ao lado de **Segurança**, em qualquer aba em que estiver. Os gráficos são desenhados pelo próprio painel, sem script, e todo número do desenho está também escrito ao lado dele. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
+O menu fica à esquerda em tela de 1280 px de largura ou mais: o símbolo e o nome, as abas em dois grupos (**Operação**, com Visão geral, Usuários e Arquivos, e **Sistema**, com Servidor, Segurança, Bloqueios e Atividade), a aba em uso marcada e, embaixo, o botão de [idioma](#idioma) (**PT** e **EN**), o nome e o papel de quem entrou e o botão **Sair**, que encerra a sessão na hora. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada (endereço público aceito ou painel por proxy ou túnel), o administrador vê um sinal de alerta ao lado de **Segurança**, em qualquer aba em que estiver. Os gráficos são desenhados pelo próprio painel, sem script, e todo número do desenho está também escrito ao lado dele. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
 
 Cada aba abre com uma faixa no azul da marca, o mesmo do menu e da tela de entrada, nos temas claro e escuro: o ícone da aba, o título, uma linha que diz o que a tela mostra e, à direita, a ação principal. Em tela com mais de 900 px de largura, a faixa leva também a cena do caminho do backup, a da tela de entrada, em miniatura: os pacotes atravessam uma vez, na chegada à tela, e param. Com **Atualizar sozinha** ligada na aba Servidor, ou com o sistema pedindo menos movimento, nada se mexe. Tela de formulário (novo usuário, editar, trocar senha, renomear, apagar) leva a faixa fina, só com o título.
 
@@ -104,6 +104,34 @@ A foto de cada tela, com a explicação item por item, está em [Fotos da aplica
 > ⚠️ Com `FTP_TLS_MODE` em `0` ou `1`, as abas Visão geral e Segurança abrem com um alerta no começo da tela: o FTP está aceitando senha e arquivo em texto puro. O alerta só some quando a variável volta para `2` ou `3`. Veja [Segurança](seguranca.md#ftp-sem-tls).
 
 > ⚠️ Com pelo menos um usuário dispensado do TLS, as mesmas abas abrem com o alerta de quantos e quais usuários entram no FTP sem TLS. Ele some quando o último volta a ser obrigado a usar TLS. Veja [Segurança](seguranca.md#tls-por-usuario).
+
+---
+
+<a name="idioma"></a>
+
+## 🌍 Idioma das telas
+
+O painel fala **português**, que é o padrão, e **inglês**. A troca é pelo botão **PT** e **EN**, que fica no menu, junto do nome de quem entrou, e também na tela de entrada. O idioma em uso aparece marcado.
+
+| Onde o botão é usado | O que muda | Onde a escolha fica |
+|---|---|---|
+| Na tela de entrada | A tela de entrada daquele navegador | No navegador, por um ano |
+| Depois da entrada | As telas da conta: todas as sessões abertas dela e as próximas entradas, em qualquer navegador | No servidor, uma por conta |
+
+Cada conta escolhe o seu, administrador ou usuário do FTP: a escolha de uma não muda a tela de nenhuma outra. A conta que nunca escolheu entra no idioma que o navegador guardou na tela de entrada e, sem isso, em português. Depois da troca, o painel volta para a tela em que o botão foi usado.
+
+Em inglês mudam todas as telas, os avisos, os erros dos formulários e a descrição de cada registro da aba Atividade; a data passa a `ano-mês-dia` e os números usam ponto decimal e vírgula de milhar. Não mudam os nomes de usuário, de pasta e de arquivo, o arquivo de auditoria, as mensagens do FTP e as dos scripts do terminal.
+
+<details>
+<summary>Detalhe técnico — como o idioma é guardado e trocado</summary>
+
+- **Por conta:** `DATA_DIR/painel/idiomas` (`/painel/idiomas` no container), `0600`, do `root`, uma linha `admin:<nome>:<pt|en>` ou `usuario:<nome>:<pt|en>` por conta que escolheu. O arquivo é gravado ao lado e trocado de uma vez. A linha acompanha o administrador que troca de nome e sai quando a conta é removida pelo painel. A de usuário removido pelo terminal sai na troca de idioma seguinte, de qualquer conta; até lá, um usuário criado com o mesmo nome entra no idioma do anterior.
+- **No navegador:** cookie `__Host-idioma`, com `Secure`, `HttpOnly`, `SameSite=Lax` e validade de um ano, gravado na troca e em toda entrada. Só `pt` e `en` são lidos: outro valor é ignorado. Ele não é sessão e não abre nenhuma tela.
+- **Troca:** `POST /idioma`, com o token dos outros formulários da sessão; antes da entrada, com o token do formulário de entrada. Por `GET` não há troca, e idioma fora da lista recebe `400`. A volta sai do caminho da tela de origem e só quando ele é uma tela do papel da sessão: nos outros casos, o começo do painel.
+- **Textos:** o texto em português é o que está no código, e o catálogo do inglês é o [`painel/idioma_en.py`](../painel/idioma_en.py). Texto sem tradução sairia em português; o `./scripts/validate.sh` recusa o código em que falta ou sobra tradução.
+- **Auditoria:** a troca de idioma não gera registro. As recusas dela são as de qualquer formulário: `recusa_csrf` e `recusa_origem`.
+
+</details>
 
 ---
 
@@ -809,6 +837,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 | Arquivos | A aba Arquivos lê, cria pasta vazia, renomeia e apaga, e só dentro de `DATA_DIR/dados`: caminho que tenta sair da pasta é recusado, link simbólico não é seguido, renomear não muda o item de pasta nem substitui outro, pasta de usuário do FTP só sai junto com o usuário, o arquivo sai sempre como anexo e no máximo 8 downloads correm ao mesmo tempo, 2 por usuário do FTP; o painel não recebe arquivo, e o usuário do FTP só faz, dentro da pasta dele, o que o perfil dele deixa |
 | Pastas dos usuários | Cada usuário do FTP fica preso (`chroot`) na pasta do cadastro; a pasta escolhida não sai de `DATA_DIR/dados` nem passa por link simbólico; pasta alcançada por mais de um usuário aparece marcada como **dividida** |
 | Formulários | Token CSRF por sessão e conferência de `Origin`: o envio tem de partir do próprio painel; corpo limitado a 8 KiB |
+| Idioma | A troca é um formulário como os outros, com token e `Origin`; o cookie do idioma só leva `pt` ou `en` e não vale como sessão; a volta depois da troca só leva a tela do próprio painel |
 | Navegador | `Content-Security-Policy` sem script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS e `no-store`; a página não carrega nada de fora |
 | Containers | Raiz somente leitura, `cap_drop: ALL`, `no-new-privileges`, sem socket do Docker, limites de CPU, memória e processos; o nginx roda sem root e sem nenhuma capability |
 
@@ -852,6 +881,8 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`estado.py`](../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados, quem entra sem TLS) e a chamada do `allsafe-ftp-user` |
 | [`confirmacao.py`](../painel/confirmacao.py) | Confirmação pela senha atual de quem está na sessão, pedida nas alterações de administrador e em tudo o que apaga arquivo ou pasta |
 | [`pagina.py`](../painel/pagina.py) | Moldura das telas, com o menu, o símbolo e a autoria no rodapé, e os textos que mais de uma aba usa |
+| [`idioma.py`](../painel/idioma.py) | Idioma das telas: o texto de cada pedido em português ou em inglês, o formato da data e dos números, o cookie da tela de entrada e a escolha gravada de cada conta |
+| [`idioma_en.py`](../painel/idioma_en.py) | Catálogo do inglês: cada texto das telas em português e a tradução dele, e as mensagens de erro do `allsafe-ftp-user` que o painel mostra |
 | [`icones.py`](../painel/icones.py) | Os ícones do painel, desenhados em linha: saem dentro do HTML de cada tela, sem arquivo de imagem |
 | [`graficos.py`](../painel/graficos.py) | Os gráficos (colunas por dia, faixa dividida, barras e linha do tempo), em SVG montado no servidor, sem script e sem estilo dentro do HTML; os números ficam também em texto |
 | [`cena.py`](../painel/cena.py) | A cena em três dimensões da tela de entrada e a miniatura dela na faixa que abre cada aba, só com HTML e CSS |
@@ -872,7 +903,7 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`aba_bloqueios.py`](../painel/aba_bloqueios.py) | Aba Bloqueios: lista dos endereços bloqueados, busca, mudança de prazo e desbloqueio (`GET /bloqueios`, `GET /bloqueios/endereco?ip=<endereço>`, `POST /bloqueios/prazo` e `POST /bloqueios/liberar`) |
 | [`aba_atividade.py`](../painel/aba_atividade.py) | Aba Atividade |
 
-Os módulos não gravam nada na imagem: a raiz do container é somente leitura e o Python roda sem gerar `.pyc`. O `./scripts/validate.sh` confere a sintaxe de todos e que nenhum usa nome que não definiu nem importou.
+Os módulos não gravam nada na imagem: a raiz do container é somente leitura e o Python roda sem gerar `.pyc`. O `./scripts/validate.sh` confere a sintaxe de todos, que nenhum usa nome que não definiu nem importou e que cada texto das telas tem tradução no catálogo do inglês.
 
 </details>
 
