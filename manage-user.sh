@@ -12,12 +12,12 @@ case "$action" in
   *)
     echo "Uso: $0 add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]" >&2
     echo "     $0 perfil <usuario> [completo|envio|soenvio|leitura]" >&2
-    echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]" >&2
+    echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N] [enviar=1]" >&2
     echo "     $0 bloqueios [usuario]" >&2
     echo "     $0 desbloquear <usuario> [origem]" >&2
     echo "     $0 enderecos" >&2
-    echo "     $0 endereco-bloquear <endereco> [dias]" >&2
-    echo "     $0 endereco-liberar <endereco>" >&2
+    echo "     $0 endereco-bloquear <endereco ou prefixo> [dias]" >&2
+    echo "     $0 endereco-liberar <endereco ou prefixo>" >&2
     exit 2 ;;
 esac
 # Instalação a operar: a do .env desta pasta ou a do arquivo apontado por ENV_FILE.
@@ -41,6 +41,7 @@ case "$action" in
     ;;
   limites)
     # Sem pares, mostra os limites do usuário; com pares, grava os que vieram (valor vazio tira o limite).
+    # enviar=1 dá ao usuário a permissão de enviar arquivo pelo painel web; enviar= tira.
     [[ -n "$user" ]] || { echo "Uso: $0 limites <usuario> [chave=valor ...]" >&2; exit 2; }
     compose exec -T ftp allsafe-ftp-user limites "$user" "${@:3}"
     ;;
@@ -58,13 +59,14 @@ case "$action" in
     compose exec -T ftp allsafe-ftp-user enderecos
     ;;
   endereco-bloquear)
-    # Bloqueia um endereço no FTP e no painel, ou muda o prazo de um que já está bloqueado. Sem os dias, o prazo da stack.
-    [[ -n "$user" && $# -le 3 ]] || { echo "Uso: $0 endereco-bloquear <endereco> [dias]" >&2; exit 2; }
+    # Bloqueia um endereço ou um prefixo (IPv4 ou IPv6) no FTP e no painel, ou muda o prazo de um que já está bloqueado.
+    # Sem os dias, o prazo da stack. O bloqueio automático nunca alcança prefixo: prefixo só entra por aqui ou pelo painel.
+    [[ -n "$user" && $# -le 3 ]] || { echo "Uso: $0 endereco-bloquear <endereco ou prefixo> [dias]" >&2; exit 2; }
     compose exec -T ftp allsafe-ftp-user endereco-bloquear "$user" ${pasta:+"$pasta"}
     ;;
   endereco-liberar)
-    # Libera um endereço bloqueado. É a saída para o administrador que ficou com o próprio endereço bloqueado.
-    [[ -n "$user" && $# -le 2 ]] || { echo "Uso: $0 endereco-liberar <endereco>" >&2; exit 2; }
+    # Libera um endereço ou um prefixo bloqueado. É a saída para o administrador que ficou com o próprio endereço bloqueado.
+    [[ -n "$user" && $# -le 2 ]] || { echo "Uso: $0 endereco-liberar <endereco ou prefixo>" >&2; exit 2; }
     compose exec -T ftp allsafe-ftp-user endereco-liberar "$user"
     ;;
   add|passwd)

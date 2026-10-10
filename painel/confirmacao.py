@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Confirmação pela senha atual de quem está na sessão.
 
-Pedida em toda alteração de administrador e em tudo o que apaga arquivo ou pasta: um navegador esquecido
-aberto não basta para criar um administrador nem para apagar um backup. A do administrador é conferida no
+Pedida em toda alteração de administrador, na troca de nome de arquivo ou pasta e em tudo o que apaga arquivo
+ou pasta: um navegador esquecido aberto não basta para criar um administrador, nem para apagar um backup ou
+trocar o nome dele. É por isso que a sessão pode durar horas. A do administrador é conferida no
 cadastro do painel; a do usuário do FTP, pelo servidor FTP, como na entrada."""
 import hmac
 

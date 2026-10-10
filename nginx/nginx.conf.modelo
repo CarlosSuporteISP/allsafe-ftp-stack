@@ -111,6 +111,9 @@ http {
         location /_erro/ {
             internal;
             allow all;
+            # Sem teto de corpo aqui: em HTTP/2 o pedido recusado por tamanho (413) chega a esta rota ainda com o
+            # tamanho declarado, seria recusado de novo e o navegador receberia a página padrão do nginx.
+            client_max_body_size 0;
             root /usr/share/allsafe-nginx;
             types { }
             default_type text/plain;
@@ -183,6 +186,27 @@ http {
             proxy_connect_timeout 5s;
             proxy_send_timeout 15s;
             proxy_read_timeout 30s;
+
+            # Envio de arquivo pelo painel: só nestas duas rotas o corpo pode ser grande (PAINEL_ENVIO_MAX_MB, mais
+            # 1 MB para os campos do formulário). O corpo segue para o painel enquanto chega, sem arquivo temporário
+            # (o /tmp/nginx é pequeno e fica na memória): o painel confere a sessão e a permissão antes de receber
+            # o arquivo. Os prazos são maiores porque o painel recebe na taxa de envio do usuário, que pode ser baixa:
+            # com o painel segurando o ritmo, o nginx fica sem ler do navegador (client_body_timeout) e sem escrever
+            # para o painel (proxy_send_timeout) por mais tempo do que nas outras rotas.
+            location ~ ^/(?:arquivos|meus-arquivos)/enviar$ {
+                proxy_pass http://unix:/nginx/painel.sock;
+@ENVIO@
+                proxy_request_buffering off;
+                # error_page não se soma ao do servidor: os quatro se repetem, e só o 413 muda de texto.
+                error_page 400 404 405 408 411 414 431 494 495 496 497 /_erro/pedido.txt;
+                error_page 403 /_erro/rede.txt;
+                error_page 413 /_erro/envio.txt;
+                error_page 429 /_erro/taxa.txt;
+                error_page 500 502 503 504 /_erro/painel.txt;
+                client_body_timeout 300s;
+                proxy_send_timeout 300s;
+                proxy_read_timeout 300s;
+            }
         }
     }
 }

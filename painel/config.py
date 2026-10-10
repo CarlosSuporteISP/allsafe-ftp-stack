@@ -26,6 +26,7 @@ ARQ_RECURSOS_NGINX = '/nginx/estado/recursos.estado'    # quem grava é o nginx,
 PASTA_BLOQUEIOS = '/auth/bloqueios'   # bloqueios por tentativa no FTP, um arquivo por usuário e endereço; quem grava é o vigia do ftp
 # Bloqueios por endereço, um arquivo por endereço: valem no FTP e no painel; gravam o vigia do ftp e o allsafe-ftp-user
 PASTA_ENDERECOS = '/auth/enderecos'
+PASTA_PREFIXOS = '/auth/prefixos'
 CMD_USUARIO = '/usr/local/sbin/allsafe-ftp-user'
 PASTA_DADOS = '/data'
 
@@ -44,14 +45,18 @@ CORPO_MAX = 8192            # bytes de um envio de formulário
 TEMPO_CONEXAO = 15          # segundos por conexão
 CONEXOES_MAX = 32
 DOWNLOADS_MAX = 8           # arquivos entregues ao mesmo tempo; o resto das conexões fica para as telas
-BLOCO_ARQUIVO = 64 * 1024   # bytes lidos e enviados por vez em um download
+BLOCO_ARQUIVO = 64 * 1024   # bytes lidos e enviados por vez em um download, e recebidos por vez em um envio
+ENVIOS_MAX = 4              # arquivos recebidos ao mesmo tempo pelo painel; cada usuário do FTP envia um por vez
+ENVIO_FOLGA = 1024 * 1024   # bytes além de PAINEL_ENVIO_MAX_MB aceitos no corpo: os campos e as marcas do formulário
+ESCOAR_MAX = 16 * 1024 * 1024  # bytes de um envio recusado que o painel ainda lê depois de responder...
+ESCOAR_PRAZO = 5            # ...e por quantos segundos
 LISTA_MAX = 2000            # itens mostrados por pasta na aba Arquivos
 APAGAR_MAX = 50000          # itens apagados por pedido na aba Arquivos; pasta maior é apagada em mais de um pedido
 APAGAR_PRAZO = 20           # segundos por pedido de apagar: abaixo do tempo que o nginx espera pelo painel
 APAGAR_NIVEIS = 64          # pastas uma dentro da outra que o painel desce para apagar
 FALHAS_MAX = 5              # falhas de entrada por IP...
 JANELA_FALHAS = 15 * 60     # ...nesta janela, em segundos
-SESSAO_ABSOLUTA = 8 * 3600
+SESSAO_ABSOLUTA = 12 * 3600 # a sessão acaba neste prazo, com ou sem uso; é também o teto de PAINEL_SESSAO_MINUTOS
 SESSOES_MAX = 50
 SESSOES_POR_USUARIO = 3     # sessões de um mesmo usuário do FTP; a mais antiga sai quando entra a quarta
 DOWNLOADS_POR_USUARIO = 2   # arquivos que um usuário do FTP baixa ao mesmo tempo, quando ele não tem limite próprio
@@ -157,9 +162,12 @@ def configuracao():
     dias = amb('BLOQUEIO_ENDERECO_DIAS', '120')
     if not (re.fullmatch(r'[1-9][0-9]{0,3}', dias) and int(dias) <= 3650):
         falha('BLOQUEIO_ENDERECO_DIAS deve ficar entre 1 e 3650')
-    minutos = amb('PAINEL_SESSAO_MINUTOS', '15')
-    if not (minutos.isdigit() and 1 <= int(minutos) <= 120):
-        falha('PAINEL_SESSAO_MINUTOS deve ficar entre 1 e 120')
+    minutos = amb('PAINEL_SESSAO_MINUTOS', '240')
+    if not (re.fullmatch(r'[1-9][0-9]{0,2}', minutos) and int(minutos) * 60 <= SESSAO_ABSOLUTA):
+        falha('PAINEL_SESSAO_MINUTOS deve ficar entre 1 e 720')
+    envio = amb('PAINEL_ENVIO_MAX_MB', '1024')
+    if not (re.fullmatch(r'[1-9][0-9]{0,5}', envio) and int(envio) <= 102400):
+        falha('PAINEL_ENVIO_MAX_MB deve ficar entre 1 e 102400')
     try:
         with open(os.path.join(RAIZ, 'VERSION'), encoding='utf-8') as arq:
             versao = arq.read().strip()
@@ -180,6 +188,7 @@ def configuracao():
         'admin_inicial': admin,
         'acesso_usuarios': amb('PAINEL_ACESSO_USUARIOS_FTP', 'sim') == 'sim',
         'inatividade': int(minutos) * 60,
+        'envio_max': int(envio) * 1024 * 1024,
         'cert_cn': amb('PAINEL_CERT_CN', '').strip().lower(),
         'contato_seguranca': contato,
         'painel_bind': amb('PAINEL_BIND_IP', '127.0.0.1'),

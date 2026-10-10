@@ -26,7 +26,7 @@ RUN apt-get update \
 # e uma pasta 0644 não é atravessada por quem não é root.
 COPY --chmod=0644 scripts/rede-privada.sh /usr/local/lib/allsafe/rede-privada.sh
 COPY --chmod=0644 nginx/nginx.conf.modelo nginx/cabecalhos.conf /etc/allsafe-nginx/
-COPY --chmod=0644 nginx/erro/pedido.txt nginx/erro/rede.txt nginx/erro/taxa.txt nginx/erro/painel.txt /usr/share/allsafe-nginx/_erro/
+COPY --chmod=0644 nginx/erro/pedido.txt nginx/erro/rede.txt nginx/erro/taxa.txt nginx/erro/painel.txt nginx/erro/envio.txt /usr/share/allsafe-nginx/_erro/
 # Arquivos estáticos do painel (pasta web/): quem serve é o nginx, sem passar pelo painel.
 COPY --chmod=0644 web/estilo.css web/robots.txt /usr/share/allsafe-nginx/web/
 # Cópia comprimida do estilo, feita uma vez aqui: o nginx a entrega a quem aceita gzip, sem comprimir a cada pedido.
@@ -70,6 +70,7 @@ RUN apt-get update \
 COPY --chmod=0644 scripts/rede-privada.sh /usr/local/lib/allsafe/rede-privada.sh
 COPY --chmod=0755 ftp/usuario.sh /usr/local/sbin/allsafe-ftp-user
 COPY --chmod=0644 ftp/entrada.pl /usr/local/lib/allsafe/entrada.pl
+COPY --chmod=0644 ftp/endereco.pl /usr/local/lib/allsafe/endereco.pl
 # Licença e autoria acompanham as imagens do ftp e do painel (Apache-2.0, seção 4).
 COPY --chmod=0644 LICENSE NOTICE /usr/share/doc/allsafe-ftp-stack/
 
@@ -115,7 +116,7 @@ RUN apt-get update \
 
 COPY --chmod=0755 ftp/entrypoint.sh /usr/local/sbin/allsafe-ftp-entrypoint
 COPY --chmod=0755 ftp/saude.sh /usr/local/sbin/allsafe-ftp-saude
-COPY --chmod=0755 ftp/porteiro.sh /usr/local/sbin/allsafe-ftp-porteiro
+COPY --chmod=0755 ftp/porteiro.pl /usr/local/sbin/allsafe-ftp-porteiro
 COPY --chmod=0755 ftp/vigia.pl /usr/local/sbin/allsafe-ftp-vigia
 
 EXPOSE 2121 30000-30049

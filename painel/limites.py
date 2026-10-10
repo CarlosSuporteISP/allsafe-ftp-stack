@@ -2,8 +2,9 @@
 """Limites próprios de cada usuário do FTP.
 
 Sessões, taxas e horário ficam no cadastro do Pure-FTPd, que é quem os aplica. Em /auth/limites.lista ficam
-o de downloads ao mesmo tempo pelo painel, que o painel aplica, e os do bloqueio por tentativa no FTP
-(senhas erradas até o bloqueio e minutos de bloqueio), que o vigia do serviço ftp aplica. Todos são gravados
+o de downloads ao mesmo tempo pelo painel e a permissão de enviar arquivo pelo painel, que o painel aplica, e os
+do bloqueio por tentativa no FTP (senhas erradas até o bloqueio e minutos de bloqueio), que o vigia do serviço ftp
+aplica. Todos são gravados
 pelo allsafe-ftp-user, o mesmo comando do terminal. Sem limite próprio, vale o da stack."""
 import re
 
@@ -19,17 +20,18 @@ NUMEROS = {
 }
 POSICAO_HORARIO = 17
 # chave ➜ (menor, maior valor aceito) dos limites que ficam em /auth/limites.lista. Em `tentativas`, 0 quer
-# dizer que o usuário nunca é bloqueado por senha errada.
-DA_LISTA = {'baixar': (1, DOWNLOADS_MAX), 'tentativas': (0, 100), 'minutos': (1, 1440)}
-CHAVES = ('sessoes', 'download', 'envio', 'horario', 'baixar', 'tentativas', 'minutos')
+# dizer que o usuário nunca é bloqueado por senha errada. `enviar` não é número: é a permissão de enviar arquivo
+# pelo painel, que só existe como enviar=1.
+DA_LISTA = {'baixar': (1, DOWNLOADS_MAX), 'tentativas': (0, 100), 'minutos': (1, 1440), 'enviar': (1, 1)}
+CHAVES = ('sessoes', 'download', 'envio', 'horario', 'baixar', 'tentativas', 'minutos', 'enviar')
 ROTULOS = {'sessoes': N('sessões no FTP'), 'download': N('download em KB/s'), 'envio': N('envio em KB/s'),
            'horario': N('horário'), 'baixar': N('downloads pelo painel'), 'tentativas': N('senhas erradas até o bloqueio'),
-           'minutos': N('minutos de bloqueio')}
+           'minutos': N('minutos de bloqueio'), 'enviar': N('envio pelo painel')}
 # O pure-pw grava o horário sem os zeros da esquerda: 0800-1800 fica 800-1800 e 0000-0600, 0-600.
 HORARIO = re.compile(r'(\d{1,4})-(\d{1,4})')
 HHMM = re.compile(r'(?:[01]\d|2[0-3])[0-5]\d')
 HORA = re.compile(r'(?:[01]\d|2[0-3]):[0-5]\d')
-PAR = re.compile(r'(baixar|tentativas|minutos)=(0|[1-9]\d{0,5})')
+PAR = re.compile(r'(baixar|tentativas|minutos|enviar)=(0|[1-9]\d{0,5})')
 
 
 def teto(chave):
@@ -89,6 +91,13 @@ def downloads_e_taxa(nome):
     return dele['baixar'] or DOWNLOADS_POR_USUARIO, dele['download'] or 0
 
 
+def envio_pelo_painel(nome):
+    """O que vale para o envio do usuário pelo painel: se ele tem a permissão e a taxa em KB/s (0 = sem teto).
+    É lido a cada envio: dar ou tirar a permissão vale na hora, com a sessão dele aberta."""
+    dele = ler(nome)
+    return dele['enviar'] == 1, dele['envio'] or 0
+
+
 def resumo(dele):
     """Os limites próprios em uma frase, para a lista de usuários; '' quando não há nenhum."""
     partes = []
@@ -98,6 +107,8 @@ def resumo(dele):
                 valor = t('{inicio} às {fim}', inicio=f'{dele[chave][:2]}:{dele[chave][2:4]}', fim=f'{dele[chave][5:7]}:{dele[chave][7:]}')
             elif chave == 'tentativas' and dele[chave] == 0:
                 valor = t('nunca bloqueia')
+            elif chave == 'enviar':
+                valor = t('permitido')
             else:
                 valor = dele[chave]
             partes.append(f'{t(ROTULOS[chave])}: {valor}')
@@ -116,6 +127,8 @@ def do_formulario(formulario):
             return None, t('Limite inválido em "{limite}": deixe vazio ou use um número inteiro de {minimo} a {maximo}.',
                            limite=t(ROTULOS[chave]), minimo=minimo, maximo=maximo)
         valores[chave] = int(texto)
+    if formulario.get('enviar') == 'sim':
+        valores['enviar'] = 1
     inicio, fim = formulario.get('inicio', '').strip(), formulario.get('fim', '').strip()
     if inicio or fim:
         if not (HORA.fullmatch(inicio) and HORA.fullmatch(fim)):

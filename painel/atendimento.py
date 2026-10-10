@@ -5,6 +5,7 @@ import http.server
 import ipaddress
 import os
 import re
+import socket
 import socketserver
 import sys
 import threading
@@ -14,14 +15,16 @@ import urllib.parse
 import administradores
 import conta_ftp
 import entrada
+import envio
 import idioma
 from auditoria import auditar, limpo
-from config import BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, GID_NGINX, TEMPO_CONEXAO, VALIDADE_CONTATO, privado
-from enderecos import bloqueado as endereco_bloqueado
+from config import (BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, ENVIO_FOLGA, ESCOAR_MAX, ESCOAR_PRAZO, GID_NGINX, TEMPO_CONEXAO,
+                    VALIDADE_CONTATO, privado)
+from enderecos import bloqueado as endereco_bloqueado, endereco_de
 from estado import usuarios
 from idioma import t
-from pagina import e, pagina
-from rotas import ROTAS, ROTAS_USUARIO
+from pagina import e, pagina, tamanho
+from rotas import ROTAS, ROTAS_DE_ENVIO, ROTAS_USUARIO
 from sessao import buscar_sessao, encerrar_sessao, trocar_idioma
 
 CABECALHOS = (
@@ -114,6 +117,7 @@ class Painel(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         self.tratar('POST')
+        self.escoar()
 
     def do_HEAD(self):
         # RFC 9110, seção 9.3.2: a resposta que o GET daria, com os mesmos cabeçalhos e sem o corpo.
@@ -227,6 +231,43 @@ class Painel(http.server.BaseHTTPRequestHandler):
             return None
         return {nome: valores[0] for nome, valores in campos.items()}
 
+    def ler_envio(self):
+        """Envio de arquivo: confere o tamanho e o formato, lê os campos de texto e deixa o corpo parado no começo
+        do arquivo, em self.corpo, para a rota gravar. Devolve os campos, ou None depois de já ter respondido com
+        o erro. A origem, a sessão e o token do formulário são conferidos antes de o arquivo ser lido."""
+        comprimento = self.headers.get('Content-Length', '')
+        if not (comprimento.isascii() and comprimento.isdigit() and len(comprimento) <= 15):
+            self.recusar(411, t('Envio sem tamanho declarado.'))
+            return None
+        if int(comprimento) > CFG['envio_max'] + ENVIO_FOLGA:
+            self.recusar(413, t('Arquivo grande demais: o painel recebe até {maximo} por arquivo.', maximo=tamanho(CFG['envio_max'])))
+            return None
+        limite = envio.limite_de(self.headers.get('Content-Type', ''))
+        if limite is None:
+            self.recusar(415, t('Formato de envio não aceito.'))
+            return None
+        self.corpo = envio.Corpo(self.rfile, int(comprimento), limite, self.connection)
+        try:
+            return self.corpo.campos()
+        except envio.Malformado:
+            self.recusar(400, t('Envio malformado.'))
+            return None
+
+    def escoar(self):
+        """Envio de arquivo respondido antes de o corpo chegar inteiro (recusa, nome repetido, sem vaga): a resposta
+        já saiu, e o painel fecha o lado dele de escrita e ainda lê um pouco do que o nginx está mandando. Fechar
+        de uma vez faria o nginx trocar a resposta por um erro de proxy."""
+        corpo = getattr(self, 'corpo', None)
+        if corpo is None or corpo.resta <= 0:
+            return
+        try:
+            self.wfile.flush()
+            self.connection.shutdown(socket.SHUT_WR)
+            self.connection.settimeout(ESCOAR_PRAZO)
+        except OSError:
+            return
+        corpo.escoar(ESCOAR_PRAZO, ESCOAR_MAX)
+
     # ------------------------------------------------------------ idioma das telas
 
     def tela_de_origem(self, sessao):
@@ -271,11 +312,12 @@ class Painel(http.server.BaseHTTPRequestHandler):
         # cabeçalho, com mais de um ou com valor que não é IP não veio pelo nginx e é recusado.
         enderecos = self.headers.get_all('X-Real-IP') or []
         self.ip = enderecos[0].strip() if len(enderecos) == 1 else ''
-        try:
-            conexao = ipaddress.ip_address(self.ip)
-        except ValueError:
+        conexao = endereco_de(self.ip)
+        if conexao is None:
             self.ip = '-'
             return self.enviar(400, t('pedido sem o endereço do cliente') + '\n', 'text/plain; charset=utf-8')
+        # Daqui em diante o endereço tem uma escrita só: é ela que conta as falhas, prende a sessão e dá nome ao bloqueio.
+        self.ip = str(conexao)
 
         if not self.rede_permitida():
             auditar(self.ip, 'recusa_rede')
@@ -285,10 +327,9 @@ class Painel(http.server.BaseHTTPRequestHandler):
         # que conta as falhas de entrada, prende a sessão e vai para a auditoria. Valor que não é IP não é usado.
         if conexao in CFG['proxies']:
             informados = self.headers.get_all('X-Cliente-IP') or []
-            try:
-                self.ip = str(ipaddress.ip_address(informados[0].strip())) if len(informados) == 1 else self.ip
-            except ValueError:
-                pass
+            informado = endereco_de(informados[0].strip()) if len(informados) == 1 else None
+            if informado is not None:
+                self.ip = str(informado)
         # Endereço bloqueado por errar usuário e senha demais, no FTP ou aqui: nenhum pedido dele é atendido, nem
         # com sessão aberta. Quem libera é outro administrador, na aba Bloqueios, ou o manage-user.sh no servidor.
         if endereco_bloqueado(self.ip):
@@ -305,8 +346,9 @@ class Painel(http.server.BaseHTTPRequestHandler):
             return self.enviar(200 if texto else 404, texto or t('contato de segurança não configurado') + '\n', 'text/plain; charset=utf-8')
 
         formulario = {}
+        self.corpo = None
         if metodo == 'POST':
-            formulario = self.ler_formulario()
+            formulario = self.ler_envio() if self.caminho in ROTAS_DE_ENVIO else self.ler_formulario()
             if formulario is None:
                 return None
             if not self.origem_valida():

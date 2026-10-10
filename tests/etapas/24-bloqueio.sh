@@ -58,7 +58,7 @@ auditoria; n_antes="$(eventos bloqueio_removido)"
 r_grava="$(limites24 blq24 'tentativas=3' 'minutos=2')"; l_painel="$(lista24)"
 aba -b "$J" "$B/usuarios" > /dev/null; etiqueta_l="$(contar24 'title="Limites próprios: senhas erradas até o bloqueio: 3 · minutos de bloqueio: 2"')"; etiqueta_0="$(contar24 'vindas de: ')"
 t_tent="$(aba -b "$J" "$B/usuarios/editar?usuario=blq24" > /dev/null; grep -c 'name="tentativas"[^>]* value="3"' "$W/corpo")"; t_min="$(grep -c 'name="minutos"[^>]* value="2"' "$W/corpo")"
-auditoria; registro_l="$(grep -c " evento=limites_alterados admin=$ADMIN usuario=blq24 sessoes=- download=- envio=- horario=- baixar=- tentativas=3 minutos=2\$" "$W/auditoria")"
+auditoria; registro_l="$(grep -c " evento=limites_alterados admin=$ADMIN usuario=blq24 sessoes=- download=- envio=- horario=- baixar=- tentativas=3 minutos=2 enviar=-\$" "$W/auditoria")"
 # Duas erradas e a certa, duas vezes: a entrada certa zera a contagem, e as quatro erradas não bloqueiam.
 e_1="$(erra24 blq24 2)"; l_1="$(login24 blq24 "$W/u24.senha")"; e_2="$(erra24 blq24 2)"; l_2="$(login24 blq24 "$W/u24.senha")"; b_antes="$(de24 blq24)"
 # A terceira errada em sequência bloqueia: a senha certa passa a ser recusada para o endereço que errou.

@@ -35,6 +35,11 @@ for proxy in "${confiaveis[@]}"; do
   [[ -n "${proxy// /}" ]] && proxies+="        ${proxy// /} 1;"$'\n'
 done
 
+# Arquivo enviado pelo painel: o teto do corpo nas rotas de envio é o do arquivo mais 1 MB para os campos do formulário.
+PAINEL_ENVIO_MAX_MB="${PAINEL_ENVIO_MAX_MB:-1024}"
+[[ "$PAINEL_ENVIO_MAX_MB" =~ ^[1-9][0-9]{0,5}$ ]] && (( PAINEL_ENVIO_MAX_MB <= 102400 )) \
+  || die "PAINEL_ENVIO_MAX_MB deve ficar entre 1 e 102400"
+
 # O painel sobe antes: cria o soquete e entrega a cópia do certificado. Espera curta, para o caso de
 # os dois containers serem iniciados juntos pelo Docker (reinício do host).
 for _ in $(seq 1 30); do
@@ -49,6 +54,8 @@ while IFS= read -r linha; do
     printf '%s' "$regras"
   elif [[ "$linha" == "@PROXIES@" ]]; then
     printf '%s' "$proxies"
+  elif [[ "$linha" == "@ENVIO@" ]]; then
+    printf '                client_max_body_size %sm;\n' "$(( PAINEL_ENVIO_MAX_MB + 1 ))"
   else
     printf '%s\n' "$linha"
   fi
