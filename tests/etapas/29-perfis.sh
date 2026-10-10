@@ -186,8 +186,9 @@ t_c="$(v29 c /meus-arquivos)"; c_fala="$(tem29 'Apagar pede a sua senha do FTP')
 c_b_ren="$(tem29 'href="/meus-arquivos/renomear\?item=c1\.cfg"')"; c_b_apa="$(tem29 'href="/meus-arquivos/apagar\?item=c1\.cfg"')"; c_adm="$(tem29 'href="/arquivos')"
 r_c_pasta="$(p29 c /meus-arquivos/pasta --data-urlencode 'pasta=' --data-urlencode 'nome=org29')"; m_org="$(modo29 $P29/org29)"; m_casa_c="$(modo29 $P29)"
 tela_ren="$(v29 c '/meus-arquivos/renomear?item=c1.cfg')"; ren_acao="$(tem29 'action="/meus-arquivos/renomear"')"; ren_onde="$(tem29 '<code>Início</code>')"
-r_c_ren="$(p29 c /meus-arquivos/renomear --data-urlencode 'item=c1.cfg' --data-urlencode 'nome=c1-web.cfg')"
-r_c_ren_sub="$(p29 c /meus-arquivos/renomear --data-urlencode 'item=n1/n2/y.cfg' --data-urlencode 'nome=z.cfg')"
+ren_senha="$(tem29 'Sua senha do FTP')"
+r_c_ren="$(p29 c /meus-arquivos/renomear --data-urlencode 'item=c1.cfg' --data-urlencode 'nome=c1-web.cfg' --data-urlencode "senha_atual@$W/p29c.senha")"
+r_c_ren_sub="$(p29 c /meus-arquivos/renomear --data-urlencode 'item=n1/n2/y.cfg' --data-urlencode 'nome=z.cfg' --data-urlencode "senha_atual@$W/p29c.senha")"
 tela_apa="$(v29 c '/meus-arquivos/apagar?item=c1-web.cfg')"; apa_acao="$(tem29 'action="/meus-arquivos/apagar"')"; apa_senha="$(tem29 'Sua senha do FTP')"
 r_c_apa="$(p29 c /meus-arquivos/apagar --data-urlencode 'item=c1-web.cfg' --data-urlencode 'confirmar=sim' --data-urlencode "senha_atual@$W/p29c.senha")"
 r_c_apa_pasta="$(p29 c /meus-arquivos/apagar --data-urlencode 'item=sub' --data-urlencode 'confirmar=sim' --data-urlencode "senha_atual@$W/p29c.senha")"
@@ -205,11 +206,11 @@ a_apa="$(grep -c ' evento=item_apagado usuario=p29c tipo=pasta caminho=perfis29/
   && "$w_ftp" == 0 && "$r_w_ftp" == 0 && "$b_w" == 200 && "$b_w_igual" == 0 \
   && "$t_c" == "200 " && "$c_fala" == 1 && "$c_form" == 1 && "$c_b_ren" == 1 && "$c_b_apa" == 1 && "$c_adm" == 0 \
   && "$r_c_pasta" == "303 /meus-arquivos?pasta=&m=criada" && "$m_org" == "ftpdata:ftpdata 755 " && "$m_org" == "$m_casa_c" \
-  && "$tela_ren" == "200 " && "$ren_acao" == 1 && "$ren_onde" == 1 && "$r_c_ren" == "303 /meus-arquivos?pasta=&m=renomeado" \
+  && "$tela_ren" == "200 " && "$ren_acao" == 1 && "$ren_onde" == 1 && "$ren_senha" == 1 && "$r_c_ren" == "303 /meus-arquivos?pasta=&m=renomeado" \
   && "$r_c_ren_sub" == "303 /meus-arquivos?pasta=n1/n2&m=renomeado" && "$tela_apa" == "200 " && "$apa_acao" == 1 && "$apa_senha" == 1 \
   && "$r_c_apa" == "303 /meus-arquivos?pasta=&m=apagado" && "$r_c_apa_pasta" == "303 /meus-arquivos?pasta=&m=apagado" && "$aviso29" == "200 " && "$n_aviso29" -ge 1 \
   && "$sairam" == 0 && "$ficaram" == 3 && "$a_baixa" == 1 && "$a_pasta" == 1 && "$a_ren" == 1 && "$a_apa" == 1 ]]
-caso $? testes 58 "Meus arquivos conforme o perfil" "entrada no painel de p29l (Leitura), p29w (Envio) e p29c (Completo): $e_web· Leitura: tela $t_l, texto do perfil: $l_fala, formulário de nova pasta: $l_form, botões de renomear ou apagar: $l_botoes, botão Baixar: $l_baixar, download $b_l (conteúdo $([[ "$b_l_igual" == 0 ]] && echo igual || echo DIFERENTE)) · Envio: tela $t_w, texto do perfil: $w_fala, formulário de nova pasta: $w_form, botões de renomear ou apagar: $w_botoes · cria a pasta web29: $r_w_pasta, dono e modo: $m_web(a pasta dele: $m_casa_w) · outra dentro dela: $r_w_dentro · o mesmo nome de novo: $r_w_repete · envio por FTP na pasta criada: $w_ftp (entregue: $r_w_ftp), download dele pelo painel: $b_w (conteúdo $([[ "$b_w_igual" == 0 ]] && echo igual || echo DIFERENTE)) · Completo: tela $t_c, texto do perfil: $c_fala, formulário de nova pasta: $c_form, botão Renomear: $c_b_ren, botão Apagar: $c_b_apa, link para a aba do administrador: $c_adm · cria a pasta org29: $r_c_pasta, dono e modo: $m_org(a pasta dele: $m_casa_c) · tela Renomear: $tela_ren · troca o nome de c1.cfg: $r_c_ren · de um arquivo dois níveis abaixo: $r_c_ren_sub · tela Apagar ($tela_apa) pede 'Sua senha do FTP': $apa_senha · apaga o arquivo: $r_c_apa · apaga a pasta sub com o que há nela: $r_c_apa_pasta · aviso 'Apagado.': $n_aviso29 · dos 4 itens renomeados ou apagados, continuam no lugar antigo: $sairam; dos 3 criados ou renomeados, existem: $ficaram · auditoria com o caminho a partir da pasta dos dados: arquivo_baixado $a_baixa, pasta_criada $a_pasta, item_renomeado $a_ren, item_apagado (itens=3) $a_apa"
+caso $? testes 58 "Meus arquivos conforme o perfil" "entrada no painel de p29l (Leitura), p29w (Envio) e p29c (Completo): $e_web· Leitura: tela $t_l, texto do perfil: $l_fala, formulário de nova pasta: $l_form, botões de renomear ou apagar: $l_botoes, botão Baixar: $l_baixar, download $b_l (conteúdo $([[ "$b_l_igual" == 0 ]] && echo igual || echo DIFERENTE)) · Envio: tela $t_w, texto do perfil: $w_fala, formulário de nova pasta: $w_form, botões de renomear ou apagar: $w_botoes · cria a pasta web29: $r_w_pasta, dono e modo: $m_web(a pasta dele: $m_casa_w) · outra dentro dela: $r_w_dentro · o mesmo nome de novo: $r_w_repete · envio por FTP na pasta criada: $w_ftp (entregue: $r_w_ftp), download dele pelo painel: $b_w (conteúdo $([[ "$b_w_igual" == 0 ]] && echo igual || echo DIFERENTE)) · Completo: tela $t_c, texto do perfil: $c_fala, formulário de nova pasta: $c_form, botão Renomear: $c_b_ren, botão Apagar: $c_b_apa, link para a aba do administrador: $c_adm · cria a pasta org29: $r_c_pasta, dono e modo: $m_org(a pasta dele: $m_casa_c) · tela Renomear: $tela_ren, pede a senha do FTP: $ren_senha · troca o nome de c1.cfg: $r_c_ren · de um arquivo dois níveis abaixo: $r_c_ren_sub · tela Apagar ($tela_apa) pede 'Sua senha do FTP': $apa_senha · apaga o arquivo: $r_c_apa · apaga a pasta sub com o que há nela: $r_c_apa_pasta · aviso 'Apagado.': $n_aviso29 · dos 4 itens renomeados ou apagados, continuam no lugar antigo: $sairam; dos 3 criados ou renomeados, existem: $ficaram · auditoria com o caminho a partir da pasta dos dados: arquivo_baixado $a_baixa, pasta_criada $a_pasta, item_renomeado $a_ren, item_apagado (itens=3) $a_apa"
 
 # O que o perfil não tem não existe para ele, mesmo com a sessão, o token e a senha certos; e ninguém sai da própria pasta.
 # A auditoria grava uma recusa de cada tipo por minuto e por endereço: o painel é reiniciado antes de cada perfil, para a
@@ -224,24 +225,25 @@ dc restart painel > /dev/null 2>&1; painel_de_pe; sessoes29 l; e_103="$e_web"; a
 n_papel="$(eventos recusa_papel)"; n_senha="$(eventos usuario_senha_atual_recusada)"; n_caminho="$(eventos recusa_caminho)"; n_feito="$(linhas29 "$L29_F")"
 n_l="$(linhas29 "$L29_L")"; n_w="$(linhas29 "$L29_W")"; n_c="$(linhas29 "$L29_C")"; n_s="$(linhas29 "$L29_S")"
 y_l1="$(p29 l /meus-arquivos/pasta --data-urlencode 'pasta=' --data-urlencode 'nome=l-web')"
-y_l2="$(v29 l '/meus-arquivos/renomear?item=esub2')"; y_l3="$(p29 l /meus-arquivos/renomear --data-urlencode 'item=esub2' --data-urlencode 'nome=l-ren')"
+y_l2="$(v29 l '/meus-arquivos/renomear?item=esub2')"; y_l3="$(p29 l /meus-arquivos/renomear --data-urlencode 'item=esub2' --data-urlencode 'nome=l-ren' --data-urlencode "senha_atual@$W/p29l.senha")"
 y_l4="$(v29 l '/meus-arquivos/apagar?item=esub2')"
 y_l5="$(p29 l /meus-arquivos/apagar --data-urlencode 'item=esub2' --data-urlencode 'confirmar=sim' --data-urlencode "senha_atual@$W/p29l.senha")"
 dc restart painel > /dev/null 2>&1; painel_de_pe; sessoes29 w c; e_103+="$e_web"
 e_adm="$(entrar "$J" "$W/painel.senha")"; proibir "$(biscoito_de "$J")"; K="$(csrf)"; proibir "$K"
-y_w1="$(v29 w '/meus-arquivos/renomear?item=w1.cfg')"; y_w2="$(p29 w /meus-arquivos/renomear --data-urlencode 'item=w1.cfg' --data-urlencode 'nome=w-ren.cfg')"
+y_w1="$(v29 w '/meus-arquivos/renomear?item=w1.cfg')"; y_w2="$(p29 w /meus-arquivos/renomear --data-urlencode 'item=w1.cfg' --data-urlencode 'nome=w-ren.cfg' --data-urlencode "senha_atual@$W/p29w.senha")"
 y_w3="$(v29 w '/meus-arquivos/apagar?item=w1.cfg')"
 y_w4="$(p29 w /meus-arquivos/apagar --data-urlencode 'item=w1.cfg' --data-urlencode 'confirmar=sim' --data-urlencode "senha_atual@$W/p29w.senha")"
 y_w5="$(p29 w /meus-arquivos/pasta --data-urlencode 'pasta=..' --data-urlencode 'nome=fora29')"; y_w6="$(p29 w /meus-arquivos/pasta --data-urlencode 'pasta=' --data-urlencode 'nome=../fora29')"
 # Completo: a senha de outro usuário não serve, a caixa de confirmação é exigida e o caminho não sai da pasta dele.
 y_c1="$(p29 c /meus-arquivos/apagar --data-urlencode 'item=esub2' --data-urlencode 'confirmar=sim' --data-urlencode "senha_atual@$W/p29w.senha")"
 y_c2="$(p29 c /meus-arquivos/apagar --data-urlencode 'item=esub2' --data-urlencode "senha_atual@$W/p29c.senha")"
-y_c3="$(p29 c /meus-arquivos/renomear --data-urlencode 'item=../w/w1.cfg' --data-urlencode 'nome=meu.cfg')"
+y_c0="$(p29 c /meus-arquivos/renomear --data-urlencode 'item=esub2' --data-urlencode 'nome=esub3' --data-urlencode "senha_atual@$W/p29w.senha")"
+y_c3="$(p29 c /meus-arquivos/renomear --data-urlencode 'item=../w/w1.cfg' --data-urlencode 'nome=meu.cfg' --data-urlencode "senha_atual@$W/p29c.senha")"
 y_c4="$(p29 c /meus-arquivos/apagar --data-urlencode 'item=perfis29/w/w1.cfg' --data-urlencode 'confirmar=sim' --data-urlencode "senha_atual@$W/p29c.senha")"
-y_c5="$(p29 c /meus-arquivos/renomear --data-urlencode 'item=atalho29/w1.cfg' --data-urlencode 'nome=meu.cfg')"; y_c6="$(baixa29 c atalho29/w1.cfg)"
+y_c5="$(p29 c /meus-arquivos/renomear --data-urlencode 'item=atalho29/w1.cfg' --data-urlencode 'nome=meu.cfg' --data-urlencode "senha_atual@$W/p29c.senha")"; y_c6="$(baixa29 c atalho29/w1.cfg)"
 # A pasta de outro usuário, dentro da dele: não sai nem muda de nome por aqui, e a tela não diz de quem é.
 y_c7="$(p29 c /meus-arquivos/apagar --data-urlencode 'item=dentro' --data-urlencode 'confirmar=sim' --data-urlencode "senha_atual@$W/p29c.senha")"
-y_c8="$(p29 c /meus-arquivos/renomear --data-urlencode 'item=dentro' --data-urlencode 'nome=dentro2')"
+y_c8="$(p29 c /meus-arquivos/renomear --data-urlencode 'item=dentro' --data-urlencode 'nome=dentro2' --data-urlencode "senha_atual@$W/p29c.senha")"
 y_c9="$(v29 c '/meus-arquivos/apagar?item=dentro')"; sem_nome="$(tem29 'outro usuário do FTP')"; com_nome="$(grep -c -F 'p29e' "$W/corpo" || true)"
 # As rotas da tela Meus arquivos não existem para o administrador.
 y_a="$(aba -b "$J" "$B/meus-arquivos/apagar?item=esub2")"
@@ -251,11 +253,11 @@ d_papel=$(( $(eventos recusa_papel) - n_papel )); d_senha=$(( $(eventos usuario_
 d_feito=$(( $(linhas29 "$L29_F") - n_feito ))
 [[ "$e_103" == "303 303 303 " && "$e_adm" == 303 && -n "${T29[l]}" && -n "${T29[w]}" && -n "${T29[c]}" && -n "$K" \
   && "$y_l1" == "404 " && "$y_l2" == "404 " && "$y_l3" == "404 " && "$y_l4" == "404 " && "$y_l5" == "404 " && "$y_w1" == "404 " && "$y_w2" == "404 " && "$y_w3" == "404 " \
-  && "$y_w4" == "404 " && "$y_w5" == "400 " && "$y_w6" == "400 " && "$y_c1" == "403 " && "$y_c2" == "400 " && "$y_c3" == "400 " && "$y_c4" == "404 " && "$y_c5" == "403 " \
+  && "$y_w4" == "404 " && "$y_w5" == "400 " && "$y_w6" == "400 " && "$y_c0" == "403 " && "$y_c1" == "403 " && "$y_c2" == "400 " && "$y_c3" == "400 " && "$y_c4" == "404 " && "$y_c5" == "403 " \
   && "$y_c6" == 403 && "$y_c7" == "409 " && "$y_c8" == "409 " && "$y_c9" == "409 " && "$sem_nome" == 1 && "$com_nome" == 0 && "$y_a" == "404 " \
-  && "$d_leitura" == 1 && "$d_envio" == 1 && "$d_papel" -ge 2 && "$d_senha" == 1 && "$a_senha" == 1 && "$d_fuga" == 1 && "$d_caminho" -ge 1 && "$d_feito" == 0 \
+  && "$d_leitura" == 1 && "$d_envio" == 1 && "$d_papel" -ge 2 && "$d_senha" == 2 && "$a_senha" == 1 && "$d_fuga" == 1 && "$d_caminho" -ge 1 && "$d_feito" == 0 \
   && -n "$a_antes" && "$a_antes" == "$(arvore29)" && -n "$c_antes" && "$c_antes" == "$(cadastro29)" ]]
-caso $? seguranca 103 "Painel recusa o que o perfil não tem" "cada pedido com a sessão e o token do próprio usuário, e a senha certa onde ela é pedida · Leitura (p29l): criar pasta $y_l1· tela Renomear $y_l2· renomear $y_l3· tela Apagar $y_l4· apagar $y_l5· Envio (p29w): tela Renomear $y_w1· renomear $y_w2· tela Apagar $y_w3· apagar $y_w4· criar pasta em '..': $y_w5· com o nome '../fora29': $y_w6· Completo (p29c): apagar com a senha de outro usuário $y_c1· sem a caixa de confirmação $y_c2· renomear '../w/w1.cfg' $y_c3· apagar 'perfis29/w/w1.cfg', caminho que só existe fora da pasta dele $y_c4· renomear por um link simbólico que aponta para a pasta de outro usuário $y_c5· baixar por ele $y_c6 · pasta de outro usuário dentro da dele: apagar $y_c7· renomear $y_c8· tela Apagar $y_c9, diz 'outro usuário do FTP': $sem_nome, mostra o nome dele: $com_nome · administrador em /meus-arquivos/apagar: $y_a· auditoria, que grava uma recusa de cada tipo por minuto e por endereço, com o painel reiniciado antes de cada perfil (entradas depois dos reinícios: $e_103· administrador: $e_adm): recusa_papel +$d_papel, a primeira de p29l com perfil=leitura: $d_leitura, a primeira de p29w com perfil=envio: $d_envio · recusa_caminho +$d_caminho, a de p29w em '../fora29': $d_fuga · usuario_senha_atual_recusada +$d_senha, a de p29c em /meus-arquivos/apagar: $a_senha · pasta criada, item renomeado ou apagado: +$d_feito · nomes, donos, modos e tamanhos de tudo em perfis29 $([[ "$a_antes" == "$(arvore29)" ]] && echo 'iguais antes e depois' || echo DIFERENTES) · cadastro do FTP $([[ "$c_antes" == "$(cadastro29)" ]] && echo idêntico || echo ALTERADO)"
+caso $? seguranca 103 "Painel recusa o que o perfil não tem" "cada pedido com a sessão e o token do próprio usuário, e a senha certa onde ela é pedida · Leitura (p29l): criar pasta $y_l1· tela Renomear $y_l2· renomear $y_l3· tela Apagar $y_l4· apagar $y_l5· Envio (p29w): tela Renomear $y_w1· renomear $y_w2· tela Apagar $y_w3· apagar $y_w4· criar pasta em '..': $y_w5· com o nome '../fora29': $y_w6· Completo (p29c): apagar com a senha de outro usuário $y_c1· renomear com ela $y_c0· sem a caixa de confirmação $y_c2· renomear '../w/w1.cfg' $y_c3· apagar 'perfis29/w/w1.cfg', caminho que só existe fora da pasta dele $y_c4· renomear por um link simbólico que aponta para a pasta de outro usuário $y_c5· baixar por ele $y_c6 · pasta de outro usuário dentro da dele: apagar $y_c7· renomear $y_c8· tela Apagar $y_c9, diz 'outro usuário do FTP': $sem_nome, mostra o nome dele: $com_nome · administrador em /meus-arquivos/apagar: $y_a· auditoria, que grava uma recusa de cada tipo por minuto e por endereço, com o painel reiniciado antes de cada perfil (entradas depois dos reinícios: $e_103· administrador: $e_adm): recusa_papel +$d_papel, a primeira de p29l com perfil=leitura: $d_leitura, a primeira de p29w com perfil=envio: $d_envio · recusa_caminho +$d_caminho, a de p29w em '../fora29': $d_fuga · usuario_senha_atual_recusada +$d_senha, a de p29c em /meus-arquivos/apagar: $a_senha · pasta criada, item renomeado ou apagado: +$d_feito · nomes, donos, modos e tamanhos de tudo em perfis29 $([[ "$a_antes" == "$(arvore29)" ]] && echo 'iguais antes e depois' || echo DIFERENTES) · cadastro do FTP $([[ "$c_antes" == "$(cadastro29)" ]] && echo idêntico || echo ALTERADO)"
 
 # ------------------------------------------------------------------ perfil Só envio no FTP
 # p29s entra em /data/.entrada/p29s e o vigia move cada arquivo que termina de chegar para perfis29/s.
@@ -333,7 +335,7 @@ t_inicio="$(v29 t /)"; t_tela="$(v29 t /meus-arquivos)"; t_fala="$(tem29 'Esta c
 t_nome="$(grep -c -F 't1.cfg' "$W/corpo" || true)"; t_links="$(tem29 '/meus-arquivos/(baixar|renomear|apagar|pasta)')"; t_menu="$(tem29 'Envio de arquivos')"
 auditoria; n_t="$(linhas29 "$L29_T")"; n_feito_t="$(linhas29 "$L29_F")"; n_baixa_t="$(eventos arquivo_baixado)"; a_antes="$(arvore29)"
 z_1="$(baixa29 t t1.cfg)"; z_2="$(v29 t '/meus-arquivos?pasta=')"; z_3="$(p29 t /meus-arquivos/pasta --data-urlencode 'pasta=' --data-urlencode 'nome=t-web')"
-z_4="$(v29 t '/meus-arquivos/renomear?item=t1.cfg')"; z_5="$(p29 t /meus-arquivos/renomear --data-urlencode 'item=t1.cfg' --data-urlencode 'nome=t9.cfg')"
+z_4="$(v29 t '/meus-arquivos/renomear?item=t1.cfg')"; z_5="$(p29 t /meus-arquivos/renomear --data-urlencode 'item=t1.cfg' --data-urlencode 'nome=t9.cfg' --data-urlencode "senha_atual@$W/p29t.senha")"
 z_6="$(v29 t '/meus-arquivos/apagar?item=t1.cfg')"
 z_7="$(p29 t /meus-arquivos/apagar --data-urlencode 'item=t1.cfg' --data-urlencode 'confirmar=sim' --data-urlencode "senha_atual@$W/p29t.senha")"
 z_8="$(v29 t /arquivos)"; z_9="$(v29 t /usuarios)"; z_10="$(c -b "$T29J" -o /dev/null -w '%{http_code}' "$B/arquivos/baixar?arquivo=perfis29/t/t1.cfg")"
@@ -344,7 +346,7 @@ adm_raiz="$(aba -b "$J" "$B/arquivos")"; adm_ve="$(grep -c -F '.entrada' "$W/cor
 w_1="$(aba -b "$J" "$B/arquivos?pasta=.entrada")"; w_2="$(aba -b "$J" "$B/arquivos?pasta=.entrada/p29t")"
 w_3="$(c -b "$J" -o "$W/p29.baixado" -w '%{http_code}' "$B/arquivos/baixar?arquivo=.entrada/p29t/fica.cfg")"
 w_4="$(aba -b "$J" "$B/arquivos/apagar?item=.entrada")"; w_5="$(aba -b "$J" "$B/arquivos/renomear?item=.entrada/p29t")"
-w_6="$(envio /arquivos/renomear --data-urlencode "csrf=$K" --data-urlencode 'item=.entrada' --data-urlencode 'nome=entrada29')"
+w_6="$(envio /arquivos/renomear --data-urlencode "csrf=$K" --data-urlencode 'item=.entrada' --data-urlencode 'nome=entrada29' --data-urlencode "senha_atual@$W/painel.senha")"
 w_7="$(envio /arquivos/apagar --data-urlencode "csrf=$K" --data-urlencode 'item=.entrada/p29t/fica.cfg' --data-urlencode 'confirmar=sim' --data-urlencode "senha_atual@$W/painel.senha")"
 w_8="$(envio /arquivos/pasta --data-urlencode "csrf=$K" --data-urlencode 'pasta=.entrada/p29t' --data-urlencode 'nome=dentro29')"
 w_9="$(envio /arquivos/pasta --data-urlencode "csrf=$K" --data-urlencode 'pasta=' --data-urlencode 'nome=.entrada')"

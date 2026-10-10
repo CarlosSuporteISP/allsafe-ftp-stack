@@ -162,6 +162,10 @@ install -d -o root -g root -m 0700 /auth/bloqueios
 # o painel aplicam. Atravessam o reinício e a restauração da cópia de segurança.
 [[ ! -L /auth/enderecos ]] || die "/auth/enderecos é link simbólico: remova-o"
 install -d -o root -g root -m 0700 /auth/enderecos
+# Bloqueios por prefixo (um arquivo por rede, IPv4 ou IPv6): só o administrador grava, pelo allsafe-ftp-user ou
+# pelo painel; o porteiro e o painel aplicam.
+[[ ! -L /auth/prefixos ]] || die "/auth/prefixos é link simbólico: remova-o"
+install -d -o root -g root -m 0700 /auth/prefixos
 exec 9>&-  # solta a trava: o descritor não pode ir para o pure-ftpd
 # Com perfil de envio, de só envio ou de leitura no cadastro, as pastas voltam ao modo que os perfis pedem e o que
 # um envio deixou sem entrega é entregue, antes de o servidor aceitar sessão. Sem esses perfis, nada é percorrido.

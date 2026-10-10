@@ -5,12 +5,12 @@ set -Eeuo pipefail
 usage() {
   echo "Uso: $0 add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]" >&2
   echo "     $0 perfil <usuario> [completo|envio|soenvio|leitura]" >&2
-  echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]" >&2
+  echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N] [enviar=1]" >&2
   echo "     $0 bloqueios [usuario]" >&2
   echo "     $0 desbloquear <usuario> [origem]" >&2
   echo "     $0 enderecos" >&2
-  echo "     $0 endereco-bloquear <endereco> [dias]" >&2
-  echo "     $0 endereco-liberar <endereco>" >&2
+  echo "     $0 endereco-bloquear <endereco ou prefixo> [dias]" >&2
+  echo "     $0 endereco-liberar <endereco ou prefixo>" >&2
   exit 2
 }
 action="${1:-}"
@@ -41,12 +41,18 @@ lista_limites=/auth/limites.lista
 # <senhas erradas>`. Quem grava é o vigia do FTP e quem aplica é o porteiro; apagar o arquivo desbloqueia.
 pasta_bloqueios=/auth/bloqueios
 regra_origem='^[0-9a-fA-F.:]{2,45}$'
-# Bloqueios por endereço: um arquivo por endereço IPv4, com `<vale até> <desde> <erros> <quem bloqueou>`. Gravam
-# o vigia do FTP (ftp), o painel (painel) e o administrador (manual); o porteiro do FTP e o painel aplicam, e o
-# endereço não entra em nenhum dos dois com conta nenhuma. Apagar o arquivo libera o endereço.
+# Bloqueios por endereço: um arquivo por endereço, IPv4 ou IPv6, com `<vale até> <desde> <erros> <quem
+# bloqueou>`. Gravam o vigia do FTP (ftp), o painel (painel) e o administrador (manual); o porteiro do FTP e o
+# painel aplicam, e o endereço não entra em nenhum dos dois com conta nenhuma. Apagar o arquivo libera o endereço.
+# O nome do arquivo é o endereço na escrita única que o endereco.pl dá.
 pasta_enderecos=/auth/enderecos
-regra_ipv4='^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'
+regra_gravado='^[0-9a-f][0-9a-f.:]{1,44}$'
 enderecos_max=10000
+# Bloqueios por prefixo: um arquivo por rede, `<rede>_<tamanho>`, com a mesma linha. Só o administrador grava
+# (manual): nada bloqueia prefixo sozinho. IPv4 de /8 a /31 e IPv6 de /16 a /127.
+pasta_prefixos=/auth/prefixos
+regra_prefixo_gravado='^[0-9a-f][0-9a-f.:]{1,44}_[0-9]{1,3}$'
+prefixos_max=1000
 # Pasta do usuário, dentro de /data: até 4 níveis. Nenhum nível começa com ponto, então "." e ".." não passam.
 regra_pasta='^[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,3}$'
 # Custo do hash da senha: o mesmo do entrypoint do serviço ftp (`pure-pw -C`, logins ao mesmo tempo).
@@ -225,7 +231,7 @@ gravar_limite() {
 # Limites do usuário, uma chave por linha; valor vazio quer dizer sem limite próprio: vale o da stack.
 # O cadastro guarda as taxas em bytes por segundo e o horário sem os zeros da esquerda (0800-1800 vira 800-1800).
 mostrar_limites() {
-  local nome envio download sessoes horario resto par baixar="" tentativas="" minutos="" _
+  local nome envio download sessoes horario resto par baixar="" tentativas="" minutos="" enviar="" _
   local -a pares=()
   while IFS=: read -r nome _ _ _ _ _ envio download _ _ sessoes _ _ _ _ _ _ horario _; do
     [[ "$nome" == "$user" ]] || continue
@@ -238,6 +244,7 @@ mostrar_limites() {
             baixar=*)     [[ ! "${par#*=}" =~ ^[0-9]{1,6}$ ]] || baixar="${par#*=}" ;;
             tentativas=*) [[ ! "${par#*=}" =~ ^[0-9]{1,6}$ ]] || tentativas="${par#*=}" ;;
             minutos=*)    [[ ! "${par#*=}" =~ ^[0-9]{1,6}$ ]] || minutos="${par#*=}" ;;
+            enviar=1)     enviar=1 ;;
           esac
         done
       done < "$lista_limites"
@@ -250,8 +257,8 @@ mostrar_limites() {
     else
       horario=""
     fi
-    printf 'sessoes=%s\ndownload=%s\nenvio=%s\nhorario=%s\nbaixar=%s\ntentativas=%s\nminutos=%s\n' \
-      "$sessoes" "$download" "$envio" "$horario" "$baixar" "$tentativas" "$minutos"
+    printf 'sessoes=%s\ndownload=%s\nenvio=%s\nhorario=%s\nbaixar=%s\ntentativas=%s\nminutos=%s\nenviar=%s\n' \
+      "$sessoes" "$download" "$envio" "$horario" "$baixar" "$tentativas" "$minutos" "$enviar"
     return 0
   done < "$passwd_file"
   return 1
@@ -284,7 +291,21 @@ ler_endereco() { # <arquivo>
   [[ "$expira" =~ ^[0-9]{1,12}$ && "$desde" =~ ^[0-9]{1,12}$ && "$erros" =~ ^[0-9]{1,6}$ && "$quem" =~ ^(ftp|painel|manual)$ ]] || return 1
   expira=$(( 10#$expira )) desde=$(( 10#$desde )) erros=$(( 10#$erros ))
 }
-endereco_invalido() { echo "Endereco invalido: use um IPv4, como 203.0.113.7" >&2; exit 1; }
+endereco_invalido() { echo "Endereco invalido: use um IPv4, um IPv6 ou um prefixo, como 203.0.113.7, 2001:db8::7 ou 203.0.113.0/24" >&2; exit 1; }
+# Lê o que vai ser bloqueado ou liberado, endereço ou prefixo, e o deixa na escrita única: `tipo`, `alvo`,
+# `arquivo`, `pasta_alvo`, `teto` e os nomes para as mensagens.
+ler_alvo() { # <texto>
+  local saida codigo=0
+  saida="$(perl /usr/local/lib/allsafe/endereco.pl alvo "$1" 2>/dev/null)" || codigo=$?
+  [[ "$codigo" != 2 ]] || { echo "Endereco nao bloqueavel: $1 e do proprio servidor" >&2; exit 1; }
+  [[ "$codigo" == 0 && "$saida" =~ ^(endereco|prefixo)\ [0-9a-f.:/]{2,49}$ ]] || endereco_invalido
+  tipo="${saida%% *}" alvo="${saida#* }"
+  if [[ "$tipo" == prefixo ]]; then
+    pasta_alvo="$pasta_prefixos" arquivo="$pasta_prefixos/${alvo/\//_}" teto="$prefixos_max" rotulo=Prefixo do_alvo="do prefixo"
+  else
+    pasta_alvo="$pasta_enderecos" arquivo="$pasta_enderecos/$alvo" teto="$enderecos_max" rotulo=Endereco do_alvo="do endereco"
+  fi
+}
 
 # Quem mais alcança a pasta: usuário com a mesma, com uma acima ou com uma abaixo dela.
 avisar_divisao() {
@@ -476,7 +497,8 @@ case "$action" in
     # sessoes, download, envio e horario ficam no cadastro do Pure-FTPd, que é quem os aplica;
     # baixar (downloads ao mesmo tempo pelo painel) fica na lista que o painel lê; tentativas (senhas erradas
     # do mesmo endereço até o bloqueio; 0 = este usuário nunca é bloqueado) e minutos (quanto o bloqueio
-    # dura), na mesma lista, que o vigia do FTP também lê.
+    # dura), na mesma lista, que o vigia do FTP também lê. enviar=1 é a permissão de enviar arquivo pelo painel
+    # (vazio tira a permissão), também na lista: quem a confere é o painel, a cada envio.
     [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || usage
     shift 2
     declare -a opcoes=()
@@ -496,6 +518,9 @@ case "$action" in
         baixar)   numero baixar "$valor" 8; da_lista[baixar]="$valor" ;;
         tentativas) numero tentativas "$valor" 100 0; da_lista[tentativas]="$valor" ;;
         minutos)  numero minutos "$valor" 1440; da_lista[minutos]="$valor" ;;
+        enviar)
+          [[ -z "$valor" || "$valor" == 1 ]] || { echo "Limite invalido: enviar aceita vazio ou 1" >&2; exit 1; }
+          da_lista[enviar]="$valor" ;;
         *) usage ;;
       esac
     done
@@ -511,7 +536,7 @@ case "$action" in
       pure-pw usermod "$user" -f "$passwd_file" "${opcoes[@]}"
       gravar_banco
     fi
-    for chave in baixar tentativas minutos; do
+    for chave in baixar tentativas minutos enviar; do
       [[ -z "${da_lista[$chave]+tem}" ]] || gravar_limite "$chave" "${da_lista[$chave]}"
     done
     # Regra do bloqueio mudou: os bloqueios feitos com a anterior saem. Gravar o mesmo valor não desbloqueia ninguém.
@@ -551,13 +576,20 @@ case "$action" in
     fi
     ;;
   enderecos)
-    # Endereços bloqueados agora, no FTP e no painel: qual, quem bloqueou, com quantos erros, desde quando e até quando.
+    # Endereços e prefixos bloqueados agora, no FTP e no painel: qual, quem bloqueou, com quantos erros, desde
+    # quando e até quando.
     [[ $# -le 1 ]] || usage
     achou=nao
-    for arquivo in "$pasta_enderecos"/*; do
+    for arquivo in "$pasta_enderecos"/* "$pasta_prefixos"/*; do
       [[ -f "$arquivo" && ! -L "$arquivo" ]] || continue
       origem="${arquivo##*/}"
-      [[ "$origem" =~ $regra_ipv4 ]] && ler_endereco "$arquivo" || continue
+      if [[ "$arquivo" == "$pasta_prefixos"/* ]]; then
+        [[ "$origem" =~ $regra_prefixo_gravado ]] || continue
+        origem="${origem/_//}"
+      else
+        [[ "$origem" =~ $regra_gravado ]] || continue
+      fi
+      ler_endereco "$arquivo" || continue
       (( expira > EPOCHSECONDS )) || continue
       printf 'origem=%s por=%s erros=%s desde=%(%F %T)T ate=%(%F %T)T\n' "$origem" "$quem" "$erros" "$desde" "$expira"
       achou=sim
@@ -565,40 +597,43 @@ case "$action" in
     [[ "$achou" == sim ]] || echo "Nenhum endereco bloqueado."
     ;;
   endereco-bloquear)
-    # Bloqueia um endereço no FTP e no painel por <dias> a partir de agora; no que já está bloqueado, só o prazo
-    # muda. Sem os dias, vale o prazo da stack. Os dois últimos argumentos são do painel, quando é ele quem
-    # bloqueia: quem bloqueou e com quantos erros.
-    origem="$user" dias="${3:-${BLOQUEIO_ENDERECO_DIAS:-120}}" por="${4:-manual}" quantos="${5:-0}"
+    # Bloqueia um endereço ou um prefixo, IPv4 ou IPv6, no FTP e no painel por <dias> a partir de agora; no que
+    # já está bloqueado, só o prazo muda, para mais ou para menos. Sem os dias, vale o prazo da stack. Os dois
+    # últimos argumentos são do painel, quando é ele quem bloqueia um endereço: quem bloqueou e com quantos erros.
+    # Prefixo só o administrador bloqueia.
+    dias="${3:-${BLOQUEIO_ENDERECO_DIAS:-120}}" por="${4:-manual}" quantos="${5:-0}"
     [[ $# -ge 2 && $# -le 5 && "$por" =~ ^(ftp|painel|manual)$ && "$quantos" =~ ^(0|[1-9][0-9]{0,5})$ ]] || usage
-    [[ "$origem" =~ $regra_ipv4 ]] || endereco_invalido
-    [[ "$origem" != 127.* && "$origem" != 0.* ]] || { echo "Endereco nao bloqueavel: $origem e do proprio servidor" >&2; exit 1; }
+    ler_alvo "$user"
+    [[ "$tipo" == endereco || "$por" == manual ]] || usage
     [[ "$dias" =~ ^[1-9][0-9]{0,3}$ ]] && (( dias <= 3650 )) || { echo "Prazo invalido: de 1 a 3650 dias" >&2; exit 1; }
-    [[ -d "$pasta_enderecos" && ! -L "$pasta_enderecos" ]] || { echo "Pasta dos bloqueios por endereco ausente: reinicie o servico ftp" >&2; exit 1; }
+    [[ -d "$pasta_alvo" && ! -L "$pasta_alvo" ]] || { echo "Pasta dos bloqueios por endereco ausente: reinicie o servico ftp" >&2; exit 1; }
     travar
-    arquivo="$pasta_enderecos/$origem"
     [[ ! -L "$arquivo" ]] || rm -f -- "$arquivo"
     if [[ -f "$arquivo" ]] && ler_endereco "$arquivo" && (( expira > EPOCHSECONDS )); then
-      por="$quem" quantos="$erros" feito="Prazo do endereco $origem alterado"
+      por="$quem" quantos="$erros" feito="Prazo $do_alvo $alvo alterado"
     else
-      em_vigor=("$pasta_enderecos"/*)
-      (( ${#em_vigor[@]} < enderecos_max )) || { echo "Teto de $enderecos_max enderecos bloqueados: libere algum antes" >&2; exit 1; }
-      desde=$EPOCHSECONDS feito="Endereco $origem bloqueado"
+      em_vigor=("$pasta_alvo"/*)
+      if (( ${#em_vigor[@]} >= teto )); then
+        [[ "$tipo" == prefixo ]] || { echo "Teto de $teto enderecos bloqueados: libere algum antes" >&2; exit 1; }
+        echo "Teto de $teto prefixos bloqueados: libere algum antes" >&2; exit 1
+      fi
+      desde=$EPOCHSECONDS feito="$rotulo $alvo bloqueado"
     fi
-    ( umask 077; printf '%s %s %s %s\n' "$(( EPOCHSECONDS + dias * 86400 ))" "$desde" "$quantos" "$por" > "$pasta_enderecos/.novo.$$" )
-    mv -f "$pasta_enderecos/.novo.$$" "$arquivo"
+    ( umask 077; printf '%s %s %s %s\n' "$(( EPOCHSECONDS + dias * 86400 ))" "$desde" "$quantos" "$por" > "$pasta_alvo/.novo.$$" )
+    mv -f "$pasta_alvo/.novo.$$" "$arquivo"
     echo "$feito: $dias dia(s) a partir de agora, no FTP e no painel."
     ;;
   endereco-liberar)
-    # Tira o bloqueio de um endereço: ele volta a entrar no FTP e no painel, e a contagem dos erros recomeça.
-    origem="$user"
+    # Tira o bloqueio de um endereço ou de um prefixo: quem estava nele volta a entrar no FTP e no painel, e a
+    # contagem dos erros recomeça.
     [[ $# -eq 2 ]] || usage
-    [[ "$origem" =~ $regra_ipv4 ]] || endereco_invalido
+    ler_alvo "$user"
     travar
-    if [[ -f "$pasta_enderecos/$origem" || -L "$pasta_enderecos/$origem" ]]; then
-      rm -f -- "$pasta_enderecos/$origem"
-      echo "Endereco $origem liberado: vale no proximo pedido."
+    if [[ -f "$arquivo" || -L "$arquivo" ]]; then
+      rm -f -- "$arquivo"
+      echo "$rotulo $alvo liberado: vale no proximo pedido."
     else
-      echo "Endereco $origem nao esta bloqueado."
+      echo "$rotulo $alvo nao esta bloqueado."
     fi
     ;;
   tls-lista)

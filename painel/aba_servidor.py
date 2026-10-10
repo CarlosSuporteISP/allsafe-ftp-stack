@@ -11,7 +11,7 @@ from estado import bloqueios, certificado, ftp_no_ar, pastas_distintas, uso_da_p
 from graficos import linha, numero, tira
 from icones import icone
 from idioma import N, t
-from pagina import ESTADOS, cabeca, como, data_inteira, e, pagina, tamanho, validade
+from pagina import ESTADOS, cabeca, como, data_inteira, e, pagina, prazo_da_sessao, tamanho, validade
 from sessao import sessoes_por_admin
 
 ATUALIZA = 10                           # segundos entre duas atualizações automáticas da tela
@@ -345,7 +345,7 @@ def servidor(pedido, sessao, consulta, formulario, token):
             f'<a class="botao" href="/servidor?auto=1">{icone("tocar")}{t("Atualizar sozinha")}</a>')
     # A atualização automática parte do navegador, não de quem usa: o pedido dela não renova a sessão (atendimento.py).
     ritmo = (t('A tela se atualiza a cada {segundos} s. A atualização automática não conta como uso do painel: a sessão '
-               'encerra depois de {minutos} min sem ação sua.', segundos=ATUALIZA, minutos=CFG['inatividade'] // 60) if sozinha else
+               'encerra depois de {prazo} sem ação sua.', segundos=ATUALIZA, prazo=prazo_da_sessao()) if sozinha else
              t('Para acompanhar sem recarregar a página, ligue <strong>Atualizar sozinha</strong>.'))
     leitura = t('Cada container lê o próprio uso e os limites que recebeu no <code>compose.yaml</code> (<code>*_CPU_LIMIT</code>, '
                 '<code>*_MEMORY_LIMIT</code> e <code>*_PIDS_LIMIT</code> no <code>.env</code>), sem swap; a memória em uso não '

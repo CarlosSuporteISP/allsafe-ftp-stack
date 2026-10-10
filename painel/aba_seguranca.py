@@ -8,7 +8,7 @@ from estado import bloqueios, certificado, sem_tls, senhas_de_custo_antigo
 from graficos import faixa
 from icones import icone
 from idioma import t, tn
-from pagina import alerta_tls, aviso_rede, cabeca, data_inteira, e, marca, pagina, validade
+from pagina import alerta_tls, aviso_rede, cabeca, data_inteira, e, marca, pagina, prazo_da_sessao, teto_da_sessao, validade
 
 
 def seguranca(pedido, sessao, consulta, formulario, token):
@@ -91,9 +91,10 @@ def seguranca(pedido, sessao, consulta, formulario, token):
         linha('atencao' if redes_publicas else 'bom', t('Quem pode abrir o painel'),
               t('Clientes de <code>{redes}</code>; os demais são recusados pelo nginx, antes de chegar ao painel.', redes=e(redes))
               + (' ' + t('<strong>Rede pública na lista: {redes}.</strong>', redes=e(', '.join(redes_publicas))) if redes_publicas else '')),
-        linha('bom', t('Sessão'), t('Encerra com {minutos} minutos sem uso e, de qualquer forma, em 8 horas. '
-                                    '{falhas} entradas erradas bloqueiam o endereço por 15 minutos.',
-                                    minutos=CFG['inatividade'] // 60, falhas=FALHAS_MAX)),
+        linha('bom', t('Sessão'), t('Encerra com {prazo} sem uso e, de qualquer forma, em {teto}. Apagar, trocar nome de '
+                                    'arquivo ou pasta e mexer em administrador pedem a senha de novo, mesmo com a '
+                                    'sessão aberta. {falhas} entradas erradas bloqueiam o endereço por 15 minutos.',
+                                    prazo=prazo_da_sessao(), teto=teto_da_sessao(), falhas=FALHAS_MAX)),
         linha('atencao' if CFG['acesso_usuarios'] and CFG['ftp_tls'] == '0' else 'bom', t('Entrada dos usuários do FTP'),
               (t('Ligada (<code>PAINEL_ACESSO_USUARIOS_FTP=sim</code>): cada usuário do FTP entra com o nome e a senha do FTP e só '
                  'navega e baixa na pasta dele. Quem confere a senha é o próprio servidor FTP, pela rede interna da stack,') + ' '

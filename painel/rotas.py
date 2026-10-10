@@ -3,8 +3,9 @@
 
 Cada papel tem a tabela dele: ROTAS é a do administrador e ROTAS_USUARIO traz a do usuário do FTP, uma por
 perfil, todas presas à pasta dele: Leitura navega e baixa, Envio também cria pasta, Completo também troca o nome
-e apaga. Só envio não tem lista nem download: vê só como enviar por FTP. O que não está na tabela do papel ou do
-perfil não existe para ele.
+e apaga. Só envio não tem lista nem download: vê só como enviar. Enviar arquivo pelo painel existe para o
+administrador e para os perfis que enviam por FTP (Só envio, Envio e Completo); no usuário do FTP, só com a permissão
+dele, que a própria rota confere. O que não está na tabela do papel ou do perfil não existe para ele.
 Toda função recebe (pedido, sessao, consulta, formulario, token); `pedido` é o tratador de atendimento.py."""
 import aba_administradores
 import aba_arquivos
@@ -36,6 +37,7 @@ ROTAS = {
     ('GET', '/arquivos'): aba_arquivos.lista_arquivos,
     ('GET', '/arquivos/baixar'): aba_arquivos.baixar,
     ('POST', '/arquivos/pasta'): aba_arquivos.criar_pasta,
+    ('POST', '/arquivos/enviar'): aba_arquivos.enviar,
     ('GET', '/arquivos/renomear'): aba_arquivos.tela_renomear,
     ('POST', '/arquivos/renomear'): aba_arquivos.renomear,
     ('GET', '/arquivos/apagar'): aba_arquivos.tela_apagar,
@@ -51,6 +53,8 @@ ROTAS = {
     ('GET', '/seguranca'): aba_seguranca.seguranca,
     ('GET', '/servidor'): aba_servidor.servidor,
     ('GET', '/bloqueios'): aba_bloqueios.lista,
+    ('GET', '/bloqueios/novo'): aba_bloqueios.tela_novo,
+    ('POST', '/bloqueios/novo'): aba_bloqueios.bloquear,
     ('GET', '/bloqueios/endereco'): aba_bloqueios.tela_endereco,
     ('POST', '/bloqueios/prazo'): aba_bloqueios.mudar_prazo,
     ('POST', '/bloqueios/liberar'): aba_bloqueios.liberar,
@@ -61,6 +65,7 @@ ROTAS = {
 ROTAS_SOENVIO = {
     ('GET', '/'): aba_meus_arquivos.inicio,
     ('GET', '/meus-arquivos'): aba_meus_arquivos.so_envio,
+    ('POST', '/meus-arquivos/enviar'): aba_arquivos.enviar,
     ('POST', '/sair'): entrada.sair,
 }
 ROTAS_LEITURA = {
@@ -72,6 +77,7 @@ ROTAS_LEITURA = {
 ROTAS_ENVIO = {
     **ROTAS_LEITURA,
     ('POST', '/meus-arquivos/pasta'): aba_arquivos.criar_pasta,
+    ('POST', '/meus-arquivos/enviar'): aba_arquivos.enviar,
 }
 ROTAS_COMPLETO = {
     **ROTAS_ENVIO,
@@ -81,3 +87,5 @@ ROTAS_COMPLETO = {
     ('POST', '/meus-arquivos/apagar'): aba_arquivos.apagar,
 }
 ROTAS_USUARIO = {'soenvio': ROTAS_SOENVIO, 'leitura': ROTAS_LEITURA, 'envio': ROTAS_ENVIO, 'completo': ROTAS_COMPLETO}
+# Rotas que recebem arquivo: o corpo delas é lido em fluxo (envio.py), e são as únicas em que o nginx aceita corpo grande.
+ROTAS_DE_ENVIO = ('/arquivos/enviar', '/meus-arquivos/enviar')

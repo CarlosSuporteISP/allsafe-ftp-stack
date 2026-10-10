@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Atividade: os últimos registros da auditoria."""
+"""Aba Log: os últimos registros da auditoria."""
 import re
 
 from auditoria import fim_da_auditoria, ler_auditoria
@@ -21,6 +21,7 @@ EVENTOS = {
     'limites_alterados': ('relogio', N('Limites do usuário alterados')),
     'bloqueio_removido': ('cadeado-aberto', N('Bloqueio do usuário no FTP removido')),
     'endereco_bloqueado': ('bloqueio', N('Endereço bloqueado por erros de usuário e senha')),
+    'endereco_bloqueado_manual': ('bloqueio', N('Endereço ou prefixo bloqueado pelo administrador')),
     'endereco_prazo': ('relogio', N('Prazo do bloqueio de endereço alterado')),
     'endereco_desbloqueado': ('cadeado-aberto', N('Endereço desbloqueado')),
     'usuario_removido': ('lixeira', N('Usuário removido')),
@@ -111,7 +112,7 @@ def atividade(pedido, sessao, consulta, formulario, token):
     corpo = ''.join(linhas) or vazio(4, 'atividade', t('Nada registrado ainda'),
                                      t('Cada entrada no painel e cada alteração feita por ele passa a aparecer aqui.'))
     resumo = t('Quem entrou e o que foi feito no painel: os últimos 300 registros, do mais novo para o mais antigo.')
-    pedido.enviar(200, pagina(t('Atividade'), f'''{cabeca('Atividade', resumo)}
+    pedido.enviar(200, pagina(t('Log'), f'''{cabeca('Log', resumo)}
 <section class="cartao lista"><div class="rolagem"><table class="blocos registros">
 <thead><tr><th>{t('Quando')}</th><th>{t('De onde')}</th><th>{t('O que aconteceu')}</th><th>{t('Detalhe')}</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>

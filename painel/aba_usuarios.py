@@ -328,7 +328,7 @@ def cartao_limites(sessao, nome, dele, erro=''):
 <input type="hidden" name="usuario" value="{e(nome)}">
 {numero('sessoes', t('Sessões ao mesmo tempo no FTP'), t('conexões abertas com este usuário'))}
 {numero('download', t('Taxa de download, em KB por segundo'), t('no FTP e nos downloads dele pelo painel'))}
-{numero('envio', t('Taxa de envio, em KB por segundo'), t('no FTP; cada arquivo enviado leva pelo menos 256 ÷ taxa segundos'))}
+{numero('envio', t('Taxa de envio, em KB por segundo'), t('no FTP e nos envios dele pelo painel; no FTP, cada arquivo enviado leva pelo menos 256 ÷ taxa segundos'))}
 <label for="inicio">{t('Horário em que o FTP aceita a entrada: das')}</label>
 <input id="inicio" name="inicio" type="time" value="{e(str(dele.get('inicio', '')))}">
 <label for="fim">{t('até as')}</label>
@@ -336,6 +336,11 @@ def cartao_limites(sessao, nome, dele, erro=''):
 {numero('baixar', t('Downloads ao mesmo tempo pelo painel'), t('vazio: {padrao}', padrao=DOWNLOADS_POR_USUARIO))}
 {numero('tentativas', t('Senhas erradas no FTP até o bloqueio'), t('{padrao}; 0: este usuário nunca é bloqueado', padrao=padrao))}
 {numero('minutos', t('Minutos de bloqueio'), t('vazio: {padrao}, o padrão da stack; é também o tempo em que as senhas erradas se somam', padrao=CFG['bloqueio_minutos']))}
+<label class="marcar"><input type="checkbox" name="enviar" value="sim"{' checked' if dele.get('enviar') in (1, 'sim') else ''}> <span>{t('Permitir que este usuário <strong>envie arquivo pelo painel</strong>, para a pasta dele')}</span></label>
+<p class="suave">{t('Sem marcar, o usuário só envia por FTP. Vale para os perfis Só envio, Envio e Completo; o perfil Leitura '
+                    'não envia. A permissão vale na hora. Arquivo enviado pelo painel tem até '
+                    '{maximo}, segue a taxa de envio acima e nunca substitui um arquivo que já existe.',
+                    maximo=e(tamanho(CFG['envio_max'])))}</p>
 <p class="suave">{t('Os limites valem na próxima entrada do usuário no FTP. Quando um limite do FTP muda, a sessão dele no '
                     'painel é encerrada. Quem confere a senha do painel é o FTP: fora do horário, ou com todas as sessões dele '
                     'ocupadas, o usuário também não entra no painel.')}</p>

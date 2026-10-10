@@ -121,7 +121,7 @@ ate28 80 de_volta_n28; r_volta_n=$?; aba -b "$J" "$B/servidor" > /dev/null; volt
 caso $? seguranca 97 "Aba Servidor só para administrador, com os arquivos de estado lidos sem confiança" "sem sessão, GET /servidor: $s_2· GET /servidor?auto=1: $s_1· cabeçalho Refresh: $s_1_auto, dado da aba no corpo: $s_1_dado · com a sessão do usuário do FTP equip28 (entrada $e_u): GET /servidor $u_1· com ?auto=1: $u_2, cabeçalho Refresh: $u_auto, dado da aba no corpo: $u_dado, item Servidor no menu dele: $u_menu, recusas de papel na auditoria (uma por minuto do mesmo endereço): de $n_antes para $n_depois · versão do núcleo do sistema na tela do administrador: $nucleo28 · /auth/rede.estado trocado por texto com marcação: tela $r_lixo· rede sem leitura: $([[ "$lixo28" == 0 ]] && echo sim || echo NÃO) · trocado por link para o cadastro do FTP: tela $r_link· rede sem leitura: $([[ "$link28" == 0 ]] && echo sim || echo NÃO) · texto do arquivo ou do cadastro na tela: $vazou28 · depois de um login por FTPS (saída $r_ftp2), o vigia publica de novo um arquivo comum com sete números: $([[ "$r_volta" == 0 ]] && echo sim || echo NÃO) · recursos do nginx trocados por texto com marcação: tela $r_lixo_n· cartão do nginx sem leitura: $lixo_n · trocados por link para o cadastro do FTP: tela $r_link_n· cartão do nginx sem leitura: $link_n · em até 80 s o nginx publica de novo um arquivo comum com doze números: $([[ "$r_volta_n" == 0 ]] && echo sim || echo NÃO), cartão sem leitura depois disso: $volta_n · cadastro do FTP igual ao de antes: $([[ -n "$soma_0" && "$soma_0" == "$soma_1" ]] && echo sim || echo NÃO)"
 
 # ------------------------------------------------------------------ a atualização automática não mantém a sessão
-sessao_0="$(env_file="$ENVA" env_valor PAINEL_SESSAO_MINUTOS 15)"
+sessao_0="$(env_file="$ENVA" env_valor PAINEL_SESSAO_MINUTOS 240)"
 gravar_env "$ENVA" PAINEL_SESSAO_MINUTOS 1
 dep; r_dep=$?; saude_1="$(saude "$FTP" "$PAINEL" "$NGINX")"; painel_de_pe
 e_a="$(entrar "$A28" "$W/painel.senha")"; proibir "$(biscoito_de "$A28")"
@@ -137,7 +137,14 @@ done
 a_fim="$(aba -b "$A28" "$B/")"; c_fim="$(aba -b "$C28" "$B/")"
 gravar_env "$ENVA" PAINEL_SESSAO_MINUTOS "$sessao_0"
 dep; r_fim=$?; saude_fim="$(saude "$FTP" "$PAINEL" "$NGINX")"; painel_de_pe
+# O prazo que vale sem a linha no .env é de 4 horas sem uso, com teto de 12 horas; fora de 1 a 720 minutos o painel não sobe.
+e_s="$(entrar "$A28" "$W/painel.senha")"; proibir "$(biscoito_de "$A28")"
+t_seg="$(aba -b "$A28" "$B/seguranca")"; fala_28="$(grep -c 'Encerra com 4 horas sem uso e, de qualquer forma, em 12 horas\.' "$W/corpo")"
+ev_rec=""; ok_rec=0
+for valor in 0 721 1000 abc 4h; do
+  rec="$(recusa_container painel "PAINEL_SESSAO_MINUTOS=$valor")"; recusou "$rec" 'PAINEL_SESSAO_MINUTOS deve ficar entre 1 e 720' || ok_rec=1; ev_rec+="$valor: $rec; "
+done
 [[ "$r_dep" == 0 && "$saude_1" == "healthy healthy healthy " && "$e_a" == 303 && "$e_c" == 303 && "$a_200" -ge 4 && "$a_200" -le 6 \
   && "$a_ultimo" == "303 /entrar" && "$a_fim" == "303 /entrar" && "$c_200" == 8 && "$c_fim" == "200 " \
-  && "$r_fim" == 0 && "$saude_fim" == "healthy healthy healthy " ]]
-caso $? seguranca 98 "Atualização automática da aba Servidor não mantém a sessão aberta" "deploy.sh com PAINEL_SESSAO_MINUTOS=1: saída $r_dep, saúde $saude_1· duas sessões de administrador abertas ($e_a e $e_c) e oito pedidos em cada uma, um a cada 10 s · sessão que só pede /servidor?auto=1: $ev_a· depois, GET /: $a_fim· sessão que abre /servidor sem o auto: $ev_c· depois, GET /: $c_fim· de volta a PAINEL_SESSAO_MINUTOS=$sessao_0: saída $r_fim, saúde $saude_fim"
+  && "$r_fim" == 0 && "$saude_fim" == "healthy healthy healthy " && "$sessao_0" == 240 && "$e_s" == 303 && "$t_seg" == "200 " && "$fala_28" == 1 && "$ok_rec" == 0 ]]
+caso $? seguranca 98 "Atualização automática da aba Servidor não mantém a sessão aberta" "deploy.sh com PAINEL_SESSAO_MINUTOS=1: saída $r_dep, saúde $saude_1· duas sessões de administrador abertas ($e_a e $e_c) e oito pedidos em cada uma, um a cada 10 s · sessão que só pede /servidor?auto=1: $ev_a· depois, GET /: $a_fim· sessão que abre /servidor sem o auto: $ev_c· depois, GET /: $c_fim· de volta a PAINEL_SESSAO_MINUTOS=$sessao_0: saída $r_fim, saúde $saude_fim· aba Segurança ($t_seg) diz que a sessão encerra com 4 horas sem uso e, de qualquer forma, em 12 horas: $fala_28 · container do painel com o prazo fora de 1 a 720 minutos: $ev_rec"

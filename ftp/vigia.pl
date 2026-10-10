@@ -15,15 +15,16 @@
 #   não contam:       os endereços da rede interna da stack (o painel confere a senha do usuário no FTP e
 #                     tem o limite de tentativas dele), a recusa do porteiro por falta de TLS, a tentativa
 #                     feita durante o bloqueio e o nome que não está no cadastro;
-#   entrada certa:    zera a contagem daquele endereço para aquele usuário.
+#   entrada certa:    zera a contagem daquele endereço para aquele usuário e a do endereço.
 #
 # Bloqueio por endereço: o vigia também conta os erros de usuário e senha de cada endereço, com qualquer nome.
 # O endereço que passa de BLOQUEIO_ENDERECO_ERROS dentro de BLOQUEIO_ENDERECO_HORAS ganha o arquivo
 # /auth/enderecos/<endereco>, que o porteiro e o painel aplicam por BLOQUEIO_ENDERECO_DIAS: ele não entra mais
-# no FTP nem no painel, com conta nenhuma. Não contam a rede interna da stack, a recusa do porteiro por falta
-# de TLS e a tentativa feita durante um bloqueio; entrada certa não zera esta contagem. O endereço de saída do
-# container nunca é bloqueado: por ele chegam os clientes do próprio host e, onde o Docker não preserva a
-# origem da conexão, todos os clientes.
+# no FTP nem no painel, com conta nenhuma. Vale para IPv4 e para IPv6, sempre um endereço por vez: prefixo só o
+# administrador bloqueia (/auth/prefixos), e o vigia só o respeita. Não contam a rede interna da stack, a recusa
+# do porteiro por falta de TLS e a tentativa feita durante um bloqueio; entrada certa zera a contagem do
+# endereço. O endereço de saída do container nunca é bloqueado: por ele chegam os clientes do próprio host e,
+# onde o Docker não preserva a origem da conexão, todos os clientes.
 #
 # Só módulos do perl-base, que já vem na imagem. O laço não espera por nada além do soquete: se ele parar
 # de ler, o Pure-FTPd trava ao registrar. Se o vigia sair, o entrypoint encerra o container.
@@ -36,6 +37,7 @@ use Time::HiRes ();
 my $SOQUETE   = '/dev/log';
 my $BLOQUEIOS = '/auth/bloqueios';
 my $ENDERECOS = '/auth/enderecos';
+my $PREFIXOS  = '/auth/prefixos';
 my $RECUSAS   = '/run/allsafe/recusa';
 my $CADASTRO  = '/auth/pureftpd.passwd';
 my $LIMITES   = '/auth/limites.lista';
@@ -50,10 +52,12 @@ my ($UID_DADOS, $GID_DADOS, $UID_ENVIO, $UID_LEITURA, $UID_SOENVIO) = (10000, 10
 # Perfil só envio: a conta fica presa na área de entrada dela e o arquivo que chega é movido para a pasta do usuário.
 my $ENTRADA   = "$DADOS/.entrada";
 require '/usr/local/lib/allsafe/entrada.pl';
+# Endereço, IPv4 ou IPv6, com a escrita única que serve de nome ao arquivo do bloqueio, e prefixo que o cobre.
+require '/usr/local/lib/allsafe/endereco.pl';
 my $NOME      = qr/[a-z_][a-z0-9_-]{0,31}/;
 my $ENDERECO  = qr/[0-9a-fA-F.:]{2,45}/;
-# Endereço que pode ser bloqueado: IPv4 escrito de um jeito só, para servir de nome de arquivo.
-my $IPV4      = qr/(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/;
+# Nome de arquivo de bloqueio: o endereço já na escrita única e, no prefixo, o tamanho depois de "_".
+my $GRAVADO   = qr/[0-9a-f][0-9a-f.:]{1,44}/;
 my $CHAVES_MAX    = 10000;   # contagens guardadas na memória, de usuário e endereço e só de endereço
 my $BLOQUEIOS_MAX = 4096;    # arquivos de bloqueio de usuário
 my $ENDERECOS_MAX = 10000;   # arquivos de bloqueio de endereço
@@ -167,21 +171,16 @@ sub bloquear {
     registrar("entrada bloqueada: usuario=$nome origem=$ip senhas_erradas=$erradas minutos=$minutos");
 }
 
-# Bloqueio de endereço: /auth/enderecos/<endereço>, com <vale até> <desde> <erros> <quem bloqueou>.
+# Bloqueio de endereço: /auth/enderecos/<endereço>, com <vale até> <desde> <erros> <quem bloqueou>, ou um
+# prefixo de /auth/prefixos que cobre o endereço.
 sub endereco_bloqueado {
     my ($ip) = @_;
-    return 0 unless $ip =~ /^$IPV4$/;
-    open(my $arq, '<', "$ENDERECOS/$ip") or return 0;
-    my $linha = <$arq> // '';
-    close $arq;
-    return $linha =~ /^(\d{1,12}) / && $1 > time ? 1 : 0;
+    return bloqueio_vale("$ENDERECOS/$ip") || defined prefixo_que_cobre($PREFIXOS, $ip) ? 1 : 0;
 }
-# Endereço que o vigia nunca bloqueia: o que não é IPv4 e o de saída do container.
+# Endereço que o vigia nunca bloqueia: o de saída do container.
 sub poupado {
     my ($ip) = @_;
-    return 1 unless $ip =~ /^$IPV4$/;
-    my @parte = split /\./, $ip;
-    return defined $saida && (($parte[0] << 24) | ($parte[1] << 16) | ($parte[2] << 8) | $parte[3]) == $saida ? 1 : 0;
+    return defined $saida && $ip eq join('.', unpack('C4', pack('N', $saida))) ? 1 : 0;
 }
 sub bloquear_endereco {
     my ($ip, $erros) = @_;
@@ -271,6 +270,7 @@ sub senha_errada {
 sub entrada_certa {
     my ($ip, $nome) = @_;
     delete $falhas{"$nome\@$ip"};
+    delete $erros{$ip};
     registrar("entrada: usuario=$nome origem=$ip");
     # A pasta que o servidor acabou de criar para a conta (sumiu e a conta entrou) nasce dela: volta ao ftpdata.
     atualizar();
@@ -392,7 +392,8 @@ sub tratar {
     $linha =~ s/[\r\n\0]+$//;
     return unless $linha =~ /^<(\d{1,3})>[A-Z][a-z]{2} [ \d]\d \d\d:\d\d:\d\d pure-ftpd(?:\[\d+\])?: \(([^@\s]{1,64})\@($ENDERECO)\) \[[A-Z]+\] (.*)$/s;
     my ($gravidade, $conta, $ip, $texto) = ($1 & 7, $2, $3, $4);
-    return if $ip =~ /^127\./;   # a conferência de saúde do container
+    # O endereço ganha a escrita única dos bloqueios. O do próprio servidor é a conferência de saúde do container.
+    $ip = endereco_canonico($ip) // return;
     if ($texto =~ /^Authentication failed for user \[(.*)\]$/s) { return senha_errada($ip, $1); }
     if ($texto =~ /^($NOME) is now logged in$/) { return entrada_certa($ip, $1); }
     return arquivo($conta, $ip, $texto) if $gravidade == 5;
@@ -426,7 +427,8 @@ sub tirar_vencidos {
 sub limpar {
     my $agora = time;
     tirar_vencidos($BLOQUEIOS, qr/$NOME\@$ENDERECO/);
-    tirar_vencidos($ENDERECOS, $IPV4);
+    tirar_vencidos($ENDERECOS, $GRAVADO);
+    tirar_vencidos($PREFIXOS, qr/${GRAVADO}_\d{1,3}/);
     if (opendir(my $pasta, $RECUSAS)) {
         for my $item (readdir $pasta) {
             next if $item =~ /^\.\.?$/;

@@ -1,21 +1,23 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tela Meus arquivos: o usuário do FTP navega pela pasta dele, baixa os próprios arquivos e, conforme o perfil,
-cria pasta, troca o nome e apaga.
+cria pasta, troca o nome e apaga. Com a permissão de envio pelo painel, também envia arquivo.
 
 A raiz é a pasta do cadastro, guardada na sessão. O caminho pedido é sempre relativo a ela e passa pelas
 mesmas conferências da aba Arquivos: parte por parte, sem `..` e sem seguir link simbólico. O perfil, também
 guardado na sessão, diz o que a tela oferece; quem recusa o resto é a tabela de rotas do perfil (rotas.py), e as
-ações são as mesmas funções da aba Arquivos, presas à pasta do usuário. Daqui não se envia arquivo.
+ações são as mesmas funções da aba Arquivos, presas à pasta do usuário. O formulário de envio só aparece para quem
+tem a permissão (limites.py), e quem a confere de novo, a cada arquivo, é a rota.
 
-O perfil só envio não tem lista nem download, nem aqui nem no FTP: a tela dele (so_envio) mostra como enviar e
-não abre a pasta."""
+O perfil só envio não tem lista nem download, nem aqui nem no FTP: a tela dele (so_envio) mostra como enviar,
+recebe o arquivo se a conta tem a permissão, e não abre a pasta."""
 import os
 
-from aba_arquivos import (MENSAGENS, Recusado, Vista, abrir, aviso_de_corte, conteudo, entregar, formulario_nova_pasta,
-                          linhas_da_lista, parametro, partes, recusa, trilha)
+from aba_arquivos import (MENSAGENS, Recusado, Vista, abrir, aviso_de_corte, conteudo, entregar, formulario_envio,
+                          formulario_nova_pasta, linhas_da_lista, parametro, partes, recusa, trilha)
 from config import CFG
 from icones import icone
 from idioma import N, t
+from limites import envio_pelo_painel
 from pagina import cabeca, como, e, pagina
 
 # perfil ➜ (linha de cima da tela, o que a tela diz que esta conta faz)
@@ -24,13 +26,15 @@ PODE = {
                 N('Aqui você navega e baixa. O perfil desta conta é de leitura: ela não cria, não envia, não renomeia e não '
                   'apaga nada, nem aqui nem por FTP. Todo download fica registrado.')),
     'envio': (N('Os arquivos da sua pasta no FTP, para navegar, baixar e criar pasta.'),
-              N('Aqui você navega, baixa e cria pasta; enviar arquivo continua sendo feito por FTP. O perfil desta conta é de '
-                'envio: o que já foi enviado não é renomeado nem apagado por ela. Todo download e toda pasta criada ficam '
-                'registrados.')),
+              N('Aqui você navega, baixa e cria pasta. O perfil desta conta é de envio: o que já foi enviado não é renomeado '
+                'nem apagado por ela. Todo download e toda pasta criada ficam registrados.')),
     'completo': (N('Os arquivos da sua pasta no FTP, para navegar, baixar e organizar.'),
-                 N('Aqui você navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continua sendo feito por FTP. '
-                   'Apagar pede a sua senha do FTP e não tem lixeira. Todo download e toda alteração ficam registrados.')),
+                 N('Aqui você navega, baixa, cria pasta, troca o nome e apaga. Trocar o nome e apagar pedem a sua senha do FTP, '
+                   'e apagar não tem lixeira. Todo download e toda alteração ficam registrados.')),
 }
+# a conta tem a permissão de enviar pelo painel? ➜ o que a tela diz do envio
+ENVIO = {True: N('Esta conta também envia arquivo por aqui: o envio fica registrado e nunca substitui um arquivo que já existe.'),
+         False: N('Enviar arquivo, só por FTP: o envio por aqui depende de uma permissão que o administrador dá a cada conta.')}
 
 
 def inicio(pedido, sessao, consulta, formulario, token):
@@ -59,6 +63,8 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
     resumo, texto = PODE[perfil]
     feito = MENSAGENS.get(consulta.get('m', ''), '')
     nova_pasta = formulario_nova_pasta(sessao, caminho) if existe and perfil != 'leitura' else ''
+    envia = perfil != 'leitura' and envio_pelo_painel(sessao['usuario'])[0]
+    do_envio = '' if perfil == 'leitura' else ' ' + t(ENVIO[envia])
     da_pasta = t('Arquivos da pasta do usuário <strong>{usuario}</strong> no FTP.', usuario=e(sessao['usuario']))
     pedido.enviar(200, pagina(t('Meus arquivos'), f'''{cabeca('Meus arquivos', t(resumo))}
 {f'<p class="ok" role="status">{e(t(feito))}</p>' if feito else ''}
@@ -66,17 +72,25 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
 {aviso_de_corte(cortado)}<section class="cartao lista"><div class="rolagem"><table class="blocos itens">
 <thead><tr><th>{t('Nome')}</th><th>{t('Tamanho')}</th><th>{t('Modificado')}</th><th>{t('Ações')}</th></tr></thead>
 <tbody>{linhas_da_lista(v.rota, caminho, pastas, arquivos, gerir=perfil == 'completo')}</tbody></table></div>
-{como(t('O que esta conta pode fazer'), f'<p class="suave">{da_pasta} {t(texto)}</p>')}</section>
+{como(t('O que esta conta pode fazer'), f'<p class="suave">{da_pasta} {t(texto)}{do_envio}</p>')}</section>
+{formulario_envio(sessao, caminho) if existe and envia else ''}
 {nova_pasta}''', sessao, v.rota))
 
 
 def so_envio(pedido, sessao, consulta, formulario, token):
-    """Tela do perfil só envio: o que a conta faz e os dados para o equipamento enviar. Não lê a pasta do usuário."""
+    """Tela do perfil só envio: o que a conta faz, os dados para o equipamento enviar e, com a permissão de envio
+    pelo painel, o formulário que recebe o arquivo. Não lê a pasta do usuário."""
     protocolo = {'0': t('FTP sem TLS (texto puro), modo passivo'),
                  '1': t('FTPS explícito (FTP com TLS) ou, só para equipamento sem TLS, FTP em texto puro; modo passivo'),
                  '3': t('FTPS explícito (FTP com TLS), também no canal de dados; modo passivo')}
     usuario = e(sessao['usuario'])
+    envia = envio_pelo_painel(sessao['usuario'])[0]
+    feito = MENSAGENS.get(consulta.get('m', ''), '')
+    faz = (t('Ela envia arquivo, por FTP ou por esta tela, e mais nada.') if envia else
+           t('Ela envia arquivo por FTP e mais nada.'))
     pedido.enviar(200, pagina(t('Envio de arquivos'), f'''{cabeca('Envio de arquivos', t('Esta conta só envia: o que chega fica guardado no servidor.'))}
+{f'<p class="ok" role="status">{e(t(feito))}</p>' if feito else ''}
+{formulario_envio(sessao) if envia else ''}
 <section class="cartao"><h2>{icone('envio')}{t('O caminho de cada arquivo')}</h2>
 <ol class="passos">
 <li>{icone('equipamento')}<strong>{t('O equipamento envia')}</strong><span class="suave">{t('por FTP, com o usuário e a senha desta conta')}</span></li>
@@ -92,9 +106,9 @@ def so_envio(pedido, sessao, consulta, formulario, token):
 <div><dt>{t('Usuário e senha')}</dt><dd>{t('<strong>{usuario}</strong>, com a mesma senha desta entrada', usuario=usuario)}</dd></div>
 </dl></section>
 <section class="cartao"><h2>{icone('escudo')}{t('O que esta conta faz')}</h2>
-<p>{t('Ela envia arquivo por FTP e mais nada. Cada arquivo que termina de chegar é guardado na pasta do usuário '
-      '<strong>{usuario}</strong> no servidor, fora do alcance desta conta: ela não lista, não baixa, não renomeia '
-      'e não apaga o que já enviou, nem por FTP nem por aqui.', usuario=usuario)}</p>
+<p>{faz} {t('Cada arquivo que termina de chegar é guardado na pasta do usuário '
+            '<strong>{usuario}</strong> no servidor, fora do alcance desta conta: ela não lista, não baixa, não renomeia '
+            'e não apaga o que já enviou, nem por FTP nem por aqui.', usuario=usuario)}</p>
 <p class="suave">{t('Depois de enviar, a pasta da sessão volta a ficar vazia: é o esperado. Arquivo enviado com um nome que já '
                     'existe não substitui o anterior: o novo é guardado com a data e a hora no nome. Quem precisa conferir ou '
                     'baixar o que foi enviado pede a um administrador ou usa uma conta de outro perfil.')}</p></section>''', sessao, '/meus-arquivos'))

@@ -9,7 +9,7 @@ from cena import cena
 from config import CFG, NOME
 from icones import icone
 from idioma import t
-from pagina import e, pagina, troca_de_idioma
+from pagina import e, pagina, prazo_da_sessao, troca_de_idioma
 from senha import senha_confere
 from sessao import (bloqueado, buscar_sessao, criar_sessao, encerrar_sessao, quem, registrar_falha, token_formulario,
                     token_formulario_valido)
@@ -30,11 +30,12 @@ def tela_entrada(pedido, codigo=200, erro=''):
 <section class="entrada-marca" aria-label="AllSafe FTP">
 <p class="entrada-nome"><img src="/marca/logo-320.png" alt="ALL-SAFE" width="56" height="56">AllSafe FTP</p>
 <div class="entrada-texto">
-<p class="entrada-chamada">{t('O backup dos equipamentos da rede, guardado em um lugar só.')}</p>
+<p class="entrada-chamada">{t('Backups e arquivos, guardados em um lugar só.')}</p>
 <ul class="entrada-pontos">
-<li>{icone('pasta')}{t('Cada equipamento preso na própria pasta')}</li>
+<li>{icone('equipamento')}{t('Equipamentos de rede, câmeras, sistemas e arquivos de pessoas e empresas')}</li>
+<li>{icone('pasta')}{t('Cada conta presa na própria pasta')}</li>
 <li>{icone('cadeado')}{t('Painel só por HTTPS, atrás do nginx')}</li>
-<li>{icone('relogio')}{t('Sessão encerrada depois de {minutos} minutos sem uso', minutos=CFG['inatividade'] // 60)}</li>
+<li>{icone('relogio')}{t('Sessão encerrada depois de {prazo} sem uso', prazo=prazo_da_sessao())}</li>
 </ul>
 </div>
 {cena()}
@@ -75,6 +76,7 @@ def entrar(pedido, metodo, formulario):
     senha_serve = 0 < len(senha) <= 256
     if senha_serve and senha_confere(senha, guardado):
         auditar(pedido.ip, 'entrada_ok', f'admin={nome}')
+        enderecos.esquecer(pedido.ip)    # entrou com usuário e senha certos: a contagem do endereço recomeça
         lingua = idioma.escolha('admin', nome) or idioma.atual()
         return pedido.redirecionar('/', (('Set-Cookie', cookie(criar_sessao(pedido.ip, admin=nome, idioma=lingua))),
                                          ('Set-Cookie', idioma.cookie(lingua))))
@@ -94,6 +96,7 @@ def entrar(pedido, metodo, formulario):
             enderecos.erro_de_entrada(pedido.ip)
         return tela_entrada(pedido, 401, t('Não foi possível entrar.'))
     auditar(pedido.ip, 'entrada_ok', f'usuario={nome}')
+    enderecos.esquecer(pedido.ip)
     lingua = idioma.escolha('usuario', nome) or idioma.atual()
     token = criar_sessao(pedido.ip, usuario=nome, marca=conta['marca'], pasta=conta['pasta'], perfil=conta['perfil'],
                          idioma=lingua)

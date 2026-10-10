@@ -242,10 +242,16 @@ nav a .sinal .i, nav a.ativa .sinal .i { color: var(--ambar-82); }
 .idioma { --idioma-traco: color-mix(in oklab, var(--marca-traco) 70%, transparent); --idioma-texto: var(--marca-suave); --idioma-marcado: var(--marca-toque); --idioma-forte: var(--marca-texto); margin: 0 0 0 auto; }
 .idioma + .sair { margin-left: 0; }
 .idioma div { display: inline-flex; overflow: hidden; border: 1px solid var(--idioma-traco); border-radius: var(--raio); }
-form.idioma button[type="submit"] { width: auto; min-width: 40px; min-height: 32px; margin: 0; padding: 4px 10px; border: 0; border-radius: 0; background: transparent; color: var(--idioma-texto); font-size: var(--texto-rotulo); font-weight: 400; letter-spacing: 0.04em; }
+form.idioma button[type="submit"] { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: auto; min-width: 40px; min-height: 32px; margin: 0; padding: 4px 10px; border: 0; border-radius: 0; background: transparent; color: var(--idioma-texto); font-size: var(--texto-rotulo); font-weight: 400; letter-spacing: 0.04em; }
 form.idioma button + button { border-left: 1px solid var(--idioma-traco); }
 form.idioma button[aria-pressed="true"] { background: var(--idioma-marcado); color: var(--idioma-forte); font-weight: 600; }
 form.idioma button:focus-visible { outline-offset: -2px; }
+/* Bandeira ao lado da sigla. As cores são as de cada bandeira, e não as do tema: valem iguais nos dois. O contorno
+   separa o verde e o branco do fundo do botão. */
+.bandeira { --b-verde: oklch(0.6 0.17 150); --b-amarelo: oklch(0.88 0.18 98); --b-anil: oklch(0.32 0.14 262); --b-branco: oklch(0.98 0 0); --b-rubro: oklch(0.5 0.19 22); --b-marinho: oklch(0.36 0.1 280);
+  flex: none; width: 20px; height: 14px; border-radius: 2px; box-shadow: 0 0 0 1px var(--idioma-traco); }
+.b-verde { fill: var(--b-verde); } .b-amarelo { fill: var(--b-amarelo); } .b-anil { fill: var(--b-anil); }
+.b-branco { fill: var(--b-branco); } .b-rubro { fill: var(--b-rubro); } .b-marinho { fill: var(--b-marinho); }
 
 main { flex: 1; width: 100%; max-width: var(--largura); margin: 0 auto; padding: 24px 16px 32px; }
 
