@@ -6,14 +6,14 @@
 
 Todas as telas do painel web, menu por menu, com a foto de cada uma e a explicação do que dá para fazer nela. As fotos são capturas reais da versão **0.30.0**, em tema escuro e em português, com usuários de exemplo, como `olt-centro`, `switch-core` e `roteador-borda`. O painel acompanha o tema claro ou escuro do sistema e também abre em inglês: veja [Idioma](#idioma). Clique em qualquer foto para abri-la em tamanho real.
 
-O painel tem uma tela de entrada, sete abas para quem administra (Visão geral, Usuários, Arquivos, Servidor, Segurança, Bloqueios e Atividade) e uma tela para o usuário do FTP, que muda com o perfil da conta: Meus arquivos ou Envio de arquivos. Os administradores ficam na aba Usuários, junto com as contas do FTP. Como abrir, criar administradores e o que protege o painel está em [Painel web](../painel.md).
+O painel tem uma tela de entrada, sete abas para quem administra (Visão geral, Usuários, Arquivos, Servidor, Segurança, Bloqueios e Log) e uma tela para o usuário do FTP, que muda com o perfil da conta: Meus arquivos ou Envio de arquivos. Os administradores ficam na aba Usuários, junto com as contas do FTP. Como abrir, criar administradores e o que protege o painel está em [Painel web](../painel.md).
 
 > 🧱 **Uso só em rede privada:** por padrão, o painel abre apenas em IP privado, atrás de firewall, fora da internet. Veja [Segurança](../seguranca.md#rede-privada).
 
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Entrar](#entrar) · [Visão geral](#visao-geral) · [Usuários](#usuarios) · [Administradores](#administradores) · [Arquivos](#arquivos) · [Meus arquivos](#meus-arquivos) · [Servidor](#servidor) · [Segurança](#seguranca) · [Bloqueios](#bloqueios) · [Atividade](#atividade) · [Idioma](#idioma) · [Como as fotos foram feitas](#como-foram-feitas)
+[Entrar](#entrar) · [Visão geral](#visao-geral) · [Usuários](#usuarios) · [Administradores](#administradores) · [Arquivos](#arquivos) · [Meus arquivos](#meus-arquivos) · [Servidor](#servidor) · [Segurança](#seguranca) · [Bloqueios](#bloqueios) · [Log](#atividade) · [Idioma](#idioma) · [Como as fotos foram feitas](#como-foram-feitas)
 
 </details>
 
@@ -67,7 +67,7 @@ O painel tem uma tela de entrada, sete abas para quem administra (Visão geral, 
 - Resposta `401` para usuário ou senha errados, `429` para endereço bloqueado e `400` para formulário expirado. Cada caso grava `entrada_falha` ou `entrada_bloqueada` na [auditoria](../painel.md#auditoria), sem o nome digitado.
 - O endereço da lista de bloqueios recebe `403` em texto puro em toda rota, mesmo com sessão aberta, com o evento `recusa_endereco`: veja [Bloqueio por endereço](../seguranca.md#bloqueio-por-endereco).
 - A entrada com a conta do FTP leva alguns segundos: é o tempo que o servidor FTP gasta para conferir a senha. Veja [Usuário do FTP no painel](../painel.md#usuario-ftp).
-- A sessão fica no cookie `__Host-sessao` (`Secure`, `HttpOnly`, `SameSite=Strict`) e encerra com 15 minutos sem uso ou em 8 horas.
+- A sessão fica no cookie `__Host-sessao` (`Secure`, `HttpOnly`, `SameSite=Strict`) e encerra com 4 horas sem uso ou em 12 horas, o que vier antes.
 - O envio só é aceito quando parte do próprio painel: o cabeçalho `Origin` tem de ser o endereço do painel. Detalhes em [Painel web](../painel.md#protecoes).
 
 </details>
@@ -97,7 +97,7 @@ O painel tem uma tela de entrada, sete abas para quem administra (Visão geral, 
 | **Arquivos recebidos por dia** | Uma coluna por dia dos últimos 14 dias, com o total do período em cima. Conta o que está nas pastas agora, pela data de cada arquivo: o que foi apagado ou substituído não entra |
 | **Último envio por usuário** | Os usuários divididos pela data do arquivo mais novo da pasta de cada um: nas últimas 24 horas, entre 1 e 7 dias, há mais de 7 dias e sem arquivo na pasta. Embaixo, a lista de quem está há mais de 7 dias sem enviar, com atalho para a aba Usuários |
 | **Espaço por pasta** | As pastas que mais ocupam, da maior para a menor, cada uma com a barra, o tamanho e a quantidade de arquivos, e o atalho para a pasta na aba Arquivos |
-| **Atividade recente** | Os seis últimos registros do painel, com a hora e o endereço de quem fez, e o atalho para a aba Atividade |
+| **Atividade recente** | Os seis últimos registros do painel, com a hora e o endereço de quem fez, e o atalho para a aba Log |
 | **Dados para configurar o equipamento** | Servidor, porta de controle, portas passivas, protocolo e de onde vem o usuário: o que preencher no equipamento |
 | Menu de todas as telas | À esquerda, em tela de 1280 px de largura ou mais: o símbolo e o nome, as sete abas em dois grupos (**Operação** e **Sistema**), cada uma com o seu ícone e a aba em uso marcada, e, embaixo, os botões de idioma **PT** e **EN**, o nome e o papel de quem entrou e o botão **Sair**. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada, um sinal de alerta fica ao lado de **Segurança** |
 | Título de cada aba | O nome da aba e uma frase que diz para que ela serve |
@@ -470,7 +470,7 @@ Na tela **Editar**, o cartão **TLS** diz como o usuário entra e traz o botão 
 | **Trocar nome** | Abre a troca do nome de entrada, o próprio ou o de outro |
 | **Remover** | Abre a confirmação de remoção. Não aparece na própria conta: assim sempre sobra um administrador |
 
-Todos têm o mesmo acesso, e o que cada um faz fica na aba Atividade com o nome de quem fez. O painel aceita até 20 administradores. Administrador e usuário do FTP são cadastros separados: não há troca de um para o outro, só remover a conta e criar a outra.
+Todos têm o mesmo acesso, e o que cada um faz fica na aba Log com o nome de quem fez. O painel aceita até 20 administradores. Administrador e usuário do FTP são cadastros separados: não há troca de um para o outro, só remover a conta e criar a outra.
 
 <details>
 <summary>Administradores ➜ Novo administrador — clique para expandir</summary>
@@ -613,7 +613,7 @@ O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continu
 2. Confira, na linha `Pasta do usuário do FTP`, de quem é a pasta.
 3. Clique em **Baixar** na linha do arquivo.
 
-**Resultado esperado:** o navegador salva o arquivo com o nome original, idêntico ao que o equipamento enviou, e a aba Atividade ganha a linha `Arquivo baixado`, com o administrador, o caminho e o tamanho.
+**Resultado esperado:** o navegador salva o arquivo com o nome original, idêntico ao que o equipamento enviou, e a aba Log ganha a linha `Arquivo baixado`, com o administrador, o caminho e o tamanho.
 
 | Limite | Valor |
 |---|---|
@@ -695,7 +695,7 @@ O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continu
 
 <sub><b>v0.30.0</b> · menu Arquivos, depois de apagar · captura de 2026-10-10</sub>
 
-**Resultado esperado:** a pasta volta com a mensagem `Apagado.` e sem o item, e a aba Atividade ganha a linha `Arquivo ou pasta apagado`.
+**Resultado esperado:** a pasta volta com a mensagem `Apagado.` e sem o item, e a aba Log ganha a linha `Arquivo ou pasta apagado`.
 
 > ⚠️ **Apagar não tem volta:** o painel não tem lixeira, e o que foi apagado só volta de uma cópia de segurança. Veja [Backup](../backup.md).
 
@@ -771,7 +771,7 @@ O usuário vê só a pasta do cadastro dele e o que há dentro dela. O caminho d
 2. Clique em **Baixar** na linha do arquivo.
 3. Clique em **Início**, no caminho do alto, para voltar à pasta do usuário.
 
-**Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Atividade, que só o administrador vê, ganha a linha `Arquivo baixado`, com o nome do usuário do FTP, o caminho e o tamanho.
+**Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Log, que só o administrador vê, ganha a linha `Arquivo baixado`, com o nome do usuário do FTP, o caminho e o tamanho.
 
 | Limite | Valor |
 |---|---|
@@ -1028,9 +1028,9 @@ O administrador que ficou com o próprio endereço bloqueado não abre o painel:
 
 <a name="atividade"></a>
 
-## 📜 Atividade
+## 📜 Log
 
-<a href="imagens/atividade.png"><img src="imagens/atividade.png" alt="Aba Atividade com os registros do painel em quatro colunas: quando, de onde, com o endereço inteiro em uma linha só ou no servidor, o que aconteceu, com um ícone por evento, e o detalhe, como arquivo baixado, pasta criada, administrador criado, endereço desbloqueado e tela fora do papel ou do perfil pedida por usuário do FTP" width="100%"></a>
+<a href="imagens/atividade.png"><img src="imagens/atividade.png" alt="Aba Log com os registros do painel em quatro colunas: quando, de onde, com o endereço inteiro em uma linha só ou no servidor, o que aconteceu, com um ícone por evento, e o detalhe, como arquivo baixado, pasta criada, administrador criado, endereço desbloqueado e tela fora do papel ou do perfil pedida por usuário do FTP" width="100%"></a>
 
 <sub><b>v0.30.0</b> · menu Atividade · captura de 2026-10-10</sub>
 

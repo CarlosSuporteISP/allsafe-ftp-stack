@@ -14,7 +14,7 @@ flowchart LR
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna" }
     end
     subgraph SESSAO["Sessão"]
-        sessao@{ shape: rect, label: "sessão de 15 min<br>cookie e token CSRF" }
+        sessao@{ shape: rect, label: "sessão de 4 h<br>cookie e token CSRF" }
         pedidos@{ shape: subproc, label: "pedidos da sessão<br>fluxograma dos pedidos" }
     end
     subgraph RESULTADO["Resultado"]

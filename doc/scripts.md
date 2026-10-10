@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`scripts/gerar-marca.sh`](#gerar-marca) · [`tests/testar.sh`](#testar) · [`ftp/entrypoint.sh`](#entrypoint) · [`ftp/saude.sh`](#ftp-saude) · [`ftp/porteiro.sh`](#porteiro) · [`ftp/vigia.pl`](#vigia) · [`painel/entrypoint.sh`](#painel-entrypoint) · [`nginx/entrypoint.sh`](#nginx-entrypoint) · [`nginx/saude.sh`](#nginx-saude) · [`ftp/usuario.sh`](#ftp-user) · [Scripts de apoio](#apoio)
+[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`scripts/gerar-marca.sh`](#gerar-marca) · [`tests/testar.sh`](#testar) · [`ftp/entrypoint.sh`](#entrypoint) · [`ftp/saude.sh`](#ftp-saude) · [`ftp/porteiro.pl`](#porteiro) · [`ftp/vigia.pl`](#vigia) · [`painel/entrypoint.sh`](#painel-entrypoint) · [`nginx/entrypoint.sh`](#nginx-entrypoint) · [`nginx/saude.sh`](#nginx-saude) · [`ftp/usuario.sh`](#ftp-user) · [Scripts de apoio](#apoio)
 
 </details>
 
@@ -51,7 +51,7 @@ flowchart LR
 | [`tests/testar.sh`](../tests/testar.sh) | host | Bateria de testes funcional, de segurança e de rede, em instância de teste que o próprio script cria e remove |
 | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado, sobe o vigia, o `pure-authd` e o `pure-ftpd` e encerra o container se um deles sair |
 | [`ftp/saude.sh`](../ftp/saude.sh) | container | Healthcheck: abre a porta de controle e espera a saudação do servidor |
-| [`ftp/porteiro.sh`](../ftp/porteiro.sh) | container | Decide a cada entrada, antes da conferência da senha, se ela pode seguir: recusa o usuário bloqueado por senhas erradas e, com o TLS por usuário valendo, a sessão sem TLS de quem não foi dispensado |
+| [`ftp/porteiro.pl`](../ftp/porteiro.pl) | container | Decide a cada entrada, antes da conferência da senha, se ela pode seguir: recusa o usuário bloqueado por senhas erradas e, com o TLS por usuário valendo, a sessão sem TLS de quem não foi dispensado |
 | [`ftp/vigia.pl`](../ftp/vigia.pl) | container | Conta as senhas erradas de cada endereço para cada usuário, grava o bloqueio que o porteiro aplica, entrega ao servidor o arquivo recebido em pasta com perfil Envio ou Leitura, leva para a pasta do usuário o arquivo recebido de um perfil Só envio e publica a rede e os recursos do container para a aba Servidor do painel |
 | [`painel/entrypoint.sh`](../painel/entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel, entrega a cópia dele ao nginx e executa o painel |
 | [`nginx/entrypoint.sh`](../nginx/entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
@@ -424,7 +424,7 @@ Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; 
 
 <a name="porteiro"></a>
 
-## 🚪 `ftp/porteiro.sh`
+## 🚪 `ftp/porteiro.pl`
 
 É o porteiro do FTP, instalado na imagem como `/usr/local/sbin/allsafe-ftp-porteiro`. Não é chamado direto: o `pure-authd` o executa a cada entrada, antes da conferência da senha. Ele não confere senha: só decide se a entrada pode seguir para ela.
 
@@ -502,7 +502,7 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 4. Prepara a pasta `/nginx` (`0750`, grupo `10001`, o do nginx): copia o certificado e a chave para `/nginx/tls`, apaga o soquete da subida anterior e cria `/nginx/estado` (`0700`, do usuário do nginx), a pasta em que o nginx publica os recursos do container dele.
 5. Executa o servidor [`painel/servidor.py`](../painel/servidor.py), o ponto de entrada dos [módulos do painel](painel.md#modulos), que abre o soquete `/nginx/painel.sock`. O painel não abre porta de rede.
 
-**Resultado esperado:** a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; sessão de 15 min; redes permitidas: ...` no log do container.
+**Resultado esperado:** a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; sessão de 240 min; redes permitidas: ...` no log do container.
 
 <details>
 <summary>Detalhe técnico — mensagens de falha</summary>
