@@ -115,12 +115,12 @@ for chave in FTP_PASSWORD FTP_PASSWORD_FILE; do
   if [[ -n "$(env_valor "$chave")" ]]; then
     echo "ERRO: $env_file ainda traz $chave. Senha não fica mais no .env." >&2
     echo "      Migração: grave a senha em .secrets/ftp-usuario-inicial-senha.txt (modo 0600), apague as linhas" >&2
-    echo "      FTP_PASSWORD e FTP_PASSWORD_FILE do .env e rode ./deploy.sh de novo. Guia: doc/segredos.md" >&2
+    echo "      FTP_PASSWORD e FTP_PASSWORD_FILE do .env e rode ./deploy.sh de novo. Guia: doc/pt-BR/segredos.md" >&2
     exit 1
   fi
 done
 for chave in PAINEL_PASSWORD PAINEL_PASSWORD_HASH; do
-  [[ -z "$(env_valor "$chave")" ]] || die "$env_file traz $chave. A senha do painel fica só em .secrets/ (guia: doc/segredos.md)"
+  [[ -z "$(env_valor "$chave")" ]] || die "$env_file traz $chave. A senha do painel fica só em .secrets/ (guia: doc/pt-BR/segredos.md)"
 done
 
 data_dir="$(env_valor DATA_DIR)"
@@ -475,7 +475,7 @@ if [[ ! -s "$chave_privada" && ! -s "$chave_publica" ]]; then
     die "não foi possível gerar a chave da cópia de segurança: $erro"
   fi
   echo "Gerada a chave da cópia de segurança em $chave_privada (0600)."
-  echo "GUARDE UMA CÓPIA DELA FORA DESTE SERVIDOR: sem ela nenhuma cópia de segurança abre (doc/backup.md)."
+  echo "GUARDE UMA CÓPIA DELA FORA DESTE SERVIDOR: sem ela nenhuma cópia de segurança abre (doc/pt-BR/backup.md)."
 fi
 if [[ -s "$chave_privada" ]]; then
   chmod 0600 "$chave_privada"

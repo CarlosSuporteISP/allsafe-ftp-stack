@@ -4,7 +4,7 @@
 # BACKUP_DIR/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age (modo 0600), com a soma sha256 ao lado.
 # A leitura e a cifra são feitas por um container sem rede, porque parte dos arquivos é do root.
 # A cifra (age) usa a chave pública de SECRETS_DIR; só a chave privada abre a cópia.
-# O .env e os segredos de SECRETS_DIR NÃO entram na cópia: guarde-os à parte (doc/backup.md).
+# O .env e os segredos de SECRETS_DIR NÃO entram na cópia: guarde-os à parte (doc/pt-BR/backup.md).
 set -Eeuo pipefail
 root_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root_dir"
@@ -125,6 +125,6 @@ mv -- "$parcial" "$arquivo"
 ( cd "$backup_dir" && sha256sum -- "$(basename -- "$arquivo")" > "$(basename -- "$arquivo").sha256" )
 
 echo "Cópia gravada: $arquivo ($(du -h -- "$arquivo" | cut -f1), cifrada)"
-echo "Fora da cópia: $env_file e os segredos de $secrets_dir. Guarde-os à parte (doc/backup.md)."
+echo "Fora da cópia: $env_file e os segredos de $secrets_dir. Guarde-os à parte (doc/pt-BR/backup.md)."
 echo "Só a chave privada abre a cópia (backup-chave-privada.txt, de $secrets_dir): guarde-a também fora deste servidor."
 echo "Restaurar: ./scripts/restaurar.sh $(basename -- "$arquivo")"

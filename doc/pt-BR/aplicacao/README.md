@@ -1,6 +1,6 @@
 # 📸 Fotos da aplicação — allsafe-ftp-stack
 
-↩ [README do projeto](../../README.md) · [Índice da documentação](../README.md)
+↩ [README do projeto](../../../README.pt-BR.md) · [Índice da documentação](../README.md)
 
 ## 💡 Em poucas palavras
 
@@ -437,7 +437,7 @@ Na tela **Editar**, o cartão **TLS** diz como o usuário entra e traz o botão 
 
 - Rotas: `GET /usuarios`, `/usuarios/novo`, `/usuarios/editar?usuario=<nome>`, `/usuarios/senha?usuario=<nome>`, `/usuarios/remover?usuario=<nome>` e `/usuarios/tls?usuario=<nome>`; o envio de cada formulário é um `POST` na mesma rota, com o token CSRF da sessão. A exceção é a tela Editar, que envia o perfil para `POST /usuarios/perfil`, a pasta para `POST /usuarios/pasta`, os limites para `POST /usuarios/limites` e o desbloqueio para `POST /usuarios/desbloquear`.
 - A dispensa do TLS vale com `FTP_TLS_EXCECOES=sim`, que é o padrão, `FTP_TLS_MODE=2` e sem `REDE_PERMITIR_IP_PUBLICO=sim`. Fora disso, a coluna, os botões e a caixa somem, a rota `/usuarios/tls` responde `404` e a lista dos dispensados fica guardada, sem valer.
-- O painel chama o mesmo `allsafe-ftp-user` do [`manage-user.sh`](../../manage-user.sh): painel e linha de comando alteram as mesmas contas. Veja [Operação](../operacao.md#usuarios).
+- O painel chama o mesmo `allsafe-ftp-user` do [`manage-user.sh`](../../../manage-user.sh): painel e linha de comando alteram as mesmas contas. Veja [Operação](../operacao.md#usuarios).
 - Cada alteração grava `usuario_criado`, `senha_trocada`, `pasta_trocada`, `perfil_trocado`, `limites_alterados`, `bloqueio_removido`, `usuario_removido`, `tls_dispensado` ou `tls_exigido` na [auditoria](../painel.md#auditoria), com o administrador que fez e sem a senha.
 - A senha gerada tem 32 caracteres aleatórios e não fica guardada: só o hash vai para o cadastro do FTP.
 - Sessões, taxas e horário ficam no cadastro do FTP, e é o `pure-ftpd` que os aplica a cada entrada; os downloads pelo painel e o bloqueio por tentativa ficam em arquivos próprios da stack: [Limites por usuário](../painel.md#limites).
