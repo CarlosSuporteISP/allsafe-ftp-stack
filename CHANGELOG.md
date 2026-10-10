@@ -6,6 +6,10 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 ## [Não lançado]
 
+Nada ainda.
+
+## [0.26.0] - 2026-10-10
+
 O painel foi redesenhado: menu na lateral, gráficos na Visão geral, ícones desenhados no lugar dos emojis, paleta medida nos dois temas e uma tela de entrada nova. Quem quiser pode publicar só o painel por proxy ou túnel, sem expor o FTP.
 
 ### Adicionado
