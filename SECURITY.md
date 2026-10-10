@@ -1,6 +1,6 @@
 # 🔐 Política de segurança — allsafe-ftp-stack
 
-↩ [README do projeto](README.md) · [Segurança](doc/seguranca.md) · [Configuração](doc/configuracao.md#contato-de-seguranca)
+↩ [README do projeto](README.pt-BR.md) · [Segurança](doc/pt-BR/seguranca.md) · [Configuração](doc/pt-BR/configuracao.md#contato-de-seguranca)
 
 ## 💡 Em poucas palavras
 
@@ -57,7 +57,7 @@ A resposta `404` com `contato de segurança não configurado` diz que a instala�
 | O que a falha permite: ler, alterar, derrubar | Arquivo de backup de equipamento ou de cliente |
 | Perfil, modo de TLS e se a instalação aceita endereço público | Prova feita em instalação de outra pessoa sem a autorização dela |
 
-Teste só na própria instalação ou em uma de laboratório. A bateria do projeto sobe uma instância separada para isso: [Bateria de testes](doc/scripts.md#testar).
+Teste só na própria instalação ou em uma de laboratório. A bateria do projeto sobe uma instância separada para isso: [Bateria de testes](doc/pt-BR/scripts.md#testar).
 
 ---
 
@@ -81,7 +81,7 @@ O contato é de quem opera, não de quem desenvolveu a stack. A variável vem va
 
 **Resultado esperado:** o resumo do `deploy.sh` com a linha `Contato de segurança: <e-mail>, publicado em /.well-known/security.txt do painel.` e a aba Segurança do painel com o item `Contato de segurança` marcado.
 
-O passo a passo completo, com a conferência, está em [Configuração](doc/configuracao.md#contato-de-seguranca).
+O passo a passo completo, com a conferência, está em [Configuração](doc/pt-BR/configuracao.md#contato-de-seguranca).
 
 ---
 
@@ -103,10 +103,10 @@ Toda correção entra no [`CHANGELOG.md`](CHANGELOG.md) e é aplicada com `./dep
 - **Quem alcança:** só as redes de `PAINEL_REDES_PERMITIDAS`; fora delas, o nginx responde `403` antes de qualquer conteúdo.
 - **Valor conferido:** o `deploy.sh`, o container do painel e o próprio painel recusam o que não é um endereço de e-mail só. A mensagem é `SEGURANCA_CONTATO_EMAIL inválido`.
 - **Instalação com endereço público:** com `REDE_PERMITIR_IP_PUBLICO=sim`, a aba Segurança do painel mostra o contato em alerta enquanto a variável estiver vazia.
-- **O que a stack já confere:** os controles e as normas seguidas estão em [Segurança](doc/seguranca.md), e os casos de teste de segurança, em [Bateria de testes](doc/scripts.md#testar).
+- **O que a stack já confere:** os controles e as normas seguidas estão em [Segurança](doc/pt-BR/seguranca.md), e os casos de teste de segurança, em [Bateria de testes](doc/pt-BR/scripts.md#testar).
 
 </details>
 
 ---
 
-⬅️ [README do projeto](README.md) · 🏠 [Documentação](doc/README.md) · ➡️ [Segurança](doc/seguranca.md)
+⬅️ [README do projeto](README.pt-BR.md) · 🏠 [Documentação](doc/pt-BR/README.md) · ➡️ [Segurança](doc/pt-BR/seguranca.md)

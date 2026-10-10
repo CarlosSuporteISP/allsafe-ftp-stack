@@ -1,6 +1,6 @@
 # 🖥️ Painel web — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
+↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -75,11 +75,11 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP, o modo de TLS do FTP, a faixa **Servidor e containers** (processador e memória do servidor e dos containers da stack, cada um com o uso contra o que há ou o que foi alocado), os arquivos recebidos por dia nos últimos 14 dias, o último envio de cada usuário, o espaço de cada pasta, os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) e os últimos registros da atividade | Só consultar; cada cartão termina no atalho para a aba do detalhe |
 | Usuários | Todas as contas em uma lista, cada uma com o **perfil** embaixo do nome. Primeiro os administradores do painel, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas; depois os usuários do FTP, um por linha: pasta, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo o perfil (Administrador, Completo, Envio, Só envio ou Leitura), a pasta e, para equipamento sem suporte a TLS, já dispensado do TLS; editar, para trocar o perfil, a pasta e os limites e tirar um bloqueio; trocar a senha; remover, com a pasta dele ou sem ela; abrir a pasta do usuário na aba Arquivos; dispensar um usuário do TLS e voltar a exigir; trocar a senha e o nome de um administrador e removê-lo |
-| Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, pelo nome ou pelo botão **Abrir**, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
+| Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, pelo nome ou pelo botão **Abrir**, baixar um arquivo pelo navegador, enviar um arquivo para a pasta aberta, criar uma pasta, trocar o nome e apagar arquivo e pasta, e abrir o cadastro de usuário já com a pasta aberta |
 | Servidor | Os três containers da stack (servidor FTP, painel e frente web), cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, e, separados, os recursos do servidor em que a stack roda: processador, memória, disco e rede do FTP, com o estado, a medida de agora e o histórico dos últimos minutos | Só consultar; **Atualizar sozinha** refaz a leitura a cada 10 s, sem contar como uso da sessão: veja [Servidor](#servidor) |
 | Segurança | Conferência da instalação, com o resumo de quantos itens estão em ordem, pedem atenção ou são conferidos no servidor: se endereço público é aceito, se o painel está publicado por proxy ou túnel, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
-| Bloqueios | Os endereços com [bloqueio por endereço](seguranca.md#bloqueio-por-endereco): a regra em vigor, o total e, por endereço, quem bloqueou (o FTP, o painel ou o administrador), com quantos erros, desde quando e até quando. Embaixo, quando há, os usuários com bloqueio por tentativa no FTP | Procurar um endereço, **Mudar prazo**, para bloquear por mais tempo ou encurtar, e **Desbloquear**; abrir o usuário que está com bloqueio por tentativa |
-| Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads, pastas criadas e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
+| Bloqueios | Os endereços e os prefixos, IPv4 e IPv6, com [bloqueio por endereço](seguranca.md#bloqueio-por-endereco): a regra em vigor, o total e, por bloqueio, quem bloqueou (o FTP, o painel ou o administrador), com quantos erros, desde quando e até quando. Embaixo, quando há, os usuários com bloqueio por tentativa no FTP | **Bloquear endereço**, para bloquear à mão um endereço ou um prefixo, procurar um endereço, **Mudar prazo**, para bloquear por mais tempo ou encurtar, e **Desbloquear**; abrir o usuário que está com bloqueio por tentativa |
+| Log | Os últimos 300 registros do painel: entradas, recusas, downloads, envios, pastas criadas, bloqueios e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
 
 O menu fica à esquerda em tela de 1280 px de largura ou mais: o símbolo e o nome, as abas em dois grupos (**Operação**, com Visão geral, Usuários e Arquivos, e **Sistema**, com Servidor, Segurança, Bloqueios e Log), a aba em uso marcada e, embaixo, o botão de [idioma](#idioma) (**PT** e **EN**), o nome e o papel de quem entrou e o botão **Sair**, que encerra a sessão na hora. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada (endereço público aceito ou painel por proxy ou túnel), o administrador vê um sinal de alerta ao lado de **Segurança**, em qualquer aba em que estiver. Os gráficos são desenhados pelo próprio painel, sem script, e todo número do desenho está também escrito ao lado dele. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
 
@@ -91,11 +91,11 @@ As listas se ajustam à largura da tela, sem rolagem lateral da página:
 |---|---|---|---|
 | Usuários | Um bloco por conta, com o rótulo de cada dado e as ações embaixo | De 641 a 1095 px, um bloco por conta: nome e perfil em cima, os dados lado a lado e as ações embaixo | A partir de 1096 px, tabela, com as ações duas por linha; a partir de 1600 px, em uma linha |
 | Arquivos e Meus arquivos | Um bloco por item, com o tamanho, a data e as ações embaixo do nome | De 641 a 899 px, o nome, o tamanho e a data em uma linha e as ações na linha de baixo | A partir de 900 px, tabela |
-| Atividade | Um bloco por registro | De 641 a 959 px, a data, o endereço e o fato em uma linha e o detalhe embaixo | A partir de 960 px, tabela |
+| Log | Um bloco por registro | De 641 a 959 px, a data, o endereço e o fato em uma linha e o detalhe embaixo | A partir de 960 px, tabela |
 | Bloqueios | Um bloco por endereço, com o rótulo de cada dado e as ações embaixo | De 641 a 1095 px, um bloco por endereço, com os dados lado a lado e as ações embaixo | A partir de 1096 px, tabela |
 | Conferência da aba Segurança | A marca e o item em cima e a situação embaixo, na largura inteira | Tabela | Tabela |
 
-Lista sem nada para mostrar (pasta vazia, atividade sem registro) diz o que falta e quando passa a aparecer. O texto longo de cada tela, como a explicação dos perfis e das etiquetas da aba Usuários, fica recolhido em uma linha embaixo da lista e abre com um clique.
+Lista sem nada para mostrar (pasta vazia, Log sem registro) diz o que falta e quando passa a aparecer. O texto longo de cada tela, como a explicação dos perfis e das etiquetas da aba Usuários, fica recolhido em uma linha embaixo da lista e abre com um clique.
 
 Quem entra com a conta do FTP não vê nenhuma dessas abas: vê uma tela só, **Meus arquivos**, descrita em [Usuário do FTP no painel](#usuario-ftp).
 
@@ -111,7 +111,7 @@ A foto de cada tela, com a explicação item por item, está em [Fotos da aplica
 
 ## 🌍 Idioma das telas
 
-O painel fala **português**, que é o padrão, e **inglês**. A troca é pelo botão **PT** e **EN**, que fica no menu, junto do nome de quem entrou, e também na tela de entrada. O idioma em uso aparece marcado.
+O painel fala **português**, que é o padrão, e **inglês**. A troca é pelo botão **PT** e **EN**, cada lado com a bandeira do idioma (a do Brasil e a dos Estados Unidos), que fica no menu, junto do nome de quem entrou, e também na tela de entrada. O idioma em uso aparece marcado.
 
 | Onde o botão é usado | O que muda | Onde a escolha fica |
 |---|---|---|
@@ -128,7 +128,8 @@ Em inglês mudam todas as telas, os avisos, os erros dos formulários e a descri
 - **Por conta:** `DATA_DIR/painel/idiomas` (`/painel/idiomas` no container), `0600`, do `root`, uma linha `admin:<nome>:<pt|en>` ou `usuario:<nome>:<pt|en>` por conta que escolheu. O arquivo é gravado ao lado e trocado de uma vez. A linha acompanha o administrador que troca de nome e sai quando a conta é removida pelo painel. A de usuário removido pelo terminal sai na troca de idioma seguinte, de qualquer conta; até lá, um usuário criado com o mesmo nome entra no idioma do anterior.
 - **No navegador:** cookie `__Host-idioma`, com `Secure`, `HttpOnly`, `SameSite=Lax` e validade de um ano, gravado na troca e em toda entrada. Só `pt` e `en` são lidos: outro valor é ignorado. Ele não é sessão e não abre nenhuma tela.
 - **Troca:** `POST /idioma`, com o token dos outros formulários da sessão; antes da entrada, com o token do formulário de entrada. Por `GET` não há troca, e idioma fora da lista recebe `400`. A volta sai do caminho da tela de origem e só quando ele é uma tela do papel da sessão: nos outros casos, o começo do painel.
-- **Textos:** o texto em português é o que está no código, e o catálogo do inglês é o [`painel/idioma_en.py`](../painel/idioma_en.py). Texto sem tradução sairia em português; o `./scripts/validate.sh` recusa o código em que falta ou sobra tradução.
+- **Textos:** o texto em português é o que está no código, e o catálogo do inglês é o [`painel/idioma_en.py`](../../painel/idioma_en.py). Texto sem tradução sairia em português; o `./scripts/validate.sh` recusa o código em que falta ou sobra tradução.
+- **Bandeiras:** são desenhadas dentro da própria página, pelo [`painel/icones.py`](../../painel/icones.py), como os outros ícones: não são emoji nem arquivo de imagem, e nada é buscado fora do painel.
 - **Auditoria:** a troca de idioma não gera registro. As recusas dela são as de qualquer formulário: `recusa_csrf` e `recusa_origem`.
 
 </details>
@@ -156,7 +157,7 @@ Em inglês mudam todas as telas, os avisos, os erros dos formulários e a descri
 
 Os formulários, as mensagens de recusa e a tela da senha gerada estão em [Fotos da aplicação](aplicacao/README.md#usuarios).
 
-Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
+Regras, as mesmas do [`manage-user.sh`](../../manage-user.sh):
 
 - Nome com letras minúsculas, números, `_` e `-`, começando por letra ou `_`, até 32 caracteres.
 - Senha com no mínimo 12 caracteres.
@@ -221,13 +222,14 @@ Limites por usuário, no cartão **Limites** da tela **Editar**. Servem tanto pa
 |---|---|---|---|
 | Sessões ao mesmo tempo | FTP | De 1 ao `FTP_MAX_CLIENTS` da stack | Só os limites da stack: `FTP_MAX_CLIENTS` no total e `FTP_MAX_CLIENTS_PER_IP` por endereço |
 | Taxa de download | FTP e downloads dele pelo painel | De 1 a 10.000.000 KB por segundo | Sem teto |
-| Taxa de envio | FTP | De 1 a 10.000.000 KB por segundo | Sem teto |
+| Taxa de envio | FTP e envios dele pelo painel | De 1 a 10.000.000 KB por segundo | Sem teto |
 | Horário de entrada | FTP e entrada dele no painel | Início e fim, em horas e minutos; pode passar da meia-noite (`22:00` às `06:00`) | Entra a qualquer hora |
 | Downloads ao mesmo tempo | Painel | De 1 a 8 | 2 |
 | Senhas erradas no FTP até o bloqueio | FTP | De 1 a 100; `0`: este usuário nunca é bloqueado | O padrão da stack, `FTP_BLOQUEIO_TENTATIVAS` (5) |
 | Minutos de bloqueio | FTP | De 1 a 1440 | O padrão da stack, `FTP_BLOQUEIO_MINUTOS` (15) |
+| Envio pelo painel | Painel | Caixa **Permitir que este usuário envie arquivo pelo painel, para a pasta dele**, marcada ou não; vale nos perfis Só envio, Envio e Completo | Sem marcar: o usuário só envia por FTP |
 
-**Resultado esperado:** a lista de usuários volta com o aviso `Limites gravados` e a marca **limites** ao lado do nome; passando o mouse sobre ela, aparece cada limite que o usuário tem. Para tirar um limite, apague o campo e grave de novo.
+**Resultado esperado:** a lista de usuários volta com o aviso `Limites gravados` e a marca **limites** ao lado do nome; passando o mouse sobre ela, aparece cada limite que o usuário tem. Para tirar um limite, apague o campo e grave de novo. A permissão de envio pelo painel é dada na edição, depois de o usuário existir, e vale na hora, sem encerrar a sessão dele: veja [Enviar arquivo pelo painel](#enviar-arquivo).
 
 <a name="bloqueios"></a>
 
@@ -291,7 +293,7 @@ Com as duas preenchidas, sai o arquivo que passar de qualquer uma. A contagem é
 <summary>Detalhe técnico — os limites por usuário</summary>
 
 - `POST /usuarios/limites` grava todos de uma vez, com o token CSRF da sessão e os campos `usuario`, `sessoes`, `download`, `envio`, `inicio`, `fim`, `baixar`, `tentativas` e `minutos`. Campo em branco tira o limite. Valor fora da regra, início sem fim ou início igual ao fim respondem `400`, com a tela de volta e o que foi digitado; usuário que não existe e nome fora da regra, `404`. Nada é gravado pela metade.
-- **Quem guarda e quem aplica:** sessões, taxas e horário ficam na linha do usuário em `/auth/pureftpd.passwd`, gravados com `pure-pw usermod`, e quem os aplica é o `pure-ftpd`, a cada entrada. O limite de downloads pelo painel fica em `/auth/limites.lista` (`0600`), e quem o aplica é o painel. Os dois campos do bloqueio por tentativa ficam na mesma lista, e quem os aplica é o vigia do serviço `ftp`: [Scripts](scripts.md#vigia). Todos são gravados pelo `allsafe-ftp-user limites`, o mesmo comando do [`manage-user.sh`](../manage-user.sh).
+- **Quem guarda e quem aplica:** sessões, taxas e horário ficam na linha do usuário em `/auth/pureftpd.passwd`, gravados com `pure-pw usermod`, e quem os aplica é o `pure-ftpd`, a cada entrada. O limite de downloads pelo painel fica em `/auth/limites.lista` (`0600`), e quem o aplica é o painel. Os dois campos do bloqueio por tentativa ficam na mesma lista, e quem os aplica é o vigia do serviço `ftp`: [Scripts](scripts.md#vigia). Todos são gravados pelo `allsafe-ftp-user limites`, o mesmo comando do [`manage-user.sh`](../../manage-user.sh).
 - **Horário:** vale no fuso do container, o da variável `TZ`. O `pure-pw` guarda as horas sem os zeros da esquerda (`08:00` às `18:00` fica `800-1800`); o painel e o `manage-user.sh` mostram sempre com quatro dígitos.
 - **Taxa de download no painel:** os downloads que o próprio usuário faz na tela Meus arquivos saem na taxa dele. Os que o administrador faz na aba Arquivos, não.
 - **Sessão do usuário no painel:** trocar um limite que fica no cadastro do FTP muda a linha dele, e as sessões dele no painel são encerradas no pedido seguinte. Trocar só o limite de downloads pelo painel não encerra nada e vale no download seguinte.
@@ -308,7 +310,7 @@ Com as duas preenchidas, sai o arquivo que passar de qualquer uma. A contagem é
 
 - `POST /usuarios/limpeza` grava a regra, com o token CSRF da sessão e os campos `usuario`, `ultimos`, `dias` e `senha_atual`, a senha de quem está na sessão. Senha errada ou em branco recebe `403`, e nada é gravado; desligar a regra pede a senha do mesmo jeito. Só administrador tem essa rota.
 - **Quem guarda:** a regra fica na linha do usuário em `/auth/limites.lista`, nas chaves `ultimos=` e `dias=`, gravada pelo `allsafe-ftp-user` (ação `retencao`), o mesmo comando do `manage-user.sh`. Usuário sem pasta dentro de `DATA_DIR/dados` não tem o cartão.
-- **Quem aplica:** o [`limpeza.py`](../painel/limpeza.py), em uma linha de execução do próprio painel: a primeira passada sai 2 minutos depois da subida, e as seguintes, a cada `PAINEL_RETENCAO_MINUTOS`. Com `0`, nenhuma passada acontece e a tela avisa.
+- **Quem aplica:** o [`limpeza.py`](../../painel/limpeza.py), em uma linha de execução do próprio painel: a primeira passada sai 2 minutos depois da subida, e as seguintes, a cada `PAINEL_RETENCAO_MINUTOS`. Com `0`, nenhuma passada acontece e a tela avisa.
 - **O que sai:** só arquivo comum. Ficam como estão o link simbólico, tudo o que tem o nome começado por ponto (arquivo ou pasta), a área de entrada do perfil Só envio e o que está em outro sistema de arquivos montado dentro da pasta.
 - **Qual data conta:** manter os mais recentes ordena pela data de modificação do arquivo. Apagar por dias olha a data mais nova entre a de modificação e a de mudança no servidor: o arquivo que chegou hoje com data antiga não sai no mesmo dia.
 - **Subpastas:** a regra desce pelas pastas de dentro, até 64 níveis e 10.000 subpastas por pasta em cada passada. A subpasta que a limpeza esvaziou sai junto; a que já estava vazia, não. A pasta do usuário nunca sai.
@@ -339,17 +341,18 @@ A linha de comando continua valendo: painel e `manage-user.sh` alteram as mesmas
 
 ## 📁 Arquivos e download
 
-A aba Arquivos mostra as pastas de `DATA_DIR/dados`, entrega pelo navegador qualquer arquivo que um equipamento enviou, cria pasta, troca o nome e apaga arquivo e pasta. **Enviar arquivo** continua sendo feito por FTP: o painel não recebe arquivo.
+A aba Arquivos mostra as pastas de `DATA_DIR/dados`, entrega pelo navegador qualquer arquivo que um equipamento enviou, recebe arquivo para a pasta aberta, cria pasta, troca o nome e apaga arquivo e pasta. O envio de todo dia, o do equipamento, continua sendo por FTP; o do painel serve para o arquivo avulso, mandado do navegador: veja [Enviar arquivo pelo painel](#enviar-arquivo).
 
 1. Abra a aba **Arquivos**. O primeiro nível tem as pastas dos usuários e as criadas pelo painel. Na aba Usuários, o endereço da coluna **Pasta** abre direto a pasta daquele usuário.
 2. Clique no nome de uma pasta para entrar. O caminho no alto da lista mostra onde você está e volta a qualquer nível.
 3. Clique em **Baixar** na linha do arquivo. O navegador salva o arquivo com o nome original.
 4. Para criar uma pasta, entre na pasta onde ela vai ficar, escreva o nome em **Nova pasta** e clique em **Criar pasta**.
-5. Para prender um usuário a uma pasta, entre nela e clique em **Novo usuário nesta pasta**: o cadastro abre com o campo **Pasta** preenchido.
-6. Para trocar o nome de um arquivo ou de uma pasta, clique em **Renomear** na linha dele, escreva o nome novo e clique em **Trocar nome**. O item continua na mesma pasta.
-7. Para apagar um arquivo ou uma pasta, clique em **Apagar** na linha dele, marque a caixa de confirmação, digite a sua senha atual e clique em **Apagar de vez**.
+5. Para enviar um arquivo, entre na pasta onde ele vai ficar, escolha o arquivo no cartão **Enviar arquivo** e clique em **Enviar arquivo**. Para gravar com outro nome, preencha **Gravar com o nome**.
+6. Para prender um usuário a uma pasta, entre nela e clique em **Novo usuário nesta pasta**: o cadastro abre com o campo **Pasta** preenchido.
+7. Para trocar o nome de um arquivo ou de uma pasta, clique em **Renomear** na linha dele, escreva o nome novo, digite a sua senha atual e clique em **Trocar nome**. O item continua na mesma pasta.
+8. Para apagar um arquivo ou uma pasta, clique em **Apagar** na linha dele, marque a caixa de confirmação, digite a sua senha atual e clique em **Apagar de vez**.
 
-**Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Log ganha a linha `Arquivo baixado`, com o administrador, o caminho e o tamanho. A pasta criada aparece na lista com o aviso `Pasta criada.`, vazia, já com o dono e a permissão que o FTP usa, e fica na aba Log como `Pasta criada`. O item renomeado aparece com o nome novo e o aviso `Nome trocado.`, com o mesmo conteúdo, dono e permissão; o apagado some da lista com o aviso `Apagado.`. Os dois ficam na aba Log, como `Arquivo ou pasta renomeado` e `Arquivo ou pasta apagado`.
+**Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Log ganha a linha `Arquivo baixado`, com o administrador, o caminho e o tamanho. A pasta criada aparece na lista com o aviso `Pasta criada.`, vazia, já com o dono e a permissão que o FTP usa, e fica na aba Log como `Pasta criada`. O arquivo enviado aparece na lista com o aviso `Arquivo enviado.`, com o dono e a permissão dos arquivos que chegam por FTP, e fica na aba Log como `Arquivo enviado pelo painel`. O item renomeado aparece com o nome novo e o aviso `Nome trocado.`, com o mesmo conteúdo, dono e permissão; o apagado some da lista com o aviso `Apagado.`. Os dois ficam na aba Log, como `Arquivo ou pasta renomeado` e `Arquivo ou pasta apagado`.
 
 > ⚠️ **Apagar não tem volta.** O painel não tem lixeira: a pasta sai com tudo o que tem dentro, e o que foi apagado só volta do [backup](backup.md). A tela de confirmação mostra o caminho e, para pasta, quantos arquivos ela tem.
 
@@ -362,7 +365,7 @@ A aba Arquivos mostra as pastas de `DATA_DIR/dados`, entrega pelo navegador qual
 Limites:
 
 - O nome da pasta nova tem letras, números, `_`, `-` e ponto, não começa com ponto e vai até 64 caracteres. Uma pasta por vez: para criar `clientes/olt-01`, crie `clientes`, entre nela e crie `olt-01`.
-- O nome novo de um item renomeado segue a mesma regra. Renomear não muda o item de pasta e não substitui outro: nome que já existe na pasta é recusado.
+- O nome novo de um item renomeado segue a mesma regra. Renomear não muda o item de pasta e não substitui outro: nome que já existe na pasta é recusado. A troca pede a senha atual de quem está na sessão, como o apagamento.
 - **Pasta de usuário do FTP não é renomeada nem apagada pela aba Arquivos**, nem a pasta que tem a de um usuário dentro: o cadastro deixaria de apontar para uma pasta que existe. O que está dentro dela pode ser renomeado e apagado. Para tirar a pasta inteira, remova o usuário com a caixa **Apagar também a pasta**, em [Usuários pelo painel](#usuarios); para mudar o nome, crie a pasta nova e troque a do usuário em **Editar**.
 - Um pedido de apagar remove até **50.000 itens** ou trabalha por até **20 segundos**. Pasta maior que isso é apagada em parte: a tela `Apagado em parte` diz quantos itens saíram e traz o botão para repetir, com a confirmação e a senha de novo.
 - **Um apagamento por vez** em todo o painel. O segundo, pedido enquanto o primeiro trabalha, recebe a tela `Nada foi apagado` (`503`), com o aviso de que o painel já está apagando outra pasta: espere e repita.
@@ -371,14 +374,43 @@ Limites:
 - O download **não é retomado**: se a conexão cair, começa de novo.
 - Conexão que recebe menos de cerca de 4 KiB por segundo é cortada, e o download aparece na aba Log como `Download interrompido`.
 
-<details>
-<summary>Detalhe técnico — como o painel abre, entrega o arquivo, cria a pasta, renomeia e apaga</summary>
+<a name="enviar-arquivo"></a>
 
-- **Rotas:** `GET /arquivos?pasta=<caminho>` lista e `GET /arquivos/baixar?arquivo=<caminho>` entrega. `POST /arquivos/pasta` cria uma pasta, com os campos `pasta` (onde) e `nome` e o token CSRF. `GET /arquivos/renomear?item=<caminho>` e `GET /arquivos/apagar?item=<caminho>` mostram a tela de cada ação; `POST /arquivos/renomear` leva os campos `item` e `nome`, e `POST /arquivos/apagar`, os campos `item`, `confirmar=sim` e `senha_atual`, os dois com o token CSRF. Todas exigem sessão de administrador; sem sessão, o pedido vai para a tela de entrada. Não existe rota de envio.
+**Enviar arquivo pelo painel.** O cartão **Enviar arquivo** fica embaixo da lista e grava na pasta que está aberta. O administrador sempre envia, pela aba Arquivos. O usuário do FTP envia pela tela dele, e só com a caixa **Permitir que este usuário envie arquivo pelo painel** marcada nos [limites](#limites) dele; a permissão serve para os perfis Só envio, Envio e Completo, e o perfil Leitura não envia.
+
+| Regra | Como funciona |
+|---|---|
+| Tamanho | Até `PAINEL_ENVIO_MAX_MB` por arquivo, 1024 MB no padrão; o cartão mostra o teto em vigor. Arquivo maior vai por FTP. Veja [Configuração](configuracao.md#painel) |
+| Nome | O do arquivo escolhido ou o do campo **Gravar com o nome**: letras, números, `_`, `-` e ponto, não começa com ponto, até 64 caracteres |
+| Nome que já existe | Nunca é substituído: o envio é recusado. No perfil Só envio, que não vê a pasta, o arquivo novo é guardado com a data e a hora no nome (`-AAAAMMDD-HHMMSS` antes da extensão) e a tela avisa |
+| Dono e permissão | Os mesmos dos arquivos que chegam por FTP: o arquivo enviado pelo painel é lido, baixado e apagado como qualquer outro |
+| Taxa | A taxa de envio do usuário vale também aqui; o administrador envia sem teto |
+| Ao mesmo tempo | Um arquivo por vez por usuário do FTP e até 4 em todo o painel |
+| Envio que cai no meio | Nada fica na pasta: o arquivo só ganha nome depois de chegar inteiro. O envio não é retomado: repita |
+
+| A tela responde | Motivo | O que fazer |
+|---|---|---|
+| `Envio não permitido` (`403`) | A conta do FTP não tem a permissão de enviar pelo painel | Um administrador marca a caixa em Usuários ➜ **Editar** ➜ **Limites** |
+| `Nenhum arquivo escolhido` (`400`) | O formulário foi enviado sem arquivo | Escolha o arquivo e envie de novo |
+| `Nome não aceito` (`400`) | O nome do arquivo está fora da regra | Troque o nome do arquivo ou preencha **Gravar com o nome** |
+| `Nome já usado` (`409`) | Já existe pasta ou arquivo com o nome, e nada foi substituído | Envie com outro nome, ou apague ou renomeie o que está lá |
+| `Arquivo grande demais` (`413`) | O arquivo passa do teto | Envie por FTP, ou aumente `PAINEL_ENVIO_MAX_MB` e rode o `deploy.sh` |
+| `Muitos envios ao mesmo tempo` (`503`) | A conta já está enviando um arquivo, ou o painel já recebe 4 | Espere terminar e repita |
+| `Sem espaço` (`507`) | O servidor não tem espaço livre para o arquivo | Libere espaço em `DATA_DIR/dados` e repita |
+| `Arquivo não gravado` (`500`) | O sistema recusou a gravação | Confira a aba Log e o log do painel: veja [Solução de problemas](solucao-de-problemas.md) |
+
+**Resultado esperado:** a pasta volta com o aviso `Arquivo enviado.` e o arquivo na lista; no perfil Só envio, a tela volta com `Arquivo enviado.` ou, quando o nome já existia, com `Arquivo enviado. Já havia um com este nome: o novo foi guardado com a data e a hora no nome.`.
+
+<details>
+<summary>Detalhe técnico — como o painel abre, entrega e recebe o arquivo, cria a pasta, renomeia e apaga</summary>
+
+- **Rotas:** `GET /arquivos?pasta=<caminho>` lista e `GET /arquivos/baixar?arquivo=<caminho>` entrega. `POST /arquivos/pasta` cria uma pasta, com os campos `pasta` (onde) e `nome` e o token CSRF. `GET /arquivos/renomear?item=<caminho>` e `GET /arquivos/apagar?item=<caminho>` mostram a tela de cada ação; `POST /arquivos/renomear` leva os campos `item`, `nome` e `senha_atual`, e `POST /arquivos/apagar`, os campos `item`, `confirmar=sim` e `senha_atual`, os dois com o token CSRF. `POST /arquivos/enviar` recebe um arquivo. Todas exigem sessão de administrador; sem sessão, o pedido vai para a tela de entrada.
 - **Caminho:** sempre relativo a `DATA_DIR/dados` (`/data` no container). Caminho com parte `..`, `.` ou vazia, com byte nulo, com parte de mais de 255 bytes ou com mais de 4096 caracteres recebe `400` e o evento `recusa_caminho`.
 - **Abertura:** o painel abre a pasta dos dados e depois cada parte do caminho em relação à anterior, só para leitura e sem seguir link simbólico (`O_RDONLY`, `O_NOFOLLOW`). O que foi conferido é o mesmo que fica aberto: trocar uma pasta por um link no meio do pedido não muda o que é lido. Link simbólico em qualquer nível, mesmo apontando para dentro da própria pasta, recebe `403` e o evento `recusa_caminho`.
-- **Pasta nova:** a pasta de destino é aberta do mesmo jeito que na listagem, e a nova é criada em relação a ela (`mkdir` pelo descritor da pasta aberta), com dono `ftpdata` e modo `0750`, os mesmos das pastas criadas pelo FTP. Nome fora da regra, com `/`, `..` ou byte nulo, recebe `400` e o evento `recusa_caminho`; destino que passa por link simbólico, `403`; destino que não existe, `404`; nome já usado por pasta, arquivo ou link, `409`. O painel não cria nada além da pasta vazia.
-- **Renomear:** a pasta onde o item está é aberta do mesmo jeito que na listagem, e a troca é feita em relação a ela, por uma chamada só (`renameat2` com `RENAME_NOREPLACE`): se o nome novo já existe, o sistema recusa, e não há intervalo em que outro processo possa colocar algo no lugar. Sistema de arquivos que não aceita essa opção cai na conferência seguida da troca. Nome novo fora da regra recebe `400` e o evento `recusa_caminho`; nome igual ao atual ou já usado, `409`; caminho por dentro de link simbólico, `403`; item que não existe, `404`.
+- **Pasta nova:** a pasta de destino é aberta do mesmo jeito que na listagem, e a nova é criada em relação a ela (`mkdir` pelo descritor da pasta aberta), com dono `ftpdata` e modo `0750`, os mesmos das pastas criadas pelo FTP. Nome fora da regra, com `/`, `..` ou byte nulo, recebe `400` e o evento `recusa_caminho`; destino que passa por link simbólico, `403`; destino que não existe, `404`; nome já usado por pasta, arquivo ou link, `409`.
+- **Envio:** `POST /arquivos/enviar`, em `multipart/form-data`, com os campos `csrf`, `pasta` e `nome` antes e o arquivo por último. Só essa forma é aceita: outra recebe `400` (`Envio malformado.`), e pedido que não é `multipart/form-data`, `415`. A origem, a sessão e o token são conferidos antes de o arquivo ser lido, e o tamanho dele sai do `Content-Length`. O arquivo é escrito sem nome na própria pasta de destino (`O_TMPFILE`), em blocos, sem ficar inteiro na memória nem passar por arquivo temporário; recebe o dono `ftpdata` e o modo `0644`, vai para o disco (`fsync`) e só então ganha o nome, por `link()`. Nome que já existe faz o `link()` falhar, e a resposta é `409`; envio cortado não deixa resto na pasta, responde `400` e grava `envio_interrompido`. Antes de receber, o painel compara o tamanho com o espaço livre da pasta (`507`). Até 4 envios ao mesmo tempo; o seguinte recebe `503` com `Retry-After: 30`.
+- **Envio no nginx:** só `/arquivos/enviar` e `/meus-arquivos/enviar` aceitam corpo grande, de até `PAINEL_ENVIO_MAX_MB` mais 1 MB; nas outras rotas o limite é o dos formulários. O nginx repassa o corpo ao painel enquanto ele chega, sem gravar em disco (`proxy_request_buffering off`), e espera até 300 segundos por dado. Corpo acima do teto é recusado pelo nginx com `413` e um texto curto, antes de chegar ao painel; envio sem tamanho declarado, em pedaços, recebe `411`.
+- **Renomear:** a pasta onde o item está é aberta do mesmo jeito que na listagem, e a troca é feita em relação a ela, por uma chamada só (`renameat2` com `RENAME_NOREPLACE`): se o nome novo já existe, o sistema recusa, e não há intervalo em que outro processo possa colocar algo no lugar. Sistema de arquivos que não aceita essa opção cai na conferência seguida da troca. Nome novo fora da regra recebe `400` e o evento `recusa_caminho`; nome igual ao atual ou já usado, `409`; caminho por dentro de link simbólico, `403`; item que não existe, `404`. A senha atual de quem está na sessão é conferida depois do nome e antes da troca, do mesmo jeito que no apagamento: errada ou em branco, `403`, o evento `admin_senha_atual_recusada` e um erro de entrada a mais para o endereço.
 - **Apagar:** pede a caixa `confirmar=sim` (`400` sem ela) e a senha atual de quem está na sessão: senha errada ou em branco recebe `403`, grava `admin_senha_atual_recusada` e conta como erro de entrada, e cinco erros bloqueiam o endereço por 15 minutos (`429`). A pasta é esvaziada de dentro para fora, sempre pelo descritor da pasta aberta e sem seguir link simbólico (`O_NOFOLLOW`): um link dentro dela é apagado como link, e o que está do outro lado dele não é tocado, esteja dentro ou fora de `DATA_DIR/dados`. O painel desce até 64 pastas uma dentro da outra.
 - **Limites do apagamento:** 50.000 itens ou 20 segundos por pedido, abaixo dos 30 segundos que o nginx espera pelo painel. Ao bater em um deles, o painel para, responde `200` com a tela `Apagado em parte` e grava `item_apagado` com `completo=nao`. Um apagamento por vez: o segundo recebe `503` com `Retry-After: 30`. Item que não pôde ser removido (permissão, erro de disco) para o pedido com a tela `Nada foi apagado` (`500`) ou `Apagado em parte`.
 - **Pasta de usuário:** antes de renomear ou apagar, o painel relê o cadastro do FTP. Se o item é a pasta de um usuário, ou tem a pasta de um usuário dentro, a tela e o `POST` respondem `409`, com os nomes dos usuários.
@@ -390,7 +422,7 @@ Limites:
 - **Só os cabeçalhos (`HEAD`):** o pedido `HEAD` do mesmo endereço devolve o tamanho e o nome do arquivo, sem o conteúdo. Não ocupa vaga de download nem entra na auditoria.
 - **Ritmo mínimo:** cada bloco tem 15 segundos para sair; passado isso, o painel fecha a conexão e libera a vaga do download.
 - **Nome fora do UTF-8:** aparece na lista com o sinal de substituição no lugar do byte inválido, e é baixado do mesmo jeito.
-- **Auditoria:** `pasta_criada` registra o administrador e o caminho; `item_renomeado`, o administrador, o tipo (`arquivo`, `pasta`, `link` ou `especial`) e os caminhos de antes e de depois; `item_apagado`, o administrador, o tipo, o caminho e a quantidade de itens removidos; `arquivo_baixado` e `arquivo_interrompido` registram quem baixou, o caminho e os bytes entregues; o conteúdo do arquivo nunca é registrado.
+- **Auditoria:** `pasta_criada` registra o administrador e o caminho; `arquivo_enviado`, quem enviou, o caminho e os bytes; `envio_interrompido`, o envio que parou antes do fim; `item_renomeado`, o administrador, o tipo (`arquivo`, `pasta`, `link` ou `especial`) e os caminhos de antes e de depois; `item_apagado`, o administrador, o tipo, o caminho e a quantidade de itens removidos; `arquivo_baixado` e `arquivo_interrompido` registram quem baixou, o caminho e os bytes entregues; o conteúdo do arquivo nunca é registrado.
 
 </details>
 
@@ -407,29 +439,31 @@ O dono dos arquivos pega os próprios backups pelo navegador, sem depender de qu
 3. Na tela **Meus arquivos**, clique no nome de uma pasta, ou em **Abrir**, para entrar; o caminho no alto da lista volta a qualquer nível, a partir de **Início**.
 4. Clique em **Baixar** na linha do arquivo. O navegador salva o arquivo com o nome original.
 5. Com o perfil Envio ou Completo, o cartão **Nova pasta**, abaixo da lista, cria uma pasta vazia dentro da que está aberta.
-6. Com o perfil Completo, cada linha tem **Renomear** e **Apagar**. Apagar pede a caixa de confirmação e a senha do FTP da própria conta, e não tem lixeira.
-7. Clique em **Sair** ao terminar.
+6. Com a permissão de envio pelo painel, dada pelo administrador, o cartão **Enviar arquivo** grava um arquivo na pasta que está aberta: veja [Enviar arquivo pelo painel](#enviar-arquivo).
+7. Com o perfil Completo, cada linha tem **Renomear** e **Apagar**. Os dois pedem a senha do FTP da própria conta; apagar pede também a caixa de confirmação, e não tem lixeira.
+8. Clique em **Sair** ao terminar.
 
-**Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Log, que só o administrador vê, ganha as linhas `Entrada aceita` e `Arquivo baixado`, com o nome do usuário do FTP, o caminho e o tamanho. Pasta criada, nome trocado e item apagado ganham a linha deles, com o mesmo usuário.
+**Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Log, que só o administrador vê, ganha as linhas `Entrada aceita` e `Arquivo baixado`, com o nome do usuário do FTP, o caminho e o tamanho. Pasta criada, arquivo enviado, nome trocado e item apagado ganham a linha deles, com o mesmo usuário.
 
 | O usuário do FTP | No painel |
 |---|---|
 | Vê | Só a pasta do cadastro dele e o que há dentro dela: nome, tamanho e data. O caminho da pasta no servidor não aparece |
-| Faz | Leitura: navega e baixa. Envio: também cria pasta. Completo: também troca o nome e apaga, do jeito da [aba Arquivos](#arquivos) e só dentro da pasta dele. Só envio: não vê arquivo nenhum; a tela dele, **Envio de arquivos**, mostra só o endereço, a porta e o modo para enviar por FTP. Enviar arquivo é por FTP, até onde o [perfil](#perfis) deixa |
+| Faz | Leitura: navega e baixa. Envio: também cria pasta. Completo: também troca o nome e apaga, do jeito da [aba Arquivos](#arquivos) e só dentro da pasta dele. Só envio: não vê arquivo nenhum; a tela dele, **Envio de arquivos**, mostra o endereço, a porta e o modo para enviar por FTP. Enviar arquivo é por FTP, até onde o [perfil](#perfis) deixa, e também pelo painel quando o administrador dá à conta a [permissão de envio](#enviar-arquivo): nos perfis Envio e Completo, para a pasta aberta; no Só envio, pela tela dele, sem ver o que já está guardado |
 | Não alcança | Nenhuma aba de administração: Usuários, Arquivos de todos, Servidor, Segurança, Bloqueios e Log respondem `404` para ele. A ação que o perfil não tem responde `404` também |
 | Divide com outro usuário | Só o que já divide no FTP: quem tem a mesma pasta, ou uma pasta dentro da outra, vê pelo painel os mesmos arquivos que vê por FTP |
 
 Regras:
 
 - Entra todo usuário do cadastro do FTP, inclusive o usuário inicial (`FTP_USER`), com a senha que vale no FTP naquele momento.
-- A sessão acompanha o cadastro: trocar a senha, a pasta, o perfil ou um limite do FTP do usuário, ou removê-lo, pelo painel ou pelo `manage-user.sh`, encerra as sessões dele no pedido seguinte.
+- A sessão acompanha o cadastro: trocar a senha, a pasta, o perfil ou um limite do FTP do usuário, ou removê-lo, pelo painel ou pelo `manage-user.sh`, encerra as sessões dele no pedido seguinte. Dar ou tirar a permissão de envio pelo painel e gravar a limpeza automática não encerram a sessão.
 - Nome igual ao de um administrador entra **só** como administrador, com a senha de administrador. Se um administrador é criado com o nome de um usuário do FTP, a sessão desse usuário é encerrada e ele deixa de entrar no painel; por FTP, nada muda.
-- **Apagar pede a senha do FTP** de quem está na sessão, conferida pelo servidor FTP como na entrada: senha errada ou em branco recebe `403`, grava `usuario_senha_atual_recusada` e conta como erro de entrada. Os limites do apagamento são os da [aba Arquivos](#arquivos).
+- **Apagar e trocar o nome pedem a senha do FTP** de quem está na sessão, conferida pelo servidor FTP como na entrada: senha errada ou em branco recebe `403`, grava `usuario_senha_atual_recusada` e conta como erro de entrada. Os limites do apagamento são os da [aba Arquivos](#arquivos).
+- **Enviar pelo painel depende da permissão da conta**, lida a cada envio: o administrador dá ou tira, e vale na hora. Sem ela, o cartão **Enviar arquivo** não aparece e o pedido direto recebe `403` e o evento `recusa_envio`. As regras do envio são as de [Enviar arquivo pelo painel](#enviar-arquivo): um arquivo por vez por conta, na taxa de envio dela.
 - **Pasta de outro usuário** dentro da dele não tem o nome trocado nem é apagada por ele (`409`); a tela não diz de quem é a pasta. O que está dentro dela ele altera item por item, como já faz por FTP.
 - Até **3 sessões** por usuário do FTP: a quarta entrada encerra a mais antiga. Até **2 downloads ao mesmo tempo** por usuário, ou o número que o administrador gravou nos [limites](#limites) dele; o seguinte recebe a tela `Muitos downloads ao mesmo tempo` (`503`).
 - Os [limites](#limites) do usuário valem aqui também: os downloads saem na taxa de download dele, e fora do horário dele, ou com todas as sessões dele no FTP ocupadas, a entrada é recusada.
 - Cinco erros de usuário ou senha em 15 minutos bloqueiam o endereço, do mesmo jeito que na entrada do administrador.
-- Com o servidor FTP parado, quem já entrou continua navegando, baixando, criando pasta e trocando nome; apagar responde `503`, porque a senha não pode ser conferida, e ninguém novo entra com conta do FTP. O administrador entra normalmente.
+- Com o servidor FTP parado, quem já entrou continua navegando, baixando, enviando e criando pasta; trocar nome e apagar respondem `503`, porque a senha não pode ser conferida, e ninguém novo entra com conta do FTP. O administrador entra normalmente.
 
 Para o painel aceitar **só administradores**, troque a variável no `.env` e rode o `deploy.sh`:
 
@@ -449,9 +483,9 @@ PAINEL_ACESSO_USUARIOS_FTP=nao
 - **Tempo da entrada:** o hash do cadastro é `argon2id`, e o servidor FTP leva menos de 1 segundo para conferir uma senha gravada com o custo do porte e de 3 a 6 segundos a mais, sorteados, para recusar. O painel repassa esse tempo. Como só o nome que existe tem a senha conferida, ele demora um pouco mais para ser recusado que o nome que não existe, a mesma diferença que se mede direto na porta do FTP ([Segurança](seguranca.md#custo-das-senhas)); a tela e o código da resposta são os mesmos nos dois casos.
 - **Limites da conferência:** duas conferências por vez, com até 5 segundos de espera pela vez e 15 segundos por etapa da conversa. Sem resposta nesse prazo, servidor fora do ar, lotado ou com outro certificado, a entrada é recusada com `401`, conta como erro e fica na auditoria como `entrada_falha conferencia=ftp_indisponivel`.
 - **Sessão:** guarda o nome, a pasta do cadastro, o perfil e o resumo SHA-256 da linha inteira do usuário em `/auth/pureftpd.passwd`, lidos antes e depois da conferência, que têm de ser iguais. A cada pedido, o painel relê a linha: se mudou, se sumiu, se o nome virou de administrador ou se a entrada foi desligada, a sessão é encerrada, o cookie é apagado e o evento `sessao_encerrada` registra o usuário e o motivo (`cadastro_alterado`, `nome_de_administrador` ou `acesso_desligado`).
-- **Rotas:** cada perfil tem a tabela de rotas dele, escolhida pelo perfil guardado na sessão. Leitura: `GET /` (leva a `/meus-arquivos`), `GET /meus-arquivos?pasta=<caminho>`, `GET /meus-arquivos/baixar?arquivo=<caminho>` e `POST /sair`. Envio: mais `POST /meus-arquivos/pasta`. Completo: mais `GET` e `POST` em `/meus-arquivos/renomear` e em `/meus-arquivos/apagar`. Só envio: `GET /`, `GET /meus-arquivos`, que mostra a tela Envio de arquivos sem ler pasta nenhuma, e `POST /sair`. Qualquer outra rota responde `404`; quando é uma rota de administração ou de outro perfil, fica o evento `recusa_papel`, com o usuário, o caminho e o perfil. Para o administrador, `/meus-arquivos` não existe.
+- **Rotas:** cada perfil tem a tabela de rotas dele, escolhida pelo perfil guardado na sessão. Leitura: `GET /` (leva a `/meus-arquivos`), `GET /meus-arquivos?pasta=<caminho>`, `GET /meus-arquivos/baixar?arquivo=<caminho>` e `POST /sair`. Envio: mais `POST /meus-arquivos/pasta` e `POST /meus-arquivos/enviar`. Completo: mais `GET` e `POST` em `/meus-arquivos/renomear` e em `/meus-arquivos/apagar`. Só envio: `GET /`, `GET /meus-arquivos`, que mostra a tela Envio de arquivos sem ler pasta nenhuma, `POST /meus-arquivos/enviar` e `POST /sair`. A rota de envio existe para o perfil, e a permissão da conta é conferida a cada pedido. Qualquer outra rota responde `404`; quando é uma rota de administração ou de outro perfil, fica o evento `recusa_papel`, com o usuário, o caminho e o perfil. Para o administrador, `/meus-arquivos` não existe.
 - **Ações:** são as mesmas funções da aba Arquivos, com a pasta do cadastro como raiz: token do formulário, conferência de `Origin`, nome novo validado, sem trocar o item de pasta nem substituir outro, e apagamento de dentro para fora sem seguir link simbólico.
-- **Senha na confirmação:** o servidor FTP confere a senha, e o painel só a aceita se a linha do cadastro for a mesma com que a sessão foi aberta. Sem resposta do servidor FTP, responde `503`, grava `falha_comando` com `acao=confirmar_senha` e nada é apagado.
+- **Senha na confirmação:** o servidor FTP confere a senha, e o painel só a aceita se a linha do cadastro for a mesma com que a sessão foi aberta. Sem resposta do servidor FTP, responde `503`, grava `falha_comando` com `acao=confirmar_senha` e nada é apagado nem tem o nome trocado.
 - **Caminho:** sempre relativo à pasta do cadastro, que é a raiz dele. Passa pelas mesmas conferências da [aba Arquivos](#arquivos): parte por parte, sem `..`, sem seguir link simbólico, só arquivo comum, entrega como anexo, em blocos e sem retomada. Na auditoria, o caminho vai inteiro, a partir da pasta dos dados.
 - **Pasta ainda não criada:** a pasta de um usuário novo nasce no primeiro login por FTP; antes disso, a tela mostra a lista vazia.
 - **Sessões cheias:** quando o painel chega ao teto de 50 sessões, sai primeiro a sessão menos usada de usuário do FTP; a entrada de um usuário não derruba a de um administrador.
@@ -640,13 +674,13 @@ O painel mostra a logo da ALL-SAFE em quatro lugares e a autoria em um:
 | Tela de entrada | Logo completa | `logo-320.png` |
 | Rodapé de todas as telas | `Desenvolvido pela allsafe.inf.br`, com o endereço do site e o do GitHub | texto do painel |
 
-Os seis arquivos ficam em [`web/marca/`](../web/marca/) e são entregues pelo nginx.
+Os seis arquivos ficam em [`web/marca/`](../../web/marca/) e são entregues pelo nginx.
 
-> ⚠️ **Contrato ou venda para terceiros:** quem usa a stack para si pode manter a logo e o ícone. Quem a entrega em contrato ou a vende para terceiros tira ou troca os dois. É o único pedido da ALL-SAFE, explicado em [Marca ALL-SAFE](../MARCA.md).
+> ⚠️ **Contrato ou venda para terceiros:** quem usa a stack para si pode manter a logo e o ícone. Quem a entrega em contrato ou a vende para terceiros tira ou troca os dois. É o único pedido da ALL-SAFE, explicado em [Marca ALL-SAFE](../../MARCA.md).
 
 **Trocar a logo e o ícone:**
 
-1. Substitua as duas artes de [`web/marca/fonte/`](../web/marca/fonte/), mantendo os nomes: `allsafe-logo-2048.png` (logo completa) e `allsafe-simbolo-512.png` (só o símbolo). Use PNG quadrado, de preferência com fundo transparente.
+1. Substitua as duas artes de [`web/marca/fonte/`](../../web/marca/fonte/), mantendo os nomes: `allsafe-logo-2048.png` (logo completa) e `allsafe-simbolo-512.png` (só o símbolo). Use PNG quadrado, de preferência com fundo transparente.
 2. Gere os seis arquivos:
 
    ```bash
@@ -668,7 +702,7 @@ A linha `Desenvolvido pela allsafe.inf.br` continua no rodapé de todas as telas
 
 - **Sem o ImageMagick:** o `gerar-marca.sh` precisa dele só no computador de quem troca a logo. Também serve substituir direto os seis arquivos de `web/marca/`, com os mesmos nomes e tamanhos: a tabela está em [Scripts](scripts.md#gerar-marca).
 - **Placa clara:** a arte é escura e o painel tem fundo escuro; o script põe a arte sobre uma placa clara de cantos arredondados, sem alterar as cores dela. `MARCA_PLACA='#rrggbb'` troca a cor da placa.
-- **Só os seis nomes existem:** o nginx entrega `/favicon.ico` e os cinco PNG de `/marca/`, só para leitura, com os cabeçalhos de segurança de [`nginx/cabecalhos.conf`](../nginx/cabecalhos.conf) e `Cache-Control: no-cache`. Outro nome, a lista da pasta e as artes de origem não são entregues, e as artes de origem nem entram na imagem.
+- **Só os seis nomes existem:** o nginx entrega `/favicon.ico` e os cinco PNG de `/marca/`, só para leitura, com os cabeçalhos de segurança de [`nginx/cabecalhos.conf`](../../nginx/cabecalhos.conf) e `Cache-Control: no-cache`. Outro nome, a lista da pasta e as artes de origem não são entregues, e as artes de origem nem entram na imagem.
 - **Sem conteúdo de fora:** o painel continua com `img-src 'self'`: só carrega imagem do próprio endereço. Os dois links do rodapé abrem em outra aba com `rel="noopener noreferrer"`, e o `Referrer-Policy: same-origin` não repassa o endereço do painel ao site de destino.
 - **Conferência:** o `./scripts/validate.sh` recusa a pasta sem um dos seis arquivos, ou com arquivo que não é PNG nem ICO.
 
@@ -771,7 +805,7 @@ flowchart LR
     subgraph RESULTADO["Resultado"]
         fim@{ shape: stadium, label: "usuário pronto no FTP" }
         barrado@{ shape: stadium, label: "403<br>envio recusado" }
-        feito@{ shape: stadium, label: "arquivo baixado<br>ou alteração feita" }
+        feito@{ shape: stadium, label: "arquivo baixado, enviado<br>ou alteração feita" }
         recusa@{ shape: stadium, label: "pedido recusado" }
     end
 
@@ -784,7 +818,7 @@ flowchart LR
     painel -- "5 · em Arquivos ou em Meus arquivos, abre uma pasta ou baixa um arquivo" --> caminho
     caminho -- "6a · sim: abre parte por parte, sem seguir link simbólico" --> dados
     caminho -- "6b · não: 400, 403, 404 ou 409" --> recusa
-    dados -- "7 · entrega o arquivo ou cria a pasta, renomeia ou apaga" --> feito
+    dados -- "7 · entrega o arquivo, grava o enviado, cria a pasta, renomeia ou apaga" --> feito
     painel -. "registra cada ação" .-> auditoria
 ```
 
@@ -792,16 +826,16 @@ flowchart LR
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
-| 1 | Painel web ➜ origem e token conferem? | Todo formulário enviado é conferido duas vezes: a origem tem de ser o próprio painel e o token CSRF tem de ser o da sessão. Só o administrador tem formulário de usuário e de arquivos; na sessão do usuário do FTP, o único formulário é o de sair |
+| 1 | Painel web ➜ origem e token conferem? | Todo formulário enviado é conferido duas vezes: a origem tem de ser o próprio painel e o token CSRF tem de ser o da sessão. Formulário de usuário, só o administrador tem; os de arquivos, o administrador e o usuário do FTP, este conforme o perfil dele |
 | 2a | origem e token conferem? ➜ `allsafe-ftp-user` | Sim, formulário de usuário: o painel chama o comando, com a senha pela entrada padrão |
-| 2b | origem e token conferem? ➜ caminho dentro da pasta dos dados? | Sim, formulário da aba Arquivos (criar pasta, renomear ou apagar): segue para a conferência do caminho |
+| 2b | origem e token conferem? ➜ caminho dentro da pasta dos dados? | Sim, formulário de arquivos, da aba Arquivos ou da tela Meus arquivos (enviar arquivo, criar pasta, renomear ou apagar): segue para a conferência do caminho |
 | 2c | origem e token conferem? ➜ 403 | Não: `403`, sem alterar nada, para o envio que não partiu do painel ou que veio sem o token da sessão |
 | 3 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez, e a pasta do usuário novo é criada em `DATA_DIR/dados`, se ainda não existe; a dispensa do TLS de um usuário fica na `sem-tls.lista`, na mesma pasta do banco |
 | 4 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
 | 5 | Painel web ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta ou baixa um arquivo; na tela Meus arquivos, o usuário do FTP faz o mesmo, só na pasta dele. Esses pedidos não levam formulário, e o caminho é conferido do mesmo jeito |
 | 6a | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | Sim: o painel abre cada parte do caminho sem seguir link simbólico, a partir da pasta dos dados, para o administrador, e a partir da pasta do cadastro, para o usuário do FTP |
 | 6b | caminho dentro da pasta dos dados? ➜ pedido recusado | Não: `400` para caminho ou nome que tenta sair da pasta, `403` para link simbólico, `404` para o que não existe, `409` para nome já usado |
-| 7 | `DATA_DIR/dados` ➜ arquivo baixado ou alteração feita | O arquivo sai como anexo, em blocos; a pasta nova nasce vazia, do usuário `ftpdata`; o arquivo ou a pasta escolhida é renomeada ou apagada |
+| 7 | `DATA_DIR/dados` ➜ arquivo baixado, enviado ou alteração feita | O arquivo sai como anexo, em blocos; o arquivo enviado só ganha nome na pasta depois de chegar inteiro, sem substituir o que existe; a pasta nova nasce vazia, do usuário `ftpdata`; o arquivo ou a pasta escolhida é renomeada ou apagada |
 
 **Apoio**
 
@@ -839,18 +873,21 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `retencao_aplicada` · `retencao_falhou` | A limpeza automática apagou arquivos antigos, com o usuário, a pasta, os arquivos, as pastas vazias e os bytes que saíram, os erros e a regra · uma passada não terminou, com o motivo. Sem endereço: quem fez foi o painel |
 | `bloqueio_removido` | Um administrador tirou o bloqueio por tentativa de um usuário no FTP, com o administrador, o usuário e a quantidade de endereços desbloqueados |
 | `endereco_bloqueado` | O painel bloqueou o endereço que passou do limite de erros de usuário e senha, com a quantidade de erros e os dias |
-| `endereco_prazo` · `endereco_desbloqueado` | Um administrador mudou o prazo do bloqueio de um endereço · liberou o endereço; com o administrador, o endereço e, na mudança, os dias |
+| `endereco_bloqueado_manual` | Um administrador bloqueou à mão um endereço ou um prefixo, pela aba Bloqueios, com o administrador, o endereço ou o prefixo e os dias |
+| `endereco_prazo` · `endereco_desbloqueado` | Um administrador mudou o prazo do bloqueio de um endereço ou de um prefixo · liberou o bloqueio; com o administrador, o endereço ou o prefixo e, na mudança, os dias |
 | `recusa_endereco` | Pedido de um endereço bloqueado, recusado com `403` antes de qualquer rota |
 | `tls_dispensado` · `tls_exigido` | Um administrador dispensou um usuário do TLS · voltou a exigir; com o administrador e o usuário |
 | `pasta_criada` | Pasta criada pela aba Arquivos ou pela tela Meus arquivos, com quem criou (administrador ou usuário do FTP) e o caminho |
 | `item_renomeado` · `item_apagado` | Arquivo ou pasta com o nome trocado · apagado, pela aba Arquivos, pela tela Meus arquivos ou junto com o usuário; com quem fez (administrador ou usuário do FTP), o tipo e o caminho. O renomeado leva o caminho de antes e o de depois; o apagado, a quantidade de itens removidos, `completo=nao` quando o pedido parou no limite e `usuario=` quando a pasta saiu junto com o dono |
 | `arquivo_baixado` · `arquivo_interrompido` | Download pela aba Arquivos ou pela tela Meus arquivos, completo · cortado antes do fim; com quem baixou, o caminho e os bytes entregues |
+| `arquivo_enviado` · `envio_interrompido` | Arquivo enviado pelo painel, pela aba Arquivos ou pela tela do usuário do FTP · envio que parou antes do fim, sem nada gravado; com quem enviou, o caminho e os bytes |
+| `recusa_envio` | Usuário do FTP que pediu o envio pelo painel sem ter a permissão, com o usuário e o perfil |
 | `admin_inicial_criado` | Primeira subida: o painel criou o administrador de `PAINEL_ADMIN_USER` |
 | `admin_criado` · `admin_senha_trocada` · `admin_renomeado` · `admin_removido` | Alteração de administrador pelo painel, com quem fez e quem foi alterado |
 | `admin_senha_atual_recusada` | Alteração de administrador ou apagamento recusado: a senha atual de quem pediu não conferiu; com o administrador e o caminho pedido |
 | `usuario_senha_atual_recusada` | Apagamento recusado na tela Meus arquivos: a senha do FTP de quem pediu não conferiu; com o usuário e o caminho pedido |
 | `admin_definido_no_host` | O `scripts/painel-senha.sh` criou um administrador ou trocou a senha dele |
-| `falha_comando` | O `allsafe-ftp-user` devolveu erro, ou o sistema recusou renomear ou apagar um item |
+| `falha_comando` | O `allsafe-ftp-user` devolveu erro, ou o sistema recusou gravar, renomear ou apagar um item |
 | `recusa_csrf` · `recusa_origem` · `recusa_host` · `recusa_rede` | Pedido recusado: sem token, de outra origem, com nome de host inválido ou de rede não permitida |
 | `recusa_caminho` | Abas Arquivos e Usuários e tela Meus arquivos: caminho ou nome de pasta que tenta sair da pasta dos dados ou que passa por link simbólico |
 
@@ -871,14 +908,14 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 | Transporte | Só HTTPS, TLS 1.2 ou 1.3, em HTTP/2 ou HTTP/1.1; HTTP puro recebe `400` |
 | Volume de pedidos | No nginx, por endereço: 20 pedidos por segundo (rajada de 40), 16 conexões, 16 KiB por pedido e 5 KiB por endereço ou cabeçalho, em HTTP/2 e em HTTP/1.1; o que passa disso recebe `429`, `413`, `414` ou `400`, ou tem a conexão HTTP/2 encerrada |
 | Entrada | Usuário e senha por administrador; senha de no mínimo 12 caracteres, guardada só como hash `scrypt`; a recusa não diz se o erro foi no usuário ou na senha; cinco erros bloqueiam o endereço por 15 minutos |
-| Usuário do FTP | Entra com o nome e a senha do FTP, conferidos pelo próprio servidor FTP, e alcança só a tela Meus arquivos, na pasta do cadastro, para navegar e baixar; as telas de administração respondem `404`; a sessão acaba quando o cadastro dele muda; `PAINEL_ACESSO_USUARIOS_FTP=nao` desliga esta entrada |
+| Usuário do FTP | Entra com o nome e a senha do FTP, conferidos pelo próprio servidor FTP, e alcança só a tela Meus arquivos, na pasta do cadastro, para o que o perfil dele deixa; as telas de administração respondem `404`; a sessão acaba quando o cadastro dele muda; `PAINEL_ACESSO_USUARIOS_FTP=nao` desliga esta entrada |
 | Perfis | O que cada usuário do FTP faz é limitado pelo perfil dele, aplicado pelo sistema de arquivos do servidor e não pela tela: Leitura não grava, Envio não apaga nem altera o que já chegou, Só envio não lista nem baixa; a troca de perfil encerra a sessão dele no painel |
 | Administradores | Toda alteração de administrador pede a senha atual de quem está alterando; o administrador alterado tem as sessões encerradas; ninguém remove a própria conta |
 | Apagar | Todo apagamento, de arquivo, de pasta ou da pasta junto com o usuário, pede a caixa de confirmação e a senha atual de quem está apagando: um navegador esquecido aberto não apaga backup |
 | Sessão | Cookie `__Host-sessao` com `Secure`, `HttpOnly` e `SameSite=Strict`, presa ao endereço de origem; encerra com 4 horas sem uso (`PAINEL_SESSAO_MINUTOS`) e, de qualquer forma, em 12 horas |
-| Arquivos | A aba Arquivos lê, cria pasta vazia, renomeia e apaga, e só dentro de `DATA_DIR/dados`: caminho que tenta sair da pasta é recusado, link simbólico não é seguido, renomear não muda o item de pasta nem substitui outro, pasta de usuário do FTP só sai junto com o usuário, o arquivo sai sempre como anexo e no máximo 8 downloads correm ao mesmo tempo, 2 por usuário do FTP; o painel não recebe arquivo, e o usuário do FTP só faz, dentro da pasta dele, o que o perfil dele deixa |
+| Arquivos | A aba Arquivos lê, recebe arquivo, cria pasta vazia, renomeia e apaga, e só dentro de `DATA_DIR/dados`: caminho que tenta sair da pasta é recusado, link simbólico não é seguido, renomear não muda o item de pasta nem substitui outro e pede a senha de quem está na sessão, como apagar, pasta de usuário do FTP só sai junto com o usuário, o arquivo sai sempre como anexo e no máximo 8 downloads correm ao mesmo tempo, 2 por usuário do FTP; arquivo enviado pelo painel nunca substitui outro, só ganha nome depois de chegar inteiro, tem teto de tamanho e, para o usuário do FTP, depende da permissão dada pelo administrador; o usuário do FTP só faz, dentro da pasta dele, o que o perfil dele deixa |
 | Pastas dos usuários | Cada usuário do FTP fica preso (`chroot`) na pasta do cadastro; a pasta escolhida não sai de `DATA_DIR/dados` nem passa por link simbólico; pasta alcançada por mais de um usuário aparece marcada como **dividida** |
-| Formulários | Token CSRF por sessão e conferência de `Origin`: o envio tem de partir do próprio painel; corpo limitado a 8 KiB |
+| Formulários | Token CSRF por sessão e conferência de `Origin`: o envio tem de partir do próprio painel; corpo limitado a 8 KiB, menos no envio de arquivo, que tem as duas rotas dele e o teto de `PAINEL_ENVIO_MAX_MB` |
 | Idioma | A troca é um formulário como os outros, com token e `Origin`; o cookie do idioma só leva `pt` ou `en` e não vale como sessão; a volta depois da troca só leva a tela do próprio painel |
 | Navegador | `Content-Security-Policy` sem script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS e `no-store`; a página não carrega nada de fora |
 | Containers | Raiz somente leitura, `cap_drop: ALL`, `no-new-privileges`, sem socket do Docker, limites de CPU, memória e processos; o nginx roda sem root e sem nenhuma capability |
@@ -886,10 +923,10 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 <details>
 <summary>Detalhe técnico — implementação</summary>
 
-- **Código:** os módulos de [`painel/`](../painel/), só com a biblioteca padrão do Python 3.13 do Debian 13, listados [logo abaixo](#modulos); a aparência está em [`web/estilo.css`](../web/estilo.css) e a logo e o ícone em [`web/marca/`](../web/marca/), que o nginx entrega direto, sem passar pelo painel, como o [`web/robots.txt`](../web/robots.txt). Cada página aponta para o estilo com a marca do conteúdo dele (`/estilo.css?v=` e os 12 primeiros dígitos do SHA-256 do arquivo, gravados na construção da imagem do painel): estilo novo é endereço novo, e nem o navegador nem um proxy no caminho entregam o antigo depois de uma atualização. O `/.well-known/security.txt` é o painel que monta, a cada pedido, com o e-mail de `SEGURANCA_CONTATO_EMAIL`: [Configuração](configuracao.md#contato-de-seguranca). Não há JavaScript, fonte nem imagem externa.
-- **Imagem:** alvo `painel` do [`Dockerfile`](../Dockerfile), sobre a mesma base do FTP (traz o `pure-pw` e o `allsafe-ftp-user`). Imagem `PAINEL_IMAGE`, container `PAINEL_CONTAINER_NAME`.
-- **Entrada do container:** [`painel/entrypoint.sh`](../painel/entrypoint.sh) recusa senha em variável, confere o `PAINEL_ADMIN_USER`, o IP e as redes privados, ajusta dono e modo de `/painel` e do arquivo de administradores, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
-- **Frente web:** alvo `nginx` do [`Dockerfile`](../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo). Com o navegador, o nginx fala HTTP/2, ou HTTP/1.1 se o navegador não pedir, e mantém a conexão parada por 60 segundos; com o painel, HTTP/1.1, uma conexão por pedido. O `estilo.css` vai comprimido para quem aceita gzip, a partir da cópia feita na construção da imagem; página do painel nunca é comprimida. Em HTTP/2, o download de arquivo grande usa mais processador por byte: 300 MiB levaram 0,69 s, contra 0,45 s em HTTP/1.1, medidos com o nginx no limite de meio processador, os dois acima do que uma rede de 1 Gbit/s entrega. O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [Segurança](seguranca.md#painel).
+- **Código:** os módulos de [`painel/`](../../painel/), só com a biblioteca padrão do Python 3.13 do Debian 13, listados [logo abaixo](#modulos); a aparência está em [`web/estilo.css`](../../web/estilo.css) e a logo e o ícone em [`web/marca/`](../../web/marca/), que o nginx entrega direto, sem passar pelo painel, como o [`web/robots.txt`](../../web/robots.txt). Cada página aponta para o estilo com a marca do conteúdo dele (`/estilo.css?v=` e os 12 primeiros dígitos do SHA-256 do arquivo, gravados na construção da imagem do painel): estilo novo é endereço novo, e nem o navegador nem um proxy no caminho entregam o antigo depois de uma atualização. O `/.well-known/security.txt` é o painel que monta, a cada pedido, com o e-mail de `SEGURANCA_CONTATO_EMAIL`: [Configuração](configuracao.md#contato-de-seguranca). Não há JavaScript, fonte nem imagem externa.
+- **Imagem:** alvo `painel` do [`Dockerfile`](../../Dockerfile), sobre a mesma base do FTP (traz o `pure-pw` e o `allsafe-ftp-user`). Imagem `PAINEL_IMAGE`, container `PAINEL_CONTAINER_NAME`.
+- **Entrada do container:** [`painel/entrypoint.sh`](../../painel/entrypoint.sh) recusa senha em variável, confere o `PAINEL_ADMIN_USER`, o IP e as redes privados, ajusta dono e modo de `/painel` e do arquivo de administradores, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
+- **Frente web:** alvo `nginx` do [`Dockerfile`](../../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../../nginx/nginx.conf.modelo). Com o navegador, o nginx fala HTTP/2, ou HTTP/1.1 se o navegador não pedir, e mantém a conexão parada por 60 segundos; com o painel, HTTP/1.1, uma conexão por pedido. O `estilo.css` vai comprimido para quem aceita gzip, a partir da cópia feita na construção da imagem; página do painel nunca é comprimida. Em HTTP/2, o download de arquivo grande usa mais processador por byte: 300 MiB levaram 0,69 s, contra 0,45 s em HTTP/1.1, medidos com o nginx no limite de meio processador, os dois acima do que uma rede de 1 Gbit/s entrega. O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [Segurança](seguranca.md#painel).
 - **Hash da senha:** `scrypt` com `N=2^15`, `r=8`, `p=1` e sal de 16 bytes, no formato `scrypt$15$8$1$<sal>$<resumo>`. Cada administrador tem o seu, em `/painel/administradores`; o arquivo é lido a cada entrada e a comparação é em tempo constante. Usuário que não existe passa pela mesma conta e recebe a mesma resposta. O segredo `/run/secrets/painel_admin_inicial_senha_hash` só é usado na subida em que ainda não existe nenhum administrador.
 - **Sessão:** o token do cookie tem 256 bits aleatórios e o servidor guarda só o resumo SHA-256 dele, em memória, com o nome do administrador ou do usuário do FTP que entrou. Reiniciar o painel encerra todas as sessões e zera a contagem de erros de entrada.
 - **Tela de entrada:** o formulário leva um token assinado (HMAC) com validade curta, para a entrada também não aceitar pedido forjado por outro site.
@@ -910,42 +947,43 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 <details>
 <summary>Detalhe técnico — módulos do código</summary>
 
-O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro para `/opt/painel` na imagem. O ponto de entrada é o `servidor.py`; os outros são importados por ele.
+O código fica em [`painel/`](../../painel/), um assunto por arquivo, e vai inteiro para `/opt/painel` na imagem. O ponto de entrada é o `servidor.py`; os outros são importados por ele.
 
 | Módulo | O que tem |
 |---|---|
-| [`servidor.py`](../painel/servidor.py) | Ponto de entrada: sobe o servidor, cria o primeiro administrador e atende os modos `--hash`, `--saude` e `--administrador` |
-| [`config.py`](../painel/config.py) | Caminhos, limites e a leitura das variáveis do container, com as recusas de rede e de sessão |
-| [`senha.py`](../painel/senha.py) | Hash `scrypt` das senhas dos administradores e a conferência em tempo constante |
-| [`administradores.py`](../painel/administradores.py) | Leitura e gravação do arquivo de administradores, uma alteração por vez |
-| [`sessao.py`](../painel/sessao.py) | Sessões em memória, de administrador e de usuário do FTP, limite de tentativas e token do formulário de entrada |
-| [`auditoria.py`](../painel/auditoria.py) | Gravação e leitura do `auditoria.log` |
-| [`estado.py`](../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados, quem entra sem TLS) e a chamada do `allsafe-ftp-user` |
-| [`confirmacao.py`](../painel/confirmacao.py) | Confirmação pela senha atual de quem está na sessão, pedida nas alterações de administrador e em tudo o que apaga arquivo ou pasta |
-| [`pagina.py`](../painel/pagina.py) | Moldura das telas, com o menu, o símbolo e a autoria no rodapé, e os textos que mais de uma aba usa |
-| [`idioma.py`](../painel/idioma.py) | Idioma das telas: o texto de cada pedido em português ou em inglês, o formato da data e dos números, o cookie da tela de entrada e a escolha gravada de cada conta |
-| [`idioma_en.py`](../painel/idioma_en.py) | Catálogo do inglês: cada texto das telas em português e a tradução dele, e as mensagens de erro do `allsafe-ftp-user` que o painel mostra |
-| [`icones.py`](../painel/icones.py) | Os ícones do painel, desenhados em linha: saem dentro do HTML de cada tela, sem arquivo de imagem |
-| [`graficos.py`](../painel/graficos.py) | Os gráficos (colunas por dia, faixa dividida, barras e linha do tempo), em SVG montado no servidor, sem script e sem estilo dentro do HTML; os números ficam também em texto |
-| [`cena.py`](../painel/cena.py) | A cena em três dimensões da tela de entrada e a miniatura dela na faixa que abre cada aba, só com HTML e CSS |
-| [`atendimento.py`](../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF), roteamento por papel (administrador ou usuário do FTP) e a entrega de arquivo em blocos |
-| [`rotas.py`](../painel/rotas.py) | Tabelas de método e caminho para a função que responde: uma para o administrador e uma para cada perfil de usuário do FTP |
-| [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, do administrador e do usuário do FTP, e saída |
-| [`conta_ftp.py`](../painel/conta_ftp.py) | Conta do usuário do FTP no painel: leitura do cadastro dele, conferência da senha no servidor FTP e os motivos que encerram a sessão |
-| [`aba_visao_geral.py`](../painel/aba_visao_geral.py) | Aba Visão geral |
-| [`limites.py`](../painel/limites.py) | Limites próprios de cada usuário do FTP: leitura do cadastro e da `limites.lista`, conferência do formulário e o resumo da lista |
-| [`retencao.py`](../painel/retencao.py) | Limpeza automática: a regra de cada usuário do FTP, lida da `limites.lista`, a conferência do formulário e o resumo da lista |
-| [`limpeza.py`](../painel/limpeza.py) | Limpeza automática: a passada que aplica a regra de cada usuário na pasta dele, pela linha de execução do painel ou pelo terminal (`servidor.py --retencao`) |
-| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista única de administradores e usuários do FTP, criação com o perfil e a pasta escolhidos, edição (perfil, pasta, limites e bloqueios), troca de senha, remoção e a dispensa do TLS por usuário |
-| [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta |
-| [`aba_meus_arquivos.py`](../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação, download e as ações do perfil dentro da pasta dele; para o perfil Só envio, a tela Envio de arquivos |
-| [`recursos.py`](../painel/recursos.py) | Recursos do servidor e de cada container da stack: leitura do processador, da memória e da rede do FTP, do grupo de controle do painel e do que o ftp e o nginx publicam, e o histórico dos últimos 10 minutos, guardado na memória |
-| [`aba_servidor.py`](../painel/aba_servidor.py) | Aba Servidor: os containers da stack, com o uso contra o alocado, os cartões de processador, memória, disco e rede do servidor, e a faixa de resumo da Visão geral |
-| [`aba_administradores.py`](../painel/aba_administradores.py) | Administradores do painel: criação pelo formulário de Novo usuário, troca de senha, troca de nome e remoção; a lista é a da aba Usuários |
-| [`aba_seguranca.py`](../painel/aba_seguranca.py) | Aba Segurança |
-| [`enderecos.py`](../painel/enderecos.py) | Bloqueio por endereço: leitura dos bloqueios em vigor, a contagem dos erros de usuário e senha de cada endereço e o pedido de bloqueio ao `allsafe-ftp-user` |
-| [`aba_bloqueios.py`](../painel/aba_bloqueios.py) | Aba Bloqueios: lista dos endereços bloqueados, busca, mudança de prazo e desbloqueio (`GET /bloqueios`, `GET /bloqueios/endereco?ip=<endereço>`, `POST /bloqueios/prazo` e `POST /bloqueios/liberar`) |
-| [`aba_atividade.py`](../painel/aba_atividade.py) | Aba Log |
+| [`servidor.py`](../../painel/servidor.py) | Ponto de entrada: sobe o servidor, cria o primeiro administrador e atende os modos `--hash`, `--saude` e `--administrador` |
+| [`config.py`](../../painel/config.py) | Caminhos, limites e a leitura das variáveis do container, com as recusas de rede e de sessão |
+| [`senha.py`](../../painel/senha.py) | Hash `scrypt` das senhas dos administradores e a conferência em tempo constante |
+| [`administradores.py`](../../painel/administradores.py) | Leitura e gravação do arquivo de administradores, uma alteração por vez |
+| [`sessao.py`](../../painel/sessao.py) | Sessões em memória, de administrador e de usuário do FTP, limite de tentativas e token do formulário de entrada |
+| [`auditoria.py`](../../painel/auditoria.py) | Gravação e leitura do `auditoria.log` |
+| [`estado.py`](../../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados, quem entra sem TLS) e a chamada do `allsafe-ftp-user` |
+| [`confirmacao.py`](../../painel/confirmacao.py) | Confirmação pela senha atual de quem está na sessão, pedida nas alterações de administrador, na troca de nome de arquivo ou pasta e em tudo o que apaga arquivo ou pasta |
+| [`pagina.py`](../../painel/pagina.py) | Moldura das telas, com o menu, o símbolo e a autoria no rodapé, e os textos que mais de uma aba usa |
+| [`idioma.py`](../../painel/idioma.py) | Idioma das telas: o texto de cada pedido em português ou em inglês, o formato da data e dos números, o cookie da tela de entrada e a escolha gravada de cada conta |
+| [`idioma_en.py`](../../painel/idioma_en.py) | Catálogo do inglês: cada texto das telas em português e a tradução dele, e as mensagens de erro do `allsafe-ftp-user` que o painel mostra |
+| [`icones.py`](../../painel/icones.py) | Os ícones do painel, desenhados em linha: saem dentro do HTML de cada tela, sem arquivo de imagem |
+| [`graficos.py`](../../painel/graficos.py) | Os gráficos (colunas por dia, faixa dividida, barras e linha do tempo), em SVG montado no servidor, sem script e sem estilo dentro do HTML; os números ficam também em texto |
+| [`cena.py`](../../painel/cena.py) | A cena em três dimensões da tela de entrada e a miniatura dela na faixa que abre cada aba, só com HTML e CSS |
+| [`atendimento.py`](../../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF), roteamento por papel (administrador ou usuário do FTP) e a entrega de arquivo em blocos |
+| [`rotas.py`](../../painel/rotas.py) | Tabelas de método e caminho para a função que responde: uma para o administrador e uma para cada perfil de usuário do FTP |
+| [`entrada.py`](../../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, do administrador e do usuário do FTP, e saída |
+| [`conta_ftp.py`](../../painel/conta_ftp.py) | Conta do usuário do FTP no painel: leitura do cadastro dele, conferência da senha no servidor FTP e os motivos que encerram a sessão |
+| [`aba_visao_geral.py`](../../painel/aba_visao_geral.py) | Aba Visão geral |
+| [`limites.py`](../../painel/limites.py) | Limites próprios de cada usuário do FTP: leitura do cadastro e da `limites.lista`, conferência do formulário e o resumo da lista |
+| [`retencao.py`](../../painel/retencao.py) | Limpeza automática: a regra de cada usuário do FTP, lida da `limites.lista`, a conferência do formulário e o resumo da lista |
+| [`limpeza.py`](../../painel/limpeza.py) | Limpeza automática: a passada que aplica a regra de cada usuário na pasta dele, pela linha de execução do painel ou pelo terminal (`servidor.py --retencao`) |
+| [`aba_usuarios.py`](../../painel/aba_usuarios.py) | Aba Usuários: lista única de administradores e usuários do FTP, criação com o perfil e a pasta escolhidos, edição (perfil, pasta, limites e bloqueios), troca de senha, remoção e a dispensa do TLS por usuário |
+| [`aba_arquivos.py`](../../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, envio de arquivo, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta |
+| [`envio.py`](../../painel/envio.py) | Envio de arquivo pelo navegador: leitura do corpo `multipart/form-data` em fluxo, do soquete para o disco, sem guardar o arquivo na memória |
+| [`aba_meus_arquivos.py`](../../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação, download e as ações do perfil dentro da pasta dele; para o perfil Só envio, a tela Envio de arquivos |
+| [`recursos.py`](../../painel/recursos.py) | Recursos do servidor e de cada container da stack: leitura do processador, da memória e da rede do FTP, do grupo de controle do painel e do que o ftp e o nginx publicam, e o histórico dos últimos 10 minutos, guardado na memória |
+| [`aba_servidor.py`](../../painel/aba_servidor.py) | Aba Servidor: os containers da stack, com o uso contra o alocado, os cartões de processador, memória, disco e rede do servidor, e a faixa de resumo da Visão geral |
+| [`aba_administradores.py`](../../painel/aba_administradores.py) | Administradores do painel: criação pelo formulário de Novo usuário, troca de senha, troca de nome e remoção; a lista é a da aba Usuários |
+| [`aba_seguranca.py`](../../painel/aba_seguranca.py) | Aba Segurança |
+| [`enderecos.py`](../../painel/enderecos.py) | Bloqueio por endereço: a escrita única do endereço, IPv4 ou IPv6, a leitura dos bloqueios de endereço e de prefixo em vigor, a contagem dos erros de usuário e senha de cada endereço, zerada na entrada certa, e o pedido de bloqueio ao `allsafe-ftp-user` |
+| [`aba_bloqueios.py`](../../painel/aba_bloqueios.py) | Aba Bloqueios: lista dos endereços e dos prefixos bloqueados, busca, bloqueio à mão de endereço ou de prefixo, mudança de prazo e desbloqueio (`GET /bloqueios`, `GET` e `POST /bloqueios/novo`, `GET /bloqueios/endereco?ip=<endereço>`, `POST /bloqueios/prazo` e `POST /bloqueios/liberar`) |
+| [`aba_atividade.py`](../../painel/aba_atividade.py) | Aba Log |
 
 Os módulos não gravam nada na imagem: a raiz do container é somente leitura e o Python roda sem gerar `.pyc`. O `./scripts/validate.sh` confere a sintaxe de todos, que nenhum usa nome que não definiu nem importou e que cada texto das telas tem tradução no catálogo do inglês.
 

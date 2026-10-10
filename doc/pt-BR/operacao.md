@@ -1,6 +1,6 @@
 # 🧰 Operação — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
+↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -39,7 +39,7 @@ flowchart LR
 
 ## 👤 Usuários
 
-Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.md#usuarios) faz as mesmas operações, com as mesmas regras:
+Gestão pelo host com [`manage-user.sh`](../../manage-user.sh). O [painel](painel.md#usuarios) faz as mesmas operações, com as mesmas regras:
 
 ```bash
 ./manage-user.sh add cliente01      # cria o usuário e /data/cliente01 (pede a senha)
@@ -54,9 +54,10 @@ Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.m
 ./manage-user.sh retencao olt01     # mostra a regra dele (retencao olt01 ultimos= dias= desliga)
 ./manage-user.sh bloqueios          # lista quem o FTP está recusando por senhas erradas demais
 ./manage-user.sh desbloquear olt01  # tira os bloqueios do usuário (ou de um endereço só: desbloquear olt01 10.0.0.5)
-./manage-user.sh enderecos          # lista os endereços bloqueados no FTP e no painel
-./manage-user.sh endereco-liberar 203.0.113.7        # libera um endereço bloqueado
+./manage-user.sh enderecos          # lista os endereços e os prefixos bloqueados no FTP e no painel
+./manage-user.sh endereco-liberar 203.0.113.7        # libera um endereço ou um prefixo bloqueado
 ./manage-user.sh endereco-bloquear 203.0.113.7 365   # bloqueia um endereço, ou muda o prazo de um já bloqueado
+./manage-user.sh endereco-bloquear 198.51.100.0/24 30   # bloqueia um prefixo inteiro, IPv4 ou IPv6
 ./manage-user.sh list               # lista os usuários do PureDB
 ./manage-user.sh del cliente01      # remove o usuário e MANTÉM a pasta dele
 ./manage-user.sh tls-dispensar olt-antiga   # deixa o usuário entrar sem TLS (equipamento que não fala TLS)
@@ -74,7 +75,7 @@ Regras:
 - `add` de um nome existente responde `Usuario ja existe`. Para mudar a pasta de quem já existe, use `pasta`, com as mesmas regras: vale na entrada seguinte, não troca a senha e não move nem apaga arquivo. Usuário que não existe: `Usuario nao existe: <nome>`.
 - `limites` aceita um ou mais pares `chave=valor`, e só mexe nas chaves informadas: `sessoes` (sessões ao mesmo tempo no FTP), `download` e `envio` (KB por segundo, de 1 a 10.000.000), `horario` (`HHMM-HHMM`, no fuso do `TZ`, podendo passar da meia-noite), `baixar` (downloads ao mesmo tempo pelo painel, de 1 a 8), `tentativas` (senhas erradas no FTP até o bloqueio, de 0 a 100; `0`: nunca é bloqueado) e `minutos` (tempo do bloqueio, de 1 a 1440). Valor vazio (`download=`) tira o limite; sem nenhum par, mostra os que o usuário tem. Vale na entrada seguinte dele no FTP. O que cada limite faz está em [Painel web](painel.md#limites).
 - `bloqueios` lista os bloqueios por tentativa em vigor, um por linha, com o usuário, o endereço, as senhas erradas, o início e o fim; com um nome, só os dele. Sem nenhum, responde `Nenhum bloqueio em vigor.` `desbloquear <usuario>` tira todos os bloqueios do usuário, e com o endereço no fim, só o daquele endereço. Vale na entrada seguinte. Mudar `tentativas` ou `minutos`, trocar a senha e remover o usuário também tiram os bloqueios dele: [Segurança](seguranca.md#bloqueio-por-tentativa).
-- `enderecos` lista os endereços com bloqueio por endereço, um por linha, com quem bloqueou, os erros, o início e o fim; sem nenhum, responde `Nenhum endereco bloqueado.` `endereco-liberar <endereco>` tira o bloqueio, e é a saída para o administrador que ficou com o próprio endereço bloqueado. `endereco-bloquear <endereco> [dias]` bloqueia um endereço no FTP e no painel ou, no que já está bloqueado, muda só o prazo; sem os dias, vale `BLOQUEIO_ENDERECO_DIAS`. Tudo vale no pedido seguinte: [Segurança](seguranca.md#bloqueio-por-endereco).
+- `enderecos` lista os endereços e os prefixos com bloqueio por endereço, IPv4 e IPv6, um por linha, com quem bloqueou, os erros, o início e o fim; sem nenhum, responde `Nenhum endereco bloqueado.` `endereco-liberar <endereco ou prefixo>` tira o bloqueio, e é a saída para o administrador que ficou com o próprio endereço bloqueado. `endereco-bloquear <endereco ou prefixo> [dias]` bloqueia um endereço, ou uma rede inteira, no FTP e no painel ou, no que já está bloqueado, muda só o prazo; sem os dias, vale `BLOQUEIO_ENDERECO_DIAS`. Prefixo só é bloqueado pelo administrador, por aqui ou pela aba Bloqueios: a stack nunca bloqueia uma rede sozinha. Tudo vale no pedido seguinte: [Segurança](seguranca.md#bloqueio-por-endereco).
 - `del` **não apaga arquivos** e responde com a pasta que ficou. Para tirar a pasta junto com o usuário, use o painel: Usuários ➜ **Remover**, com a caixa de apagar a pasta, em [Painel web](painel.md#usuarios). Depois do `del`, a pasta que ficou é apagada na aba Arquivos.
 - `tls-dispensar` e `tls-exigir` valem em instantes, sem reiniciar o container e sem derrubar quem está conectado, e só para usuário que existe (`Usuario nao existe: <nome>`). A dispensa só tem efeito com `FTP_TLS_EXCECOES=sim` (o padrão), `FTP_TLS_MODE=2` e sem `REDE_PERMITIR_IP_PUBLICO=sim`; fora disso, fica guardada. O `del` tira o usuário da lista.
 
@@ -87,7 +88,7 @@ Regras:
 <details>
 <summary>Detalhe técnico — onde a mudança é gravada</summary>
 
-O `manage-user.sh` encapsula o [`ftp/usuario.sh`](../ftp/usuario.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo. A dispensa do TLS fica em `/auth/sem-tls.lista`, um nome por linha, lida pelo servidor a cada entrada. Os limites de sessões, de taxa e de horário ficam na própria linha do usuário no cadastro; o de downloads pelo painel e os do bloqueio por tentativa, em `/auth/limites.lista`. Cada bloqueio em vigor é um arquivo em `/auth/bloqueios`.
+O `manage-user.sh` encapsula o [`ftp/usuario.sh`](../../ftp/usuario.sh), que roda dentro do container como `allsafe-ftp-user`. As mudanças são gravadas em `/auth/pureftpd.passwd` e recompiladas em `/auth/pureftpd.pdb` (pasta `DATA_DIR/auth` do host). Não é preciso reiniciar o serviço: o `pure-ftpd` consulta o banco a cada login. O painel chama o mesmo script, e uma trava (`/auth/.lock`) impede duas alterações ao mesmo tempo. A dispensa do TLS fica em `/auth/sem-tls.lista`, um nome por linha, lida pelo servidor a cada entrada. Os limites de sessões, de taxa e de horário ficam na própria linha do usuário no cadastro; o de downloads pelo painel e os do bloqueio por tentativa, em `/auth/limites.lista`. Cada bloqueio em vigor é um arquivo em `/auth/bloqueios`.
 
 </details>
 
@@ -114,7 +115,7 @@ docker compose restart ftp
 **Resultado esperado:** o cliente conecta sem aviso de certificado e o container volta a `healthy`.
 
 - O arquivo precisa conter **chave, certificado e intermediárias** no mesmo PEM, `0600`.
-- O [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) só gera o autoassinado **se o arquivo não existir**: o seu não será sobrescrito.
+- O [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh) só gera o autoassinado **se o arquivo não existir**: o seu não será sobrescrito.
 - Renovação: repita os passos 1 a 3 (por exemplo, por `cron` no host, puxando do seu cliente ACME).
 - Apague a cópia local do `pure-ftpd.pem` depois de instalar: ela contém a chave privada.
 
@@ -195,7 +196,7 @@ docker compose logs ftp | grep 'vigia:'
 
 O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos, arquivos baixados) fica no `auditoria.log`, visível na aba Log: veja [Painel web](painel.md#auditoria).
 
-Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](../compose.yaml)).
+Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](../../compose.yaml)).
 
 ---
 
@@ -215,7 +216,7 @@ Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](.
 <details>
 <summary>Detalhe técnico — base fixada por digest</summary>
 
-A base no [`Dockerfile`](../Dockerfile) está **fixada por digest**: um `docker compose build --pull` não troca a base sozinho. Para pegar uma base nova, atualize o digest do `FROM` e rode `./deploy.sh --atualizar`. Enquanto o `Dockerfile` não muda, um `docker compose build` comum reaproveita a camada de instalação dos pacotes; o `--atualizar` usa `build --no-cache`, que refaz essa camada e reinstala os pacotes na versão atual do repositório Debian. As três imagens (FTP, painel e nginx) saem da mesma base, `debian:trixie-slim` (Debian 13).
+A base no [`Dockerfile`](../../Dockerfile) está **fixada por digest**: um `docker compose build --pull` não troca a base sozinho. Para pegar uma base nova, atualize o digest do `FROM` e rode `./deploy.sh --atualizar`. Enquanto o `Dockerfile` não muda, um `docker compose build` comum reaproveita a camada de instalação dos pacotes; o `--atualizar` usa `build --no-cache`, que refaz essa camada e reinstala os pacotes na versão atual do repositório Debian. As três imagens (FTP, painel e nginx) saem da mesma base, `debian:trixie-slim` (Debian 13).
 
 </details>
 

@@ -1,6 +1,6 @@
 # 🚀 Instalação — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
+↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -54,7 +54,7 @@ flowchart LR
 
 ## 1️⃣ Configuração base
 
-Este passo é **opcional na primeira vez**: sem `.env`, o [`deploy.sh`](../deploy.sh) cria um a partir do exemplo, com tudo em `127.0.0.1` (só o próprio servidor acessa), e segue. Para já subir atendendo a rede interna, crie e ajuste o arquivo antes:
+Este passo é **opcional na primeira vez**: sem `.env`, o [`deploy.sh`](../../deploy.sh) cria um a partir do exemplo, com tudo em `127.0.0.1` (só o próprio servidor acessa), e segue. Para já subir atendendo a rede interna, crie e ajuste o arquivo antes:
 
 ```bash
 cp .env.example .env
@@ -81,7 +81,7 @@ Cada variável está explicada em [Configuração](configuracao.md). Os campos q
 
 ## 2️⃣ Senha do usuário inicial
 
-Nada a fazer aqui na primeira vez: o [`deploy.sh`](../deploy.sh) **gera uma senha forte** em `.secrets/ftp-usuario-inicial-senha.txt`, com permissão `0600`, se o arquivo estiver vazio ou ausente. Anote-a para configurar o cliente FTP:
+Nada a fazer aqui na primeira vez: o [`deploy.sh`](../../deploy.sh) **gera uma senha forte** em `.secrets/ftp-usuario-inicial-senha.txt`, com permissão `0600`, se o arquivo estiver vazio ou ausente. Anote-a para configurar o cliente FTP:
 
 ```bash
 cat .secrets/ftp-usuario-inicial-senha.txt      # depois do primeiro deploy
@@ -100,7 +100,7 @@ chmod 600 .secrets/ftp-usuario-inicial-senha.txt
 <summary>Detalhe técnico — regras da senha</summary>
 
 - A senha é gerada com `openssl rand -base64 36`; o `openssl` é exigido no host.
-- Mínimo de **12 caracteres**: o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) recusa senhas menores.
+- Mínimo de **12 caracteres**: o [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh) recusa senhas menores.
 - O arquivo chega ao container como o segredo `/run/secrets/ftp_usuario_inicial_senha`, somente leitura; o serviço não vê o resto de `.secrets/`.
 - Arquivos `.txt` de `.secrets/` são ignorados pelo Git. Veja [Segredos](segredos.md).
 - Senha no `.env` **não é aceita**: o `deploy.sh` recusa um `.env` com `FTP_PASSWORD` preenchido e o container recusa a variável.
@@ -143,7 +143,7 @@ Qual perfil usar: [Perfis](perfis.md). Nos perfis `xlarge` e `extended` a subida
 <details>
 <summary>Detalhe técnico — o que o <code>deploy.sh</code> e o entrypoint fazem</summary>
 
-O [`deploy.sh`](../deploy.sh), nesta ordem:
+O [`deploy.sh`](../../deploy.sh), nesta ordem:
 
 1. confere os requisitos: `docker`, o plugin `docker compose` e o serviço do Docker respondendo;
 2. confere que o servidor tem as CPUs e a memória que o perfil pede; se não tiver, para sem alterar nada;
@@ -160,7 +160,7 @@ O [`deploy.sh`](../deploy.sh), nesta ordem:
 
 Com `--check-only`, o script para depois do passo 4 e de um `config --quiet`, sem criar `.env`, pasta ou senha, com `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.`
 
-Na **primeira** subida o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh):
+Na **primeira** subida o [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh):
 
 - cria `/data/$FTP_USER` com dono `ftpdata`;
 - grava o usuário no PureDB (`/auth/pureftpd.pdb`);
@@ -224,4 +224,4 @@ Os arquivos dos usuários, o PureDB e os certificados ficam em `DATA_DIR`, no ho
 
 ---
 
-⬅️ [README do projeto](../README.md) · 🏠 [Documentação](README.md) · ➡️ [Configuração](configuracao.md)
+⬅️ [README do projeto](../../README.pt-BR.md) · 🏠 [Documentação](README.md) · ➡️ [Configuração](configuracao.md)

@@ -1,6 +1,6 @@
 # 🏷️ Marca ALL-SAFE — allsafe-ftp-stack
 
-↩ [README do projeto](README.md) · [Licença](LICENSE) · [Aviso de autoria](NOTICE)
+↩ [README do projeto](README.pt-BR.md) · [Licença](LICENSE) · [Aviso de autoria](NOTICE)
 
 ## 💡 Em poucas palavras
 
@@ -45,7 +45,7 @@ Quem instala a stack para guardar os próprios backups não precisa mudar nada: 
 
 Vender é permitido pela licença, e não depende de contrato com a ALL-SAFE. O pedido é este: quem entrega a stack em contrato ou a vende para terceiros tira a logo e o ícone da ALL-SAFE do painel, para o cliente não tomar a entrega por um produto da ALL-SAFE.
 
-1. Troque a logo e o ícone do painel pelos próprios: [Marca do painel](doc/painel.md#marca) mostra como, em um comando.
+1. Troque a logo e o ícone do painel pelos próprios: [Marca do painel](doc/pt-BR/painel.md#marca) mostra como, em um comando.
 2. Confira a tela de entrada, o topo e a aba do navegador.
 
 **Resultado esperado:** o cliente final vê a marca de quem entregou na tela de entrada, no topo e na aba do navegador.
@@ -84,4 +84,4 @@ O painel traz a mesma linha no rodapé das telas. Ela vem assim de fábrica e n�
 
 ---
 
-⬅️ [README do projeto](README.md) · 🏠 [Documentação](doc/README.md) · ➡️ [Marca do painel](doc/painel.md#marca)
+⬅️ [README do projeto](README.pt-BR.md) · 🏠 [Documentação](doc/pt-BR/README.md) · ➡️ [Marca do painel](doc/pt-BR/painel.md#marca)

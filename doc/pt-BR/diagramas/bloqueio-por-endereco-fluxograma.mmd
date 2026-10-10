@@ -6,7 +6,7 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         servico@{ shape: rect, label: "FTP ou painel<br>allsafe-ftp, allsafe-ftp-painel" }
         preso@{ shape: diam, label: "endereço<br>bloqueado?" }
-        enderecos@{ shape: docs, label: "enderecos<br>/auth, um arquivo por endereço" }
+        enderecos@{ shape: docs, label: "enderecos e prefixos<br>/auth, um arquivo por bloqueio" }
     end
     subgraph AUTH["Autenticação"]
         login@{ shape: diam, label: "usuário e senha<br>conferem?" }
@@ -26,12 +26,12 @@ flowchart LR
     servico -- "2 · antes de conferir a senha" --> preso
     preso -- "3a · sim: recusa com qualquer conta" --> recusa
     preso -- "3b · não: segue" --> login
-    login -- "4a · sim: entra" --> entra
+    login -- "4a · sim: entra e zera a contagem" --> entra
     login -- "4b · não: soma um erro do endereço" --> passou
     passou -- "5a · sim: bloqueia" --> bloqueia
     passou -- "5b · não: só recusa" --> recusa
     bloqueia -- "6 · recusa" --> recusa
-    admin -- "7 · acompanha, libera ou muda o prazo" --> aba
+    admin -- "7 · acompanha, bloqueia, libera ou muda o prazo" --> aba
     preso -. "lê" .-> enderecos
     bloqueia -. "grava o bloqueio" .-> enderecos
-    aba -. "lê, apaga ou regrava" .-> enderecos
+    aba -. "lê, grava, apaga ou regrava" .-> enderecos
