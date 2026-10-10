@@ -503,6 +503,10 @@ tbody tr { transition: background-color var(--passo) var(--curva); }
 .contas .acoes .botao { min-width: 0; }
 thead th:last-child { padding-left: 12px; }
 td:first-child strong { white-space: nowrap; }
+/* Nome no limite do cadastro (32 caracteres): na lista de usuários ele parte, de preferência no hífen, antes de a
+   tabela rolar. */
+.contas td:first-child { min-width: 7.5rem; }
+.contas td:first-child strong { overflow-wrap: anywhere; white-space: normal; }
 /* Data, endereço e pasta ficam inteiros: um IPv6 tem até 39 caracteres e não pode partir no meio. Quando falta
    largura, a etiqueta da pasta desce para a linha de baixo e, por último, a tabela rola para o lado. */
 td.quando, td.origem { white-space: nowrap; }
@@ -862,7 +866,7 @@ p > .botao { margin-top: 0; }
 /* Até 1360 px a tabela inteira cabe por pouco (com o menu ao lado, a partir de 1280 px, a largura útil volta a ser a
    de 1096 px): as células ficam com menos espaço dos lados. */
 @media (min-width: 1096px) and (max-width: 1359px) {
-  .contas th, .contas td { padding-inline: 8px; }
+  .contas th, .contas td { padding-inline: 6px; }
   .lista .contas tr > :last-child { padding-right: 12px; }
   .contas .acoes { min-width: 18rem; padding-left: 2px; }
 }
@@ -870,6 +874,20 @@ p > .botao { margin-top: 0; }
 /* Lista de arquivos entre o celular e 900 px: os três botões não cabem ao lado da data, e cada item vira duas
    linhas, o nome com o tamanho e a data em cima e as ações embaixo, à vista, em vez de um botão por linha. Dali
    em diante as ações ficam sempre em uma linha: quem cede largura é o nome, que pode quebrar. */
+/* Atividade entre o celular e 959 px: a data, o endereço e o fato em uma linha e o detalhe embaixo, na largura
+   inteira. A coluna do endereço tem a largura de um IPv4 e cresce só na linha que traz um IPv6 por extenso, que parte
+   quando nem assim cabe. */
+@media (min-width: 641px) and (max-width: 959px) {
+  .registros thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .registros, .registros tbody { display: block; }
+  .registros tr { display: grid; grid-template-columns: max-content minmax(9.5rem, max-content) minmax(7rem, 1fr); gap: 4px 16px; padding: 12px 20px; border-bottom: 1px solid var(--borda); }
+  .registros tbody tr:last-child { border-bottom: 0; }
+  .registros td, .lista .registros tr > td { display: block; min-width: 0; padding: 0; border: 0; }
+  .registros td.detalhe, .registros td[colspan] { grid-column: 1 / -1; }
+  .registros td.fato { font-weight: 600; }
+  .registros td.origem, .registros td.origem code { overflow-wrap: anywhere; white-space: normal; }
+}
+
 @media (min-width: 900px) {
   .itens .acoes { white-space: nowrap; }
 }
@@ -965,6 +983,15 @@ p > .botao { margin-top: 0; }
   .blocos .vazio { padding: 0; }
   .blocos td.detalhe { min-width: 0; }
   .blocos .acoes .botao { padding-inline: 8px; }
+  /* No bloco não há para onde rolar: o endereço IPv6 por extenso parte quando não cabe na linha. */
+  .blocos td.origem, .blocos td.origem code { overflow-wrap: anywhere; white-space: normal; }
+  .contas td:first-child { min-width: 0; }
+  /* Conferência da aba Segurança: a marca e o item em cima, a situação embaixo, na largura inteira. */
+  .conferencia, .conferencia tbody { display: block; }
+  .conferencia tr { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 8px; padding: 12px 16px; border-bottom: 1px solid var(--borda); }
+  .conferencia tbody tr:last-child { border-bottom: 0; }
+  .conferencia tr > *, .lista .conferencia tr > * { display: block; width: auto; padding: 0; border: 0; white-space: normal; }
+  .conferencia tr > td:last-child { grid-column: 1 / -1; overflow-wrap: anywhere; }
 }
 
 @media (max-width: 520px) {

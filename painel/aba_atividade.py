@@ -105,7 +105,7 @@ def atividade(pedido, sessao, consulta, formulario, token):
     corpo = ''.join(linhas) or vazio(4, 'atividade', 'Nada registrado ainda',
                                      'Cada entrada no painel e cada alteração feita por ele passa a aparecer aqui.')
     pedido.enviar(200, pagina('Atividade', f'''{cabeca('Atividade', 'Quem entrou e o que foi feito no painel: os últimos 300 registros, do mais novo para o mais antigo.')}
-<section class="cartao lista"><div class="rolagem"><table class="blocos">
+<section class="cartao lista"><div class="rolagem"><table class="blocos registros">
 <thead><tr><th>Quando</th><th>De onde</th><th>O que aconteceu</th><th>Detalhe</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
 {como('O que fica registrado', '''<p class="suave">Senha e token nunca são gravados.

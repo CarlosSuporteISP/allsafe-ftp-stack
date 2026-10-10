@@ -86,13 +86,12 @@ Cada aba abre com uma faixa no azul da marca, o mesmo do menu e da tela de entra
 
 As listas se ajustam à largura da tela, sem rolagem lateral da página:
 
-| Largura da tela | Usuários | Arquivos e Meus arquivos | Atividade |
+| Lista | Até 640 px de largura | Tela média | Tela larga |
 |---|---|---|---|
-| Até 640 px | Um bloco por conta, com o rótulo de cada dado e as ações embaixo | Um bloco por item, com o tamanho, a data e as ações embaixo do nome | Um bloco por registro |
-| De 641 a 899 px | Um bloco por conta: nome e perfil em cima, os cinco dados lado a lado e as ações embaixo | Nome, tamanho e data em uma linha e as ações na linha de baixo | Tabela |
-| De 900 a 1095 px | O mesmo bloco | Tabela, com as ações em uma linha | Tabela |
-| De 1096 a 1599 px | Tabela, com as ações duas por linha | Tabela | Tabela |
-| 1600 px ou mais | Tabela, com as ações em uma linha | Tabela | Tabela |
+| Usuários | Um bloco por conta, com o rótulo de cada dado e as ações embaixo | De 641 a 1095 px, um bloco por conta: nome e perfil em cima, os dados lado a lado e as ações embaixo | A partir de 1096 px, tabela, com as ações duas por linha; a partir de 1600 px, em uma linha |
+| Arquivos e Meus arquivos | Um bloco por item, com o tamanho, a data e as ações embaixo do nome | De 641 a 899 px, o nome, o tamanho e a data em uma linha e as ações na linha de baixo | A partir de 900 px, tabela |
+| Atividade | Um bloco por registro | De 641 a 959 px, a data, o endereço e o fato em uma linha e o detalhe embaixo | A partir de 960 px, tabela |
+| Conferência da aba Segurança | A marca e o item em cima e a situação embaixo, na largura inteira | Tabela | Tabela |
 
 Lista sem nada para mostrar (pasta vazia, atividade sem registro) diz o que falta e quando passa a aparecer. O texto longo de cada tela, como a explicação dos perfis e das etiquetas da aba Usuários, fica recolhido em uma linha embaixo da lista e abre com um clique.
 
