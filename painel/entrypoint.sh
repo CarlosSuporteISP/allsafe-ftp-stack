@@ -56,6 +56,13 @@ SEGURANCA_CONTATO_EMAIL="${SEGURANCA_CONTATO_EMAIL:-}"
   || die "BLOQUEIO_ENDERECO_HORAS deve ficar entre 1 e 720"
 [[ "${BLOQUEIO_ENDERECO_DIAS:-120}" =~ ^[1-9][0-9]{0,3}$ ]] && (( ${BLOQUEIO_ENDERECO_DIAS:-120} <= 3650 )) \
   || die "BLOQUEIO_ENDERECO_DIAS deve ficar entre 1 e 3650"
+# As mesmas regras do config.py, conferidas aqui para o container recusar antes de tocar em qualquer pasta.
+[[ "${PAINEL_SESSAO_MINUTOS:-240}" =~ ^[1-9][0-9]{0,2}$ ]] && (( ${PAINEL_SESSAO_MINUTOS:-240} <= 720 )) \
+  || die "PAINEL_SESSAO_MINUTOS deve ficar entre 1 e 720"
+[[ "${PAINEL_ENVIO_MAX_MB:-1024}" =~ ^[1-9][0-9]{0,5}$ ]] && (( ${PAINEL_ENVIO_MAX_MB:-1024} <= 102400 )) \
+  || die "PAINEL_ENVIO_MAX_MB deve ficar entre 1 e 102400"
+[[ "${PAINEL_RETENCAO_MINUTOS:-60}" =~ ^(0|[1-9][0-9]{0,3})$ ]] && (( ${PAINEL_RETENCAO_MINUTOS:-60} <= 1440 )) \
+  || die "PAINEL_RETENCAO_MINUTOS deve ficar entre 0 e 1440"
 cn_ip=false
 if [[ "$PAINEL_CERT_CN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   cn_ip=true
