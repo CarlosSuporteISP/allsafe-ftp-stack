@@ -168,6 +168,9 @@ def configuracao():
     envio = amb('PAINEL_ENVIO_MAX_MB', '1024')
     if not (re.fullmatch(r'[1-9][0-9]{0,5}', envio) and int(envio) <= 102400):
         falha('PAINEL_ENVIO_MAX_MB deve ficar entre 1 e 102400')
+    retencao = amb('PAINEL_RETENCAO_MINUTOS', '60')
+    if not (re.fullmatch(r'0|[1-9][0-9]{0,3}', retencao) and int(retencao) <= 1440):
+        falha('PAINEL_RETENCAO_MINUTOS deve ficar entre 0 e 1440')
     try:
         with open(os.path.join(RAIZ, 'VERSION'), encoding='utf-8') as arq:
             versao = arq.read().strip()
@@ -189,6 +192,7 @@ def configuracao():
         'acesso_usuarios': amb('PAINEL_ACESSO_USUARIOS_FTP', 'sim') == 'sim',
         'inatividade': int(minutos) * 60,
         'envio_max': int(envio) * 1024 * 1024,
+        'retencao_minutos': int(retencao),
         'cert_cn': amb('PAINEL_CERT_CN', '').strip().lower(),
         'contato_seguranca': contato,
         'painel_bind': amb('PAINEL_BIND_IP', '127.0.0.1'),

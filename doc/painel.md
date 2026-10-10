@@ -251,6 +251,29 @@ Limites por usuário, no cartão **Limites** da tela **Editar**. Servem tanto pa
 
 > ⚠️ **Dispensa do TLS:** o usuário dispensado manda senha e arquivo em texto puro. Use só para o equipamento antigo que não fala TLS, em rede interna isolada, com usuário e senha só dele. As condições e o que a stack garante estão em [Segurança](seguranca.md#tls-por-usuario).
 
+<a name="limpeza"></a>
+
+**Limpeza automática.** No cartão **Limpeza automática** da tela **Editar**, o administrador escolhe o que o painel apaga sozinho na pasta do usuário e nas pastas de dentro dela. Vem desligada: sem regra, nada é apagado.
+
+| Regra | O que faz | Valor | Em branco |
+|---|---|---|---|
+| Manter só os arquivos mais recentes | Em **cada pasta**, ficam os arquivos de data de modificação mais nova, na quantidade escolhida; os mais antigos saem | De 1 a 100.000 | Não conta os arquivos |
+| Apagar depois de tantos dias | Sai o arquivo que está há mais dias que isso no servidor | De 1 a 3.650 | Não olha a idade |
+
+Com as duas preenchidas, sai o arquivo que passar de qualquer uma. A contagem é por pasta: com `30` na pasta de um usuário que guarda cada equipamento em uma subpasta, ficam os 30 arquivos mais recentes de cada equipamento.
+
+1. Na aba Usuários, clique em **Editar** no usuário.
+2. No cartão **Limpeza automática**, preencha uma regra ou as duas.
+3. Digite a sua senha e clique em **Gravar limpeza**.
+
+**Resultado esperado:** a lista de usuários volta com o aviso de que a limpeza foi gravada e a marca **limpeza** ao lado do nome; passando o mouse sobre ela, aparece a regra. A regra vale na passada seguinte, que acontece a cada `PAINEL_RETENCAO_MINUTOS` (60 minutos, no padrão). Para desligar, apague os dois campos e grave de novo. O usuário vê a regra na tela Meus arquivos, em um aviso acima da lista.
+
+> ⚠️ **A limpeza não tem volta:** o painel não tem lixeira, e o que sai dali só volta do [backup](backup.md). Antes de ligar, veja o que sairia com `--simular`, no detalhe técnico abaixo.
+
+> ⚠️ **Regra por dias em backup de equipamento:** se o equipamento parar de enviar, os arquivos que ele já mandou continuam envelhecendo e saem todos no prazo. Para backup de equipamento, prefira manter os mais recentes, que sempre deixa os últimos na pasta.
+
+> ⚠️ **Pasta dividida:** a regra alcança a pasta do usuário e tudo o que está dentro dela, inclusive a pasta de outro usuário que fique ali. O cartão avisa quais usuários são alcançados.
+
 <details>
 <summary>Detalhe técnico — a dispensa do TLS no painel</summary>
 
@@ -277,6 +300,23 @@ Limites por usuário, no cartão **Limites** da tela **Editar**. Servem tanto pa
 - **Bloqueio:** mudar `tentativas` ou `minutos` tira os bloqueios que o usuário tem; gravar os outros limites, não. Trocar a senha dele e removê-lo também tiram. `POST /usuarios/desbloquear`, com o token CSRF da sessão e o campo `usuario`, tira todos os bloqueios do usuário de uma vez e grava `bloqueio_removido` na auditoria, com o administrador, o usuário e a quantidade de endereços; usuário que não existe e nome fora da regra respondem `404`. O painel só lê `/auth/bloqueios` para montar as telas: quem grava o bloqueio é o vigia, e quem o tira é o `allsafe-ftp-user desbloquear`, o mesmo comando do `manage-user.sh`. Para tirar o bloqueio de um endereço só, use o terminal: [Operação](operacao.md#usuarios).
 - Remover o usuário tira o nome dele da `limites.lista`: um usuário novo com o mesmo nome não herda o limite.
 - Cada gravação fica na auditoria como `limites_alterados`, com o administrador, o usuário e o valor de cada limite (`-` no que ficou em branco).
+
+</details>
+
+<details>
+<summary>Detalhe técnico — a limpeza automática</summary>
+
+- `POST /usuarios/limpeza` grava a regra, com o token CSRF da sessão e os campos `usuario`, `ultimos`, `dias` e `senha_atual`, a senha de quem está na sessão. Senha errada ou em branco recebe `403`, e nada é gravado; desligar a regra pede a senha do mesmo jeito. Só administrador tem essa rota.
+- **Quem guarda:** a regra fica na linha do usuário em `/auth/limites.lista`, nas chaves `ultimos=` e `dias=`, gravada pelo `allsafe-ftp-user` (ação `retencao`), o mesmo comando do `manage-user.sh`. Usuário sem pasta dentro de `DATA_DIR/dados` não tem o cartão.
+- **Quem aplica:** o [`limpeza.py`](../painel/limpeza.py), em uma linha de execução do próprio painel: a primeira passada sai 2 minutos depois da subida, e as seguintes, a cada `PAINEL_RETENCAO_MINUTOS`. Com `0`, nenhuma passada acontece e a tela avisa.
+- **O que sai:** só arquivo comum. Ficam como estão o link simbólico, tudo o que tem o nome começado por ponto (arquivo ou pasta), a área de entrada do perfil Só envio e o que está em outro sistema de arquivos montado dentro da pasta.
+- **Qual data conta:** manter os mais recentes ordena pela data de modificação do arquivo. Apagar por dias olha a data mais nova entre a de modificação e a de mudança no servidor: o arquivo que chegou hoje com data antiga não sai no mesmo dia.
+- **Subpastas:** a regra desce pelas pastas de dentro, até 64 níveis e 10.000 subpastas por pasta em cada passada. A subpasta que a limpeza esvaziou sai junto; a que já estava vazia, não. A pasta do usuário nunca sai.
+- **Caminho:** a pasta é aberta nível por nível, sem seguir link simbólico, e percorrida pelo descritor dela, como na aba Arquivos. Os arquivos saem em lotes de 1.000, com uma pausa entre um lote e outro, para o disco e os pedidos do painel seguirem atendidos.
+- **Dois usuários na mesma pasta com a mesma regra:** a pasta é percorrida uma vez por passada.
+- **Trocar a pasta do usuário desliga a regra dele:** ela foi ligada olhando a pasta anterior. A lista de usuários volta com o aviso, e a regra precisa ser gravada de novo. Remover o usuário tira o nome dele da `limites.lista`.
+- **Pelo terminal:** `docker compose exec painel python3 /opt/painel/servidor.py --retencao --simular` mostra, por usuário, quantos arquivos e bytes sairiam agora, sem apagar nada; sem o `--simular`, faz a passada na hora. O `./manage-user.sh retencao <usuario>` mostra e grava a regra: veja [Operação](operacao.md#usuarios).
+- **Auditoria:** `retencao_alterada`, com o administrador, o usuário e a regra; `retencao_aplicada`, a cada passada em que algo saiu ou falhou, com o usuário, a pasta, os arquivos, as pastas, os bytes, os erros e a regra; `retencao_falhou`, quando uma passada não termina. As duas últimas não têm endereço: quem fez foi o painel.
 
 </details>
 
@@ -795,6 +835,8 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `usuario_criado` · `senha_trocada` · `pasta_trocada` · `usuario_removido` | Alteração de usuário do FTP, com o administrador que fez; a criação leva também a pasta e o perfil do usuário, a troca de pasta, a nova e a anterior, e a remoção, a pasta, quando ela foi apagada junto |
 | `perfil_trocado` | Perfil de um usuário do FTP trocado, com o administrador, o usuário, o perfil novo e o anterior |
 | `limites_alterados` | Limites de um usuário do FTP gravados, com o administrador, o usuário e o valor de cada limite; `-` no que ficou em branco |
+| `retencao_alterada` | Limpeza automática de um usuário do FTP gravada ou desligada, com o administrador, o usuário e a regra; `-` no que ficou em branco |
+| `retencao_aplicada` · `retencao_falhou` | A limpeza automática apagou arquivos antigos, com o usuário, a pasta, os arquivos, as pastas vazias e os bytes que saíram, os erros e a regra · uma passada não terminou, com o motivo. Sem endereço: quem fez foi o painel |
 | `bloqueio_removido` | Um administrador tirou o bloqueio por tentativa de um usuário no FTP, com o administrador, o usuário e a quantidade de endereços desbloqueados |
 | `endereco_bloqueado` | O painel bloqueou o endereço que passou do limite de erros de usuário e senha, com a quantidade de erros e os dias |
 | `endereco_prazo` · `endereco_desbloqueado` | Um administrador mudou o prazo do bloqueio de um endereço · liberou o endereço; com o administrador, o endereço e, na mudança, os dias |
@@ -892,6 +934,8 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`conta_ftp.py`](../painel/conta_ftp.py) | Conta do usuário do FTP no painel: leitura do cadastro dele, conferência da senha no servidor FTP e os motivos que encerram a sessão |
 | [`aba_visao_geral.py`](../painel/aba_visao_geral.py) | Aba Visão geral |
 | [`limites.py`](../painel/limites.py) | Limites próprios de cada usuário do FTP: leitura do cadastro e da `limites.lista`, conferência do formulário e o resumo da lista |
+| [`retencao.py`](../painel/retencao.py) | Limpeza automática: a regra de cada usuário do FTP, lida da `limites.lista`, a conferência do formulário e o resumo da lista |
+| [`limpeza.py`](../painel/limpeza.py) | Limpeza automática: a passada que aplica a regra de cada usuário na pasta dele, pela linha de execução do painel ou pelo terminal (`servidor.py --retencao`) |
 | [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista única de administradores e usuários do FTP, criação com o perfil e a pasta escolhidos, edição (perfil, pasta, limites e bloqueios), troca de senha, remoção e a dispensa do TLS por usuário |
 | [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta |
 | [`aba_meus_arquivos.py`](../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação, download e as ações do perfil dentro da pasta dele; para o perfil Só envio, a tela Envio de arquivos |

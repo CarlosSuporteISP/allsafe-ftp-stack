@@ -12,6 +12,7 @@ import urllib.parse
 import administradores
 import idioma
 import limites
+import retencao
 from aba_arquivos import Recusado, apagar_caminho, endereco, resposta_parcial
 from auditoria import auditar, limpo
 from config import ADMINS_MAX, CFG, DOWNLOADS_POR_USUARIO, NOME, PASTA, SENHA_MAX, SENHA_MIN
@@ -40,8 +41,12 @@ MENSAGENS = {
     'criado_tls_falhou': N('Usuário criado, mas a dispensa do TLS não foi gravada: ele só entra com TLS. Tente de novo em Editar.'),
     'senha': N('Senha trocada.'),
     'pasta': N('Pasta trocada. Os arquivos da pasta anterior continuam nela.'),
+    'pasta_sem_limpeza': N('Pasta trocada. Os arquivos da pasta anterior continuam nela. A limpeza automática foi desligada: '
+                           'a regra era da pasta anterior.'),
     'perfil': N('Perfil trocado. Vale na próxima entrada do usuário no FTP.'),
     'limites': N('Limites gravados. Valem na próxima entrada do usuário no FTP.'),
+    'limpeza': N('Limpeza automática gravada. Vale na próxima passada do painel.'),
+    'limpeza_desligada': N('Limpeza automática desligada. Nenhum arquivo deste usuário é apagado sozinho.'),
     'desbloqueado': N('Bloqueio removido. O usuário volta a poder entrar no FTP.'),
     'removido': N('Usuário removido. Os arquivos continuam na pasta.'),
     'removido_com_pasta': N('Usuário removido e pasta apagada.'),
@@ -71,6 +76,7 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
     excecoes = CFG['tls_excecoes']
     marcados = sem_tls(cadastro) if excecoes else []
     proprios = limites.todos()
+    limpezas = retencao.regras()
     presos = bloqueios()
     divididas = vizinhos_de_todos(cadastro)
     papeis = perfis()
@@ -112,6 +118,9 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
         dele = limites.resumo(proprios[nome]) if nome in proprios else ''
         if dele:
             marca += f' <span class="etiqueta" title="{t("Limites próprios: {limites}", limites=e(dele))}">{t("limites")}</span>'
+        if nome in limpezas and pasta:
+            marca += (f' <span class="etiqueta atencao" title="{t("Limpeza automática: {regra}", regra=e(retencao.resumo(limpezas[nome])))}">'
+                      f'{t("limpeza")}</span>')
         if nome in presos:
             origens = ', '.join(origem for origem, *_ in presos[nome][:5]) + (' ' + t('e outros') if len(presos[nome]) > 5 else '')
             vindas = t('Senhas erradas demais no FTP, vindas de: {origens}', origens=e(origens))
@@ -148,6 +157,8 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
         f'<span class="etiqueta">{t("dividida")}</span> '
         + t('Pasta alcançada por mais de um usuário: cada um mexe nos arquivos do outro até onde o perfil dele deixa.'),
         f'<span class="etiqueta">{t("limites")}</span> ' + t('Limite próprio, ajustado em Editar.'),
+        f'<span class="etiqueta atencao">{t("limpeza")}</span> '
+        + t('Limpeza automática ligada em Editar: o painel apaga sozinho os arquivos antigos da pasta deste usuário.'),
         f'<span class="etiqueta ruim">{t("bloqueado")}</span> '
         + t('Recusado pelo FTP por senhas erradas demais vindas de um endereço: o bloqueio sai sozinho no fim do prazo, ou em '
             'Editar.')))
@@ -312,6 +323,45 @@ def usuario_alteravel(pedido, sessao, nome):
     return True
 
 
+def cartao_limpeza(sessao, nome, dele, outros, erro=''):
+    """Formulário da limpeza automática do usuário. `dele` traz o que mostrar em cada campo: a regra gravada ou,
+    depois de uma recusa, o que foi digitado. `outros` são os usuários que alcançam a pasta dele."""
+    gravada = retencao.ler(nome)
+    estado = (f'<span class="etiqueta atencao">{t("ligada")}</span> {e(retencao.resumo(gravada))}.' if retencao.resumo(gravada)
+              else t('Desligada: nenhum arquivo deste usuário é apagado sozinho.'))
+    passada = (tn(CFG['retencao_minutos'], 'O painel aplica a regra a cada minuto.', 'O painel aplica a regra a cada {n} minutos.')
+               if CFG['retencao_minutos'] else '')
+    parada = ('' if CFG['retencao_minutos'] else
+              '<p class="aviso">' + t('Com <code>PAINEL_RETENCAO_MINUTOS=0</code>, a limpeza automática está parada nesta '
+                                      'instalação: a regra fica gravada e não é aplicada.') + '</p>')
+    dividida = ('<p class="aviso">' + t('A pasta deste usuário também é alcançada por <strong>{outros}</strong>: a limpeza '
+                                        'apaga os arquivos antigos de todos os que estiverem nela.',
+                                        outros=e(', '.join(outros))) + '</p>') if outros else ''
+
+    def numero(chave, rotulo, nota):
+        return (f'<label for="limpeza_{chave}">{rotulo} <span class="suave">({nota})</span></label>\n'
+                f'<input id="limpeza_{chave}" name="{chave}" type="number" min="1" max="{retencao.TETOS[chave]}" step="1" '
+                f'inputmode="numeric" value="{e(str(dele.get(chave) or ""))}">')
+    return f'''<section class="cartao estreito" id="limpeza"><h2>{t('Limpeza automática')}</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
+<p>{estado}</p>
+<p>{t('O painel apaga sozinho os arquivos antigos da pasta deste usuário e das pastas de dentro dela. Campo vazio desliga '
+      'aquela regra; os dois vazios desligam a limpeza.')}</p>
+{parada}{dividida}<form method="post" action="/usuarios/limpeza" autocomplete="off">
+<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+<input type="hidden" name="usuario" value="{e(nome)}">
+{numero('ultimos', t('Manter só os arquivos mais recentes'), t('quantos ficam em cada pasta; os mais antigos saem'))}
+{numero('dias', t('Apagar o arquivo com mais de tantos dias'), t('dias no servidor, desde que chegou ou foi alterado'))}
+<p class="suave">{t('A contagem é por pasta: com 30, cada pasta fica com os 30 arquivos mais recentes dela. Com os dois campos '
+                    'preenchidos, sai o arquivo que passar de qualquer um. Não saem link simbólico nem arquivo ou pasta com o '
+                    'nome começado por ponto; a subpasta que a limpeza esvaziar sai junto.')} {passada}</p>
+<p class="aviso">{t('O painel <strong>não tem lixeira</strong>: o que a limpeza apaga não volta. Na regra por dias, o '
+                    'equipamento que parar de enviar fica sem nenhum arquivo depois do prazo; para backup de equipamento, '
+                    'prefira manter os mais recentes.')}</p>
+{campo_senha_atual(sessao, para=t('para gravar a limpeza'))}
+<button type="submit">{t('Gravar limpeza')}</button>
+</form></section>'''
+
+
 def cartao_limites(sessao, nome, dele, erro=''):
     """Formulário dos limites do usuário. `dele` traz o que mostrar em cada campo: os limites gravados ou,
     depois de uma recusa, o que foi digitado."""
@@ -420,7 +470,7 @@ def cartao_tls(nome):
 
 
 def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, pasta='', erro_limites='', digitado=None,
-                erro_bloqueio='', erro_perfil=''):
+                erro_bloqueio='', erro_perfil='', erro_limpeza='', da_limpeza=None):
     nome = consulta.get('usuario', '')
     if not usuario_alteravel(pedido, sessao, nome):
         return
@@ -454,11 +504,13 @@ def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
 <input type="hidden" name="usuario" value="{e(nome)}">
 {campo_da_pasta(t('Pasta nova'), pasta, obrigatoria=True)}
 <p class="suave">{t('Os arquivos da pasta atual <strong>não são movidos nem apagados</strong>: continuam onde estão, e o usuário '
-                    'deixa de alcançá-los. A troca vale no próximo login no FTP e encerra a sessão dele no painel.')}</p>
+                    'deixa de alcançá-los. A troca vale no próximo login no FTP e encerra a sessão dele no painel. A limpeza '
+                    'automática, se estiver ligada, é desligada: a regra era da pasta atual.')}</p>
 <button type="submit">{t('Trocar pasta')}</button> <a class="botao" href="/usuarios">{t('Cancelar')}</a>
 </form></section>
 {cartao_tls(nome)}
 {cartao_limites(sessao, nome, digitado, erro_limites)}
+{cartao_limpeza(sessao, nome, da_limpeza or retencao.ler(nome), outros, erro_limpeza) if atual else ''}
 </div>''', sessao, '/usuarios'))
 
 
@@ -477,6 +529,27 @@ def gravar_limites(pedido, sessao, consulta, formulario, token):
     gravados = ' '.join(f'{chave}={valores[chave] if valores[chave] != "" else "-"}' for chave in limites.CHAVES)
     auditar(pedido.ip, 'limites_alterados', f'admin={sessao["admin"]} usuario={nome} {gravados}')
     return pedido.redirecionar('/usuarios?m=limites')
+
+
+def gravar_limpeza(pedido, sessao, consulta, formulario, token):
+    """Liga, muda ou desliga a limpeza automática do usuário. Pede a senha de quem está na sessão: é uma regra que apaga."""
+    nome = formulario.get('usuario', '')
+    if not usuario_alteravel(pedido, sessao, nome):
+        return None
+    valores, erro = retencao.do_formulario(formulario)
+    if erro:
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro_limpeza=erro, codigo=400, da_limpeza=formulario)
+    codigo, erro = confirmacao_recusada(pedido, sessao, formulario)
+    if codigo:
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro_limpeza=erro, codigo=codigo, da_limpeza=formulario)
+    feito, mensagem = executar_usuario('retencao', nome, pares=retencao.pares(valores))
+    if not feito:
+        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=gravar_limpeza usuario={nome}')
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro_limpeza=t('Não foi possível gravar:') + ' ' + do_comando(mensagem),
+                           codigo=500, da_limpeza=formulario)
+    auditar(pedido.ip, 'retencao_alterada',
+            f'admin={sessao["admin"]} usuario={nome} ultimos={valores["ultimos"] or "-"} dias={valores["dias"] or "-"}')
+    return pedido.redirecionar('/usuarios?m=' + ('limpeza' if valores['ultimos'] or valores['dias'] else 'limpeza_desligada'))
 
 
 def desbloquear(pedido, sessao, consulta, formulario, token):
@@ -518,6 +591,7 @@ def trocar_pasta(pedido, sessao, consulta, formulario, token):
         return None
     pasta = formulario.get('pasta', '').strip()
     anterior = usuarios().get(nome)
+    com_limpeza = nome in retencao.regras()
     if not PASTA.fullmatch(pasta):
         impedimento = t('Pasta inválida. Veja a regra abaixo do campo.')
     elif pasta == anterior:
@@ -533,7 +607,7 @@ def trocar_pasta(pedido, sessao, consulta, formulario, token):
         return tela_editar(pedido, sessao, {'usuario': nome}, erro=t('Não foi possível trocar:') + ' ' + do_comando(mensagem),
                            codigo=500, pasta=pasta)
     auditar(pedido.ip, 'pasta_trocada', f'admin={sessao["admin"]} usuario={nome} pasta={pasta} anterior={anterior or "fora"}')
-    return pedido.redirecionar('/usuarios?m=pasta')
+    return pedido.redirecionar('/usuarios?m=' + ('pasta_sem_limpeza' if com_limpeza else 'pasta'))
 
 
 def tela_trocar_senha(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200):

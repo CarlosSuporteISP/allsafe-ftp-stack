@@ -7,12 +7,13 @@ action="${1:-}"
 user="${2:-}"
 pasta="${3:-}"
 case "$action" in
-  list|del|add|passwd|pasta|perfil|limites|bloqueios|desbloquear|tls-dispensar|tls-exigir|tls-lista) ;;
+  list|del|add|passwd|pasta|perfil|limites|retencao|bloqueios|desbloquear|tls-dispensar|tls-exigir|tls-lista) ;;
   enderecos|endereco-bloquear|endereco-liberar) ;;
   *)
     echo "Uso: $0 add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]" >&2
     echo "     $0 perfil <usuario> [completo|envio|soenvio|leitura]" >&2
     echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N] [enviar=1]" >&2
+    echo "     $0 retencao <usuario> [ultimos=N] [dias=N]" >&2
     echo "     $0 bloqueios [usuario]" >&2
     echo "     $0 desbloquear <usuario> [origem]" >&2
     echo "     $0 enderecos" >&2
@@ -44,6 +45,12 @@ case "$action" in
     # enviar=1 dá ao usuário a permissão de enviar arquivo pelo painel web; enviar= tira.
     [[ -n "$user" ]] || { echo "Uso: $0 limites <usuario> [chave=valor ...]" >&2; exit 2; }
     compose exec -T ftp allsafe-ftp-user limites "$user" "${@:3}"
+    ;;
+  retencao)
+    # Limpeza automática da pasta do usuário: ultimos=N mantém só os N arquivos mais recentes de cada pasta, e dias=N
+    # apaga o arquivo que está há mais de N dias no servidor. Sem pares, mostra a regra; valor vazio desliga aquela parte.
+    [[ -n "$user" ]] || { echo "Uso: $0 retencao <usuario> [ultimos=N] [dias=N]" >&2; exit 2; }
+    compose exec -T ftp allsafe-ftp-user retencao "$user" "${@:3}"
     ;;
   bloqueios)
     # Bloqueios por tentativa em vigor, de todos ou de um usuário.
