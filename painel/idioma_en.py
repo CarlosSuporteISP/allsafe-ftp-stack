@@ -1566,20 +1566,20 @@ EN = {
         'Page not found',
     'roteador':
         'router',
-    'switch':
-        'switch',
-    'OLT':
-        'OLT',
-    'rádio':
-        'radio',
+    'câmera':
+        'camera',
+    'empresa':
+        'company',
+    'pessoa':
+        'person',
     '/roteador':
         '/router',
-    '/switch':
-        '/switch',
-    '/olt':
-        '/olt',
-    '/radio':
-        '/radio',
+    '/cameras':
+        '/cameras',
+    '/empresa':
+        '/company',
+    '/pessoal':
+        '/personal',
     'Pausar movimento':
         'Pause motion',
     'Retomar movimento':
