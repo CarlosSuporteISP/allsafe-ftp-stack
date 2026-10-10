@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Cena do lado da marca na tela de entrada: cada origem (equipamento de rede, câmera, empresa, pessoa) manda os
-arquivos pelo FTPS e eles caem na própria pasta.
+"""Cena do lado da marca na tela de entrada: cada origem (roteador, switch, OLT, rádio, câmera, empresa, pessoa)
+manda os arquivos pelo FTPS e eles caem na própria pasta. São sete origens em quatro faixas: as que andam juntas
+dividem a faixa e a placa.
 As telas de dentro levam a mesma cena, pequena, na faixa de cabeçalho (miniatura).
 
 É enfeite (o texto ao lado diz o mesmo) e fica fora do leitor de tela. Tudo é HTML e CSS do próprio painel: a
@@ -12,8 +13,9 @@ from icones import icone
 from idioma import N, t
 
 FAIXAS = ('l1', 'l2', 'l3', 'l4')
-ORIGENS = (N('roteador'), N('câmera'), N('empresa'), N('pessoa'))
-PASTAS = (N('/roteador'), N('/cameras'), N('/empresa'), N('/pessoal'))
+# A placa curta fica na primeira e na última faixa: é onde a cena chega mais perto da borda do painel da marca.
+ORIGENS = (N('OLT / rádio'), N('roteador / switch'), N('empresa / pessoa'), N('câmera'))
+PASTAS = (N('/olt /radio'), N('/roteador /switch'), N('/empresa /pessoal'), N('/cameras'))
 # Os trilhos, na medida do palco (22 por 15): da origem ao muro e do muro à pasta, uma linha por faixa.
 TRILHOS = ''.join(f'M3 {y}H9.9M12.1 {y}H19' for y in ('2.25', '5.75', '9.25', '12.75'))
 
