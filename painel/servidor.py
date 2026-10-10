@@ -11,12 +11,14 @@ allsafe-ftp-user do serviço ftp, na pasta /auth que os dois containers comparti
 
 Modos: sem argumento, sobe o servidor; --hash lê uma senha da entrada padrão e imprime o hash;
 --administrador <nome> lê um hash da entrada padrão e cria o administrador ou troca a senha dele;
---saude confere /saude pelo soquete e sai com 0 ou 1 (healthcheck do container).
+--saude confere /saude pelo soquete e sai com 0 ou 1 (healthcheck do container);
+--retencao aplica agora a limpeza automática de cada usuário que tem uma, e com --simular só conta o que sairia.
 """
 import socket
 import sys
 
 import administradores
+import limpeza
 import recursos
 from atendimento import Painel, Servidor
 from auditoria import auditar, limpo
@@ -68,9 +70,27 @@ def modo_saude():
     sys.exit(0 if cabecalho.startswith(b'HTTP/1.1 200 ') and corpo.strip() == b'ok' else 1)
 
 
+def modo_retencao(simular):
+    """A passada da limpeza automática, pedida pelo terminal. Diz o que saiu de cada pasta, sem o nome dos arquivos."""
+    feitas = limpeza.passada(simular)
+    for nome, pasta, regra, conta in feitas:
+        dela = ' '.join(f'{chave}={valor}' for chave, valor in regra.items() if valor)
+        if conta is None:
+            print(f'{nome} /data/{pasta} ({dela}): a pasta não pôde ser aberta')
+        else:
+            print(f'{nome} /data/{pasta} ({dela}): {conta["arquivos"]} arquivo(s), {conta["bytes"]} bytes, '
+                  f'{conta["pastas"]} pasta(s) vazia(s), {conta["erros"]} erro(s)')
+    if not feitas:
+        print('Nenhum usuário com limpeza automática.')
+    elif simular:
+        print('Simulação: nada foi apagado. Pasta que ficaria vazia não entra na conta.')
+
+
 def principal():
     if '--hash' in sys.argv[1:]:
         return modo_hash()
+    if '--retencao' in sys.argv[1:]:
+        return modo_retencao('--simular' in sys.argv[1:])
     if '--saude' in sys.argv[1:]:
         return modo_saude()
     if '--administrador' in sys.argv[1:]:
@@ -90,6 +110,7 @@ def principal():
             auditar('-', 'admin_inicial_criado', f'admin={CFG["admin_inicial"]}')
     servidor = Servidor(ARQ_SOQUETE, Painel)
     recursos.iniciar()
+    limpeza.iniciar()
     auditar('-', 'painel_iniciado', f'versao={limpo(CFG["versao"])}')
     print(f'Painel pronto no soquete {ARQ_SOQUETE}, atrás do nginx; sessão de {CFG["inatividade"] // 60} min; '
           f'redes permitidas: {", ".join(str(r) for r in CFG["redes"])}', flush=True)

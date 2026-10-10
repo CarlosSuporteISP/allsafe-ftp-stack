@@ -150,7 +150,7 @@ docker compose logs --tail 5 nginx
 
 O aviso da tela pode ser ocultado por quem instala, com `PAINEL_AVISO_EXPOSICAO=nao` no `.env` e um `./deploy.sh`: o sinal do menu, o aviso do começo da aba Segurança e o texto do rodapé somem. As linhas da aba Segurança e o alerta do `deploy.sh` continuam.
 
-4. Abra o painel pelo nome público, entre e confira na aba Atividade que a coluna **De onde** mostra o seu endereço, e não o do proxy.
+4. Abra o painel pelo nome público, entre e confira na aba Log que a coluna **De onde** mostra o seu endereço, e não o do proxy.
 
 | Com a opção preenchida | O que acontece |
 |---|---|
@@ -330,7 +330,7 @@ Onde a dispensa aparece:
 | Registro do container (`docker compose logs ftp`) | Na linha `FTP pronto`: `TLS por usuário: nenhum dispensado, sessão sem TLS recusada antes da senha` ou `com exceção por usuário (<n> dispensado(s) do TLS)`, esta com o `AVISO` de texto puro; a cada mudança de lado da lista, `TLS por usuário: a lista dos dispensados mudou`; a cada recusa, `porteiro: entrada sem TLS recusada: usuario=<nome> origem=<ip> (a senha enviada passou em texto puro: troque-a)` |
 | Painel, aba Usuários | A coluna **TLS**, com `obrigatório` ou `sem TLS` em cada linha |
 | Painel, abas Visão geral e Segurança | Com pelo menos um usuário dispensado, a faixa de alerta no começo da tela, com a quantidade e os nomes; na aba Segurança, o item `TLS do FTP` |
-| Painel, aba Atividade | `Usuário dispensado do TLS` e `Usuário volta a exigir TLS`, com o administrador que fez |
+| Painel, aba Log | `Usuário dispensado do TLS` e `Usuário volta a exigir TLS`, com o administrador que fez |
 
 <details>
 <summary>Fluxograma da entrada com o TLS por usuário, com a sequência escrita — clique para expandir</summary>
@@ -408,7 +408,7 @@ flowchart LR
 - **Sempre no ar:** o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) sobe o `pure-authd -s /run/pure-authd.sock -r /usr/local/sbin/allsafe-ftp-porteiro` e o `pure-ftpd` com `-l extauth:/run/pure-authd.sock -l puredb:/auth/pureftpd.pdb`, com ou sem a dispensa, porque o mesmo porteiro aplica o [bloqueio por tentativa](#bloqueio-por-tentativa). Com a opção valendo, a marca `/run/allsafe/tls-por-usuario` liga a regra do TLS no porteiro.
 - **Dois modos de entrada, conforme a lista:** sem nenhum dispensado, o `pure-ftpd` sobe com `-Y 2` e recusa a sessão sem TLS ele mesmo, antes da senha. Com pelo menos um, sobe com `-Y 1`, que aceita sessão com e sem TLS, e quem decide é o porteiro. Um observador no entrypoint relê a lista a cada segundo; quando ela passa de vazia a preenchida, ou o contrário, só o processo do `pure-ftpd` que escuta a porta é encerrado e outro sobe com o modo novo. O container não reinicia, e cada sessão em andamento é um processo próprio, que continua até terminar.
 - **Custos da troca:** a porta fica fechada pelo instante entre um processo e o outro; o processo novo recomeça a contagem de sessões simultâneas (`FTP_MAX_CLIENTS` e `FTP_MAX_CLIENTS_PER_IP`), sem contar as que já estavam abertas; e a sessão sem TLS já aberta de quem voltou a ser obrigado segue até terminar.
-- **O porteiro não confere senha:** o [`ftp/porteiro.sh`](../ftp/porteiro.sh) responde `auth_ok:0` ("não é comigo") quando a sessão tem TLS ou quando o nome está na lista, e o `pure-ftpd` segue para o PureDB, que confere a senha como sempre. Nos outros casos responde `auth_ok:-1`, a recusa definitiva. A senha chega a ele em variável de ambiente e não é lida, gravada nem registrada.
+- **O porteiro não confere senha:** o [`ftp/porteiro.pl`](../ftp/porteiro.pl) responde `auth_ok:0` ("não é comigo") quando a sessão tem TLS ou quando o nome está na lista, e o `pure-ftpd` segue para o PureDB, que confere a senha como sempre. Nos outros casos responde `auth_ok:-1`, a recusa definitiva. A senha chega a ele em variável de ambiente e não é lida, gravada nem registrada.
 - **A lista:** `/auth/sem-tls.lista` (`DATA_DIR/auth` no host), `0600`, do `root`, um nome por linha. Só o `allsafe-ftp-user` grava, com a mesma trava do cadastro de usuários e por troca de nome do arquivo, para o porteiro nunca ler a lista pela metade. O porteiro a lê a cada entrada, e o observador, a cada segundo: a mudança vale em instantes, sem reiniciar o container.
 - **Falha fechada:** sem o `pure-authd`, o `pure-ftpd` cairia direto no PureDB e aceitaria todos sem TLS. Por isso o entrypoint vigia os processos: se um sair, escreve `FALHA: o pure-authd saiu: o container encerra para ninguém entrar sem a conferência do porteiro` (ou `o vigia saiu`, `o pure-ftpd saiu`, `o observador da lista do TLS saiu`), encerra com código `1`, e o `restart: unless-stopped` sobe o container de novo, com todos. O healthcheck só responde saudável com o soquete do `pure-authd` aberto.
 - **A recusa por TLS não conta como senha errada:** o porteiro deixa uma marca em `/run/allsafe/recusa/`, e o vigia do bloqueio por tentativa ignora a falha que vem logo depois dela. Equipamento configurado sem TLS não bloqueia o próprio usuário.
@@ -490,7 +490,7 @@ Enquanto houver bloqueio, ele aparece em:
 | Painel, aba Usuários | A marca **bloqueado** na linha do usuário, com os endereços ao passar o mouse; a marca **limites** mostra o limite próprio |
 | Painel, tela Editar | O cartão **Bloqueios**, com a origem, as senhas erradas, o início e o fim de cada bloqueio, e o botão **Desbloquear** |
 | Painel, aba Segurança | O item `Bloqueio por tentativa no FTP`, com o limite da stack e os usuários bloqueados agora |
-| Painel, aba Atividade | `Bloqueio do usuário no FTP removido` e `Limites do usuário alterados`, com o administrador que fez |
+| Painel, aba Log | `Bloqueio do usuário no FTP removido` e `Limites do usuário alterados`, com o administrador que fez |
 
 <details>
 <summary>Fluxograma da entrada com o bloqueio por tentativa, com a sequência escrita — clique para expandir</summary>
@@ -565,7 +565,7 @@ flowchart LR
 <details>
 <summary>Detalhe técnico — como o bloqueio é aplicado</summary>
 
-- **Dois papéis:** o vigia conta e grava; o porteiro lê e recusa. O [`ftp/vigia.pl`](../ftp/vigia.pl), instalado como `/usr/local/sbin/allsafe-ftp-vigia`, escuta em `/dev/log` o que o `pure-ftpd` registra, porque o servidor só avisa da senha errada por ali. O [`ftp/porteiro.sh`](../ftp/porteiro.sh) é chamado pelo `pure-authd` a cada entrada, antes da conferência da senha. Nenhum dos dois recebe a senha para conferir: o aviso traz só o nome e o endereço, e o porteiro não lê a variável em que ela chega.
+- **Dois papéis:** o vigia conta e grava; o porteiro lê e recusa. O [`ftp/vigia.pl`](../ftp/vigia.pl), instalado como `/usr/local/sbin/allsafe-ftp-vigia`, escuta em `/dev/log` o que o `pure-ftpd` registra, porque o servidor só avisa da senha errada por ali. O [`ftp/porteiro.pl`](../ftp/porteiro.pl) é chamado pelo `pure-authd` a cada entrada, antes da conferência da senha. Nenhum dos dois recebe a senha para conferir: o aviso traz só o nome e o endereço, e o porteiro não lê a variável em que ela chega.
 - **O bloqueio é um arquivo:** `/auth/bloqueios/<usuario>@<endereco>` (`DATA_DIR/auth/bloqueios` no host), `0600`, do `root`, em pasta `0700`, com uma linha: até quando vale, desde quando e quantas senhas erradas, em segundos desde 1970. É a única memória do bloqueio: por isso ele atravessa o reinício, e apagar o arquivo desbloqueia na entrada seguinte. O vigia grava por troca de nome do arquivo, para o porteiro nunca ler pela metade.
 - **Arquivo inválido não bloqueia:** vale só o arquivo comum cuja primeira linha começa por um número de até 12 dígitos maior que a hora atual. Vencido, vazio, com texto ou link simbólico, não bloqueia, e o vigia o apaga na limpeza de minuto em minuto.
 - **Janela de contagem:** as senhas erradas se somam enquanto a mais antiga tiver menos que os minutos de bloqueio do usuário. A contagem fica na memória do vigia, até 10.000 pares de usuário e endereço; os bloqueios gravados vão até 4.096. Acima desses tetos o vigia registra `AVISO` e segue.
@@ -656,7 +656,7 @@ Enquanto houver bloqueio, ele aparece em:
 |---|---|
 | Painel, aba Bloqueios | A regra em vigor, o total e uma linha por endereço, com **Mudar prazo** e **Desbloquear**; com mais de dez endereços, a busca por trecho do endereço |
 | Painel, aba Segurança | O item `Bloqueio por endereço`, com a regra e quantos endereços estão bloqueados agora |
-| Painel, aba Atividade | `Endereço bloqueado por erros de usuário e senha`, `Prazo do bloqueio de endereço alterado` e `Endereço desbloqueado`, com o administrador que fez, e `Pedido de endereço bloqueado`, a cada pedido recusado |
+| Painel, aba Log | `Endereço bloqueado por erros de usuário e senha`, `Prazo do bloqueio de endereço alterado` e `Endereço desbloqueado`, com o administrador que fez, e `Pedido de endereço bloqueado`, a cada pedido recusado |
 | Registro do container (`docker compose logs ftp`) | A cada subida, `vigia: pronto: endereço com mais de 5 erros de usuário e senha em 24 h fica bloqueado por 120 dias, no FTP e no painel`; no bloqueio, `vigia: endereço bloqueado: origem=<ip> erros=<n> dias=<d>`; a cada tentativa durante o bloqueio, `vigia: entrada recusada pelo bloqueio do endereço: origem=<ip>` |
 | Terminal do servidor | `./manage-user.sh enderecos` |
 
@@ -734,7 +734,7 @@ flowchart LR
 
 - **O bloqueio é um arquivo:** `/auth/enderecos/<endereco>` (`DATA_DIR/auth/enderecos` no host), `0600`, do `root`, em pasta `0700`, com uma linha: até quando vale, desde quando, quantos erros e quem bloqueou (`ftp`, `painel` ou `manual`). É a única memória do bloqueio: por isso ele atravessa o reinício e vale nos dois serviços, e apagar o arquivo libera o endereço no pedido seguinte. A gravação é por troca de nome do arquivo, para ninguém ler pela metade.
 - **Quem conta:** no FTP, o [`ftp/vigia.pl`](../ftp/vigia.pl), a partir do que o `pure-ftpd` registra a cada falha de usuário e senha; no painel, o [`painel/enderecos.py`](../painel/enderecos.py), a cada entrada recusada depois de a senha ser conferida e a cada confirmação por senha recusada. Cada um guarda a contagem na própria memória, por endereço, só dos erros mais novos que as horas configuradas: até 10.000 endereços no vigia e 5.000 no painel.
-- **Quem aplica:** no FTP, o [`ftp/porteiro.sh`](../ftp/porteiro.sh), chamado pelo `pure-authd` antes da conferência da senha, e é a primeira das três regras dele; no painel, o atendimento ([`painel/atendimento.py`](../painel/atendimento.py)), antes de qualquer rota, inclusive a de saúde.
+- **Quem aplica:** no FTP, o [`ftp/porteiro.pl`](../ftp/porteiro.pl), chamado pelo `pure-authd` antes da conferência da senha, e é a primeira das três regras dele; no painel, o atendimento ([`painel/atendimento.py`](../painel/atendimento.py)), antes de qualquer rota, inclusive a de saúde.
 - **Passa do limite:** bloqueia o erro seguinte ao limite. Com `5`, cinco erros não bloqueiam e o sexto bloqueia.
 - **Arquivo inválido não bloqueia:** vale só o arquivo comum, com nome de endereço IPv4 escrito de um jeito só, cuja primeira linha começa por um número de até 12 dígitos maior que a hora atual. Vencido, vazio, com texto ou link simbólico, não bloqueia; o vigia apaga os vencidos de minuto em minuto. `127.0.0.0/8` nunca é lido como bloqueado.
 - **Teto:** 10.000 endereços bloqueados. Acima disso, o vigia registra `AVISO` e o comando responde `Teto de 10000 enderecos bloqueados: libere algum antes`.
@@ -901,7 +901,7 @@ O passo a passo, na ordem em que é feito:
 | 8 | Enumeração por DNS reverso ou _fingerprint_ | `-H` (sem resolução reversa) |
 | 9 | Adivinhação do usuário e da senha do painel | Senha inicial de 48 caracteres, guardada só como hash `scrypt`; a recusa é a mesma para usuário que não existe e para senha errada; cinco erros em 15 minutos bloqueiam o endereço (`429`); antes disso, o nginx limita os pedidos por endereço |
 | 10 | Ação forjada no painel (CSRF, _clickjacking_) | Token CSRF por sessão, conferência do `Origin`, cookie `SameSite=Strict`, `frame-ancestors 'none'` e `X-Frame-Options: DENY` |
-| 11 | Roubo da sessão do painel | Só HTTPS, fechado no nginx (TLS 1.2 ou 1.3); cookie `__Host-` com `Secure` e `HttpOnly`; sessão presa ao endereço do cliente, 15 minutos sem uso e teto de 8 horas |
+| 11 | Roubo da sessão do painel | Só HTTPS, fechado no nginx (TLS 1.2 ou 1.3); cookie `__Host-` com `Secure` e `HttpOnly`; sessão presa ao endereço do cliente, 4 horas sem uso e teto de 12 horas; apagar, trocar nome e mexer em administrador pedem a senha de novo |
 | 12 | Painel exposto fora da rede interna | Bind só em IP privado; lista de redes permitidas aplicada pelo nginx e conferida de novo pelo painel; conferência do `Host`; o `deploy.sh` e os containers recusam valor público, a não ser com `REDE_PERMITIR_IP_PUBLICO=sim`. Publicar só o painel por [proxy ou túnel](#painel-por-proxy) é opção de quem instala, com alerta |
 | 13 | Painel comprometido atingir o host | Sem socket do Docker, raiz somente leitura, três capabilities, só a biblioteca padrão do Python e nenhum JavaScript |
 | 14 | Enxurrada de pedidos ou pedido malformado no painel | O nginx recebe primeiro: 20 pedidos por segundo por endereço (rajada de 40), 16 conexões por endereço, pedido de até 16 KiB e prazos de 15 s. O que passa disso recebe `429`, `413` ou `400` sem chegar ao painel |
@@ -961,7 +961,7 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 | Limite de tentativas | Cinco erros em 15 minutos, somando entrada recusada, de administrador ou de usuário do FTP, e senha atual recusada, bloqueiam o endereço do cliente, mesmo para a senha certa. O endereço é o da conexão; com o painel [por proxy ou túnel](#painel-por-proxy), o que o proxy escolhido informa |
 | Usuário do FTP só na pasta dele | Com `PAINEL_ACESSO_USUARIOS_FTP=sim`, o usuário do FTP entra com o nome e a senha do FTP, conferidos pelo próprio servidor FTP na rede interna da stack, em TLS e com o certificado conferido. Ele só alcança a pasta do cadastro e, nela, o que o perfil dele deixa: Leitura navega e baixa, Envio também cria pasta, Completo também troca o nome e apaga, com a senha do FTP. Não ganha nada que já não tenha por FTP, e o envio de arquivo continua só por FTP. Com `FTP_TLS_MODE=0`, essa conferência vai em texto puro, sem sair da rede interna da stack |
 | Alteração de administrador confirmada | Criar, trocar senha, trocar nome e remover pedem a senha atual de quem está na sessão; as sessões do administrador alterado são encerradas; ninguém remove a própria conta |
-| Sessão curta | 15 minutos sem uso (`PAINEL_SESSAO_MINUTOS`) e teto de 8 horas; a atualização automática da aba Servidor não conta como uso; presa ao endereço do cliente; encerrada em **Sair** e quando o painel reinicia |
+| Sessão com prazo | 4 horas sem uso (`PAINEL_SESSAO_MINUTOS`, de `1` a `720` minutos) e teto de 12 horas; o que apaga, troca nome ou mexe em administrador pede a senha de novo; a atualização automática da aba Servidor não conta como uso; presa ao endereço do cliente; encerrada em **Sair** e quando o painel reinicia |
 | Formulário protegido | Token CSRF por sessão e conferência do `Origin` em todo envio; `Referrer-Policy: same-origin` para o navegador informar a origem só ao próprio painel |
 | Idioma sem atalho | A troca de idioma só acontece por `POST`, com o token da sessão ou, antes da entrada, o do formulário de entrada; o cookie `__Host-idioma` só leva `pt` ou `en`, não vale como sessão e valor fora disso é ignorado; depois da troca, o navegador só volta para tela do próprio painel |
 | Página fechada | Sem JavaScript, sem conteúdo de terceiros, sem ser embutida em outra página (`Content-Security-Policy`) |
@@ -1029,7 +1029,7 @@ Além da bateria, cada versão passa por:
 ./tests/testar.sh
 ```
 
-**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 65 casos funcionais, 114 de segurança e 14 de rede. A bateria leva cerca de 1 hora; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
+**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 73 casos funcionais, 124 de segurança e 14 de rede. A bateria leva cerca de 1 hora; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
 
 > ⚠️ **Limite — o que a bateria não alcança:** ela roda no próprio servidor, contra a instância de teste. O firewall do host, o proxy ou o túnel da borda e o equipamento que envia o backup são de quem instala e não entram nela: confira-os pelo [passo a passo de produção](#boas-praticas).
 

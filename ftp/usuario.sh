@@ -6,6 +6,7 @@ usage() {
   echo "Uso: $0 add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]" >&2
   echo "     $0 perfil <usuario> [completo|envio|soenvio|leitura]" >&2
   echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N] [enviar=1]" >&2
+  echo "     $0 retencao <usuario> [ultimos=N] [dias=N]" >&2
   echo "     $0 bloqueios [usuario]" >&2
   echo "     $0 desbloquear <usuario> [origem]" >&2
   echo "     $0 enderecos" >&2
@@ -68,7 +69,7 @@ gravar_marca() { # <arquivo>: grava o nome do usuário inicial, só para o root
   ( umask 077; printf '%s\n' "$inicial" > "$1.novo" )
   mv -f "$1.novo" "$1"
 }
-[[ $# -le 2 || "$action" == add || "$action" == pasta || "$action" == perfil || "$action" == limites || "$action" == desbloquear || "$action" == endereco-bloquear ]] || usage
+[[ $# -le 2 || "$action" == add || "$action" == pasta || "$action" == perfil || "$action" == limites || "$action" == retencao || "$action" == desbloquear || "$action" == endereco-bloquear ]] || usage
 perfil_invalido() { echo "Perfil invalido: use completo, envio, soenvio ou leitura" >&2; exit 1; }
 pasta_invalida() {
   echo "Pasta invalida: ate 4 niveis separados por /; letras, numeros, _ - e ponto; nenhum nivel comeca com ponto" >&2
@@ -262,6 +263,25 @@ mostrar_limites() {
     return 0
   done < "$passwd_file"
   return 1
+}
+
+# Limpeza automática do usuário, uma chave por linha; valor vazio quer dizer que essa regra não está ligada.
+mostrar_retencao() {
+  local nome resto par ultimos="" dias=""
+  local -a pares=()
+  if [[ -f "$lista_limites" ]]; then
+    while read -r nome resto; do
+      [[ "$nome" == "$user" ]] || continue
+      read -r -a pares <<< "$resto"
+      for par in "${pares[@]}"; do
+        case "$par" in
+          ultimos=*) [[ ! "${par#*=}" =~ ^[1-9][0-9]{0,5}$ ]] || ultimos="${par#*=}" ;;
+          dias=*)    [[ ! "${par#*=}" =~ ^[1-9][0-9]{0,3}$ ]] || dias="${par#*=}" ;;
+        esac
+      done
+    done < "$lista_limites"
+  fi
+  printf 'ultimos=%s\ndias=%s\n' "$ultimos" "$dias"
 }
 
 # Número de um limite: vazio (tira o limite) ou inteiro do piso (1, se não vier) até o teto.
@@ -458,6 +478,12 @@ case "$action" in
     ajustar_pastas "$anterior"
     avisar_divisao
     echo "Pasta do usuario $user: /data/$pasta. Os arquivos de ${anterior:-/data/$user} continuam la."
+    # A limpeza automática foi ligada olhando a pasta anterior: na pasta nova ela só vale se for ligada de novo.
+    if [[ "$(mostrar_retencao)" != $'ultimos=\ndias=' ]]; then
+      gravar_limite ultimos ""
+      gravar_limite dias ""
+      echo "Limpeza automatica do usuario $user desligada: a regra era da pasta anterior."
+    fi
     ;;
   del)
     [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || usage
@@ -543,6 +569,34 @@ case "$action" in
     regra_depois="$(mostrar_limites | grep -E '^(tentativas|minutos)=' || true)"
     [[ "$regra_antes" == "$regra_depois" ]] || tirar_bloqueios > /dev/null
     echo "Limites do usuario $user gravados: valem na proxima entrada no FTP."
+    ;;
+  retencao)
+    # Limpeza automática da pasta do usuário, feita pelo painel de tempos em tempos. Sem pares, mostra a regra. Com
+    # pares, grava só os que vieram; valor vazio desliga. ultimos=N mantém os N arquivos mais recentes de cada pasta;
+    # dias=N apaga o arquivo com mais de N dias. Com as duas, sai o arquivo que passar de qualquer uma.
+    [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || usage
+    shift 2
+    declare -A da_lista=()
+    for par in "$@"; do
+      [[ "$par" == *=* ]] || usage
+      chave="${par%%=*}" valor="${par#*=}"
+      case "$chave" in
+        ultimos) numero ultimos "$valor" 100000; da_lista[ultimos]="$valor" ;;
+        dias)    numero dias "$valor" 3650; da_lista[dias]="$valor" ;;
+        *) usage ;;
+      esac
+    done
+    [[ -f "$passwd_file" ]] && pasta_de "$user" > /dev/null || { echo "Usuario nao existe: $user" >&2; exit 1; }
+    if [[ $# -eq 0 ]]; then
+      mostrar_retencao
+      exit 0
+    fi
+    travar
+    pasta_de "$user" > /dev/null || { echo "Usuario nao existe: $user" >&2; exit 1; }
+    for chave in ultimos dias; do
+      [[ -z "${da_lista[$chave]+tem}" ]] || gravar_limite "$chave" "${da_lista[$chave]}"
+    done
+    echo "Limpeza automatica do usuario $user gravada: vale na proxima passada do painel."
     ;;
   bloqueios)
     # Bloqueios por tentativa em vigor, de todos ou de um usuário: quem, de onde, até quando e com quantas senhas erradas.

@@ -19,6 +19,9 @@ EVENTOS = {
     'pasta_trocada': ('pasta', N('Pasta do usuário trocada')),
     'perfil_trocado': ('usuario', N('Perfil do usuário trocado')),
     'limites_alterados': ('relogio', N('Limites do usuário alterados')),
+    'retencao_alterada': ('relogio', N('Limpeza automática do usuário alterada')),
+    'retencao_aplicada': ('lixeira', N('Limpeza automática: arquivos antigos apagados')),
+    'retencao_falhou': ('alerta', N('Limpeza automática não concluída')),
     'bloqueio_removido': ('cadeado-aberto', N('Bloqueio do usuário no FTP removido')),
     'endereco_bloqueado': ('bloqueio', N('Endereço bloqueado por erros de usuário e senha')),
     'endereco_bloqueado_manual': ('bloqueio', N('Endereço ou prefixo bloqueado pelo administrador')),
@@ -56,7 +59,9 @@ TONS = {'erro': 'ruim', 'bloqueio': 'ruim', 'alerta': 'atencao'}
 # Nome de cada chave do detalhe, como ele aparece na tela. Chave fora daqui aparece como foi gravada.
 ROTULOS = {'admin': N('administrador'), 'usuario': N('usuário'), 'versao': N('versão'), 'acao': N('ação'),
            'conferencia': N('conferência'), 'credencial': N('senha'), 'alvo': N('conta'), 'novo': N('conta nova'),
-           'anterior': N('pasta anterior'), 'host': N('endereço pedido'), 'bytes': N('tamanho'), 'endereco': N('endereço')}
+           'anterior': N('pasta anterior'), 'host': N('endereço pedido'), 'bytes': N('tamanho'), 'endereco': N('endereço'),
+           'ultimos': N('arquivos mantidos'), 'dias': N('dias'), 'pasta': N('pasta'), 'arquivos': N('arquivos'),
+           'pastas': N('pastas'), 'erros': N('erros')}
 MOMENTO = re.compile(r'(\d{4})-(\d\d)-(\d\d)T(\d\d:\d\d)(:\d\d)')
 
 
