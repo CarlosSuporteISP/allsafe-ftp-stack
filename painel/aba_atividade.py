@@ -19,6 +19,9 @@ EVENTOS = {
     'perfil_trocado': ('usuario', 'Perfil do usuário trocado'),
     'limites_alterados': ('relogio', 'Limites do usuário alterados'),
     'bloqueio_removido': ('cadeado-aberto', 'Bloqueio do usuário no FTP removido'),
+    'endereco_bloqueado': ('bloqueio', 'Endereço bloqueado por erros de usuário e senha'),
+    'endereco_prazo': ('relogio', 'Prazo do bloqueio de endereço alterado'),
+    'endereco_desbloqueado': ('cadeado-aberto', 'Endereço desbloqueado'),
     'usuario_removido': ('lixeira', 'Usuário removido'),
     'tls_dispensado': ('cadeado-aberto', 'Usuário dispensado do TLS'),
     'tls_exigido': ('cadeado', 'Usuário volta a exigir TLS'),
@@ -40,6 +43,7 @@ EVENTOS = {
     'recusa_origem': ('bloqueio', 'Envio de outra origem'),
     'recusa_host': ('bloqueio', 'Endereço não aceito'),
     'recusa_rede': ('bloqueio', 'Cliente fora das redes permitidas'),
+    'recusa_endereco': ('bloqueio', 'Pedido de endereço bloqueado'),
     'recusa_caminho': ('bloqueio', 'Caminho de arquivo recusado'),
     'recusa_papel': ('bloqueio', 'Tela fora do papel ou do perfil pedida por usuário do FTP'),
 }
@@ -50,7 +54,7 @@ TONS = {'erro': 'ruim', 'bloqueio': 'ruim', 'alerta': 'atencao'}
 # Nome de cada chave do detalhe, como ele aparece na tela. Chave fora daqui aparece como foi gravada.
 ROTULOS = {'admin': 'administrador', 'usuario': 'usuário', 'versao': 'versão', 'acao': 'ação', 'conferencia': 'conferência',
            'credencial': 'senha', 'alvo': 'conta', 'novo': 'conta nova', 'anterior': 'pasta anterior', 'host': 'endereço pedido',
-           'bytes': 'tamanho'}
+           'bytes': 'tamanho', 'endereco': 'endereço'}
 MOMENTO = re.compile(r'(\d{4})-(\d\d)-(\d\d)T(\d\d:\d\d)(:\d\d)')
 
 

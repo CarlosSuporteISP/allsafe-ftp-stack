@@ -2,6 +2,7 @@
 """Tela de entrada, entrada e saída do painel."""
 import administradores
 import conta_ftp
+import enderecos
 from auditoria import auditar
 from cena import cena
 from config import CFG, NOME
@@ -82,6 +83,9 @@ def entrar(pedido, metodo, formulario):
     if conta is None:
         registrar_falha(pedido.ip)
         auditar(pedido.ip, 'entrada_falha', f'conferencia={motivo}' if motivo else '')
+        # Senha que o FTP não chegou a conferir não é erro de usuário e senha: não conta para o bloqueio do endereço.
+        if not motivo:
+            enderecos.erro_de_entrada(pedido.ip)
         return tela_entrada(pedido, 401, 'Não foi possível entrar.')
     auditar(pedido.ip, 'entrada_ok', f'usuario={nome}')
     token = criar_sessao(pedido.ip, usuario=nome, marca=conta['marca'], pasta=conta['pasta'], perfil=conta['perfil'])

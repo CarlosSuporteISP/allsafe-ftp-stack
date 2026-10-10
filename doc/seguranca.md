@@ -30,7 +30,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [Painel por proxy ou túnel](#painel-por-proxy) · [FTP sem TLS](#ftp-sem-tls) · [TLS por usuário](#tls-por-usuario) · [Bloqueio por tentativa](#bloqueio-por-tentativa) · [Perfis de usuário](#perfis) · [Boas práticas antes de produção](#boas-praticas) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Testes executados](#testes-executados) · [Sem senha, senha aleatória, exaustão e acesso direto ao cadastro](#sem-senha-e-exaustao) · [Custo das senhas do FTP](#custo-das-senhas) · [Contato de segurança e robôs de busca](#contato-de-seguranca) · [Conformidade com as RFCs](#conformidade-rfc) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
+[Só em rede privada](#rede-privada) · [IP público](#ip-publico) · [Painel por proxy ou túnel](#painel-por-proxy) · [FTP sem TLS](#ftp-sem-tls) · [TLS por usuário](#tls-por-usuario) · [Bloqueio por tentativa](#bloqueio-por-tentativa) · [Bloqueio por endereço](#bloqueio-por-endereco) · [Perfis de usuário](#perfis) · [Boas práticas antes de produção](#boas-praticas) · [Modelo de ameaça](#modelo-de-ameaca) · [Superfície exposta](#superficie-exposta) · [Proteções do painel](#painel) · [Testes executados](#testes-executados) · [Sem senha, senha aleatória, exaustão e acesso direto ao cadastro](#sem-senha-e-exaustao) · [Custo das senhas do FTP](#custo-das-senhas) · [Contato de segurança e robôs de busca](#contato-de-seguranca) · [Conformidade com as RFCs](#conformidade-rfc) · [Endurecimento do `compose.yaml`](#hardening-do-compose-yaml-linha-a-linha) · [Gestão de segredos](#gestao-de-segredos)
 
 </details>
 
@@ -475,12 +475,12 @@ Quando um mesmo endereço erra a senha de um usuário vezes demais, o FTP passa 
 | Usuário removido e criado de novo com o mesmo nome | Não herda o bloqueio nem o limite |
 | O container do FTP reinicia ou é recriado | O bloqueio continua valendo até o prazo; a contagem que ainda não tinha chegado ao limite recomeça |
 | Entrada fora do [horário do usuário](painel.md#limites) | Conta como senha errada: o servidor responde do mesmo jeito nos dois casos |
-| Sessão sem TLS recusada, nome que não está no cadastro, tentativa feita durante o bloqueio | Não contam |
+| Sessão sem TLS recusada, nome que não está no cadastro, tentativa feita durante o bloqueio | Não contam aqui. O nome que não está no cadastro conta no [bloqueio por endereço](#bloqueio-por-endereco) |
 | Senha do usuário do FTP errada na tela do painel | Não conta aqui: conta no limite de tentativas do painel |
 
 > ⚠️ **Mesmo endereço, mesmo usuário:** equipamentos que usam o mesmo usuário e chegam ao servidor pelo mesmo endereço, atrás de um roteador que troca o endereço de origem, são bloqueados juntos. Dê a cada equipamento o usuário dele: o erro de um não segura o outro.
 
-> ⚠️ **Limite:** o bloqueio conta as senhas erradas de um endereço para um usuário. Quem tenta poucas senhas em muitos usuários, abaixo do limite de cada um, não é bloqueado: contra isso valem a espera de 3 a 6 segundos de cada recusa, o limite de sessões por endereço e o firewall do host, que deve liberar a porta `21/tcp` só para as origens de backup. O bloqueio freia a adivinhação; quem autentica continua sendo a senha.
+> ⚠️ **Limite:** o bloqueio conta as senhas erradas de um endereço para um usuário. Quem tenta poucas senhas em muitos usuários, abaixo do limite de cada um, não é bloqueado por esta regra: quem o segura é o [bloqueio por endereço](#bloqueio-por-endereco), que soma os erros do endereço com qualquer nome. Valem também a espera de 3 a 6 segundos de cada recusa, o limite de sessões por endereço e o firewall do host, que deve liberar a porta `21/tcp` só para as origens de backup. O bloqueio freia a adivinhação; quem autentica continua sendo a senha.
 
 Enquanto houver bloqueio, ele aparece em:
 
@@ -581,6 +581,172 @@ flowchart LR
 
 ---
 
+<a name="bloqueio-por-endereco"></a>
+
+## ⛔ Bloqueio por endereço
+
+O endereço que erra usuário e senha vezes demais deixa de entrar no FTP e no painel, com qualquer conta e mesmo com a senha certa, até o prazo acabar ou um administrador liberar. A stack sai da instalação com o bloqueio ligado: o endereço que passa de 5 erros em 24 horas fica 120 dias bloqueado. Os erros se somam com qualquer nome de usuário, cadastrado ou não, no FTP com TLS ou sem, em modo passivo ou ativo, e na tela de entrada do painel.
+
+| O que ajustar | Onde | Valor | Padrão |
+|---|---|---|---|
+| Erros de usuário e senha que um endereço pode ter | `BLOQUEIO_ENDERECO_ERROS`, no `.env` | `0` a `100`; `0` desliga | `5` |
+| Horas em que os erros do endereço se somam | `BLOQUEIO_ENDERECO_HORAS`, no `.env` | `1` a `720` | `24` |
+| Dias de bloqueio | `BLOQUEIO_ENDERECO_DIAS`, no `.env` | `1` a `3650` | `120` |
+| Prazo de um endereço já bloqueado | Painel, Bloqueios ➜ **Mudar prazo** | `1` a `3650` dias, contados de agora | O da stack |
+
+1. Para mudar a regra de todos, edite as três variáveis no `.env` e reaplique:
+
+   ```bash
+   ./deploy.sh
+   ```
+
+2. Para acompanhar, abra a aba **Bloqueios** do painel: cada endereço bloqueado aparece com quem bloqueou (o FTP, o painel ou o administrador), quantos erros, desde quando e até quando. Pelo terminal, o mesmo:
+
+   ```bash
+   ./manage-user.sh enderecos
+   ```
+
+3. Para liberar um endereço antes do prazo, corrija a senha no equipamento e clique em **Desbloquear**, na linha dele. Pelo terminal:
+
+   ```bash
+   ./manage-user.sh endereco-liberar <endereco>
+   ```
+
+4. Para bloquear por mais tempo, ou encurtar o bloqueio, clique em **Mudar prazo** e informe os dias, contados de agora. Pelo terminal:
+
+   ```bash
+   ./manage-user.sh endereco-bloquear <endereco> <dias>
+   ```
+
+5. Para bloquear um endereço que ainda não errou, use o mesmo comando, no servidor. Sem os dias, vale o prazo da stack:
+
+   ```bash
+   ./manage-user.sh endereco-bloquear <endereco>
+   ```
+
+**Resultado esperado:** o `enderecos` responde uma linha por endereço, `origem=<ip> por=<ftp|painel|manual> erros=<n> desde=<data hora> ate=<data hora>`, ou `Nenhum endereco bloqueado.`; o `endereco-bloquear` responde `Endereco <ip> bloqueado: <n> dia(s) a partir de agora, no FTP e no painel.`, ou `Prazo do endereco <ip> alterado: <n> dia(s) a partir de agora, no FTP e no painel.` quando ele já estava bloqueado; o `endereco-liberar` responde `Endereco <ip> liberado: vale no proximo pedido.` Tudo vale no pedido seguinte, sem reiniciar nada; na aba Bloqueios, o que foi feito no terminal aparece em até 5 segundos.
+
+| Situação | O que acontece |
+|---|---|
+| Erro de usuário e senha, até o limite | `530` no FTP, ou a recusa da tela de entrada no painel, e o erro é somado aos outros do mesmo endereço, com qualquer nome de usuário |
+| Erro que passa do limite: o sexto, no padrão | O endereço fica bloqueado por 120 dias, no FTP e no painel |
+| O endereço bloqueado tenta o FTP | `530` com qualquer conta, com a senha certa ou errada, com TLS ou sem, em modo passivo ou ativo |
+| O endereço bloqueado abre o painel | `403` em todo pedido, com o texto `endereço bloqueado por excesso de erros de usuário e senha`, mesmo com sessão aberta |
+| Entrada certa antes do limite | Entra, e a contagem do endereço continua: quem tem uma conta não ganha tentativas com ela |
+| Erros no FTP e erros no painel, do mesmo endereço | Cada serviço conta os dele; o bloqueio feito por um vale no outro |
+| Outro endereço | Entra: o bloqueio vale só para o endereço que errou |
+| Fim do prazo | O bloqueio sai sozinho |
+| O administrador desbloqueia | O endereço volta a entrar no pedido seguinte, e a contagem dele recomeça |
+| O administrador muda o prazo | O prazo novo substitui o anterior; quem bloqueou e com quantos erros continuam registrados |
+| O container do FTP ou do painel reinicia | O bloqueio continua valendo; a contagem que ainda não tinha passado do limite recomeça |
+| Sessão sem TLS recusada antes da senha, senha que o FTP não pôde conferir, tentativa feita durante um bloqueio | Não contam |
+| Entrada no painel, com o padrão de 5 erros | O [limite de tentativas do painel](painel.md#protecoes) chega antes: na quinta falha, o endereço espera 15 minutos. Ele só é bloqueado por 120 dias se voltar a errar depois da espera, dentro das 24 horas |
+
+> ⚠️ **Nunca são bloqueados sozinhos:** o próprio servidor, a rede interna da stack, o endereço de saída do container, por onde chegam os clientes do próprio servidor, e os proxies de `PAINEL_PROXY_CONFIAVEL`, atrás dos quais estão todos os visitantes. Para eles valem o [bloqueio por tentativa](#bloqueio-por-tentativa) do FTP e o limite de tentativas do painel. O endereço IPv6 também fica só com esses dois.
+
+> ⚠️ **Vários equipamentos atrás do mesmo endereço:** equipamentos que saem por um roteador que troca o endereço de origem chegam ao servidor com um endereço só e são bloqueados juntos. Um deles com a senha errada, tentando de hora em hora, bloqueia todos por 120 dias. Nesse cenário, aumente `BLOQUEIO_ENDERECO_ERROS` ou diminua `BLOQUEIO_ENDERECO_HORAS`, e acompanhe a aba Bloqueios.
+
+> ⚠️ **Administrador com o próprio endereço bloqueado:** o painel responde `403` também para ele. A saída é outro administrador, de outro endereço, ou o terminal do servidor: `./manage-user.sh endereco-liberar <endereco>`.
+
+> ⚠️ **Limite:** o bloqueio vale para o endereço que o servidor enxerga. Onde o Docker não preserva a origem da conexão, todo cliente do FTP chega com o endereço de saída do container, que nunca é bloqueado: confira no registro (`docker compose logs ftp`) se o `origem=` das entradas é o endereço real de cada equipamento. Quem troca de endereço a cada tentativa também escapa da contagem: o firewall do host continua sendo a primeira barreira, liberando a porta `21/tcp` só para as origens de backup.
+
+Enquanto houver bloqueio, ele aparece em:
+
+| Onde | O que aparece |
+|---|---|
+| Painel, aba Bloqueios | A regra em vigor, o total e uma linha por endereço, com **Mudar prazo** e **Desbloquear**; com mais de dez endereços, a busca por trecho do endereço |
+| Painel, aba Segurança | O item `Bloqueio por endereço`, com a regra e quantos endereços estão bloqueados agora |
+| Painel, aba Atividade | `Endereço bloqueado por erros de usuário e senha`, `Prazo do bloqueio de endereço alterado` e `Endereço desbloqueado`, com o administrador que fez, e `Pedido de endereço bloqueado`, a cada pedido recusado |
+| Registro do container (`docker compose logs ftp`) | A cada subida, `vigia: pronto: endereço com mais de 5 erros de usuário e senha em 24 h fica bloqueado por 120 dias, no FTP e no painel`; no bloqueio, `vigia: endereço bloqueado: origem=<ip> erros=<n> dias=<d>`; a cada tentativa durante o bloqueio, `vigia: entrada recusada pelo bloqueio do endereço: origem=<ip>` |
+| Terminal do servidor | `./manage-user.sh enderecos` |
+
+<details>
+<summary>Fluxograma da entrada com o bloqueio por endereço, com a sequência escrita — clique para expandir</summary>
+
+<!-- diagrama: diagramas/bloqueio-por-endereco-fluxograma.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origem"]
+        origem@{ shape: hex, label: "Endereço de origem<br>equipamento ou navegador" }
+    end
+    subgraph ENTRADA["Entrada"]
+        servico@{ shape: rect, label: "FTP ou painel<br>allsafe-ftp, allsafe-ftp-painel" }
+        preso@{ shape: diam, label: "endereço<br>bloqueado?" }
+        enderecos@{ shape: docs, label: "enderecos<br>/auth, um arquivo por endereço" }
+    end
+    subgraph AUTH["Autenticação"]
+        login@{ shape: diam, label: "usuário e senha<br>conferem?" }
+        passou@{ shape: diam, label: "soma os erros do endereço<br>passou do limite?" }
+        bloqueia@{ shape: rect, label: "vigia ou painel<br>bloqueia o endereço" }
+    end
+    subgraph GESTAO["Gestão"]
+        admin@{ shape: person, label: "Usuário<br>administrador" }
+        aba@{ shape: rect, label: "aba Bloqueios<br>ou manage-user.sh" }
+    end
+    subgraph RESULTADO["Resultado"]
+        entra@{ shape: stadium, label: "entra<br>sessão aberta" }
+        recusa@{ shape: stadium, label: "recusado<br>530 no FTP, 403 no painel" }
+    end
+
+    origem -- "1 · envia usuário e senha" --> servico
+    servico -- "2 · antes de conferir a senha" --> preso
+    preso -- "3a · sim: recusa com qualquer conta" --> recusa
+    preso -- "3b · não: segue" --> login
+    login -- "4a · sim: entra" --> entra
+    login -- "4b · não: soma um erro do endereço" --> passou
+    passou -- "5a · sim: bloqueia" --> bloqueia
+    passou -- "5b · não: só recusa" --> recusa
+    bloqueia -- "6 · recusa" --> recusa
+    admin -- "7 · acompanha, libera ou muda o prazo" --> aba
+    preso -. "lê" .-> enderecos
+    bloqueia -. "grava o bloqueio" .-> enderecos
+    aba -. "lê, apaga ou regrava" .-> enderecos
+```
+
+<sub>Nível 2 · Mapa · [fonte](diagramas/)</sub>
+
+| Nº | De ➜ Para | O que acontece |
+|---|---|---|
+| 1 | Endereço de origem ➜ FTP ou painel | O equipamento envia usuário e senha ao FTP, na porta `21/tcp`, ou o navegador envia à tela de entrada do painel |
+| 2 | FTP ou painel ➜ endereço bloqueado? | Antes de conferir a senha, o porteiro do FTP e o atendimento do painel procuram um bloqueio daquele endereço, ainda dentro do prazo |
+| 3a | endereço bloqueado? ➜ recusado | Sim: `530` no FTP e `403` no painel, com qualquer conta e com a senha certa ou errada |
+| 3b | endereço bloqueado? ➜ usuário e senha conferem? | Não: segue para a conferência da senha |
+| 4a | usuário e senha conferem? ➜ entra | Sim: a sessão abre. A contagem do endereço não volta a zero |
+| 4b | usuário e senha conferem? ➜ soma os erros do endereço: passou do limite? | Não: o vigia, no FTP, ou o painel soma um erro àquele endereço, com qualquer nome de usuário, dentro das horas configuradas |
+| 5a | soma os erros do endereço: passou do limite? ➜ vigia ou painel | Sim: o serviço que contou grava o bloqueio do endereço, com o prazo em dias |
+| 5b | soma os erros do endereço: passou do limite? ➜ recusado | Não: a entrada é recusada e a contagem fica guardada |
+| 6 | vigia ou painel ➜ recusado | A entrada que passou do limite também é recusada |
+| 7 | Usuário ➜ aba Bloqueios ou manage-user.sh | O administrador acompanha a lista, libera um endereço ou muda o prazo dele |
+
+**Apoio**
+
+| Quem | Usa | Como |
+|---|---|---|
+| endereço bloqueado? | enderecos (`DATA_DIR/auth/enderecos`) | lê a cada entrada no FTP e a cada pedido ao painel |
+| vigia ou painel | enderecos (`DATA_DIR/auth/enderecos`) | grava o bloqueio, com o prazo |
+| aba Bloqueios ou manage-user.sh | enderecos (`DATA_DIR/auth/enderecos`) | lê a lista, apaga o arquivo do endereço liberado e regrava o prazo |
+
+</details>
+
+<details>
+<summary>Detalhe técnico — como o bloqueio por endereço é aplicado</summary>
+
+- **O bloqueio é um arquivo:** `/auth/enderecos/<endereco>` (`DATA_DIR/auth/enderecos` no host), `0600`, do `root`, em pasta `0700`, com uma linha: até quando vale, desde quando, quantos erros e quem bloqueou (`ftp`, `painel` ou `manual`). É a única memória do bloqueio: por isso ele atravessa o reinício e vale nos dois serviços, e apagar o arquivo libera o endereço no pedido seguinte. A gravação é por troca de nome do arquivo, para ninguém ler pela metade.
+- **Quem conta:** no FTP, o [`ftp/vigia.pl`](../ftp/vigia.pl), a partir do que o `pure-ftpd` registra a cada falha de usuário e senha; no painel, o [`painel/enderecos.py`](../painel/enderecos.py), a cada entrada recusada depois de a senha ser conferida e a cada confirmação por senha recusada. Cada um guarda a contagem na própria memória, por endereço, só dos erros mais novos que as horas configuradas: até 10.000 endereços no vigia e 5.000 no painel.
+- **Quem aplica:** no FTP, o [`ftp/porteiro.sh`](../ftp/porteiro.sh), chamado pelo `pure-authd` antes da conferência da senha, e é a primeira das três regras dele; no painel, o atendimento ([`painel/atendimento.py`](../painel/atendimento.py)), antes de qualquer rota, inclusive a de saúde.
+- **Passa do limite:** bloqueia o erro seguinte ao limite. Com `5`, cinco erros não bloqueiam e o sexto bloqueia.
+- **Arquivo inválido não bloqueia:** vale só o arquivo comum, com nome de endereço IPv4 escrito de um jeito só, cuja primeira linha começa por um número de até 12 dígitos maior que a hora atual. Vencido, vazio, com texto ou link simbólico, não bloqueia; o vigia apaga os vencidos de minuto em minuto. `127.0.0.0/8` nunca é lido como bloqueado.
+- **Teto:** 10.000 endereços bloqueados. Acima disso, o vigia registra `AVISO` e o comando responde `Teto de 10000 enderecos bloqueados: libere algum antes`.
+- **O que nunca é bloqueado sozinho, no FTP:** o endereço que não é IPv4, a rede interna da stack, que é a conferência de senha feita pelo painel, e o endereço de saída do container. **No painel:** o que não é IPv4, o loopback, os proxies de `PAINEL_PROXY_CONFIAVEL` e as redes ligadas direto ao container, lidas de `/proc/net/route`.
+- **Bloqueio pelo terminal:** o `endereco-bloquear` aceita qualquer IPv4 fora de `127.0.0.0/8` e de `0.0.0.0/8`, inclusive os que nunca são bloqueados sozinhos: é decisão de quem tem o terminal do servidor.
+- **Quem libera e quem muda o prazo:** só um administrador, pelo painel (`POST /bloqueios/liberar` e `POST /bloqueios/prazo`), com token CSRF e origem conferidos, ou quem tem acesso ao Docker do servidor, pelo `manage-user.sh`. Para o usuário do FTP que entra no painel, as telas dos bloqueios respondem `404`. Ficam na auditoria `endereco_bloqueado`, `endereco_prazo`, `endereco_desbloqueado` e `recusa_endereco`.
+- **Desligado:** com `BLOQUEIO_ENDERECO_ERROS=0`, nada é bloqueado sozinho; o bloqueio feito pelo terminal continua valendo nos dois serviços.
+- O bloqueio no FTP com e sem TLS, em modo passivo e ativo, no painel, de um serviço para o outro, a aba, o terminal, o que nunca é bloqueado e as recusas são conferidos pela [bateria de testes](scripts.md#testar), em [`tests/etapas/30-bloqueio-por-endereco.sh`](../tests/etapas/30-bloqueio-por-endereco.sh).
+
+</details>
+
+---
 <a name="perfis"></a>
 
 ## 🧑‍💼 Perfis de usuário: o mínimo que cada conta precisa
@@ -708,7 +874,7 @@ O passo a passo, na ordem em que é feito:
 1. **Certificado real** no lugar do autoassinado: [Operação](operacao.md#certificado-real-de-producao).
 2. `FTP_BIND_IP` com o IP **privado** dedicado e **regra no firewall** do host liberando só as origens de backup: [rede privada](#rede-privada).
 3. **Painel:** trocar a senha inicial ([Segredos](segredos.md#senha-do-painel)), reduzir `PAINEL_REDES_PERMITIDAS` à rede de administração e liberar a porta do painel no firewall só para ela. Em `PAINEL_BIND_IP=127.0.0.1` o painel só abre no próprio servidor.
-4. Rever o [bloqueio por tentativa](#bloqueio-por-tentativa) do FTP: o padrão da stack e o limite próprio dos usuários que precisam de outro.
+4. Rever o [bloqueio por tentativa](#bloqueio-por-tentativa) do FTP: o padrão da stack e o limite próprio dos usuários que precisam de outro. Rever também o [bloqueio por endereço](#bloqueio-por-endereco): o limite de erros, as horas em que eles se somam e os dias de bloqueio.
 5. Rever `FTP_MAX_CLIENTS` e a faixa passiva conforme o número real de equipamentos: [Perfis](perfis.md). Depois de mudar o porte, ou de atualizar uma instalação anterior à `0.18.1`, trocar a senha dos usuários que a aba Segurança lista em `Custo das senhas do FTP`: [Custo das senhas do FTP](#custo-das-senhas).
 6. Cópia de segurança agendada e levada para fora do servidor, e a chave que a abre guardada em um cofre, separada das cópias: [Backup e restauração](backup.md#chave).
 7. Conferir que `FTP_TLS_MODE` está em `2` ou `3`. Se um equipamento antigo não falar TLS, siga antes [FTP sem TLS](#ftp-sem-tls) e prefira dispensar só o usuário dele: [TLS por usuário](#tls-por-usuario).
@@ -753,6 +919,7 @@ O passo a passo, na ordem em que é feito:
 | 26 | Adivinhação da senha de um usuário pelo FTP, ou senhas erradas de propósito para tirar a entrada dele | [Bloqueio por tentativa](#bloqueio-por-tentativa): 5 senhas erradas do mesmo endereço em 15 minutos bloqueiam o usuário para aquele endereço, com limite próprio por usuário no painel. O bloqueio vale só para o endereço que errou: o equipamento que chega de outro endereço continua entrando. Nome que não está no cadastro não vira contagem nem arquivo, e o bloqueio inválido ou vencido não bloqueia. Se o processo que conta ou o que recusa parar, o container do FTP encerra em vez de seguir sem o bloqueio |
 | 27 | Leitura de uma cópia de segurança que saiu do servidor (mídia perdida, outra máquina, pasta de rede) | A cópia é cifrada pelo `scripts/backup.sh` com a chave pública de `.secrets/`, e nada sem cifra chega ao disco; só a chave privada a abre. Cada bloco é autenticado: cópia alterada ou cortada não restaura, e a recusa vem antes de qualquer mudança na stack: [Backup e restauração](backup.md#chave) |
 | 28 | Endereço do cliente forjado por cabeçalho, para escapar do bloqueio por tentativa ou tomar a sessão de outro | `X-Forwarded-For` é ignorado de fábrica; com `PAINEL_PROXY_CONFIAVEL`, só vale o último endereço, e só em conexão vinda do proxy escolhido. `X-Real-IP` e `X-Cliente-IP` são sempre regravados pelo nginx |
+| 29 | Adivinhação de senha com muitos nomes de usuário, no FTP ou no painel, abaixo do limite de cada conta | [Bloqueio por endereço](#bloqueio-por-endereco): o endereço que passa de 5 erros de usuário e senha em 24 horas, com qualquer nome, fica 120 dias sem entrar no FTP e no painel. O bloqueio é um arquivo por endereço, em pasta `0700` do `root`; só o administrador libera ou muda o prazo, com sessão e token do formulário. O próprio servidor, a rede interna e os proxies aceitos nunca são bloqueados sozinhos |
 
 > ⚠️ **Limite da ameaça nº 1:** no modo `2`, o conteúdo do arquivo só é criptografado se o cliente pedir proteção do canal de dados (`PROT P`). Um equipamento que negocia TLS no login e envia os dados sem proteção é aceito. Só o modo `3` recusa esse caso. A troca do padrão está registrada no plano do projeto.
 
@@ -804,6 +971,7 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 | Troca de pasta contida | A pasta nova passa pelas mesmas regras da criação: fica dentro de `DATA_DIR/dados`, link simbólico e arquivo no caminho são recusados (`400`), e nenhum arquivo é movido nem apagado. Só o administrador troca, com sessão e token do formulário |
 | Limites por usuário | Sessões no FTP, taxa de download, taxa de envio, horário, downloads pelo painel e bloqueio por tentativa no FTP, por usuário, na tela **Editar**. Só o administrador grava, com sessão e token do formulário; valor fora da regra é recusado com `400` e nada é gravado; o painel e o comando conferem cada valor, e o comando grava como `root`, em arquivos `0600`. Quem aplica os limites do FTP é o próprio `pure-ftpd`, e o do bloqueio, o vigia do serviço `ftp`. Limite do FTP trocado encerra a sessão do usuário no painel |
 | Desbloqueio só pelo administrador | Tirar o [bloqueio por tentativa](#bloqueio-por-tentativa) de um usuário pede sessão de administrador e token do formulário; fica na auditoria, com quem fez. O usuário do FTP não vê nem tira o próprio bloqueio (`404`) |
+| Bloqueio por endereço | O endereço com [bloqueio por endereço](#bloqueio-por-endereco) valendo recebe `403` em todo pedido, antes de qualquer rota e mesmo com sessão aberta. A entrada recusada e a confirmação por senha recusada contam como erro do endereço. A aba Bloqueios, a mudança de prazo e o desbloqueio pedem sessão de administrador e token do formulário, ficam na auditoria com quem fez, e respondem `404` ao usuário do FTP |
 
 O que cada proteção significa na prática e o fluxograma da decisão: [Painel web](painel.md#protecoes).
 
@@ -819,8 +987,8 @@ Nenhuma versão é publicada sem a bateria inteira aprovada. Ela roda em um clon
 
 | Bateria | Casos | O que responde |
 |---|---|---|
-| Funcional | 54 | A instalação faz o que promete: instalar em um comando, enviar e baixar, usuários pelo terminal e pelo painel, reinício sem perda, cópia e restauração |
-| Segurança | 96 | O que deveria ser recusado é recusado: cada caso tenta uma coisa que não pode acontecer e confere a recusa |
+| Funcional | 62 | A instalação faz o que promete: instalar em um comando, enviar e baixar, usuários pelo terminal e pelo painel, reinício sem perda, cópia e restauração |
+| Segurança | 112 | O que deveria ser recusado é recusado: cada caso tenta uma coisa que não pode acontecer e confere a recusa |
 | Rede | 14 | Só o que foi configurado fica aberto: portas, endereço de escuta, modo passivo, sub-rede e redes aceitas pelo painel |
 
 **O que a bateria de segurança tenta**, por alvo. O número é o do caso, o mesmo que aparece na saída do `./tests/testar.sh`:
@@ -830,6 +998,7 @@ Nenhuma versão é publicada sem a bateria inteira aprovada. Ela roda em um clon
 | Entrada no FTP | Entrar sem TLS, como anônimo, com senha errada, vazia ou sorteada, mandar comando antes do login, derrubar o `pure-authd` para ver se a entrada abre | 1, 2, 5, 7, 64 a 66, 70, 71, 89 |
 | Confinamento no FTP | Sair da pasta pelo `chroot`, ler a pasta de outro usuário, mudar permissão por `SITE CHMOD`, escapar da pasta escolhida | 3, 4, 6, 59 |
 | Bloqueio por tentativa | Burlar o bloqueio, desbloquear ou mudar limite sem sessão, sem token ou com valor fora da regra | 85, 86 |
+| Bloqueio por endereço | Seguir entrando no FTP depois do sexto erro, com TLS e sem, em modo passivo e ativo, e com a senha certa; entrar no painel com o endereço bloqueado pelo FTP e no FTP com o bloqueado pelo painel; bloquear o endereço de saída do container, a rede interna e o proxy aceito; abrir a aba, mudar o prazo e desbloquear sem sessão, sem token, com a sessão de um usuário do FTP e com valor fora da regra; subir com as variáveis fora da faixa | 106 a 112 |
 | Perfis de usuário | Apagar, renomear e gravar por cima com o perfil Envio; gravar, criar pasta e apagar com o perfil Leitura; conferir o modo das pastas depois de trocar perfil, trocar pasta e remover usuário; trocar perfil sem sessão, sem token, com a sessão de um usuário do FTP e com valor fora da lista; pelo painel, criar pasta com o perfil Leitura, renomear e apagar com os perfis Leitura e Envio, apagar com a senha errada e sair da própria pasta com o perfil Completo; com o perfil Só envio, listar, baixar, pedir o tamanho, apagar e renomear, chegar à pasta de destino pelo caminho inteiro e por `..`, deixar na área de entrada arquivo de outro dono e link simbólico, e, pelo painel, abrir pasta, baixar, criar pasta, renomear e apagar com a sessão dele, abrir a área de entrada pela aba Arquivos e criar pasta ou usuário apontando para ela | 99 a 105 |
 | Rede e exposição | Subir com o FTP em todas as interfaces ou em IP público, anunciar IP público, abrir o painel para rede pública, ligar a opção de IP público com valor inválido, sem TLS ou em "todos" | 16 a 21, 40 a 45 |
 | Painel por proxy ou túnel | Forjar o endereço do cliente por cabeçalho, com e sem proxy declarado; contar senha errada e sessão pelo endereço de quem não é o cliente; ler na tela de entrada como o painel foi publicado; ocultar o aviso de exposição | 93 a 96 |
@@ -858,7 +1027,7 @@ Além da bateria, cada versão passa por:
 ./tests/testar.sh
 ```
 
-**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 60 casos funcionais, 105 de segurança e 14 de rede. A bateria leva cerca de 45 minutos; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
+**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 62 casos funcionais, 112 de segurança e 14 de rede. A bateria leva cerca de 1 hora; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
 
 > ⚠️ **Limite — o que a bateria não alcança:** ela roda no próprio servidor, contra a instância de teste. O firewall do host, o proxy ou o túnel da borda e o equipamento que envia o backup são de quem instala e não entram nela: confira-os pelo [passo a passo de produção](#boas-praticas).
 

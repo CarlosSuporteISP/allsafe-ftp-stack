@@ -2,6 +2,7 @@
 """Aba Segurança: o que o painel consegue conferir da própria stack."""
 import os
 
+import enderecos
 from config import ARQ_CERT, ARQ_CERT_FTP, CFG, FALHAS_MAX, PRIVADAS, endereco_privado
 from estado import bloqueios, certificado, sem_tls, senhas_de_custo_antigo
 from graficos import faixa
@@ -38,6 +39,8 @@ def seguranca(pedido, sessao, consulta, formulario, token):
     redes = ', '.join(str(rede) for rede in CFG['redes'])
     antigas = senhas_de_custo_antigo()
     presos = bloqueios()
+    presos_endereco = enderecos.lista()
+    erros, horas, dias = CFG['endereco_erros'], CFG['endereco_janela'] // 3600, CFG['endereco_dias']
 
     def local(ip):
         if ip.startswith('127.'):
@@ -103,6 +106,14 @@ def seguranca(pedido, sessao, consulta, formulario, token):
                '<strong>Desligado na stack</strong> (<code>FTP_BLOQUEIO_TENTATIVAS=0</code>): só é bloqueado o usuário que tem limite próprio. ')
               + 'O limite próprio de cada usuário fica em Editar, na aba Usuários. '
               + (f'<strong>Bloqueado agora: {e(", ".join(sorted(presos)))}.</strong>' if presos else 'Nenhum usuário bloqueado agora.')),
+        linha('bom' if CFG['endereco_erros'] else 'atencao', 'Bloqueio por endereço',
+              ((f'O endereço que passa de {erros} erro{"" if erros == 1 else "s"} de usuário e senha em {horas} hora{"" if horas == 1 else "s"}, '
+                f'no FTP ou no painel, fica {dias} dia{"" if dias == 1 else "s"} sem entrar nos dois (<code>BLOQUEIO_ENDERECO_ERROS</code>, '
+                '<code>BLOQUEIO_ENDERECO_HORAS</code> e <code>BLOQUEIO_ENDERECO_DIAS</code>). ')
+               if CFG['endereco_erros'] else
+               '<strong>Desligado na stack</strong> (<code>BLOQUEIO_ENDERECO_ERROS=0</code>): nenhum endereço é bloqueado sozinho. ')
+              + (f'<strong><a href="/bloqueios">{len(presos_endereco)} endereço{" bloqueado" if len(presos_endereco) == 1 else "s bloqueados"} agora</a>.</strong>' if presos_endereco
+                 else 'Nenhum endereço bloqueado agora.')),
         linha('atencao' if antigas else 'bom', 'Custo das senhas do FTP',
               (f'<strong>{len(antigas)} usuário(s) com a senha gravada com o custo anterior</strong>: {e(", ".join(antigas))}. '
                     'Cada tentativa de entrada com esses nomes ocupa mais o processador do FTP. O custo atual passa a valer '

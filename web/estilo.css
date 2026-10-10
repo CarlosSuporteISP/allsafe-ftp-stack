@@ -147,6 +147,7 @@ h1 { margin: 0 0 16px; font-size: var(--titulo); line-height: 1.2; letter-spacin
 .selo-aba .i { width: 22px; height: 22px; }
 /* Tela de dentro de uma aba (criar, editar, confirmar): o título em faixa fina, sem ícone nem cena. */
 main > h1 { padding: 12px 20px; }
+main > h1 code, .cabeca code { border-color: color-mix(in oklab, var(--marca-traco) 70%, transparent); background: var(--marca-toque); color: inherit; }
 h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: var(--texto-base); font-weight: 600; line-height: 1.3; }
 h3 { margin: 4px 0; font-size: var(--texto-rotulo); font-weight: 600; line-height: 1.3; }
 p { max-width: 75ch; margin: 0 0 12px; text-wrap: pretty; }
@@ -530,6 +531,7 @@ a.item .i { color: inherit; }
 /* Tabela sem nada: o que falta e quando passa a aparecer, no meio do cartão. */
 .vazio td { padding: 36px 20px; }
 .vazio div { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.vazio td strong { white-space: normal; }
 .vazio .i { width: 44px; height: 44px; margin-bottom: 8px; padding: 11px; border-radius: 50%; background: var(--superficie-2); color: var(--suave); }
 tbody tr.vazio:hover { background: none; }
 
@@ -589,6 +591,11 @@ td > .etiqueta:first-child { margin-left: 0; }
 /* ------------------------------------------------------------ formulários e botões */
 
 label { display: block; margin: 12px 0 4px; font-weight: 600; }
+/* Busca de uma lista: o rótulo em cima, o campo e o botão na mesma linha. */
+.busca { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 16px; }
+.busca label { flex: 1 1 100%; margin: 0; }
+.busca input:not([type="hidden"]) { flex: 1 1 12rem; width: auto; max-width: 20rem; }
+.busca button, .busca .botao { margin: 0; }
 label .suave { font-weight: 400; }
 
 input:not([type="hidden"]) {
@@ -871,6 +878,26 @@ p > .botao { margin-top: 0; }
   .contas .acoes { min-width: 18rem; padding-left: 2px; }
 }
 
+/* Listas da aba Bloqueios entre o celular e 1096 px: cada bloqueio vira um bloco em grade, com o endereço (ou o
+   usuário) em cima, os dados lado a lado, cada um sob o próprio rótulo, e as ações embaixo, à vista. */
+@media (min-width: 641px) and (max-width: 1095px) {
+  .barrados thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .barrados, .barrados tbody { display: block; }
+  .barrados tr { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 8px 16px; padding: 14px 20px; border-bottom: 1px solid var(--borda); }
+  .barrados tbody tr:last-child { border-bottom: 0; }
+  .barrados td, .lista .barrados tr > td { display: block; min-width: 0; padding: 0; border: 0; }
+  .barrados td:first-child, .barrados td[colspan], .barrados td.acoes { grid-column: 1 / -1; }
+  .barrados td[data-rotulo]::before { content: attr(data-rotulo); display: block; color: var(--suave); font-size: var(--texto-miudo); }
+  .barrados .acoes .botao { margin-right: 4px; }
+}
+/* Em tabela, nada parte no meio: quando falta largura, o que resta do prazo desce inteiro para baixo da data, e as
+   ações ficam lado a lado. */
+.prazo > span { white-space: nowrap; }
+@media (min-width: 1096px) {
+  .barrados td { white-space: nowrap; }
+  .barrados .prazo { white-space: normal; }
+}
+
 /* Lista de arquivos entre o celular e 900 px: os três botões não cabem ao lado da data, e cada item vira duas
    linhas, o nome com o tamanho e a data em cima e as ações embaixo, à vista, em vez de um botão por linha. Dali
    em diante as ações ficam sempre em uma linha: quem cede largura é o nome, que pode quebrar. */
@@ -981,6 +1008,7 @@ p > .botao { margin-top: 0; }
   .blocos td.acoes { padding-top: 8px; }
   .blocos td.acoes:empty { display: none; }
   .blocos .vazio { padding: 0; }
+  .blocos tr.vazio > td, .lista .blocos tr.vazio > td { padding: 28px 16px; }
   .blocos td.detalhe { min-width: 0; }
   .blocos .acoes .botao { padding-inline: 8px; }
   /* No bloco não há para onde rolar: o endereço IPv6 por extenso parte quando não cabe na linha. */

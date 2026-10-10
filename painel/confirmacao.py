@@ -8,6 +8,7 @@ import hmac
 
 import administradores
 import conta_ftp
+import enderecos
 from auditoria import auditar, limpo
 from pagina import e
 from senha import senha_confere
@@ -41,5 +42,6 @@ def confirmacao_recusada(pedido, sessao, formulario):
     if not confere:
         registrar_falha(pedido.ip)
         auditar(pedido.ip, evento, f'{quem(sessao)} caminho={limpo(pedido.caminho)}')
+        enderecos.erro_de_entrada(pedido.ip)
         return 403, 'A sua senha atual não confere. Nada foi alterado.'
     return 0, ''

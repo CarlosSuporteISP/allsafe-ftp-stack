@@ -1,0 +1,37 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origem"]
+        origem@{ shape: hex, label: "Endereço de origem<br>equipamento ou navegador" }
+    end
+    subgraph ENTRADA["Entrada"]
+        servico@{ shape: rect, label: "FTP ou painel<br>allsafe-ftp, allsafe-ftp-painel" }
+        preso@{ shape: diam, label: "endereço<br>bloqueado?" }
+        enderecos@{ shape: docs, label: "enderecos<br>/auth, um arquivo por endereço" }
+    end
+    subgraph AUTH["Autenticação"]
+        login@{ shape: diam, label: "usuário e senha<br>conferem?" }
+        passou@{ shape: diam, label: "soma os erros do endereço<br>passou do limite?" }
+        bloqueia@{ shape: rect, label: "vigia ou painel<br>bloqueia o endereço" }
+    end
+    subgraph GESTAO["Gestão"]
+        admin@{ shape: person, label: "Usuário<br>administrador" }
+        aba@{ shape: rect, label: "aba Bloqueios<br>ou manage-user.sh" }
+    end
+    subgraph RESULTADO["Resultado"]
+        entra@{ shape: stadium, label: "entra<br>sessão aberta" }
+        recusa@{ shape: stadium, label: "recusado<br>530 no FTP, 403 no painel" }
+    end
+
+    origem -- "1 · envia usuário e senha" --> servico
+    servico -- "2 · antes de conferir a senha" --> preso
+    preso -- "3a · sim: recusa com qualquer conta" --> recusa
+    preso -- "3b · não: segue" --> login
+    login -- "4a · sim: entra" --> entra
+    login -- "4b · não: soma um erro do endereço" --> passou
+    passou -- "5a · sim: bloqueia" --> bloqueia
+    passou -- "5b · não: só recusa" --> recusa
+    bloqueia -- "6 · recusa" --> recusa
+    admin -- "7 · acompanha, libera ou muda o prazo" --> aba
+    preso -. "lê" .-> enderecos
+    bloqueia -. "grava o bloqueio" .-> enderecos
+    aba -. "lê, apaga ou regrava" .-> enderecos

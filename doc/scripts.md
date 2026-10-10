@@ -42,7 +42,7 @@ flowchart LR
 | Script | Onde roda | Para que serve |
 |---|---|---|
 | [`deploy.sh`](../deploy.sh) | host | Instala, reaplica, atualiza ou remove a stack em um comando, sem perguntas |
-| [`manage-user.sh`](../manage-user.sh) | host | Atalho para criar, trocar senha, trocar pasta, trocar o perfil, ajustar limites, desbloquear, remover e listar usuários FTP, e para dispensar um usuário do TLS |
+| [`manage-user.sh`](../manage-user.sh) | host | Atalho para criar, trocar senha, trocar pasta, trocar o perfil, ajustar limites, desbloquear, remover e listar usuários FTP, para dispensar um usuário do TLS e para listar, bloquear e liberar endereços |
 | [`scripts/painel-senha.sh`](../scripts/painel-senha.sh) | host | Recupera o acesso ao painel: define a senha de um administrador ou cria o administrador, gravando só o hash |
 | [`scripts/backup.sh`](../scripts/backup.sh) | host | Grava a cópia de segurança cifrada de `dados/`, `auth/`, `certs/` e `painel/` em `BACKUP_DIR` |
 | [`scripts/restaurar.sh`](../scripts/restaurar.sh) | host | Devolve a stack ao estado de uma cópia, guardando antes o estado atual |
@@ -56,7 +56,7 @@ flowchart LR
 | [`painel/entrypoint.sh`](../painel/entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel, entrega a cópia dele ao nginx e executa o painel |
 | [`nginx/entrypoint.sh`](../nginx/entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
 | [`nginx/saude.sh`](../nginx/saude.sh) | container do nginx | Healthcheck: pede `/saude` ao painel passando pelo nginx |
-| [`ftp/usuario.sh`](../ftp/usuario.sh) | containers do FTP e do painel | Gestão de usuários no PureDB, dos perfis, dos limites, dos bloqueios e da lista de quem entra sem TLS, chamada pelo `manage-user.sh` e pelo painel |
+| [`ftp/usuario.sh`](../ftp/usuario.sh) | containers do FTP e do painel | Gestão de usuários no PureDB, dos perfis, dos limites, dos bloqueios por tentativa e por endereço e da lista de quem entra sem TLS, chamada pelo `manage-user.sh` e pelo painel |
 | [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) | host e containers | Funções que conferem se um IP ou uma rede é privado e que tratam a opção de IP público; carregado pelos outros scripts |
 | [`scripts/ambiente.sh`](../scripts/ambiente.sh) | host | Função que lê uma chave do `.env` sem executar o arquivo; carregado pelos outros scripts |
 
@@ -137,13 +137,16 @@ A pasta [`scripts/`](../scripts/) tem o que roda fora dos containers: no servido
 ./manage-user.sh limites backup-olt tentativas=3 minutos=30   # senhas erradas até o bloqueio e minutos de bloqueio, só do usuário
 ./manage-user.sh bloqueios            # lista os bloqueios por tentativa em vigor (ou só os de um usuário)
 ./manage-user.sh desbloquear backup-olt   # tira os bloqueios do usuário (ou só o de uma origem)
+./manage-user.sh enderecos            # lista os endereços bloqueados no FTP e no painel
+./manage-user.sh endereco-bloquear 203.0.113.7 365   # bloqueia o endereço, ou muda o prazo de um já bloqueado; sem os dias, o prazo da stack
+./manage-user.sh endereco-liberar 203.0.113.7        # libera o endereço: vale no próximo pedido
 ./manage-user.sh del backup-olt       # remove o usuário (os arquivos ficam em /data)
 ./manage-user.sh tls-dispensar olt-antiga   # deixa o usuário entrar sem TLS (equipamento que não fala TLS)
 ./manage-user.sh tls-exigir olt-antiga      # volta a exigir o TLS do usuário
 ./manage-user.sh tls-lista                  # lista os usuários dispensados do TLS
 ```
 
-**Resultado esperado:** `add` e `passwd` terminam sem erro e o usuário aparece no `list`; `pasta` responde `Pasta do usuario <nome>: /data/<pasta>. Os arquivos de /data/<anterior> continuam la.`; `del` responde `Usuario removido; os dados em /data/<pasta> foram preservados.`, com a pasta real do usuário. O `add` com uma pasta que outro usuário já alcança termina sem erro e mostra uma linha `Aviso:` por usuário. `tls-dispensar` responde `Usuario <nome> dispensado do TLS: vale na proxima entrada, com FTP_TLS_EXCECOES=sim.` e `tls-exigir`, `Usuario <nome> volta a ser obrigado a usar TLS: vale na proxima entrada.`; `tls-lista` mostra um nome por linha, ou nada. `limites` com pelo menos um par responde `Limites do usuario <nome> gravados: valem na proxima entrada no FTP.`; sem par nenhum, mostra uma linha por limite (`sessoes=`, `download=`, `envio=`, `horario=`, `baixar=`, `tentativas=` e `minutos=`), vazia no que o usuário não tem. `bloqueios` mostra uma linha por bloqueio, `usuario=<nome> origem=<ip> senhas_erradas=<n> desde=<data hora> ate=<data hora>`, ou `Nenhum bloqueio em vigor.`; `desbloquear` responde `Usuario <nome> desbloqueado (<n> endereco(s)): vale na proxima entrada no FTP.`, ou `Usuario <nome> nao tem bloqueio.`
+**Resultado esperado:** `add` e `passwd` terminam sem erro e o usuário aparece no `list`; `pasta` responde `Pasta do usuario <nome>: /data/<pasta>. Os arquivos de /data/<anterior> continuam la.`; `del` responde `Usuario removido; os dados em /data/<pasta> foram preservados.`, com a pasta real do usuário. O `add` com uma pasta que outro usuário já alcança termina sem erro e mostra uma linha `Aviso:` por usuário. `tls-dispensar` responde `Usuario <nome> dispensado do TLS: vale na proxima entrada, com FTP_TLS_EXCECOES=sim.` e `tls-exigir`, `Usuario <nome> volta a ser obrigado a usar TLS: vale na proxima entrada.`; `tls-lista` mostra um nome por linha, ou nada. `limites` com pelo menos um par responde `Limites do usuario <nome> gravados: valem na proxima entrada no FTP.`; sem par nenhum, mostra uma linha por limite (`sessoes=`, `download=`, `envio=`, `horario=`, `baixar=`, `tentativas=` e `minutos=`), vazia no que o usuário não tem. `bloqueios` mostra uma linha por bloqueio, `usuario=<nome> origem=<ip> senhas_erradas=<n> desde=<data hora> ate=<data hora>`, ou `Nenhum bloqueio em vigor.`; `desbloquear` responde `Usuario <nome> desbloqueado (<n> endereco(s)): vale na proxima entrada no FTP.`, ou `Usuario <nome> nao tem bloqueio.` `enderecos` mostra uma linha por [endereço bloqueado](seguranca.md#bloqueio-por-endereco), `origem=<ip> por=<ftp|painel|manual> erros=<n> desde=<data hora> ate=<data hora>`, ou `Nenhum endereco bloqueado.`; `endereco-bloquear` responde `Endereco <ip> bloqueado: <n> dia(s) a partir de agora, no FTP e no painel.`, ou `Prazo do endereco <ip> alterado: <n> dia(s) a partir de agora, no FTP e no painel.` quando ele já estava bloqueado; `endereco-liberar` responde `Endereco <ip> liberado: vale no proximo pedido.`, ou `Endereco <ip> nao esta bloqueado.`
 
 O perfil diz o que o usuário faz na pasta: `completo` envia, baixa, renomeia e apaga; `envio` envia e baixa, sem apagar nem alterar o que já chegou; `soenvio` só envia, sem listar nem baixar nada; `leitura` só lista e baixa. No `add`, ele vem depois da pasta. `perfil` com o nome do perfil responde `Perfil do usuario <nome>: <perfil>. Vale na proxima entrada no FTP.`; valor fora dos quatro para com `Perfil invalido: use completo, envio, soenvio ou leitura` e código `1`. O que cada perfil alcança e os limites do Envio e do Só envio estão em [Painel web](painel.md#perfis).
 
@@ -294,7 +297,7 @@ Roda a bateria de testes da stack: funcional, de segurança e de rede. O script 
 ./tests/testar.sh --limpar               # só remove a instância de teste e a pasta dela
 ```
 
-**Resultado esperado:** uma linha por caso, com `✅` ou `❌`, o resumo de cada bateria com o caminho do arquivo de resultado e, no fim, `Bateria aprovada: nenhum desvio.` A execução leva perto de 25 minutos.
+**Resultado esperado:** uma linha por caso, com `✅` ou `❌`, o resumo de cada bateria com o caminho do arquivo de resultado e, no fim, `Bateria aprovada: nenhum desvio.` A execução leva cerca de 1 hora.
 
 > ⚠️ A instância de teste só sobe em IP privado: `TESTE_IP` fora das faixas privadas é recusado antes de qualquer container subir. A opção de IP público é testada com endereços de documentação (`203.0.113.0/24` e `198.51.100.0/24`), sem publicar porta fora do IP de teste.
 
@@ -384,6 +387,10 @@ Quando uma validação falha, o script sai com `FALHA: <motivo>`:
 | `FALHA: FTP_BLOQUEIO_TENTATIVAS deve ficar entre 0 e 100 (0 desliga o bloqueio por tentativa)` | o limite de senhas erradas da stack não é um inteiro de 0 a 100 |
 | `FALHA: FTP_BLOQUEIO_MINUTOS deve ficar entre 1 e 1440` | os minutos de bloqueio da stack não são um inteiro de 1 a 1440 |
 | `FALHA: /auth/bloqueios é link simbólico: remova-o` | a pasta dos bloqueios, em `DATA_DIR/auth`, foi trocada por um link |
+| `FALHA: BLOQUEIO_ENDERECO_ERROS deve ficar entre 0 e 100 (0 desliga o bloqueio por endereço)` | o limite de erros por endereço não é um inteiro de 0 a 100 |
+| `FALHA: BLOQUEIO_ENDERECO_HORAS deve ficar entre 1 e 720` | as horas em que os erros de um endereço se somam não são um inteiro de 1 a 720 |
+| `FALHA: BLOQUEIO_ENDERECO_DIAS deve ficar entre 1 e 3650` | os dias de bloqueio do endereço não são um inteiro de 1 a 3650 |
+| `FALHA: /auth/enderecos é link simbólico: remova-o` | a pasta dos bloqueios por endereço, em `DATA_DIR/auth`, foi trocada por um link |
 | `FALHA: o vigia não abriu o soquete /dev/log: o FTP não sobe sem a contagem das senhas erradas` | o vigia não iniciou |
 | `FALHA: o pure-authd não abriu o soquete /run/pure-authd.sock: o FTP não sobe sem o porteiro` | o `pure-authd` não iniciou |
 | `FALHA: o pure-authd saiu: o container encerra para ninguém entrar sem a conferência do porteiro` (ou `o vigia saiu`, `o pure-ftpd saiu`, ou `o observador da lista do TLS saiu`) | um dos processos vigiados parou depois da subida; o Docker sobe o container de novo |
@@ -419,13 +426,14 @@ Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; 
 
 É o porteiro do FTP, instalado na imagem como `/usr/local/sbin/allsafe-ftp-porteiro`. Não é chamado direto: o `pure-authd` o executa a cada entrada, antes da conferência da senha. Ele não confere senha: só decide se a entrada pode seguir para ela.
 
-**Resultado esperado:** a entrada sem impedimento segue para a conferência da senha. O usuário com [bloqueio por tentativa](seguranca.md#bloqueio-por-tentativa) valendo para o endereço recebe `530`. Com o TLS por usuário valendo e algum usuário dispensado, a sessão sem TLS de quem não foi dispensado recebe `530`, e o log do container ganha a linha `porteiro: entrada sem TLS recusada: usuario=<nome> origem=<ip> (a senha enviada passou em texto puro: troque-a)`.
+**Resultado esperado:** a entrada sem impedimento segue para a conferência da senha. O endereço com [bloqueio por endereço](seguranca.md#bloqueio-por-endereco) valendo recebe `530` com qualquer conta. O usuário com [bloqueio por tentativa](seguranca.md#bloqueio-por-tentativa) valendo para o endereço recebe `530`. Com o TLS por usuário valendo e algum usuário dispensado, a sessão sem TLS de quem não foi dispensado recebe `530`, e o log do container ganha a linha `porteiro: entrada sem TLS recusada: usuario=<nome> origem=<ip> (a senha enviada passou em texto puro: troque-a)`.
 
 <details>
 <summary>Detalhe técnico — o que ele responde</summary>
 
 - Recebe do `pure-authd`, em variáveis de ambiente, o nome (`AUTHD_ACCOUNT`), se a sessão tem TLS (`AUTHD_ENCRYPTED`) e o endereço de origem (`AUTHD_REMOTE_IP`). A senha também chega em variável e **não** é lida, gravada nem registrada.
-- Responde `auth_ok:0`, a resposta "não é comigo", quando nenhuma das duas regras recusa: o `pure-ftpd` segue para o PureDB, que confere a senha. Responde `auth_ok:-1`, a recusa definitiva, quando uma delas recusa: o cliente recebe `530` com a senha certa ou errada.
+- Responde `auth_ok:0`, a resposta "não é comigo", quando nenhuma das três regras recusa: o `pure-ftpd` segue para o PureDB, que confere a senha. Responde `auth_ok:-1`, a recusa definitiva, quando uma delas recusa: o cliente recebe `530` com a senha certa ou errada.
+- **Bloqueio por endereço**, a primeira regra: recusa quando a origem é um IPv4 fora de `127.0.0.0/8` e existe o arquivo comum `/auth/enderecos/<origem>` com a primeira linha começando por um número de até 12 dígitos maior que a hora atual. Vale para qualquer nome, com TLS ou sem. Arquivo vencido ou fora desse formato não bloqueia.
 - **TLS por usuário**, só com a opção valendo (`FTP_TLS_EXCECOES=sim`, `FTP_TLS_MODE=2` e sem IP público aceito), que o entrypoint marca em `/run/allsafe/tls-por-usuario`: sem nenhum dispensado, o `pure-ftpd` recusa a sessão sem TLS antes da senha e o porteiro nem é chamado; com algum, a sessão sem TLS só segue quando o nome está em uma linha inteira de `/auth/sem-tls.lista`. Lista ausente ou ilegível conta como lista vazia: ninguém entra sem TLS. A recusa deixa uma marca em `/run/allsafe/recusa/`, para o vigia não a contar como senha errada.
 - **Bloqueio por tentativa:** recusa quando existe o arquivo comum `/auth/bloqueios/<usuario>@<origem>` e a primeira linha dele começa por um número de até 12 dígitos maior que a hora atual. Arquivo vencido ou fora desse formato não bloqueia.
 - Só vira caminho de arquivo ou linha de registro o nome dentro da regra `^[a-z_][a-z0-9_-]{0,31}$` e a origem em formato de endereço. No registro, o nome fora da regra vira `(nome fora da regra)` e a origem fora do formato vira `?`: o que o cliente mandou não vai cru para o log. A linha sai pela saída de erro do processo 1 do container, porque o `pure-authd` fecha a do script.
@@ -467,6 +475,7 @@ Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; 
 - **Limite e prazo:** os do usuário, em `/auth/limites.lista` (`tentativas=` e `minutos=`), ou os da stack (`FTP_BLOQUEIO_TENTATIVAS` e `FTP_BLOQUEIO_MINUTOS`). O cadastro e a lista são relidos quando o arquivo muda.
 - **Contagem:** na memória, por usuário e endereço, só das senhas erradas mais novas que os minutos de bloqueio; até 10.000 pares. Reiniciar o container zera a contagem em andamento e não tira bloqueio.
 - **Bloqueio:** o arquivo `/auth/bloqueios/<usuario>@<endereco>`, `0600`, gravado por troca de nome, com até quando vale, desde quando e quantas senhas erradas; até 4.096 arquivos. De minuto em minuto, o vigia apaga os vencidos e os inválidos.
+- **Bloqueio por endereço:** além da contagem por usuário, soma os erros de usuário e senha de cada endereço, com qualquer nome, cadastrado ou não, dentro de `BLOQUEIO_ENDERECO_HORAS`; até 10.000 endereços na memória. O erro que passa de `BLOQUEIO_ENDERECO_ERROS` grava `/auth/enderecos/<endereco>`, `0600`, por troca de nome, com até quando vale (`BLOQUEIO_ENDERECO_DIAS`), desde quando, quantos erros e `ftp`; até 10.000 arquivos. Não contam a rede interna da stack, a recusa do porteiro por falta de TLS e a tentativa feita durante um bloqueio; o endereço de saída do container e o que não é IPv4 nunca são bloqueados. Os vencidos saem na mesma limpeza de minuto em minuto.
 - **Rede:** a cada 5 s, soma os contadores das interfaces do container em `/proc/net/dev`, fora a `lo`, e grava uma linha de sete números em `/auth/rede.estado` (`0600`): instante, segundos do intervalo, bytes recebidos e enviados desde que o container subiu, bytes recebidos e enviados no intervalo, e erros e descartes. Grava por troca de nome, com a trava do cadastro (`/auth/.lock`), só quando os contadores mudam e mais uma vez quando o tráfego para; com a trava ocupada, aquela leitura não é publicada. Falha na leitura ou na gravação não para o vigia.
 - **Recursos do container:** no mesmo ciclo de 5 s, lê o grupo de controle do container (`/sys/fs/cgroup`) e grava uma linha de doze números em `/auth/recursos.estado` (`0600`): instante, instante em que o vigia iniciou, milissegundos do intervalo, microssegundos de processador gastos nele, cota e período do limite de processador, memória em uso e limite, processos e limite, vezes em que o limite de processador segurou o container e vezes em que faltou memória. Limite `0` quer dizer sem limite. Publica nas duas primeiras leituras e, depois, quando o uso muda (1% de um núcleo, 1 MiB de memória, processos ou contadores) ou a cada minuto, do mesmo jeito que a rede: por troca de nome, com a trava do cadastro.
 - **O que não conta:** endereço da rede interna da stack, recusa do porteiro por falta de TLS, tentativa durante o bloqueio, nome fora do cadastro e nome fora da regra.
@@ -605,7 +614,7 @@ Instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user`
 - Depois de cada mudança, regenera o `pureftpd.pdb` com `pure-pw mkdb` e mantém os dois arquivos em `0600`.
 - Antes de alterar, pega a trava `/auth/.lock` (`flock`, espera até 30 segundos): o FTP, o `manage-user.sh` e o painel nunca gravam ao mesmo tempo.
 - `list` passa o arquivo pela variável `PURE_PASSWDFILE`, porque o `pure-pw list` não aceita `-f` logo depois da ação.
-- Uso inválido: mostra as formas aceitas, `Uso: ... add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]`, `... perfil <usuario> [completo|envio|soenvio|leitura]`, `... limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]`, `... bloqueios [usuario]` e `... desbloquear <usuario> [origem]`, e sai com código `2`.
+- Uso inválido: mostra as formas aceitas, `Uso: ... add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]`, `... perfil <usuario> [completo|envio|soenvio|leitura]`, `... limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]`, `... bloqueios [usuario]`, `... desbloquear <usuario> [origem]`, `... enderecos`, `... endereco-bloquear <endereco> [dias]` e `... endereco-liberar <endereco>`, e sai com código `2`.
 
 </details>
 

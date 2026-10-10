@@ -8,12 +8,16 @@ user="${2:-}"
 pasta="${3:-}"
 case "$action" in
   list|del|add|passwd|pasta|perfil|limites|bloqueios|desbloquear|tls-dispensar|tls-exigir|tls-lista) ;;
+  enderecos|endereco-bloquear|endereco-liberar) ;;
   *)
     echo "Uso: $0 add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]" >&2
     echo "     $0 perfil <usuario> [completo|envio|soenvio|leitura]" >&2
     echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]" >&2
     echo "     $0 bloqueios [usuario]" >&2
     echo "     $0 desbloquear <usuario> [origem]" >&2
+    echo "     $0 enderecos" >&2
+    echo "     $0 endereco-bloquear <endereco> [dias]" >&2
+    echo "     $0 endereco-liberar <endereco>" >&2
     exit 2 ;;
 esac
 # Instalação a operar: a do .env desta pasta ou a do arquivo apontado por ENV_FILE.
@@ -48,6 +52,20 @@ case "$action" in
     # Tira o bloqueio por tentativa do usuário: de todas as origens ou só da que vier.
     [[ -n "$user" ]] || { echo "Uso: $0 desbloquear <usuario> [origem]" >&2; exit 2; }
     compose exec -T ftp allsafe-ftp-user desbloquear "$user" ${pasta:+"$pasta"}
+    ;;
+  enderecos)
+    # Endereços bloqueados agora, no FTP e no painel.
+    compose exec -T ftp allsafe-ftp-user enderecos
+    ;;
+  endereco-bloquear)
+    # Bloqueia um endereço no FTP e no painel, ou muda o prazo de um que já está bloqueado. Sem os dias, o prazo da stack.
+    [[ -n "$user" && $# -le 3 ]] || { echo "Uso: $0 endereco-bloquear <endereco> [dias]" >&2; exit 2; }
+    compose exec -T ftp allsafe-ftp-user endereco-bloquear "$user" ${pasta:+"$pasta"}
+    ;;
+  endereco-liberar)
+    # Libera um endereço bloqueado. É a saída para o administrador que ficou com o próprio endereço bloqueado.
+    [[ -n "$user" && $# -le 2 ]] || { echo "Uso: $0 endereco-liberar <endereco>" >&2; exit 2; }
+    compose exec -T ftp allsafe-ftp-user endereco-liberar "$user"
     ;;
   add|passwd)
     read -r -s -p "Senha para $user: " password

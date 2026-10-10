@@ -28,6 +28,7 @@ Uso: ./tests/testar.sh [--manter] [--resultados <pasta>]
 Ajustes por variável de ambiente (padrão entre parênteses):
   TESTE_IP (127.0.0.2) · TESTE_FTP_PORT (2121) · TESTE_PAINEL_PORT (8444)
   TESTE_PASSIVA_INICIO (32000) · TESTE_SUBNET (172.29.2.0/29) · TESTE_SUBNET_B (172.29.3.0/29)
+  TESTE_SUBNET_C (172.29.3.8/29) · TESTE_SUBNET_D (172.29.3.16/29): redes da etapa do bloqueio por endereço
   TESTE_ADMIN (gestor): nome do primeiro administrador do painel, de propósito diferente do padrão
   TEMP_DIR (o do .env; sem ele, o do .env.example)
 

@@ -51,6 +51,9 @@ Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.m
 ./manage-user.sh limites olt01 tentativas=3 minutos=30   # bloqueio por tentativa só dele: 3 senhas erradas, 30 minutos
 ./manage-user.sh bloqueios          # lista quem o FTP está recusando por senhas erradas demais
 ./manage-user.sh desbloquear olt01  # tira os bloqueios do usuário (ou de um endereço só: desbloquear olt01 10.0.0.5)
+./manage-user.sh enderecos          # lista os endereços bloqueados no FTP e no painel
+./manage-user.sh endereco-liberar 203.0.113.7        # libera um endereço bloqueado
+./manage-user.sh endereco-bloquear 203.0.113.7 365   # bloqueia um endereço, ou muda o prazo de um já bloqueado
 ./manage-user.sh list               # lista os usuários do PureDB
 ./manage-user.sh del cliente01      # remove o usuário e MANTÉM a pasta dele
 ./manage-user.sh tls-dispensar olt-antiga   # deixa o usuário entrar sem TLS (equipamento que não fala TLS)
@@ -68,6 +71,7 @@ Regras:
 - `add` de um nome existente responde `Usuario ja existe`. Para mudar a pasta de quem já existe, use `pasta`, com as mesmas regras: vale na entrada seguinte, não troca a senha e não move nem apaga arquivo. Usuário que não existe: `Usuario nao existe: <nome>`.
 - `limites` aceita um ou mais pares `chave=valor`, e só mexe nas chaves informadas: `sessoes` (sessões ao mesmo tempo no FTP), `download` e `envio` (KB por segundo, de 1 a 10.000.000), `horario` (`HHMM-HHMM`, no fuso do `TZ`, podendo passar da meia-noite), `baixar` (downloads ao mesmo tempo pelo painel, de 1 a 8), `tentativas` (senhas erradas no FTP até o bloqueio, de 0 a 100; `0`: nunca é bloqueado) e `minutos` (tempo do bloqueio, de 1 a 1440). Valor vazio (`download=`) tira o limite; sem nenhum par, mostra os que o usuário tem. Vale na entrada seguinte dele no FTP. O que cada limite faz está em [Painel web](painel.md#limites).
 - `bloqueios` lista os bloqueios por tentativa em vigor, um por linha, com o usuário, o endereço, as senhas erradas, o início e o fim; com um nome, só os dele. Sem nenhum, responde `Nenhum bloqueio em vigor.` `desbloquear <usuario>` tira todos os bloqueios do usuário, e com o endereço no fim, só o daquele endereço. Vale na entrada seguinte. Mudar `tentativas` ou `minutos`, trocar a senha e remover o usuário também tiram os bloqueios dele: [Segurança](seguranca.md#bloqueio-por-tentativa).
+- `enderecos` lista os endereços com bloqueio por endereço, um por linha, com quem bloqueou, os erros, o início e o fim; sem nenhum, responde `Nenhum endereco bloqueado.` `endereco-liberar <endereco>` tira o bloqueio, e é a saída para o administrador que ficou com o próprio endereço bloqueado. `endereco-bloquear <endereco> [dias]` bloqueia um endereço no FTP e no painel ou, no que já está bloqueado, muda só o prazo; sem os dias, vale `BLOQUEIO_ENDERECO_DIAS`. Tudo vale no pedido seguinte: [Segurança](seguranca.md#bloqueio-por-endereco).
 - `del` **não apaga arquivos** e responde com a pasta que ficou. Para tirar a pasta junto com o usuário, use o painel: Usuários ➜ **Remover**, com a caixa de apagar a pasta, em [Painel web](painel.md#usuarios). Depois do `del`, a pasta que ficou é apagada na aba Arquivos.
 - `tls-dispensar` e `tls-exigir` valem em instantes, sem reiniciar o container e sem derrubar quem está conectado, e só para usuário que existe (`Usuario nao existe: <nome>`). A dispensa só tem efeito com `FTP_TLS_EXCECOES=sim` (o padrão), `FTP_TLS_MODE=2` e sem `REDE_PERMITIR_IP_PUBLICO=sim`; fora disso, fica guardada. O `del` tira o usuário da lista.
 

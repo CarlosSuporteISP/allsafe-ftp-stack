@@ -4,7 +4,10 @@
 # Ele não confere senha: só decide se a sessão pode seguir para ela.
 #   auth_ok:0   "não é comigo": o pure-ftpd segue para o PureDB, que confere a senha;
 #   auth_ok:-1  recusa definitiva: o cliente recebe 530, com a senha certa ou errada.
-# Duas regras, nesta ordem:
+# Três regras, nesta ordem:
+#   bloqueio por endereço: a origem com /auth/enderecos/<origem> ainda valendo é recusada com qualquer conta,
+#     com ou sem TLS. Gravam esse arquivo o vigia, o painel e o administrador (allsafe-ftp-user
+#     endereco-bloquear); apagá-lo libera o endereço;
 #   TLS por usuário (só com a opção valendo, que o entrypoint marca em /run/allsafe/tls-por-usuario):
 #     com TLS toda conta segue; sem TLS, só a que o administrador marcou em /auth/sem-tls.lista. Sem nenhum
 #     dispensado o pure-ftpd nem chega aqui com sessão sem TLS: ele a recusa antes da senha;
@@ -18,8 +21,16 @@ origem="${AUTHD_REMOTE_IP:-}"
 # O que o cliente mandou como nome pode ser qualquer coisa: só vira caminho ou registro o nome que cabe na regra.
 if [[ "$conta" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]]; then nome_valido=sim; else nome_valido=nao; fi
 resposta=0
+ipv4='^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'
+vale() { # <arquivo>: o bloqueio gravado nele ainda vale. Vencido, não vale mais; quem o apaga é o vigia.
+  local expira=0
+  read -r expira _ < "$1" 2>/dev/null || true
+  [[ "$expira" =~ ^[0-9]{1,12}$ ]] && (( 10#$expira > EPOCHSECONDS ))
+}
 
-if [[ -e /run/allsafe/tls-por-usuario && "${AUTHD_ENCRYPTED:-0}" != 1 ]] \
+if [[ "$origem" =~ $ipv4 && "$origem" != 127.* && -f "/auth/enderecos/$origem" ]] && vale "/auth/enderecos/$origem"; then
+  resposta=-1
+elif [[ -e /run/allsafe/tls-por-usuario && "${AUTHD_ENCRYPTED:-0}" != 1 ]] \
   && ! { [[ "$nome_valido" == sim ]] && grep -qxF -- "$conta" "$lista" 2>/dev/null; }; then
   resposta=-1
   if [[ "$nome_valido" == sim ]]; then
@@ -30,10 +41,7 @@ if [[ -e /run/allsafe/tls-por-usuario && "${AUTHD_ENCRYPTED:-0}" != 1 ]] \
   fi
   # O pure-authd fecha a saída de erro de quem ele chama: o registro vai pela do processo 1, que é a do container.
   { echo "porteiro: entrada sem TLS recusada: usuario=$conta origem=$origem (a senha enviada passou em texto puro: troque-a)" > /proc/1/fd/2; } 2>/dev/null || true
-elif [[ "$nome_valido" == sim && "$origem" != "?" && -f "/auth/bloqueios/$conta@$origem" ]]; then
-  expira=0
-  read -r expira _ < "/auth/bloqueios/$conta@$origem" 2>/dev/null || true
-  # Vencido, o arquivo não vale mais; quem o apaga é o vigia.
-  if [[ "$expira" =~ ^[0-9]{1,12}$ ]] && (( 10#$expira > EPOCHSECONDS )); then resposta=-1; fi
+elif [[ "$nome_valido" == sim && "$origem" != "?" && -f "/auth/bloqueios/$conta@$origem" ]] && vale "/auth/bloqueios/$conta@$origem"; then
+  resposta=-1
 fi
 printf 'auth_ok:%s\nend\n' "$resposta"

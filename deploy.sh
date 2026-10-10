@@ -244,6 +244,16 @@ bloqueio_tentativas="$(env_valor FTP_BLOQUEIO_TENTATIVAS 5)"
 bloqueio_minutos="$(env_valor FTP_BLOQUEIO_MINUTOS 15)"
 [[ "$bloqueio_minutos" =~ ^[1-9][0-9]{0,3}$ ]] && (( bloqueio_minutos <= 1440 )) \
   || die "FTP_BLOQUEIO_MINUTOS deve ficar entre 1 e 1440; em $env_file está '$bloqueio_minutos'."
+# Bloqueio por endereço: o que passa do limite de erros de usuário e senha não entra mais no FTP nem no painel.
+endereco_erros="$(env_valor BLOQUEIO_ENDERECO_ERROS 5)"
+[[ "$endereco_erros" =~ ^(0|[1-9][0-9]{0,2})$ ]] && (( endereco_erros <= 100 )) \
+  || die "BLOQUEIO_ENDERECO_ERROS deve ficar entre 0 e 100 (0 desliga o bloqueio por endereço); em $env_file está '$endereco_erros'."
+endereco_horas="$(env_valor BLOQUEIO_ENDERECO_HORAS 24)"
+[[ "$endereco_horas" =~ ^[1-9][0-9]{0,2}$ ]] && (( endereco_horas <= 720 )) \
+  || die "BLOQUEIO_ENDERECO_HORAS deve ficar entre 1 e 720; em $env_file está '$endereco_horas'."
+endereco_dias="$(env_valor BLOQUEIO_ENDERECO_DIAS 120)"
+[[ "$endereco_dias" =~ ^[1-9][0-9]{0,3}$ ]] && (( endereco_dias <= 3650 )) \
+  || die "BLOQUEIO_ENDERECO_DIAS deve ficar entre 1 e 3650; em $env_file está '$endereco_dias'."
 # Com IP público aceito, senha em texto puro não passa: o TLS tem de ser obrigatório.
 if ip_publico_permitido && (( tls_modo < 2 )); then
   die "REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3; em $env_file está '$tls_modo'. FTP sem TLS na internet entrega a senha a quem escuta."

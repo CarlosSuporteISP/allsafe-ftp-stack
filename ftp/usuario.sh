@@ -8,6 +8,9 @@ usage() {
   echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]" >&2
   echo "     $0 bloqueios [usuario]" >&2
   echo "     $0 desbloquear <usuario> [origem]" >&2
+  echo "     $0 enderecos" >&2
+  echo "     $0 endereco-bloquear <endereco> [dias]" >&2
+  echo "     $0 endereco-liberar <endereco>" >&2
   exit 2
 }
 action="${1:-}"
@@ -38,6 +41,12 @@ lista_limites=/auth/limites.lista
 # <senhas erradas>`. Quem grava é o vigia do FTP e quem aplica é o porteiro; apagar o arquivo desbloqueia.
 pasta_bloqueios=/auth/bloqueios
 regra_origem='^[0-9a-fA-F.:]{2,45}$'
+# Bloqueios por endereço: um arquivo por endereço IPv4, com `<vale até> <desde> <erros> <quem bloqueou>`. Gravam
+# o vigia do FTP (ftp), o painel (painel) e o administrador (manual); o porteiro do FTP e o painel aplicam, e o
+# endereço não entra em nenhum dos dois com conta nenhuma. Apagar o arquivo libera o endereço.
+pasta_enderecos=/auth/enderecos
+regra_ipv4='^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'
+enderecos_max=10000
 # Pasta do usuário, dentro de /data: até 4 níveis. Nenhum nível começa com ponto, então "." e ".." não passam.
 regra_pasta='^[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,3}$'
 # Custo do hash da senha: o mesmo do entrypoint do serviço ftp (`pure-pw -C`, logins ao mesmo tempo).
@@ -53,7 +62,7 @@ gravar_marca() { # <arquivo>: grava o nome do usuário inicial, só para o root
   ( umask 077; printf '%s\n' "$inicial" > "$1.novo" )
   mv -f "$1.novo" "$1"
 }
-[[ $# -le 2 || "$action" == add || "$action" == pasta || "$action" == perfil || "$action" == limites || "$action" == desbloquear ]] || usage
+[[ $# -le 2 || "$action" == add || "$action" == pasta || "$action" == perfil || "$action" == limites || "$action" == desbloquear || "$action" == endereco-bloquear ]] || usage
 perfil_invalido() { echo "Perfil invalido: use completo, envio, soenvio ou leitura" >&2; exit 1; }
 pasta_invalida() {
   echo "Pasta invalida: ate 4 niveis separados por /; letras, numeros, _ - e ponto; nenhum nivel comeca com ponto" >&2
@@ -267,6 +276,15 @@ tirar_bloqueios() { # [origem]
   done
   printf '%s\n' "$quantos"
 }
+
+# Lê um bloqueio de endereço para `expira`, `desde`, `erros` e `quem`; falha se o arquivo não for um bloqueio.
+ler_endereco() { # <arquivo>
+  expira="" desde="" erros="" quem=""
+  read -r expira desde erros quem _ < "$1" 2>/dev/null || true
+  [[ "$expira" =~ ^[0-9]{1,12}$ && "$desde" =~ ^[0-9]{1,12}$ && "$erros" =~ ^[0-9]{1,6}$ && "$quem" =~ ^(ftp|painel|manual)$ ]] || return 1
+  expira=$(( 10#$expira )) desde=$(( 10#$desde )) erros=$(( 10#$erros ))
+}
+endereco_invalido() { echo "Endereco invalido: use um IPv4, como 203.0.113.7" >&2; exit 1; }
 
 # Quem mais alcança a pasta: usuário com a mesma, com uma acima ou com uma abaixo dela.
 avisar_divisao() {
@@ -530,6 +548,57 @@ case "$action" in
       echo "Usuario $user desbloqueado ($quantos endereco(s)): vale na proxima entrada no FTP."
     else
       echo "Usuario $user nao tem bloqueio${origem:+ para $origem}."
+    fi
+    ;;
+  enderecos)
+    # Endereços bloqueados agora, no FTP e no painel: qual, quem bloqueou, com quantos erros, desde quando e até quando.
+    [[ $# -le 1 ]] || usage
+    achou=nao
+    for arquivo in "$pasta_enderecos"/*; do
+      [[ -f "$arquivo" && ! -L "$arquivo" ]] || continue
+      origem="${arquivo##*/}"
+      [[ "$origem" =~ $regra_ipv4 ]] && ler_endereco "$arquivo" || continue
+      (( expira > EPOCHSECONDS )) || continue
+      printf 'origem=%s por=%s erros=%s desde=%(%F %T)T ate=%(%F %T)T\n' "$origem" "$quem" "$erros" "$desde" "$expira"
+      achou=sim
+    done
+    [[ "$achou" == sim ]] || echo "Nenhum endereco bloqueado."
+    ;;
+  endereco-bloquear)
+    # Bloqueia um endereço no FTP e no painel por <dias> a partir de agora; no que já está bloqueado, só o prazo
+    # muda. Sem os dias, vale o prazo da stack. Os dois últimos argumentos são do painel, quando é ele quem
+    # bloqueia: quem bloqueou e com quantos erros.
+    origem="$user" dias="${3:-${BLOQUEIO_ENDERECO_DIAS:-120}}" por="${4:-manual}" quantos="${5:-0}"
+    [[ $# -ge 2 && $# -le 5 && "$por" =~ ^(ftp|painel|manual)$ && "$quantos" =~ ^(0|[1-9][0-9]{0,5})$ ]] || usage
+    [[ "$origem" =~ $regra_ipv4 ]] || endereco_invalido
+    [[ "$origem" != 127.* && "$origem" != 0.* ]] || { echo "Endereco nao bloqueavel: $origem e do proprio servidor" >&2; exit 1; }
+    [[ "$dias" =~ ^[1-9][0-9]{0,3}$ ]] && (( dias <= 3650 )) || { echo "Prazo invalido: de 1 a 3650 dias" >&2; exit 1; }
+    [[ -d "$pasta_enderecos" && ! -L "$pasta_enderecos" ]] || { echo "Pasta dos bloqueios por endereco ausente: reinicie o servico ftp" >&2; exit 1; }
+    travar
+    arquivo="$pasta_enderecos/$origem"
+    [[ ! -L "$arquivo" ]] || rm -f -- "$arquivo"
+    if [[ -f "$arquivo" ]] && ler_endereco "$arquivo" && (( expira > EPOCHSECONDS )); then
+      por="$quem" quantos="$erros" feito="Prazo do endereco $origem alterado"
+    else
+      em_vigor=("$pasta_enderecos"/*)
+      (( ${#em_vigor[@]} < enderecos_max )) || { echo "Teto de $enderecos_max enderecos bloqueados: libere algum antes" >&2; exit 1; }
+      desde=$EPOCHSECONDS feito="Endereco $origem bloqueado"
+    fi
+    ( umask 077; printf '%s %s %s %s\n' "$(( EPOCHSECONDS + dias * 86400 ))" "$desde" "$quantos" "$por" > "$pasta_enderecos/.novo.$$" )
+    mv -f "$pasta_enderecos/.novo.$$" "$arquivo"
+    echo "$feito: $dias dia(s) a partir de agora, no FTP e no painel."
+    ;;
+  endereco-liberar)
+    # Tira o bloqueio de um endereço: ele volta a entrar no FTP e no painel, e a contagem dos erros recomeça.
+    origem="$user"
+    [[ $# -eq 2 ]] || usage
+    [[ "$origem" =~ $regra_ipv4 ]] || endereco_invalido
+    travar
+    if [[ -f "$pasta_enderecos/$origem" || -L "$pasta_enderecos/$origem" ]]; then
+      rm -f -- "$pasta_enderecos/$origem"
+      echo "Endereco $origem liberado: vale no proximo pedido."
+    else
+      echo "Endereco $origem nao esta bloqueado."
     fi
     ;;
   tls-lista)

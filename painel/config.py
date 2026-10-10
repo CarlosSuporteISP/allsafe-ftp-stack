@@ -22,6 +22,8 @@ ARQ_REDE = '/auth/rede.estado'        # contadores de rede do container do ftp, 
 ARQ_RECURSOS_FTP = '/auth/recursos.estado'              # quem grava é o vigia do ftp
 ARQ_RECURSOS_NGINX = '/nginx/estado/recursos.estado'    # quem grava é o nginx, na única pasta em que ele escreve
 PASTA_BLOQUEIOS = '/auth/bloqueios'   # bloqueios por tentativa no FTP, um arquivo por usuário e endereço; quem grava é o vigia do ftp
+# Bloqueios por endereço, um arquivo por endereço: valem no FTP e no painel; gravam o vigia do ftp e o allsafe-ftp-user
+PASTA_ENDERECOS = '/auth/enderecos'
 CMD_USUARIO = '/usr/local/sbin/allsafe-ftp-user'
 PASTA_DADOS = '/data'
 
@@ -144,6 +146,15 @@ def configuracao():
     bloqueio = amb('FTP_BLOQUEIO_MINUTOS', '15')
     if not (re.fullmatch(r'[1-9][0-9]{0,3}', bloqueio) and int(bloqueio) <= 1440):
         falha('FTP_BLOQUEIO_MINUTOS deve ficar entre 1 e 1440')
+    erros = amb('BLOQUEIO_ENDERECO_ERROS', '5')
+    if not (re.fullmatch(r'0|[1-9][0-9]{0,2}', erros) and int(erros) <= 100):
+        falha('BLOQUEIO_ENDERECO_ERROS deve ficar entre 0 e 100 (0 desliga o bloqueio por endereço)')
+    horas = amb('BLOQUEIO_ENDERECO_HORAS', '24')
+    if not (re.fullmatch(r'[1-9][0-9]{0,2}', horas) and int(horas) <= 720):
+        falha('BLOQUEIO_ENDERECO_HORAS deve ficar entre 1 e 720')
+    dias = amb('BLOQUEIO_ENDERECO_DIAS', '120')
+    if not (re.fullmatch(r'[1-9][0-9]{0,3}', dias) and int(dias) <= 3650):
+        falha('BLOQUEIO_ENDERECO_DIAS deve ficar entre 1 e 3650')
     minutos = amb('PAINEL_SESSAO_MINUTOS', '15')
     if not (minutos.isdigit() and 1 <= int(minutos) <= 120):
         falha('PAINEL_SESSAO_MINUTOS deve ficar entre 1 e 120')
@@ -182,6 +193,9 @@ def configuracao():
         'tls_sem_excecao': sem_excecao,
         'bloqueio_tentativas': int(tentativas),
         'bloqueio_minutos': int(bloqueio),
+        'endereco_erros': int(erros),
+        'endereco_janela': int(horas) * 3600,
+        'endereco_dias': int(dias),
         'ftp_passiva': f"{amb('FTP_PASSIVE_PORT_START', '30000')}–{amb('FTP_PASSIVE_PORT_END', '30049')}",
         'pasta_host': amb('PAINEL_PASTA_DADOS', 'DATA_DIR/dados').rstrip('/'),
         'versao': versao,

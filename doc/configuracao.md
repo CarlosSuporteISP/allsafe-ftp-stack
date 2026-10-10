@@ -56,6 +56,9 @@ FTP_MAX_CLIENTS=50
 FTP_MAX_CLIENTS_PER_IP=8
 FTP_BLOQUEIO_TENTATIVAS=5
 FTP_BLOQUEIO_MINUTOS=15
+BLOQUEIO_ENDERECO_ERROS=5
+BLOQUEIO_ENDERECO_HORAS=24
+BLOQUEIO_ENDERECO_DIAS=120
 ```
 
 Nenhuma senha entra no `.env`: ela fica em `.secrets/ftp-usuario-inicial-senha.txt` ([Segredos](segredos.md)).
@@ -189,6 +192,9 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 | `FTP_MAX_CLIENTS_PER_IP` | Máximo de conexões por IP de origem (opção `-C`) | inteiro maior que zero | `8` |
 | `FTP_BLOQUEIO_TENTATIVAS` | Bloqueio por tentativa: quantas senhas erradas vindas de um mesmo endereço bloqueiam o usuário para aquele endereço. É o padrão da stack; o limite próprio de cada usuário é ajustado no painel: [Painel](painel.md#limites) | `0` a `100`; `0` desliga | `5` |
 | `FTP_BLOQUEIO_MINUTOS` | Minutos que o bloqueio dura. É também o tempo em que as senhas erradas se somam: [Segurança](seguranca.md#bloqueio-por-tentativa) | `1` a `1440` | `15` |
+| `BLOQUEIO_ENDERECO_ERROS` | Bloqueio por endereço: o endereço que passa deste número de erros de usuário e senha, no FTP ou no painel, não entra mais em nenhum dos dois, com conta nenhuma: [Segurança](seguranca.md#bloqueio-por-endereco) | `0` a `100`; `0` desliga | `5` |
+| `BLOQUEIO_ENDERECO_HORAS` | Horas em que os erros de um mesmo endereço se somam | `1` a `720` | `24` |
+| `BLOQUEIO_ENDERECO_DIAS` | Dias que o bloqueio do endereço dura. O administrador libera o endereço ou muda o prazo dele na aba Bloqueios do painel | `1` a `3650` | `120` |
 
 ---
 

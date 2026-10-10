@@ -22,6 +22,9 @@ FTP_MAX_CLIENTS="${FTP_MAX_CLIENTS:-50}"
 FTP_MAX_CLIENTS_PER_IP="${FTP_MAX_CLIENTS_PER_IP:-8}"
 FTP_BLOQUEIO_TENTATIVAS="${FTP_BLOQUEIO_TENTATIVAS:-5}"
 FTP_BLOQUEIO_MINUTOS="${FTP_BLOQUEIO_MINUTOS:-15}"
+BLOQUEIO_ENDERECO_ERROS="${BLOQUEIO_ENDERECO_ERROS:-5}"
+BLOQUEIO_ENDERECO_HORAS="${BLOQUEIO_ENDERECO_HORAS:-24}"
+BLOQUEIO_ENDERECO_DIAS="${BLOQUEIO_ENDERECO_DIAS:-120}"
 password="$(tr -d '\r\n' < "$secret_file")"
 
 conferir_opcao_ip_publico
@@ -37,6 +40,9 @@ exigir_ip FTP_PASSIVE_IP "$FTP_PASSIVE_IP" || exit 1
 [[ "$FTP_MAX_CLIENTS_PER_IP" =~ ^[1-9][0-9]{0,4}$ ]] || die "FTP_MAX_CLIENTS_PER_IP deve ser um inteiro maior que zero"
 [[ "$FTP_BLOQUEIO_TENTATIVAS" =~ ^(0|[1-9][0-9]{0,2})$ ]] && (( FTP_BLOQUEIO_TENTATIVAS <= 100 )) || die "FTP_BLOQUEIO_TENTATIVAS deve ficar entre 0 e 100 (0 desliga o bloqueio por tentativa)"
 [[ "$FTP_BLOQUEIO_MINUTOS" =~ ^[1-9][0-9]{0,3}$ ]] && (( FTP_BLOQUEIO_MINUTOS <= 1440 )) || die "FTP_BLOQUEIO_MINUTOS deve ficar entre 1 e 1440"
+[[ "$BLOQUEIO_ENDERECO_ERROS" =~ ^(0|[1-9][0-9]{0,2})$ ]] && (( BLOQUEIO_ENDERECO_ERROS <= 100 )) || die "BLOQUEIO_ENDERECO_ERROS deve ficar entre 0 e 100 (0 desliga o bloqueio por endereço)"
+[[ "$BLOQUEIO_ENDERECO_HORAS" =~ ^[1-9][0-9]{0,2}$ ]] && (( BLOQUEIO_ENDERECO_HORAS <= 720 )) || die "BLOQUEIO_ENDERECO_HORAS deve ficar entre 1 e 720"
+[[ "$BLOQUEIO_ENDERECO_DIAS" =~ ^[1-9][0-9]{0,3}$ ]] && (( BLOQUEIO_ENDERECO_DIAS <= 3650 )) || die "BLOQUEIO_ENDERECO_DIAS deve ficar entre 1 e 3650"
 # Com IP público aceito, senha em texto puro não passa: o TLS tem de ser obrigatório.
 if ip_publico_permitido && (( FTP_TLS_MODE < 2 )); then
   die "REDE_PERMITIR_IP_PUBLICO=sim exige FTP_TLS_MODE=2 ou 3; está $FTP_TLS_MODE (FTP sem TLS na internet entrega a senha a quem escuta)"
@@ -152,6 +158,10 @@ fi
 # Só o root entra na pasta. O que ainda vale atravessa o reinício.
 [[ ! -L /auth/bloqueios ]] || die "/auth/bloqueios é link simbólico: remova-o"
 install -d -o root -g root -m 0700 /auth/bloqueios
+# Bloqueios por endereço (um arquivo por endereço): gravam o vigia, o painel e o allsafe-ftp-user; o porteiro e
+# o painel aplicam. Atravessam o reinício e a restauração da cópia de segurança.
+[[ ! -L /auth/enderecos ]] || die "/auth/enderecos é link simbólico: remova-o"
+install -d -o root -g root -m 0700 /auth/enderecos
 exec 9>&-  # solta a trava: o descritor não pode ir para o pure-ftpd
 # Com perfil de envio, de só envio ou de leitura no cadastro, as pastas voltam ao modo que os perfis pedem e o que
 # um envio deixou sem entrega é entregue, antes de o servidor aceitar sessão. Sem esses perfis, nada é percorrido.

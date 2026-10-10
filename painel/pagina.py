@@ -9,7 +9,8 @@ from estado import dias_restantes, sem_tls
 from icones import desenhos, icone
 
 ABAS = (('/', 'painel', 'Visão geral'), ('/usuarios', 'usuarios', 'Usuários'), ('/arquivos', 'pasta', 'Arquivos'),
-        ('/servidor', 'pulso', 'Servidor'), ('/seguranca', 'cadeado', 'Segurança'), ('/atividade', 'atividade', 'Atividade'))
+        ('/servidor', 'pulso', 'Servidor'), ('/seguranca', 'cadeado', 'Segurança'), ('/bloqueios', 'bloqueio', 'Bloqueios'),
+        ('/atividade', 'atividade', 'Atividade'))
 ABAS_USUARIO = (('/meus-arquivos', 'pasta', 'Meus arquivos'),)
 ABAS_SOENVIO = (('/meus-arquivos', 'envio', 'Envio de arquivos'),)   # perfil só envio: sem lista de arquivos
 # Menu lateral do administrador: o dia a dia em cima, o que cuida do próprio painel embaixo.

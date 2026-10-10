@@ -779,6 +779,7 @@ Trocar o nome do primeiro administrador pelo painel não mexe no `.env`: o `PAIN
 | Sessão | Tempo sem uso, tempo máximo e bloqueio por entrada errada |
 | Entrada dos usuários do FTP | Se os usuários do FTP entram no painel (`PAINEL_ACESSO_USUARIOS_FTP`) e como a senha deles é conferida |
 | Bloqueio por tentativa no FTP | Quantas senhas erradas do mesmo endereço bloqueiam um usuário e por quanto tempo (`FTP_BLOQUEIO_TENTATIVAS` e `FTP_BLOQUEIO_MINUTOS`), e quem está bloqueado agora |
+| Bloqueio por endereço | Quantos erros de usuário e senha, em quantas horas, bloqueiam um endereço no FTP e no painel, por quantos dias (`BLOQUEIO_ENDERECO_ERROS`, `BLOQUEIO_ENDERECO_HORAS` e `BLOQUEIO_ENDERECO_DIAS`), e quantos estão bloqueados agora, com o atalho para a aba Bloqueios |
 | Custo das senhas do FTP | Se todas as senhas estão gravadas com o custo do porte atual, ou quais usuários ainda estão com o anterior |
 | Contato de segurança | O e-mail publicado em `/.well-known/security.txt` (`SEGURANCA_CONTATO_EMAIL`), ou o aviso de que não há contato |
 | Container do painel | Raiz somente leitura e sem acesso ao Docker do host |
@@ -840,6 +841,7 @@ Com pelo menos um usuário dispensado do TLS, a aba abre com o alerta e a linha 
 | Entrada · Entrada recusada · Entrada bloqueada pelo limite de tentativas · Saída | Alguém entrou, errou o usuário ou a senha, teve o endereço bloqueado ou saiu |
 | Usuário criado · Senha trocada · Pasta do usuário trocada · Usuário removido | Alteração de usuário do FTP, com o administrador que fez |
 | Limites do usuário alterados · Bloqueio do usuário no FTP removido | Limites gravados, com o valor de cada um, e bloqueio por senha errada tirado em **Editar** |
+| Endereço bloqueado por erros de usuário e senha · Prazo do bloqueio de endereço alterado · Endereço desbloqueado · Pedido de endereço bloqueado | O painel bloqueou um endereço, um administrador mudou o prazo ou liberou na aba Bloqueios, e cada pedido recusado de um endereço bloqueado |
 | Usuário dispensado do TLS · Usuário volta a exigir TLS | Alteração do TLS de um usuário |
 | Arquivo baixado · Download interrompido | Download pela aba Arquivos ou pela tela Meus arquivos, completo ou cortado antes do fim |
 | Pasta criada · Arquivo ou pasta renomeado · Arquivo ou pasta apagado | Alteração pela aba Arquivos, com o caminho; o apagado aparece também quando a pasta sai junto com o usuário |

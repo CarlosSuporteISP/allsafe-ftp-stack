@@ -9,6 +9,7 @@ Toda função recebe (pedido, sessao, consulta, formulario, token); `pedido` é 
 import aba_administradores
 import aba_arquivos
 import aba_atividade
+import aba_bloqueios
 import aba_meus_arquivos
 import aba_seguranca
 import aba_servidor
@@ -49,6 +50,10 @@ ROTAS = {
     ('POST', '/administradores/remover'): aba_administradores.remover,
     ('GET', '/seguranca'): aba_seguranca.seguranca,
     ('GET', '/servidor'): aba_servidor.servidor,
+    ('GET', '/bloqueios'): aba_bloqueios.lista,
+    ('GET', '/bloqueios/endereco'): aba_bloqueios.tela_endereco,
+    ('POST', '/bloqueios/prazo'): aba_bloqueios.mudar_prazo,
+    ('POST', '/bloqueios/liberar'): aba_bloqueios.liberar,
     ('GET', '/atividade'): aba_atividade.atividade,
     ('POST', '/sair'): entrada.sair,
 }

@@ -17,6 +17,14 @@
 #                     feita durante o bloqueio e o nome que não está no cadastro;
 #   entrada certa:    zera a contagem daquele endereço para aquele usuário.
 #
+# Bloqueio por endereço: o vigia também conta os erros de usuário e senha de cada endereço, com qualquer nome.
+# O endereço que passa de BLOQUEIO_ENDERECO_ERROS dentro de BLOQUEIO_ENDERECO_HORAS ganha o arquivo
+# /auth/enderecos/<endereco>, que o porteiro e o painel aplicam por BLOQUEIO_ENDERECO_DIAS: ele não entra mais
+# no FTP nem no painel, com conta nenhuma. Não contam a rede interna da stack, a recusa do porteiro por falta
+# de TLS e a tentativa feita durante um bloqueio; entrada certa não zera esta contagem. O endereço de saída do
+# container nunca é bloqueado: por ele chegam os clientes do próprio host e, onde o Docker não preserva a
+# origem da conexão, todos os clientes.
+#
 # Só módulos do perl-base, que já vem na imagem. O laço não espera por nada além do soquete: se ele parar
 # de ler, o Pure-FTPd trava ao registrar. Se o vigia sair, o entrypoint encerra o container.
 use strict;
@@ -27,6 +35,7 @@ use Time::HiRes ();
 
 my $SOQUETE   = '/dev/log';
 my $BLOQUEIOS = '/auth/bloqueios';
+my $ENDERECOS = '/auth/enderecos';
 my $RECUSAS   = '/run/allsafe/recusa';
 my $CADASTRO  = '/auth/pureftpd.passwd';
 my $LIMITES   = '/auth/limites.lista';
@@ -43,8 +52,11 @@ my $ENTRADA   = "$DADOS/.entrada";
 require '/usr/local/lib/allsafe/entrada.pl';
 my $NOME      = qr/[a-z_][a-z0-9_-]{0,31}/;
 my $ENDERECO  = qr/[0-9a-fA-F.:]{2,45}/;
-my $CHAVES_MAX    = 10000;   # contagens guardadas na memória
-my $BLOQUEIOS_MAX = 4096;    # arquivos de bloqueio
+# Endereço que pode ser bloqueado: IPv4 escrito de um jeito só, para servir de nome de arquivo.
+my $IPV4      = qr/(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/;
+my $CHAVES_MAX    = 10000;   # contagens guardadas na memória, de usuário e endereço e só de endereço
+my $BLOQUEIOS_MAX = 4096;    # arquivos de bloqueio de usuário
+my $ENDERECOS_MAX = 10000;   # arquivos de bloqueio de endereço
 my $RECUSA_VALE   = 30;      # segundos em que a marca de recusa do porteiro ainda explica uma falha
 my $REDE_CADA     = 5;       # segundos entre duas leituras dos contadores de rede e dos recursos do container
 my $RECURSOS_VALE = 60;      # segundos: container parado publica os recursos uma vez nesse tempo
@@ -58,6 +70,9 @@ sub inteiro {
 }
 my $PADRAO_TENTATIVAS = inteiro($ENV{FTP_BLOQUEIO_TENTATIVAS}, 0, 100, 5);
 my $PADRAO_MINUTOS    = inteiro($ENV{FTP_BLOQUEIO_MINUTOS}, 1, 1440, 15);
+my $ENDERECO_ERROS    = inteiro($ENV{BLOQUEIO_ENDERECO_ERROS}, 0, 100, 5);
+my $ENDERECO_HORAS    = inteiro($ENV{BLOQUEIO_ENDERECO_HORAS}, 1, 720, 24);
+my $ENDERECO_DIAS     = inteiro($ENV{BLOQUEIO_ENDERECO_DIAS}, 1, 3650, 120);
 
 # Rede interna da stack: as redes ligadas direto ao container, fora o endereço de saída (o gateway), que é
 # por onde chegam os clientes do próprio host. Lida uma vez de /proc/net/route, sem consulta de nomes.
@@ -152,6 +167,58 @@ sub bloquear {
     registrar("entrada bloqueada: usuario=$nome origem=$ip senhas_erradas=$erradas minutos=$minutos");
 }
 
+# Bloqueio de endereço: /auth/enderecos/<endereço>, com <vale até> <desde> <erros> <quem bloqueou>.
+sub endereco_bloqueado {
+    my ($ip) = @_;
+    return 0 unless $ip =~ /^$IPV4$/;
+    open(my $arq, '<', "$ENDERECOS/$ip") or return 0;
+    my $linha = <$arq> // '';
+    close $arq;
+    return $linha =~ /^(\d{1,12}) / && $1 > time ? 1 : 0;
+}
+# Endereço que o vigia nunca bloqueia: o que não é IPv4 e o de saída do container.
+sub poupado {
+    my ($ip) = @_;
+    return 1 unless $ip =~ /^$IPV4$/;
+    my @parte = split /\./, $ip;
+    return defined $saida && (($parte[0] << 24) | ($parte[1] << 16) | ($parte[2] << 8) | $parte[3]) == $saida ? 1 : 0;
+}
+sub bloquear_endereco {
+    my ($ip, $erros) = @_;
+    my $agora = time;
+    my $falha = sub { registrar("$_[0]: bloqueio do endereço origem=$ip não gravado"); return 0; };
+    opendir(my $pasta, $ENDERECOS) or return $falha->("FALHA: $ENDERECOS não abre");
+    my $quantos = grep { !/^\./ } readdir $pasta;
+    closedir $pasta;
+    return $falha->("AVISO: $quantos endereços bloqueados, o teto") if $quantos >= $ENDERECOS_MAX;
+    my $novo = "$ENDERECOS/.novo.$$";
+    open(my $arq, '>', $novo) or return $falha->('FALHA');
+    printf $arq "%d %d %d ftp\n", $agora + $ENDERECO_DIAS * 86400, $agora, $erros;
+    close $arq;
+    rename($novo, "$ENDERECOS/$ip") or return $falha->('FALHA');
+    registrar("endereço bloqueado: origem=$ip erros=$erros dias=$ENDERECO_DIAS");
+    return 1;
+}
+my %erros;   # endereço ➜ instantes dos erros de usuário e senha ainda dentro da janela
+# Conta um erro do endereço e, quando ele passa do limite, bloqueia. Devolve 1 se bloqueou agora.
+sub erro_do_endereco {
+    my ($ip) = @_;
+    return 0 if $ENDERECO_ERROS == 0 || poupado($ip);
+    my $agora = time;
+    if (!$erros{$ip} && keys(%erros) >= $CHAVES_MAX) {
+        registrar("AVISO: $CHAVES_MAX endereços com erro na memória, o teto: as contagens recomeçam");
+        %erros = ();
+    }
+    my @dentro = grep { $agora - $_ < $ENDERECO_HORAS * 3600 } @{ $erros{$ip} // [] };
+    push @dentro, $agora;
+    if (@dentro <= $ENDERECO_ERROS) {
+        $erros{$ip} = \@dentro;
+        return 0;
+    }
+    delete $erros{$ip};
+    return bloquear_endereco($ip, scalar(@dentro));
+}
+
 # Marca que o porteiro deixa quando é ele quem recusa por falta de TLS: essa falha não é senha errada.
 sub recusa_do_porteiro {
     my ($nome, $ip) = @_;
@@ -168,10 +235,17 @@ sub recusa_do_porteiro {
 my %falhas;   # "usuario@endereco" ➜ instantes das senhas erradas ainda dentro da janela
 sub senha_errada {
     my ($ip, $nome) = @_;
-    return registrar("entrada recusada: nome fora da regra, origem=$ip") unless $nome =~ /^$NOME$/;
+    return registrar("entrada recusada pelo bloqueio do endereço: origem=$ip") if endereco_bloqueado($ip);
+    unless ($nome =~ /^$NOME$/) {
+        registrar("entrada recusada: nome fora da regra, origem=$ip");
+        erro_do_endereco($ip) unless interno($ip);
+        return;
+    }
     return if recusa_do_porteiro($nome, $ip);
     return registrar("entrada recusada: usuario=$nome origem=$ip (rede interna da stack: não conta para o bloqueio)") if interno($ip);
     return registrar("entrada recusada pelo bloqueio: usuario=$nome origem=$ip") if bloqueado($nome, $ip);
+    # O erro conta para o endereço com qualquer nome, esteja ele no cadastro ou não.
+    return if erro_do_endereco($ip);
     atualizar();
     return registrar("entrada recusada: usuario=$nome origem=$ip (não está no cadastro)") unless $existe{$nome};
     my $limiar  = $proprio{$nome}{tentativas} // $PADRAO_TENTATIVAS;
@@ -327,25 +401,32 @@ sub tratar {
     registrar('pure-ftpd: ' . substr($texto, 0, 200) . " origem=$ip");
 }
 
+# Tira de uma pasta de bloqueios os que venceram e o arquivo de passagem que sobrou de uma gravação.
+sub tirar_vencidos {
+    my ($onde, $regra) = @_;
+    my $agora = time;
+    opendir(my $pasta, $onde) or return;
+    for my $item (readdir $pasta) {
+        next unless $item =~ /^$regra$/ || $item =~ /^\.novo\.\d+$/;
+        my $caminho = "$onde/$item";
+        if ($item =~ /^\./) {
+            my @s = stat($caminho);
+            unlink $caminho if @s && $agora - $s[9] > 60;
+            next;
+        }
+        open(my $arq, '<', $caminho) or next;
+        my $texto = <$arq> // '';
+        close $arq;
+        unlink $caminho unless $texto =~ /^(\d{1,12}) / && $1 > $agora;
+    }
+    closedir $pasta;
+}
+
 # De minuto em minuto: bloqueio vencido, marca de recusa velha e contagem parada saem.
 sub limpar {
     my $agora = time;
-    if (opendir(my $pasta, $BLOQUEIOS)) {
-        for my $item (readdir $pasta) {
-            next unless $item =~ /^$NOME\@$ENDERECO$/ || $item =~ /^\.novo\.\d+$/;
-            my $caminho = "$BLOQUEIOS/$item";
-            if ($item =~ /^\./) {
-                my @s = stat($caminho);
-                unlink $caminho if @s && $agora - $s[9] > 60;
-                next;
-            }
-            open(my $arq, '<', $caminho) or next;
-            my $texto = <$arq> // '';
-            close $arq;
-            unlink $caminho unless $texto =~ /^(\d{1,12}) / && $1 > $agora;
-        }
-        closedir $pasta;
-    }
+    tirar_vencidos($BLOQUEIOS, qr/$NOME\@$ENDERECO/);
+    tirar_vencidos($ENDERECOS, $IPV4);
     if (opendir(my $pasta, $RECUSAS)) {
         for my $item (readdir $pasta) {
             next if $item =~ /^\.\.?$/;
@@ -357,6 +438,10 @@ sub limpar {
     for my $chave (keys %falhas) {
         my @dentro = grep { $agora - $_ < 1440 * 60 } @{ $falhas{$chave} };
         if (@dentro) { $falhas{$chave} = \@dentro; } else { delete $falhas{$chave}; }
+    }
+    for my $ip (keys %erros) {
+        my @dentro = grep { $agora - $_ < $ENDERECO_HORAS * 3600 } @{ $erros{$ip} };
+        if (@dentro) { $erros{$ip} = \@dentro; } else { delete $erros{$ip}; }
     }
 }
 
@@ -453,6 +538,9 @@ registrar('pronto: ' . ($PADRAO_TENTATIVAS
     ? "$PADRAO_TENTATIVAS senhas erradas do mesmo endereço bloqueiam o usuário para ele por $PADRAO_MINUTOS min"
     : 'bloqueio por tentativa desligado na stack (FTP_BLOQUEIO_TENTATIVAS=0); vale o limite de cada usuário')
     . '; limite próprio do usuário em Editar, na aba Usuários do painel');
+registrar('pronto: ' . ($ENDERECO_ERROS
+    ? "endereço com mais de $ENDERECO_ERROS erros de usuário e senha em $ENDERECO_HORAS h fica bloqueado por $ENDERECO_DIAS dias, no FTP e no painel"
+    : 'bloqueio por endereço desligado (BLOQUEIO_ENDERECO_ERROS=0)'));
 my $proxima = time + 60;
 my $proxima_rede = time;
 while (1) {

@@ -50,6 +50,12 @@ SEGURANCA_CONTATO_EMAIL="${SEGURANCA_CONTATO_EMAIL:-}"
   || die "FTP_BLOQUEIO_TENTATIVAS deve ficar entre 0 e 100 (0 desliga o bloqueio por tentativa)"
 [[ "${FTP_BLOQUEIO_MINUTOS:-15}" =~ ^[1-9][0-9]{0,3}$ ]] && (( ${FTP_BLOQUEIO_MINUTOS:-15} <= 1440 )) \
   || die "FTP_BLOQUEIO_MINUTOS deve ficar entre 1 e 1440"
+[[ "${BLOQUEIO_ENDERECO_ERROS:-5}" =~ ^(0|[1-9][0-9]{0,2})$ ]] && (( ${BLOQUEIO_ENDERECO_ERROS:-5} <= 100 )) \
+  || die "BLOQUEIO_ENDERECO_ERROS deve ficar entre 0 e 100 (0 desliga o bloqueio por endereço)"
+[[ "${BLOQUEIO_ENDERECO_HORAS:-24}" =~ ^[1-9][0-9]{0,2}$ ]] && (( ${BLOQUEIO_ENDERECO_HORAS:-24} <= 720 )) \
+  || die "BLOQUEIO_ENDERECO_HORAS deve ficar entre 1 e 720"
+[[ "${BLOQUEIO_ENDERECO_DIAS:-120}" =~ ^[1-9][0-9]{0,3}$ ]] && (( ${BLOQUEIO_ENDERECO_DIAS:-120} <= 3650 )) \
+  || die "BLOQUEIO_ENDERECO_DIAS deve ficar entre 1 e 3650"
 cn_ip=false
 if [[ "$PAINEL_CERT_CN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   cn_ip=true

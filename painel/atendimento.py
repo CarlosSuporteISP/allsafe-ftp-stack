@@ -15,6 +15,7 @@ import conta_ftp
 import entrada
 from auditoria import auditar, limpo
 from config import BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, GID_NGINX, TEMPO_CONEXAO, VALIDADE_CONTATO, privado
+from enderecos import bloqueado as endereco_bloqueado
 from pagina import e, pagina
 from rotas import ROTAS, ROTAS_USUARIO
 from sessao import buscar_sessao, encerrar_sessao
@@ -254,6 +255,11 @@ class Painel(http.server.BaseHTTPRequestHandler):
                 self.ip = str(ipaddress.ip_address(informados[0].strip())) if len(informados) == 1 else self.ip
             except ValueError:
                 pass
+        # Endereço bloqueado por errar usuário e senha demais, no FTP ou aqui: nenhum pedido dele é atendido, nem
+        # com sessão aberta. Quem libera é outro administrador, na aba Bloqueios, ou o manage-user.sh no servidor.
+        if endereco_bloqueado(self.ip):
+            auditar(self.ip, 'recusa_endereco')
+            return self.enviar(403, 'endereço bloqueado por excesso de erros de usuário e senha\n', 'text/plain; charset=utf-8')
         if not self.host_valido():
             auditar(self.ip, 'recusa_host', f'host={limpo(self.headers.get("Host", ""))}')
             return self.enviar(400, 'endereço não aceito\n', 'text/plain; charset=utf-8')
