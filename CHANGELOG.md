@@ -62,7 +62,7 @@ O painel foi redesenhado: menu na lateral, gráficos na Visão geral, ícones de
 - **Fonte do sistema mantida**: nenhuma fonte é baixada.
 - **Repositório oficial na documentação**: a instalação, a política de segurança e a seção Versão apontam para `github.com/allsafe-inf/allsafe-ftp-stack`, onde as versões saem primeiro e onde issues e pull requests são recebidos; a cópia na conta pessoal é espelho.
 - **Documentação com os nomes das telas novas**: abas citadas sem emoji e a coluna **Pasta** da aba Usuários com o nome que a tela mostra.
-- **Fotos da aplicação refeitas**: as 45 capturas mostram as telas novas, e o guia de [fotos](doc/aplicacao/README.md) descreve a tela de entrada, a Atividade recente, a legenda da aba Usuários e a linha do proxy na aba Segurança.
+- **Fotos da aplicação refeitas**: as 58 capturas mostram as telas novas, e o guia de [fotos](doc/aplicacao/README.md) descreve a tela de entrada, o menu lateral, os perfis, os administradores na aba Usuários, a tela de cada perfil do usuário do FTP, as abas Servidor e Bloqueios e o painel em inglês.
 - **Caso de teste funcional 28**: a conferência do menu do usuário do FTP conta só os links, e não o endereço interno do ícone.
 - **Casos de teste de segurança 45, 93, 94 e 96**: passam a conferir que a tela de entrada não diz como a instalação foi publicada e que o sinal do menu aparece só com a instalação publicada e o aviso ligado.
 
