@@ -1,6 +1,6 @@
 # 🚨 Solução de problemas — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
+↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -141,7 +141,7 @@ Enquanto houver algum usuário dispensado, o mesmo teste muda de resposta: o ser
 | Sintoma | Causa | Como verificar | Correção |
 |---|---|---|---|
 | `553 Could not create file` | Diretório do usuário sem dono `ftpdata` (uid 10000) | `docker compose exec ftp ls -ld /data/<usuario>` | `docker compose exec ftp chown -R 10000:10000 /data/<usuario>` |
-| Arquivos entram com permissão inesperada | O `umask` do `pure-ftpd` é `133:022` (arquivos sem execução e sem escrita para grupo e outros) | `docker compose exec ftp ls -l /data/<usuario>` | Comportamento esperado; ajuste `-U` no [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) se precisar |
+| Arquivos entram com permissão inesperada | O `umask` do `pure-ftpd` é `133:022` (arquivos sem execução e sem escrita para grupo e outros) | `docker compose exec ftp ls -l /data/<usuario>` | Comportamento esperado; ajuste `-U` no [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh) se precisar |
 | Cliente não consegue `chmod` | `-R` desabilita o `SITE CHMOD` | Mensagem de recusa no cliente | Intencional, por segurança. Remova `-R` do entrypoint só se for realmente necessário |
 | `ls` não mostra todos os arquivos | Limite `-L 10000:8` (10000 arquivos, profundidade 8) | Conte os arquivos da pasta | Reduza o número de arquivos por diretório ou ajuste `-L` |
 | O envio termina sem erro, mas a lista do cliente vem vazia e ele não acha o arquivo que acabou de enviar | O usuário tem o [perfil](painel.md#perfis) Só envio: ele envia e não vê a pasta dos backups. O arquivo está na pasta do usuário | `./manage-user.sh perfil <usuario>`; o arquivo aparece na aba Arquivos do painel e a linha `vigia: envio:` do registro traz o caminho final | Comportamento esperado. Cliente que confere o envio pela lista precisa do perfil Envio |
@@ -174,7 +174,7 @@ Enquanto houver algum usuário dispensado, o mesmo teste muda de resposta: o ser
 | `pedido não aceito` (`400`) ao abrir com `http://` | A porta do painel só fala HTTPS | O endereço digitado | Use `https://` |
 | `pedido não aceito` (`413` ou outro `4xx`), ou a página não carrega ao abrir uma pasta de caminho muito longo | Pedido maior que 16 KiB, endereço ou cabeçalho maior que 5 KiB, ou pedido malformado, recusado pelo nginx. Em HTTP/2, o endereço grande demais encerra a conexão, e o navegador mostra erro de protocolo no lugar da mensagem | `docker compose logs --tail 20 nginx` | Repita pelo navegador, direto no endereço do painel |
 | `painel indisponível; tente de novo em instantes` (`502`) | O nginx está no ar e o painel está parado ou reiniciando | `docker compose ps painel`; `docker compose logs --tail 20 painel` | Aguarde alguns segundos; se não voltar, `./deploy.sh` |
-| `pedidos demais deste endereço; aguarde alguns segundos` (`429`) | Mais de 20 pedidos por segundo do mesmo endereço (rajada de 40) ou mais de 16 conexões, que em HTTP/2 são 16 pedidos abertos ao mesmo tempo: script consultando o painel, ou várias pessoas saindo pelo mesmo endereço | `docker compose logs --tail 20 nginx` | Aguarde alguns segundos. O limite é fixo em [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo) |
+| `pedidos demais deste endereço; aguarde alguns segundos` (`429`) | Mais de 20 pedidos por segundo do mesmo endereço (rajada de 40) ou mais de 16 conexões, que em HTTP/2 são 16 pedidos abertos ao mesmo tempo: script consultando o painel, ou várias pessoas saindo pelo mesmo endereço | `docker compose logs --tail 20 nginx` | Aguarde alguns segundos. O limite é fixo em [`nginx/nginx.conf.modelo`](../../nginx/nginx.conf.modelo) |
 | Aviso de certificado no navegador | O certificado inicial é autoassinado | A impressão digital mostrada na aba Segurança | Confira a impressão digital e aceite, ou instale um certificado próprio: [Painel web](painel.md#certificado) |
 | `cliente fora das redes permitidas` (`403`) | O endereço do cliente não está em `PAINEL_REDES_PERMITIDAS`. A recusa é do nginx e fica no log dele, com o endereço visto | `grep '^PAINEL_REDES_PERMITIDAS=' .env`; `docker compose logs --tail 20 nginx` | Inclua a rede **privada** de quem administra e rode o `deploy.sh`. Para abrir pelo próprio servidor, mantenha a sub-rede da stack (`FTP_SUBNET`) na lista |
 | `endereço não aceito` (`400`) | O painel foi aberto por um nome que ele não conhece, ou por IP público sem `REDE_PERMITIR_IP_PUBLICO=sim` | O endereço digitado | Abra pelo IP privado, ou cadastre o nome interno em `PAINEL_CERT_CN` e rode o `deploy.sh` |

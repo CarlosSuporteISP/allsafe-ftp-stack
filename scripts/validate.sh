@@ -127,7 +127,7 @@ print(f'idioma OK: {len(catalogo)} textos do painel com tradução em inglês, {
 PY
 fi
 # Toda variável do .env.example tem comentário na linha de cima e está explicada no guia de configuração.
-awk -v guia=doc/configuracao.md '
+awk -v guia=doc/pt-BR/configuracao.md '
   BEGIN { while ((getline linha < guia) > 0) texto = texto linha "\n" }
   /^[A-Z_]+=/ {
     nome = $0; sub(/=.*/, "", nome); total++

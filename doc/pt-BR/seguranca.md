@@ -1,6 +1,6 @@
 # 🔐 Segurança — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
+↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -108,7 +108,7 @@ A opção existe para o servidor que só tem endereço público, como uma VPS, e
 <details>
 <summary>Detalhe técnico — onde a opção é conferida</summary>
 
-- A variável chega aos três containers pelo [`compose.yaml`](../compose.yaml) e é lida pelas mesmas funções de [`scripts/rede-privada.sh`](../scripts/rede-privada.sh) no [`deploy.sh`](../deploy.sh) e nos três entrypoints: `conferir_opcao_ip_publico`, `exigir_ip`, `exigir_rede` e `aviso_ip_publico`. O painel confere de novo em [`painel/config.py`](../painel/config.py).
+- A variável chega aos três containers pelo [`compose.yaml`](../../compose.yaml) e é lida pelas mesmas funções de [`scripts/rede-privada.sh`](../../scripts/rede-privada.sh) no [`deploy.sh`](../../deploy.sh) e nos três entrypoints: `conferir_opcao_ip_publico`, `exigir_ip`, `exigir_rede` e `aviso_ip_publico`. O painel confere de novo em [`painel/config.py`](../../painel/config.py).
 - Valor fora de `nao` e de `sim` para tudo com `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'`: nenhum valor é tratado como `sim` por aproximação.
 - Com a opção ligada, o painel aceita ser aberto por qualquer endereço IPv4 digitado no lugar do nome; por nome, continua valendo só `localhost` e o `PAINEL_CERT_CN`.
 - O limite de tentativas de senha, a sessão curta e os limites de pedidos do nginx continuam valendo, mas não substituem o firewall: reduzem a velocidade do ataque, não a exposição.
@@ -207,9 +207,9 @@ Túnel: aponte o serviço do túnel para `https://127.0.0.1:8443`, com o nome do
 
 Onde a opção é conferida:
 
-- A variável chega aos containers do painel e do nginx pelo [`compose.yaml`](../compose.yaml). A função `exigir_proxies`, de [`scripts/rede-privada.sh`](../scripts/rede-privada.sh), é chamada pelo [`deploy.sh`](../deploy.sh) e pelos dois entrypoints; o painel confere de novo em [`painel/config.py`](../painel/config.py).
-- No [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo), a lista vira um bloco `geo`, e o endereço de quem acessa (`$cliente`) é o último do `X-Forwarded-For` só quando a conexão vem da lista. O módulo `realip` fica de fora de propósito: com ele, o `allow` e o `deny` passariam a valer sobre o endereço informado, e não sobre quem abriu a conexão.
-- O nginx manda ao painel o endereço da conexão (`X-Real-IP`) e o de quem acessa (`X-Cliente-IP`), sempre regravados por ele. O painel só usa o segundo quando o primeiro está na lista ([`painel/atendimento.py`](../painel/atendimento.py)); os dois escritos pelo cliente não chegam ao painel.
+- A variável chega aos containers do painel e do nginx pelo [`compose.yaml`](../../compose.yaml). A função `exigir_proxies`, de [`scripts/rede-privada.sh`](../../scripts/rede-privada.sh), é chamada pelo [`deploy.sh`](../../deploy.sh) e pelos dois entrypoints; o painel confere de novo em [`painel/config.py`](../../painel/config.py).
+- No [`nginx/nginx.conf.modelo`](../../nginx/nginx.conf.modelo), a lista vira um bloco `geo`, e o endereço de quem acessa (`$cliente`) é o último do `X-Forwarded-For` só quando a conexão vem da lista. O módulo `realip` fica de fora de propósito: com ele, o `allow` e o `deny` passariam a valer sobre o endereço informado, e não sobre quem abriu a conexão.
+- O nginx manda ao painel o endereço da conexão (`X-Real-IP`) e o de quem acessa (`X-Cliente-IP`), sempre regravados por ele. O painel só usa o segundo quando o primeiro está na lista ([`painel/atendimento.py`](../../painel/atendimento.py)); os dois escritos pelo cliente não chegam ao painel.
 - O endereço informado pode ser IPv4 ou IPv6. Os endereços da lista são IPv4.
 - As recusas, o alerta e o endereço forjado são conferidos pela [bateria de testes](scripts.md#testar).
 
@@ -281,7 +281,7 @@ O aviso informa, não bloqueia: a decisão é de quem opera o servidor. O painel
 
 O certificado do FTP é gerado em qualquer modo, e as demais camadas continuam valendo: bind em IP privado, usuários virtuais, `chroot`, limites de sessão e container endurecido. O que se perde é o sigilo e a integridade do que trafega.
 
-Um valor fora de `0` a `3` é recusado duas vezes: pelo [`deploy.sh`](../deploy.sh), antes de qualquer alteração, e pelo [`ftp/entrypoint.sh`](../ftp/entrypoint.sh), com `FALHA: FTP_TLS_MODE deve ser 0, 1, 2 ou 3`.
+Um valor fora de `0` a `3` é recusado duas vezes: pelo [`deploy.sh`](../../deploy.sh), antes de qualquer alteração, e pelo [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh), com `FALHA: FTP_TLS_MODE deve ser 0, 1, 2 ou 3`.
 
 </details>
 
@@ -405,14 +405,14 @@ flowchart LR
 <details>
 <summary>Detalhe técnico — como a dispensa é aplicada</summary>
 
-- **Sempre no ar:** o [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) sobe o `pure-authd -s /run/pure-authd.sock -r /usr/local/sbin/allsafe-ftp-porteiro` e o `pure-ftpd` com `-l extauth:/run/pure-authd.sock -l puredb:/auth/pureftpd.pdb`, com ou sem a dispensa, porque o mesmo porteiro aplica o [bloqueio por tentativa](#bloqueio-por-tentativa). Com a opção valendo, a marca `/run/allsafe/tls-por-usuario` liga a regra do TLS no porteiro.
+- **Sempre no ar:** o [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh) sobe o `pure-authd -s /run/pure-authd.sock -r /usr/local/sbin/allsafe-ftp-porteiro` e o `pure-ftpd` com `-l extauth:/run/pure-authd.sock -l puredb:/auth/pureftpd.pdb`, com ou sem a dispensa, porque o mesmo porteiro aplica o [bloqueio por tentativa](#bloqueio-por-tentativa). Com a opção valendo, a marca `/run/allsafe/tls-por-usuario` liga a regra do TLS no porteiro.
 - **Dois modos de entrada, conforme a lista:** sem nenhum dispensado, o `pure-ftpd` sobe com `-Y 2` e recusa a sessão sem TLS ele mesmo, antes da senha. Com pelo menos um, sobe com `-Y 1`, que aceita sessão com e sem TLS, e quem decide é o porteiro. Um observador no entrypoint relê a lista a cada segundo; quando ela passa de vazia a preenchida, ou o contrário, só o processo do `pure-ftpd` que escuta a porta é encerrado e outro sobe com o modo novo. O container não reinicia, e cada sessão em andamento é um processo próprio, que continua até terminar.
 - **Custos da troca:** a porta fica fechada pelo instante entre um processo e o outro; o processo novo recomeça a contagem de sessões simultâneas (`FTP_MAX_CLIENTS` e `FTP_MAX_CLIENTS_PER_IP`), sem contar as que já estavam abertas; e a sessão sem TLS já aberta de quem voltou a ser obrigado segue até terminar.
-- **O porteiro não confere senha:** o [`ftp/porteiro.pl`](../ftp/porteiro.pl) responde `auth_ok:0` ("não é comigo") quando a sessão tem TLS ou quando o nome está na lista, e o `pure-ftpd` segue para o PureDB, que confere a senha como sempre. Nos outros casos responde `auth_ok:-1`, a recusa definitiva. A senha chega a ele em variável de ambiente e não é lida, gravada nem registrada.
+- **O porteiro não confere senha:** o [`ftp/porteiro.pl`](../../ftp/porteiro.pl) responde `auth_ok:0` ("não é comigo") quando a sessão tem TLS ou quando o nome está na lista, e o `pure-ftpd` segue para o PureDB, que confere a senha como sempre. Nos outros casos responde `auth_ok:-1`, a recusa definitiva. A senha chega a ele em variável de ambiente e não é lida, gravada nem registrada.
 - **A lista:** `/auth/sem-tls.lista` (`DATA_DIR/auth` no host), `0600`, do `root`, um nome por linha. Só o `allsafe-ftp-user` grava, com a mesma trava do cadastro de usuários e por troca de nome do arquivo, para o porteiro nunca ler a lista pela metade. O porteiro a lê a cada entrada, e o observador, a cada segundo: a mudança vale em instantes, sem reiniciar o container.
 - **Falha fechada:** sem o `pure-authd`, o `pure-ftpd` cairia direto no PureDB e aceitaria todos sem TLS. Por isso o entrypoint vigia os processos: se um sair, escreve `FALHA: o pure-authd saiu: o container encerra para ninguém entrar sem a conferência do porteiro` (ou `o vigia saiu`, `o pure-ftpd saiu`, `o observador da lista do TLS saiu`), encerra com código `1`, e o `restart: unless-stopped` sobe o container de novo, com todos. O healthcheck só responde saudável com o soquete do `pure-authd` aberto.
 - **A recusa por TLS não conta como senha errada:** o porteiro deixa uma marca em `/run/allsafe/recusa/`, e o vigia do bloqueio por tentativa ignora a falha que vem logo depois dela. Equipamento configurado sem TLS não bloqueia o próprio usuário.
-- **Quando a opção fica sem efeito:** com `FTP_TLS_MODE` diferente de `2` ou com `REDE_PERMITIR_IP_PUBLICO=sim`. A instalação sobe, ninguém é dispensado, e o [`deploy.sh`](../deploy.sh), o registro do container e o painel dizem o motivo. Só o valor fora de `nao` e de `sim` é recusado, pelo `deploy.sh` e pelos containers do FTP e do painel.
+- **Quando a opção fica sem efeito:** com `FTP_TLS_MODE` diferente de `2` ou com `REDE_PERMITIR_IP_PUBLICO=sim`. A instalação sobe, ninguém é dispensado, e o [`deploy.sh`](../../deploy.sh), o registro do container e o painel dizem o motivo. Só o valor fora de `nao` e de `sim` é recusado, pelo `deploy.sh` e pelos containers do FTP e do painel.
 - **Quem altera a lista:** só um administrador, pelo painel, com token CSRF e origem conferidos, ou quem tem acesso ao Docker do servidor, pelo `manage-user.sh`. Para o usuário do FTP que entra no painel, a tela responde `404`. Com a opção desligada ou sem efeito, a tela também responde `404`.
 - O painel confere a senha do usuário do FTP em TLS, pela rede interna da stack, com ou sem dispensa: ela não muda a [entrada dele no painel](painel.md#usuario-ftp).
 - As recusas, a troca do modo de entrada com sessões abertas, a queda do `pure-authd` e os casos sem efeito são conferidos pela [bateria de testes](scripts.md#testar).
@@ -565,17 +565,17 @@ flowchart LR
 <details>
 <summary>Detalhe técnico — como o bloqueio é aplicado</summary>
 
-- **Dois papéis:** o vigia conta e grava; o porteiro lê e recusa. O [`ftp/vigia.pl`](../ftp/vigia.pl), instalado como `/usr/local/sbin/allsafe-ftp-vigia`, escuta em `/dev/log` o que o `pure-ftpd` registra, porque o servidor só avisa da senha errada por ali. O [`ftp/porteiro.pl`](../ftp/porteiro.pl) é chamado pelo `pure-authd` a cada entrada, antes da conferência da senha. Nenhum dos dois recebe a senha para conferir: o aviso traz só o nome e o endereço, e o porteiro não lê a variável em que ela chega.
+- **Dois papéis:** o vigia conta e grava; o porteiro lê e recusa. O [`ftp/vigia.pl`](../../ftp/vigia.pl), instalado como `/usr/local/sbin/allsafe-ftp-vigia`, escuta em `/dev/log` o que o `pure-ftpd` registra, porque o servidor só avisa da senha errada por ali. O [`ftp/porteiro.pl`](../../ftp/porteiro.pl) é chamado pelo `pure-authd` a cada entrada, antes da conferência da senha. Nenhum dos dois recebe a senha para conferir: o aviso traz só o nome e o endereço, e o porteiro não lê a variável em que ela chega.
 - **O bloqueio é um arquivo:** `/auth/bloqueios/<usuario>@<endereco>` (`DATA_DIR/auth/bloqueios` no host), `0600`, do `root`, em pasta `0700`, com uma linha: até quando vale, desde quando e quantas senhas erradas, em segundos desde 1970. É a única memória do bloqueio: por isso ele atravessa o reinício, e apagar o arquivo desbloqueia na entrada seguinte. O vigia grava por troca de nome do arquivo, para o porteiro nunca ler pela metade.
 - **Arquivo inválido não bloqueia:** vale só o arquivo comum cuja primeira linha começa por um número de até 12 dígitos maior que a hora atual. Vencido, vazio, com texto ou link simbólico, não bloqueia, e o vigia o apaga na limpeza de minuto em minuto.
 - **Janela de contagem:** as senhas erradas se somam enquanto a mais antiga tiver menos que os minutos de bloqueio do usuário. A contagem fica na memória do vigia, até 10.000 pares de usuário e endereço; os bloqueios gravados vão até 4.096. Acima desses tetos o vigia registra `AVISO` e segue.
-- **Limite próprio:** `tentativas` e `minutos` ficam na linha do usuário em `/auth/limites.lista` (`0600`), gravados pelo `allsafe-ftp-user limites`, o mesmo comando do painel e do [`manage-user.sh`](../manage-user.sh). O vigia relê o cadastro e a lista quando o arquivo muda.
+- **Limite próprio:** `tentativas` e `minutos` ficam na linha do usuário em `/auth/limites.lista` (`0600`), gravados pelo `allsafe-ftp-user limites`, o mesmo comando do painel e do [`manage-user.sh`](../../manage-user.sh). O vigia relê o cadastro e a lista quando o arquivo muda.
 - **O que não conta:** a tentativa vinda da rede interna da stack, que é a conferência de senha feita pelo painel e tem o limite de tentativas dele; a recusa do porteiro por falta de TLS, que ele marca em `/run/allsafe/recusa/`; a tentativa feita durante o bloqueio; o nome que não está no cadastro e o nome fora da regra, que não viram arquivo nem contagem.
 - **Rede interna:** são as redes ligadas direto ao container, lidas de `/proc/net/route` na subida, menos o endereço de saída, por onde chegam os clientes do próprio servidor, e mais `127.0.0.0/8`.
 - **Falha fechada:** o entrypoint vigia o `pure-ftpd`, o `pure-authd` e o vigia. Se um sair, escreve `FALHA: o <processo> saiu: o container encerra para ninguém entrar sem a conferência do porteiro`, encerra com código `1`, e o `restart: unless-stopped` sobe o container de novo. O healthcheck só responde saudável com o soquete do `pure-authd` e o `/dev/log` abertos.
 - **Quem desbloqueia e quem altera o limite:** só um administrador, pelo painel (`POST /usuarios/desbloquear` e `POST /usuarios/limites`), com token CSRF e origem conferidos, ou quem tem acesso ao Docker do servidor, pelo `manage-user.sh`. Para o usuário do FTP que entra no painel, as duas telas respondem `404`. O desbloqueio fica na auditoria como `bloqueio_removido`, com o administrador, o usuário e a quantidade de endereços.
 - **Sem pacote novo:** o vigia usa só o `perl-base`, que já vem na imagem base, e o container continua com `read_only` e `cap_drop: ALL`.
-- O bloqueio, o desbloqueio, o vencimento, o reinício e as tentativas de burlar são conferidos pela [bateria de testes](scripts.md#testar), em [`tests/etapas/24-bloqueio.sh`](../tests/etapas/24-bloqueio.sh).
+- O bloqueio, o desbloqueio, o vencimento, o reinício e as tentativas de burlar são conferidos pela [bateria de testes](scripts.md#testar), em [`tests/etapas/24-bloqueio.sh`](../../tests/etapas/24-bloqueio.sh).
 
 </details>
 
@@ -737,9 +737,9 @@ flowchart LR
 <summary>Detalhe técnico — como o bloqueio por endereço é aplicado</summary>
 
 - **O bloqueio é um arquivo:** `/auth/enderecos/<endereco>` (`DATA_DIR/auth/enderecos` no host), `0600`, do `root`, em pasta `0700`, com uma linha: até quando vale, desde quando, quantos erros e quem bloqueou (`ftp`, `painel` ou `manual`). O prefixo fica em `/auth/prefixos/<rede>_<tamanho>`, com a mesma linha e o mesmo modo. É a única memória do bloqueio: por isso ele atravessa o reinício e vale nos dois serviços, e apagar o arquivo libera o endereço no pedido seguinte. A gravação é por troca de nome do arquivo, para ninguém ler pela metade.
-- **Quem conta:** no FTP, o [`ftp/vigia.pl`](../ftp/vigia.pl), a partir do que o `pure-ftpd` registra a cada falha de usuário e senha; no painel, o [`painel/enderecos.py`](../painel/enderecos.py), a cada entrada recusada depois de a senha ser conferida e a cada confirmação por senha recusada. Cada um guarda a contagem na própria memória, por endereço, só dos erros mais novos que as horas configuradas: até 10.000 endereços no vigia e 5.000 no painel. A entrada certa apaga a contagem daquele endereço no serviço em que ela aconteceu.
-- **Escrita única do endereço:** o nome do arquivo é o endereço escrito de um jeito só, o mesmo no FTP ([`ftp/endereco.pl`](../ftp/endereco.pl)) e no painel: IPv4 sem zero à esquerda; IPv6 em minúsculas, com a maior sequência de zeros comprimida; o IPv4 escrito dentro de um IPv6 (`::ffff:a.b.c.d`) vale como IPv4; endereço com zona (`%eth0`) é recusado. O prefixo é gravado com a rede já sem os bits depois do tamanho. Sem isso, o mesmo IPv6 escrito de dois jeitos escaparia do bloqueio.
-- **Quem aplica:** no FTP, o [`ftp/porteiro.pl`](../ftp/porteiro.pl), chamado pelo `pure-authd` antes da conferência da senha, e é a primeira das três regras dele; no painel, o atendimento ([`painel/atendimento.py`](../painel/atendimento.py)), antes de qualquer rota, inclusive a de saúde.
+- **Quem conta:** no FTP, o [`ftp/vigia.pl`](../../ftp/vigia.pl), a partir do que o `pure-ftpd` registra a cada falha de usuário e senha; no painel, o [`painel/enderecos.py`](../../painel/enderecos.py), a cada entrada recusada depois de a senha ser conferida e a cada confirmação por senha recusada. Cada um guarda a contagem na própria memória, por endereço, só dos erros mais novos que as horas configuradas: até 10.000 endereços no vigia e 5.000 no painel. A entrada certa apaga a contagem daquele endereço no serviço em que ela aconteceu.
+- **Escrita única do endereço:** o nome do arquivo é o endereço escrito de um jeito só, o mesmo no FTP ([`ftp/endereco.pl`](../../ftp/endereco.pl)) e no painel: IPv4 sem zero à esquerda; IPv6 em minúsculas, com a maior sequência de zeros comprimida; o IPv4 escrito dentro de um IPv6 (`::ffff:a.b.c.d`) vale como IPv4; endereço com zona (`%eth0`) é recusado. O prefixo é gravado com a rede já sem os bits depois do tamanho. Sem isso, o mesmo IPv6 escrito de dois jeitos escaparia do bloqueio.
+- **Quem aplica:** no FTP, o [`ftp/porteiro.pl`](../../ftp/porteiro.pl), chamado pelo `pure-authd` antes da conferência da senha, e é a primeira das três regras dele; no painel, o atendimento ([`painel/atendimento.py`](../../painel/atendimento.py)), antes de qualquer rota, inclusive a de saúde.
 - **Passa do limite:** bloqueia o erro seguinte ao limite. Com `5`, cinco erros não bloqueiam e o sexto bloqueia.
 - **Arquivo inválido não bloqueia:** vale só o arquivo comum, com nome de endereço ou de prefixo na escrita única, cuja primeira linha começa por um número de até 12 dígitos maior que a hora atual. Vencido, vazio, com texto ou link simbólico, não bloqueia; o vigia apaga os vencidos de minuto em minuto. `127.0.0.0/8`, `0.0.0.0/8` e `::/16`, que são do próprio servidor, nunca são lidos como bloqueados.
 - **Teto:** 10.000 endereços e 1.000 prefixos bloqueados. Acima disso, o vigia registra `AVISO` e o comando responde `Teto de 10000 enderecos bloqueados: libere algum antes` ou `Teto de 1000 prefixos bloqueados: libere algum antes`.
@@ -748,7 +748,7 @@ flowchart LR
 - **Bloqueio pelo painel:** `GET` e `POST /bloqueios/novo`, com os campos `alvo` e `dias`. Recusa com `400`, sem gravar nada, o texto que não é endereço nem prefixo, o prefixo fora da faixa, os dias fora de `1` a `3650`, o endereço do próprio servidor e o bloqueio que pegaria o endereço de quem está pedindo, as redes ligadas direto ao container ou um proxy confiável. No que já está bloqueado, só o prazo muda.
 - **Quem libera e quem muda o prazo:** só um administrador, pelo painel (`POST /bloqueios/novo`, `POST /bloqueios/liberar` e `POST /bloqueios/prazo`), com token CSRF e origem conferidos, ou quem tem acesso ao Docker do servidor, pelo `manage-user.sh`. Para o usuário do FTP que entra no painel, as telas dos bloqueios respondem `404`. Ficam na auditoria `endereco_bloqueado`, `endereco_bloqueado_manual`, `endereco_prazo`, `endereco_desbloqueado` e `recusa_endereco`.
 - **Desligado:** com `BLOQUEIO_ENDERECO_ERROS=0`, nada é bloqueado sozinho; o bloqueio feito pelo terminal continua valendo nos dois serviços.
-- O bloqueio no FTP com e sem TLS, em modo passivo e ativo, no painel, de um serviço para o outro, em IPv4, em IPv6 e por prefixo, a entrada certa que zera a contagem, a escrita única do endereço, a aba, o terminal, o que nunca é bloqueado e as recusas são conferidos pela [bateria de testes](scripts.md#testar), em [`tests/etapas/30-bloqueio-por-endereco.sh`](../tests/etapas/30-bloqueio-por-endereco.sh).
+- O bloqueio no FTP com e sem TLS, em modo passivo e ativo, no painel, de um serviço para o outro, em IPv4, em IPv6 e por prefixo, a entrada certa que zera a contagem, a escrita única do endereço, a aba, o terminal, o que nunca é bloqueado e as recusas são conferidos pela [bateria de testes](scripts.md#testar), em [`tests/etapas/30-bloqueio-por-endereco.sh`](../../tests/etapas/30-bloqueio-por-endereco.sh).
 
 </details>
 
@@ -783,7 +783,7 @@ Cada usuário do FTP tem um perfil, escolhido pelo administrador. Dê a cada con
 - **Partida:** com Envio, Só envio ou Leitura no cadastro, o entrypoint do `ftp` refaz os modos e entrega o que ficou sem entrega antes de aceitar sessão; se não conseguir, o container não sobe.
 - **Troca de perfil:** só um administrador, pelo painel (`POST /usuarios/perfil`), com token CSRF e origem conferidos, ou quem tem acesso ao Docker do servidor, pelo `manage-user.sh`. Fica na auditoria como `perfil_trocado`, e a sessão do usuário no painel é encerrada.
 - **Sem capacidade nova:** o container do `ftp` já tinha `CHOWN` e `FOWNER`; nenhum pacote entrou na imagem.
-- Os perfis, os limites e as tentativas de burlar são conferidos pela [bateria de testes](scripts.md#testar), em [`tests/etapas/29-perfis.sh`](../tests/etapas/29-perfis.sh).
+- Os perfis, os limites e as tentativas de burlar são conferidos pela [bateria de testes](scripts.md#testar), em [`tests/etapas/29-perfis.sh`](../../tests/etapas/29-perfis.sh).
 
 </details>
 
@@ -947,7 +947,7 @@ O passo a passo, na ordem em que é feito:
 | Faixa passiva (dados): `30000-30049` no `small`, até `31599` no `extended` | As mesmas origens da porta de controle |
 | `PAINEL_PORT` (painel, HTTPS, publicada pelo nginx) | Só as máquinas de quem administra a stack |
 
-Todo o resto fica interno aos containers. O painel não publica porta: quem atende na `PAINEL_PORT` é o nginx. Na `PAINEL_PORT`, o que responde sem usuário e senha é só a tela de entrada, o estilo, a logo e o ícone, o `/saude`, o `/robots.txt` e, quando configurado, o `/.well-known/security.txt`: [Contato de segurança e robôs de busca](#contato-de-seguranca). A gestão dos usuários é pelo [painel](painel.md) ou por linha de comando, com [`manage-user.sh`](../manage-user.sh).
+Todo o resto fica interno aos containers. O painel não publica porta: quem atende na `PAINEL_PORT` é o nginx. Na `PAINEL_PORT`, o que responde sem usuário e senha é só a tela de entrada, o estilo, a logo e o ícone, o `/saude`, o `/robots.txt` e, quando configurado, o `/.well-known/security.txt`: [Contato de segurança e robôs de busca](#contato-de-seguranca). A gestão dos usuários é pelo [painel](painel.md) ou por linha de comando, com [`manage-user.sh`](../../manage-user.sh).
 
 ---
 
@@ -1054,7 +1054,7 @@ Quatro perguntas que a bateria de segurança responde a cada versão, em instân
 | Dá para derrubar por exaustão? | Senhas erradas ao mesmo tempo até o limite de sessões do endereço, 300 pedidos em rajada, 300 conexões paradas, conexões que mandam o pedido pela metade, 60 conexões de FTP de uma vez, pedidos grandes e malformados | Os três containers continuam `healthy`, sem reinício. O nginx recusa o excesso com `429`, fecha a conexão parada em 15 segundos e devolve `413`, `414`, `400`, `431`, `405` ou `501` ao pedido fora da regra. O FTP aceita as sessões do limite por endereço e recusa as demais com `421`. Quem tem a senha certa continua entrando durante a rajada |
 | Dá para ler o cadastro das senhas sem passar pela entrada? | Os arquivos do cadastro, dos segredos, do `.env`, do Git e da chave do TLS pedidos pela web, sem sessão e com sessão de administrador; os mesmos arquivos pedidos por FTP por um usuário com a senha certa; a leitura pelos outros containers e por um usuário comum do host | Pela web, `303`, `404` ou `400`, e nenhuma tela mostra hash. Pelo FTP, `550`: o usuário não sai da pasta dele. O nginx não enxerga o cadastro, o painel não publica porta, e as pastas do cadastro são do `root`, fechadas para os outros usuários do host |
 
-**Resultado esperado:** `./tests/testar.sh` termina com `Bateria aprovada`, e o resultado da bateria de segurança traz os casos 69 a 80 aprovados, com o que foi medido em cada um. Os casos estão em [`tests/etapas/18-seguranca-ampliada.sh`](../tests/etapas/18-seguranca-ampliada.sh); os do bloqueio por tentativa, 85 e 86, em [`tests/etapas/24-bloqueio.sh`](../tests/etapas/24-bloqueio.sh).
+**Resultado esperado:** `./tests/testar.sh` termina com `Bateria aprovada`, e o resultado da bateria de segurança traz os casos 69 a 80 aprovados, com o que foi medido em cada um. Os casos estão em [`tests/etapas/18-seguranca-ampliada.sh`](../../tests/etapas/18-seguranca-ampliada.sh); os do bloqueio por tentativa, 85 e 86, em [`tests/etapas/24-bloqueio.sh`](../../tests/etapas/24-bloqueio.sh).
 
 <a name="custo-das-senhas"></a>
 
@@ -1079,7 +1079,7 @@ A senha já gravada não muda de custo sozinha: o custo do porte vale quando ela
 
 - **Conta:** `pure-pw useradd` e `pure-pw passwd` recebem `-C FTP_MAX_CLIENTS`. A memória do `argon2id` fica em `65536 / FTP_MAX_CLIENTS` KiB, e o número de passadas é escolhido pelo `pure-pw` a cada gravação, pelo tempo que o hash leva naquele momento: por isso ele varia de um usuário para outro. Na máquina de teste, a conferência ficou entre meio segundo e um segundo em todos os portes.
 - **Sem a opção**, o `pure-pw` supõe 8 sessões: 8192 KiB e cerca de 3 segundos de processador por conferência. Era assim até a `0.19.0`. Na máquina de teste, 7 senhas erradas ao mesmo tempo, de um só endereço, seguravam por cerca de 50 segundos a entrada de quem tinha a senha certa; com o custo do porte `small`, cerca de 8 segundos.
-- **Onde é aplicado:** no [`ftp/entrypoint.sh`](../ftp/entrypoint.sh), para o usuário inicial, e no [`ftp/usuario.sh`](../ftp/usuario.sh), para os usuários criados ou alterados pelo painel e pelo `manage-user.sh`. O serviço `painel` recebe o mesmo `FTP_MAX_CLIENTS` do serviço `ftp` e o repassa ao comando que grava a senha.
+- **Onde é aplicado:** no [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh), para o usuário inicial, e no [`ftp/usuario.sh`](../../ftp/usuario.sh), para os usuários criados ou alterados pelo painel e pelo `manage-user.sh`. O serviço `painel` recebe o mesmo `FTP_MAX_CLIENTS` do serviço `ftp` e o repassa ao comando que grava a senha.
 - **Aviso do painel:** a aba Segurança lê só o parâmetro de memória de cada linha do cadastro e compara com o do porte, `65536 / FTP_MAX_CLIENTS` KiB, com o mínimo de 8; o hash não sai do arquivo nem aparece na tela.
 
 </details>
@@ -1098,12 +1098,12 @@ Dois endereços do painel seguem convenções da web e respondem sem usuário e 
 
 | Endereço | O que entrega | Quem entrega | Norma |
 |---|---|---|---|
-| `/robots.txt` | `User-agent: *` e `Disallow: /`: nada do painel é para indexar | nginx, arquivo [`web/robots.txt`](../web/robots.txt) | RFC 9309 |
+| `/robots.txt` | `User-agent: *` e `Disallow: /`: nada do painel é para indexar | nginx, arquivo [`web/robots.txt`](../../web/robots.txt) | RFC 9309 |
 | `/.well-known/security.txt` | O e-mail de `SEGURANCA_CONTATO_EMAIL`, a validade e o idioma; `404` com a variável vazia | painel, a cada pedido | RFC 9116 e RFC 8615 |
 
 O `robots.txt` é um pedido, não uma barreira: quem protege o painel é a rede permitida, a senha e a sessão. Ele existe para o buscador que alcançar o endereço, em instalação com IP público, não guardar a tela de entrada; as telas saem também com `noindex, nofollow`.
 
-O `security.txt` diz para quem avisar de uma falha. Como preencher: [Configuração](configuracao.md#contato-de-seguranca). Para quem avisar, o que mandar e quais versões recebem correção: [Política de segurança](../SECURITY.md).
+O `security.txt` diz para quem avisar de uma falha. Como preencher: [Configuração](configuracao.md#contato-de-seguranca). Para quem avisar, o que mandar e quais versões recebem correção: [Política de segurança](../../SECURITY.md).
 
 > ⚠️ **Com `REDE_PERMITIR_IP_PUBLICO=sim`, preencha o contato.** Servidor na internet é varrido por pesquisador e por ferramenta automática; sem o arquivo, quem acha uma falha não tem para onde escrever. A aba Segurança do painel mostra o item em alerta enquanto a variável estiver vazia.
 
@@ -1180,7 +1180,7 @@ Cabeçalhos de segurança que não vêm de RFC, e sim das normas do navegador (W
 
 ## 🧱 Endurecimento do `compose.yaml`
 
-Os três containers sobem sem `privileged`, sem `docker.sock` e sem `network_mode: host`. O detalhe de cada linha do [`compose.yaml`](../compose.yaml) está abaixo.
+Os três containers sobem sem `privileged`, sem `docker.sock` e sem `network_mode: host`. O detalhe de cada linha do [`compose.yaml`](../../compose.yaml) está abaixo.
 
 <details>
 <summary>Detalhe técnico — cada diretiva e o motivo</summary>
@@ -1245,7 +1245,7 @@ O nginx é o único container que publica a porta do painel, e por isso é o mai
 |---|---|---|
 | `user` | `10001:10001` | O processo nunca é root: o entrypoint para com `FALHA: o nginx desta stack não roda como root` se for |
 | `cap_drop` | `ALL`, sem `cap_add` | Nenhuma capability. A porta interna é a `8443`, não privilegiada |
-| `read_only` e `tmpfs` | raiz imutável; `/run/nginx` e `/tmp/nginx` em memória | A configuração é gerada a cada subida em `/run/nginx`, a partir de [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo) |
+| `read_only` e `tmpfs` | raiz imutável; `/run/nginx` e `/tmp/nginx` em memória | A configuração é gerada a cada subida em `/run/nginx`, a partir de [`nginx/nginx.conf.modelo`](../../nginx/nginx.conf.modelo) |
 | Volume | `DATA_DIR/nginx` em `/nginx`, **somente leitura** | É tudo o que ele enxerga: o soquete do painel e a cópia do certificado |
 | Pasta de estado | `DATA_DIR/nginx/estado` em `/estado`, `0700`, do usuário dele | A única pasta em que ele grava: uma linha de números com os recursos do container, para a aba Servidor. O painel a lê sem seguir link e só aceita doze números |
 | Limites | `64M` de memória, `0.5` CPU, `32` processos | Um servidor web pequeno não precisa de mais |
@@ -1267,9 +1267,9 @@ O nginx registra só o que ele mesmo recusa, no formato `ip método caminho cód
 - Senhas do painel: só o hash `scrypt` de cada administrador, em `DATA_DIR/painel/administradores` (`0600`, do `root`). O hash da senha inicial, em `.secrets/painel-admin-inicial-senha-hash.txt`, é entregue **só** ao serviço `painel` como `/run/secrets/painel_admin_inicial_senha_hash` e serve para criar o primeiro administrador. A senha inicial em texto (`painel-admin-inicial-senha.txt`) fica no host, nunca é montada em container e deve ser apagada depois da troca.
 - Chave da cópia de segurança: `.secrets/backup-chave-privada.txt` abre e `.secrets/backup-chave-publica.txt` cifra, as duas `0600`. Não são montadas nos serviços: só os containers descartáveis da cópia e da restauração as usam. Quem lê a privada no servidor abre as cópias feitas com ela: para tirar isso do servidor, guarde-a no cofre e apague-a dele. Veja [Backup e restauração](backup.md#chave).
 - Chave do certificado do painel: gerada em `DATA_DIR/painel/tls` e copiada a cada subida para `DATA_DIR/nginx/tls`, que o nginx monta somente leitura (chave `0640`, grupo `10001`; pasta `0750`). Veja [Segredos](segredos.md).
-- [`.gitignore`](../.gitignore): `.env` e `.secrets/*.txt` (mantém só `.secrets/.gitkeep`, para a pasta existir no clone).
-- [`.dockerignore`](../.dockerignore): `.env`, `.env.example`, `.git`, `.gitignore`, `.secrets`, `doc`, `profiles`, `README.md`, `deploy.sh` e `manage-user.sh`. `*.pdf` também fica fora. Chegam ao build o `Dockerfile`, o `compose.yaml`, o `CHANGELOG.md`, o `VERSION` e as pastas `scripts/`, `painel/` e `nginx/`, e o `Dockerfile` copia só os scripts, o painel, a configuração do nginx e o `VERSION`; nada de segredo entra na imagem.
-- O [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) recusa senha em variável de ambiente e faz `unset` da variável interna da senha antes do `exec`. O [`painel/entrypoint.sh`](../painel/entrypoint.sh) recusa `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`.
+- [`.gitignore`](../../.gitignore): `.env` e `.secrets/*.txt` (mantém só `.secrets/.gitkeep`, para a pasta existir no clone).
+- [`.dockerignore`](../../.dockerignore): `.env`, `.env.example`, `.git`, `.gitignore`, `.secrets`, `doc`, `profiles`, `README.md`, `README.pt-BR.md`, `deploy.sh` e `manage-user.sh`. `*.pdf` também fica fora. Chegam ao build o `Dockerfile`, o `compose.yaml`, o `CHANGELOG.md`, o `VERSION` e as pastas `scripts/`, `painel/` e `nginx/`, e o `Dockerfile` copia só os scripts, o painel, a configuração do nginx e o `VERSION`; nada de segredo entra na imagem.
+- O [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh) recusa senha em variável de ambiente e faz `unset` da variável interna da senha antes do `exec`. O [`painel/entrypoint.sh`](../../painel/entrypoint.sh) recusa `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`.
 
 ---
 

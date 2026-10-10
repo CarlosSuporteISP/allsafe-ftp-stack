@@ -4,7 +4,7 @@ Histórico de mudanças por versão. A versão segue o formato `MAJOR.MINOR.PATC
 
 Em 2026-10-10 as versões foram renumeradas: cada versão passou a levar no máximo duas correções, e a terceira virou a versão seguinte. O conteúdo de cada uma é o mesmo; a [tabela de correspondência](#renumeracao) mostra o número de antes e o de agora.
 
-↩ [README do projeto](README.md)
+↩ [README do projeto](README.pt-BR.md)
 
 ## [Não lançado]
 
@@ -12,12 +12,12 @@ O painel passa a receber arquivo, o bloqueio por endereço vale para IPv4 e IPv6
 
 ### Adicionado
 
-- **Envio de arquivo pelo painel**: na aba Arquivos, o administrador envia um arquivo para a pasta aberta; na tela Meus arquivos, o usuário do FTP envia para a pasta dele. O arquivo nasce como o que chega por FTP (do usuário `ftpdata`, modo `0644`), só ganha nome na pasta depois de chegar inteiro e nunca substitui o que existe: nome repetido responde `409`, e na conta de perfil Só envio o arquivo novo é guardado com a data e a hora no nome. O envio que cai no meio não deixa pedaço. O painel recebe até 4 arquivos por vez, um por usuário do FTP, na taxa de envio da conta. Veja [Enviar arquivo pelo painel](doc/painel.md#enviar-arquivo).
+- **Envio de arquivo pelo painel**: na aba Arquivos, o administrador envia um arquivo para a pasta aberta; na tela Meus arquivos, o usuário do FTP envia para a pasta dele. O arquivo nasce como o que chega por FTP (do usuário `ftpdata`, modo `0644`), só ganha nome na pasta depois de chegar inteiro e nunca substitui o que existe: nome repetido responde `409`, e na conta de perfil Só envio o arquivo novo é guardado com a data e a hora no nome. O envio que cai no meio não deixa pedaço. O painel recebe até 4 arquivos por vez, um por usuário do FTP, na taxa de envio da conta. Veja [Enviar arquivo pelo painel](doc/pt-BR/painel.md#enviar-arquivo).
 - **Permissão de envio pelo painel, por usuário**: a caixa **Permitir que este usuário envie arquivo pelo painel**, em Usuários ➜ Editar, ou `./manage-user.sh limites <usuario> enviar=1`. Sem ela, o usuário só envia por FTP. Vale para os perfis Só envio, Envio e Completo, na hora e sem encerrar a sessão dele; o perfil Leitura não envia. O envio sem a permissão responde `403` e fica na auditoria (`recusa_envio`).
 - **`PAINEL_ENVIO_MAX_MB`** (`1024` por padrão, de 1 a 102400): o tamanho máximo de cada arquivo enviado pelo painel. O nginx recebe corpo desse tamanho só nas duas rotas de envio e repassa ao painel enquanto chega, sem arquivo temporário; nas demais rotas o limite continua em 16 KiB.
 - **Bloqueio por endereço em IPv6**: o vigia do FTP, o porteiro e o painel leem e escrevem o endereço de origem do mesmo jeito (`ftp/endereco.pl` e `painel/enderecos.py`), IPv4 ou IPv6, e o bloqueio feito em um vale no outro. O IPv6 que carrega um IPv4 vale como o IPv4.
 - **Bloqueio feito pelo administrador, de endereço e de prefixo**: na aba Bloqueios, **Bloquear endereço** recebe um endereço ou um prefixo, IPv4 ou IPv6, e o prazo em dias; pelo terminal, `./manage-user.sh endereco-bloquear <endereco ou prefixo> [dias]`. Prefixo só é bloqueado pelo administrador: a stack nunca bloqueia uma rede sozinha. O painel recusa o bloqueio que pegaria o endereço de quem está pedindo, a rede interna da stack, um proxy confiável ou o próprio servidor. Os prefixos ficam em `DATA_DIR/auth/prefixos`, até 1.000.
-- **Limpeza automática por usuário**: em Usuários ➜ Editar, cartão **Limpeza automática**, o administrador manda guardar só os últimos arquivos de cada pasta, só os dos últimos dias, ou as duas regras juntas, com a senha dele; pelo terminal, `./manage-user.sh retencao <usuario> [ultimos=N] [dias=N]`. O painel aplica a regra de tempos em tempos (`PAINEL_RETENCAO_MINUTOS`, `60` por padrão; `0` desliga), sem sair da pasta do usuário, sem seguir link simbólico e sem tocar em arquivo oculto. Nasce desligada, e trocar a pasta do usuário desliga a regra. Veja [Limpeza automática](doc/painel.md#limpeza).
+- **Limpeza automática por usuário**: em Usuários ➜ Editar, cartão **Limpeza automática**, o administrador manda guardar só os últimos arquivos de cada pasta, só os dos últimos dias, ou as duas regras juntas, com a senha dele; pelo terminal, `./manage-user.sh retencao <usuario> [ultimos=N] [dias=N]`. O painel aplica a regra de tempos em tempos (`PAINEL_RETENCAO_MINUTOS`, `60` por padrão; `0` desliga), sem sair da pasta do usuário, sem seguir link simbólico e sem tocar em arquivo oculto. Nasce desligada, e trocar a pasta do usuário desliga a regra. Veja [Limpeza automática](doc/pt-BR/painel.md#limpeza).
 - **Bandeiras no botão de idioma**: a do Brasil ao lado de **PT** e a dos Estados Unidos ao lado de **EN**, desenhadas na própria página, sem arquivo de imagem.
 - **Tela de entrada para uso geral**: a chamada passa a ser `Backups e arquivos, guardados em um lugar só`, e a cena mostra, além de OLT, rádio, roteador e switch, a câmera, a empresa e a pessoa enviando para o mesmo servidor.
 - **Casos de teste** funcionais 66 a 73 e de segurança 115 a 124: o bloqueio de endereço e de prefixo, IPv4 e IPv6, pela aba e pelo terminal, com estender, encurtar e desbloquear; a entrada certa zerando a contagem no FTP e no painel; o bloqueio novo recusado para o próprio endereço, a stack e o servidor; o envio pelo painel do administrador e do usuário do FTP, só com a permissão e dentro do perfil; o envio forjado, com nome fora da regra, malformado, para fora da pasta, acima do tamanho e além do limite de envios ao mesmo tempo; e a limpeza automática, definida só pelo administrador, mantendo os mais recentes, apagando o que passou do prazo, rodando sozinha e sem sair da pasta do usuário.
@@ -39,14 +39,14 @@ O painel foi redesenhado: menu na lateral, gráficos na Visão geral, ícones de
 
 - **Menu na lateral**: em tela de 1280 px de largura ou mais, as abas ficam à esquerda, em dois grupos (Operação e Sistema), com o nome e o papel de quem entrou e o botão Sair embaixo. Em tela mais estreita, o menu vira a faixa de cima, com as abas numa linha que rola para o lado. O usuário do FTP vê só a aba Meus arquivos.
 - **Gráficos na Visão geral**: arquivos recebidos por dia nos últimos 14 dias, o último envio de cada usuário e o espaço de cada pasta. São SVG montados pelo painel (`painel/graficos.py`), sem script e sem estilo dentro do HTML, e todo número do desenho está também escrito ao lado dele.
-- **Aba Servidor**, só para administrador, em duas partes. **Containers da stack**: um cartão para o servidor FTP, um para o painel e um para a frente web, cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, o histórico do processador e quantas vezes o limite o segurou ou faltou memória; no alto, a soma do alocado e do uso, ao lado do que o servidor tem. **Recursos do servidor**: processador, memória, disco e rede do FTP da máquina inteira, com o estado, a medida de agora e o histórico dos últimos minutos. O painel lê o `/proc` e o grupo de controle que o container dele já enxerga; o ftp e o nginx leem o grupo de controle deles e publicam uma linha de doze números (`/auth/recursos.estado` e a pasta de estado do nginx), e o vigia do ftp publica a rede em `/auth/rede.estado`. O painel lê esses arquivos sem seguir link e só aceita números. Nenhum soquete do Docker, pasta do servidor ou script entra nisso. Os cartões se arrumam sozinhos pela largura da tela: cada um tem pelo menos 236 px e cabem tantos por linha quantos a tela comporta, de um no celular a cinco em tela larga. **Atualizar sozinha** refaz a leitura a cada 10 s e não conta como uso da sessão. Detalhe em [Painel web](doc/painel.md#servidor).
+- **Aba Servidor**, só para administrador, em duas partes. **Containers da stack**: um cartão para o servidor FTP, um para o painel e um para a frente web, cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, o histórico do processador e quantas vezes o limite o segurou ou faltou memória; no alto, a soma do alocado e do uso, ao lado do que o servidor tem. **Recursos do servidor**: processador, memória, disco e rede do FTP da máquina inteira, com o estado, a medida de agora e o histórico dos últimos minutos. O painel lê o `/proc` e o grupo de controle que o container dele já enxerga; o ftp e o nginx leem o grupo de controle deles e publicam uma linha de doze números (`/auth/recursos.estado` e a pasta de estado do nginx), e o vigia do ftp publica a rede em `/auth/rede.estado`. O painel lê esses arquivos sem seguir link e só aceita números. Nenhum soquete do Docker, pasta do servidor ou script entra nisso. Os cartões se arrumam sozinhos pela largura da tela: cada um tem pelo menos 236 px e cabem tantos por linha quantos a tela comporta, de um no celular a cinco em tela larga. **Atualizar sozinha** refaz a leitura a cada 10 s e não conta como uso da sessão. Detalhe em [Painel web](doc/pt-BR/painel.md#servidor).
 - **Faixa Servidor e containers na Visão geral**: processador e memória do servidor e dos containers da stack em quatro medidas, cada uma com o uso contra o que há ou o que foi alocado, e o atalho para a aba Servidor.
-- **Perfis de usuário**: cada conta do FTP passa a ter um perfil. **Completo** envia, baixa, renomeia e apaga; **Envio** envia e baixa, sem apagar, renomear nem gravar por cima do que já chegou; **Leitura** só lista e baixa. O limite é aplicado pelo sistema de arquivos do servidor, com um usuário de sistema por perfil (`ftpdata`, `ftpenvio` e `ftpleitura`), e vale para qualquer comando do FTP. O perfil é escolhido em **Novo usuário**, trocado em **Editar**, cartão **Perfil**, e pelo terminal, com `./manage-user.sh add <usuario> <pasta> <perfil>` e `./manage-user.sh perfil <usuario> [perfil]`. Quem já existe continua Completo. Detalhes e limites em [Painel web](doc/painel.md#perfis) e [Segurança](doc/seguranca.md#perfis).
+- **Perfis de usuário**: cada conta do FTP passa a ter um perfil. **Completo** envia, baixa, renomeia e apaga; **Envio** envia e baixa, sem apagar, renomear nem gravar por cima do que já chegou; **Leitura** só lista e baixa. O limite é aplicado pelo sistema de arquivos do servidor, com um usuário de sistema por perfil (`ftpdata`, `ftpenvio` e `ftpleitura`), e vale para qualquer comando do FTP. O perfil é escolhido em **Novo usuário**, trocado em **Editar**, cartão **Perfil**, e pelo terminal, com `./manage-user.sh add <usuario> <pasta> <perfil>` e `./manage-user.sh perfil <usuario> [perfil]`. Quem já existe continua Completo. Detalhes e limites em [Painel web](doc/pt-BR/painel.md#perfis) e [Segurança](doc/pt-BR/seguranca.md#perfis).
 - **Perfil valendo também no painel**: na tela Meus arquivos, o usuário de perfil **Leitura** navega e baixa; o de **Envio** também cria pasta; o de **Completo** também troca o nome e apaga, com a caixa de confirmação e a senha do FTP dele. Cada perfil tem a tabela de rotas dele: a ação que o perfil não tem responde `404` mesmo pedida direto pelo endereço e fica na auditoria (`recusa_papel`, com o perfil). O painel continua sem receber arquivo.
 - **Casos de teste** funcionais 56 a 58 e de segurança 99 a 103: o que cada perfil faz e não faz no FTP e no painel, o modo das pastas depois de trocar perfil, trocar pasta e remover usuário, a tela única de usuários, a troca de perfil recusada sem sessão, sem token, por usuário do FTP e com valor fora da lista, e a ação fora do perfil, a senha errada e a saída da própria pasta recusadas na tela Meus arquivos.
-- **Perfil Só envio**: a conta envia e não vê os backups. Ela entra por FTP em uma área de entrada só dela, fora da pasta dos backups, e o servidor leva cada arquivo para a pasta do usuário assim que ele termina de chegar. Não lista, não baixa, não apaga e não troca o nome de nada, nem do que ela mesma enviou; arquivo que chega com nome repetido ganha a data e a hora no nome, sem substituir o anterior. No painel, a conta vê só a tela **Envio de arquivos**, com os dados para enviar por FTP. Usuário de sistema próprio (`ftpsoenvio`), escolhido em **Novo usuário** e em **Editar**, ou com `./manage-user.sh add <usuario> <pasta> soenvio`. Comportamentos e limites em [Painel web](doc/painel.md#perfis).
+- **Perfil Só envio**: a conta envia e não vê os backups. Ela entra por FTP em uma área de entrada só dela, fora da pasta dos backups, e o servidor leva cada arquivo para a pasta do usuário assim que ele termina de chegar. Não lista, não baixa, não apaga e não troca o nome de nada, nem do que ela mesma enviou; arquivo que chega com nome repetido ganha a data e a hora no nome, sem substituir o anterior. No painel, a conta vê só a tela **Envio de arquivos**, com os dados para enviar por FTP. Usuário de sistema próprio (`ftpsoenvio`), escolhido em **Novo usuário** e em **Editar**, ou com `./manage-user.sh add <usuario> <pasta> soenvio`. Comportamentos e limites em [Painel web](doc/pt-BR/painel.md#perfis).
 - **Casos de teste** funcionais 59 e 60 e de segurança 104 e 105: o envio do perfil Só envio entregue na pasta do usuário, o nome repetido com data e hora, a lista vazia, o download, o tamanho, o apagamento e a troca de nome recusados, a pasta de destino fora do alcance da sessão, a entrega do que ficou na área na partida do serviço, na troca de perfil e na remoção, e, no painel, a tela sem arquivo nenhum, as rotas de arquivo respondendo `404` e a área de entrada fora da aba Arquivos.
-- **Bloqueio por endereço, no FTP e no painel** (`BLOQUEIO_ENDERECO_ERROS`, `BLOQUEIO_ENDERECO_HORAS` e `BLOQUEIO_ENDERECO_DIAS`; `5`, `24` e `120` por padrão): o endereço que passa de 5 erros de usuário e senha em 24 horas, com qualquer nome de usuário, fica 120 dias sem entrar no FTP (com TLS ou sem, em modo passivo ou ativo) e no painel, com conta nenhuma. O bloqueio feito por um serviço vale no outro e atravessa o reinício. O próprio servidor, a rede interna da stack e os proxies de `PAINEL_PROXY_CONFIAVEL` nunca são bloqueados sozinhos; `BLOQUEIO_ENDERECO_ERROS=0` desliga. Veja [bloqueio por endereço](doc/seguranca.md#bloqueio-por-endereco).
+- **Bloqueio por endereço, no FTP e no painel** (`BLOQUEIO_ENDERECO_ERROS`, `BLOQUEIO_ENDERECO_HORAS` e `BLOQUEIO_ENDERECO_DIAS`; `5`, `24` e `120` por padrão): o endereço que passa de 5 erros de usuário e senha em 24 horas, com qualquer nome de usuário, fica 120 dias sem entrar no FTP (com TLS ou sem, em modo passivo ou ativo) e no painel, com conta nenhuma. O bloqueio feito por um serviço vale no outro e atravessa o reinício. O próprio servidor, a rede interna da stack e os proxies de `PAINEL_PROXY_CONFIAVEL` nunca são bloqueados sozinhos; `BLOQUEIO_ENDERECO_ERROS=0` desliga. Veja [bloqueio por endereço](doc/pt-BR/seguranca.md#bloqueio-por-endereco).
 - **Aba Bloqueios**, só para administrador: a lista dos endereços bloqueados, com quem bloqueou, quantos erros, desde quando e até quando, a busca, **Mudar prazo**, para bloquear por mais tempo ou encurtar, e **Desbloquear**. A aba Segurança ganhou o item `Bloqueio por endereço`, e a Atividade registra o bloqueio, a mudança de prazo, o desbloqueio e cada pedido recusado.
 - **Bloqueio por endereço pelo terminal**: `./manage-user.sh enderecos`, `endereco-bloquear <endereco> [dias]` e `endereco-liberar <endereco>`.
 - **Casos de teste** funcionais 61 e 62 e de segurança 106 a 112: o sexto erro bloqueando o endereço no FTP com TLS e sem, em modo passivo e ativo, e no painel; o bloqueio de um serviço valendo no outro; o endereço de saída do container, a rede interna e o proxy aceito fora do bloqueio; a aba, a mudança de prazo e o desbloqueio; o terminal; as recusas sem sessão, sem token, com a sessão de um usuário do FTP e com valor fora da regra; o bloqueio desligado e as variáveis fora da faixa.
@@ -58,8 +58,8 @@ O painel foi redesenhado: menu na lateral, gráficos na Visão geral, ícones de
 - **Aviso de exposição só para administrador, e opção de quem instala** (`PAINEL_AVISO_EXPOSICAO`, `sim` por padrão): com o painel publicado por proxy, por túnel ou em endereço público, o administrador lê isso em três lugares: no sinal ao lado de Segurança no menu, no começo da aba Segurança e no rodapé. A tela de entrada e as telas do usuário do FTP não dizem como a instalação foi publicada. Com `nao`, os três avisos somem. O estado continua nas linhas da aba Segurança, que só administrador vê, e o alerta continua na saída do `deploy.sh` e no registro dos containers. Caso de teste de segurança 96.
 - **Casos de teste** de segurança 93 a 95 e de rede 14: cabeçalho de endereço escrito pelo cliente ignorado, só o proxy aceito informa o endereço, senha errada e sessão contam pelo endereço de quem acessa, e as recusas do `deploy.sh` e dos containers a rede inteira, endereço público, `0.0.0.0`, mais de oito endereços e endereço fora das redes permitidas.
 - **Casos de teste** funcional 55 e de segurança 97 e 98: a aba Servidor coerente com a máquina, com os limites que o Docker aplica a cada container e com um envio por FTPS, os três containers sem swap, a aba fora do alcance de quem não é administrador, o arquivo da rede e o dos recursos do nginx trocados por texto com marcação e por link para o cadastro, e a sessão que não fica aberta só com a atualização automática.
-- **Boas práticas antes de produção, em fluxograma**, no guia de [Segurança](doc/seguranca.md#boas-praticas): as quatro decisões de quem instala (onde o FTP escuta, equipamento sem TLS, por onde o painel é aberto, para onde vai a cópia), com o caminho recomendado e a opção de cada uma.
-- **Testes executados**, no guia de [Segurança](doc/seguranca.md#testes-executados): o que a bateria de segurança tenta, alvo por alvo, com o número de cada caso, e o que cada versão passa além da bateria.
+- **Boas práticas antes de produção, em fluxograma**, no guia de [Segurança](doc/pt-BR/seguranca.md#boas-praticas): as quatro decisões de quem instala (onde o FTP escuta, equipamento sem TLS, por onde o painel é aberto, para onde vai a cópia), com o caminho recomendado e a opção de cada uma.
+- **Testes executados**, no guia de [Segurança](doc/pt-BR/seguranca.md#testes-executados): o que a bateria de segurança tenta, alvo por alvo, com o número de cada caso, e o que cada versão passa além da bateria.
 
 ### Alterado
 
@@ -89,7 +89,7 @@ O painel foi redesenhado: menu na lateral, gráficos na Visão geral, ícones de
 - **Fonte do sistema mantida**: nenhuma fonte é baixada.
 - **Repositório oficial na documentação**: a instalação, a política de segurança e a seção Versão apontam para `github.com/allsafe-inf/allsafe-ftp-stack`, onde as versões saem primeiro e onde issues e pull requests são recebidos; a cópia na conta pessoal é espelho.
 - **Documentação com os nomes das telas novas**: abas citadas sem emoji e a coluna **Pasta** da aba Usuários com o nome que a tela mostra.
-- **Fotos da aplicação refeitas**: as 58 capturas mostram as telas novas, e o guia de [fotos](doc/aplicacao/README.md) descreve a tela de entrada, o menu lateral, os perfis, os administradores na aba Usuários, a tela de cada perfil do usuário do FTP, as abas Servidor e Bloqueios e o painel em inglês.
+- **Fotos da aplicação refeitas**: as 58 capturas mostram as telas novas, e o guia de [fotos](doc/pt-BR/aplicacao/README.md) descreve a tela de entrada, o menu lateral, os perfis, os administradores na aba Usuários, a tela de cada perfil do usuário do FTP, as abas Servidor e Bloqueios e o painel em inglês.
 - **Caso de teste funcional 28**: a conferência do menu do usuário do FTP conta só os links, e não o endereço interno do ícone.
 - **Casos de teste de segurança 45, 93, 94 e 96**: passam a conferir que a tela de entrada não diz como a instalação foi publicada e que o sinal do menu aparece só com a instalação publicada e o aviso ligado.
 
@@ -242,7 +242,7 @@ O padrão das três pastas da stack deixa de ser a pasta do computador onde ela 
 
 - **Pastas padrão em `/srv/allsafe-ftp-stack`.** No `.env.example`, `DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR` passam a `/srv/allsafe-ftp-stack/data`, `/srv/allsafe-ftp-stack/backups` e `/srv/allsafe-ftp-stack/tmp`. Quem instala sem ser root cria a pasta de cima uma vez (`sudo install -d -o "$USER" /srv/allsafe-ftp-stack`) ou aponta as três para outro lugar no `.env`.
 - **`deploy.sh` diz o que fazer quando não consegue criar a pasta de dados**: a mensagem traz o comando que cria a pasta de cima para o usuário e a alternativa de trocar as três pastas. Nada é construído nem sobe antes disso.
-- **Guias sem caminho de um computador**: os comandos de [Backup e restauração](doc/backup.md), [Operação](doc/operacao.md) e [Solução de problemas](doc/solucao-de-problemas.md) leem `DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR` do `.env`, e [Configuração](doc/configuracao.md) mostra o padrão novo.
+- **Guias sem caminho de um computador**: os comandos de [Backup e restauração](doc/pt-BR/backup.md), [Operação](doc/pt-BR/operacao.md) e [Solução de problemas](doc/pt-BR/solucao-de-problemas.md) leem `DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR` do `.env`, e [Configuração](doc/pt-BR/configuracao.md) mostra o padrão novo.
 
 ### Adicionado
 
@@ -384,7 +384,7 @@ O painel passa a editar o usuário do FTP: troca a pasta de quem já existe e tr
 
 ### Alterado
 
-- **Senha do usuário inicial: vale a troca mais recente.** O serviço `ftp` deixa de regravar a senha do segredo em toda subida. Trocada pelo painel ou pelo `manage-user.sh passwd`, a senha nova sobrevive aos reinícios; o arquivo `.secrets/ftp-usuario-inicial-senha.txt` volta a valer na subida seguinte a uma alteração dele. Sem troca pelo painel, nada muda: a senha do arquivo continua sendo aplicada. Veja [Segredos](doc/segredos.md#trocar-a-senha).
+- **Senha do usuário inicial: vale a troca mais recente.** O serviço `ftp` deixa de regravar a senha do segredo em toda subida. Trocada pelo painel ou pelo `manage-user.sh passwd`, a senha nova sobrevive aos reinícios; o arquivo `.secrets/ftp-usuario-inicial-senha.txt` volta a valer na subida seguinte a uma alteração dele. Sem troca pelo painel, nada muda: a senha do arquivo continua sendo aplicada. Veja [Segredos](doc/pt-BR/segredos.md#trocar-a-senha).
 - **Dois arquivos novos em `DATA_DIR/auth`**, modo `0600`: `senha-inicial.aplicada`, uma impressão do segredo aplicado (`sha512-crypt` com sal próprio, nunca a senha), e `senha-inicial.trocada`, só com o nome do usuário. Os dois entram no backup, com o cadastro.
 - **Resumo do `deploy.sh`.** Com a senha do usuário inicial trocada pelo painel, a linha do FTP diz `senha trocada pelo painel` e avisa que a do arquivo volta a valer quando ele for alterado.
 - **Pasta do usuário inicial.** O entrypoint do FTP só cria `DATA_DIR/dados/<FTP_USER>` enquanto ela é a pasta dele; trocada, a pasta escolhida é mantida nas subidas seguintes.
@@ -404,7 +404,7 @@ O projeto ganha a política de segurança, sem endereço fixo: quem acha uma fal
 
 ### Alterado
 
-- **Comentário da variável no [`.env.example`](.env.example) e guia de [Configuração](doc/configuracao.md#contato-de-seguranca)** dizem que a política do projeto aponta para o contato da instalação. [Segurança](doc/seguranca.md#contato-de-seguranca), [Instalação](doc/instalacao.md), [Scripts](doc/scripts.md#deploy) e o índice da [documentação](doc/README.md) acompanham.
+- **Comentário da variável no [`.env.example`](.env.example) e guia de [Configuração](doc/pt-BR/configuracao.md#contato-de-seguranca)** dizem que a política do projeto aponta para o contato da instalação. [Segurança](doc/pt-BR/seguranca.md#contato-de-seguranca), [Instalação](doc/pt-BR/instalacao.md), [Scripts](doc/pt-BR/scripts.md#deploy) e o índice da [documentação](doc/pt-BR/README.md) acompanham.
 - **Caso 36 da bateria** confere também as duas linhas do resumo do `deploy.sh`, com o contato e sem ele. O número de casos não muda.
 - **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados; a variável continua vazia até ser preenchida. É recriado o container do painel, porque a imagem dele leva o número da versão; o do FTP continua em execução.
 
@@ -416,7 +416,7 @@ A regra da marca fica com um pedido só: a stack é livre para usar e distribuir
 
 - **[`MARCA.md`](MARCA.md) reescrito.** Usar, copiar, alterar e distribuir continua livre pela [Licença Apache 2.0](LICENSE), de graça ou cobrando, e não depende de contrato com a ALL-SAFE. O pedido é um: quem entrega a stack em contrato ou a vende para terceiros tira ou troca a logo e o ícone. No uso próprio e na distribuição de graça, os dois podem ficar.
 - **Linha de autoria do rodapé.** Continua vindo de fábrica no painel, mas deixa de ser pedida de quem altera o código. O [`NOTICE`](NOTICE) continua acompanhando toda cópia, como a licença determina.
-- **[`NOTICE`](NOTICE), seção Licença do [README](README.md#licenca) e [Marca do painel](doc/painel.md#marca)** com o mesmo texto.
+- **[`NOTICE`](NOTICE), seção Licença do [README](README.pt-BR.md#licenca) e [Marca do painel](doc/pt-BR/painel.md#marca)** com o mesmo texto.
 - **Ao atualizar:** nada muda no `.env`, nos segredos, no cadastro nem nos dados. O `NOTICE` entra nas três imagens: os três containers são recriados.
 
 ## [0.21.1] - 2026-10-06
@@ -429,7 +429,7 @@ Os créditos do README passam a citar o nginx e o Python, que a stack usa desde 
 
 ### Adicionado
 
-- **nginx e Python nos créditos.** A tabela dos [projetos oficiais usados](README.md#creditos) ganha os dois, com o uso de cada um na stack, a licença, a página oficial e o código-fonte.
+- **nginx e Python nos créditos.** A tabela dos [projetos oficiais usados](README.pt-BR.md#creditos) ganha os dois, com o uso de cada um na stack, a licença, a página oficial e o código-fonte.
 
 ### Corrigido
 
@@ -445,8 +445,8 @@ O painel passa a responder ao método `HEAD`, que a RFC 9110 pede de todo servid
 
 ### Corrigido
 
-- **`HEAD` respondia `501` no painel.** Nas telas, no `security.txt` e no download, o `HEAD` agora traz o código e os cabeçalhos que o `GET` traria, sem o corpo. O `HEAD` de um arquivo devolve o tamanho e o nome e não conta como download: não ocupa vaga nem entra na auditoria. Na [tabela de conformidade](doc/seguranca.md#conformidade-rfc), a linha da RFC 9110, seção 9.1, passa de desvio a atendida: 23 normas atendidas e uma parcial.
-- **Duração da bateria no guia.** O [guia dos scripts](doc/scripts.md) dizia perto de cinco minutos; a bateria completa leva perto de 25.
+- **`HEAD` respondia `501` no painel.** Nas telas, no `security.txt` e no download, o `HEAD` agora traz o código e os cabeçalhos que o `GET` traria, sem o corpo. O `HEAD` de um arquivo devolve o tamanho e o nome e não conta como download: não ocupa vaga nem entra na auditoria. Na [tabela de conformidade](doc/pt-BR/seguranca.md#conformidade-rfc), a linha da RFC 9110, seção 9.1, passa de desvio a atendida: 23 normas atendidas e uma parcial.
+- **Duração da bateria no guia.** O [guia dos scripts](doc/pt-BR/scripts.md) dizia perto de cinco minutos; a bateria completa leva perto de 25.
 
 ### Adicionado
 
@@ -462,9 +462,9 @@ A documentação ganha as fotos de todas as telas do painel, a tabela de conform
 
 ### Adicionado
 
-- **Fotos de todas as telas:** [fotos da aplicação](doc/aplicacao/README.md) passa de 12 para 26 capturas, menu por menu, com as abas Arquivos e Administradores, a tela Meus arquivos do usuário do FTP, o download de um backup, a criação de pasta e o TLS por usuário. O [README](README.md#imagens) mostra uma foto de cada aba.
-- **Conformidade com as RFCs:** [tabela](doc/seguranca.md#conformidade-rfc) com as 24 normas que a stack usa no FTP, no TLS, no HTTP, nos cookies, no download, nas senhas e nos endereços, o que ela faz de cada uma e a situação: 22 atendidas, uma parcial (a memória do `argon2id`, abaixo da que a RFC 9106 recomenda) e um desvio (o `HEAD` responde `501` nas telas do painel, e a RFC 9110 pede que seja atendido).
-- **Peso das linguagens e dos serviços:** no [README](README.md#tecnologias), a memória em repouso, o tamanho das imagens, o tempo de resposta do painel e o tamanho do código, medidos na instância de teste.
+- **Fotos de todas as telas:** [fotos da aplicação](doc/pt-BR/aplicacao/README.md) passa de 12 para 26 capturas, menu por menu, com as abas Arquivos e Administradores, a tela Meus arquivos do usuário do FTP, o download de um backup, a criação de pasta e o TLS por usuário. O [README](README.pt-BR.md#imagens) mostra uma foto de cada aba.
+- **Conformidade com as RFCs:** [tabela](doc/pt-BR/seguranca.md#conformidade-rfc) com as 24 normas que a stack usa no FTP, no TLS, no HTTP, nos cookies, no download, nas senhas e nos endereços, o que ela faz de cada uma e a situação: 22 atendidas, uma parcial (a memória do `argon2id`, abaixo da que a RFC 9106 recomenda) e um desvio (o `HEAD` responde `501` nas telas do painel, e a RFC 9110 pede que seja atendido).
+- **Peso das linguagens e dos serviços:** no [README](README.pt-BR.md#tecnologias), a memória em repouso, o tamanho das imagens, o tempo de resposta do painel e o tamanho do código, medidos na instância de teste.
 
 ### Alterado
 
@@ -496,7 +496,7 @@ O projeto passa a ter licença: o código é livre pela Apache 2.0, e o nome, a 
 - Linha `SPDX-License-Identifier: Apache-2.0` no começo de cada arquivo de código.
 - `./scripts/validate.sh` confere o `LICENSE` pelo sha256 do texto oficial, a autoria no `NOTICE`, o `MARCA.md` e a linha da licença em cada arquivo de código, e imprime `licença OK: ...`.
 - Bateria: etapa 19, com 1 caso funcional: licença e autoria no projeto e dentro das três imagens.
-- Documentação: seção [Licença](README.md#licenca) e selo no README, e a regra de venda e revenda em [Marca do painel](doc/painel.md#marca).
+- Documentação: seção [Licença](README.pt-BR.md#licenca) e selo no README, e a regra de venda e revenda em [Marca do painel](doc/pt-BR/painel.md#marca).
 
 ### Alterado
 
@@ -516,7 +516,7 @@ A bateria de segurança passa a responder a quatro perguntas a cada versão: abr
 - Validação de `FTP_MAX_CLIENTS` e `FTP_MAX_CLIENTS_PER_IP` no container do `ftp`: valor que não é inteiro maior que zero para o serviço com `FALHA: FTP_MAX_CLIENTS deve ser um inteiro maior que zero`.
 - Aba Segurança: item `Custo das senhas do FTP`, com os usuários que ainda estão com a senha gravada com o custo anterior. O painel lê só o parâmetro de memória de cada linha do cadastro; o hash não aparece na tela.
 - Bateria: etapa 18, com 2 casos funcionais (tudo em Docker, sem systemd; senha do usuário inicial reaplicada do segredo) e 12 de segurança: nenhuma rota do painel e nenhum comando do FTP sem login, senha aleatória no FTP e no painel, rajada de senhas, de pedidos e de conexões, conexão parada, pedido grande ou malformado, cadastro das senhas fora do alcance da web, do FTP, dos outros containers e do host, e custo da senha conforme o porte. São 38 casos funcionais, 80 de segurança e 13 de rede.
-- Documentação: [o que a bateria tenta e o que acontece](doc/seguranca.md#sem-senha-e-exaustao) e o [custo das senhas do FTP](doc/seguranca.md#custo-das-senhas), com os limites conhecidos.
+- Documentação: [o que a bateria tenta e o que acontece](doc/pt-BR/seguranca.md#sem-senha-e-exaustao) e o [custo das senhas do FTP](doc/pt-BR/seguranca.md#custo-das-senhas), com os limites conhecidos.
 
 ### Alterado
 
@@ -530,12 +530,12 @@ O painel passa a publicar o contato de segurança da instalação, em `/.well-kn
 
 ### Adicionado
 
-- **Contato de segurança (RFC 9116):** a variável `SEGURANCA_CONTATO_EMAIL` do `.env` recebe o e-mail para onde quem achar uma falha na instalação deve escrever. Preenchida, o painel publica `/.well-known/security.txt` com o contato, a validade e o idioma, sem pedir senha, para as redes de `PAINEL_REDES_PERMITIDAS`. Vazia, que é o padrão, o endereço responde `404`. Guia em [Configuração](doc/configuracao.md#contato-de-seguranca).
+- **Contato de segurança (RFC 9116):** a variável `SEGURANCA_CONTATO_EMAIL` do `.env` recebe o e-mail para onde quem achar uma falha na instalação deve escrever. Preenchida, o painel publica `/.well-known/security.txt` com o contato, a validade e o idioma, sem pedir senha, para as redes de `PAINEL_REDES_PERMITIDAS`. Vazia, que é o padrão, o endereço responde `404`. Guia em [Configuração](doc/pt-BR/configuracao.md#contato-de-seguranca).
 - **Validade que não vence:** a linha `Expires` é calculada a cada pedido, 90 dias à frente; o arquivo sai sempre da configuração em vigor.
 - **`robots.txt` (RFC 9309):** [`web/robots.txt`](web/robots.txt), entregue pelo nginx, pede aos robôs de busca que não indexem nada do painel.
 - **Aba Segurança:** item `Contato de segurança`, com o e-mail publicado ou, com a variável vazia, o aviso de que não há para onde escrever; em alerta quando endereço público é aceito.
 - **Validação do e-mail** no `deploy.sh`, no container do painel e no painel: só um endereço, sem `mailto:`, espaço, `%`, `<`, `>` nem quebra de linha. Valor fora da regra para com `SEGURANCA_CONTATO_EMAIL inválido`.
-- Seção [Contato de segurança e robôs de busca](doc/seguranca.md#contato-de-seguranca) em Segurança, com o que os dois endereços entregam e o que não entregam.
+- Seção [Contato de segurança e robôs de busca](doc/pt-BR/seguranca.md#contato-de-seguranca) em Segurança, com o que os dois endereços entregam e o que não entregam.
 - Bateria de testes: dois casos funcionais (`robots.txt` entregue pelo nginx; `security.txt` publicado com o contato de segurança) e um de segurança (os dois endereços, abertos sem senha, não entregam mais nada).
 
 ### Alterado
@@ -548,7 +548,7 @@ O painel passa a mostrar a logo e o ícone da ALL-SAFE e, no rodapé de todas as
 
 ### Adicionado
 
-- **Logo e ícone no painel:** ícone na aba do navegador (`favicon.ico`, com 16, 32 e 48 pixels, e PNG de 32, 180 e 192 pixels), símbolo no topo de todas as telas e logo na tela de entrada. Guia em [Marca do painel](doc/painel.md#marca).
+- **Logo e ícone no painel:** ícone na aba do navegador (`favicon.ico`, com 16, 32 e 48 pixels, e PNG de 32, 180 e 192 pixels), símbolo no topo de todas as telas e logo na tela de entrada. Guia em [Marca do painel](doc/pt-BR/painel.md#marca).
 - **Autoria no rodapé de todas as telas**, inclusive na de entrada, na de tela não encontrada e na do usuário do FTP: `Desenvolvido pela allsafe.inf.br`, com os endereços [allsafe.inf.br](https://allsafe.inf.br) e [github.com/allsafe-inf](https://github.com/allsafe-inf). Os links abrem em outra aba e o site de destino não recebe o endereço do painel.
 - **Pasta [`web/marca/`](web/marca/):** os seis arquivos que o painel usa, 22 KB no total, e, em `fonte/`, as duas artes de origem, sem alteração.
 - **[`scripts/gerar-marca.sh`](scripts/gerar-marca.sh):** gera os seis arquivos a partir das artes de origem, sobre uma placa clara, para a arte escura aparecer no fundo escuro do painel e em aba escura do navegador. `MARCA_PLACA` troca a cor da placa. Só roda quando a logo muda: a instalação não depende dele nem do ImageMagick.
@@ -572,7 +572,7 @@ O administrador passa a escolher, no painel, quais usuários entram no FTP sem T
 
 ### Adicionado
 
-- **TLS por usuário (`FTP_TLS_EXCECOES`):** com `sim`, o servidor continua exigindo TLS de todos, menos dos usuários que um administrador dispensar, um a um. O padrão é `nao`, e nada muda para quem não ligar. Guia em [TLS por usuário](doc/seguranca.md#tls-por-usuario).
+- **TLS por usuário (`FTP_TLS_EXCECOES`):** com `sim`, o servidor continua exigindo TLS de todos, menos dos usuários que um administrador dispensar, um a um. O padrão é `nao`, e nada muda para quem não ligar. Guia em [TLS por usuário](doc/pt-BR/seguranca.md#tls-por-usuario).
 - **Dispensa pelo painel:** na aba Usuários, a coluna **TLS** mostra quem é obrigado e quem entra sem TLS, e os botões **Dispensar TLS** e **Exigir TLS** alteram um usuário por vez, com confirmação. Qualquer administrador altera; vale na entrada seguinte do usuário, sem reiniciar.
 - **Dispensa pelo terminal:** `./manage-user.sh tls-dispensar <usuario>`, `tls-exigir <usuario>` e `tls-lista`.
 - **Recusa antes da senha:** sem TLS, o usuário que não foi dispensado recebe `530` com a senha certa ou errada, e a recusa fica no registro do container, com o usuário e a origem. Quem é removido sai da lista: um usuário novo com o mesmo nome não herda a dispensa.
@@ -600,7 +600,7 @@ O dono dos arquivos passa a baixar os próprios backups pelo navegador: cada usu
 
 ### Adicionado
 
-- **Entrada do usuário do FTP no painel:** na mesma tela de entrada, o usuário do FTP digita o nome e a senha do FTP e chega à tela **Meus arquivos**, com a pasta do cadastro dele: navega pelas subpastas e baixa os arquivos. Não cria, não envia, não renomeia e não apaga. Guia em [Usuário do FTP no painel](doc/painel.md#usuario-ftp).
+- **Entrada do usuário do FTP no painel:** na mesma tela de entrada, o usuário do FTP digita o nome e a senha do FTP e chega à tela **Meus arquivos**, com a pasta do cadastro dele: navega pelas subpastas e baixa os arquivos. Não cria, não envia, não renomeia e não apaga. Guia em [Usuário do FTP no painel](doc/pt-BR/painel.md#usuario-ftp).
 - **Senha conferida pelo servidor FTP:** o painel faz um login no serviço `ftp`, pela rede interna da stack, em TLS e com o certificado dele conferido; não lê o hash do cadastro. Com `FTP_TLS_MODE=0`, essa conferência vai em texto puro, sem sair da rede interna, e a aba Segurança avisa.
 - **Variável `PAINEL_ACESSO_USUARIOS_FTP`:** `sim` (padrão) liga a entrada dos usuários do FTP; `nao` deixa o painel só para administradores. Valor diferente é recusado pelo `deploy.sh` e pelo container do painel.
 - **Sem alcance à administração:** para o usuário do FTP, as abas e os formulários de administração respondem `404`, com o evento `recusa_papel` na auditoria. Nome igual ao de um administrador entra só como administrador, com a senha de administrador.
@@ -625,8 +625,8 @@ Quem administra passa a escolher a pasta de cada usuário do FTP e a criar pasta
 
 ### Adicionado
 
-- **Pasta escolhida por usuário:** o cadastro de usuário, no painel, ganhou o campo **Pasta**, e o [`manage-user.sh`](manage-user.sh), um terceiro parâmetro: `./manage-user.sh add olt01 clientes/olt-01`. A pasta fica sempre dentro de `DATA_DIR/dados`, com até 4 níveis, e é criada se não existir. Em branco, continua sendo a do nome do usuário. Guia em [Usuários pelo painel](doc/painel.md#usuarios).
-- **Nova pasta na aba Arquivos:** o formulário **Nova pasta** cria uma pasta vazia dentro da que está aberta, com o dono e a permissão que o FTP usa; o botão **Novo usuário nesta pasta** abre o cadastro com a pasta preenchida. O painel continua sem enviar, renomear e apagar. Guia em [Arquivos e download](doc/painel.md#arquivos).
+- **Pasta escolhida por usuário:** o cadastro de usuário, no painel, ganhou o campo **Pasta**, e o [`manage-user.sh`](manage-user.sh), um terceiro parâmetro: `./manage-user.sh add olt01 clientes/olt-01`. A pasta fica sempre dentro de `DATA_DIR/dados`, com até 4 níveis, e é criada se não existir. Em branco, continua sendo a do nome do usuário. Guia em [Usuários pelo painel](doc/pt-BR/painel.md#usuarios).
+- **Nova pasta na aba Arquivos:** o formulário **Nova pasta** cria uma pasta vazia dentro da que está aberta, com o dono e a permissão que o FTP usa; o botão **Novo usuário nesta pasta** abre o cadastro com a pasta preenchida. O painel continua sem enviar, renomear e apagar. Guia em [Arquivos e download](doc/pt-BR/painel.md#arquivos).
 - **Pasta dividida avisada:** dois usuários com a mesma pasta, ou com uma dentro da outra, alcançam os arquivos um do outro. O painel aceita e avisa: alerta no cadastro, a marca **dividida** na lista, com o nome de quem mais alcança a pasta, e o mesmo aviso na tela de remoção. Na linha de comando, o `add` escreve uma linha `Aviso:` por usuário.
 - **Só dentro da pasta dos dados:** pasta com `..`, barra no início, nível começando por ponto ou caractere fora da regra é recusada (`400`), no painel e na linha de comando; pasta que passa por link simbólico ou por um arquivo também. A pasta nova é criada em relação à pasta já aberta, sem seguir link; nome já usado recebe `409`.
 - **Auditoria:** evento `pasta_criada`, com o administrador e o caminho, e a pasta no evento `usuario_criado`.
@@ -648,7 +648,7 @@ Os backups recebidos passam a ser consultados e baixados pelo navegador, na aba 
 
 ### Adicionado
 
-- **Aba Arquivos:** as pastas de `DATA_DIR/dados`, uma por usuário do FTP, com nome, tamanho e data de cada arquivo, navegação por subpasta e o caminho no alto da lista. Guia em [Arquivos e download](doc/painel.md#arquivos).
+- **Aba Arquivos:** as pastas de `DATA_DIR/dados`, uma por usuário do FTP, com nome, tamanho e data de cada arquivo, navegação por subpasta e o caminho no alto da lista. Guia em [Arquivos e download](doc/pt-BR/painel.md#arquivos).
 - **Download pelo navegador:** o botão **Baixar** entrega o arquivo com o nome original, em blocos, sem carregá-lo na memória e sem limite de tamanho. O arquivo sai sempre como anexo (`application/octet-stream` e `Content-Disposition: attachment`, com o nome nas formas da RFC 6266 e da RFC 8187): o navegador salva, nunca abre.
 - **Só dentro da pasta dos dados:** o caminho é conferido parte por parte e aberto só para leitura, sem seguir link simbólico. Caminho com `..`, absoluto ou com byte nulo recebe `400`; link simbólico, `403`; link simbólico e arquivo especial aparecem na lista sem botão.
 - **Limite de downloads:** até 8 ao mesmo tempo, somando todos os administradores; o nono recebe `503` com `Retry-After`, e as outras telas continuam respondendo.
@@ -672,7 +672,7 @@ O painel deixa de ter uma senha só: cada administrador entra com o próprio usu
 
 - **Entrada com usuário e senha:** a tela de entrada pede os dois. A recusa é a mesma para usuário que não existe e para senha errada, e o nome digitado em uma entrada recusada não vai para a auditoria nem para os logs.
 - **`PAINEL_ADMIN_USER`** (padrão `admin`) no [`.env.example`](.env.example): o nome do primeiro administrador, criado na primeira subida com a senha inicial de `.secrets/`. Depois disso, a variável não é mais consultada. Nome fora da regra é recusado pelo `deploy.sh` e pelo container.
-- **Aba Administradores:** lista com as sessões abertas de cada um, criação (com senha informada ou gerada pelo painel, mostrada uma única vez), troca de senha, troca de nome e remoção. Até 20 administradores, todos com o mesmo acesso: [Administradores do painel](doc/painel.md#administradores).
+- **Aba Administradores:** lista com as sessões abertas de cada um, criação (com senha informada ou gerada pelo painel, mostrada uma única vez), troca de senha, troca de nome e remoção. Até 20 administradores, todos com o mesmo acesso: [Administradores do painel](doc/pt-BR/painel.md#administradores).
 - **Senha atual em toda alteração de administrador:** criar, trocar senha, trocar nome e remover pedem a senha de quem está na sessão. A recusa conta no mesmo limite da tela de entrada: cinco erros em 15 minutos bloqueiam o endereço.
 - **Sessões encerradas na alteração:** trocar a senha, trocar o nome ou remover um administrador encerra as sessões dele. Ninguém remove a própria conta.
 - **Auditoria com o administrador:** as entradas e as alterações de usuário passam a registrar quem fez (`admin=`), e há eventos novos para os administradores (`admin_inicial_criado`, `admin_criado`, `admin_senha_trocada`, `admin_renomeado`, `admin_removido`, `admin_senha_atual_recusada`, `admin_definido_no_host`). O nome de quem está na sessão aparece no topo do painel.
@@ -697,7 +697,7 @@ O código do painel, que era um arquivo só, passa a ser dividido em módulos, u
 
 ### Alterado
 
-- **Painel em módulos:** o `painel/servidor.py` fica como ponto de entrada (servidor e modos `--hash` e `--saude`) e o restante vai para treze módulos ao lado dele: configuração, senha, sessão, auditoria, estado da stack, moldura das telas, atendimento, rotas, entrada e uma aba por arquivo. Lista em [Painel web](doc/painel.md#modulos). Os caminhos usados pelo `compose.yaml`, pelo entrypoint e pelo `scripts/painel-senha.sh` são os mesmos.
+- **Painel em módulos:** o `painel/servidor.py` fica como ponto de entrada (servidor e modos `--hash` e `--saude`) e o restante vai para treze módulos ao lado dele: configuração, senha, sessão, auditoria, estado da stack, moldura das telas, atendimento, rotas, entrada e uma aba por arquivo. Lista em [Painel web](doc/pt-BR/painel.md#modulos). Os caminhos usados pelo `compose.yaml`, pelo entrypoint e pelo `scripts/painel-senha.sh` são os mesmos.
 - [`Dockerfile`](Dockerfile): o alvo `painel` copia todos os módulos de `painel/` para `/opt/painel`.
 - [`scripts/validate.sh`](scripts/validate.sh): confere a sintaxe de cada módulo do painel e que todo nome usado em cada um está definido ou importado nele; a linha de resultado passa a ser `painel OK: <n> módulos Python`.
 
@@ -707,7 +707,7 @@ A stack ganha uma opção para aceitar endereço público, desligada por padrão
 
 ### Adicionado
 
-- **`REDE_PERMITIR_IP_PUBLICO`** (`nao` ou `sim`, padrão `nao`) no [`.env.example`](.env.example), com o alerta nos comentários da variável: [IP público](doc/seguranca.md#ip-publico). Com `sim`, `FTP_BIND_IP`, `FTP_PASSIVE_IP`, `PAINEL_BIND_IP` e `PAINEL_CERT_CN` aceitam IPv4 público de servidor e `PAINEL_REDES_PERMITIDAS` aceita rede pública de `/8` a `/32`.
+- **`REDE_PERMITIR_IP_PUBLICO`** (`nao` ou `sim`, padrão `nao`) no [`.env.example`](.env.example), com o alerta nos comentários da variável: [IP público](doc/pt-BR/seguranca.md#ip-publico). Com `sim`, `FTP_BIND_IP`, `FTP_PASSIVE_IP`, `PAINEL_BIND_IP` e `PAINEL_CERT_CN` aceitam IPv4 público de servidor e `PAINEL_REDES_PERMITIDAS` aceita rede pública de `/8` a `/32`.
 - **Alerta em execução:** com a opção ligada, o `deploy.sh` (também no `--check-only`), o registro dos três containers e o painel (tela de entrada, rodapé e a linha **Endereço público** da aba Segurança) avisam que a stack aceita endereço público e que a proteção passa a ser o firewall do servidor.
 - **Travas que continuam com a opção ligada:** `0.0.0.0`, multicast e endereços reservados são recusados; rede mais larga que `/8`, como `0.0.0.0/0`, é recusada; `FTP_TLS_MODE` em `0` ou `1` é recusado; valor diferente de `nao` e de `sim` para tudo antes de qualquer outra conferência.
 - Bateria de testes: seis casos de segurança (funções da opção, IP público só com a opção, "todos" sempre recusado, TLS obrigatório, valor inválido e alerta em execução) e um de rede (rede pública no painel só com a opção). A opção é testada com endereços de documentação, sem publicar porta fora do IP de teste.
@@ -726,12 +726,12 @@ O [`.env.example`](.env.example) passa a explicar cada variável. Nenhum valor, 
 ### Alterado
 
 - **`.env.example` comentado:** as 40 variáveis vêm agrupadas por assunto (geral, nomes, pastas, rede, servidor FTP, painel, perfil e limites) e cada uma tem, na linha de cima, um comentário dizendo para que serve. O `.env` de quem já instalou não é tocado.
-- [`scripts/validate.sh`](scripts/validate.sh) confere que nenhuma variável do exemplo fica sem comentário nem fora do guia de [Configuração](doc/configuracao.md).
+- [`scripts/validate.sh`](scripts/validate.sh) confere que nenhuma variável do exemplo fica sem comentário nem fora do guia de [Configuração](doc/pt-BR/configuracao.md).
 
 ### Corrigido
 
-- [Configuração](doc/configuracao.md) citava `FTP_PASSWORD_FILE`, que deixou de existir na `0.2.0`, entre os padrões do Compose; o texto agora traz as variáveis que de fato não têm padrão (`DATA_DIR` e `FTP_PASSIVE_IP`).
-- [Scripts](doc/scripts.md) lista todas as pastas de script que o `validate.sh` confere.
+- [Configuração](doc/pt-BR/configuracao.md) citava `FTP_PASSWORD_FILE`, que deixou de existir na `0.2.0`, entre os padrões do Compose; o texto agora traz as variáveis que de fato não têm padrão (`DATA_DIR` e `FTP_PASSIVE_IP`).
+- [Scripts](doc/pt-BR/scripts.md) lista todas as pastas de script que o `validate.sh` confere.
 
 ## [0.11.0] - 2026-10-04
 
@@ -739,7 +739,7 @@ Os arquivos de `.secrets/` passam a dizer no nome o que guardam, e a pasta ganha
 
 ### Alterado
 
-- **Nomes dos arquivos de segredo:** [Segredos](doc/segredos.md#o-que-fica).
+- **Nomes dos arquivos de segredo:** [Segredos](doc/pt-BR/segredos.md#o-que-fica).
 
   | Antes | Agora | O que guarda |
   |---|---|---|
@@ -757,7 +757,7 @@ Os arquivos de `.secrets/` passam a dizer no nome o que guardam, e a pasta ganha
 
 ### Ao atualizar
 
-Rode `./deploy.sh` uma vez: ele dá o nome novo aos arquivos e recria os containers do FTP e do painel, porque o nome do segredo dentro deles mudou. Dados, usuários e senhas ficam como estavam: [Segredos](doc/segredos.md#nomes-antigos).
+Rode `./deploy.sh` uma vez: ele dá o nome novo aos arquivos e recria os containers do FTP e do painel, porque o nome do segredo dentro deles mudou. Dados, usuários e senhas ficam como estavam: [Segredos](doc/pt-BR/segredos.md#nomes-antigos).
 
 ## [0.10.0] - 2026-10-04
 
@@ -765,7 +765,7 @@ A variável do IP anunciado no modo passivo muda de nome: `FTP_PUBLIC_IP` vira `
 
 ### Alterado
 
-- **`FTP_PUBLIC_IP` vira `FTP_PASSIVE_IP`** no [`.env.example`](.env.example), no [`compose.yaml`](compose.yaml), no FTP e no painel. É o IP que o servidor informa ao cliente no modo passivo: [Configuração](doc/configuracao.md#ftp-passive-ip).
+- **`FTP_PUBLIC_IP` vira `FTP_PASSIVE_IP`** no [`.env.example`](.env.example), no [`compose.yaml`](compose.yaml), no FTP e no painel. É o IP que o servidor informa ao cliente no modo passivo: [Configuração](doc/pt-BR/configuracao.md#ftp-passive-ip).
 
 ### Adicionado
 
@@ -827,8 +827,8 @@ Esta versão foi publicada primeiro como `1.0.0` e renumerada no mesmo dia: a `1
 
 ### Adicionado
 
-- Guia [Fotos da aplicação](doc/aplicacao/README.md): todas as telas do painel, menu por menu, com capturas reais, para que serve cada uma, como chegar e o que há na tela.
-- Imagem principal e uma imagem de cada aba do painel no [README](README.md#imagens).
+- Guia [Fotos da aplicação](doc/pt-BR/aplicacao/README.md): todas as telas do painel, menu por menu, com capturas reais, para que serve cada uma, como chegar e o que há na tela.
+- Imagem principal e uma imagem de cada aba do painel no [README](README.pt-BR.md#imagens).
 - Um caso na bateria de segurança, que passa a 38: a resposta traz `Referrer-Policy: same-origin` e o envio com `Origin: null` é recusado.
 
 ### Alterado
@@ -849,14 +849,14 @@ Backup e restauração em um comando e healthcheck do FTP que confere se o servi
 - **`scripts/backup.sh`:** grava `dados/`, `auth/`, `certs/` e `painel/` de `DATA_DIR` em um arquivo `.tar.gz` de `BACKUP_DIR`, com data e hora no nome, modo `0600` e a soma `.sha256` ao lado. Funciona com a stack no ar; a leitura é feita por um container sem rede. O `.env` e os segredos de `.secrets/` não entram na cópia.
 - **`scripts/restaurar.sh`:** confere a cópia antes de tocar em qualquer coisa (soma, formato e conteúdo), para a stack, guarda o estado atual em um arquivo com `antes-da-restauracao` no nome, troca o conteúdo e sobe de novo. A restauração pode ser desfeita com um comando.
 - **`scripts/ftp-saude.sh`:** healthcheck do FTP, instalado na imagem como `/usr/local/sbin/allsafe-ftp-saude`.
-- Guia [Backup e restauração](doc/backup.md): o que entra na cópia, o que guardar à parte, restauração em outro servidor e cópia agendada.
+- Guia [Backup e restauração](doc/pt-BR/backup.md): o que entra na cópia, o que guardar à parte, restauração em outro servidor e cópia agendada.
 - Dois casos na bateria funcional, que passa a 19: o ciclo de backup e restauração e o healthcheck do FTP.
 
 ### Alterado
 
 - **Healthcheck do FTP:** abre a porta de controle e espera a saudação do servidor; antes conferia só se o processo existia. Um `pure-ftpd` vivo que não atende passa a deixar o container `unhealthy`.
-- A seção de backup de [Operação](doc/operacao.md#backup-dos-volumes) usa os dois scripts no lugar dos comandos manuais.
-- [Segurança](doc/seguranca.md#hardening-do-compose-yaml-linha-a-linha): a capacidade `NET_BIND_SERVICE` é exigida pelo `pure-ftpd` na partida; o texto anterior a dava como reservada.
+- A seção de backup de [Operação](doc/pt-BR/operacao.md#backup-dos-volumes) usa os dois scripts no lugar dos comandos manuais.
+- [Segurança](doc/pt-BR/seguranca.md#hardening-do-compose-yaml-linha-a-linha): a capacidade `NET_BIND_SERVICE` é exigida pelo `pure-ftpd` na partida; o texto anterior a dava como reservada.
 
 ### Corrigido
 
@@ -871,7 +871,7 @@ Testes automatizados: um comando roda a bateria funcional, de segurança e de re
 - **`scripts/testar.sh`:** sobe uma instância de teste separada (em `127.0.0.2`, com nomes, portas, sub-rede, dados e segredos próprios), roda 18 casos funcionais, 37 de segurança e 12 de rede, grava um arquivo de resultado por bateria e remove tudo o que criou. A instalação em uso não é tocada. Opções `--resultados`, `--manter` e `--limpar`.
 - A bateria confere os próprios resultados contra as senhas, o hash, o cookie e o token que usou: se algum aparecer, o arquivo é apagado e a saída é `3`.
 - `ENV_FILE` no `manage-user.sh` e no `validate.sh --runtime`, para operar e conferir a instalação de outro arquivo de ambiente.
-- Seção do `testar.sh` em [Scripts](doc/scripts.md#testar) e a bateria na seção Testes do README e em [Solução de problemas](doc/solucao-de-problemas.md#ferramentas-de-validacao).
+- Seção do `testar.sh` em [Scripts](doc/pt-BR/scripts.md#testar) e a bateria na seção Testes do README e em [Solução de problemas](doc/pt-BR/solucao-de-problemas.md#ferramentas-de-validacao).
 
 ### Alterado
 
@@ -928,7 +928,7 @@ nginx na frente do painel, cinco portes, base Debian 13 e opção de FTP sem TLS
 - **`FTP_TLS_MODE=0`, FTP sem TLS, só para equipamento antigo que não fala TLS.** Senhas e arquivos trafegam em texto puro: o `deploy.sh`, o registro do container e o painel (telas Visão geral e Segurança) avisam enquanto o modo `0` ou `1` estiver ligado. O padrão continua `2`, TLS obrigatório no login.
 - Variáveis `NGINX_IMAGE`, `NGINX_CONTAINER_NAME`, `NGINX_MEMORY_LIMIT`, `NGINX_CPU_LIMIT` e `NGINX_PIDS_LIMIT` no `.env.example`; pasta `DATA_DIR/nginx`, criada pelo `deploy.sh`.
 - `scripts/nginx-entrypoint.sh`, `scripts/nginx-saude.sh`, `nginx/nginx.conf.modelo` e as páginas de erro em `nginx/erro/`.
-- Seção sobre o FTP sem TLS em [Segurança](doc/seguranca.md#ftp-sem-tls), o porquê do nome `FTP_PUBLIC_IP` em [Configuração](doc/configuracao.md#ftp-public-ip) e o serviço `nginx` em todos os guias e diagramas.
+- Seção sobre o FTP sem TLS em [Segurança](doc/pt-BR/seguranca.md#ftp-sem-tls), o porquê do nome `FTP_PUBLIC_IP` em [Configuração](doc/pt-BR/configuracao.md#ftp-public-ip) e o serviço `nginx` em todos os guias e diagramas.
 
 ### Alterado
 
@@ -978,7 +978,7 @@ Painel web seguro. **Uso só em rede privada, atrás de firewall**: o painel rec
 - Variáveis `PAINEL_IMAGE`, `PAINEL_CONTAINER_NAME`, `PAINEL_BIND_IP`, `PAINEL_PORT`, `PAINEL_REDES_PERMITIDAS`, `PAINEL_SESSAO_MINUTOS`, `PAINEL_CERT_CN`, `PAINEL_MEMORY_LIMIT`, `PAINEL_CPU_LIMIT` e `PAINEL_PIDS_LIMIT` no `.env.example`.
 - `scripts/painel-senha.sh`, que troca a senha do painel gravando só o hash; `scripts/painel-entrypoint.sh`; `scripts/ambiente.sh`, que lê uma chave do `.env` sem executar o arquivo.
 - Trava (`flock`) nas alterações de usuário: o `manage-user.sh` e o painel nunca gravam o PureDB ao mesmo tempo.
-- Guia [Painel web](doc/painel.md), diagramas `painel-diagrama.mmd` e `painel-fluxograma.mmd`, e o painel nos guias de configuração, segredos, segurança, arquitetura, scripts, operação, instalação e solução de problemas.
+- Guia [Painel web](doc/pt-BR/painel.md), diagramas `painel-diagrama.mmd` e `painel-fluxograma.mmd`, e o painel nos guias de configuração, segredos, segurança, arquitetura, scripts, operação, instalação e solução de problemas.
 
 ### Alterado
 
@@ -1008,7 +1008,7 @@ Painel web seguro. **Uso só em rede privada, atrás de firewall**: o painel rec
 
 ## [0.2.0] - 2026-10-04
 
-Pastas fixas, segredos fora do `.env` e recusa de IP público. **Quem já tinha a `0.1.x` instalada precisa migrar**: veja [Migrar dos volumes nomeados](doc/operacao.md#migracao).
+Pastas fixas, segredos fora do `.env` e recusa de IP público. **Quem já tinha a `0.1.x` instalada precisa migrar**: veja [Migrar dos volumes nomeados](doc/pt-BR/operacao.md#migracao).
 
 ### Adicionado
 

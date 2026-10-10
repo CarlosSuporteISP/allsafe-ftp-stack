@@ -8,6 +8,7 @@ profiles
 tests
 web/marca/fonte
 README.md
+README.pt-BR.md
 MARCA.md
 CHANGELOG.md
 deploy.sh

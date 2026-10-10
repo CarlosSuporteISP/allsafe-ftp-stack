@@ -1,6 +1,6 @@
 # 🎚️ Perfis de capacidade — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
+↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -39,7 +39,7 @@ flowchart LR
 
 ## 🚀 Como usar
 
-Passe o nome do perfil em `--size` para o [`deploy.sh`](../deploy.sh). Ele grava os limites do perfil no `.env`, com o nome em `FTP_PROFILE`, e reaplica a stack. A instalação nasce com o `small`; sem `--size`, o perfil em uso continua valendo:
+Passe o nome do perfil em `--size` para o [`deploy.sh`](../../deploy.sh). Ele grava os limites do perfil no `.env`, com o nome em `FTP_PROFILE`, e reaplica a stack. A instalação nasce com o `small`; sem `--size`, o perfil em uso continua valendo:
 
 ```bash
 ./deploy.sh --size medium                 # grava o medium no .env e reaplica
@@ -57,11 +57,11 @@ Passe o nome do perfil em `--size` para o [`deploy.sh`](../deploy.sh). Ele grava
 
 | Perfil | Host de referência | Sessões simultâneas | Uso típico |
 |---|---|---|---|
-| [`small`](../profiles/small.env) | 2 vCPU · 2 GB · SSD | até ~50 (`FTP_MAX_CLIENTS=50`) | provedor pequeno ou médio; backup de configuração é tráfego pequeno e esporádico: **cobre a maioria dos casos** |
-| [`medium`](../profiles/medium.env) | 4 vCPU · 4 GB · SSD | até ~120 | coleta noturna em lote de ~50 a ~200 equipamentos |
-| [`large`](../profiles/large.env) | 8 vCPU · 8 GB · NVMe | até ~300 | mais de 200 equipamentos ou vários coletores empurrando backup ao mesmo tempo |
-| [`xlarge`](../profiles/xlarge.env) | 16 vCPU · 16 GB · NVMe | até ~600 | operação grande, com várias regiões ou vários coletores no mesmo servidor |
-| [`extended`](../profiles/extended.env) | 32 vCPU · 32 GB · NVMe | até ~1200 | o maior porte: servidor dedicado, milhares de equipamentos enviando em janelas curtas |
+| [`small`](../../profiles/small.env) | 2 vCPU · 2 GB · SSD | até ~50 (`FTP_MAX_CLIENTS=50`) | provedor pequeno ou médio; backup de configuração é tráfego pequeno e esporádico: **cobre a maioria dos casos** |
+| [`medium`](../../profiles/medium.env) | 4 vCPU · 4 GB · SSD | até ~120 | coleta noturna em lote de ~50 a ~200 equipamentos |
+| [`large`](../../profiles/large.env) | 8 vCPU · 8 GB · NVMe | até ~300 | mais de 200 equipamentos ou vários coletores empurrando backup ao mesmo tempo |
+| [`xlarge`](../../profiles/xlarge.env) | 16 vCPU · 16 GB · NVMe | até ~600 | operação grande, com várias regiões ou vários coletores no mesmo servidor |
+| [`extended`](../../profiles/extended.env) | 32 vCPU · 32 GB · NVMe | até ~1200 | o maior porte: servidor dedicado, milhares de equipamentos enviando em janelas curtas |
 
 Os números são **pontos de partida**, não garantia de capacidade. FTP de backup raramente precisa de mais que `small`; suba de perfil só se vir `421 Too many connections` ou saturação de CPU ou memória do container. Os cinco perfis existem para a mesma stack servir em qualquer máquina, da VPS pequena ao servidor dedicado.
 

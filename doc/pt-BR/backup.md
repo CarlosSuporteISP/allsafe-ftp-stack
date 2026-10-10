@@ -1,6 +1,6 @@
 # ♻️ Backup e restauração — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
+↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 

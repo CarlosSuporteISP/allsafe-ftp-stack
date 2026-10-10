@@ -1,6 +1,6 @@
 # 🖥️ Painel web — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
+↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -128,8 +128,8 @@ Em inglês mudam todas as telas, os avisos, os erros dos formulários e a descri
 - **Por conta:** `DATA_DIR/painel/idiomas` (`/painel/idiomas` no container), `0600`, do `root`, uma linha `admin:<nome>:<pt|en>` ou `usuario:<nome>:<pt|en>` por conta que escolheu. O arquivo é gravado ao lado e trocado de uma vez. A linha acompanha o administrador que troca de nome e sai quando a conta é removida pelo painel. A de usuário removido pelo terminal sai na troca de idioma seguinte, de qualquer conta; até lá, um usuário criado com o mesmo nome entra no idioma do anterior.
 - **No navegador:** cookie `__Host-idioma`, com `Secure`, `HttpOnly`, `SameSite=Lax` e validade de um ano, gravado na troca e em toda entrada. Só `pt` e `en` são lidos: outro valor é ignorado. Ele não é sessão e não abre nenhuma tela.
 - **Troca:** `POST /idioma`, com o token dos outros formulários da sessão; antes da entrada, com o token do formulário de entrada. Por `GET` não há troca, e idioma fora da lista recebe `400`. A volta sai do caminho da tela de origem e só quando ele é uma tela do papel da sessão: nos outros casos, o começo do painel.
-- **Textos:** o texto em português é o que está no código, e o catálogo do inglês é o [`painel/idioma_en.py`](../painel/idioma_en.py). Texto sem tradução sairia em português; o `./scripts/validate.sh` recusa o código em que falta ou sobra tradução.
-- **Bandeiras:** são desenhadas dentro da própria página, pelo [`painel/icones.py`](../painel/icones.py), como os outros ícones: não são emoji nem arquivo de imagem, e nada é buscado fora do painel.
+- **Textos:** o texto em português é o que está no código, e o catálogo do inglês é o [`painel/idioma_en.py`](../../painel/idioma_en.py). Texto sem tradução sairia em português; o `./scripts/validate.sh` recusa o código em que falta ou sobra tradução.
+- **Bandeiras:** são desenhadas dentro da própria página, pelo [`painel/icones.py`](../../painel/icones.py), como os outros ícones: não são emoji nem arquivo de imagem, e nada é buscado fora do painel.
 - **Auditoria:** a troca de idioma não gera registro. As recusas dela são as de qualquer formulário: `recusa_csrf` e `recusa_origem`.
 
 </details>
@@ -157,7 +157,7 @@ Em inglês mudam todas as telas, os avisos, os erros dos formulários e a descri
 
 Os formulários, as mensagens de recusa e a tela da senha gerada estão em [Fotos da aplicação](aplicacao/README.md#usuarios).
 
-Regras, as mesmas do [`manage-user.sh`](../manage-user.sh):
+Regras, as mesmas do [`manage-user.sh`](../../manage-user.sh):
 
 - Nome com letras minúsculas, números, `_` e `-`, começando por letra ou `_`, até 32 caracteres.
 - Senha com no mínimo 12 caracteres.
@@ -293,7 +293,7 @@ Com as duas preenchidas, sai o arquivo que passar de qualquer uma. A contagem é
 <summary>Detalhe técnico — os limites por usuário</summary>
 
 - `POST /usuarios/limites` grava todos de uma vez, com o token CSRF da sessão e os campos `usuario`, `sessoes`, `download`, `envio`, `inicio`, `fim`, `baixar`, `tentativas` e `minutos`. Campo em branco tira o limite. Valor fora da regra, início sem fim ou início igual ao fim respondem `400`, com a tela de volta e o que foi digitado; usuário que não existe e nome fora da regra, `404`. Nada é gravado pela metade.
-- **Quem guarda e quem aplica:** sessões, taxas e horário ficam na linha do usuário em `/auth/pureftpd.passwd`, gravados com `pure-pw usermod`, e quem os aplica é o `pure-ftpd`, a cada entrada. O limite de downloads pelo painel fica em `/auth/limites.lista` (`0600`), e quem o aplica é o painel. Os dois campos do bloqueio por tentativa ficam na mesma lista, e quem os aplica é o vigia do serviço `ftp`: [Scripts](scripts.md#vigia). Todos são gravados pelo `allsafe-ftp-user limites`, o mesmo comando do [`manage-user.sh`](../manage-user.sh).
+- **Quem guarda e quem aplica:** sessões, taxas e horário ficam na linha do usuário em `/auth/pureftpd.passwd`, gravados com `pure-pw usermod`, e quem os aplica é o `pure-ftpd`, a cada entrada. O limite de downloads pelo painel fica em `/auth/limites.lista` (`0600`), e quem o aplica é o painel. Os dois campos do bloqueio por tentativa ficam na mesma lista, e quem os aplica é o vigia do serviço `ftp`: [Scripts](scripts.md#vigia). Todos são gravados pelo `allsafe-ftp-user limites`, o mesmo comando do [`manage-user.sh`](../../manage-user.sh).
 - **Horário:** vale no fuso do container, o da variável `TZ`. O `pure-pw` guarda as horas sem os zeros da esquerda (`08:00` às `18:00` fica `800-1800`); o painel e o `manage-user.sh` mostram sempre com quatro dígitos.
 - **Taxa de download no painel:** os downloads que o próprio usuário faz na tela Meus arquivos saem na taxa dele. Os que o administrador faz na aba Arquivos, não.
 - **Sessão do usuário no painel:** trocar um limite que fica no cadastro do FTP muda a linha dele, e as sessões dele no painel são encerradas no pedido seguinte. Trocar só o limite de downloads pelo painel não encerra nada e vale no download seguinte.
@@ -310,7 +310,7 @@ Com as duas preenchidas, sai o arquivo que passar de qualquer uma. A contagem é
 
 - `POST /usuarios/limpeza` grava a regra, com o token CSRF da sessão e os campos `usuario`, `ultimos`, `dias` e `senha_atual`, a senha de quem está na sessão. Senha errada ou em branco recebe `403`, e nada é gravado; desligar a regra pede a senha do mesmo jeito. Só administrador tem essa rota.
 - **Quem guarda:** a regra fica na linha do usuário em `/auth/limites.lista`, nas chaves `ultimos=` e `dias=`, gravada pelo `allsafe-ftp-user` (ação `retencao`), o mesmo comando do `manage-user.sh`. Usuário sem pasta dentro de `DATA_DIR/dados` não tem o cartão.
-- **Quem aplica:** o [`limpeza.py`](../painel/limpeza.py), em uma linha de execução do próprio painel: a primeira passada sai 2 minutos depois da subida, e as seguintes, a cada `PAINEL_RETENCAO_MINUTOS`. Com `0`, nenhuma passada acontece e a tela avisa.
+- **Quem aplica:** o [`limpeza.py`](../../painel/limpeza.py), em uma linha de execução do próprio painel: a primeira passada sai 2 minutos depois da subida, e as seguintes, a cada `PAINEL_RETENCAO_MINUTOS`. Com `0`, nenhuma passada acontece e a tela avisa.
 - **O que sai:** só arquivo comum. Ficam como estão o link simbólico, tudo o que tem o nome começado por ponto (arquivo ou pasta), a área de entrada do perfil Só envio e o que está em outro sistema de arquivos montado dentro da pasta.
 - **Qual data conta:** manter os mais recentes ordena pela data de modificação do arquivo. Apagar por dias olha a data mais nova entre a de modificação e a de mudança no servidor: o arquivo que chegou hoje com data antiga não sai no mesmo dia.
 - **Subpastas:** a regra desce pelas pastas de dentro, até 64 níveis e 10.000 subpastas por pasta em cada passada. A subpasta que a limpeza esvaziou sai junto; a que já estava vazia, não. A pasta do usuário nunca sai.
@@ -674,13 +674,13 @@ O painel mostra a logo da ALL-SAFE em quatro lugares e a autoria em um:
 | Tela de entrada | Logo completa | `logo-320.png` |
 | Rodapé de todas as telas | `Desenvolvido pela allsafe.inf.br`, com o endereço do site e o do GitHub | texto do painel |
 
-Os seis arquivos ficam em [`web/marca/`](../web/marca/) e são entregues pelo nginx.
+Os seis arquivos ficam em [`web/marca/`](../../web/marca/) e são entregues pelo nginx.
 
-> ⚠️ **Contrato ou venda para terceiros:** quem usa a stack para si pode manter a logo e o ícone. Quem a entrega em contrato ou a vende para terceiros tira ou troca os dois. É o único pedido da ALL-SAFE, explicado em [Marca ALL-SAFE](../MARCA.md).
+> ⚠️ **Contrato ou venda para terceiros:** quem usa a stack para si pode manter a logo e o ícone. Quem a entrega em contrato ou a vende para terceiros tira ou troca os dois. É o único pedido da ALL-SAFE, explicado em [Marca ALL-SAFE](../../MARCA.md).
 
 **Trocar a logo e o ícone:**
 
-1. Substitua as duas artes de [`web/marca/fonte/`](../web/marca/fonte/), mantendo os nomes: `allsafe-logo-2048.png` (logo completa) e `allsafe-simbolo-512.png` (só o símbolo). Use PNG quadrado, de preferência com fundo transparente.
+1. Substitua as duas artes de [`web/marca/fonte/`](../../web/marca/fonte/), mantendo os nomes: `allsafe-logo-2048.png` (logo completa) e `allsafe-simbolo-512.png` (só o símbolo). Use PNG quadrado, de preferência com fundo transparente.
 2. Gere os seis arquivos:
 
    ```bash
@@ -702,7 +702,7 @@ A linha `Desenvolvido pela allsafe.inf.br` continua no rodapé de todas as telas
 
 - **Sem o ImageMagick:** o `gerar-marca.sh` precisa dele só no computador de quem troca a logo. Também serve substituir direto os seis arquivos de `web/marca/`, com os mesmos nomes e tamanhos: a tabela está em [Scripts](scripts.md#gerar-marca).
 - **Placa clara:** a arte é escura e o painel tem fundo escuro; o script põe a arte sobre uma placa clara de cantos arredondados, sem alterar as cores dela. `MARCA_PLACA='#rrggbb'` troca a cor da placa.
-- **Só os seis nomes existem:** o nginx entrega `/favicon.ico` e os cinco PNG de `/marca/`, só para leitura, com os cabeçalhos de segurança de [`nginx/cabecalhos.conf`](../nginx/cabecalhos.conf) e `Cache-Control: no-cache`. Outro nome, a lista da pasta e as artes de origem não são entregues, e as artes de origem nem entram na imagem.
+- **Só os seis nomes existem:** o nginx entrega `/favicon.ico` e os cinco PNG de `/marca/`, só para leitura, com os cabeçalhos de segurança de [`nginx/cabecalhos.conf`](../../nginx/cabecalhos.conf) e `Cache-Control: no-cache`. Outro nome, a lista da pasta e as artes de origem não são entregues, e as artes de origem nem entram na imagem.
 - **Sem conteúdo de fora:** o painel continua com `img-src 'self'`: só carrega imagem do próprio endereço. Os dois links do rodapé abrem em outra aba com `rel="noopener noreferrer"`, e o `Referrer-Policy: same-origin` não repassa o endereço do painel ao site de destino.
 - **Conferência:** o `./scripts/validate.sh` recusa a pasta sem um dos seis arquivos, ou com arquivo que não é PNG nem ICO.
 
@@ -923,10 +923,10 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 <details>
 <summary>Detalhe técnico — implementação</summary>
 
-- **Código:** os módulos de [`painel/`](../painel/), só com a biblioteca padrão do Python 3.13 do Debian 13, listados [logo abaixo](#modulos); a aparência está em [`web/estilo.css`](../web/estilo.css) e a logo e o ícone em [`web/marca/`](../web/marca/), que o nginx entrega direto, sem passar pelo painel, como o [`web/robots.txt`](../web/robots.txt). Cada página aponta para o estilo com a marca do conteúdo dele (`/estilo.css?v=` e os 12 primeiros dígitos do SHA-256 do arquivo, gravados na construção da imagem do painel): estilo novo é endereço novo, e nem o navegador nem um proxy no caminho entregam o antigo depois de uma atualização. O `/.well-known/security.txt` é o painel que monta, a cada pedido, com o e-mail de `SEGURANCA_CONTATO_EMAIL`: [Configuração](configuracao.md#contato-de-seguranca). Não há JavaScript, fonte nem imagem externa.
-- **Imagem:** alvo `painel` do [`Dockerfile`](../Dockerfile), sobre a mesma base do FTP (traz o `pure-pw` e o `allsafe-ftp-user`). Imagem `PAINEL_IMAGE`, container `PAINEL_CONTAINER_NAME`.
-- **Entrada do container:** [`painel/entrypoint.sh`](../painel/entrypoint.sh) recusa senha em variável, confere o `PAINEL_ADMIN_USER`, o IP e as redes privados, ajusta dono e modo de `/painel` e do arquivo de administradores, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
-- **Frente web:** alvo `nginx` do [`Dockerfile`](../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo). Com o navegador, o nginx fala HTTP/2, ou HTTP/1.1 se o navegador não pedir, e mantém a conexão parada por 60 segundos; com o painel, HTTP/1.1, uma conexão por pedido. O `estilo.css` vai comprimido para quem aceita gzip, a partir da cópia feita na construção da imagem; página do painel nunca é comprimida. Em HTTP/2, o download de arquivo grande usa mais processador por byte: 300 MiB levaram 0,69 s, contra 0,45 s em HTTP/1.1, medidos com o nginx no limite de meio processador, os dois acima do que uma rede de 1 Gbit/s entrega. O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [Segurança](seguranca.md#painel).
+- **Código:** os módulos de [`painel/`](../../painel/), só com a biblioteca padrão do Python 3.13 do Debian 13, listados [logo abaixo](#modulos); a aparência está em [`web/estilo.css`](../../web/estilo.css) e a logo e o ícone em [`web/marca/`](../../web/marca/), que o nginx entrega direto, sem passar pelo painel, como o [`web/robots.txt`](../../web/robots.txt). Cada página aponta para o estilo com a marca do conteúdo dele (`/estilo.css?v=` e os 12 primeiros dígitos do SHA-256 do arquivo, gravados na construção da imagem do painel): estilo novo é endereço novo, e nem o navegador nem um proxy no caminho entregam o antigo depois de uma atualização. O `/.well-known/security.txt` é o painel que monta, a cada pedido, com o e-mail de `SEGURANCA_CONTATO_EMAIL`: [Configuração](configuracao.md#contato-de-seguranca). Não há JavaScript, fonte nem imagem externa.
+- **Imagem:** alvo `painel` do [`Dockerfile`](../../Dockerfile), sobre a mesma base do FTP (traz o `pure-pw` e o `allsafe-ftp-user`). Imagem `PAINEL_IMAGE`, container `PAINEL_CONTAINER_NAME`.
+- **Entrada do container:** [`painel/entrypoint.sh`](../../painel/entrypoint.sh) recusa senha em variável, confere o `PAINEL_ADMIN_USER`, o IP e as redes privados, ajusta dono e modo de `/painel` e do arquivo de administradores, gera o certificado, copia-o para a pasta do nginx e executa o servidor.
+- **Frente web:** alvo `nginx` do [`Dockerfile`](../../Dockerfile), nginx 1.26 do Debian 13, configurado por [`nginx/nginx.conf.modelo`](../../nginx/nginx.conf.modelo). Com o navegador, o nginx fala HTTP/2, ou HTTP/1.1 se o navegador não pedir, e mantém a conexão parada por 60 segundos; com o painel, HTTP/1.1, uma conexão por pedido. O `estilo.css` vai comprimido para quem aceita gzip, a partir da cópia feita na construção da imagem; página do painel nunca é comprimida. Em HTTP/2, o download de arquivo grande usa mais processador por byte: 300 MiB levaram 0,69 s, contra 0,45 s em HTTP/1.1, medidos com o nginx no limite de meio processador, os dois acima do que uma rede de 1 Gbit/s entrega. O painel escuta no soquete `/nginx/painel.sock` (`0660`, grupo `10001`) e só aceita pedido com exatamente um `X-Real-IP` válido; sem ele, responde `400`. Detalhe em [Segurança](seguranca.md#painel).
 - **Hash da senha:** `scrypt` com `N=2^15`, `r=8`, `p=1` e sal de 16 bytes, no formato `scrypt$15$8$1$<sal>$<resumo>`. Cada administrador tem o seu, em `/painel/administradores`; o arquivo é lido a cada entrada e a comparação é em tempo constante. Usuário que não existe passa pela mesma conta e recebe a mesma resposta. O segredo `/run/secrets/painel_admin_inicial_senha_hash` só é usado na subida em que ainda não existe nenhum administrador.
 - **Sessão:** o token do cookie tem 256 bits aleatórios e o servidor guarda só o resumo SHA-256 dele, em memória, com o nome do administrador ou do usuário do FTP que entrou. Reiniciar o painel encerra todas as sessões e zera a contagem de erros de entrada.
 - **Tela de entrada:** o formulário leva um token assinado (HMAC) com validade curta, para a entrada também não aceitar pedido forjado por outro site.
@@ -947,43 +947,43 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 <details>
 <summary>Detalhe técnico — módulos do código</summary>
 
-O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro para `/opt/painel` na imagem. O ponto de entrada é o `servidor.py`; os outros são importados por ele.
+O código fica em [`painel/`](../../painel/), um assunto por arquivo, e vai inteiro para `/opt/painel` na imagem. O ponto de entrada é o `servidor.py`; os outros são importados por ele.
 
 | Módulo | O que tem |
 |---|---|
-| [`servidor.py`](../painel/servidor.py) | Ponto de entrada: sobe o servidor, cria o primeiro administrador e atende os modos `--hash`, `--saude` e `--administrador` |
-| [`config.py`](../painel/config.py) | Caminhos, limites e a leitura das variáveis do container, com as recusas de rede e de sessão |
-| [`senha.py`](../painel/senha.py) | Hash `scrypt` das senhas dos administradores e a conferência em tempo constante |
-| [`administradores.py`](../painel/administradores.py) | Leitura e gravação do arquivo de administradores, uma alteração por vez |
-| [`sessao.py`](../painel/sessao.py) | Sessões em memória, de administrador e de usuário do FTP, limite de tentativas e token do formulário de entrada |
-| [`auditoria.py`](../painel/auditoria.py) | Gravação e leitura do `auditoria.log` |
-| [`estado.py`](../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados, quem entra sem TLS) e a chamada do `allsafe-ftp-user` |
-| [`confirmacao.py`](../painel/confirmacao.py) | Confirmação pela senha atual de quem está na sessão, pedida nas alterações de administrador, na troca de nome de arquivo ou pasta e em tudo o que apaga arquivo ou pasta |
-| [`pagina.py`](../painel/pagina.py) | Moldura das telas, com o menu, o símbolo e a autoria no rodapé, e os textos que mais de uma aba usa |
-| [`idioma.py`](../painel/idioma.py) | Idioma das telas: o texto de cada pedido em português ou em inglês, o formato da data e dos números, o cookie da tela de entrada e a escolha gravada de cada conta |
-| [`idioma_en.py`](../painel/idioma_en.py) | Catálogo do inglês: cada texto das telas em português e a tradução dele, e as mensagens de erro do `allsafe-ftp-user` que o painel mostra |
-| [`icones.py`](../painel/icones.py) | Os ícones do painel, desenhados em linha: saem dentro do HTML de cada tela, sem arquivo de imagem |
-| [`graficos.py`](../painel/graficos.py) | Os gráficos (colunas por dia, faixa dividida, barras e linha do tempo), em SVG montado no servidor, sem script e sem estilo dentro do HTML; os números ficam também em texto |
-| [`cena.py`](../painel/cena.py) | A cena em três dimensões da tela de entrada e a miniatura dela na faixa que abre cada aba, só com HTML e CSS |
-| [`atendimento.py`](../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF), roteamento por papel (administrador ou usuário do FTP) e a entrega de arquivo em blocos |
-| [`rotas.py`](../painel/rotas.py) | Tabelas de método e caminho para a função que responde: uma para o administrador e uma para cada perfil de usuário do FTP |
-| [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, do administrador e do usuário do FTP, e saída |
-| [`conta_ftp.py`](../painel/conta_ftp.py) | Conta do usuário do FTP no painel: leitura do cadastro dele, conferência da senha no servidor FTP e os motivos que encerram a sessão |
-| [`aba_visao_geral.py`](../painel/aba_visao_geral.py) | Aba Visão geral |
-| [`limites.py`](../painel/limites.py) | Limites próprios de cada usuário do FTP: leitura do cadastro e da `limites.lista`, conferência do formulário e o resumo da lista |
-| [`retencao.py`](../painel/retencao.py) | Limpeza automática: a regra de cada usuário do FTP, lida da `limites.lista`, a conferência do formulário e o resumo da lista |
-| [`limpeza.py`](../painel/limpeza.py) | Limpeza automática: a passada que aplica a regra de cada usuário na pasta dele, pela linha de execução do painel ou pelo terminal (`servidor.py --retencao`) |
-| [`aba_usuarios.py`](../painel/aba_usuarios.py) | Aba Usuários: lista única de administradores e usuários do FTP, criação com o perfil e a pasta escolhidos, edição (perfil, pasta, limites e bloqueios), troca de senha, remoção e a dispensa do TLS por usuário |
-| [`aba_arquivos.py`](../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, envio de arquivo, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta |
-| [`envio.py`](../painel/envio.py) | Envio de arquivo pelo navegador: leitura do corpo `multipart/form-data` em fluxo, do soquete para o disco, sem guardar o arquivo na memória |
-| [`aba_meus_arquivos.py`](../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação, download e as ações do perfil dentro da pasta dele; para o perfil Só envio, a tela Envio de arquivos |
-| [`recursos.py`](../painel/recursos.py) | Recursos do servidor e de cada container da stack: leitura do processador, da memória e da rede do FTP, do grupo de controle do painel e do que o ftp e o nginx publicam, e o histórico dos últimos 10 minutos, guardado na memória |
-| [`aba_servidor.py`](../painel/aba_servidor.py) | Aba Servidor: os containers da stack, com o uso contra o alocado, os cartões de processador, memória, disco e rede do servidor, e a faixa de resumo da Visão geral |
-| [`aba_administradores.py`](../painel/aba_administradores.py) | Administradores do painel: criação pelo formulário de Novo usuário, troca de senha, troca de nome e remoção; a lista é a da aba Usuários |
-| [`aba_seguranca.py`](../painel/aba_seguranca.py) | Aba Segurança |
-| [`enderecos.py`](../painel/enderecos.py) | Bloqueio por endereço: a escrita única do endereço, IPv4 ou IPv6, a leitura dos bloqueios de endereço e de prefixo em vigor, a contagem dos erros de usuário e senha de cada endereço, zerada na entrada certa, e o pedido de bloqueio ao `allsafe-ftp-user` |
-| [`aba_bloqueios.py`](../painel/aba_bloqueios.py) | Aba Bloqueios: lista dos endereços e dos prefixos bloqueados, busca, bloqueio à mão de endereço ou de prefixo, mudança de prazo e desbloqueio (`GET /bloqueios`, `GET` e `POST /bloqueios/novo`, `GET /bloqueios/endereco?ip=<endereço>`, `POST /bloqueios/prazo` e `POST /bloqueios/liberar`) |
-| [`aba_atividade.py`](../painel/aba_atividade.py) | Aba Log |
+| [`servidor.py`](../../painel/servidor.py) | Ponto de entrada: sobe o servidor, cria o primeiro administrador e atende os modos `--hash`, `--saude` e `--administrador` |
+| [`config.py`](../../painel/config.py) | Caminhos, limites e a leitura das variáveis do container, com as recusas de rede e de sessão |
+| [`senha.py`](../../painel/senha.py) | Hash `scrypt` das senhas dos administradores e a conferência em tempo constante |
+| [`administradores.py`](../../painel/administradores.py) | Leitura e gravação do arquivo de administradores, uma alteração por vez |
+| [`sessao.py`](../../painel/sessao.py) | Sessões em memória, de administrador e de usuário do FTP, limite de tentativas e token do formulário de entrada |
+| [`auditoria.py`](../../painel/auditoria.py) | Gravação e leitura do `auditoria.log` |
+| [`estado.py`](../../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados, quem entra sem TLS) e a chamada do `allsafe-ftp-user` |
+| [`confirmacao.py`](../../painel/confirmacao.py) | Confirmação pela senha atual de quem está na sessão, pedida nas alterações de administrador, na troca de nome de arquivo ou pasta e em tudo o que apaga arquivo ou pasta |
+| [`pagina.py`](../../painel/pagina.py) | Moldura das telas, com o menu, o símbolo e a autoria no rodapé, e os textos que mais de uma aba usa |
+| [`idioma.py`](../../painel/idioma.py) | Idioma das telas: o texto de cada pedido em português ou em inglês, o formato da data e dos números, o cookie da tela de entrada e a escolha gravada de cada conta |
+| [`idioma_en.py`](../../painel/idioma_en.py) | Catálogo do inglês: cada texto das telas em português e a tradução dele, e as mensagens de erro do `allsafe-ftp-user` que o painel mostra |
+| [`icones.py`](../../painel/icones.py) | Os ícones do painel, desenhados em linha: saem dentro do HTML de cada tela, sem arquivo de imagem |
+| [`graficos.py`](../../painel/graficos.py) | Os gráficos (colunas por dia, faixa dividida, barras e linha do tempo), em SVG montado no servidor, sem script e sem estilo dentro do HTML; os números ficam também em texto |
+| [`cena.py`](../../painel/cena.py) | A cena em três dimensões da tela de entrada e a miniatura dela na faixa que abre cada aba, só com HTML e CSS |
+| [`atendimento.py`](../../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF), roteamento por papel (administrador ou usuário do FTP) e a entrega de arquivo em blocos |
+| [`rotas.py`](../../painel/rotas.py) | Tabelas de método e caminho para a função que responde: uma para o administrador e uma para cada perfil de usuário do FTP |
+| [`entrada.py`](../../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, do administrador e do usuário do FTP, e saída |
+| [`conta_ftp.py`](../../painel/conta_ftp.py) | Conta do usuário do FTP no painel: leitura do cadastro dele, conferência da senha no servidor FTP e os motivos que encerram a sessão |
+| [`aba_visao_geral.py`](../../painel/aba_visao_geral.py) | Aba Visão geral |
+| [`limites.py`](../../painel/limites.py) | Limites próprios de cada usuário do FTP: leitura do cadastro e da `limites.lista`, conferência do formulário e o resumo da lista |
+| [`retencao.py`](../../painel/retencao.py) | Limpeza automática: a regra de cada usuário do FTP, lida da `limites.lista`, a conferência do formulário e o resumo da lista |
+| [`limpeza.py`](../../painel/limpeza.py) | Limpeza automática: a passada que aplica a regra de cada usuário na pasta dele, pela linha de execução do painel ou pelo terminal (`servidor.py --retencao`) |
+| [`aba_usuarios.py`](../../painel/aba_usuarios.py) | Aba Usuários: lista única de administradores e usuários do FTP, criação com o perfil e a pasta escolhidos, edição (perfil, pasta, limites e bloqueios), troca de senha, remoção e a dispensa do TLS por usuário |
+| [`aba_arquivos.py`](../../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, envio de arquivo, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta |
+| [`envio.py`](../../painel/envio.py) | Envio de arquivo pelo navegador: leitura do corpo `multipart/form-data` em fluxo, do soquete para o disco, sem guardar o arquivo na memória |
+| [`aba_meus_arquivos.py`](../../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação, download e as ações do perfil dentro da pasta dele; para o perfil Só envio, a tela Envio de arquivos |
+| [`recursos.py`](../../painel/recursos.py) | Recursos do servidor e de cada container da stack: leitura do processador, da memória e da rede do FTP, do grupo de controle do painel e do que o ftp e o nginx publicam, e o histórico dos últimos 10 minutos, guardado na memória |
+| [`aba_servidor.py`](../../painel/aba_servidor.py) | Aba Servidor: os containers da stack, com o uso contra o alocado, os cartões de processador, memória, disco e rede do servidor, e a faixa de resumo da Visão geral |
+| [`aba_administradores.py`](../../painel/aba_administradores.py) | Administradores do painel: criação pelo formulário de Novo usuário, troca de senha, troca de nome e remoção; a lista é a da aba Usuários |
+| [`aba_seguranca.py`](../../painel/aba_seguranca.py) | Aba Segurança |
+| [`enderecos.py`](../../painel/enderecos.py) | Bloqueio por endereço: a escrita única do endereço, IPv4 ou IPv6, a leitura dos bloqueios de endereço e de prefixo em vigor, a contagem dos erros de usuário e senha de cada endereço, zerada na entrada certa, e o pedido de bloqueio ao `allsafe-ftp-user` |
+| [`aba_bloqueios.py`](../../painel/aba_bloqueios.py) | Aba Bloqueios: lista dos endereços e dos prefixos bloqueados, busca, bloqueio à mão de endereço ou de prefixo, mudança de prazo e desbloqueio (`GET /bloqueios`, `GET` e `POST /bloqueios/novo`, `GET /bloqueios/endereco?ip=<endereço>`, `POST /bloqueios/prazo` e `POST /bloqueios/liberar`) |
+| [`aba_atividade.py`](../../painel/aba_atividade.py) | Aba Log |
 
 Os módulos não gravam nada na imagem: a raiz do container é somente leitura e o Python roda sem gerar `.pyc`. O `./scripts/validate.sh` confere a sintaxe de todos, que nenhum usa nome que não definiu nem importou e que cada texto das telas tem tradução no catálogo do inglês.
 

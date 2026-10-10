@@ -1,6 +1,6 @@
 # 📚 Documentação — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md)
+↩ [README do projeto](../../README.pt-BR.md)
 
 ## 💡 Em poucas palavras
 
@@ -71,8 +71,8 @@ flowchart LR
 | Ver as telas do painel antes de instalar | [Fotos da aplicação](aplicacao/README.md) |
 | Antes de produção | [Rede privada e firewall](seguranca.md#rede-privada) ➜ [Boas práticas antes de produção](seguranca.md#boas-praticas) ➜ [Operação](operacao.md#certificado-real-de-producao) ➜ [Backup e restauração](backup.md#automatica) |
 | Equipamento antigo que não fala TLS | [Equipamento sem TLS](seguranca.md#ftp-sem-tls) ➜ [Configuração](configuracao.md#tls) ➜ [Solução de problemas](solucao-de-problemas.md#ftp-sem-tls) |
-| Trocar a logo, entregar em contrato ou vender | [Marca do painel](painel.md#marca) ➜ [Marca ALL-SAFE](../MARCA.md) |
-| Avisar de uma falha de segurança | [Política de segurança](../SECURITY.md) ➜ [Contato de segurança](configuracao.md#contato-de-seguranca) |
+| Trocar a logo, entregar em contrato ou vender | [Marca do painel](painel.md#marca) ➜ [Marca ALL-SAFE](../../MARCA.md) |
+| Avisar de uma falha de segurança | [Política de segurança](../../SECURITY.md) ➜ [Contato de segurança](configuracao.md#contato-de-seguranca) |
 | Guardar ou recuperar os dados | [Backup e restauração](backup.md) |
 | Algo quebrou | [Solução de problemas](solucao-de-problemas.md) |
 
@@ -106,9 +106,9 @@ Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com o
 
 | Diagrama | Nível | Onde aparece |
 |---|---|---|
-| [visao-geral-diagrama.mmd](diagramas/visao-geral-diagrama.mmd) | 1 | [README do projeto](../README.md) e este índice |
-| [funcionamento-fluxograma.mmd](diagramas/funcionamento-fluxograma.mmd) | 2 | [README do projeto](../README.md#como-funciona) |
-| [arquitetura-mapa.mmd](diagramas/arquitetura-mapa.mmd) | 2 | [README do projeto](../README.md#arquitetura) e [Arquitetura](arquitetura.md) |
+| [visao-geral-diagrama.mmd](diagramas/visao-geral-diagrama.mmd) | 1 | [README do projeto](../../README.pt-BR.md) e este índice |
+| [funcionamento-fluxograma.mmd](diagramas/funcionamento-fluxograma.mmd) | 2 | [README do projeto](../../README.pt-BR.md#como-funciona) |
+| [arquitetura-mapa.mmd](diagramas/arquitetura-mapa.mmd) | 2 | [README do projeto](../../README.pt-BR.md#arquitetura) e [Arquitetura](arquitetura.md) |
 | [subida-modelo.mmd](diagramas/subida-modelo.mmd) | 3 | [Arquitetura](arquitetura.md#subida) |
 | [instalacao-diagrama.mmd](diagramas/instalacao-diagrama.mmd) | 1 | [Instalação](instalacao.md) |
 | [configuracao-diagrama.mmd](diagramas/configuracao-diagrama.mmd) | 1 | [Configuração](configuracao.md) e [Perfis](perfis.md) |
@@ -121,8 +121,8 @@ Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com o
 | [usuarios-diagrama.mmd](diagramas/usuarios-diagrama.mmd) | 1 | [Operação](operacao.md) |
 | [backup-diagrama.mmd](diagramas/backup-diagrama.mmd) | 1 | [Backup e restauração](backup.md) |
 | [painel-diagrama.mmd](diagramas/painel-diagrama.mmd) | 1 | [Painel web](painel.md) |
-| [painel-fluxograma.mmd](diagramas/painel-fluxograma.mmd) | 2 | [README do projeto](../README.md#como-funciona) e [Painel web](painel.md#como-decide) |
-| [painel-pedidos-fluxograma.mmd](diagramas/painel-pedidos-fluxograma.mmd) | 2 | [README do projeto](../README.md#como-funciona) e [Painel web](painel.md#como-decide) |
+| [painel-fluxograma.mmd](diagramas/painel-fluxograma.mmd) | 2 | [README do projeto](../../README.pt-BR.md#como-funciona) e [Painel web](painel.md#como-decide) |
+| [painel-pedidos-fluxograma.mmd](diagramas/painel-pedidos-fluxograma.mmd) | 2 | [README do projeto](../../README.pt-BR.md#como-funciona) e [Painel web](painel.md#como-decide) |
 | [diagnostico-diagrama.mmd](diagramas/diagnostico-diagrama.mmd) | 1 | [Solução de problemas](solucao-de-problemas.md) |
 
 ---
@@ -135,7 +135,7 @@ As fotos são capturas reais do painel, em tema escuro. No Markdown, toda foto �
 
 | Pasta | O que guarda | Onde aparece | Visualizador |
 |---|---|---|---|
-| [`imagens/`](imagens/) | A imagem principal e uma imagem de cada aba do painel | [README do projeto](../README.md#imagens) | [`visualizador.html`](imagens/visualizador.html) |
+| [`imagens/`](imagens/) | A imagem principal e uma imagem de cada aba do painel | [README do projeto](../../README.pt-BR.md#imagens) | [`visualizador.html`](imagens/visualizador.html) |
 | [`aplicacao/imagens/`](aplicacao/imagens/) | As fotos de cada menu, formulário, recusa e confirmação | [Fotos da aplicação](aplicacao/README.md) | [`visualizador.html`](aplicacao/imagens/visualizador.html) |
 
 ---
@@ -148,4 +148,4 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ---
 
-⬅️ [README do projeto](../README.md) · 🏠 [Documentação](README.md) · ➡️ [Instalação](instalacao.md)
+⬅️ [README do projeto](../../README.pt-BR.md) · 🏠 [Documentação](README.md) · ➡️ [Instalação](instalacao.md)

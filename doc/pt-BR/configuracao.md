@@ -1,6 +1,6 @@
 # ⚙️ Configuração — allsafe-ftp-stack
 
-↩ [README do projeto](../README.md) · [Índice da documentação](README.md)
+↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
 
@@ -39,7 +39,7 @@ flowchart LR
 
 ## 🧾 Exemplo mínimo de produção
 
-Todas as variáveis vivem no `.env`, copiado de [`.env.example`](../.env.example). No exemplo, as variáveis vêm agrupadas por assunto e **cada uma tem, na linha de cima, um comentário dizendo para que serve**; este guia traz o mesmo, com mais detalhe.
+Todas as variáveis vivem no `.env`, copiado de [`.env.example`](../../.env.example). No exemplo, as variáveis vêm agrupadas por assunto e **cada uma tem, na linha de cima, um comentário dizendo para que serve**; este guia traz o mesmo, com mais detalhe.
 
 ```ini
 TZ=America/Sao_Paulo
@@ -71,7 +71,7 @@ Depois de editar o `.env`, valide sem subir:
 
 **Resultado esperado:** `OK: perfil 'small', rede privada, recursos do servidor e compose validados; nada foi alterado.` Um IP fora das faixas privadas, uma senha no `.env`, um `FTP_TLS_MODE` fora de `0` a `3` ou um perfil maior que o servidor param o comando com a explicação.
 
-A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../.env.example). Quando a variável falta no `.env`, o [`compose.yaml`](../compose.yaml) aplica o mesmo valor, com três exceções: `FTP_CERT_CN` vira `localhost`, e `DATA_DIR` e `FTP_PASSIVE_IP` não têm padrão no Compose: sem elas o comando para com `defina DATA_DIR no .env` ou `defina FTP_PASSIVE_IP no .env`.
+A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../../.env.example). Quando a variável falta no `.env`, o [`compose.yaml`](../../compose.yaml) aplica o mesmo valor, com três exceções: `FTP_CERT_CN` vira `localhost`, e `DATA_DIR` e `FTP_PASSIVE_IP` não têm padrão no Compose: sem elas o comando para com `defina DATA_DIR no .env` ou `defina FTP_PASSIVE_IP no .env`.
 
 ---
 
@@ -104,7 +104,7 @@ A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../.env.e
 | `NGINX_CONTAINER_NAME` | Nome do container e do host do nginx | Nome de container | `allsafe-ftp-nginx` |
 | `FTP_NETWORK_NAME` | Nome da rede Docker da stack | Nome de rede | `allsafe-ftp-network` |
 
-Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três imagens, as pastas, as portas (do FTP e do painel) e a `FTP_SUBNET`. O [`deploy.sh`](../deploy.sh) aceita outro arquivo no lugar do `.env`: `ENV_FILE=/caminho/outro.env ./deploy.sh`.
+Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três imagens, as pastas, as portas (do FTP e do painel) e a `FTP_SUBNET`. O [`deploy.sh`](../../deploy.sh) aceita outro arquivo no lugar do `.env`: `ENV_FILE=/caminho/outro.env ./deploy.sh`.
 
 ---
 
@@ -121,7 +121,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 | `FTP_PASSIVE_PORT_START` | Início da faixa de portas de dados (modo passivo) | `1024` a `65535`, menor ou igual ao fim | `30000` |
 | `FTP_PASSIVE_PORT_END` | Fim da faixa passiva. Número de portas maior ou igual a `FTP_MAX_CLIENTS` | `1024` a `65535`, maior ou igual ao início | `30049` |
 
-> 🧱 **Rede privada:** por padrão só são aceitos `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16`. O [`deploy.sh`](../deploy.sh) e o container param com `não é IP privado` para qualquer outro valor ([`scripts/rede-privada.sh`](../scripts/rede-privada.sh)).
+> 🧱 **Rede privada:** por padrão só são aceitos `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16`. O [`deploy.sh`](../../deploy.sh) e o container param com `não é IP privado` para qualquer outro valor ([`scripts/rede-privada.sh`](../../scripts/rede-privada.sh)).
 
 <a name="rede-permitir-ip-publico"></a>
 
@@ -147,7 +147,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 | `FTP_USER` | Nome do usuário inicial, criado uma vez, na primeira subida. Removido pelo painel, não é recriado | Regra `^[a-z_][a-z0-9_-]{0,31}$` | `transfer` |
 A **senha** do usuário inicial não é variável: fica em `SECRETS_DIR/ftp-usuario-inicial-senha.txt`, criada pelo `deploy.sh`, e chega ao container como o segredo `/run/secrets/ftp_usuario_inicial_senha`. Um `.env` com `FTP_PASSWORD` preenchido é recusado. Veja [Segredos](segredos.md).
 
-Só o usuário inicial vem do `.env`. Os demais são criados pelo [painel](painel.md#usuarios) ou com [`manage-user.sh`](../manage-user.sh): veja [Operação](operacao.md#usuarios). A senha e a pasta do usuário inicial também são trocadas por eles, e ele é removido como os outros. Trocar o `FTP_USER` depois da instalação cria o usuário do nome novo na subida seguinte, também uma vez; o do nome antigo continua no cadastro até ser removido.
+Só o usuário inicial vem do `.env`. Os demais são criados pelo [painel](painel.md#usuarios) ou com [`manage-user.sh`](../../manage-user.sh): veja [Operação](operacao.md#usuarios). A senha e a pasta do usuário inicial também são trocadas por eles, e ele é removido como os outros. Trocar o `FTP_USER` depois da instalação cria o usuário do nome novo na subida seguinte, também uma vez; o do nome antigo continua no cadastro até ser removido.
 
 ---
 
@@ -222,7 +222,7 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 | `NGINX_CPU_LIMIT` | `cpus` do nginx | exemplo: `0.5` | `0.5` |
 | `NGINX_PIDS_LIMIT` | `pids_limit` do nginx | inteiro | `32` |
 
-> 🧱 **Rede privada:** por padrão o painel é só para rede interna, atrás de firewall. `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e um `PAINEL_CERT_CN` em forma de IP têm de ser privados: o [`deploy.sh`](../deploy.sh) e os containers do painel e do nginx param com `não é IP privado` ou `não é rede privada` para qualquer outro valor. Endereço e rede públicos só passam com a opção [`REDE_PERMITIR_IP_PUBLICO`](#rede-permitir-ip-publico).
+> 🧱 **Rede privada:** por padrão o painel é só para rede interna, atrás de firewall. `PAINEL_BIND_IP`, cada rede de `PAINEL_REDES_PERMITIDAS` e um `PAINEL_CERT_CN` em forma de IP têm de ser privados: o [`deploy.sh`](../../deploy.sh) e os containers do painel e do nginx param com `não é IP privado` ou `não é rede privada` para qualquer outro valor. Endereço e rede públicos só passam com a opção [`REDE_PERMITIR_IP_PUBLICO`](#rede-permitir-ip-publico).
 
 <a name="painel-proxy-confiavel"></a>
 
@@ -232,7 +232,7 @@ Com `PAINEL_SESSAO_MINUTOS`, `PAINEL_ENVIO_MAX_MB` ou `PAINEL_RETENCAO_MINUTOS` 
 
 A senha do painel **não** é variável: a inicial fica em `.secrets/`, e a de cada administrador, só como hash, em `DATA_DIR/painel/administradores`. O `deploy.sh` e o container recusam `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`, e param com `PAINEL_ADMIN_USER inválido` para um nome fora da regra. Veja [Segredos](segredos.md#senha-do-painel) e [Administradores do painel](painel.md#administradores).
 
-O navegador nunca fala direto com o painel: só o nginx publica porta, e ele repassa o pedido ao painel por um soquete dentro de `DATA_DIR/nginx`. O limite de pedidos por endereço, o tamanho máximo do pedido, o HTTP/2 e o tempo da conexão parada são fixos na configuração do nginx ([`nginx/nginx.conf.modelo`](../nginx/nginx.conf.modelo)), sem variável. Os perfis de [`profiles/`](../profiles/) não mexem nas variáveis do painel nem nas do nginx.
+O navegador nunca fala direto com o painel: só o nginx publica porta, e ele repassa o pedido ao painel por um soquete dentro de `DATA_DIR/nginx`. O limite de pedidos por endereço, o tamanho máximo do pedido, o HTTP/2 e o tempo da conexão parada são fixos na configuração do nginx ([`nginx/nginx.conf.modelo`](../../nginx/nginx.conf.modelo)), sem variável. Os perfis de [`profiles/`](../../profiles/) não mexem nas variáveis do painel nem nas do nginx.
 
 ---
 
@@ -279,10 +279,10 @@ Com a variável vazia, o mesmo endereço responde `404` com `contato de seguran�
 
 - **Validade sempre no futuro:** a linha `Expires` é calculada a cada pedido, 90 dias à frente, à meia-noite UTC. O arquivo não vence com o servidor no ar, e a RFC pede validade menor que um ano.
 - **Sempre igual ao `.env`:** o texto sai da configuração em vigor, não de arquivo gravado. Esvaziar a variável e rodar o `deploy.sh` tira o arquivo do ar.
-- **Validação em três pontos:** o [`deploy.sh`](../deploy.sh), o container do painel e o próprio painel recusam o valor que não é um endereço só: sem `@`, domínio sem ponto, dois endereços, espaço, `mailto:`, URL, `<`, `>`, `%`, quebra de linha, parte antes do `@` com mais de 64 caracteres ou endereço com mais de 254. A mensagem é `SEGURANCA_CONTATO_EMAIL inválido`.
+- **Validação em três pontos:** o [`deploy.sh`](../../deploy.sh), o container do painel e o próprio painel recusam o valor que não é um endereço só: sem `@`, domínio sem ponto, dois endereços, espaço, `mailto:`, URL, `<`, `>`, `%`, quebra de linha, parte antes do `@` com mais de 64 caracteres ou endereço com mais de 254. A mensagem é `SEGURANCA_CONTATO_EMAIL inválido`.
 - **Só o contato:** o arquivo não traz versão, nome da stack nem caminho. Não há linha `Canonical`, porque o endereço do painel muda de uma instalação para outra e o arquivo não é assinado.
 - **Só esse endereço:** `/security.txt` na raiz, a lista de `/.well-known/` e qualquer outro nome dentro dela não existem; sem sessão, levam à tela de entrada.
-- **De quem é o contato:** de quem opera esta instalação, não de quem desenvolveu a stack. A [política de segurança](../SECURITY.md) do projeto não traz endereço fixo: manda quem achou a falha para o contato publicado aqui.
+- **De quem é o contato:** de quem opera esta instalação, não de quem desenvolveu a stack. A [política de segurança](../../SECURITY.md) do projeto não traz endereço fixo: manda quem achou a falha para o contato publicado aqui.
 
 O que mais fica aberto sem senha, e por quê: [Segurança](seguranca.md#contato-de-seguranca).
 
@@ -302,7 +302,7 @@ O que mais fica aberto sem senha, e por quê: [Segurança](seguranca.md#contato-
 | `FTP_NOFILE` | `ulimit nofile` (soft igual a hard) | inteiro | `16384` |
 | `FTP_PROFILE` | Nome do perfil em uso. Só informa: quem grava é o `./deploy.sh --size` | `small`, `medium`, `large`, `xlarge`, `extended` | `small` |
 
-> Estes campos, mais `FTP_MAX_CLIENTS*` e a faixa passiva, são o que o `./deploy.sh --size <perfil>` grava a partir de [`profiles/`](../profiles/). Prefira `./deploy.sh --size medium` a editar os valores à mão: veja [Perfis](perfis.md). O `deploy.sh` confere se o servidor tem as CPUs e a memória que `FTP_CPU_LIMIT` e `FTP_MEMORY_LIMIT` pedem e recusa o que não cabe.
+> Estes campos, mais `FTP_MAX_CLIENTS*` e a faixa passiva, são o que o `./deploy.sh --size <perfil>` grava a partir de [`profiles/`](../../profiles/). Prefira `./deploy.sh --size medium` a editar os valores à mão: veja [Perfis](perfis.md). O `deploy.sh` confere se o servidor tem as CPUs e a memória que `FTP_CPU_LIMIT` e `FTP_MEMORY_LIMIT` pedem e recusa o que não cabe.
 
 ---
 
@@ -330,7 +330,7 @@ Numa instalação que já está rodando, a sub-rede nova só vale depois de recr
 <details>
 <summary>Detalhe técnico — o bloco de endereços das stacks AllSafe</summary>
 
-As stacks AllSafe reservam `172.29.1.0/24` para redes `/29` e `172.29.2.0/24` para redes `/28` e `/27`. Esta stack usa a primeira `/29` do bloco. O valor entra no [`compose.yaml`](../compose.yaml) como `subnet: ${FTP_SUBNET:-172.29.1.0/29}`.
+As stacks AllSafe reservam `172.29.1.0/24` para redes `/29` e `172.29.2.0/24` para redes `/28` e `/27`. Esta stack usa a primeira `/29` do bloco. O valor entra no [`compose.yaml`](../../compose.yaml) como `subnet: ${FTP_SUBNET:-172.29.1.0/29}`.
 
 </details>
 
