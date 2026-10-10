@@ -10,7 +10,7 @@ case "$action" in
   list|del|add|passwd|pasta|perfil|limites|bloqueios|desbloquear|tls-dispensar|tls-exigir|tls-lista) ;;
   *)
     echo "Uso: $0 add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]" >&2
-    echo "     $0 perfil <usuario> [completo|envio|leitura]" >&2
+    echo "     $0 perfil <usuario> [completo|envio|soenvio|leitura]" >&2
     echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]" >&2
     echo "     $0 bloqueios [usuario]" >&2
     echo "     $0 desbloquear <usuario> [origem]" >&2
@@ -30,9 +30,9 @@ case "$action" in
     compose exec -T ftp allsafe-ftp-user pasta "$user" "$pasta"
     ;;
   perfil)
-    # Sem o perfil, mostra o do usuário; com ele, troca: completo (envia, baixa e apaga), envio (envia e baixa)
-    # ou leitura (só lista e baixa). Vale na próxima entrada no FTP.
-    [[ -n "$user" ]] || { echo "Uso: $0 perfil <usuario> [completo|envio|leitura]" >&2; exit 2; }
+    # Sem o perfil, mostra o do usuário; com ele, troca: completo (envia, baixa e apaga), envio (envia e baixa),
+    # soenvio (só envia: não lista nem baixa) ou leitura (só lista e baixa). Vale na próxima entrada no FTP.
+    [[ -n "$user" ]] || { echo "Uso: $0 perfil <usuario> [completo|envio|soenvio|leitura]" >&2; exit 2; }
     compose exec -T ftp allsafe-ftp-user perfil "$user" ${pasta:+"$pasta"}
     ;;
   limites)

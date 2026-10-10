@@ -9,7 +9,7 @@ import subprocess
 import threading
 import time
 
-from config import ARQ_SEM_TLS, ARQ_USUARIOS, CFG, CMD_USUARIO, NIVEL, NOME, PASTA_BLOQUEIOS, PASTA_DADOS
+from config import ARQ_SEM_TLS, ARQ_USUARIOS, CFG, CMD_USUARIO, NIVEL, NOME, PASTA, PASTA_BLOQUEIOS, PASTA_DADOS
 
 TRAVA_CACHE = threading.Lock()
 CACHE = {}
@@ -38,7 +38,8 @@ def limpar_cache():
         CACHE.clear()
 
 
-UID_DO_PERFIL = {'10002': 'envio', '10003': 'leitura'}   # os demais são do perfil completo (ftpdata, 10000)
+UID_DO_PERFIL = {'10002': 'envio', '10003': 'leitura', '10004': 'soenvio'}   # os demais são do perfil completo (ftpdata, 10000)
+UID_SOENVIO = '10004'
 
 
 def pasta_do_cadastro(casa):
@@ -53,6 +54,14 @@ def pasta_do_cadastro(casa):
     return pasta
 
 
+def pasta_da_linha(campos):
+    """Pasta do usuário pela linha dele no cadastro. No perfil só envio a pasta da sessão do FTP (campo 6) é a área
+    de entrada, de onde o servidor move o que chega, e a pasta do usuário está na descrição (campo 5)."""
+    if campos[2] == UID_SOENVIO:
+        return campos[4] if PASTA.fullmatch(campos[4]) else None
+    return pasta_do_cadastro(campos[5])
+
+
 def usuarios():
     """Nome ➜ pasta de cada usuário, em ordem de nome. O hash da senha, que está no mesmo arquivo, nunca sai daqui."""
     cadastro = {}
@@ -61,14 +70,14 @@ def usuarios():
             for linha in arq:
                 campos = linha.rstrip('\n').split(':')
                 if len(campos) > 5 and NOME.fullmatch(campos[0]):
-                    cadastro[campos[0]] = pasta_do_cadastro(campos[5])
+                    cadastro[campos[0]] = pasta_da_linha(campos)
     except OSError:
         pass
     return dict(sorted(cadastro.items()))
 
 
 def perfis():
-    """Nome ➜ perfil de cada usuário: completo, envio ou leitura. O perfil é a identidade de sistema gravada no
+    """Nome ➜ perfil de cada usuário: completo, envio, soenvio ou leitura. O perfil é a identidade de sistema gravada no
     cadastro (campo 3), a mesma que o allsafe-ftp-user grava: quem aplica o limite é o sistema de arquivos."""
     cadastro = {}
     try:

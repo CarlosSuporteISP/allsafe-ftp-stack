@@ -50,6 +50,9 @@ LIBC.renameat2.argtypes = (ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c
 RENAME_NOREPLACE = 1
 
 
+AREA_DE_ENTRADA = '.entrada'   # área do perfil só envio, na raiz dos dados: é do servidor, o painel não entra nela
+
+
 class Recusado(Exception):
     """Caminho que tenta sair da pasta dos dados, passa por link simbólico ou não existe."""
 
@@ -94,6 +97,8 @@ def partes(caminho):
 def abrir(lista, pasta):
     """Abre a partir da pasta dos dados, uma parte por vez e sempre em relação à anterior, sem seguir
     link simbólico em nenhuma: o que foi conferido é o que fica aberto. Devolve o descritor."""
+    if lista and lista[0] == AREA_DE_ENTRADA:
+        raise Recusado(404)
     atual = os.open(PASTA_DADOS, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
     try:
         for indice, parte in enumerate(lista):
@@ -217,6 +222,8 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
         pastas, arquivos, cortado = [], [], False
     finally:
         os.close(descritor)
+    if not lista:
+        pastas = [item for item in pastas if item[0] != AREA_DE_ENTRADA]
     corpo, aviso = linhas_da_lista('/arquivos', caminho, pastas, arquivos, gerir=True), aviso_de_corte(cortado)
     feito = MENSAGENS.get(consulta.get('m', ''), '')
     donos = [nome for nome, dele in usuarios().items() if dele == caminho] if caminho else []
@@ -317,6 +324,8 @@ def situar(caminho, raiz=()):
     lista = partes(caminho)
     if not lista:
         raise Recusado(400)
+    if not raiz and lista[0] == AREA_DE_ENTRADA:
+        raise Recusado(404)
     acima = abrir([*raiz, *lista[:-1]], pasta=True)
     try:
         dados = os.lstat(lista[-1], dir_fd=acima)

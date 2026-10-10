@@ -153,9 +153,9 @@ fi
 [[ ! -L /auth/bloqueios ]] || die "/auth/bloqueios é link simbólico: remova-o"
 install -d -o root -g root -m 0700 /auth/bloqueios
 exec 9>&-  # solta a trava: o descritor não pode ir para o pure-ftpd
-# Com perfil de envio ou de leitura no cadastro, as pastas voltam ao modo que os perfis pedem e o que um envio
-# deixou sem entrega é entregue, antes de o servidor aceitar sessão. Sem esses perfis, nada é percorrido.
-if grep -qE '^[^:]+:[^:]*:1000[23]:' /auth/pureftpd.passwd; then
+# Com perfil de envio, de só envio ou de leitura no cadastro, as pastas voltam ao modo que os perfis pedem e o que
+# um envio deixou sem entrega é entregue, antes de o servidor aceitar sessão. Sem esses perfis, nada é percorrido.
+if grep -qE '^[^:]+:[^:]*:1000[234]:' /auth/pureftpd.passwd; then
   /usr/local/sbin/allsafe-ftp-user ajustar || die "não foi possível ajustar as pastas aos perfis dos usuários"
 fi
 

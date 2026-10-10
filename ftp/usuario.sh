@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 usage() {
   echo "Uso: $0 add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]" >&2
-  echo "     $0 perfil <usuario> [completo|envio|leitura]" >&2
+  echo "     $0 perfil <usuario> [completo|envio|soenvio|leitura]" >&2
   echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]" >&2
   echo "     $0 bloqueios [usuario]" >&2
   echo "     $0 desbloquear <usuario> [origem]" >&2
@@ -19,10 +19,15 @@ passwd_file=/auth/pureftpd.passwd
 #   completo  ftpdata:ftpdata        envia, baixa, renomeia e apaga;
 #   envio     ftpenvio:ftpdata       envia e baixa; o vigia do FTP passa cada arquivo recebido para o ftpdata,
 #                                    e daí em diante este perfil não o sobrescreve, não o renomeia e não o apaga;
+#   soenvio   ftpsoenvio:ftpsoenvio  só envia: a sessão fica presa em /data/.entrada/<usuario>, fora da pasta
+#                                    do usuário, e o vigia do FTP move cada arquivo recebido para a pasta, como
+#                                    ftpdata. Este perfil não lista nem baixa o que está lá. No cadastro, a pasta
+#                                    da sessão (campo 6) é a área de entrada e a do usuário vai na descrição (campo 5);
 #   leitura   ftpleitura:ftpleitura  lista e baixa.
-declare -A dono_do_perfil=([completo]=ftpdata [envio]=ftpenvio [leitura]=ftpleitura)
-declare -A grupo_do_perfil=([completo]=ftpdata [envio]=ftpdata [leitura]=ftpleitura)
-uid_envio=10002 uid_leitura=10003
+declare -A dono_do_perfil=([completo]=ftpdata [envio]=ftpenvio [soenvio]=ftpsoenvio [leitura]=ftpleitura)
+declare -A grupo_do_perfil=([completo]=ftpdata [envio]=ftpdata [soenvio]=ftpsoenvio [leitura]=ftpleitura)
+uid_envio=10002 uid_leitura=10003 uid_soenvio=10004
+pasta_entrada=/data/.entrada
 # Quem entra sem TLS com o TLS por usuário valendo: um nome por linha. Quem lê é o porteiro do FTP, a cada
 # entrada, e a partida do serviço ftp, que só aceita sessão sem TLS enquanto houver nome aqui.
 lista_tls=/auth/sem-tls.lista
@@ -49,7 +54,7 @@ gravar_marca() { # <arquivo>: grava o nome do usuário inicial, só para o root
   mv -f "$1.novo" "$1"
 }
 [[ $# -le 2 || "$action" == add || "$action" == pasta || "$action" == perfil || "$action" == limites || "$action" == desbloquear ]] || usage
-perfil_invalido() { echo "Perfil invalido: use completo, envio ou leitura" >&2; exit 1; }
+perfil_invalido() { echo "Perfil invalido: use completo, envio, soenvio ou leitura" >&2; exit 1; }
 pasta_invalida() {
   echo "Pasta invalida: ate 4 niveis separados por /; letras, numeros, _ - e ponto; nenhum nivel comeca com ponto" >&2
   exit 1
@@ -61,11 +66,16 @@ travar() {
   flock -w 30 9 || { echo "Outra alteracao de usuario em andamento; tente de novo" >&2; exit 1; }
 }
 
-# Pasta gravada no cadastro para o usuário (campo 6, na forma /data/<pasta>/./).
+# Pasta gravada no cadastro para o usuário (campo 6, na forma /data/<pasta>/./). No perfil só envio o campo 6 é
+# a área de entrada, e a pasta do usuário é a da descrição (campo 5).
 pasta_de() {
-  local nome casa _
-  while IFS=: read -r nome _ _ _ _ casa _; do
+  local nome uid descricao casa _
+  while IFS=: read -r nome _ uid _ descricao casa _; do
     [[ "$nome" == "$1" ]] || continue
+    if [[ "$uid" == "$uid_soenvio" ]]; then
+      [[ "$descricao" =~ $regra_pasta ]] || return 1
+      casa="/data/$descricao"
+    fi
     casa="${casa%/./}"
     printf '%s\n' "${casa%/}"
     return 0
@@ -99,6 +109,7 @@ perfil_de() {
     [[ "$nome" == "$1" ]] || continue
     case "$uid" in
       "$uid_envio") echo envio ;;
+      "$uid_soenvio") echo soenvio ;;
       "$uid_leitura") echo leitura ;;
       *) echo completo ;;
     esac
@@ -115,9 +126,14 @@ perfil_de() {
 # As pastas de dentro acompanham a do usuário quando o modo muda. Os argumentos são pastas que saíram do
 # cadastro nesta alteração (a de quem foi removido, a anterior de quem trocou): voltam ao que o resto pede.
 ajustar_pastas() {
-  local nome uid casa outra par modo atual _
+  local nome uid descricao casa outra par modo atual _
   local -a pares=() casas=("$@")
-  while IFS=: read -r nome _ uid _ _ casa _; do
+  while IFS=: read -r nome _ uid _ descricao casa _; do
+    if [[ "$uid" == "$uid_soenvio" ]]; then
+      # Só envio não alcança a pasta: ela entra na conta, mas este perfil não muda o modo dela.
+      [[ ! "$descricao" =~ $regra_pasta ]] || casas+=("/data/$descricao")
+      continue
+    fi
     casa="${casa%/./}"; casa="${casa%/}"
     [[ "$casa" == /data/* ]] || continue
     pares+=("$uid:$casa")
@@ -254,8 +270,9 @@ tirar_bloqueios() { # [origem]
 
 # Quem mais alcança a pasta: usuário com a mesma, com uma acima ou com uma abaixo dela.
 avisar_divisao() {
-  local nome casa _
-  while IFS=: read -r nome _ _ _ _ casa _; do
+  local nome uid descricao casa _
+  while IFS=: read -r nome _ uid _ descricao casa _; do
+    [[ "$uid" != "$uid_soenvio" ]] || casa="/data/$descricao"
     casa="${casa%/./}"; casa="${casa%/}"
     [[ "$nome" != "$user" && "$casa" == /data/* ]] || continue
     casa="${casa#/data/}"
@@ -263,6 +280,31 @@ avisar_divisao() {
       echo "Aviso: /data/$pasta e dividida com o usuario $nome (/data/$casa): um alcanca os arquivos do outro."
     fi
   done < "$passwd_file"
+}
+
+# Área de entrada do perfil só envio: /data/.entrada é do root e só ele entra; a de cada usuário é do ftpsoenvio.
+preparar_entrada() { # <usuario>
+  local area="$pasta_entrada/$1"
+  [[ ! -L "$pasta_entrada" && ! -L "$area" ]] || { echo "Area de entrada recusada: $area passa por link simbolico" >&2; exit 1; }
+  [[ ! -e "$area" || -d "$area" ]] || { echo "Area de entrada recusada: $area existe e nao e pasta" >&2; exit 1; }
+  install -d -o root -g root -m 0700 "$pasta_entrada"
+  install -d -o ftpsoenvio -g ftpsoenvio -m 0700 "$area"
+}
+
+# Entrega à pasta do usuário o que ficou na área de entrada dele (envio que o vigia não chegou a mover).
+entregar_entrada() { # <usuario> <pasta do usuario, sem o /data/>
+  [[ -d "$pasta_entrada/$1" && ! -L "$pasta_entrada" && ! -L "$pasta_entrada/$1" ]] || return 0
+  perl /usr/local/lib/allsafe/entrada.pl "$1" "$2"
+}
+
+# O usuário deixou de ser só envio, ou saiu do cadastro: o que ficou na área vai para a pasta dele e a área sai.
+# O que não pôde ser entregue continua na área, com o aviso.
+retirar_entrada() { # <usuario> <pasta do usuario, sem o /data/>
+  local area="$pasta_entrada/$1"
+  [[ -d "$area" && ! -L "$pasta_entrada" && ! -L "$area" ]] || return 0
+  entregar_entrada "$1" "$2" || true
+  find "$area" -xdev -depth -type d -empty -delete
+  [[ ! -e "$area" ]] || echo "Aviso: ficou em $area o que nao pode ser entregue em /data/$2."
 }
 
 case "$action" in
@@ -285,8 +327,14 @@ case "$action" in
         echo "Usuario ja existe: $user" >&2; exit 1
       fi
       preparar_pasta "$pasta"
-      printf '%s\n%s\n' "$password" "$password" | pure-pw useradd "$user" \
-        -f "$passwd_file" -u "${dono_do_perfil[$perfil]}" -g "${grupo_do_perfil[$perfil]}" -d "/data/$pasta" -C "$logins"
+      if [[ "$perfil" == soenvio ]]; then
+        preparar_entrada "$user"
+        printf '%s\n%s\n' "$password" "$password" | pure-pw useradd "$user" \
+          -f "$passwd_file" -u ftpsoenvio -g ftpsoenvio -d "$pasta_entrada/$user" -c "$pasta" -C "$logins"
+      else
+        printf '%s\n%s\n' "$password" "$password" | pure-pw useradd "$user" \
+          -f "$passwd_file" -u "${dono_do_perfil[$perfil]}" -g "${grupo_do_perfil[$perfil]}" -d "/data/$pasta" -C "$logins"
+      fi
       ajustar_pastas
       avisar_divisao
       # Usuário inicial criado de novo depois de removido: fica com a senha informada aqui, como na troca de senha.
@@ -310,12 +358,24 @@ case "$action" in
       exit 0
     fi
     travar
-    if ! { [[ -f "$passwd_file" ]] && pasta_de "$user" > /dev/null; }; then
+    if ! { [[ -f "$passwd_file" ]] && casa="$(pasta_de "$user")"; }; then
       echo "Usuario nao existe: $user" >&2; exit 1
     fi
-    pure-pw usermod "$user" -f "$passwd_file" -u "${dono_do_perfil[$perfil]}" -g "${grupo_do_perfil[$perfil]}"
+    casa="${casa#/data/}"
+    anterior="$(perfil_de "$user")"
+    # Entrar no só envio ou sair dele troca também a pasta da sessão: a área de entrada ou a pasta do usuário.
+    if [[ "$perfil" == soenvio ]]; then
+      preparar_pasta "$casa"
+      preparar_entrada "$user"
+      pure-pw usermod "$user" -f "$passwd_file" -u ftpsoenvio -g ftpsoenvio -d "$pasta_entrada/$user" -c "$casa"
+    elif [[ "$anterior" == soenvio ]]; then
+      pure-pw usermod "$user" -f "$passwd_file" -u "${dono_do_perfil[$perfil]}" -g "${grupo_do_perfil[$perfil]}" -d "/data/$casa" -c ""
+    else
+      pure-pw usermod "$user" -f "$passwd_file" -u "${dono_do_perfil[$perfil]}" -g "${grupo_do_perfil[$perfil]}"
+    fi
     gravar_banco
     ajustar_pastas
+    [[ "$anterior" != soenvio || "$perfil" == soenvio ]] || retirar_entrada "$user" "$casa"
     echo "Perfil do usuario $user: $perfil. Vale na proxima entrada no FTP."
     ;;
   ajustar)
@@ -326,7 +386,15 @@ case "$action" in
     travar
     [[ -f "$passwd_file" ]] || exit 0
     ajustar_pastas
-    while IFS=: read -r _ _ uid _ _ casa _; do
+    while IFS=: read -r nome _ uid _ descricao casa _; do
+      # Só envio: a área de entrada volta a ser do perfil e o que ficou nela vai para a pasta do usuário.
+      if [[ "$uid" == "$uid_soenvio" && "$nome" =~ ^[a-z_][a-z0-9_-]{0,31}$ && "$descricao" =~ $regra_pasta ]]; then
+        preparar_entrada "$nome"
+        entregar_entrada "$nome" "$descricao" || echo "AVISO: ficou arquivo sem entrega em $pasta_entrada/$nome" >&2
+        # As pastas que o cliente criou na área já existem na pasta do usuário: vazias, saem daqui.
+        find "$pasta_entrada/$nome" -mindepth 1 -xdev -depth -type d -empty -delete
+        continue
+      fi
       casa="${casa%/./}"; casa="${casa%/}"
       [[ "$uid" == "$uid_envio" && "$casa" == /data/* && -d "$casa" && ! -L "$casa" ]] || continue
       find "$casa" -xdev -type d -user ftpenvio -exec chmod --reference="$casa" {} + -exec chown ftpdata:ftpdata {} +
@@ -342,7 +410,11 @@ case "$action" in
       echo "Usuario nao existe: $user" >&2; exit 1
     fi
     preparar_pasta "$pasta"
-    pure-pw usermod "$user" -f "$passwd_file" -d "/data/$pasta"
+    if [[ "$(perfil_de "$user")" == soenvio ]]; then
+      pure-pw usermod "$user" -f "$passwd_file" -c "$pasta"   # a pasta da sessão continua sendo a área de entrada
+    else
+      pure-pw usermod "$user" -f "$passwd_file" -d "/data/$pasta"
+    fi
     gravar_banco
     ajustar_pastas "$anterior"
     avisar_divisao
@@ -352,6 +424,7 @@ case "$action" in
     [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || usage
     travar
     casa="$(pasta_de "$user" || true)"
+    anterior="$(perfil_de "$user" || true)"
     pure-pw userdel "$user" -f "$passwd_file"
     # Usuário inicial removido: a marca de criado impede a partida do serviço ftp de trazê-lo de volta.
     if [[ "$user" == "$inicial" ]]; then
@@ -360,6 +433,7 @@ case "$action" in
     fi
     gravar_banco
     [[ -z "$casa" ]] || ajustar_pastas "$casa"
+    [[ "$anterior" != soenvio || -z "$casa" ]] || retirar_entrada "$user" "${casa#/data/}"
     # Um usuário novo com o mesmo nome não herda a dispensa do TLS, os limites nem os bloqueios.
     [[ ! -f "$lista_tls" ]] || gravar_lista_tls exigir
     [[ ! -f "$lista_limites" ]] || gravar_limite ""

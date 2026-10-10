@@ -10,6 +10,7 @@ from icones import desenhos, icone
 ABAS = (('/', 'painel', 'Visão geral'), ('/usuarios', 'usuarios', 'Usuários'), ('/arquivos', 'pasta', 'Arquivos'),
         ('/servidor', 'pulso', 'Servidor'), ('/seguranca', 'cadeado', 'Segurança'), ('/atividade', 'atividade', 'Atividade'))
 ABAS_USUARIO = (('/meus-arquivos', 'pasta', 'Meus arquivos'),)
+ABAS_SOENVIO = (('/meus-arquivos', 'envio', 'Envio de arquivos'),)   # perfil só envio: sem lista de arquivos
 # Menu lateral do administrador: o dia a dia em cima, o que cuida do próprio painel embaixo.
 GRUPOS = (('Operação', ABAS[:3]), ('Sistema', ABAS[3:]))
 # Estado de um item conferido ➜ (ícone, o que o leitor de tela diz). A cor acompanha, mas nunca é o único sinal.
@@ -111,7 +112,7 @@ def cabeca(titulo, resumo, acao=''):
 def menu_lateral(sessao, ativa):
     """Menu, quem está na sessão e a saída. Em tela larga fica na lateral; na estreita, vira a faixa de cima."""
     admin = not sessao['usuario']
-    grupos = GRUPOS if admin else (('', ABAS_USUARIO),)
+    grupos = GRUPOS if admin else (('', ABAS_SOENVIO if sessao['perfil'] == 'soenvio' else ABAS_USUARIO),)
     links = ''
     for grupo, abas in grupos:
         links += f'<span class="grupo">{grupo}</span>' if grupo else ''

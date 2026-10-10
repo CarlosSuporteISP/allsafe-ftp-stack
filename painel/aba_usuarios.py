@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Aba Usuários: todas as contas em uma lista, cada uma com o seu perfil. Os administradores entram no painel; os
-usuários do FTP têm o perfil Completo, Envio ou Leitura. Aqui ficam a lista, a criação, a edição (perfil, pasta, TLS,
+usuários do FTP têm o perfil Completo, Envio, Só envio ou Leitura. Aqui ficam a lista, a criação, a edição (perfil, pasta, TLS,
 limites e bloqueios), a troca de senha e a remoção dos usuários do FTP; as alterações de administrador ficam em
 aba_administradores.py.
 
@@ -21,11 +21,12 @@ from icones import icone
 from pagina import cabeca, e, pagina, quando, tamanho
 from sessao import sessoes_por_admin
 
-# Perfil ➜ nome na tela e o que a conta pode fazer. O administrador é do painel; os outros três são do FTP.
+# Perfil ➜ nome na tela e o que a conta pode fazer. O administrador é do painel; os outros quatro são do FTP.
 PERFIS = (
     ('administrador', 'Administrador', 'entra no painel e administra tudo; não é conta do FTP'),
     ('completo', 'Completo', 'envia, baixa, renomeia e apaga'),
     ('envio', 'Envio', 'envia e baixa; não apaga nem altera o que já enviou'),
+    ('soenvio', 'Só envio', 'só envia; não lista nem baixa nada, nem o que ela mesma enviou'),
     ('leitura', 'Leitura', 'só lista e baixa'),
 )
 PERFIS_FTP = tuple(chave for chave, _, _ in PERFIS[1:])
@@ -130,7 +131,7 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
 <li><strong>Administrador</strong> entra neste painel e administra tudo; não é conta do FTP. Alterar administrador pede a sua senha
 atual, e ninguém remove a própria conta. Até {ADMINS_MAX} administradores.</li>
 <li><strong>Completo</strong> envia, baixa, renomeia e apaga. <strong>Envio</strong> envia e baixa, sem apagar nem alterar o que já
-enviou. <strong>Leitura</strong> só lista e baixa. O perfil vale no FTP e na entrada do usuário pelo painel.</li>
+enviou. <strong>Só envio</strong> só envia: não lista nem baixa nada. <strong>Leitura</strong> só lista e baixa. O perfil vale no FTP e na entrada do usuário pelo painel.</li>
 <li>Cada usuário do FTP fica preso na pasta dele, dentro de <code>{e(CFG['pasta_host'])}</code> no servidor. Toda alteração vale no
 próximo login, sem reiniciar o FTP.</li>
 <li><span class="etiqueta">dividida</span> Pasta alcançada por mais de um usuário: cada um mexe nos arquivos do outro até onde o
@@ -350,6 +351,9 @@ def cartao_perfil(sessao, nome, atual, erro=''):
 dele no painel; sessão de FTP que já está aberta segue com o perfil anterior até sair.</p>
 <p class="suave">No perfil Envio, o arquivo passa a ser do servidor assim que termina de chegar: daí em diante o usuário não o
 apaga, não o renomeia e não grava por cima. Equipamento que envia sempre com o mesmo nome de arquivo precisa do perfil Completo.</p>
+<p class="suave">No perfil Só envio, a conta entra em uma área de entrada vazia e cada arquivo que chega é movido para a pasta do
+usuário: ela não lista nem baixa o que está lá. Nome repetido não substitui o anterior: o novo é guardado com a data e a hora no
+nome. Equipamento que envia com um nome provisório e renomeia no fim, ou que confere o envio listando a pasta, precisa de outro perfil.</p>
 <button type="submit">Gravar perfil</button> <a class="botao" href="/usuarios">Cancelar</a>
 </form></section>'''
 

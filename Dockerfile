@@ -55,17 +55,21 @@ RUN apt-get update \
     && groupadd --gid 10000 ftpdata \
     && useradd --uid 10000 --gid ftpdata --home-dir /nonexistent \
        --shell /usr/sbin/nologin --no-create-home ftpdata \
-    # Perfis do FTP: o envio grava como outro usuário do mesmo grupo e a leitura fica fora do grupo.
+    # Perfis do FTP: o envio grava como outro usuário do mesmo grupo; a leitura e o só envio ficam fora do grupo.
     && useradd --uid 10002 --gid ftpdata --home-dir /nonexistent \
        --shell /usr/sbin/nologin --no-create-home ftpenvio \
     && groupadd --gid 10003 ftpleitura \
     && useradd --uid 10003 --gid ftpleitura --home-dir /nonexistent \
        --shell /usr/sbin/nologin --no-create-home ftpleitura \
+    && groupadd --gid 10004 ftpsoenvio \
+    && useradd --uid 10004 --gid ftpsoenvio --home-dir /nonexistent \
+       --shell /usr/sbin/nologin --no-create-home ftpsoenvio \
     && mkdir -p /data /auth /etc/ssl/private /usr/local/lib/allsafe /usr/share/doc/allsafe-ftp-stack \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chmod=0644 scripts/rede-privada.sh /usr/local/lib/allsafe/rede-privada.sh
 COPY --chmod=0755 ftp/usuario.sh /usr/local/sbin/allsafe-ftp-user
+COPY --chmod=0644 ftp/entrada.pl /usr/local/lib/allsafe/entrada.pl
 # Licença e autoria acompanham as imagens do ftp e do painel (Apache-2.0, seção 4).
 COPY --chmod=0644 LICENSE NOTICE /usr/share/doc/allsafe-ftp-stack/
 

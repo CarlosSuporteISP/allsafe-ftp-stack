@@ -13,7 +13,7 @@ import threading
 
 import administradores
 from config import ARQ_CERT_FTP, ARQ_USUARIOS, CFG, CONFERENCIAS_FTP, ESPERA_FTP, NOME, TEMPO_FTP
-from estado import UID_DO_PERFIL, pasta_do_cadastro
+from estado import UID_DO_PERFIL, pasta_da_linha
 
 VEZ = threading.BoundedSemaphore(CONFERENCIAS_FTP)
 
@@ -26,7 +26,7 @@ def cadastro(nome):
             for linha in arq:
                 campos = linha.rstrip('\n').split(':')
                 if len(campos) > 5 and campos[0] == nome:
-                    pasta = pasta_do_cadastro(campos[5])
+                    pasta = pasta_da_linha(campos)
                     if not pasta:
                         return None
                     return hashlib.sha256(linha.rstrip('\n').encode()).digest(), pasta, UID_DO_PERFIL.get(campos[2], 'completo')

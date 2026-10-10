@@ -37,7 +37,10 @@ my $TRAVA     = '/auth/.lock';
 my $DADOS     = '/data';
 my $PASTA     = qr{[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(?:/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,3}};
 # Identidades de sistema dos perfis, as mesmas do allsafe-ftp-user: o perfil é o uid gravado no cadastro.
-my ($UID_DADOS, $GID_DADOS, $UID_ENVIO, $UID_LEITURA) = (10000, 10000, 10002, 10003);
+my ($UID_DADOS, $GID_DADOS, $UID_ENVIO, $UID_LEITURA, $UID_SOENVIO) = (10000, 10000, 10002, 10003, 10004);
+# Perfil só envio: a conta fica presa na área de entrada dela e o arquivo que chega é movido para a pasta do usuário.
+my $ENTRADA   = "$DADOS/.entrada";
+require '/usr/local/lib/allsafe/entrada.pl';
 my $NOME      = qr/[a-z_][a-z0-9_-]{0,31}/;
 my $ENDERECO  = qr/[0-9a-fA-F.:]{2,45}/;
 my $CHAVES_MAX    = 10000;   # contagens guardadas na memória
@@ -82,19 +85,25 @@ sub interno {
 }
 
 # Cadastro e limites próprios, relidos só quando o arquivo muda (inode, tamanho e data).
-my (%existe, %proprio, %perfil, %casa);
+my (%existe, %proprio, %perfil, %casa, %destino);
 my ($visto_cadastro, $visto_limites) = ('?', '?');
 sub marca { my @s = stat($_[0]); return @s ? "$s[1]:$s[7]:$s[9]" : ''; }
 sub atualizar {
     my $agora = marca($CADASTRO);
     if ($agora ne $visto_cadastro) {
-        %existe = %perfil = %casa = ();
+        %existe = %perfil = %casa = %destino = ();
         if (open(my $arq, '<', $CADASTRO)) {
             while (my $linha = <$arq>) {
                 next unless $linha =~ /^($NOME):/;
                 $existe{$1} = 1;
                 my @campos = split /:/, $linha;
-                next unless @campos > 5 && $campos[2] =~ /^\d{1,10}$/ && $campos[5] =~ m{^$DADOS/($PASTA)/\./$};
+                next unless @campos > 5 && $campos[2] =~ /^\d{1,10}$/;
+                # Só envio: a pasta da sessão é a área de entrada, e a pasta do usuário vai no campo da descrição.
+                if ($campos[2] == $UID_SOENVIO) {
+                    $destino{$campos[0]} = $campos[4] if $campos[4] =~ /^$PASTA$/ && $campos[5] eq "$ENTRADA/$campos[0]/./";
+                    next;
+                }
+                next unless $campos[5] =~ m{^$DADOS/($PASTA)/\./$};
                 $casa{$campos[0]} = $1;
                 $perfil{$campos[0]} = $campos[2] == $UID_ENVIO ? 'envio' : $campos[2] == $UID_LEITURA ? 'leitura' : 'completo';
             }
@@ -251,6 +260,19 @@ sub entregar {
     registrar("entrega nao feita ($motivo): usuario=$conta" . (defined $caminho ? ' arquivo=' . limpo($caminho, 400) : ''));
 }
 
+# Só envio: o arquivo que acabou de chegar à área de entrada da conta vai para a pasta do usuário. Devolve o
+# caminho em que ele ficou, que é o que vai para o registro; sem a entrega, o da área, onde ele continua.
+sub da_entrada {
+    my ($conta, $caminho) = @_;
+    $caminho =~ s{/{2,}}{/}g;
+    my $area = "$ENTRADA/$conta/";
+    my ($final, $motivo) = index($caminho, $area) == 0
+        ? entrada_mover($conta, $destino{$conta}, substr($caminho, length $area)) : (undef, 'fora da área de entrada');
+    return $final if defined $final;
+    registrar("entrega nao feita ($motivo): usuario=$conta arquivo=" . limpo($caminho, 400));
+    return $caminho;
+}
+
 # Nome de arquivo vem do cliente: antes de ir para o registro, perde o que quebraria a linha ou comandaria o
 # terminal de quem lê (caractere de controle e de direção do texto). UTF-8 válido passa; o resto vira "?".
 sub limpo {
@@ -279,7 +301,11 @@ sub arquivo {
     return registrar("renomeado: $quem nomes=" . limpo($1, 800)) if $texto =~ /^File successfully renamed or moved: (\[.+\]->\[.+\])$/s;
     if ($texto =~ m{^(/.+) (uploaded|downloaded)  \((\d{1,20}) bytes, [\d.]+KB/sec\)$}s) {
         my ($caminho, $sentido, $bytes) = ($1, $2, $3);
-        if ($sentido eq 'uploaded') { atualizar(); entregar($conta, $caminho); }
+        if ($sentido eq 'uploaded') {
+            atualizar();
+            if (defined $destino{$conta}) { $caminho = da_entrada($conta, $caminho); }
+            else { entregar($conta, $caminho); }
+        }
         return registrar(($sentido eq 'uploaded' ? 'envio' : 'download') . ": $quem bytes=$bytes arquivo=" . limpo($caminho, 400));
     }
 }

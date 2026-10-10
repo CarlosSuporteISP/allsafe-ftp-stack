@@ -3,7 +3,8 @@
 
 Cada papel tem a tabela dele: ROTAS é a do administrador e ROTAS_USUARIO traz a do usuário do FTP, uma por
 perfil, todas presas à pasta dele: Leitura navega e baixa, Envio também cria pasta, Completo também troca o nome
-e apaga. O que não está na tabela do papel ou do perfil não existe para ele.
+e apaga. Só envio não tem lista nem download: vê só como enviar por FTP. O que não está na tabela do papel ou do
+perfil não existe para ele.
 Toda função recebe (pedido, sessao, consulta, formulario, token); `pedido` é o tratador de atendimento.py."""
 import aba_administradores
 import aba_arquivos
@@ -52,6 +53,11 @@ ROTAS = {
     ('POST', '/sair'): entrada.sair,
 }
 
+ROTAS_SOENVIO = {
+    ('GET', '/'): aba_meus_arquivos.inicio,
+    ('GET', '/meus-arquivos'): aba_meus_arquivos.so_envio,
+    ('POST', '/sair'): entrada.sair,
+}
 ROTAS_LEITURA = {
     ('GET', '/'): aba_meus_arquivos.inicio,
     ('GET', '/meus-arquivos'): aba_meus_arquivos.lista_arquivos,
@@ -69,4 +75,4 @@ ROTAS_COMPLETO = {
     ('GET', '/meus-arquivos/apagar'): aba_arquivos.tela_apagar,
     ('POST', '/meus-arquivos/apagar'): aba_arquivos.apagar,
 }
-ROTAS_USUARIO = {'leitura': ROTAS_LEITURA, 'envio': ROTAS_ENVIO, 'completo': ROTAS_COMPLETO}
+ROTAS_USUARIO = {'soenvio': ROTAS_SOENVIO, 'leitura': ROTAS_LEITURA, 'envio': ROTAS_ENVIO, 'completo': ROTAS_COMPLETO}
