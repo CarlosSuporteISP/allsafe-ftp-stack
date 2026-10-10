@@ -722,7 +722,8 @@ p > .botao { margin-top: 0; }
   --topo: var(--marca-topo);
   --lado: var(--marca-lado);
   --frente: var(--marca-frente);
-  --u: clamp(11px, 1.2vw, 22px);
+  /* A unidade da cena acompanha a largura da tela; abaixo de 1025px ela encolhe mais depressa, para as placas caberem no painel da marca. */
+  --u: clamp(9.5px, min(1.2vw, 2.4vw - 12.3px), 22px);
   order: -1;
   align-self: stretch;
   display: grid;
@@ -756,8 +757,8 @@ p > .botao { margin-top: 0; }
 .muro::after { background: linear-gradient(90deg, transparent 0 1em, var(--lado) 1em), repeating-linear-gradient(180deg, var(--lado) 0 2.15em, var(--marca-fundo-2) 2.15em 3.15em, var(--lado) 3.15em 3.5em); }
 .pacote { top: calc(var(--y) - 0.35em); left: 3em; width: 0.7em; height: 0.7em; border-radius: 0.15em; background: var(--marca-texto); transform: translate3d(3.4em, 0, 0.45em); animation: envio 6s linear var(--atraso) infinite; }
 .pacote.outro { animation-delay: calc(var(--atraso) - 3s); }
-/* Placa: fica de pé, virada para a câmera, com o nome no tamanho de rótulo da página. */
-.placa { color: var(--marca-suave); font-size: var(--texto-rotulo); line-height: 1.2; white-space: nowrap; }
+/* Placa: fica de pé, virada para a câmera, com o nome no tamanho de rótulo da página, um pouco menor em tela estreita. */
+.placa { color: var(--marca-suave); font-size: clamp(0.75rem, 1.1vw, var(--texto-rotulo)); line-height: 1.2; white-space: nowrap; }
 .placa.de { top: var(--y); left: calc(var(--u) * -0.6); transform-origin: 100% 50%; transform: translate3d(-100%, -50%, 6px) rotateZ(32deg) rotateX(-56deg); }
 .placa.para { top: var(--y); left: calc(var(--u) * 23); font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", "DejaVu Sans Mono", monospace; transform-origin: 0 50%; transform: translate3d(0, -50%, 12px) rotateZ(32deg) rotateX(-56deg); }
 .placa.selo {
