@@ -13,21 +13,23 @@ import threading
 
 import administradores
 from config import ARQ_CERT_FTP, ARQ_USUARIOS, CFG, CONFERENCIAS_FTP, ESPERA_FTP, NOME, TEMPO_FTP
-from estado import pasta_do_cadastro
+from estado import UID_DO_PERFIL, pasta_do_cadastro
 
 VEZ = threading.BoundedSemaphore(CONFERENCIAS_FTP)
 
 
 def cadastro(nome):
-    """Marca e pasta do usuário no cadastro do FTP, ou None se ele não existe ou a pasta não serve.
-    A marca é o resumo da linha inteira: muda quando a senha, a pasta ou qualquer outro campo muda."""
+    """Marca, pasta e perfil do usuário no cadastro do FTP, ou None se ele não existe ou a pasta não serve.
+    A marca é o resumo da linha inteira: muda quando a senha, a pasta, o perfil ou qualquer outro campo muda."""
     try:
         with open(ARQ_USUARIOS, encoding='utf-8', errors='replace') as arq:
             for linha in arq:
                 campos = linha.rstrip('\n').split(':')
                 if len(campos) > 5 and campos[0] == nome:
                     pasta = pasta_do_cadastro(campos[5])
-                    return (hashlib.sha256(linha.rstrip('\n').encode()).digest(), pasta) if pasta else None
+                    if not pasta:
+                        return None
+                    return hashlib.sha256(linha.rstrip('\n').encode()).digest(), pasta, UID_DO_PERFIL.get(campos[2], 'completo')
     except OSError:
         pass
     return None
@@ -81,7 +83,7 @@ def senha_aceita(nome, senha):
 
 
 def conferir(nome, senha):
-    """Confere nome e senha de um usuário do FTP. Devolve (conta, motivo): a conta é {'marca', 'pasta'} quando
+    """Confere nome e senha de um usuário do FTP. Devolve (conta, motivo): a conta é {'marca', 'pasta', 'perfil'} quando
     a entrada vale e None quando não vale; o motivo só vem preenchido quando a conferência não pôde ser feita.
     O servidor é consultado para todo nome válido, exista ou não: a resposta e o tempo não dizem qual existe."""
     if not NOME.fullmatch(nome):
@@ -93,15 +95,15 @@ def conferir(nome, senha):
     # O cadastro lido antes e depois da conferência tem de ser o mesmo: a senha aceita é a desta linha.
     if not aceita or antes is None or cadastro(nome) != antes:
         return None, ''
-    return {'marca': antes[0], 'pasta': antes[1]}, ''
+    return {'marca': antes[0], 'pasta': antes[1], 'perfil': antes[2]}, ''
 
 
 def motivo_do_fim(sessao):
     """A sessão de um usuário do FTP só vale enquanto o acesso está ligado, o usuário existe com a mesma linha
-    no cadastro (mesma senha, mesma pasta) e nenhum administrador tem o nome dele. Devolve '' enquanto vale
+    no cadastro (mesma senha, mesma pasta, mesmo perfil) e nenhum administrador tem o nome dele. Devolve '' enquanto vale
     ou o motivo do encerramento. É conferido a cada pedido: alteração feita no painel ou pelo terminal vale na hora."""
     if not CFG['acesso_usuarios']:
         return 'acesso_desligado'
     if sessao['usuario'] in administradores.ler():
         return 'nome_de_administrador'
-    return '' if cadastro(sessao['usuario']) == (sessao['marca'], sessao['pasta']) else 'cadastro_alterado'
+    return '' if cadastro(sessao['usuario']) == (sessao['marca'], sessao['pasta'], sessao['perfil']) else 'cadastro_alterado'

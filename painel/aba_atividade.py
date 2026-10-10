@@ -35,12 +35,13 @@ EVENTOS = {
     'admin_removido': ('lixeira', 'Administrador removido'),
     'admin_definido_no_host': ('terminal', 'Administrador definido pelo host'),
     'admin_senha_atual_recusada': ('erro', 'Senha atual recusada'),
+    'usuario_senha_atual_recusada': ('erro', 'Senha do FTP recusada na confirmação'),
     'recusa_csrf': ('bloqueio', 'Envio sem token válido'),
     'recusa_origem': ('bloqueio', 'Envio de outra origem'),
     'recusa_host': ('bloqueio', 'Endereço não aceito'),
     'recusa_rede': ('bloqueio', 'Cliente fora das redes permitidas'),
     'recusa_caminho': ('bloqueio', 'Caminho de arquivo recusado'),
-    'recusa_papel': ('bloqueio', 'Tela de administração pedida por usuário do FTP'),
+    'recusa_papel': ('bloqueio', 'Tela fora do papel ou do perfil pedida por usuário do FTP'),
 }
 
 

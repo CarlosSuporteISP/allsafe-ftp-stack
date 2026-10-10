@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Rotas do painel depois da entrada: método e caminho ➜ função que responde.
 
-São duas tabelas, uma por papel: ROTAS é a do administrador e ROTAS_USUARIO, a do usuário do FTP, que só
-navega e baixa na pasta dele. O que não está na tabela do papel não existe para ele.
+Cada papel tem a tabela dele: ROTAS é a do administrador e ROTAS_USUARIO traz a do usuário do FTP, uma por
+perfil, todas presas à pasta dele: Leitura navega e baixa, Envio também cria pasta, Completo também troca o nome
+e apaga. O que não está na tabela do papel ou do perfil não existe para ele.
 Toda função recebe (pedido, sessao, consulta, formulario, token); `pedido` é o tratador de atendimento.py."""
 import aba_administradores
 import aba_arquivos
@@ -51,9 +52,21 @@ ROTAS = {
     ('POST', '/sair'): entrada.sair,
 }
 
-ROTAS_USUARIO = {
+ROTAS_LEITURA = {
     ('GET', '/'): aba_meus_arquivos.inicio,
     ('GET', '/meus-arquivos'): aba_meus_arquivos.lista_arquivos,
     ('GET', '/meus-arquivos/baixar'): aba_meus_arquivos.baixar,
     ('POST', '/sair'): entrada.sair,
 }
+ROTAS_ENVIO = {
+    **ROTAS_LEITURA,
+    ('POST', '/meus-arquivos/pasta'): aba_arquivos.criar_pasta,
+}
+ROTAS_COMPLETO = {
+    **ROTAS_ENVIO,
+    ('GET', '/meus-arquivos/renomear'): aba_arquivos.tela_renomear,
+    ('POST', '/meus-arquivos/renomear'): aba_arquivos.renomear,
+    ('GET', '/meus-arquivos/apagar'): aba_arquivos.tela_apagar,
+    ('POST', '/meus-arquivos/apagar'): aba_arquivos.apagar,
+}
+ROTAS_USUARIO = {'leitura': ROTAS_LEITURA, 'envio': ROTAS_ENVIO, 'completo': ROTAS_COMPLETO}

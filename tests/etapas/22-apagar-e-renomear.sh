@@ -166,7 +166,7 @@ UK="$(c -b "$U22" "$B/meus-arquivos" | sed -n 's/.*name="csrf" value="\([^"]*\)"
 r_usu="$(POTE="$U22" envio /arquivos/apagar --data-urlencode "csrf=$UK" --data-urlencode 'item=arq22/novo.cfg' --data-urlencode 'confirmar=sim' --data-urlencode "senha_atual@$W/u22.senha")"
 r_usu_ren="$(POTE="$U22" envio /arquivos/renomear --data-urlencode "csrf=$UK" --data-urlencode 'item=arq22/novo.cfg' --data-urlencode 'nome=meu.cfg')"
 r_usu_tela="$(aba -b "$U22" "$B/arquivos/apagar?item=arq22/novo.cfg")"; r_usu_tela_ren="$(aba -b "$U22" "$B/arquivos/renomear?item=arq22/novo.cfg")"
-r_usu_lista="$(aba -b "$U22" "$B/meus-arquivos")"; botoes_usu="$(grep -c -E 'arquivos/(renomear|apagar)' "$W/corpo")"
+r_usu_lista="$(aba -b "$U22" "$B/meus-arquivos")"; botoes_usu="$(grep -c -E 'href="/arquivos/(renomear|apagar)' "$W/corpo")"
 auditoria; n_depois="$(eventos recusa_caminho)"; c_depois="$(eventos recusa_csrf)"; o_depois="$(eventos recusa_origem)"; s_depois="$(eventos admin_senha_atual_recusada)"; p_depois="$(eventos recusa_papel)"
 depois="$(arvore22)"; auth_meio="$(auth22)"
 # O link simbólico em si é apagado; o destino dele, não. A pasta que não é de usuário sai inteira.

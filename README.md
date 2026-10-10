@@ -632,7 +632,7 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 57 casos funcionais, 102 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 58 casos funcionais, 103 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/scripts.md#testar).
 
 ---
 

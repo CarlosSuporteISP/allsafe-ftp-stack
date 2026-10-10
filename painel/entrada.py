@@ -84,7 +84,7 @@ def entrar(pedido, metodo, formulario):
         auditar(pedido.ip, 'entrada_falha', f'conferencia={motivo}' if motivo else '')
         return tela_entrada(pedido, 401, 'Não foi possível entrar.')
     auditar(pedido.ip, 'entrada_ok', f'usuario={nome}')
-    token = criar_sessao(pedido.ip, usuario=nome, marca=conta['marca'], pasta=conta['pasta'])
+    token = criar_sessao(pedido.ip, usuario=nome, marca=conta['marca'], pasta=conta['pasta'], perfil=conta['perfil'])
     return pedido.redirecionar('/meus-arquivos', (('Set-Cookie', cookie(token)),))
 
 

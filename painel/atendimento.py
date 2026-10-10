@@ -292,11 +292,13 @@ class Painel(http.server.BaseHTTPRequestHandler):
             auditar(self.ip, 'recusa_csrf', f'caminho={limpo(self.caminho)}')
             return self.recusar(403, 'Formulário sem token válido. Abra a página de novo e repita.')
 
-        # Cada papel tem a tabela dele: para o usuário do FTP, as telas de administração não existem.
-        rota = (ROTAS_USUARIO if sessao['usuario'] else ROTAS).get((metodo, self.caminho))
+        # Cada papel tem a tabela dele: para o usuário do FTP, as telas de administração não existem, nem as ações
+        # que o perfil dele não tem.
+        rota = (ROTAS_USUARIO[sessao['perfil']] if sessao['usuario'] else ROTAS).get((metodo, self.caminho))
         if rota is None:
-            if sessao['usuario'] and (metodo, self.caminho) in ROTAS:
-                auditar(self.ip, 'recusa_papel', f'usuario={sessao["usuario"]} caminho={limpo(self.caminho)}')
+            if sessao['usuario'] and ((metodo, self.caminho) in ROTAS or (metodo, self.caminho) in ROTAS_USUARIO['completo']):
+                auditar(self.ip, 'recusa_papel', f'usuario={sessao["usuario"]} caminho={limpo(self.caminho)} '
+                                                 f'perfil={sessao["perfil"]}')
             return self.enviar(404, pagina('Não encontrado', '<section class="cartao"><h1>Página não encontrada</h1>'
                                            '<p><a href="/">Voltar ao painel</a></p></section>', sessao))
         return rota(self, sessao, consulta, formulario, token)

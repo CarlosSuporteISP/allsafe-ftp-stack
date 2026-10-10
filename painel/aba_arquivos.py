@@ -2,10 +2,10 @@
 """Aba Arquivos: navegar pelas pastas dos usuários do FTP, baixar um arquivo pelo navegador, criar pasta,
 trocar o nome e apagar.
 
-O painel não envia arquivo. Criar pasta, trocar o nome e apagar são só do administrador, e apagar pede a caixa
-de confirmação e a senha atual dele. Toda alteração é feita em relação à pasta de cima já aberta, sem seguir
-link simbólico. A abertura dos caminhos, a lista e a entrega do arquivo servem também à tela Meus arquivos,
-do usuário do FTP, que só navega e baixa."""
+O painel não envia arquivo. Apagar pede a caixa de confirmação e a senha de quem está na sessão. Toda alteração
+é feita em relação à pasta de cima já aberta, sem seguir link simbólico. As mesmas funções servem à tela Meus
+arquivos, do usuário do FTP: a Vista diz de onde cada um vê os arquivos, e a tabela de rotas do perfil (rotas.py)
+diz quais destas ações existem para ele."""
 import ctypes
 import errno
 import itertools
@@ -116,17 +116,28 @@ def abrir(lista, pasta):
     return atual
 
 
-def tela_de(sessao):
-    """Rota e nome da tela de arquivos de quem está na sessão: a do administrador ou a do usuário do FTP."""
-    return ('/meus-arquivos', 'Meus arquivos') if sessao['usuario'] else ('/arquivos', 'Arquivos')
+class Vista:
+    """De onde quem está na sessão vê os arquivos: o administrador, da pasta dos dados, pela aba Arquivos; o usuário
+    do FTP, da pasta do cadastro dele, pela tela Meus arquivos. O caminho que vem do navegador é sempre relativo
+    à raiz da vista, e é a raiz que o prende ali."""
+
+    def __init__(self, sessao):
+        self.usuario = sessao['usuario']
+        self.rota, self.tela = ('/meus-arquivos', 'Meus arquivos') if self.usuario else ('/arquivos', 'Arquivos')
+        self.raiz = partes(sessao['pasta']) if self.usuario else []
+        self.inicio = 'Início' if self.usuario else CFG['pasta_host']
+
+    def real(self, caminho):
+        """O mesmo caminho a partir da pasta dos dados: é o que vai para a auditoria e para a conta do cadastro."""
+        return '/'.join(self.raiz + ([caminho] if caminho else []))
 
 
 def recusa(pedido, sessao, erro, caminho):
-    rota, tela = tela_de(sessao)
+    v = Vista(sessao)
     if erro.codigo != 404:
         auditar(pedido.ip, 'recusa_caminho', f'{quem(sessao)} caminho={limpo(caminho, 120)}')
-    pedido.enviar(erro.codigo, pagina(tela, f'<section class="cartao"><h1>Pedido recusado</h1><p>{e(RECUSAS[erro.codigo])}</p>'
-                                      f'<p><a href="{rota}">Voltar para {tela}</a></p></section>', sessao, rota))
+    pedido.enviar(erro.codigo, pagina(v.tela, f'<section class="cartao"><h1>Pedido recusado</h1><p>{e(RECUSAS[erro.codigo])}</p>'
+                                      f'<p><a href="{v.rota}">Voltar para {v.tela}</a></p></section>', sessao, v.rota))
 
 
 def conteudo(descritor):
@@ -145,23 +156,24 @@ def conteudo(descritor):
     return sorted(pastas), sorted(arquivos), cortado
 
 
-def trilha(lista):
-    """Caminho da pasta aberta, com um link em cada nível."""
+def trilha(v, lista):
+    """Caminho da pasta aberta, a partir da raiz da vista, com um link em cada nível."""
+    inicio = e(v.inicio) if v.usuario else f'<code>{e(v.inicio)}</code>'
     if not lista:
-        return f'<code>{e(CFG["pasta_host"])}</code>'
-    niveis = [f'<a href="/arquivos"><code>{e(CFG["pasta_host"])}</code></a>']
+        return f'<strong>{inicio}</strong>' if v.usuario else inicio
+    niveis = [f'<a href="{v.rota}">{inicio}</a>']
     for indice, parte in enumerate(lista):
         if indice == len(lista) - 1:
             niveis.append(f'<strong>{e(visivel(parte))}</strong>')
         else:
-            niveis.append(f'<a href="{e(endereco("/arquivos", "pasta", "/".join(lista[:indice + 1])))}">{e(visivel(parte))}</a>')
+            niveis.append(f'<a href="{e(endereco(v.rota, "pasta", "/".join(lista[:indice + 1])))}">{e(visivel(parte))}</a>')
     return ' / '.join(niveis)
 
 
-def botoes_de_gestao(item):
-    """Renomear e Apagar de um item da lista. Só a aba Arquivos, do administrador, os mostra."""
-    return (f' <a class="botao" href="{e(endereco("/arquivos/renomear", "item", item))}">Renomear</a>'
-            f' <a class="botao perigo" href="{e(endereco("/arquivos/apagar", "item", item))}">Apagar</a>')
+def botoes_de_gestao(rota, item):
+    """Renomear e Apagar de um item da lista: aparecem para o administrador e para o usuário de perfil completo."""
+    return (f' <a class="botao" href="{e(endereco(rota + "/renomear", "item", item))}">Renomear</a>'
+            f' <a class="botao perigo" href="{e(endereco(rota + "/apagar", "item", item))}">Apagar</a>')
 
 
 def linhas_da_lista(rota, caminho, pastas, arquivos, gerir=False):
@@ -170,11 +182,11 @@ def linhas_da_lista(rota, caminho, pastas, arquivos, gerir=False):
     base = caminho + '/' if caminho else ''
     linhas = []
     for nome, dados in pastas:
-        gestao = botoes_de_gestao(base + nome) if gerir else ''
+        gestao = botoes_de_gestao(rota, base + nome) if gerir else ''
         linhas.append(f'<tr><td><a class="item" href="{e(endereco(rota, "pasta", base + nome))}">{icone("pasta")}<strong>{e(visivel(nome))}</strong></a></td>'
                       f'<td class="suave">pasta</td><td>{e(quando(dados.st_mtime))}</td><td class="acoes">{gestao}</td></tr>')
     for nome, dados in arquivos:
-        gestao = botoes_de_gestao(base + nome) if gerir else ''
+        gestao = botoes_de_gestao(rota, base + nome) if gerir else ''
         if stat.S_ISREG(dados.st_mode):
             linhas.append(f'<tr><td><span class="item">{icone("arquivo")}{e(visivel(nome))}</span></td><td>{e(tamanho(dados.st_size))}</td><td>{e(quando(dados.st_mtime))}</td>'
                           f'<td class="acoes"><a class="botao" href="{e(endereco(rota + "/baixar", "arquivo", base + nome))}" download>'
@@ -213,7 +225,7 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
                     if PASTA.fullmatch(caminho) else '')
     pedido.enviar(200, pagina('Arquivos', f'''{cabeca('Arquivos', 'O que os equipamentos já enviaram, pasta por pasta.')}
 {f'<p class="ok" role="status">{e(feito)}</p>' if feito else ''}
-<p class="trilha">{trilha(lista)}{novo_usuario}</p>
+<p class="trilha">{trilha(Vista(sessao), lista)}{novo_usuario}</p>
 {de_quem}{aviso}<section class="cartao lista"><div class="rolagem"><table>
 <thead><tr><th>Nome</th><th>Tamanho</th><th>Modificado</th><th>Ações</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
@@ -229,31 +241,36 @@ def formulario_nova_pasta(sessao, caminho):
         caminho.encode('utf-8')
     except UnicodeEncodeError:
         return ''
+    v = Vista(sessao)
+    nasce = ('A pasta nasce vazia, dentro da sua pasta no FTP.' if v.usuario else
+             'A pasta nasce vazia; para um equipamento gravar nela, crie um usuário com esta pasta.')
     return f'''<section class="cartao estreito"><h2>Nova pasta</h2>
-<form method="post" action="/arquivos/pasta" autocomplete="off">
+<form method="post" action="{v.rota}/pasta" autocomplete="off">
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
 <input type="hidden" name="pasta" value="{e(caminho)}">
-<label for="nome">Nome da pasta, criada dentro de <code>{e(CFG['pasta_host'])}{'/' + e(caminho) if caminho else ''}</code></label>
+<label for="nome">Nome da pasta, criada dentro de <code>{e(v.inicio)}{'/' + e(caminho) if caminho else ''}</code></label>
 <input id="nome" name="nome" required maxlength="64" pattern="[A-Za-z0-9_][A-Za-z0-9._\\-]*" autocapitalize="none" spellcheck="false">
 <p class="suave">Letras, números, <code>_</code>, <code>-</code> e ponto; não começa com ponto; até 64 caracteres.
-A pasta nasce vazia; para um equipamento gravar nela, crie um usuário com esta pasta.</p>
+{nasce}</p>
 <button type="submit">Criar pasta</button>
 </form></section>'''
 
 
 def resposta_pasta(pedido, sessao, codigo, titulo, texto, caminho):
-    pedido.enviar(codigo, pagina('Arquivos', f'<section class="cartao"><h1>{titulo}</h1><p>{e(texto)}</p>'
-                                 f'<p><a href="{e(endereco("/arquivos", "pasta", caminho))}">Voltar para a pasta</a></p></section>',
-                                 sessao, '/arquivos'))
+    v = Vista(sessao)
+    pedido.enviar(codigo, pagina(v.tela, f'<section class="cartao"><h1>{titulo}</h1><p>{e(texto)}</p>'
+                                 f'<p><a href="{e(endereco(v.rota, "pasta", caminho))}">Voltar para a pasta</a></p></section>',
+                                 sessao, v.rota))
 
 
 def criar_pasta(pedido, sessao, consulta, formulario, token):
     """Cria uma pasta vazia dentro de uma pasta que já existe, com o dono e o modo das pastas do FTP.
     A pasta de cima é aberta parte por parte, sem seguir link simbólico, e a nova nasce em relação a ela."""
+    v = Vista(sessao)
     caminho, nome = formulario.get('pasta', ''), formulario.get('nome', '').strip()
     novo = f'{caminho}/{nome}' if caminho else nome
     try:
-        lista = partes(caminho)
+        lista = v.raiz + partes(caminho)
         if not NIVEL.fullmatch(nome):
             auditar(pedido.ip, 'recusa_caminho', f'{quem(sessao)} caminho={limpo(novo, 120)}')
             return resposta_pasta(pedido, sessao, 400, 'Nome não aceito', 'Use letras, números, _, - e ponto; o nome não começa '
@@ -276,12 +293,12 @@ def criar_pasta(pedido, sessao, consulta, formulario, token):
     except FileExistsError:
         return resposta_pasta(pedido, sessao, 409, 'Nome já usado', 'Já existe uma pasta ou um arquivo com este nome.', caminho)
     except (OSError, KeyError):
-        auditar(pedido.ip, 'falha_comando', f'{quem(sessao)} acao=criar_pasta pasta={limpo(novo, 200)}')
+        auditar(pedido.ip, 'falha_comando', f'{quem(sessao)} acao=criar_pasta pasta={limpo(v.real(novo), 200)}')
         return resposta_pasta(pedido, sessao, 500, 'Pasta não criada', 'Não foi possível criar a pasta.', caminho)
     finally:
         os.close(descritor)
-    auditar(pedido.ip, 'pasta_criada', f'{quem(sessao)} pasta={limpo(novo, 200)}')
-    return pedido.redirecionar(endereco('/arquivos', 'pasta', caminho) + '&m=criada')
+    auditar(pedido.ip, 'pasta_criada', f'{quem(sessao)} pasta={limpo(v.real(novo), 200)}')
+    return pedido.redirecionar(endereco(v.rota, 'pasta', caminho) + '&m=criada')
 
 
 def campo_do_item(caminho):
@@ -293,13 +310,14 @@ def item_do_formulario(formulario):
     return urllib.parse.unquote(formulario.get('item', ''), errors='surrogateescape')
 
 
-def situar(caminho):
-    """Abre a pasta de cima do item e confere que ele existe, sem segui-lo se for link simbólico.
+def situar(caminho, raiz=()):
+    """Abre a pasta de cima do item e confere que ele existe, sem segui-lo se for link simbólico. O caminho é
+    relativo à `raiz`: a pasta dos dados ou, na vista de um usuário do FTP, a pasta dele.
     Devolve (partes do caminho, descritor da pasta de cima, dados do item); quem chama fecha o descritor."""
     lista = partes(caminho)
     if not lista:
         raise Recusado(400)
-    acima = abrir(lista[:-1], pasta=True)
+    acima = abrir([*raiz, *lista[:-1]], pasta=True)
     try:
         dados = os.lstat(lista[-1], dir_fd=acima)
     except OSError:
@@ -320,23 +338,30 @@ def tipo_de(dados):
 
 
 def usuarios_presos(caminho):
-    """Usuários do FTP com a pasta do cadastro neste caminho ou dentro dele: trocar o nome da pasta ou apagá-la
-    por aqui os deixaria sem ter onde entrar."""
+    """Usuários do FTP com a pasta do cadastro neste caminho (a partir da pasta dos dados) ou dentro dele: trocar
+    o nome da pasta ou apagá-la por aqui os deixaria sem ter onde entrar."""
     return [nome for nome, dele in usuarios().items() if dele and (dele == caminho or dele.startswith(caminho + '/'))]
 
 
 def pasta_de_usuario(pedido, sessao, lista, presos, feita):
-    pedido.enviar(409, pagina('Arquivos', f'''<section class="cartao"><h1>Pasta de usuário do FTP</h1>
+    v = Vista(sessao)
+    if v.usuario:  # quem são os outros usuários é assunto do administrador: a tela dele não diz os nomes
+        de_quem = 'outro usuário do FTP'
+        saida = 'Peça ao administrador do painel.'
+    else:
+        de_quem = f'<strong>{e(", ".join(presos))}</strong>'
+        saida = ('Para dar outra pasta a um usuário, use <strong>Usuários ➜ Editar</strong>. Para apagar a pasta junto com '
+                 'o usuário, use <strong>Usuários ➜ Remover</strong>.')
+    pedido.enviar(409, pagina(v.tela, f'''<section class="cartao"><h1>Pasta de usuário do FTP</h1>
 <p>A pasta <strong>{e(visivel(lista[-1]))}</strong> não é {feita} por aqui: é a pasta, ou tem dentro dela a pasta, de
-<strong>{e(", ".join(presos))}</strong>.</p>
-<p>Para dar outra pasta a um usuário, use <strong>Usuários ➜ Editar</strong>. Para apagar a pasta junto com o usuário,
-use <strong>Usuários ➜ Remover</strong>. O que está dentro dela pode ser renomeado e apagado item por item.</p>
-<p><a href="{e(endereco("/arquivos", "pasta", "/".join(lista[:-1])))}">Voltar para a pasta</a></p></section>''', sessao, '/arquivos'))
+{de_quem}.</p>
+<p>{saida} O que está dentro dela pode ser renomeado e apagado item por item.</p>
+<p><a href="{e(endereco(v.rota, "pasta", "/".join(lista[:-1])))}">Voltar para a pasta</a></p></section>''', sessao, v.rota))
 
 
-def onde_fica(lista):
-    """Pasta de cima do item, como o administrador a vê no host."""
-    return f'<code>{e(CFG["pasta_host"])}{"".join("/" + e(visivel(parte)) for parte in lista[:-1])}</code>'
+def onde_fica(v, lista):
+    """Pasta de cima do item, como quem está na sessão a vê: o administrador, no host; o usuário do FTP, na pasta dele."""
+    return f'<code>{e(v.inicio)}{"".join("/" + e(visivel(parte)) for parte in lista[:-1])}</code>'
 
 
 def trocar_nome(descritor, antigo, novo):
@@ -356,20 +381,21 @@ def trocar_nome(descritor, antigo, novo):
 
 
 def tela_renomear(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, caminho=None, novo=''):
+    v = Vista(sessao)
     caminho = parametro(pedido, 'item') if caminho is None else caminho
     try:
-        lista, acima, dados = situar(caminho)
+        lista, acima, dados = situar(caminho, v.raiz)
     except Recusado as motivo:
         return recusa(pedido, sessao, motivo, caminho)
     os.close(acima)
-    presos = usuarios_presos(caminho) if stat.S_ISDIR(dados.st_mode) else []
+    presos = usuarios_presos(v.real(caminho)) if stat.S_ISDIR(dados.st_mode) else []
     if presos:
         return pasta_de_usuario(pedido, sessao, lista, presos, 'renomeada')
-    volta = endereco('/arquivos', 'pasta', '/'.join(lista[:-1]))
+    volta = endereco(v.rota, 'pasta', '/'.join(lista[:-1]))
     return pedido.enviar(codigo, pagina('Renomear', f'''<h1>Renomear</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
-<p>Trocar o nome d{tipo_de(dados)[1]} <strong>{e(visivel(lista[-1]))}</strong>, em {onde_fica(lista)}.</p>
-<form method="post" action="/arquivos/renomear" autocomplete="off">
+<p>Trocar o nome d{tipo_de(dados)[1]} <strong>{e(visivel(lista[-1]))}</strong>, em {onde_fica(v, lista)}.</p>
+<form method="post" action="{v.rota}/renomear" autocomplete="off">
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
 {campo_do_item(caminho)}
 <label for="nome">Nome novo</label>
@@ -378,15 +404,16 @@ def tela_renomear(pedido, sessao, consulta, formulario=None, token=None, erro=''
 O item continua na mesma pasta: o painel não move de uma pasta para outra. O equipamento que grava com o nome antigo
 cria outro arquivo no envio seguinte.</p>
 <button type="submit">Trocar nome</button> <a class="botao" href="{e(volta)}">Cancelar</a>
-</form></section>''', sessao, '/arquivos'))
+</form></section>''', sessao, v.rota))
 
 
 def renomear(pedido, sessao, consulta, formulario, token):
     """Troca o nome de um arquivo ou de uma pasta, dentro da mesma pasta. O nome novo segue a regra do nome de
     pasta; a pasta de um usuário do FTP, ou a que tem uma dentro, não é renomeada por aqui."""
+    v = Vista(sessao)
     caminho, novo = item_do_formulario(formulario), formulario.get('nome', '').strip()
     try:
-        lista, acima, dados = situar(caminho)
+        lista, acima, dados = situar(caminho, v.raiz)
     except Recusado as motivo:
         return recusa(pedido, sessao, motivo, caminho)
     de_cima = '/'.join(lista[:-1])
@@ -396,7 +423,7 @@ def renomear(pedido, sessao, consulta, formulario, token):
             auditar(pedido.ip, 'recusa_caminho', f'{quem(sessao)} caminho={limpo(destino, 120)}')
             return tela_renomear(pedido, sessao, consulta, erro='Nome não aceito. Veja a regra abaixo do campo.', codigo=400,
                                  caminho=caminho)
-        presos = usuarios_presos(caminho) if stat.S_ISDIR(dados.st_mode) else []
+        presos = usuarios_presos(v.real(caminho)) if stat.S_ISDIR(dados.st_mode) else []
         if presos:
             return pasta_de_usuario(pedido, sessao, lista, presos, 'renomeada')
         if novo == lista[-1]:
@@ -407,14 +434,15 @@ def renomear(pedido, sessao, consulta, formulario, token):
             return tela_renomear(pedido, sessao, consulta, erro='Já existe uma pasta ou um arquivo com este nome.', codigo=409,
                                  caminho=caminho, novo=novo)
         except OSError:
-            auditar(pedido.ip, 'falha_comando', f'{quem(sessao)} acao=renomear caminho={limpo(caminho, 200)}')
+            auditar(pedido.ip, 'falha_comando', f'{quem(sessao)} acao=renomear caminho={limpo(v.real(caminho), 200)}')
             return tela_renomear(pedido, sessao, consulta, erro='Não foi possível trocar o nome.', codigo=500, caminho=caminho,
                                  novo=novo)
     finally:
         os.close(acima)
     limpar_cache()
-    auditar(pedido.ip, 'item_renomeado', f'{quem(sessao)} tipo={tipo_de(dados)[0]} de={limpo(caminho, 200)} para={limpo(destino, 200)}')
-    return pedido.redirecionar(endereco('/arquivos', 'pasta', de_cima) + '&m=renomeado')
+    auditar(pedido.ip, 'item_renomeado', f'{quem(sessao)} tipo={tipo_de(dados)[0]} de={limpo(v.real(caminho), 200)} '
+                                         f'para={limpo(v.real(destino), 200)}')
+    return pedido.redirecionar(endereco(v.rota, 'pasta', de_cima) + '&m=renomeado')
 
 
 def apagar_entrada(acima, nome, pasta, estado, nivel=0):
@@ -475,18 +503,19 @@ def apagar_caminho(caminho):
 
 
 def tela_apagar(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, caminho=None):
+    v = Vista(sessao)
     caminho = parametro(pedido, 'item') if caminho is None else caminho
     try:
-        lista, acima, dados = situar(caminho)
+        lista, acima, dados = situar(caminho, v.raiz)
     except Recusado as motivo:
         return recusa(pedido, sessao, motivo, caminho)
     os.close(acima)
     nome = e(visivel(lista[-1]))
     if stat.S_ISDIR(dados.st_mode):
-        presos = usuarios_presos(caminho)
+        presos = usuarios_presos(v.real(caminho))
         if presos:
             return pasta_de_usuario(pedido, sessao, lista, presos, 'apagada')
-        uso = uso_da_pasta(caminho, validade=0)
+        uso = uso_da_pasta(v.real(caminho), validade=0)
         mais = ' ou mais' if uso['parcial'] else ''
         alvo = (f'a pasta <strong>{nome}</strong> e <strong>tudo o que há dentro dela</strong>: {uso["arquivos"]}{mais} arquivo(s), '
                 f'{e(tamanho(uso["bytes"]))}{mais}')
@@ -494,31 +523,32 @@ def tela_apagar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
         alvo = f'o arquivo <strong>{nome}</strong>, de {e(tamanho(dados.st_size))}, modificado em {e(quando(dados.st_mtime))}'
     else:
         alvo = f'{tipo_de(dados)[1]} <strong>{nome}</strong>; o destino dele não é tocado'
-    volta = endereco('/arquivos', 'pasta', '/'.join(lista[:-1]))
+    volta = endereco(v.rota, 'pasta', '/'.join(lista[:-1]))
     return pedido.enviar(codigo, pagina('Apagar', f'''<h1>Apagar</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
-<p>Apagar {alvo}, em {onde_fica(lista)}?</p>
+<p>Apagar {alvo}, em {onde_fica(v, lista)}?</p>
 <p class="aviso">O painel <strong>não tem lixeira</strong>: o que for apagado só volta de uma cópia de segurança.</p>
-<form method="post" action="/arquivos/apagar" autocomplete="off">
+<form method="post" action="{v.rota}/apagar" autocomplete="off">
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
 {campo_do_item(caminho)}
 <label class="marcar"><input type="checkbox" name="confirmar" value="sim" required> Conferi o nome e quero apagar</label>
 {campo_senha_atual(sessao, para='para apagar')}
 <button class="perigo" type="submit">Apagar de vez</button> <a class="botao" href="{e(volta)}">Cancelar</a>
-</form></section>''', sessao, '/arquivos'))
+</form></section>''', sessao, v.rota))
 
 
 def apagar(pedido, sessao, consulta, formulario, token):
-    """Apaga um arquivo, ou uma pasta com tudo o que há nela. Pede a caixa de confirmação e a senha atual do
-    administrador; a pasta de um usuário do FTP, ou a que tem uma dentro, só sai junto com o usuário."""
+    """Apaga um arquivo, ou uma pasta com tudo o que há nela. Pede a caixa de confirmação e a senha de quem está
+    na sessão; a pasta de um usuário do FTP, ou a que tem uma dentro, só sai junto com o usuário."""
+    v = Vista(sessao)
     caminho = item_do_formulario(formulario)
     try:
-        lista, acima, dados = situar(caminho)
+        lista, acima, dados = situar(caminho, v.raiz)
     except Recusado as motivo:
         return recusa(pedido, sessao, motivo, caminho)
     try:
         pasta = stat.S_ISDIR(dados.st_mode)
-        presos = usuarios_presos(caminho) if pasta else []
+        presos = usuarios_presos(v.real(caminho)) if pasta else []
         if presos:
             return pasta_de_usuario(pedido, sessao, lista, presos, 'apagada')
         if formulario.get('confirmar') != 'sim':
@@ -530,17 +560,17 @@ def apagar(pedido, sessao, consulta, formulario, token):
         itens, parada = apagar_item(acima, lista[-1], pasta)
     finally:
         os.close(acima)
-    registro = f'{quem(sessao)} tipo={tipo_de(dados)[0]} caminho={limpo(caminho, 200)}'
+    registro = f'{quem(sessao)} tipo={tipo_de(dados)[0]} caminho={limpo(v.real(caminho), 200)}'
     de_cima = '/'.join(lista[:-1])
     if not parada:
         auditar(pedido.ip, 'item_apagado', f'{registro} itens={itens}')
-        return pedido.redirecionar(endereco('/arquivos', 'pasta', de_cima) + '&m=apagado')
+        return pedido.redirecionar(endereco(v.rota, 'pasta', de_cima) + '&m=apagado')
     if itens:
         auditar(pedido.ip, 'item_apagado', f'{registro} itens={itens} completo=nao')
     elif parada != 'ocupado':
-        auditar(pedido.ip, 'falha_comando', f'{quem(sessao)} acao=apagar caminho={limpo(caminho, 200)}')
-    return resposta_parcial(pedido, sessao, itens, parada, endereco('/arquivos/apagar', 'item', caminho),
-                            endereco('/arquivos', 'pasta', de_cima), '/arquivos')
+        auditar(pedido.ip, 'falha_comando', f'{quem(sessao)} acao=apagar caminho={limpo(v.real(caminho), 200)}')
+    return resposta_parcial(pedido, sessao, itens, parada, endereco(v.rota + '/apagar', 'item', caminho),
+                            endereco(v.rota, 'pasta', de_cima), v.rota)
 
 
 def resposta_parcial(pedido, sessao, itens, parada, repetir, volta, aba):
@@ -582,7 +612,7 @@ def entregar(pedido, sessao, descritor, nome, registro):
         with os.fdopen(descritor, 'rb', buffering=0) as arquivo:
             pedido.enviar_arquivo(arquivo, os.fstat(arquivo.fileno()).st_size, extras=(('Content-Disposition', anexo(nome)),))
         return None
-    rota, tela = tela_de(sessao)
+    v = Vista(sessao)
     usuario, limite = sessao['usuario'], ''
     dele, taxa = downloads_e_taxa(usuario) if usuario else (0, 0)
     with TRAVA_CURSO:
@@ -594,9 +624,9 @@ def entregar(pedido, sessao, descritor, nome, registro):
             EM_CURSO[usuario] = EM_CURSO.get(usuario, 0) + 1
     if limite:
         os.close(descritor)
-        return pedido.enviar(503, pagina(tela, '<section class="cartao"><h1>Muitos downloads ao mesmo tempo</h1>'
+        return pedido.enviar(503, pagina(v.tela, '<section class="cartao"><h1>Muitos downloads ao mesmo tempo</h1>'
                                          f'<p>{limite} Espere um deles terminar e repita.</p>'
-                                         f'<p><a href="{rota}">Voltar para {tela}</a></p></section>', sessao, rota),
+                                         f'<p><a href="{v.rota}">Voltar para {v.tela}</a></p></section>', sessao, v.rota),
                              extras=(('Retry-After', '30'),))
     try:
         with os.fdopen(descritor, 'rb', buffering=0) as arquivo:
