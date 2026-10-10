@@ -194,7 +194,7 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 | `FTP_BLOQUEIO_MINUTOS` | Minutos que o bloqueio dura. É também o tempo em que as senhas erradas se somam: [Segurança](seguranca.md#bloqueio-por-tentativa) | `1` a `1440` | `15` |
 | `BLOQUEIO_ENDERECO_ERROS` | Bloqueio por endereço: o endereço que passa deste número de erros de usuário e senha, no FTP ou no painel, não entra mais em nenhum dos dois, com conta nenhuma: [Segurança](seguranca.md#bloqueio-por-endereco) | `0` a `100`; `0` desliga | `5` |
 | `BLOQUEIO_ENDERECO_HORAS` | Horas em que os erros de um mesmo endereço se somam | `1` a `720` | `24` |
-| `BLOQUEIO_ENDERECO_DIAS` | Dias que o bloqueio do endereço dura. O administrador libera o endereço ou muda o prazo dele na aba Bloqueios do painel | `1` a `3650` | `120` |
+| `BLOQUEIO_ENDERECO_DIAS` | Dias que o bloqueio do endereço dura, e o prazo que o bloqueio feito pelo administrador recebe quando ele não informa outro. O administrador bloqueia um endereço ou um prefixo, libera e muda o prazo na aba Bloqueios do painel | `1` a `3650` | `120` |
 
 ---
 

@@ -16,7 +16,7 @@ flowchart LR
     subgraph RESULTADO["Resultado"]
         fim@{ shape: stadium, label: "usuário pronto no FTP" }
         barrado@{ shape: stadium, label: "403<br>envio recusado" }
-        feito@{ shape: stadium, label: "arquivo baixado<br>ou alteração feita" }
+        feito@{ shape: stadium, label: "arquivo baixado, enviado<br>ou alteração feita" }
         recusa@{ shape: stadium, label: "pedido recusado" }
     end
 
@@ -29,5 +29,5 @@ flowchart LR
     painel -- "5 · em Arquivos ou em Meus arquivos, abre uma pasta ou baixa um arquivo" --> caminho
     caminho -- "6a · sim: abre parte por parte, sem seguir link simbólico" --> dados
     caminho -- "6b · não: 400, 403, 404 ou 409" --> recusa
-    dados -- "7 · entrega o arquivo ou cria a pasta, renomeia ou apaga" --> feito
+    dados -- "7 · entrega o arquivo, grava o enviado, cria a pasta, renomeia ou apaga" --> feito
     painel -. "registra cada ação" .-> auditoria

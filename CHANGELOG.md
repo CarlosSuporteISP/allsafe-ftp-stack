@@ -8,7 +8,28 @@ Em 2026-10-10 as versões foram renumeradas: cada versão passou a levar no máx
 
 ## [Não lançado]
 
-Nada ainda.
+O painel passa a receber arquivo, o bloqueio por endereço vale para IPv4 e IPv6 e ganha o bloqueio feito pelo administrador, de endereço e de prefixo, e cada conta pode ter a limpeza automática dos arquivos antigos. A tela de entrada mostra que a stack guarda arquivos de equipamentos de rede, câmeras, empresas e pessoas.
+
+### Adicionado
+
+- **Envio de arquivo pelo painel**: na aba Arquivos, o administrador envia um arquivo para a pasta aberta; na tela Meus arquivos, o usuário do FTP envia para a pasta dele. O arquivo nasce como o que chega por FTP (do usuário `ftpdata`, modo `0644`), só ganha nome na pasta depois de chegar inteiro e nunca substitui o que existe: nome repetido responde `409`, e na conta de perfil Só envio o arquivo novo é guardado com a data e a hora no nome. O envio que cai no meio não deixa pedaço. O painel recebe até 4 arquivos por vez, um por usuário do FTP, na taxa de envio da conta. Veja [Enviar arquivo pelo painel](doc/painel.md#enviar-arquivo).
+- **Permissão de envio pelo painel, por usuário**: a caixa **Permitir que este usuário envie arquivo pelo painel**, em Usuários ➜ Editar, ou `./manage-user.sh limites <usuario> enviar=1`. Sem ela, o usuário só envia por FTP. Vale para os perfis Só envio, Envio e Completo, na hora e sem encerrar a sessão dele; o perfil Leitura não envia. O envio sem a permissão responde `403` e fica na auditoria (`recusa_envio`).
+- **`PAINEL_ENVIO_MAX_MB`** (`1024` por padrão, de 1 a 102400): o tamanho máximo de cada arquivo enviado pelo painel. O nginx recebe corpo desse tamanho só nas duas rotas de envio e repassa ao painel enquanto chega, sem arquivo temporário; nas demais rotas o limite continua em 16 KiB.
+- **Bloqueio por endereço em IPv6**: o vigia do FTP, o porteiro e o painel leem e escrevem o endereço de origem do mesmo jeito (`ftp/endereco.pl` e `painel/enderecos.py`), IPv4 ou IPv6, e o bloqueio feito em um vale no outro. O IPv6 que carrega um IPv4 vale como o IPv4.
+- **Bloqueio feito pelo administrador, de endereço e de prefixo**: na aba Bloqueios, **Bloquear endereço** recebe um endereço ou um prefixo, IPv4 ou IPv6, e o prazo em dias; pelo terminal, `./manage-user.sh endereco-bloquear <endereco ou prefixo> [dias]`. Prefixo só é bloqueado pelo administrador: a stack nunca bloqueia uma rede sozinha. O painel recusa o bloqueio que pegaria o endereço de quem está pedindo, a rede interna da stack, um proxy confiável ou o próprio servidor. Os prefixos ficam em `DATA_DIR/auth/prefixos`, até 1.000.
+- **Limpeza automática por usuário**: em Usuários ➜ Editar, cartão **Limpeza automática**, o administrador manda guardar só os últimos arquivos de cada pasta, só os dos últimos dias, ou as duas regras juntas, com a senha dele; pelo terminal, `./manage-user.sh retencao <usuario> [ultimos=N] [dias=N]`. O painel aplica a regra de tempos em tempos (`PAINEL_RETENCAO_MINUTOS`, `60` por padrão; `0` desliga), sem sair da pasta do usuário, sem seguir link simbólico e sem tocar em arquivo oculto. Nasce desligada, e trocar a pasta do usuário desliga a regra. Veja [Limpeza automática](doc/painel.md#limpeza).
+- **Bandeiras no botão de idioma**: a do Brasil ao lado de **PT** e a dos Estados Unidos ao lado de **EN**, desenhadas na própria página, sem arquivo de imagem.
+- **Tela de entrada para uso geral**: a chamada passa a ser `Backups e arquivos, guardados em um lugar só`, e a cena mostra, além de OLT, rádio, roteador e switch, a câmera, a empresa e a pessoa enviando para o mesmo servidor.
+- **Casos de teste** funcionais 66 a 73 e de segurança 115 a 124: o bloqueio de endereço e de prefixo, IPv4 e IPv6, pela aba e pelo terminal, com estender, encurtar e desbloquear; a entrada certa zerando a contagem no FTP e no painel; o bloqueio novo recusado para o próprio endereço, a stack e o servidor; o envio pelo painel do administrador e do usuário do FTP, só com a permissão e dentro do perfil; o envio forjado, com nome fora da regra, malformado, para fora da pasta, acima do tamanho e além do limite de envios ao mesmo tempo; e a limpeza automática, definida só pelo administrador, mantendo os mais recentes, apagando o que passou do prazo, rodando sozinha e sem sair da pasta do usuário.
+
+### Alterado
+
+- **Entrada certa zera a contagem do endereço**: a entrada com usuário e senha certos, no FTP ou no painel, apaga os erros somados daquele endereço. O bloqueio já gravado não sai com ela: só no prazo ou pelo administrador.
+- **A aba Atividade passa a se chamar Log.** O endereço da aba continua `/atividade`. Ela registra também o envio pelo painel, o envio interrompido e o bloqueio feito pelo administrador.
+- **Sessão do painel mais longa**: `PAINEL_SESSAO_MINUTOS` passa de `15` para `240` (4 horas sem uso), com valores de 1 a 720, e toda sessão acaba em 12 horas, com uso ou sem.
+- **Trocar o nome de arquivo ou pasta pede a senha** de quem está na sessão, como apagar já pedia, na aba Arquivos e na tela Meus arquivos.
+- **Porteiro do FTP em Perl** (`ftp/porteiro.pl` no lugar de `ftp/porteiro.sh`), para ler o endereço de origem com a mesma rotina do vigia.
+- **`BLOQUEIO_ENDERECO_DIAS`** é também o prazo do bloqueio feito pelo administrador quando ele não informa outro.
 
 ## [0.30.0] - 2026-10-10
 

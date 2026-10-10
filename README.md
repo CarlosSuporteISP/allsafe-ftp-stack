@@ -4,7 +4,7 @@
 
 # 📁 allsafe-ftp-stack
 
-**Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para backup de equipamentos em rede privada.**
+**Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para guardar em um lugar só os backups e arquivos de equipamentos de rede, câmeras, empresas e pessoas, em rede privada.**
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
@@ -64,13 +64,13 @@ flowchart LR
 
 ## 💡 O que é
 
-Um servidor de arquivos para onde roteadores, switches, OLTs e outros equipamentos de rede mandam a cópia de segurança da própria configuração. Cada equipamento entra com usuário e senha, só enxerga a própria pasta e, no padrão, só consegue entrar por conexão criptografada. As contas dos equipamentos são criadas pelo navegador, em um **painel web seguro**, ou pela linha de comando. No mesmo painel, os backups recebidos são consultados e **baixados pelo navegador**, por quem administra e pelo dono dos arquivos, que entra com o usuário e a senha do FTP e vê só a própria pasta. Cada equipamento pode ter a pasta escolhida por quem administra.
+Um servidor de arquivos para guardar, em um lugar só, backups e arquivos: a cópia de segurança da configuração de roteadores, switches, OLTs e rádios, as gravações de câmeras e gravadores que salvam por FTP, e os arquivos de empresas e de pessoas. Cada conta entra com usuário e senha, só enxerga a própria pasta e, no padrão, só consegue entrar por conexão criptografada. As contas são criadas pelo navegador, em um **painel web seguro**, ou pela linha de comando. No mesmo painel, os arquivos recebidos são consultados e **baixados pelo navegador**, por quem administra e pelo dono dos arquivos, que entra com o usuário e a senha do FTP e vê só a própria pasta; com a permissão do administrador, o dono também **envia arquivo pelo navegador**. Cada conta pode ter a pasta escolhida por quem administra.
 
 São **três containers**: o servidor FTP, o painel e o **nginx**, a única porta de entrada do painel. O FTP usa o banco local **PureDB** em vez de PostgreSQL: menos memória, menos superfície de ataque e autenticação sem latência de rede. O painel é pequeno de propósito: administradores com usuário e senha, sem JavaScript, sem acesso ao Docker e sem porta de rede própria; quem fala HTTPS com o navegador é o nginx, que confere a rede de origem e o volume de pedidos antes de repassar. Nos três, o sistema de arquivos raiz é somente leitura, as `capabilities` são mínimas e os segredos ficam fora da imagem e do Git.
 
 | | |
 |---|---|
-| **Para quê** | Receber por FTPS o backup de configuração de equipamentos de rede |
+| **Para quê** | Receber por FTPS backups e arquivos de equipamentos de rede, câmeras, empresas e pessoas, e consultar tudo pelo navegador |
 | **Tecnologias** | Docker Compose · Debian 13 · Pure-FTPd · PureDB · OpenSSL · nginx · Bash · Python |
 | **Acesso** | Cliente FTP com **TLS explícito** (`AUTH TLS`) na porta `21/tcp`, modo passivo na faixa do perfil (`30000-30049/tcp` no `small`) · painel em `https://<IP privado>:8443`, pelo nginx |
 | **Requisitos** | Docker Engine com Docker Compose v2 ou mais novo · CPU e memória do perfil escolhido (2 vCPU e 2 GB no `small`) · um IP **privado** dedicado · firewall no host liberando só a rede interna |
@@ -92,10 +92,13 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **FTPS explícito obrigatório por padrão** | Sem `AUTH TLS` não há login: usuário e senha não passam em texto puro. O modo sem TLS, para equipamento antigo, é uma escolha explícita e avisada |
 | **Usuários virtuais em PureDB** | Não são contas do sistema; cada um fica preso (`chroot`) na própria pasta |
 | **Bloqueio por tentativa no FTP** | Cinco senhas erradas do mesmo endereço bloqueiam o usuário para ele por 15 minutos; o administrador ajusta o limite de cada usuário e desbloqueia pelo painel |
+| **Bloqueio por endereço, IPv4 e IPv6** | O endereço que passa de cinco erros de usuário e senha em 24 horas fica 120 dias sem entrar no FTP e no painel, e a entrada certa zera a contagem. Na aba Bloqueios, o administrador bloqueia um endereço ou um prefixo, libera e muda o prazo |
 | **Bind local por padrão** | Sobe em `127.0.0.1`; você abre só um IP **privado** dedicado, com firewall no host |
 | **Rede privada por padrão** | Feita para rede interna, atrás de firewall; endereço público só por uma opção explícita, com alerta |
 | **Só o painel publicado, se quiser** | O painel pode ser aberto por um proxy ou túnel do próprio servidor, com o FTP fechado na rede privada; o endereço do cliente só é aceito do proxy declarado |
 | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão que encerra com 4 horas sem uso, bloqueio depois de cinco senhas erradas e registro de cada ação |
+| **Arquivos pelo navegador** | O administrador navega, envia, baixa, renomeia e apaga; o dono dos arquivos entra com o usuário e a senha do FTP, vê só a própria pasta e faz o que o perfil dele deixa. Enviar pelo painel depende de permissão dada a cada usuário |
+| **Limpeza automática** | Por conta, o administrador manda guardar só os últimos arquivos de cada pasta ou só os dos últimos dias; o painel apaga o resto sozinho, de tempos em tempos. Desligada por padrão |
 | **Saúde do servidor no painel** | A aba Servidor mostra os três containers da stack, cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, e o processador, a memória, o disco e a rede do FTP do servidor, com o histórico dos últimos minutos |
 | **nginx na frente do painel** | Só o nginx publica a porta do painel: TLS 1.2 e 1.3, HTTP/2, lista de redes permitidas, limite de pedidos e de conexões por endereço; o painel fica sem porta de rede |
 | **Containers endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs; o nginx roda sem `root` e sem nenhuma `capability` |
@@ -115,11 +118,11 @@ O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página,
 | | |
 |---|---|
 | <a href="doc/imagens/aba-usuarios.png"><img src="doc/imagens/aba-usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista das contas: primeiro o administrador admin, com a etiqueta você, depois os usuários do FTP, cada um com o perfil embaixo do nome e as etiquetas inicial, limites e bloqueado, a pasta, com a etiqueta dividida em duas, uso, arquivos, último envio, a coluna TLS, com obrigatório em todas as linhas, as ações Editar, Dispensar TLS, Trocar senha e Remover e, abaixo da lista, o recolhido Como funcionam os perfis e as etiquetas" width="100%"></a> | <a href="doc/imagens/aba-arquivos.png"><img src="doc/imagens/aba-arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma, os botões Renomear e Apagar em cada linha e o formulário Nova pasta" width="100%"></a> |
-| **Usuários** — cria a conta de cada equipamento, escolhe o perfil, troca a senha, a pasta e os limites, desbloqueia e remove | **Arquivos** — navega nas pastas dos usuários, baixa os backups, cria pasta, renomeia e apaga |
+| **Usuários** — cria cada conta, escolhe o perfil, troca a senha, a pasta e os limites, desbloqueia e remove | **Arquivos** — navega nas pastas dos usuários, envia e baixa arquivo, cria pasta, renomeia e apaga |
 | <a href="doc/imagens/aba-servidor.png"><img src="doc/imagens/aba-servidor.png" alt="Aba Servidor com o botão Atualizar sozinha, o cartão Containers da stack, com um quadro para o Servidor FTP, um para o Painel e um para a Frente web, cada um com processador, memória e processos em uso e alocados e o gráfico do último minuto, e o cartão Recursos do servidor, com processador, memória, disco e rede do FTP" width="100%"></a> | <a href="doc/imagens/aba-seguranca.png"><img src="doc/imagens/aba-seguranca.png" alt="Aba Segurança com o resumo da conferência no alto, que diz quantos itens estão em ordem, e uma linha por item: endereço público, painel por proxy ou túnel, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, bloqueio por endereço, com a quantidade de endereços bloqueados, custo das senhas, contato de segurança, container e firewall" width="100%"></a> |
 | **Servidor** — o uso e o limite de processador, memória e processos de cada container, e os recursos do servidor | **Segurança** — confere rede, TLS, certificados, bloqueios, senhas e contato de segurança |
 | <a href="doc/imagens/aba-bloqueios.png"><img src="doc/imagens/aba-bloqueios.png" alt="Aba Bloqueios com a regra em uso abaixo do título, três endereços bloqueados, um por erros no painel, um por um administrador e um por erros no FTP, cada um com desde quando, até quando e os botões Mudar prazo e Desbloquear, e o cartão Usuários bloqueados no FTP, com o usuário switch-core" width="100%"></a> | <a href="doc/imagens/aba-atividade.png"><img src="doc/imagens/aba-atividade.png" alt="Aba Log com os registros do painel em quatro colunas: quando, de onde, com o endereço inteiro em uma linha só ou no servidor, o que aconteceu, com um ícone por evento, e o detalhe, como arquivo baixado, pasta criada, administrador criado, endereço desbloqueado e tela fora do papel ou do perfil pedida por usuário do FTP" width="100%"></a> |
-| **Bloqueios** — os endereços bloqueados por erro de usuário e senha, com desbloqueio e troca do prazo | **Log** — quem entrou, de onde, o que baixou e o que foi alterado |
+| **Bloqueios** — os endereços e os prefixos bloqueados, por erro de usuário e senha ou pelo administrador, com bloqueio novo, desbloqueio e troca do prazo | **Log** — quem entrou, de onde, o que baixou, o que enviou e o que foi alterado |
 | <a href="doc/imagens/aba-administradores.png"><img src="doc/imagens/aba-administradores.png" alt="Aba Usuários com três administradores no começo da lista, admin, com a etiqueta você, noc-plantao e suporte, cada um com o perfil Administrador, as sessões abertas e as ações Trocar senha, Trocar nome e Remover, e, abaixo deles, os usuários do FTP" width="100%"></a> | <a href="doc/imagens/aba-meus-arquivos.png"><img src="doc/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, de perfil Completo, com as pastas 2026-09 e 2026-10 e um arquivo de configuração, os botões Abrir ou Baixar, Renomear e Apagar em cada linha, o formulário Nova pasta e, no menu, só a aba Meus arquivos, os botões PT e EN, o nome do usuário e o botão Sair" width="100%"></a> |
 | **Administradores** — ficam na aba Usuários, cada pessoa com o próprio nome e a própria senha | **Meus arquivos** — o usuário do FTP vê a própria pasta e faz nela o que o perfil dele deixa |
 
@@ -173,6 +176,9 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | Limitar o que um usuário faz (envia sem apagar, só envia sem ver os backups, ou só baixa) | pelo painel, aba Usuários, **Editar**, cartão **Perfil**, ou `./manage-user.sh perfil backup-olt envio`: veja [Perfis](doc/painel.md#perfis) |
 | Baixar um backup recebido | pelo painel, aba Arquivos, botão **Baixar** na linha do arquivo |
 | Deixar o dono dos arquivos baixar os dele | ele abre o painel com o usuário e a senha do FTP e vê só a própria pasta; para o painel aceitar só administradores, `PAINEL_ACESSO_USUARIOS_FTP=nao` no `.env` e `./deploy.sh` |
+| Deixar um usuário enviar arquivo pelo navegador | pelo painel, aba Usuários, **Editar**, caixa **Permitir que este usuário envie arquivo pelo painel**, ou `./manage-user.sh limites backup-olt enviar=1`: veja [Enviar arquivo pelo painel](doc/painel.md#enviar-arquivo) |
+| Guardar só os arquivos mais novos de uma conta | pelo painel, aba Usuários, **Editar**, cartão **Limpeza automática**, ou `./manage-user.sh retencao backup-olt ultimos=30`: veja [Limpeza automática](doc/painel.md#limpeza) |
+| Bloquear um endereço ou um prefixo | pelo painel, aba Bloqueios, **Bloquear endereço**, ou `./manage-user.sh endereco-bloquear 203.0.113.7 30`: veja [bloqueio por endereço](doc/seguranca.md#bloqueio-por-endereco) |
 | Criar uma pasta e prender um usuário a ela | pelo painel, aba Arquivos, **Nova pasta** e **Novo usuário nesta pasta**, ou `./manage-user.sh add olt01 clientes/olt-01` |
 | Guardar uma cópia de segurança | `./scripts/backup.sh`, que a grava cifrada; para voltar a ela, `./scripts/restaurar.sh <cópia>`. Guarde `.secrets/backup-chave-privada.txt` fora do servidor |
 | Ver o estado | `docker compose ps` |
@@ -241,7 +247,7 @@ flowchart LR
 | 3b | pediu TLS? ➜ conexão recusada | Não: no padrão, sessão em texto puro é recusada. Só entra sem TLS o usuário dispensado por um administrador no painel, ou quem estiver em uma instalação com `FTP_TLS_MODE=0` ou `1`, opções para [equipamento antigo](doc/seguranca.md#ftp-sem-tls) |
 | 4 | usuário e senha conferem? ➜ PureDB | A conta é procurada no banco de usuários virtuais (`/auth/pureftpd.pdb`) |
 | 5a | usuário e senha conferem? ➜ sessão em chroot | Sim: a sessão abre presa na pasta do usuário |
-| 5b | usuário e senha conferem? ➜ conexão recusada | Não: `530 Login authentication failed`. No padrão, 5 senhas erradas do mesmo endereço em 15 minutos bloqueiam o usuário para aquele endereço por 15 minutos; o limite de cada usuário é ajustado no painel: [bloqueio por tentativa](doc/seguranca.md#bloqueio-por-tentativa). O endereço que passa de 5 erros em 24 horas, com qualquer usuário, fica 120 dias sem entrar no FTP e no painel: [bloqueio por endereço](doc/seguranca.md#bloqueio-por-endereco) |
+| 5b | usuário e senha conferem? ➜ conexão recusada | Não: `530 Login authentication failed`. No padrão, 5 senhas erradas do mesmo endereço em 15 minutos bloqueiam o usuário para aquele endereço por 15 minutos; o limite de cada usuário é ajustado no painel: [bloqueio por tentativa](doc/seguranca.md#bloqueio-por-tentativa). O endereço, IPv4 ou IPv6, que passa de 5 erros em 24 horas, com qualquer usuário, fica 120 dias sem entrar no FTP e no painel: [bloqueio por endereço](doc/seguranca.md#bloqueio-por-endereco) |
 | 6 | sessão em chroot ➜ `/data` | O arquivo sobe pelo canal de dados em modo passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
 | 7 | `/data` ➜ backup guardado | O arquivo fica gravado na pasta do usuário, dentro do volume |
 
@@ -347,7 +353,7 @@ flowchart LR
     subgraph RESULTADO["Resultado"]
         fim@{ shape: stadium, label: "usuário pronto no FTP" }
         barrado@{ shape: stadium, label: "403<br>envio recusado" }
-        feito@{ shape: stadium, label: "arquivo baixado<br>ou alteração feita" }
+        feito@{ shape: stadium, label: "arquivo baixado, enviado<br>ou alteração feita" }
         recusa@{ shape: stadium, label: "pedido recusado" }
     end
 
@@ -360,7 +366,7 @@ flowchart LR
     painel -- "5 · em Arquivos ou em Meus arquivos, abre uma pasta ou baixa um arquivo" --> caminho
     caminho -- "6a · sim: abre parte por parte, sem seguir link simbólico" --> dados
     caminho -- "6b · não: 400, 403, 404 ou 409" --> recusa
-    dados -- "7 · entrega o arquivo ou cria a pasta, renomeia ou apaga" --> feito
+    dados -- "7 · entrega o arquivo, grava o enviado, cria a pasta, renomeia ou apaga" --> feito
     painel -. "registra cada ação" .-> auditoria
 ```
 
@@ -368,16 +374,16 @@ flowchart LR
 
 | Nº | De ➜ Para | O que acontece |
 |---|---|---|
-| 1 | Painel web ➜ origem e token conferem? | Todo formulário enviado é conferido duas vezes: a origem tem de ser o próprio painel e o token CSRF tem de ser o da sessão. Só o administrador tem formulário de usuário e de arquivos; na sessão do usuário do FTP, o único formulário é o de sair |
+| 1 | Painel web ➜ origem e token conferem? | Todo formulário enviado é conferido duas vezes: a origem tem de ser o próprio painel e o token CSRF tem de ser o da sessão. Formulário de usuário, só o administrador tem; os de arquivos, o administrador e o usuário do FTP, este conforme o perfil dele |
 | 2a | origem e token conferem? ➜ `allsafe-ftp-user` | Sim, formulário de usuário: o painel chama o comando, com a senha pela entrada padrão |
-| 2b | origem e token conferem? ➜ caminho dentro da pasta dos dados? | Sim, formulário da aba Arquivos (criar pasta, renomear ou apagar): segue para a conferência do caminho |
+| 2b | origem e token conferem? ➜ caminho dentro da pasta dos dados? | Sim, formulário de arquivos, da aba Arquivos ou da tela Meus arquivos (enviar arquivo, criar pasta, renomear ou apagar): segue para a conferência do caminho |
 | 2c | origem e token conferem? ➜ 403 | Não: `403`, sem alterar nada, para o envio que não partiu do painel ou que veio sem o token da sessão |
 | 3 | `allsafe-ftp-user` ➜ PureDB | A conta é gravada em `DATA_DIR/auth`, com trava para uma alteração por vez, e a pasta do usuário novo é criada em `DATA_DIR/dados`, se ainda não existe; a dispensa do TLS de um usuário fica na `sem-tls.lista`, na mesma pasta do banco |
 | 4 | PureDB ➜ usuário pronto no FTP | O FTP lê o banco a cada login: vale na hora, sem reiniciar |
 | 5 | Painel web ➜ caminho dentro da pasta dos dados? | Na aba Arquivos, o administrador abre uma pasta ou baixa um arquivo; na tela Meus arquivos, o usuário do FTP faz o mesmo, só na pasta dele. Esses pedidos não levam formulário, e o caminho é conferido do mesmo jeito |
 | 6a | caminho dentro da pasta dos dados? ➜ `DATA_DIR/dados` | Sim: o painel abre cada parte do caminho sem seguir link simbólico, a partir da pasta dos dados, para o administrador, e a partir da pasta do cadastro, para o usuário do FTP |
 | 6b | caminho dentro da pasta dos dados? ➜ pedido recusado | Não: `400` para caminho ou nome que tenta sair da pasta, `403` para link simbólico, `404` para o que não existe, `409` para nome já usado |
-| 7 | `DATA_DIR/dados` ➜ arquivo baixado ou alteração feita | O arquivo sai como anexo, em blocos; a pasta nova nasce vazia, do usuário `ftpdata`; o arquivo ou a pasta escolhida é renomeada ou apagada |
+| 7 | `DATA_DIR/dados` ➜ arquivo baixado, enviado ou alteração feita | O arquivo sai como anexo, em blocos; o arquivo enviado só ganha nome na pasta depois de chegar inteiro, sem substituir o que existe; a pasta nova nasce vazia, do usuário `ftpdata`; o arquivo ou a pasta escolhida é renomeada ou apagada |
 
 **Apoio**
 
@@ -609,7 +615,7 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 - Bind em `127.0.0.1` por padrão: abra só um IP privado dedicado e libere no firewall do host apenas as redes que enviam backup.
 - TLS **obrigatório** para entrar no padrão (`FTP_TLS_MODE=2`), `chroot` em todos, sem usuário anônimo, sem DNS reverso.
 - **Bloqueio por tentativa no FTP:** o endereço que erra a senha de um usuário cinco vezes em 15 minutos fica bloqueado para aquele usuário pelo mesmo tempo; o limite e o tempo são ajustados por usuário, e o administrador desbloqueia pelo painel. Veja [bloqueio por tentativa](doc/seguranca.md#bloqueio-por-tentativa).
-- **Bloqueio por endereço, no FTP e no painel:** o endereço que passa de cinco erros de usuário e senha em 24 horas, com qualquer nome de usuário, fica 120 dias sem entrar nos dois, com conta nenhuma. A aba Bloqueios do painel lista os endereços, e o administrador libera ou muda o prazo. Veja [bloqueio por endereço](doc/seguranca.md#bloqueio-por-endereco).
+- **Bloqueio por endereço, no FTP e no painel:** o endereço, IPv4 ou IPv6, que passa de cinco erros de usuário e senha em 24 horas, com qualquer nome de usuário, fica 120 dias sem entrar nos dois, com conta nenhuma; a entrada certa zera a contagem. A aba Bloqueios do painel lista os endereços, e o administrador bloqueia um endereço ou um prefixo, libera ou muda o prazo. Prefixo só é bloqueado pelo administrador. Veja [bloqueio por endereço](doc/seguranca.md#bloqueio-por-endereco).
 - **Sem TLS só para quem o administrador dispensar:** no painel, ao criar o usuário ou em Editar, o administrador marca os usuários dos equipamentos antigos, um a um; os demais continuam obrigados a usar TLS, e sem nenhum dispensado a sessão sem TLS é recusada antes da senha. Veja [TLS por usuário](doc/seguranca.md#tls-por-usuario).
 - **Sem TLS para todos só por escolha:** `FTP_TLS_MODE=0` ou `1` existe para equipamento antigo que não fala TLS. Senha e arquivos passam em texto puro, e a stack avisa disso no `deploy.sh`, no registro do container e no painel. Só em rede interna isolada. Veja [equipamento sem TLS](doc/seguranca.md#ftp-sem-tls).
 - `read_only` no sistema de arquivos raiz, `cap_drop: ALL` (só as estritamente necessárias voltam), `no-new-privileges`, limites de CPU, memória, PIDs e `nofile`.
