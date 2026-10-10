@@ -162,12 +162,6 @@ EN = {
         'Empty folder',
     'O que for enviado para ela por FTP aparece aqui.':
         'Whatever is sent to it by FTP shows up here.',
-    'O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continua sendo feito por '
-    'FTP. Apagar pede a sua senha atual e não tem lixeira. Todo download e toda alteração ficam '
-    'registrados na aba Atividade.':
-        'The panel browses, downloads, creates folders, renames and deletes; uploading files is still '
-        'done by FTP. Deleting asks for your current password and there is no recycle bin. Every '
-        'download and every change is recorded on the Activity tab.',
     'Arquivos':
         'Files',
     'Nova pasta':
@@ -370,8 +364,8 @@ EN = {
         'Nothing recorded yet',
     'Cada entrada no painel e cada alteração feita por ele passa a aparecer aqui.':
         'Every sign-in to the panel and every change made through it will show up here.',
-    'Atividade':
-        'Activity',
+    'Log':
+        'Log',
     'no servidor':
         'on the server',
     'Nada registrado ainda.':
@@ -393,12 +387,12 @@ EN = {
         '{erros} errors on FTP',
     '{erros} erros no painel':
         '{erros} errors on the panel',
-    'Endereço liberado: ele volta a entrar no FTP e no painel.':
-        'Address released: it can connect to FTP and to the panel again.',
+    'Bloqueio desfeito: quem estava nele volta a entrar no FTP e no painel.':
+        'Block removed: whoever was in it can connect to FTP and to the panel again.',
     'Prazo do bloqueio alterado.':
         'Block period changed.',
-    'Este endereço não está mais bloqueado.':
-        'This address is no longer blocked.',
+    'Este bloqueio não está mais em vigor.':
+        'This block is no longer in force.',
     'O endereço que passa de {erros} de usuário e senha em {horas}, no FTP ou no painel, fica {dias} '
     'sem entrar nos dois.':
         'An address with more than {erros} in user name and password within {horas}, on FTP or on the '
@@ -407,16 +401,16 @@ EN = {
         'less than 1 day',
     '{dias} dias':
         '{dias} days',
-    'O bloqueio automático está desligado (<code>BLOQUEIO_ENDERECO_ERROS=0</code>): aqui ficam só os '
-    'endereços bloqueados pelo terminal.':
-        'Automatic blocking is off (<code>BLOQUEIO_ENDERECO_ERROS=0</code>): only addresses blocked '
-        'from the terminal are listed here.',
+    'O bloqueio automático está desligado (<code>BLOQUEIO_ENDERECO_ERROS=0</code>): aqui ficam só os endereços '
+    'e prefixos bloqueados pelo administrador.':
+        'Automatic blocking is off (<code>BLOQUEIO_ENDERECO_ERROS=0</code>): only addresses and prefixes '
+        'blocked by the administrator are listed here.',
     'nenhum endereço bloqueado':
         'no address blocked',
-    '1 endereço bloqueado':
-        '1 address blocked',
-    '{n} endereços bloqueados':
-        '{n} addresses blocked',
+    '1 bloqueio em vigor':
+        '1 block in force',
+    '{n} bloqueios em vigor':
+        '{n} blocks in force',
     'Bloqueado por <strong>{quem}</strong>, com {erros} erros de usuário e senha, em {desde}.':
         'Blocked by <strong>{quem}</strong>, with {erros} user name and password errors, on {desde}.',
     'Bloqueado por <strong>{quem}</strong>, em {desde}.':
@@ -425,6 +419,10 @@ EN = {
         '{n} error',
     '{n} erros':
         '{n} errors',
+    '{n} minuto':
+        '{n} minute',
+    '{n} minutos':
+        '{n} minutes',
     '{n} hora':
         '{n} hour',
     '{n} horas':
@@ -433,6 +431,53 @@ EN = {
         '{n} day',
     '{n} dias':
         '{n} days',
+    'Endereço ou prefixo bloqueado pelo administrador':
+        'Address or prefix blocked by the administrator',
+    'Bloquear endereço':
+        'Block address',
+    'Vale para IPv4 e para IPv6. Sozinho, o bloqueio é sempre de um endereço, e a entrada com usuário e senha '
+    'certos zera a contagem dos erros dele. Prefixo, que é uma rede inteira, só o administrador bloqueia: em '
+    'IPv6 o equipamento costuma trocar de endereço dentro da própria rede, e é o prefixo dela que o segura.':
+        'Applies to IPv4 and to IPv6. On its own, the block is always of a single address, and signing in with '
+        'the right user name and password resets the error count of that address. A prefix, which is a whole '
+        'network, is blocked only by the administrator: on IPv6 a device usually changes address within its '
+        'own network, and it is the prefix of that network that holds it.',
+    'Os endereços deste prefixo voltam a entrar no FTP e no painel no próximo pedido.':
+        'The addresses in this prefix can connect to FTP and to the panel again on the next request.',
+    'Bloquear endereço ou prefixo':
+        'Block address or prefix',
+    'O que for bloqueado aqui não entra mais no FTP nem no painel, com conta nenhuma, até o prazo vencer ou '
+    'alguém desbloquear.':
+        'Whatever is blocked here no longer gets into FTP or the panel, with any account, until the period '
+        'ends or someone unblocks it.',
+    'Endereço ou prefixo <span class="suave">(IPv4 ou IPv6)</span>':
+        'Address or prefix <span class="suave">(IPv4 or IPv6)</span>',
+    'Um endereço, como <code>203.0.113.7</code> ou <code>2001:db8::7</code>, ou uma rede inteira, como '
+    '<code>203.0.113.0/24</code> ou <code>2001:db8:12::/64</code>. Prefixo aceito: IPv4 de /8 a /31 e IPv6 de '
+    '/16 a /127.':
+        'An address, such as <code>203.0.113.7</code> or <code>2001:db8::7</code>, or a whole network, such as '
+        '<code>203.0.113.0/24</code> or <code>2001:db8:12::/64</code>. Accepted prefix: IPv4 from /8 to /31 '
+        'and IPv6 from /16 to /127.',
+    'O painel não bloqueia o endereço de onde você o está usando, a rede interna da stack nem os proxies de '
+    '<code>PAINEL_PROXY_CONFIAVEL</code>. O que já está bloqueado só tem o prazo trocado.':
+        'The panel does not block the address you are using it from, the internal network of the stack or the '
+        'proxies in <code>PAINEL_PROXY_CONFIAVEL</code>. What is already blocked only has its period changed.',
+    'Bloquear':
+        'Block',
+    'Este endereço é do próprio servidor: não pode ser bloqueado.':
+        'This address belongs to the server itself: it cannot be blocked.',
+    'Este bloqueio pegaria o endereço de onde você está usando o painel ({ip}). Nada foi bloqueado.':
+        'This block would catch the address you are using the panel from ({ip}). Nothing was blocked.',
+    'Este bloqueio pegaria a rede interna da stack ou um proxy confiável, por onde chegam os visitantes. Nada '
+    'foi bloqueado.':
+        'This block would catch the internal network of the stack or a trusted proxy, through which the '
+        'visitors arrive. Nothing was blocked.',
+    'Bloqueio gravado: vale no FTP e no painel a partir do próximo pedido.':
+        'Block saved: it applies to FTP and to the panel from the next request.',
+    'Endereço ou prefixo inválido: use um IPv4, um IPv6 ou um prefixo, como 203.0.113.7, 2001:db8::7 ou '
+    '203.0.113.0/24.':
+        'Invalid address or prefix: use an IPv4 address, an IPv6 address or a prefix, such as 203.0.113.7, '
+        '2001:db8::7 or 203.0.113.0/24.',
     'Usuários bloqueados no FTP':
         'Users blocked on FTP',
     'Bloqueio curto, de um usuário para um endereço: os outros usuários seguem entrando por ele. Vence '
@@ -451,8 +496,8 @@ EN = {
         'Until',
     'Nenhum endereço bloqueado com esse trecho':
         'No blocked address with that text',
-    'Confira os números ou veja a lista inteira.':
-        'Check the numbers or see the whole list.',
+    'Confira o que foi digitado ou veja a lista inteira.':
+        'Check what was typed or see the whole list.',
     'Bloqueios':
         'Blocks',
     'Bloqueio de {ip}':
@@ -462,8 +507,9 @@ EN = {
     'Quem passar do limite de erros de usuário e senha, no FTP ou no painel, aparece aqui.':
         'Whoever goes over the limit of user name and password errors, on FTP or on the panel, shows '
         'up here.',
-    'Nada é bloqueado sozinho nesta instalação: só pelo terminal do servidor.':
-        'Nothing is blocked automatically on this installation: only from the server terminal.',
+    'Nada é bloqueado sozinho nesta instalação: só pelo administrador, aqui ou no terminal do servidor.':
+        'Nothing is blocked automatically on this installation: only by the administrator, here or from the '
+        'server terminal.',
     'Procurar endereço':
         'Search address',
     'Procurar':
@@ -480,8 +526,8 @@ EN = {
         'Change period',
     'Desbloquear':
         'Unblock',
-    'Endereço':
-        'Address',
+    'Endereço ou prefixo':
+        'Address or prefix',
     'Bloqueio de <code>{ip}</code>':
         'Block of <code>{ip}</code>',
     'Prazo':
@@ -536,20 +582,8 @@ EN = {
         'upload, rename or delete anything, here or by FTP. Every download is recorded.',
     'Os arquivos da sua pasta no FTP, para navegar, baixar e criar pasta.':
         'The files in your FTP folder, to browse, download and create folders.',
-    'Aqui você navega, baixa e cria pasta; enviar arquivo continua sendo feito por FTP. O perfil desta '
-    'conta é de envio: o que já foi enviado não é renomeado nem apagado por ela. Todo download e toda '
-    'pasta criada ficam registrados.':
-        'Here you browse, download and create folders; uploading files is still done by FTP. This '
-        'account has the upload profile: what was already sent is not renamed or deleted by it. Every '
-        'download and every folder created is recorded.',
     'Os arquivos da sua pasta no FTP, para navegar, baixar e organizar.':
         'The files in your FTP folder, to browse, download and organize.',
-    'Aqui você navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continua sendo feito '
-    'por FTP. Apagar pede a sua senha do FTP e não tem lixeira. Todo download e toda alteração ficam '
-    'registrados.':
-        'Here you browse, download, create folders, rename and delete; uploading files is still done '
-        'by FTP. Deleting asks for your FTP password and there is no recycle bin. Every download and '
-        'every change is recorded.',
     'FTP sem TLS (texto puro), modo passivo':
         'FTP without TLS (plain text), passive mode',
     'FTPS explícito (FTP com TLS) ou, só para equipamento sem TLS, FTP em texto puro; modo passivo':
@@ -588,12 +622,6 @@ EN = {
         '<strong>{usuario}</strong>, with the same password used to sign in here',
     'O que esta conta faz':
         'What this account does',
-    'Ela envia arquivo por FTP e mais nada. Cada arquivo que termina de chegar é guardado na pasta do '
-    'usuário <strong>{usuario}</strong> no servidor, fora do alcance desta conta: ela não lista, não '
-    'baixa, não renomeia e não apaga o que já enviou, nem por FTP nem por aqui.':
-        'It uploads files by FTP and nothing else. Each file that finishes arriving is stored in the '
-        'folder of the user <strong>{usuario}</strong> on the server, out of reach of this account: it '
-        'does not list, download, rename or delete what it has already sent, by FTP or here.',
     'Depois de enviar, a pasta da sessão volta a ficar vazia: é o esperado. Arquivo enviado com um '
     'nome que já existe não substitui o anterior: o novo é guardado com a data e a hora no nome. Quem '
     'precisa conferir ou baixar o que foi enviado pede a um administrador ou usa uma conta de outro '
@@ -657,10 +685,12 @@ EN = {
         'Who can open the panel',
     'Sessão':
         'Session',
-    'Encerra com {minutos} minutos sem uso e, de qualquer forma, em 8 horas. {falhas} entradas erradas '
+    'Encerra com {prazo} sem uso e, de qualquer forma, em {teto}. Apagar, trocar nome de arquivo ou pasta e '
+    'mexer em administrador pedem a senha de novo, mesmo com a sessão aberta. {falhas} entradas erradas '
     'bloqueiam o endereço por 15 minutos.':
-        'Closes after {minutos} minutes without use and, in any case, after 8 hours. {falhas} wrong '
-        'sign-ins block the address for 15 minutes.',
+        'Closes after {prazo} without use and, in any case, after {teto}. Deleting, renaming a file or '
+        'folder and changing an administrator ask for the password again, even with the session open. '
+        '{falhas} wrong sign-ins block the address for 15 minutes.',
     'Entrada dos usuários do FTP':
         'Sign-in of FTP users',
     'Bloqueio por tentativa no FTP':
@@ -863,9 +893,9 @@ EN = {
     'recebendo e enviando agora':
         'receiving and sending now',
     'A tela se atualiza a cada {segundos} s. A atualização automática não conta como uso do painel: a '
-    'sessão encerra depois de {minutos} min sem ação sua.':
+    'sessão encerra depois de {prazo} sem ação sua.':
         'The screen refreshes every {segundos} s. Automatic refresh does not count as use of the '
-        'panel: the session closes after {minutos} min without any action from you.',
+        'panel: the session closes after {prazo} without any action from you.',
     'Para acompanhar sem recarregar a página, ligue <strong>Atualizar sozinha</strong>.':
         'To follow along without reloading the page, turn on <strong>Auto-refresh</strong>.',
     'últimos {tempo}':
@@ -1223,8 +1253,6 @@ EN = {
         'on FTP and on their downloads through the panel',
     'Taxa de envio, em KB por segundo':
         'Upload rate, in KB per second',
-    'no FTP; cada arquivo enviado leva pelo menos 256 ÷ taxa segundos':
-        'on FTP; each uploaded file takes at least 256 ÷ rate seconds',
     'Downloads ao mesmo tempo pelo painel':
         'Simultaneous downloads through the panel',
     'vazio: {padrao}':
@@ -1478,8 +1506,8 @@ EN = {
         'check the fingerprint',
     'Atividade recente':
         'Recent activity',
-    'ver toda a atividade':
-        'see all activity',
+    'ver o log inteiro':
+        'see the whole log',
     'Dados para configurar o equipamento':
         'Details to set up the device',
     'um usuário por equipamento ou por grupo, criado em <a href="/usuarios">Usuários</a>':
@@ -1596,14 +1624,16 @@ EN = {
         'The page expired. Try again.',
     'Não foi possível entrar.':
         'Could not sign in.',
-    'O backup dos equipamentos da rede, guardado em um lugar só.':
-        'The backup of the network devices, kept in one place.',
-    'Cada equipamento preso na própria pasta':
-        'Each device confined to its own folder',
+    'Backups e arquivos, guardados em um lugar só.':
+        'Backups and files, kept in one place.',
+    'Equipamentos de rede, câmeras, sistemas e arquivos de pessoas e empresas':
+        'Network devices, cameras, systems and files of people and companies',
+    'Cada conta presa na própria pasta':
+        'Each account confined to its own folder',
     'Painel só por HTTPS, atrás do nginx':
         'Panel over HTTPS only, behind nginx',
-    'Sessão encerrada depois de {minutos} minutos sem uso':
-        'Session closed after {minutos} minutes without use',
+    'Sessão encerrada depois de {prazo} sem uso':
+        'Session closed after {prazo} without use',
     'Entrar no painel':
         'Sign in to the panel',
     'Uso restrito a quem foi autorizado. As tentativas de entrada ficam registradas.':
@@ -1713,6 +1743,82 @@ EN = {
         'public address accepted: check the firewall',
     'painel publicado por proxy ou túnel':
         'panel published through a proxy or tunnel',
+    'O painel navega, baixa, envia arquivo, cria pasta, troca o nome e apaga; arquivo enviado não substitui outro. Apagar pede a sua senha atual e não tem lixeira. Todo download e toda alteração ficam registrados na aba Log.':
+        'The panel browses, downloads, uploads files, creates folders, renames and deletes; an uploaded file never replaces another. Deleting asks for your current password and there is no recycle bin. Every download and every change is recorded on the Log tab.',
+    'Arquivo enviado.':
+        'File uploaded.',
+    'Arquivo enviado. Já havia um com este nome: o novo foi guardado com a data e a hora no nome.':
+        'File uploaded. There was already one with this name: the new one was stored with the date and time in its name.',
+    'Arquivo, guardado na pasta do usuário no servidor':
+        "File, stored in the user's folder on the server",
+    'Nome que já existe não substitui o anterior: o novo é guardado com a data e a hora no nome.':
+        'A name that already exists does not replace the previous file: the new one is stored with the date and time in its name.',
+    'Arquivo, gravado em <code>{onde}</code>':
+        'File, saved in <code>{onde}</code>',
+    'Nome que já existe na pasta não é substituído: o envio é recusado.':
+        'A name that already exists in the folder is not replaced: the upload is refused.',
+    'Enviar arquivo':
+        'Upload file',
+    'Gravar com o nome <span class="suave">(deixe em branco para manter o nome do arquivo)</span>':
+        'Save as <span class="suave">(leave blank to keep the file name)</span>',
+    'Até {maximo} por arquivo.':
+        'Up to {maximo} per file.',
+    'Envio não permitido':
+        'Upload not allowed',
+    'Esta conta não tem a permissão de enviar arquivo pelo painel. Quem dá a permissão é um administrador.':
+        'This account does not have permission to upload files through the panel. An administrator grants the permission.',
+    'Escolha o arquivo e envie de novo.':
+        'Choose the file and send it again.',
+    'Nenhum arquivo escolhido':
+        'No file chosen',
+    'O nome do arquivo usa letras, números, _, - e ponto, não começa com ponto e tem até 64 caracteres. Troque o nome do arquivo ou preencha o campo "Gravar com o nome".':
+        'The file name uses letters, numbers, _, - and dot, does not start with a dot and has up to 64 characters. Rename the file or fill in the "Save as" field.',
+    'Arquivo grande demais':
+        'File too large',
+    'Arquivo grande demais: o painel recebe até {maximo} por arquivo.':
+        'File too large: the panel accepts up to {maximo} per file.',
+    'Esta conta envia um arquivo por vez.':
+        'This account uploads one file at a time.',
+    'O painel recebe até {maximo} arquivos por vez.':
+        'The panel receives up to {maximo} files at a time.',
+    'Muitos envios ao mesmo tempo':
+        'Too many uploads at the same time',
+    'Espere terminar e repita.':
+        'Wait for it to finish and try again.',
+    'O envio parou antes do fim: nada foi gravado.':
+        'The upload stopped before the end: nothing was saved.',
+    'O servidor não tem espaço livre para este arquivo.':
+        'The server does not have free space for this file.',
+    'Sem espaço':
+        'No space left',
+    'Arquivo não gravado':
+        'File not saved',
+    'Não foi possível gravar o arquivo.':
+        'Could not save the file.',
+    'Cada arquivo que termina de chegar é guardado na pasta do usuário <strong>{usuario}</strong> no servidor, fora do alcance desta conta: ela não lista, não baixa, não renomeia e não apaga o que já enviou, nem por FTP nem por aqui.':
+        "Each file that finishes arriving is stored in the folder of user <strong>{usuario}</strong> on the server, out of this account's reach: it does not list, download, rename or delete what it has already sent, neither over FTP nor here.",
+    'Aqui você navega, baixa e cria pasta. O perfil desta conta é de envio: o que já foi enviado não é renomeado nem apagado por ela. Todo download e toda pasta criada ficam registrados.':
+        "Here you browse, download and create folders. This account's profile is upload: what has already been sent is not renamed or deleted by it. Every download and every folder created is recorded.",
+    'Aqui você navega, baixa, cria pasta, troca o nome e apaga. Trocar o nome e apagar pedem a sua senha do FTP, e apagar não tem lixeira. Todo download e toda alteração ficam registrados.':
+        'Here you browse, download, create folders, rename and delete. Renaming and deleting ask for your FTP password, and deleting has no recycle bin. Every download and every change is recorded.',
+    'Esta conta também envia arquivo por aqui: o envio fica registrado e nunca substitui um arquivo que já existe.':
+        'This account also uploads files here: the upload is recorded and never replaces a file that already exists.',
+    'Enviar arquivo, só por FTP: o envio por aqui depende de uma permissão que o administrador dá a cada conta.':
+        'Uploading files, only over FTP: uploading here depends on a permission the administrator gives to each account.',
+    'Ela envia arquivo, por FTP ou por esta tela, e mais nada.':
+        'It uploads files, over FTP or on this screen, and nothing else.',
+    'Ela envia arquivo por FTP e mais nada.':
+        'It uploads files over FTP and nothing else.',
+    'no FTP e nos envios dele pelo painel; no FTP, cada arquivo enviado leva pelo menos 256 ÷ taxa segundos':
+        'on FTP and on their uploads through the panel; on FTP, each uploaded file takes at least 256 ÷ rate seconds',
+    'Permitir que este usuário <strong>envie arquivo pelo painel</strong>, para a pasta dele':
+        'Allow this user to <strong>upload files through the panel</strong>, to their folder',
+    'Sem marcar, o usuário só envia por FTP. Vale para os perfis Só envio, Envio e Completo; o perfil Leitura não envia. A permissão vale na hora. Arquivo enviado pelo painel tem até {maximo}, segue a taxa de envio acima e nunca substitui um arquivo que já existe.':
+        'Unchecked, the user only uploads over FTP. It applies to the Upload only, Upload and Full profiles; the Read only profile does not upload. The permission takes effect immediately. A file uploaded through the panel has up to {maximo}, follows the upload rate above and never replaces a file that already exists.',
+    'permitido':
+        'allowed',
+    'envio pelo painel':
+        'upload through the panel',
 }
 
 # Mensagem de erro do allsafe-ftp-user (ftp/usuario.sh), que fala português sem acento: a expressão que a
@@ -1727,10 +1833,12 @@ COMANDO = tuple((re.compile(regra), ingles) for regra, ingles in (
     (r'Pasta recusada: (.+) existe e nao e pasta', r'Folder refused: \1 exists and is not a folder'),
     (r'Limite invalido: (\S+) aceita vazio ou um inteiro de (\d+) a (\d+)',
      r'Invalid limit: \1 accepts empty or a whole number from \2 to \3'),
+    (r'Limite invalido: enviar aceita vazio ou 1', r'Invalid limit: enviar accepts empty or 1'),
     (r'Limite invalido: horario aceita vazio ou HHMM-HHMM, com inicio diferente do fim',
      r'Invalid limit: horario accepts empty or HHMM-HHMM, with the start different from the end'),
-    (r'Endereco invalido: use um IPv4, como 203\.0\.113\.7',
-     r'Invalid address: use an IPv4 address, such as 203.0.113.7'),
+    (r'Endereco invalido: use um IPv4, um IPv6 ou um prefixo, como 203\.0\.113\.7, 2001:db8::7 ou 203\.0\.113\.0/24',
+     r'Invalid address: use an IPv4 address, an IPv6 address or a prefix, such as 203.0.113.7, 2001:db8::7 or '
+     r'203.0.113.0/24'),
     (r'Area de entrada recusada: (.+) passa por link simbolico',
      r'Inbox area refused: \1 goes through a symbolic link'),
     (r'Area de entrada recusada: (.+) existe e nao e pasta', r'Inbox area refused: \1 exists and is not a folder'),
@@ -1747,4 +1855,5 @@ COMANDO = tuple((re.compile(regra), ingles) for regra, ingles in (
     (r'Pasta dos bloqueios por endereco ausente: reinicie o servico ftp',
      r'Address block folder missing: restart the ftp service'),
     (r'Teto de (\d+) enderecos bloqueados: libere algum antes', r'Ceiling of \1 blocked addresses: release one first'),
+    (r'Teto de (\d+) prefixos bloqueados: libere algum antes', r'Ceiling of \1 blocked prefixes: release one first'),
 ))

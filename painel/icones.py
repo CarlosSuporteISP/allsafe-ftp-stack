@@ -49,6 +49,22 @@ TRACOS = {
 USO = re.compile(r'<use href="#i-([a-z-]+)"/>')
 
 
+# Bandeira do botão de cada idioma, em grade de 20 por 14: só as formas que se leem nesse tamanho. As cores são
+# classes do estilo.css; a bandeira é enfeite da sigla ao lado, e o leitor de tela ouve o nome do idioma.
+BANDEIRAS = {
+    'pt': '<rect class="b-verde" width="20" height="14"/><path class="b-amarelo" d="M10 1.7 17.8 7 10 12.3 2.2 7z"/>'
+          '<circle class="b-anil" cx="10" cy="7" r="3"/>',
+    'en': '<rect class="b-branco" width="20" height="14"/><path class="b-rubro" d="M0 0h20v2H0zM0 4h20v2H0zM0 8h20v2H0zM0 12h20v2H0z"/>'
+          '<rect class="b-marinho" width="9" height="8"/>'
+          '<path class="b-branco" d="M1.5 1.5h1v1h-1zM4 1.5h1v1H4zM6.5 1.5h1v1h-1zM1.5 3.5h1v1h-1zM4 3.5h1v1H4zM6.5 3.5h1v1h-1z'
+          'M1.5 5.5h1v1h-1zM4 5.5h1v1H4zM6.5 5.5h1v1h-1z"/>',
+}
+
+
+def bandeira(codigo):
+    return f'<svg class="bandeira" viewBox="0 0 20 14" aria-hidden="true" focusable="false">{BANDEIRAS[codigo]}</svg>'
+
+
 def icone(nome, rotulo='', classe=''):
     """Referência ao ícone. Sem rótulo ele é enfeite do texto ao lado; com rótulo, é ele que diz o estado ao leitor de tela."""
     if nome not in TRACOS:

@@ -112,7 +112,7 @@ done
 grep -v -x -F -e "$K" "$W/proibidos" > "$W/proibidos-pagina"
 na_pagina="$(grep -c -a -F -f "$W/proibidos-pagina" "$W/corpo" || true)"
 [[ "$r" == "200 " && "$na_pagina" == 0 ]] || ok=1
-caso $ok testes 17 "Atividade" "GET /atividade: $r· $ev senhas ou cookie de sessão na página: $na_pagina"
+caso $ok testes 17 "Log" "GET /atividade: $r· $ev senhas ou cookie de sessão na página: $na_pagina"
 
 r="$(envio /sair --data-urlencode "csrf=$K")"; depois="$(aba -b "$J" "$B/")"
 [[ "$r" == "303 /entrar" && "$depois" == "303 /entrar" ]]

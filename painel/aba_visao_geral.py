@@ -146,7 +146,7 @@ def visao_geral(pedido, sessao, consulta, formulario, token):
 {espaco(pastas, usos)}
 <section class="cartao"><h2>{icone('atividade')}{t('Atividade recente')}</h2>
 <ul class="recentes">{recentes()}</ul>
-<p class="atalho"><a href="/atividade">{t('ver toda a atividade')}</a></p></section>
+<p class="atalho"><a href="/atividade">{t('ver o log inteiro')}</a></p></section>
 </div>
 <section class="cartao"><h2>{icone('equipamento')}{t('Dados para configurar o equipamento')}</h2>
 <dl class="dados">

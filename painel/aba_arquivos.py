@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Arquivos: navegar pelas pastas dos usuários do FTP, baixar um arquivo pelo navegador, criar pasta,
+"""Aba Arquivos: navegar pelas pastas dos usuários do FTP, baixar e enviar arquivo pelo navegador, criar pasta,
 trocar o nome e apagar.
 
-O painel não envia arquivo. Apagar pede a caixa de confirmação e a senha de quem está na sessão. Toda alteração
+Arquivo enviado nunca substitui outro. Apagar pede a caixa de confirmação e a senha de quem está na sessão. Toda alteração
 é feita em relação à pasta de cima já aberta, sem seguir link simbólico. As mesmas funções servem à tela Meus
 arquivos, do usuário do FTP: a Vista diz de onde cada um vê os arquivos, e a tabela de rotas do perfil (rotas.py)
 diz quais destas ações existem para ele."""
@@ -17,19 +17,23 @@ import threading
 import time
 import urllib.parse
 
+import envio
 from auditoria import auditar, limpo
-from config import APAGAR_MAX, APAGAR_NIVEIS, APAGAR_PRAZO, CFG, DONO_DADOS, DOWNLOADS_MAX, LISTA_MAX, NIVEL, PASTA, PASTA_DADOS
+from config import (APAGAR_MAX, APAGAR_NIVEIS, APAGAR_PRAZO, CFG, DONO_DADOS, DOWNLOADS_MAX, ENVIOS_MAX, LISTA_MAX, NIVEL, PASTA,
+                    PASTA_DADOS)
 from confirmacao import campo_senha_atual, confirmacao_recusada
 from estado import limpar_cache, uso_da_pasta, usuarios
 from icones import icone
 from idioma import N, t
-from limites import downloads_e_taxa
+from limites import downloads_e_taxa, envio_pelo_painel
 from pagina import cabeca, como, e, pagina, quando, tamanho, vazio
 from sessao import quem
 
 VAGAS = threading.BoundedSemaphore(DOWNLOADS_MAX)
 TRAVA_CURSO = threading.Lock()
 EM_CURSO = {}  # usuário do FTP → downloads dele em andamento
+ENVIOS = threading.BoundedSemaphore(ENVIOS_MAX)
+ENVIANDO = set()  # usuários do FTP com um envio pelo painel em andamento: cada um envia um arquivo por vez
 # Nenhuma parte do caminho é seguida se for link simbólico; O_NONBLOCK não deixa um FIFO prender o pedido.
 ABRIR = os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK
 RECUSAS = {
@@ -37,7 +41,9 @@ RECUSAS = {
     403: N('Link simbólico não é seguido pelo painel.'),
     404: N('Pasta ou arquivo não encontrado.'),
 }
-MENSAGENS = {'criada': N('Pasta criada.'), 'renomeado': N('Nome trocado.'), 'apagado': N('Apagado.')}
+MENSAGENS = {'criada': N('Pasta criada.'), 'renomeado': N('Nome trocado.'), 'apagado': N('Apagado.'),
+             'enviado': N('Arquivo enviado.'),
+             'enviado_com_data': N('Arquivo enviado. Já havia um com este nome: o novo foi guardado com a data e a hora no nome.')}
 TRAVA_APAGAR = threading.Lock()  # um apagamento por vez: os outros pedidos do painel seguem atendidos
 PARADAS = {
     'limite': N('A pasta tem mais do que o painel apaga de uma vez ({maximo} itens ou {prazo} segundos por pedido). '
@@ -260,9 +266,9 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
     novo_usuario = (f' <a class="botao" href="{e(endereco("/usuarios/novo", "pasta", caminho))}">{t("Novo usuário nesta pasta")}</a>'
                     if PASTA.fullmatch(caminho) else '')
     ajuda = ('<p class="suave">'
-             + t('O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continua sendo feito por FTP. '
+             + t('O painel navega, baixa, envia arquivo, cria pasta, troca o nome e apaga; arquivo enviado não substitui outro. '
                  'Apagar pede a sua senha atual e não tem lixeira. Todo download e toda alteração ficam registrados na aba '
-                 'Atividade.') + '</p>')
+                 'Log.') + '</p>')
     pedido.enviar(200, pagina(t('Arquivos'), f'''{cabeca('Arquivos', t('O que os equipamentos já enviaram, pasta por pasta.'))}
 {f'<p class="ok" role="status">{e(t(feito))}</p>' if feito else ''}
 <p class="trilha">{trilha(Vista(sessao), lista)}{novo_usuario}</p>
@@ -270,6 +276,7 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
 <thead><tr><th>{t('Nome')}</th><th>{t('Tamanho')}</th><th>{t('Modificado')}</th><th>{t('Ações')}</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
 {como(t('O que dá para fazer nesta aba'), ajuda)}</section>
+{formulario_envio(sessao, caminho)}
 {formulario_nova_pasta(sessao, caminho)}''', sessao, '/arquivos'))
 
 
@@ -447,13 +454,15 @@ def tela_renomear(pedido, sessao, consulta, formulario=None, token=None, erro=''
 <p class="suave">{t(REGRA_DO_ITEM)}
 {t('O item continua na mesma pasta: o painel não move de uma pasta para outra. O equipamento que grava com o nome antigo '
    'cria outro arquivo no envio seguinte.')}</p>
+{campo_senha_atual(sessao)}
 <button type="submit">{t('Trocar nome')}</button> <a class="botao" href="{e(volta)}">{t('Cancelar')}</a>
 </form></section>''', sessao, v.rota))
 
 
 def renomear(pedido, sessao, consulta, formulario, token):
-    """Troca o nome de um arquivo ou de uma pasta, dentro da mesma pasta. O nome novo segue a regra do nome de
-    pasta; a pasta de um usuário do FTP, ou a que tem uma dentro, não é renomeada por aqui."""
+    """Troca o nome de um arquivo ou de uma pasta, dentro da mesma pasta. Pede a senha de quem está na sessão. O
+    nome novo segue a regra do nome de pasta; a pasta de um usuário do FTP, ou a que tem uma dentro, não é
+    renomeada por aqui."""
     v = Vista(sessao)
     caminho, novo = item_do_formulario(formulario), formulario.get('nome', '').strip()
     try:
@@ -472,6 +481,9 @@ def renomear(pedido, sessao, consulta, formulario, token):
             return pasta_de_usuario(pedido, sessao, lista, presos, 'renomeada')
         if novo == lista[-1]:
             return tela_renomear(pedido, sessao, consulta, erro=t('O item já tem este nome.'), codigo=409, caminho=caminho, novo=novo)
+        codigo, erro = confirmacao_recusada(pedido, sessao, formulario)
+        if codigo:
+            return tela_renomear(pedido, sessao, consulta, erro=erro, codigo=codigo, caminho=caminho, novo=novo)
         try:
             trocar_nome(acima, lista[-1], novo)
         except FileExistsError:
@@ -629,6 +641,143 @@ def resposta_parcial(pedido, sessao, itens, parada, repetir, volta, aba):
                                         f'<a class="botao" href="{e(volta)}">{t("Voltar")}</a></p>'
                                         '</section>', sessao, aba),
                          extras=(('Retry-After', '30'),) if parada == 'ocupado' else ())
+
+
+def formulario_envio(sessao, caminho=''):
+    """Formulário que envia um arquivo para a pasta que está aberta. O arquivo é o último campo: o painel lê os de
+    texto, e confere a sessão, antes de receber o conteúdo (envio.py). Não aparece se o caminho tem byte fora do
+    UTF-8, que o formulário não consegue devolver."""
+    try:
+        caminho.encode('utf-8')
+    except UnicodeEncodeError:
+        return ''
+    v = Vista(sessao)
+    if v.usuario and sessao['perfil'] == 'soenvio':
+        onde = t('Arquivo, guardado na pasta do usuário no servidor')
+        repetido = t('Nome que já existe não substitui o anterior: o novo é guardado com a data e a hora no nome.')
+    else:
+        onde = t('Arquivo, gravado em <code>{onde}</code>', onde=f'{e(v.inicio)}{"/" + e(caminho) if caminho else ""}')
+        repetido = t('Nome que já existe na pasta não é substituído: o envio é recusado.')
+    return f'''<section class="cartao estreito"><h2>{t('Enviar arquivo')}</h2>
+<form method="post" action="{v.rota}/enviar" enctype="multipart/form-data" autocomplete="off">
+<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+<input type="hidden" name="pasta" value="{e(caminho)}">
+<label for="gravar-como">{t('Gravar com o nome <span class="suave">(deixe em branco para manter o nome do arquivo)</span>')}</label>
+<input id="gravar-como" name="nome" maxlength="64" pattern="[A-Za-z0-9_][A-Za-z0-9._\\-]*" autocapitalize="none" spellcheck="false">
+<label for="arquivo">{onde}</label>
+<input id="arquivo" name="arquivo" type="file" required>
+<p class="suave">{t(REGRA_DO_ITEM)}
+{t('Até {maximo} por arquivo.', maximo=e(tamanho(CFG['envio_max'])))} {repetido}</p>
+<button type="submit">{t('Enviar arquivo')}</button>
+</form></section>'''
+
+
+def nomes_com_data(nome):
+    """Perfil só envio: os nomes a tentar quando o arquivo já existe, pela regra da área de entrada do FTP
+    (ftp/entrada.pl): data e hora antes da extensão e, se ainda assim repetir, um número."""
+    achado = re.fullmatch(r'(.+?)((?:\.tar)?\.[A-Za-z0-9]{1,10})', nome)
+    base, extensao = achado.groups() if achado else (nome, '')
+    marca = time.strftime('-%Y%m%d-%H%M%S')
+    return [f'{base}{marca}{f"-{vez}" if vez > 1 else ""}{extensao}' for vez in range(1, 100)]
+
+
+def enviar(pedido, sessao, consulta, formulario, token):
+    """Recebe um arquivo do navegador e o grava na pasta aberta, com o dono e o modo dos arquivos do FTP. O arquivo
+    é escrito sem nome (O_TMPFILE) na própria pasta de destino e só ganha nome depois de chegar inteiro, por link():
+    envio que cai no meio não deixa resto, e nome que já existe nunca é substituído. O administrador sempre envia;
+    o usuário do FTP, só com a permissão dele, lida a cada envio, na taxa de envio dele e um arquivo por vez."""
+    v, corpo, usuario = Vista(sessao), pedido.corpo, sessao['usuario']
+    so_envia = bool(usuario) and sessao['perfil'] == 'soenvio'
+    caminho = '' if so_envia else formulario.get('pasta', '')
+    permitido, taxa = envio_pelo_painel(usuario) if usuario else (True, 0)
+    if not permitido:
+        auditar(pedido.ip, 'recusa_envio', f'{quem(sessao)} perfil={sessao["perfil"]}')
+        return resposta_pasta(pedido, sessao, 403, t('Envio não permitido'),
+                              t('Esta conta não tem a permissão de enviar arquivo pelo painel. Quem dá a permissão é um '
+                                'administrador.'), caminho)
+    nome = formulario.get('nome', '').strip() or re.split(r'[/\\]', corpo.arquivo)[-1].strip()
+    destino = f'{caminho}/{nome}' if caminho else nome
+    bytes_do_arquivo = corpo.tamanho()
+    if bytes_do_arquivo < 0:
+        return pedido.recusar(400, t('Envio malformado.'))
+    try:
+        lista = v.raiz + partes(caminho)
+        if not corpo.arquivo:
+            return resposta_pasta(pedido, sessao, 400, t('Nenhum arquivo escolhido'), t('Escolha o arquivo e envie de novo.'), caminho)
+        if not NIVEL.fullmatch(nome):
+            auditar(pedido.ip, 'recusa_caminho', f'{quem(sessao)} caminho={limpo(destino, 120)}')
+            return resposta_pasta(pedido, sessao, 400, t('Nome não aceito'),
+                                  t('O nome do arquivo usa letras, números, _, - e ponto, não começa com ponto e tem até 64 '
+                                    'caracteres. Troque o nome do arquivo ou preencha o campo "Gravar com o nome".'), caminho)
+        if bytes_do_arquivo > CFG['envio_max']:
+            return resposta_pasta(pedido, sessao, 413, t('Arquivo grande demais'),
+                                  t('Arquivo grande demais: o painel recebe até {maximo} por arquivo.', maximo=tamanho(CFG['envio_max'])),
+                                  caminho)
+        descritor = abrir(lista, pasta=True)
+    except Recusado as erro:
+        return recusa(pedido, sessao, erro, destino)
+    limite = ''
+    with TRAVA_CURSO:
+        if usuario in ENVIANDO:
+            limite = t('Esta conta envia um arquivo por vez.')
+        elif not ENVIOS.acquire(blocking=False):
+            limite = t('O painel recebe até {maximo} arquivos por vez.', maximo=ENVIOS_MAX)
+        elif usuario:
+            ENVIANDO.add(usuario)
+    if limite:
+        os.close(descritor)
+        return pedido.enviar(503, pagina(t(v.tela), f'<section class="cartao"><h1>{t("Muitos envios ao mesmo tempo")}</h1>'
+                                         f'<p>{limite} {t("Espere terminar e repita.")}</p>'
+                                         f'<p><a href="{e(endereco(v.rota, "pasta", caminho))}">{t("Voltar para a pasta")}</a></p></section>',
+                                         sessao, v.rota),
+                             extras=(('Retry-After', '30'),))
+    final = ''
+    try:
+        disco = os.fstatvfs(descritor)
+        if bytes_do_arquivo > disco.f_bavail * disco.f_frsize:
+            raise OSError(errno.ENOSPC, 'sem espaço')
+        dono = pwd.getpwnam(DONO_DADOS)
+        sem_nome = os.open('.', os.O_TMPFILE | os.O_WRONLY | os.O_CLOEXEC, 0o600, dir_fd=descritor)
+        try:
+            corpo.gravar(sem_nome, taxa)
+            os.fchown(sem_nome, dono.pw_uid, dono.pw_gid)
+            os.fchmod(sem_nome, 0o644)
+            os.fsync(sem_nome)
+            for tentativa in [nome] + (nomes_com_data(nome) if so_envia else []):
+                try:
+                    os.link(f'/proc/self/fd/{sem_nome}', tentativa, dst_dir_fd=descritor)
+                except FileExistsError:
+                    continue
+                final = tentativa
+                break
+        finally:
+            os.close(sem_nome)
+    except envio.Cortado:
+        auditar(pedido.ip, 'envio_interrompido', f'{quem(sessao)} arquivo={limpo(v.real(destino), 200)} bytes={bytes_do_arquivo}')
+        try:
+            return pedido.recusar(400, t('O envio parou antes do fim: nada foi gravado.'))
+        except OSError:
+            return None
+    except envio.Malformado:
+        return pedido.recusar(400, t('Envio malformado.'))
+    except (OSError, KeyError) as erro:
+        if getattr(erro, 'errno', None) in (errno.ENOSPC, errno.EDQUOT):
+            auditar(pedido.ip, 'falha_comando', f'{quem(sessao)} acao=enviar motivo=sem_espaco arquivo={limpo(v.real(destino), 200)}')
+            return resposta_pasta(pedido, sessao, 507, t('Sem espaço'), t('O servidor não tem espaço livre para este arquivo.'), caminho)
+        auditar(pedido.ip, 'falha_comando', f'{quem(sessao)} acao=enviar arquivo={limpo(v.real(destino), 200)}')
+        return resposta_pasta(pedido, sessao, 500, t('Arquivo não gravado'), t('Não foi possível gravar o arquivo.'), caminho)
+    finally:
+        os.close(descritor)
+        ENVIOS.release()
+        if usuario:
+            with TRAVA_CURSO:
+                ENVIANDO.discard(usuario)
+    if not final:
+        return resposta_pasta(pedido, sessao, 409, t('Nome já usado'), t('Já existe uma pasta ou um arquivo com este nome.'), caminho)
+    limpar_cache()
+    gravado = f'{caminho}/{final}' if caminho else final
+    auditar(pedido.ip, 'arquivo_enviado', f'{quem(sessao)} arquivo={limpo(v.real(gravado), 200)} bytes={bytes_do_arquivo}')
+    return pedido.redirecionar(endereco(v.rota, 'pasta', caminho) + ('&m=enviado' if final == nome else '&m=enviado_com_data'))
 
 
 def anexo(nome):

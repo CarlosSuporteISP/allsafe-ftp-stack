@@ -6,14 +6,14 @@ import time
 
 import idioma
 from cena import miniatura
-from config import CFG
+from config import CFG, SESSAO_ABSOLUTA
 from estado import dias_restantes, sem_tls
-from icones import desenhos, icone
-from idioma import N, t
+from icones import bandeira, desenhos, icone
+from idioma import N, t, tn
 
 ABAS = (('/', 'painel', N('Visão geral')), ('/usuarios', 'usuarios', N('Usuários')), ('/arquivos', 'pasta', N('Arquivos')),
         ('/servidor', 'pulso', N('Servidor')), ('/seguranca', 'cadeado', N('Segurança')),
-        ('/bloqueios', 'bloqueio', N('Bloqueios')), ('/atividade', 'atividade', N('Atividade')))
+        ('/bloqueios', 'bloqueio', N('Bloqueios')), ('/atividade', 'atividade', N('Log')))
 ABAS_USUARIO = (('/meus-arquivos', 'pasta', N('Meus arquivos')),)
 ABAS_SOENVIO = (('/meus-arquivos', 'envio', N('Envio de arquivos')),)   # perfil só envio: sem lista de arquivos
 # Menu lateral do administrador: o dia a dia em cima, o que cuida do próprio painel embaixo.
@@ -49,6 +49,17 @@ def marca(estado):
 
 def quando(instante):
     return time.strftime(idioma.formato_da_data() + ' %H:%M', time.localtime(instante)) if instante else '—'
+
+
+def prazo_da_sessao():
+    """O tempo sem uso que encerra a sessão: em horas quando são horas inteiras, em minutos nos demais."""
+    minutos = CFG['inatividade'] // 60
+    return tn(minutos, '{n} minuto', '{n} minutos') if minutos % 60 else tn(minutos // 60, '{n} hora', '{n} horas')
+
+
+def teto_da_sessao():
+    """O prazo em que a sessão acaba, com ou sem uso."""
+    return tn(SESSAO_ABSOLUTA // 3600, '{n} hora', '{n} horas')
 
 
 def data_inteira(texto):
@@ -141,10 +152,11 @@ def como(titulo, miolo):
 
 
 def troca_de_idioma(campo, valor):
-    """Os botões de idioma: um formulário pequeno, enviado por POST, que volta para a tela de onde saiu. `campo` é o
+    """Os botões de idioma, cada um com a bandeira e a sigla: um formulário pequeno, enviado por POST, que volta
+    para a tela de onde saiu. `campo` é o
     token que vai junto: o `csrf` da sessão ou, na tela de entrada, o `token` do formulário dela."""
     botoes = ''.join(f'<button type="submit" name="idioma" value="{codigo}" lang="{da_lingua}" title="{nome}" '
-                     f'aria-pressed="{"true" if codigo == idioma.atual() else "false"}">{sigla}'
+                     f'aria-pressed="{"true" if codigo == idioma.atual() else "false"}">{bandeira(codigo)}{sigla}'
                      f'<span class="so-leitor"> {nome}</span></button>'
                      for codigo, (sigla, nome, da_lingua) in idioma.NOMES.items())
     return (f'<form class="idioma" method="post" action="/idioma"><input type="hidden" name="{campo}" value="{e(valor)}">'
