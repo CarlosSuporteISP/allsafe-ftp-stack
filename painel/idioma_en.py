@@ -1362,12 +1362,78 @@ EN = {
         'to sign in to FTP.',
     'Pasta atual: {onde}, com {arquivos} arquivo(s), {tamanho}.':
         'Current folder: {onde}, with {arquivos} file(s), {tamanho}.',
-    'Os arquivos da pasta atual <strong>não são movidos nem apagados</strong>: continuam onde estão, e '
-    'o usuário deixa de alcançá-los. A troca vale no próximo login no FTP e encerra a sessão dele no '
-    'painel.':
-        'The files in the current folder <strong>are not moved or deleted</strong>: they stay where '
-        'they are, and the user no longer reaches them. The change applies on the next FTP login and '
-        'closes their panel session.',
+    'Os arquivos da pasta atual <strong>não são movidos nem apagados</strong>: continuam onde estão, e o usuário deixa de alcançá-los. A troca vale no próximo login no FTP e encerra a sessão dele no painel. A limpeza automática, se estiver ligada, é desligada: a regra era da pasta atual.':
+        'The files in the current folder <strong>are not moved or deleted</strong>: they stay where they are, and the user no longer reaches them. The change applies on the next FTP login and closes their panel session. Automatic cleanup, if it is on, is turned off: the rule belonged to the current folder.',
+    'Pasta trocada. Os arquivos da pasta anterior continuam nela. A limpeza automática foi desligada: a regra era da pasta anterior.':
+        'Folder changed. The files of the previous folder stay in it. Automatic cleanup was turned off: the rule belonged to the previous folder.',
+    'Limpeza automática gravada. Vale na próxima passada do painel.':
+        'Automatic cleanup saved. It applies on the next run of the panel.',
+    'Limpeza automática desligada. Nenhum arquivo deste usuário é apagado sozinho.':
+        'Automatic cleanup turned off. No file of this user is deleted on its own.',
+    'Limpeza automática':
+        'Automatic cleanup',
+    'Limpeza automática: {regra}':
+        'Automatic cleanup: {regra}',
+    'limpeza':
+        'cleanup',
+    'ligada':
+        'on',
+    'Limpeza automática ligada em Editar: o painel apaga sozinho os arquivos antigos da pasta deste usuário.':
+        "Automatic cleanup turned on in Edit: the panel deletes the old files of this user's folder on its own.",
+    'Desligada: nenhum arquivo deste usuário é apagado sozinho.':
+        'Off: no file of this user is deleted on its own.',
+    'O painel aplica a regra a cada minuto.':
+        'The panel applies the rule every minute.',
+    'O painel aplica a regra a cada {n} minutos.':
+        'The panel applies the rule every {n} minutes.',
+    'Com <code>PAINEL_RETENCAO_MINUTOS=0</code>, a limpeza automática está parada nesta instalação: a regra fica gravada e não é aplicada.':
+        'With <code>PAINEL_RETENCAO_MINUTOS=0</code>, automatic cleanup is stopped on this installation: the rule stays saved and is not applied.',
+    'A pasta deste usuário também é alcançada por <strong>{outros}</strong>: a limpeza apaga os arquivos antigos de todos os que estiverem nela.':
+        "This user's folder is also reached by <strong>{outros}</strong>: the cleanup deletes the old files of everyone who is in it.",
+    'O painel apaga sozinho os arquivos antigos da pasta deste usuário e das pastas de dentro dela. Campo vazio desliga aquela regra; os dois vazios desligam a limpeza.':
+        "The panel deletes, on its own, the old files of this user's folder and of the folders inside it. An empty field turns that rule off; both empty turn the cleanup off.",
+    'Manter só os arquivos mais recentes':
+        'Keep only the most recent files',
+    'quantos ficam em cada pasta; os mais antigos saem':
+        'how many stay in each folder; the oldest are deleted',
+    'Apagar o arquivo com mais de tantos dias':
+        'Delete the file older than this many days',
+    'dias no servidor, desde que chegou ou foi alterado':
+        'days on the server, since it arrived or was changed',
+    'A contagem é por pasta: com 30, cada pasta fica com os 30 arquivos mais recentes dela. Com os dois campos preenchidos, sai o arquivo que passar de qualquer um. Não saem link simbólico nem arquivo ou pasta com o nome começado por ponto; a subpasta que a limpeza esvaziar sai junto.':
+        'The count is per folder: with 30, each folder keeps its own 30 most recent files. With both fields filled in, a file that exceeds either one is deleted. Symbolic links and files or folders whose name starts with a dot are never deleted; a subfolder emptied by the cleanup is deleted too.',
+    'O painel <strong>não tem lixeira</strong>: o que a limpeza apaga não volta. Na regra por dias, o equipamento que parar de enviar fica sem nenhum arquivo depois do prazo; para backup de equipamento, prefira manter os mais recentes.':
+        'The panel <strong>has no recycle bin</strong>: what the cleanup deletes does not come back. With the rule by days, a device that stops sending ends up with no file at all after the period; for device backups, prefer keeping the most recent ones.',
+    'para gravar a limpeza':
+        'to save the cleanup',
+    'Gravar limpeza':
+        'Save cleanup',
+    'mantém só o arquivo mais recente de cada pasta':
+        'keeps only the most recent file in each folder',
+    'mantém só os {n} arquivos mais recentes de cada pasta':
+        'keeps only the {n} most recent files in each folder',
+    'apaga o arquivo com mais de {n} dia':
+        'deletes the file older than {n} day',
+    'apaga o arquivo com mais de {n} dias':
+        'deletes the file older than {n} days',
+    'arquivos mantidos':
+        'files kept',
+    'dias':
+        'days',
+    'pastas':
+        'folders',
+    'erros':
+        'errors',
+    'Valor inválido em "{campo}": deixe vazio ou use um número inteiro de 1 a {maximo}.':
+        'Invalid value in "{campo}": leave it empty or use a whole number from 1 to {maximo}.',
+    'Limpeza automática do usuário alterada':
+        'User automatic cleanup changed',
+    'Limpeza automática: arquivos antigos apagados':
+        'Automatic cleanup: old files deleted',
+    'Limpeza automática não concluída':
+        'Automatic cleanup not completed',
+    'Limpeza automática, ligada pelo administrador: o servidor {regra}, sozinho. O que sai não volta: baixe o que precisa guardar.':
+        'Automatic cleanup, turned on by the administrator: the server {regra}, on its own. What is deleted does not come back: download what you need to keep.',
     'Trocar pasta':
         'Change folder',
     'Esta já é a pasta do usuário.':

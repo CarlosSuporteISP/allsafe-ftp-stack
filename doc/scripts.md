@@ -29,7 +29,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`scripts/gerar-marca.sh`](#gerar-marca) · [`tests/testar.sh`](#testar) · [`ftp/entrypoint.sh`](#entrypoint) · [`ftp/saude.sh`](#ftp-saude) · [`ftp/porteiro.sh`](#porteiro) · [`ftp/vigia.pl`](#vigia) · [`painel/entrypoint.sh`](#painel-entrypoint) · [`nginx/entrypoint.sh`](#nginx-entrypoint) · [`nginx/saude.sh`](#nginx-saude) · [`ftp/usuario.sh`](#ftp-user) · [Scripts de apoio](#apoio)
+[Visão geral](#visao-geral) · [`deploy.sh`](#deploy) · [`manage-user.sh`](#manage-user) · [`scripts/painel-senha.sh`](#painel-senha) · [`scripts/backup.sh`](#backup) · [`scripts/restaurar.sh`](#restaurar) · [`scripts/validate.sh`](#validate) · [`scripts/gerar-marca.sh`](#gerar-marca) · [`tests/testar.sh`](#testar) · [`ftp/entrypoint.sh`](#entrypoint) · [`ftp/saude.sh`](#ftp-saude) · [`ftp/porteiro.pl`](#porteiro) · [`ftp/vigia.pl`](#vigia) · [`painel/entrypoint.sh`](#painel-entrypoint) · [`nginx/entrypoint.sh`](#nginx-entrypoint) · [`nginx/saude.sh`](#nginx-saude) · [`ftp/usuario.sh`](#ftp-user) · [Scripts de apoio](#apoio)
 
 </details>
 
@@ -51,7 +51,7 @@ flowchart LR
 | [`tests/testar.sh`](../tests/testar.sh) | host | Bateria de testes funcional, de segurança e de rede, em instância de teste que o próprio script cria e remove |
 | [`ftp/entrypoint.sh`](../ftp/entrypoint.sh) | container | Provisiona o usuário inicial e o certificado, sobe o vigia, o `pure-authd` e o `pure-ftpd` e encerra o container se um deles sair |
 | [`ftp/saude.sh`](../ftp/saude.sh) | container | Healthcheck: abre a porta de controle e espera a saudação do servidor |
-| [`ftp/porteiro.sh`](../ftp/porteiro.sh) | container | Decide a cada entrada, antes da conferência da senha, se ela pode seguir: recusa o usuário bloqueado por senhas erradas e, com o TLS por usuário valendo, a sessão sem TLS de quem não foi dispensado |
+| [`ftp/porteiro.pl`](../ftp/porteiro.pl) | container | Decide a cada entrada, antes da conferência da senha, se ela pode seguir: recusa o usuário bloqueado por senhas erradas e, com o TLS por usuário valendo, a sessão sem TLS de quem não foi dispensado |
 | [`ftp/vigia.pl`](../ftp/vigia.pl) | container | Conta as senhas erradas de cada endereço para cada usuário, grava o bloqueio que o porteiro aplica, entrega ao servidor o arquivo recebido em pasta com perfil Envio ou Leitura, leva para a pasta do usuário o arquivo recebido de um perfil Só envio e publica a rede e os recursos do container para a aba Servidor do painel |
 | [`painel/entrypoint.sh`](../painel/entrypoint.sh) | container do painel | Confere a rede privada, gera o certificado do painel, entrega a cópia dele ao nginx e executa o painel |
 | [`nginx/entrypoint.sh`](../nginx/entrypoint.sh) | container do nginx | Confere a rede privada, gera a configuração do nginx e o executa, sem root |
@@ -135,6 +135,8 @@ A pasta [`scripts/`](../scripts/) tem o que roda fora dos containers: no servido
 ./manage-user.sh limites backup-olt sessoes=2 download=500 horario=0800-1800   # grava limites só do usuário
 ./manage-user.sh limites backup-olt   # mostra os limites do usuário
 ./manage-user.sh limites backup-olt tentativas=3 minutos=30   # senhas erradas até o bloqueio e minutos de bloqueio, só do usuário
+./manage-user.sh retencao backup-olt ultimos=30 dias=90   # limpeza automática da pasta do usuário, aplicada pelo painel
+./manage-user.sh retencao backup-olt  # mostra a regra do usuário (ultimos= dias= desliga)
 ./manage-user.sh bloqueios            # lista os bloqueios por tentativa em vigor (ou só os de um usuário)
 ./manage-user.sh desbloquear backup-olt   # tira os bloqueios do usuário (ou só o de uma origem)
 ./manage-user.sh enderecos            # lista os endereços bloqueados no FTP e no painel
@@ -422,7 +424,7 @@ Para rodar à mão: `docker compose exec ftp /usr/local/sbin/allsafe-ftp-saude; 
 
 <a name="porteiro"></a>
 
-## 🚪 `ftp/porteiro.sh`
+## 🚪 `ftp/porteiro.pl`
 
 É o porteiro do FTP, instalado na imagem como `/usr/local/sbin/allsafe-ftp-porteiro`. Não é chamado direto: o `pure-authd` o executa a cada entrada, antes da conferência da senha. Ele não confere senha: só decide se a entrada pode seguir para ela.
 
@@ -500,7 +502,7 @@ Roda a cada início do container do painel. Não tem parâmetros: tudo vem das v
 4. Prepara a pasta `/nginx` (`0750`, grupo `10001`, o do nginx): copia o certificado e a chave para `/nginx/tls`, apaga o soquete da subida anterior e cria `/nginx/estado` (`0700`, do usuário do nginx), a pasta em que o nginx publica os recursos do container dele.
 5. Executa o servidor [`painel/servidor.py`](../painel/servidor.py), o ponto de entrada dos [módulos do painel](painel.md#modulos), que abre o soquete `/nginx/painel.sock`. O painel não abre porta de rede.
 
-**Resultado esperado:** a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; sessão de 15 min; redes permitidas: ...` no log do container.
+**Resultado esperado:** a linha `Painel pronto no soquete /nginx/painel.sock, atrás do nginx; sessão de 240 min; redes permitidas: ...` no log do container.
 
 <details>
 <summary>Detalhe técnico — mensagens de falha</summary>
@@ -611,10 +613,11 @@ Instalado nas imagens do FTP e do painel como `/usr/local/sbin/allsafe-ftp-user`
 - `del` do usuário inicial grava `/auth/usuario-inicial.criado` e apaga a marca da senha: o entrypoint não o recria. `add` com o nome dele grava as duas marcas: o usuário volta com a senha informada.
 - `tls-dispensar` e `tls-exigir` põem e tiram o nome de `/auth/sem-tls.lista` (`0600`), um nome por linha, em ordem. Só aceitam usuário que existe: senão, `Usuario nao existe: <nome>` e código `1`. A lista é gravada em um arquivo ao lado e trocada de nome, para nunca ser lida pela metade, e a cada gravação saem dela os nomes que já não estão no cadastro. `del` tira o usuário da lista; `tls-lista` a mostra. O FTP relê a lista a cada segundo: a alteração vale em instantes, sem reiniciar.
 - `limites` exige usuário que existe e confere todos os pares antes de gravar: `sessoes` de 1 a 99999, `download` e `envio` de 1 a 10000000, `baixar` de 1 a 8 e `horario` em `HHMM-HHMM`, com início diferente do fim. Valor fora da regra para com `Limite invalido: ...` e código `1`; chave desconhecida ou par sem `=`, com o uso e código `2`. Sessões, taxas e horário vão para o cadastro com `pure-pw usermod` (`-y`, `-t`, `-T` e `-z`), e valor vazio tira o limite; `baixar` vai para `/auth/limites.lista` (`0600`), uma linha `<usuario> baixar=<n>` por usuário, gravada ao lado e trocada de nome como a lista do TLS. Sem par nenhum, mostra os limites, com as taxas em KB por segundo e o horário com quatro dígitos de cada lado. `del` tira o usuário da lista.
+- `retencao` exige usuário que existe e confere os pares antes de gravar: `ultimos` de 1 a 100000 e `dias` de 1 a 3650. Os dois vão para a linha do usuário em `/auth/limites.lista`, sem mexer nos outros pares dela, e valor vazio tira aquela parte. Sem par nenhum, mostra a regra em duas linhas, `ultimos=` e `dias=`. O comando só grava: quem apaga os arquivos é o painel, a cada `PAINEL_RETENCAO_MINUTOS`. `pasta` tira a regra do usuário e avisa em uma linha a mais: ela foi ligada olhando a pasta anterior. Veja [Limpeza automática](painel.md#limpeza).
 - Depois de cada mudança, regenera o `pureftpd.pdb` com `pure-pw mkdb` e mantém os dois arquivos em `0600`.
 - Antes de alterar, pega a trava `/auth/.lock` (`flock`, espera até 30 segundos): o FTP, o `manage-user.sh` e o painel nunca gravam ao mesmo tempo.
 - `list` passa o arquivo pela variável `PURE_PASSWDFILE`, porque o `pure-pw list` não aceita `-f` logo depois da ação.
-- Uso inválido: mostra as formas aceitas, `Uso: ... add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]`, `... perfil <usuario> [completo|envio|soenvio|leitura]`, `... limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]`, `... bloqueios [usuario]`, `... desbloquear <usuario> [origem]`, `... enderecos`, `... endereco-bloquear <endereco> [dias]` e `... endereco-liberar <endereco>`, e sai com código `2`.
+- Uso inválido: mostra as formas aceitas, `Uso: ... add|passwd|pasta|del|list|tls-dispensar|tls-exigir|tls-lista [usuario] [pasta] [perfil]`, `... perfil <usuario> [completo|envio|soenvio|leitura]`, `... limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N]`, `... retencao <usuario> [ultimos=N] [dias=N]`, `... bloqueios [usuario]`, `... desbloquear <usuario> [origem]`, `... enderecos`, `... endereco-bloquear <endereco> [dias]` e `... endereco-liberar <endereco>`, e sai com código `2`.
 
 </details>
 

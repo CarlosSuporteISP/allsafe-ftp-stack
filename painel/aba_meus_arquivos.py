@@ -12,9 +12,11 @@ O perfil só envio não tem lista nem download, nem aqui nem no FTP: a tela dele
 recebe o arquivo se a conta tem a permissão, e não abre a pasta."""
 import os
 
+import retencao
 from aba_arquivos import (MENSAGENS, Recusado, Vista, abrir, aviso_de_corte, conteudo, entregar, formulario_envio,
                           formulario_nova_pasta, linhas_da_lista, parametro, partes, recusa, trilha)
 from config import CFG
+from estado import usuarios
 from icones import icone
 from idioma import N, t
 from limites import envio_pelo_painel
@@ -66,10 +68,13 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
     envia = perfil != 'leitura' and envio_pelo_painel(sessao['usuario'])[0]
     do_envio = '' if perfil == 'leitura' else ' ' + t(ENVIO[envia])
     da_pasta = t('Arquivos da pasta do usuário <strong>{usuario}</strong> no FTP.', usuario=e(sessao['usuario']))
+    limpeza = ''.join('<p class="aviso">' + t('Limpeza automática, ligada pelo administrador: o servidor {regra}, sozinho. O '
+                                              'que sai não volta: baixe o que precisa guardar.', regra=e(retencao.resumo(regra)))
+                      + '</p>' for regra in retencao.que_alcancam(usuarios(), '/'.join(v.raiz)))
     pedido.enviar(200, pagina(t('Meus arquivos'), f'''{cabeca('Meus arquivos', t(resumo))}
 {f'<p class="ok" role="status">{e(t(feito))}</p>' if feito else ''}
 <p class="trilha">{trilha(v, lista)}</p>
-{aviso_de_corte(cortado)}<section class="cartao lista"><div class="rolagem"><table class="blocos itens">
+{limpeza}{aviso_de_corte(cortado)}<section class="cartao lista"><div class="rolagem"><table class="blocos itens">
 <thead><tr><th>{t('Nome')}</th><th>{t('Tamanho')}</th><th>{t('Modificado')}</th><th>{t('Ações')}</th></tr></thead>
 <tbody>{linhas_da_lista(v.rota, caminho, pastas, arquivos, gerir=perfil == 'completo')}</tbody></table></div>
 {como(t('O que esta conta pode fazer'), f'<p class="suave">{da_pasta} {t(texto)}{do_envio}</p>')}</section>

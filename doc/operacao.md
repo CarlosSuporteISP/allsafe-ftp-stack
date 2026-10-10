@@ -49,6 +49,9 @@ Gestão pelo host com [`manage-user.sh`](../manage-user.sh). O [painel](painel.m
 ./manage-user.sh limites cliente01 sessoes=2 download=500 horario=0800-1800   # grava limites só dele
 ./manage-user.sh limites cliente01  # mostra os limites dele
 ./manage-user.sh limites olt01 tentativas=3 minutos=30   # bloqueio por tentativa só dele: 3 senhas erradas, 30 minutos
+./manage-user.sh retencao olt01 ultimos=30   # limpeza automática: mantém só os 30 arquivos mais recentes de cada pasta dele
+./manage-user.sh retencao cliente01 dias=15  # apaga o arquivo que está há mais de 15 dias no servidor
+./manage-user.sh retencao olt01     # mostra a regra dele (retencao olt01 ultimos= dias= desliga)
 ./manage-user.sh bloqueios          # lista quem o FTP está recusando por senhas erradas demais
 ./manage-user.sh desbloquear olt01  # tira os bloqueios do usuário (ou de um endereço só: desbloquear olt01 10.0.0.5)
 ./manage-user.sh enderecos          # lista os endereços bloqueados no FTP e no painel
@@ -190,7 +193,7 @@ docker compose logs ftp | grep 'vigia:'
 
 **Resultado esperado:** uma linha por entrada, por recusa e por transferência, sem senha; quem está bloqueado agora sai em `./manage-user.sh bloqueios`. Para ver só o que um usuário enviou e baixou: `docker compose logs ftp | grep -E 'vigia: (envio|download): usuario=<nome> '`.
 
-O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos, arquivos baixados) fica no `auditoria.log`, visível na aba Atividade: veja [Painel web](painel.md#auditoria).
+O que foi feito pelo painel (entradas, saídas, usuários criados, alterados e removidos, arquivos baixados) fica no `auditoria.log`, visível na aba Log: veja [Painel web](painel.md#auditoria).
 
 Rotação pelo Docker: `max-size: 10m`, `max-file: 3` (veja o [`compose.yaml`](../compose.yaml)).
 
