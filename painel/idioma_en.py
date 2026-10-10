@@ -1564,22 +1564,22 @@ EN = {
         'security contact not configured',
     'Página não encontrada':
         'Page not found',
-    'roteador':
-        'router',
-    'switch':
-        'switch',
-    'OLT':
-        'OLT',
-    'rádio':
-        'radio',
-    '/roteador':
-        '/router',
-    '/switch':
-        '/switch',
-    '/olt':
-        '/olt',
-    '/radio':
-        '/radio',
+    'OLT / rádio':
+        'OLT / radio',
+    'roteador / switch':
+        'router / switch',
+    'empresa / pessoa':
+        'company / person',
+    'câmera':
+        'camera',
+    '/olt /radio':
+        '/olt /radio',
+    '/roteador /switch':
+        '/router /switch',
+    '/empresa /pessoal':
+        '/company /personal',
+    '/cameras':
+        '/cameras',
     'Pausar movimento':
         'Pause motion',
     'Retomar movimento':
