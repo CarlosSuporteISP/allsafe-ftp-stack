@@ -332,6 +332,12 @@ EN = {
         'File or folder deleted',
     'Download interrompido':
         'Download interrupted',
+    'Arquivo enviado pelo painel':
+        'File uploaded through the panel',
+    'Envio interrompido':
+        'Upload interrupted',
+    'Envio pelo painel sem a permissão':
+        'Upload through the panel without the permission',
     'Administrador inicial criado':
         'Initial administrator created',
     'Senha de administrador trocada':
