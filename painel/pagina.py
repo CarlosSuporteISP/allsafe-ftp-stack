@@ -3,6 +3,7 @@
 import html
 import time
 
+from cena import miniatura
 from config import CFG
 from estado import dias_restantes, sem_tls
 from icones import desenhos, icone
@@ -13,6 +14,8 @@ ABAS_USUARIO = (('/meus-arquivos', 'pasta', 'Meus arquivos'),)
 ABAS_SOENVIO = (('/meus-arquivos', 'envio', 'Envio de arquivos'),)   # perfil só envio: sem lista de arquivos
 # Menu lateral do administrador: o dia a dia em cima, o que cuida do próprio painel embaixo.
 GRUPOS = (('Operação', ABAS[:3]), ('Sistema', ABAS[3:]))
+# Título da aba ➜ ícone dela no menu: é o mesmo que abre a faixa de cabeçalho da tela.
+DESENHO_DA_ABA = {rotulo: desenho for _, desenho, rotulo in ABAS + ABAS_USUARIO + ABAS_SOENVIO}
 # Estado de um item conferido ➜ (ícone, o que o leitor de tela diz). A cor acompanha, mas nunca é o único sinal.
 ESTADOS = {'bom': ('ok', 'em ordem'), 'atencao': ('alerta', 'atenção'), 'ruim': ('erro', 'problema'),
            'neutro': ('neutro', 'não se aplica'), 'manual': ('muro', 'conferir no servidor')}
@@ -104,9 +107,22 @@ def aviso_rede():
     return avisos
 
 
-def cabeca(titulo, resumo, acao=''):
-    """Começo de toda aba do menu: o título, uma linha que diz o que a tela mostra e, à direita, a ação principal dela."""
-    return (f'<div class="cabeca"><div><h1 class="titulo-aba">{titulo}</h1><p class="suave">{resumo}</p></div>{acao}</div>')
+def cabeca(titulo, resumo, acao='', quieta=False):
+    """Começo de toda aba do menu, em faixa com as cores da tela de entrada: o ícone da aba, o título, uma linha que
+    diz o que a tela mostra, a cena da entrada em miniatura e, à direita, a ação principal da tela."""
+    return (f'<div class="cabeca"><span class="selo-aba">{icone(DESENHO_DA_ABA.get(titulo, "painel"))}</span>'
+            f'<div><h1 class="titulo-aba">{titulo}</h1><p class="suave">{resumo}</p></div>{miniatura(quieta)}{acao}</div>')
+
+
+def vazio(colunas, desenho, titulo, texto):
+    """Linha de uma tabela sem nada para mostrar: o que falta e quando passa a aparecer."""
+    return (f'<tr class="vazio"><td colspan="{colunas}"><div>{icone(desenho)}<strong>{titulo}</strong>'
+            f'<span class="suave">{texto}</span></div></td></tr>')
+
+
+def como(titulo, miolo):
+    """Explicação longa de uma tela, recolhida: abre com um clique, sem script."""
+    return f'<details class="como"><summary>{titulo}</summary>{miolo}</details>'
 
 
 def menu_lateral(sessao, ativa):
@@ -126,7 +142,8 @@ def menu_lateral(sessao, ativa):
                       + f'>{icone(desenho)}{rotulo}{sinal}</a>')
     nome, papel = (sessao['admin'], 'Administrador') if admin else (sessao['usuario'], 'Usuário do FTP')
     return (f'<nav aria-label="Abas do painel">{links}</nav><form class="sair" method="post" action="/sair">'
-            f'<input type="hidden" name="csrf" value="{e(sessao["csrf"])}"><span class="quem">{e(nome)}<span>{papel}</span>'
+            f'<input type="hidden" name="csrf" value="{e(sessao["csrf"])}">'
+            f'<span class="avatar">{icone("escudo" if admin else "usuario")}</span><span class="quem">{e(nome)}<span>{papel}</span>'
             f'</span><button type="submit">{icone("sair")}Sair</button></form>')
 
 
@@ -163,8 +180,7 @@ def pagina(titulo, miolo, sessao=None, ativa='', porta=False):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="dark light">
-<meta name="theme-color" content="#151c26" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#fcfdff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e2648">
 <title>{e(titulo)} · AllSafe FTP</title>
 <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" href="/marca/icone-32.png" type="image/png" sizes="32x32">

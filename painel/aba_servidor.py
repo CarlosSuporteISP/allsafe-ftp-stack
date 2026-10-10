@@ -9,7 +9,7 @@ from config import ARQ_CERT, CFG, PASTA_DADOS
 from estado import bloqueios, certificado, ftp_no_ar, pastas_distintas, uso_da_pasta, usuarios
 from graficos import linha, numero, tira
 from icones import icone
-from pagina import ESTADOS, cabeca, e, pagina, tamanho, validade
+from pagina import ESTADOS, cabeca, como, e, pagina, tamanho, validade
 from sessao import sessoes_por_admin
 
 ATUALIZA = 10                           # segundos entre duas atualizações automáticas da tela
@@ -325,7 +325,7 @@ def servidor(pedido, sessao, consulta, formulario, token):
     ritmo = (f'A tela se atualiza a cada {ATUALIZA} s. A atualização automática não conta como uso do painel: a sessão '
              f'encerra depois de {CFG["inatividade"] // 60} min sem ação sua.' if sozinha else
              'Para acompanhar sem recarregar a página, ligue <strong>Atualizar sozinha</strong>.')
-    pedido.enviar(200, pagina('Servidor', f"""{cabeca('Servidor', 'Os containers desta stack e o servidor em que ela roda.', acao)}
+    pedido.enviar(200, pagina('Servidor', f"""{cabeca('Servidor', 'Os containers desta stack e o servidor em que ela roda.', acao, quieta=sozinha)}
 <div class="lado">
 {containers(amostras, servidor_)}
 <section aria-labelledby="t-servidor"><h2 class="secao" id="t-servidor">Recursos do servidor</h2>
@@ -337,6 +337,7 @@ def servidor(pedido, sessao, consulta, formulario, token):
 {rede(amostras)}
 </div></section>
 </div>
-<p class="suave rodape-aba">Lido às {time.strftime('%H:%M:%S')}. {ritmo} Cada container lê o próprio uso e os limites que recebeu no <code>compose.yaml</code> (<code>*_CPU_LIMIT</code>, <code>*_MEMORY_LIMIT</code> e <code>*_PIDS_LIMIT</code> no <code>.env</code>), sem swap; a memória em uso não conta o cache de arquivo que o sistema solta quando precisa. O histórico guarda os últimos {duracao(recursos.AMOSTRAS * recursos.INTERVALO)}, com uma leitura a cada {recursos.INTERVALO} s, e recomeça quando o painel reinicia; cada desenho vai de zero até pouco acima do pico do período. Na rede, a linha cheia é o que chega e a tracejada, o que sai, e os totais contam desde que o serviço do FTP iniciou; o disco é o da pasta dos dados.</p>""",
+<p class="suave rodape-aba">Lido às {time.strftime('%H:%M:%S')}. {ritmo}</p>
+{como('Como estas medidas são lidas', f'''<p class="suave">Cada container lê o próprio uso e os limites que recebeu no <code>compose.yaml</code> (<code>*_CPU_LIMIT</code>, <code>*_MEMORY_LIMIT</code> e <code>*_PIDS_LIMIT</code> no <code>.env</code>), sem swap; a memória em uso não conta o cache de arquivo que o sistema solta quando precisa. O histórico guarda os últimos {duracao(recursos.AMOSTRAS * recursos.INTERVALO)}, com uma leitura a cada {recursos.INTERVALO} s, e recomeça quando o painel reinicia; cada desenho vai de zero até pouco acima do pico do período. Na rede, a linha cheia é o que chega e a tracejada, o que sai, e os totais contam desde que o serviço do FTP iniciou; o disco é o da pasta dos dados.</p>''')}""",
                               sessao, '/servidor'),
                   extras=(('Refresh', f'{ATUALIZA}; url=/servidor?auto=1'),) if sozinha else ())

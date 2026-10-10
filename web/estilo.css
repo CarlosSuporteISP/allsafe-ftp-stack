@@ -49,13 +49,20 @@
   --ruim: var(--vermelho-72);
   --perigo: var(--vermelho-52);
   --foco: var(--azul-78);
-  /* Lado da marca na tela de entrada: o azul-marinho da logo, igual nos dois temas. */
+  /* A marca: o azul-marinho da logo, igual nos dois temas. É a cor da tela de entrada e, nas telas de dentro, do
+     menu e da faixa de cabeçalho. Topo, lado e frente são as três faces das peças da cena. */
   --marca-fundo: oklch(0.27 0.07 258);
   --marca-fundo-2: oklch(0.2 0.055 258);
   --marca-texto: oklch(0.97 0.01 255);
   --marca-suave: oklch(0.84 0.04 255);
   --marca-traco: oklch(0.58 0.1 255);
   --marca-realce: var(--azul-78);
+  --marca-topo: oklch(0.52 0.11 256);
+  --marca-lado: oklch(0.4 0.1 257);
+  --marca-frente: oklch(0.32 0.085 258);
+  --marca-toque: oklch(1 0 0 / 0.08);
+  /* Os pontos do chão da cena, planos: aparecem no pé do menu lateral e no lado direito da faixa de cabeçalho. */
+  --marca-pontos: radial-gradient(circle, color-mix(in oklab, var(--marca-traco) 45%, transparent) 1px, transparent 1.5px) 0 0 / 20px 20px;
   --sombra: none;
 
   --texto-miudo: 0.8125rem;
@@ -67,6 +74,7 @@
   --raio-cartao: 12px;
   --largura: 1392px;
   --passo: 150ms;
+  --curva: cubic-bezier(0.16, 1, 0.3, 1);
   color-scheme: dark light;
   accent-color: var(--acao);
   caret-color: var(--link);
@@ -117,11 +125,28 @@ a { color: var(--link); text-decoration: none; text-underline-offset: 0.15em; }
 
 h1, h2 { text-wrap: balance; }
 h1 { margin: 0 0 16px; font-size: var(--titulo); line-height: 1.2; letter-spacing: -0.02em; }
-/* Começo de aba: título, uma linha do que a tela mostra e, à direita, a ação principal. */
-.cabeca { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin: 0 0 20px; }
-.cabeca h1 { margin: 0 0 4px; }
+/* Começo de aba, em faixa com a cor da marca: o ícone da aba, o título, uma linha do que a tela mostra, a cena da
+   entrada em miniatura e, à direita, a ação principal. À esquerda a faixa é lisa, para o texto; os pontos do chão
+   da cena só aparecem do meio para a direita. */
+.cabeca, main > h1 {
+  border-radius: var(--raio-cartao);
+  background: linear-gradient(90deg, var(--marca-fundo) 35%, transparent 90%), var(--marca-pontos), linear-gradient(160deg, var(--marca-fundo), var(--marca-fundo-2));
+  color: var(--marca-texto);
+}
+.cabeca { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 0 0 20px; padding: 16px 20px; overflow: hidden; }
+.cabeca > div:not(.cena) { flex: 1 1 16rem; min-width: 0; }
+.cabeca h1 { margin: 0 0 2px; }
 .cabeca p { margin: 0; }
+.cabeca .suave { color: var(--marca-suave); }
 .cabeca .botao { margin: 0; }
+.cabeca .botao:not(.principal) { border-color: color-mix(in oklab, var(--marca-traco) 70%, transparent); background: var(--marca-toque); color: var(--marca-texto); }
+.cabeca .botao.principal { border-color: color-mix(in oklab, var(--marca-realce) 55%, transparent); }
+.cabeca :focus-visible, header :focus-visible { outline-color: var(--marca-realce); }
+/* O ícone da aba, em peça da cena: a face de cima e, embaixo, a da frente. */
+.selo-aba { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 4px; border-radius: var(--raio); background: var(--marca-topo); box-shadow: 0 4px 0 var(--marca-frente); }
+.selo-aba .i { width: 22px; height: 22px; }
+/* Tela de dentro de uma aba (criar, editar, confirmar): o título em faixa fina, sem ícone nem cena. */
+main > h1 { padding: 12px 20px; }
 h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: var(--texto-base); font-weight: 600; line-height: 1.3; }
 h3 { margin: 4px 0; font-size: var(--texto-rotulo); font-weight: 600; line-height: 1.3; }
 p { max-width: 75ch; margin: 0 0 12px; text-wrap: pretty; }
@@ -177,14 +202,14 @@ header {
   align-items: center;
   gap: 4px 24px;
   padding: 8px 16px;
-  border-bottom: 1px solid var(--borda);
-  background: var(--superficie);
+  background: linear-gradient(160deg, var(--marca-fundo), var(--marca-fundo-2));
+  color: var(--marca-texto);
 }
 
 .marca-topo { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
 .marca-topo img { display: block; border-radius: 6px; }
 
-nav { display: flex; align-items: center; gap: 4px; order: 1; flex: 0 0 100%; overflow-x: auto; scrollbar-width: thin; }
+nav { display: flex; align-items: center; gap: 4px; order: 1; flex: 0 0 100%; overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--marca-traco) transparent; }
 nav a {
   position: relative;
   display: inline-flex;
@@ -194,20 +219,22 @@ nav a {
   min-height: 44px;
   padding: 0 12px;
   border-radius: var(--raio);
-  color: var(--suave);
+  color: var(--marca-suave);
   white-space: nowrap;
-  transition: background-color var(--passo), color var(--passo);
+  transition: background-color var(--passo) var(--curva), color var(--passo) var(--curva);
 }
-nav a.ativa { color: var(--texto); font-weight: 600; }
-nav a.ativa .i { color: var(--link); }
-nav a.ativa::after { content: ""; position: absolute; right: 12px; bottom: 0; left: 12px; height: 2px; border-radius: 2px 2px 0 0; background: var(--link); }
+nav a.ativa { color: var(--marca-texto); font-weight: 600; }
+nav a.ativa .i { color: var(--marca-realce); }
+nav a.ativa::after { content: ""; position: absolute; right: 12px; bottom: 0; left: 12px; height: 2px; border-radius: 2px 2px 0 0; background: var(--marca-realce); }
 nav .sinal { display: inline-flex; }
-nav a .sinal .i, nav a.ativa .sinal .i { color: var(--atencao); }
+/* O menu é escuro nos dois temas: o sinal usa o âmbar claro, e não o do tema. */
+nav a .sinal .i, nav a.ativa .sinal .i { color: var(--ambar-82); }
 .grupo { display: none; }
 .sair { display: flex; align-items: center; gap: 12px; margin: 0 0 0 auto; }
-/* Quem está na sessão: o nome e, embaixo, o papel. */
+/* Quem está na sessão: o desenho do papel, o nome e, embaixo, o papel. */
+.avatar { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--marca-toque); color: var(--marca-realce); }
 .quem { display: flex; flex-direction: column; min-width: 0; font-size: var(--texto-rotulo); font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
-.quem span { color: var(--suave); font-weight: 400; }
+.quem span { color: var(--marca-suave); font-weight: 400; }
 .sair button { margin: 0; }
 
 main { flex: 1; width: 100%; max-width: var(--largura); margin: 0 auto; padding: 24px 16px 32px; }
@@ -233,6 +260,7 @@ footer .autoria { margin-top: 4px; }
   box-shadow: var(--sombra);
 }
 .cartao > :last-child { margin-bottom: 0; }
+.cartao h2 > .i { color: var(--link); }
 .cartao.estreito { max-width: 560px; }
 .cartao.medio { max-width: 800px; }   /* tabela com endereço: cabe um IPv6 inteiro sem rolar */
 /* Tela com vários formulários (Editar usuário): os cartões se distribuem em até três colunas de pelo menos 440 px,
@@ -272,8 +300,12 @@ footer .autoria { margin-top: 4px; }
 .situacao > div { display: flex; flex-direction: column; min-width: 0; padding: 12px 16px; background: var(--superficie); }
 .situacao h2 { margin-bottom: 6px; color: var(--suave); font-size: var(--texto-miudo); }
 .situacao h2 > svg { width: 16px; height: 16px; }
-.situacao .numero { font-size: 1.25rem; }
-.situacao .numero.menor { font-size: 1.0625rem; }
+/* Em cada medida o ícone vira um bloco no canto, e o número é o que se lê primeiro. */
+.situacao > div:not(.estado) { position: relative; }
+.situacao > div:not(.estado) h2 { min-height: 36px; padding-right: 44px; }
+.situacao > div:not(.estado) h2 > svg { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; padding: 8px; border-radius: var(--raio); background: color-mix(in oklab, var(--link) 14%, transparent); color: var(--link); }
+.situacao .numero { font-size: var(--titulo); }
+.situacao .numero.menor { font-size: var(--texto-destaque); }
 .situacao .suave, .situacao .atalho { margin-bottom: 0; font-size: var(--texto-miudo); }
 .situacao .atalho { padding-top: 4px; }
 .situacao .estado {
@@ -464,9 +496,11 @@ th, td { padding: 10px; border-bottom: 1px solid var(--borda); text-align: left;
 thead th { color: var(--suave); font-size: var(--texto-rotulo); font-weight: 600; white-space: nowrap; }
 tbody th { width: 1%; font-weight: 600; white-space: nowrap; }
 tbody tr:last-child > * { border-bottom: 0; }
-tbody tr { transition: background-color var(--passo); }
+tbody tr { transition: background-color var(--passo) var(--curva); }
 .acoes { min-width: 12rem; padding-left: 2px; }
-.acoes .botao { white-space: nowrap; }
+.acoes .botao, .sem-acao { justify-content: flex-start; white-space: nowrap; }
+.sem-acao { display: inline-flex; align-items: center; min-height: 32px; margin: 2px 0; font-size: var(--texto-rotulo); }
+.contas .acoes .botao { min-width: 0; }
 thead th:last-child { padding-left: 12px; }
 td:first-child strong { white-space: nowrap; }
 /* Data, endereço e pasta ficam inteiros: um IPv6 tem até 39 caracteres e não pode partir no meio. Quando falta
@@ -488,6 +522,29 @@ td a > code { padding: 0; border: 0; background: none; }
 .item .i.ruim { color: var(--ruim); }
 .item .i.atencao { color: var(--atencao); }
 a.item .i { color: inherit; }
+
+/* Tabela sem nada: o que falta e quando passa a aparecer, no meio do cartão. */
+.vazio td { padding: 36px 20px; }
+.vazio div { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.vazio .i { width: 44px; height: 44px; margin-bottom: 8px; padding: 11px; border-radius: 50%; background: var(--superficie-2); color: var(--suave); }
+tbody tr.vazio:hover { background: none; }
+
+/* Explicação longa de uma tela: fica recolhida, com o título à mostra, e abre com um clique. */
+.como summary { display: flex; align-items: center; gap: 10px; width: fit-content; min-height: 44px; color: var(--suave); font-size: var(--texto-rotulo); font-weight: 600; cursor: pointer; list-style: none; }
+.como summary::-webkit-details-marker { display: none; }
+.como summary::before { content: ""; flex: none; width: 7px; height: 7px; margin: 0 2px 0 4px; border-right: 2px solid; border-bottom: 2px solid; transform: rotate(-45deg); transition: transform var(--passo) var(--curva); }
+.como[open] summary::before { transform: rotate(45deg); }
+.como > :not(summary) { margin-top: 4px; }
+.como .legenda { margin-top: 4px; }
+.cartao.lista > .como { margin: 0; padding: 4px 20px; border-top: 1px solid var(--borda); }
+.cartao.lista > .como[open] { padding-bottom: 16px; }
+
+/* Caminho em passos, lado a lado: o desenho, o que acontece e uma linha de detalhe; a seta leva ao próximo. */
+.passos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 12px; margin: 0; padding: 0; list-style: none; }
+.passos li { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-content: start; gap: 0 12px; padding-right: 28px; }
+.passos .i { grid-row: span 2; width: 40px; height: 40px; padding: 9px; border-radius: var(--raio); background: color-mix(in oklab, var(--link) 14%, transparent); color: var(--link); }
+.passos .suave { grid-column: 2; font-size: var(--texto-rotulo); }
+.passos li:not(:last-child)::after { content: ""; position: absolute; top: 15px; right: 12px; width: 9px; height: 9px; border-top: 2px solid var(--borda-campo); border-right: 2px solid var(--borda-campo); transform: rotate(45deg); }
 
 .trilha { max-width: none; overflow-wrap: anywhere; }
 
@@ -539,7 +596,7 @@ input:not([type="hidden"]) {
   background: var(--campo);
   color: var(--texto);
   font: inherit;
-  transition: border-color var(--passo);
+  transition: border-color var(--passo) var(--curva);
 }
 input:focus-visible { border-color: var(--foco); }
 /* Caixa de marcar: fica ao lado do texto, do tamanho dela, e não na largura do campo. */
@@ -550,8 +607,8 @@ fieldset.perfis { min-width: 0; margin: 12px 0 0; padding: 4px 12px 8px; border:
 fieldset.perfis legend { padding: 0 6px; font-weight: 600; }
 fieldset.perfis label.marcar { align-items: flex-start; padding: 10px 0; }
 fieldset.perfis label.marcar input { margin-top: 2px; }
-/* Perfil da conta na lista: embaixo do nome, sem tomar a largura de uma coluna. */
-td .perfil { display: block; color: var(--suave); font-size: var(--texto-rotulo); }
+/* Perfil da conta na lista: um selo embaixo do nome, sem tomar a largura de uma coluna. */
+td .perfil { display: block; width: fit-content; margin-top: 4px; padding: 0 8px; border: 1px solid var(--borda); border-radius: 999px; color: var(--suave); font-size: var(--texto-miudo); }
 /* Novo usuário: o que é só do FTP some com o perfil Administrador marcado, e a senha atual só aparece com ele.
    Navegador sem :has() ignora a regra e mostra todos os campos; o painel confere só os do perfil escolhido. */
 form:has(#perfil-administrador:checked) .so-ftp,
@@ -574,28 +631,31 @@ button, .botao {
   line-height: 1.4;
   cursor: pointer;
   touch-action: manipulation;
-  transition: background-color var(--passo), border-color var(--passo), color var(--passo), transform var(--passo);
+  transition: background-color var(--passo) var(--curva), border-color var(--passo) var(--curva), color var(--passo) var(--curva), transform var(--passo) var(--curva);
 }
 button:active, .botao:active { transform: scale(0.97); }
 button:disabled { opacity: 0.55; cursor: not-allowed; }
 form button[type="submit"], .botao.principal { border-color: transparent; background: var(--acao); color: var(--sobre-acao); }
 form button.perigo, .botao.perigo { border-color: var(--borda); background: var(--superficie-2); color: var(--ruim); }
-form.sair button[type="submit"] { border-color: var(--borda); background: transparent; color: var(--suave); font-weight: 400; }
-/* Botão de linha de tabela: discreto e denso com o mouse; no toque, a altura sobe para 44px. */
-td .botao { margin: 0; min-height: 0; padding: 4px 10px; border-color: transparent; background: transparent; color: var(--link); font-size: var(--texto-rotulo); font-weight: 400; }
-td .botao.perigo { border-color: transparent; background: transparent; color: var(--ruim); }
+form.sair button[type="submit"] { border-color: color-mix(in oklab, var(--marca-traco) 70%, transparent); background: transparent; color: var(--marca-suave); font-weight: 400; }
+/* Botão de linha de tabela: compacto, com o ícone da ação; no toque, a altura sobe para 44px. */
+td .botao { gap: 6px; margin: 2px 0; min-height: 32px; padding: 4px 10px; background: transparent; font-size: var(--texto-rotulo); font-weight: 400; }
+td .botao .i { width: 16px; height: 16px; color: var(--link); }
+td .botao.perigo { background: transparent; }
+td .botao.perigo .i { color: inherit; }
 p > .botao { margin-top: 0; }
 
 @media (hover: hover) {
   a:hover { text-decoration: underline; }
-  nav a:hover { background: var(--superficie-2); color: var(--texto); text-decoration: none; }
+  nav a:hover { background: var(--marca-toque); color: var(--marca-texto); text-decoration: none; }
   tbody tr:hover { background: color-mix(in oklab, var(--superficie-2) 45%, transparent); }
   input:not([type="hidden"]):hover { border-color: var(--suave); }
   button:hover, .botao:hover { border-color: var(--borda-campo); text-decoration: none; }
-  td .botao:hover { border-color: transparent; background: var(--superficie-2); }
+  td .botao:hover { background: var(--superficie-2); }
   form button[type="submit"]:hover, .botao.principal:hover { border-color: transparent; background: var(--acao-realce); }
   form button.perigo:hover, .botao.perigo:hover { border-color: transparent; background: var(--perigo); color: var(--sobre-acao); }
-  form.sair button[type="submit"]:hover { border-color: var(--borda-campo); background: var(--superficie-2); color: var(--texto); }
+  form.sair button[type="submit"]:hover { border-color: var(--marca-realce); background: var(--marca-toque); color: var(--marca-texto); }
+  .cabeca .botao:not(.principal):hover { border-color: var(--marca-realce); background: oklch(1 0 0 / 0.14); }
 }
 
 @media (pointer: coarse) {
@@ -629,9 +689,9 @@ p > .botao { margin-top: 0; }
    saem de uma unidade só (--u), que acompanha a largura da tela. O movimento só mexe em transform e opacity. */
 .vitrine { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .cena {
-  --topo: oklch(0.52 0.11 256);
-  --lado: oklch(0.4 0.1 257);
-  --frente: oklch(0.32 0.085 258);
+  --topo: var(--marca-topo);
+  --lado: var(--marca-lado);
+  --frente: var(--marca-frente);
   --u: clamp(11px, 1.2vw, 22px);
   order: -1;
   align-self: stretch;
@@ -697,9 +757,28 @@ p > .botao { margin-top: 0; }
   61%, 95% { opacity: 1; }
   100% { opacity: 0; transform: translate3d(15.3em, 0, 0.45em); }
 }
+/* A cena em miniatura, na faixa de cabeçalho das telas de dentro: sem o chão (a faixa já tem os pontos), sem os
+   nomes e sem girar. Os pacotes atravessam uma vez, na chegada à tela, e ficam entregues ao lado da pasta: menos de
+   cinco segundos de movimento, sem repetição, e por isso sem botão de pausar. Na tela que se recarrega sozinha
+   (.quieta) e com movimento reduzido, a cena já chega parada, com os pacotes entregues. */
+.cena.mini { --u: 6.5px; order: 0; flex: none; align-self: center; place-content: center; width: 28em; height: 7em; margin-right: 1.5em; }
+.mini .palco { top: 1em; transform: rotateX(70deg) rotateZ(-32deg); animation: none; }
+.mini .chao { display: none; }
+.mini .l1 { --atraso: 0.2s; }
+.mini .l2 { --atraso: 1.3s; }
+.mini .l3 { --atraso: 0.7s; }
+.mini .l4 { --atraso: 1.9s; }
+.mini .pacote { transform: translate3d(15.3em, 0, 0.45em); animation: entrega 2.4s linear var(--atraso) 1 backwards; }
+.mini.quieta .pacote { animation: none; }
+@keyframes entrega {
+  0% { opacity: 0; transform: translate3d(0, 0, 0.45em); }
+  5%, 39% { opacity: 1; }
+  43%, 57% { opacity: 0; }
+  61%, 100% { opacity: 1; }
+}
 /* Pausar sem script: a caixa de marcar vem antes da cena e para tudo o que se mexe nela. */
 .pausa { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; }
-.pausa-rotulo { display: inline-flex; margin: 0; padding: 6px 12px 6px 8px; border: 1px solid color-mix(in oklab, var(--marca-traco) 70%, transparent); border-radius: 999px; color: var(--marca-suave); font-size: var(--texto-rotulo); font-weight: 400; cursor: pointer; transition: border-color var(--passo), color var(--passo); }
+.pausa-rotulo { display: inline-flex; margin: 0; padding: 6px 12px 6px 8px; border: 1px solid color-mix(in oklab, var(--marca-traco) 70%, transparent); border-radius: 999px; color: var(--marca-suave); font-size: var(--texto-rotulo); font-weight: 400; cursor: pointer; transition: border-color var(--passo) var(--curva), color var(--passo) var(--curva); }
 .pausa-rotulo span { display: inline-flex; align-items: center; gap: 6px; }
 .pausa-rotulo .parada, .pausa:checked + .pausa-rotulo .roda { display: none; }
 .pausa:checked + .pausa-rotulo .parada { display: inline-flex; }
@@ -718,7 +797,7 @@ p > .botao { margin-top: 0; }
 @media (min-width: 1280px) {
   .com-menu { display: grid; grid-template-columns: 208px minmax(0, 1fr); grid-template-rows: 1fr auto; }
   /* A coluna do menu vai até o fim da página, mesmo quando a tela é mais alta que o menu. */
-  .com-menu::before { content: ""; grid-area: 1 / 1 / 3 / 2; border-right: 1px solid var(--borda); background: var(--superficie); }
+  .com-menu::before { content: ""; grid-area: 1 / 1 / 3 / 2; background: var(--marca-fundo-2); }
   .com-menu header {
     grid-area: 1 / 1 / 3 / 2;
     position: sticky;
@@ -732,17 +811,19 @@ p > .botao { margin-top: 0; }
     height: 100dvh;
     padding: 20px 12px 16px;
     overflow-y: auto;
-    border-right: 1px solid var(--borda);
-    border-bottom: 0;
+    /* Liso em cima, para as abas, e embaixo, para a conta; os pontos do chão da cena aparecem só no meio. */
+    background: linear-gradient(180deg, var(--marca-fundo) 40%, transparent 62%, transparent calc(100% - 15rem), var(--marca-fundo-2) calc(100% - 9rem)), var(--marca-pontos), linear-gradient(160deg, var(--marca-fundo), var(--marca-fundo-2));
   }
-  .com-menu .marca-topo { padding: 0 12px; font-size: var(--texto-destaque); }
+  .com-menu .marca-topo { gap: 12px; padding: 0 12px; font-size: var(--texto-destaque); }
+  .com-menu .marca-topo img { width: 36px; height: 36px; border-radius: var(--raio); }
   .com-menu nav { order: 0; flex: 1 0 auto; flex-direction: column; align-items: stretch; gap: 2px; overflow: visible; }
-  .com-menu .grupo { display: block; padding: 20px 12px 4px; color: var(--suave); font-size: var(--texto-rotulo); }
+  .com-menu .grupo { display: block; padding: 20px 12px 4px; color: var(--marca-suave); font-size: var(--texto-rotulo); }
   .com-menu .grupo:first-child { padding-top: 0; }
-  .com-menu nav a.ativa { background: var(--superficie-2); }
+  .com-menu nav a.ativa { background: oklch(1 0 0 / 0.1); }
   .com-menu nav a.ativa::after { top: 10px; right: auto; bottom: 10px; left: 0; width: 3px; height: auto; border-radius: 0 3px 3px 0; }
   .com-menu nav .sinal { margin-left: auto; }
-  .com-menu .sair { flex-direction: column; align-items: stretch; margin: 0; padding: 16px 12px 0; border-top: 1px solid var(--borda); }
+  .com-menu .sair { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; margin: 0; padding: 16px 12px 0; border-top: 1px solid color-mix(in oklab, var(--marca-traco) 40%, transparent); }
+  .com-menu .sair button { grid-column: 1 / -1; }
   /* O conteúdo usa a largura que sobra ao lado do menu, sem teto: diminuir o zoom ou alargar a janela dá mais
      colunas e tabelas mais largas, em vez de margem vazia dos dois lados. */
   .com-menu main { grid-area: 1 / 2; max-width: none; padding: 24px 20px 32px; }
@@ -754,11 +835,63 @@ p > .botao { margin-top: 0; }
   .com-menu main { padding: 32px 32px 40px; }
 }
 
-/* Ações da lista de usuários: uma por linha em tela estreita, duas por linha quando a coluna chega a 14.5rem
-   ("Dispensar TLS" e "Remover" são o par mais largo) e todas na mesma linha a partir de 1560 px, que é quando a
-   tabela de 1170 px cabe ao lado do menu. Faltando largura, a tabela rola dentro do cartão. */
-@media (min-width: 1064px) {
-  .acoes { min-width: 14.5rem; }
+/* Lista de usuários entre o celular e 1096 px (tablet, janela em meia tela): as sete colunas não cabem, e cada
+   conta vira um bloco em grade, com o nome em cima, os dados lado a lado, cada um sob o próprio rótulo
+   (data-rotulo), e as ações embaixo, à vista. A linha de títulos fica só para leitor de tela. */
+@media (min-width: 641px) and (max-width: 1095px) {
+  .contas thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .contas, .contas tbody { display: block; }
+  .contas tr { display: grid; grid-template-columns: 1.3fr 0.8fr 0.7fr 1.4fr 1fr; gap: 8px 16px; padding: 14px 20px; border-bottom: 1px solid var(--borda); }
+  .contas tbody tr:last-child { border-bottom: 0; }
+  .contas td, .lista .contas tr > td { display: block; min-width: 0; padding: 0; border: 0; }
+  .contas td:first-child, .contas td[colspan], .contas td.acoes { grid-column: 1 / -1; }
+  .contas td:first-child .perfil { display: inline-block; margin: 0 0 0 8px; vertical-align: 2px; }
+  .contas td[data-rotulo]::before { content: attr(data-rotulo); display: block; color: var(--suave); font-size: var(--texto-miudo); }
+  .contas .acoes .botao { margin-right: 4px; }
+}
+
+/* Ações da lista de usuários, com a tabela inteira: dois botões por linha, e a coluna pede 18.75rem ("Trocar senha"
+   e "Trocar nome", da linha do administrador, são o par mais largo) e não cresce além disso, para a sobra de
+   largura ir para as outras colunas; a partir de 1360 px os botões ficam da mesma largura, para as duas linhas
+   formarem colunas (a coluna pede 20.5rem); a partir de 1600 px, todos na mesma linha, cada um na própria largura,
+   que é quando a tabela de 1265 px cabe ao lado do menu. */
+@media (min-width: 1096px) {
+  .contas .acoes { width: 1%; min-width: 18.75rem; }
+}
+
+/* Até 1360 px a tabela inteira cabe por pouco (com o menu ao lado, a partir de 1280 px, a largura útil volta a ser a
+   de 1096 px): as células ficam com menos espaço dos lados. */
+@media (min-width: 1096px) and (max-width: 1359px) {
+  .contas th, .contas td { padding-inline: 8px; }
+  .lista .contas tr > :last-child { padding-right: 12px; }
+  .contas .acoes { min-width: 18rem; padding-left: 2px; }
+}
+
+/* Lista de arquivos entre o celular e 900 px: os três botões não cabem ao lado da data, e cada item vira duas
+   linhas, o nome com o tamanho e a data em cima e as ações embaixo, à vista, em vez de um botão por linha. Dali
+   em diante as ações ficam sempre em uma linha: quem cede largura é o nome, que pode quebrar. */
+@media (min-width: 900px) {
+  .itens .acoes { white-space: nowrap; }
+}
+
+@media (min-width: 641px) and (max-width: 899px) {
+  .itens thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .itens, .itens tbody { display: block; }
+  .itens tr { display: grid; grid-template-columns: minmax(0, 1fr) 6rem 10rem; gap: 4px 16px; padding: 12px 20px; border-bottom: 1px solid var(--borda); }
+  .itens tbody tr:last-child { border-bottom: 0; }
+  .itens td, .lista .itens tr > td { display: block; min-width: 0; padding: 0; border: 0; }
+  .itens td[colspan], .itens td.acoes { grid-column: 1 / -1; }
+  .itens .acoes .botao { margin-right: 4px; }
+}
+
+/* Lista de arquivos: os botões da mesma largura, para Abrir, Baixar, Renomear e Apagar formarem colunas. */
+@media (min-width: 720px) {
+  .acoes .botao, .sem-acao { min-width: 6.75rem; }
+}
+
+@media (min-width: 1360px) {
+  .contas .acoes { min-width: 20.5rem; }
+  .contas .acoes .botao { min-width: 9.25rem; }
 }
 
 /* Tela bem larga (ou zoom reduzido): as duas seções da aba Servidor ficam lado a lado, numa linha só de sete cartões
@@ -776,11 +909,13 @@ p > .botao { margin-top: 0; }
   .fichas > .cartao.medio { grid-column: 1 / -1; }
 }
 
-@media (min-width: 1560px) {
+@media (min-width: 1600px) {
   .acoes { white-space: nowrap; }
+  .contas .acoes .botao { min-width: 0; }
 }
 
 @media (max-width: 900px) {
+  .cena.mini { display: none; }
   .situacao { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dupla { grid-template-columns: minmax(0, 1fr); }
   .medidas { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; }
@@ -806,12 +941,34 @@ p > .botao { margin-top: 0; }
   .recentes li { flex-direction: column; align-items: flex-start; }
   .lista tr > :first-child { padding-left: 16px; }
   .lista tr > :last-child { padding-right: 16px; }
-  .acoes { min-width: 0; }
+  .acoes, .acoes .botao { min-width: 0; }
   .acoes .botao, .etiqueta { white-space: normal; }
+  .cabeca { padding: 12px 16px; }
+  .cabeca > div:not(.cena) { flex-basis: 10rem; }
+  main > h1 { padding: 12px 16px; }
+  .cartao.lista > .como { padding: 4px 16px; }
+  .passos { grid-template-columns: minmax(0, 1fr); }
+  .passos li { padding-right: 0; }
+  .passos li:not(:last-child)::after { display: none; }
+  /* Lista em blocos: cada linha da tabela vira um bloco, com o nome em cima, os dados em pares de rótulo e valor
+     e as ações embaixo. O rótulo vem do próprio HTML (data-rotulo). A linha de títulos fica só para leitor de tela. */
+  .blocos thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .blocos, .blocos tbody, .blocos tr, .blocos td { display: block; }
+  .blocos tr { padding: 12px 16px; border-bottom: 1px solid var(--borda); }
+  .blocos tbody tr:last-child { border-bottom: 0; }
+  .blocos td, .lista .blocos tr > td { padding: 2px 0; border: 0; }
+  .blocos td:empty { display: none; }
+  .blocos td[data-rotulo] { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 16px; font-size: var(--texto-rotulo); }
+  .blocos td[data-rotulo]::before { content: attr(data-rotulo); color: var(--suave); }
+  .blocos td.acoes { padding-top: 8px; }
+  .blocos td.acoes:empty { display: none; }
+  .blocos .vazio { padding: 0; }
+  .blocos td.detalhe { min-width: 0; }
+  .blocos .acoes .botao { padding-inline: 8px; }
 }
 
 @media (max-width: 520px) {
-  .quem span { display: none; }
+  .quem span, .avatar { display: none; }
   .situacao { grid-template-columns: minmax(0, 1fr); }
   .situacao .estado { display: flex; align-items: flex-start; gap: 4px; }
   .situacao .estado .atalho { padding-top: 8px; }

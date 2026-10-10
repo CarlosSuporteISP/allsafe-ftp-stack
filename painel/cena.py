@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Cena do lado da marca na tela de entrada: cada equipamento manda o backup pelo FTPS e ele cai na própria pasta.
+As telas de dentro levam a mesma cena, pequena, na faixa de cabeçalho (miniatura).
 
 É enfeite (o texto ao lado diz o mesmo) e fica fora do leitor de tela. Tudo é HTML e CSS do próprio painel: a
 profundidade vem de `transform` em três dimensões, o movimento só mexe em `transform` e `opacity`, e não há script,
@@ -13,6 +14,16 @@ EQUIPAMENTOS = ('roteador', 'switch', 'OLT', 'rádio')
 PASTAS = ('roteador', 'switch', 'olt', 'radio')
 # Os trilhos, na medida do palco (22 por 15): do equipamento ao muro e do muro à pasta, uma linha por faixa.
 TRILHOS = ''.join(f'M3 {y}H9.9M12.1 {y}H19' for y in ('2.25', '5.75', '9.25', '12.75'))
+
+
+def miniatura(quieta=False):
+    """A cena na faixa de cabeçalho das telas de dentro: sem os nomes e sem girar. Os pacotes atravessam uma vez,
+    na chegada à tela, e param; por isso não há botão de pausar. `quieta` é a tela que se recarrega sozinha: nela
+    nada se mexe."""
+    blocos = ''.join(f'<i class="bloco eq {f}"></i><i class="bloco gaveta {f}">{icone("pasta")}</i><i class="pacote {f}"></i>'
+                     for f in FAIXAS)
+    return (f'<div class="cena mini{" quieta" if quieta else ""}" aria-hidden="true"><div class="palco"><i class="chao"></i>'
+            f'<svg class="trilhos" viewBox="0 0 22 15"><path d="{TRILHOS}"/></svg>{blocos}<i class="bloco muro"></i></div></div>')
 
 
 def cena():

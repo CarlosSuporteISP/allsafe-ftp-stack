@@ -15,7 +15,7 @@ from aba_arquivos import (MENSAGENS, Recusado, Vista, abrir, aviso_de_corte, con
                           linhas_da_lista, parametro, partes, recusa, trilha)
 from config import CFG
 from icones import icone
-from pagina import cabeca, e, pagina
+from pagina import cabeca, como, e, pagina
 
 # perfil ➜ (linha de cima da tela, o que a tela diz que esta conta faz)
 PODE = {
@@ -61,10 +61,10 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
     pedido.enviar(200, pagina('Meus arquivos', f'''{cabeca('Meus arquivos', resumo)}
 {f'<p class="ok" role="status">{e(feito)}</p>' if feito else ''}
 <p class="trilha">{trilha(v, lista)}</p>
-{aviso_de_corte(cortado)}<section class="cartao lista"><div class="rolagem"><table>
+{aviso_de_corte(cortado)}<section class="cartao lista"><div class="rolagem"><table class="blocos itens">
 <thead><tr><th>Nome</th><th>Tamanho</th><th>Modificado</th><th>Ações</th></tr></thead>
 <tbody>{linhas_da_lista(v.rota, caminho, pastas, arquivos, gerir=perfil == 'completo')}</tbody></table></div>
-<p class="suave">Arquivos da pasta do usuário <strong>{e(sessao['usuario'])}</strong> no FTP. {texto}</p></section>
+{como('O que esta conta pode fazer', f'''<p class="suave">Arquivos da pasta do usuário <strong>{e(sessao['usuario'])}</strong> no FTP. {texto}</p>''')}</section>
 {nova_pasta}''', sessao, v.rota))
 
 
@@ -74,6 +74,12 @@ def so_envio(pedido, sessao, consulta, formulario, token):
                  '1': 'FTPS explícito (FTP com TLS) ou, só para equipamento sem TLS, FTP em texto puro; modo passivo',
                  '3': 'FTPS explícito (FTP com TLS), também no canal de dados; modo passivo'}
     pedido.enviar(200, pagina('Envio de arquivos', f'''{cabeca('Envio de arquivos', 'Esta conta só envia: o que chega fica guardado no servidor.')}
+<section class="cartao"><h2>{icone('envio')}O caminho de cada arquivo</h2>
+<ol class="passos">
+<li>{icone('equipamento')}<strong>O equipamento envia</strong><span class="suave">por FTP, com o usuário e a senha desta conta</span></li>
+<li>{icone('servidor')}<strong>O servidor recebe</strong><span class="suave">em uma área de entrada que é só desta conta</span></li>
+<li>{icone('cadeado')}<strong>O arquivo é guardado</strong><span class="suave">na pasta do usuário, fora do alcance desta conta</span></li>
+</ol></section>
 <section class="cartao"><h2>{icone('equipamento')}Dados para enviar por FTP</h2>
 <dl class="dados">
 <div><dt>Servidor</dt><dd><code>{e(CFG['ftp_anunciado'])}</code></dd></div>
@@ -82,7 +88,7 @@ def so_envio(pedido, sessao, consulta, formulario, token):
 <div><dt>Protocolo</dt><dd>{e(protocolo.get(CFG['ftp_tls'], 'FTPS explícito (FTP com TLS), modo passivo'))}</dd></div>
 <div><dt>Usuário e senha</dt><dd><strong>{e(sessao['usuario'])}</strong>, com a mesma senha desta entrada</dd></div>
 </dl></section>
-<section class="cartao"><h2>{icone('envio')}O que esta conta faz</h2>
+<section class="cartao"><h2>{icone('escudo')}O que esta conta faz</h2>
 <p>Ela envia arquivo por FTP e mais nada. Cada arquivo que termina de chegar é guardado na pasta do usuário
 <strong>{e(sessao['usuario'])}</strong> no servidor, fora do alcance desta conta: ela não lista, não baixa, não renomeia
 e não apaga o que já enviou, nem por FTP nem por aqui.</p>

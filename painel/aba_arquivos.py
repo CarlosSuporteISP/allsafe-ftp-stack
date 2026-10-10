@@ -23,7 +23,7 @@ from confirmacao import campo_senha_atual, confirmacao_recusada
 from estado import limpar_cache, uso_da_pasta, usuarios
 from icones import icone
 from limites import downloads_e_taxa
-from pagina import cabeca, e, pagina, quando, tamanho
+from pagina import cabeca, como, e, pagina, quando, tamanho, vazio
 from sessao import quem
 
 VAGAS = threading.BoundedSemaphore(DOWNLOADS_MAX)
@@ -177,8 +177,8 @@ def trilha(v, lista):
 
 def botoes_de_gestao(rota, item):
     """Renomear e Apagar de um item da lista: aparecem para o administrador e para o usuário de perfil completo."""
-    return (f' <a class="botao" href="{e(endereco(rota + "/renomear", "item", item))}">Renomear</a>'
-            f' <a class="botao perigo" href="{e(endereco(rota + "/apagar", "item", item))}">Apagar</a>')
+    return (f' <a class="botao" href="{e(endereco(rota + "/renomear", "item", item))}">{icone("lapis")}Renomear</a>'
+            f' <a class="botao perigo" href="{e(endereco(rota + "/apagar", "item", item))}">{icone("lixeira")}Apagar</a>')
 
 
 def linhas_da_lista(rota, caminho, pastas, arquivos, gerir=False):
@@ -188,20 +188,23 @@ def linhas_da_lista(rota, caminho, pastas, arquivos, gerir=False):
     linhas = []
     for nome, dados in pastas:
         gestao = botoes_de_gestao(rota, base + nome) if gerir else ''
-        linhas.append(f'<tr><td><a class="item" href="{e(endereco(rota, "pasta", base + nome))}">{icone("pasta")}<strong>{e(visivel(nome))}</strong></a></td>'
-                      f'<td class="suave">pasta</td><td>{e(quando(dados.st_mtime))}</td><td class="acoes">{gestao}</td></tr>')
+        destino = e(endereco(rota, "pasta", base + nome))
+        linhas.append(f'<tr><td><a class="item" href="{destino}">{icone("pasta")}<strong>{e(visivel(nome))}</strong></a></td>'
+                      f'<td class="suave" data-rotulo="Tamanho">pasta</td><td data-rotulo="Modificado">{e(quando(dados.st_mtime))}</td>'
+                      f'<td class="acoes"><a class="botao" href="{destino}">{icone("pasta")}Abrir</a>{gestao}</td></tr>')
     for nome, dados in arquivos:
         gestao = botoes_de_gestao(rota, base + nome) if gerir else ''
         if stat.S_ISREG(dados.st_mode):
-            linhas.append(f'<tr><td><span class="item">{icone("arquivo")}{e(visivel(nome))}</span></td><td>{e(tamanho(dados.st_size))}</td><td>{e(quando(dados.st_mtime))}</td>'
+            linhas.append(f'<tr><td><span class="item">{icone("arquivo")}{e(visivel(nome))}</span></td><td data-rotulo="Tamanho">{e(tamanho(dados.st_size))}</td>'
+                          f'<td data-rotulo="Modificado">{e(quando(dados.st_mtime))}</td>'
                           f'<td class="acoes"><a class="botao" href="{e(endereco(rota + "/baixar", "arquivo", base + nome))}" download>'
-                          f'Baixar</a>{gestao}</td></tr>')
+                          f'{icone("baixar")}Baixar</a>{gestao}</td></tr>')
         else:
             tipo = 'link simbólico' if stat.S_ISLNK(dados.st_mode) else 'arquivo especial'
-            linhas.append(f'<tr><td><span class="item">{icone("atalho")}{e(visivel(nome))}</span> <span class="etiqueta">{tipo}</span></td><td class="suave">—</td>'
-                          f'<td>{e(quando(dados.st_mtime))}</td><td class="acoes"><span class="suave">o painel não abre</span>'
+            linhas.append(f'<tr><td><span class="item">{icone("atalho")}{e(visivel(nome))}</span> <span class="etiqueta">{tipo}</span></td><td class="suave" data-rotulo="Tamanho">—</td>'
+                          f'<td data-rotulo="Modificado">{e(quando(dados.st_mtime))}</td><td class="acoes"><span class="suave sem-acao">não abre aqui</span>'
                           f'{gestao}</td></tr>')
-    return ''.join(linhas) or '<tr><td colspan="4" class="suave">Pasta vazia.</td></tr>'
+    return ''.join(linhas) or vazio(4, 'pasta', 'Pasta vazia', 'O que for enviado para ela por FTP aparece aqui.')
 
 
 def aviso_de_corte(cortado):
@@ -233,11 +236,11 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
     pedido.enviar(200, pagina('Arquivos', f'''{cabeca('Arquivos', 'O que os equipamentos já enviaram, pasta por pasta.')}
 {f'<p class="ok" role="status">{e(feito)}</p>' if feito else ''}
 <p class="trilha">{trilha(Vista(sessao), lista)}{novo_usuario}</p>
-{de_quem}{aviso}<section class="cartao lista"><div class="rolagem"><table>
+{de_quem}{aviso}<section class="cartao lista"><div class="rolagem"><table class="blocos itens">
 <thead><tr><th>Nome</th><th>Tamanho</th><th>Modificado</th><th>Ações</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
-<p class="suave">O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continua sendo feito por FTP.
-Apagar pede a sua senha atual e não tem lixeira. Todo download e toda alteração ficam registrados na aba Atividade.</p></section>
+{como('O que dá para fazer nesta aba', '''<p class="suave">O painel navega, baixa, cria pasta, troca o nome e apaga; enviar arquivo continua sendo feito por FTP.
+Apagar pede a sua senha atual e não tem lixeira. Todo download e toda alteração ficam registrados na aba Atividade.</p>''')}</section>
 {formulario_nova_pasta(sessao, caminho)}''', sessao, '/arquivos'))
 
 

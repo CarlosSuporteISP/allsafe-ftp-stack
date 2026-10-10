@@ -18,7 +18,7 @@ from confirmacao import campo_senha_atual, confirmacao_recusada
 from estado import (bloqueios, executar_usuario, impedimento_da_pasta, pastas_do_primeiro_nivel, perfis, sem_tls, uso_da_pasta,
                     usuarios, vizinhos, vizinhos_de_todos)
 from icones import icone
-from pagina import cabeca, e, pagina, quando, tamanho
+from pagina import cabeca, como, e, pagina, quando, tamanho
 from sessao import sessoes_por_admin
 
 # Perfil ➜ nome na tela e o que a conta pode fazer. O administrador é do painel; os outros quatro são do FTP.
@@ -71,10 +71,10 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
     for nome in administradores.ler():
         destino = urllib.parse.quote(nome)
         proprio = nome == sessao['admin']
-        acoes = (f'<a class="botao" href="/administradores/senha?admin={destino}">Trocar senha</a> '
-                 f'<a class="botao" href="/administradores/nome?admin={destino}">Trocar nome</a>')
+        acoes = (f'<a class="botao" href="/administradores/senha?admin={destino}">{icone("chave")}Trocar senha</a> '
+                 f'<a class="botao" href="/administradores/nome?admin={destino}">{icone("lapis")}Trocar nome</a>')
         if not proprio:
-            acoes += f' <a class="botao perigo" href="/administradores/remover?admin={destino}">Remover</a>'
+            acoes += f' <a class="botao perigo" href="/administradores/remover?admin={destino}">{icone("lixeira")}Remover</a>'
         quantas = abertas.get(nome, 0)
         marca = ' <span class="etiqueta">você</span>' if proprio else ''
         linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}<span class="perfil">{NOME_DO_PERFIL["administrador"]}</span></td>'
@@ -93,11 +93,12 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
         else:
             celula = '<span class="suave">fora da pasta dos dados</span>'
         mais = ' ou mais' if uso['parcial'] else ''
-        acoes = (f'<a class="botao" href="/usuarios/editar?usuario={destino}">Editar</a> '
-                 f'<a class="botao" href="/usuarios/senha?usuario={destino}">Trocar senha</a>')
+        # A ordem dos botões põe um curto ao lado de um longo: as duas linhas da coluna ficam com largura parecida.
+        acoes = f'<a class="botao" href="/usuarios/editar?usuario={destino}">{icone("lapis")}Editar</a>'
+        senha = f' <a class="botao" href="/usuarios/senha?usuario={destino}">{icone("chave")}Trocar senha</a>'
         marca = (' <span class="etiqueta" title="Criado pela instalação, uma vez; removido, não volta sozinho">inicial</span>'
                  if nome == CFG['ftp_usuario'] else '')
-        remover = f' <a class="botao perigo" href="/usuarios/remover?usuario={destino}">Remover</a>'
+        remover = f' <a class="botao perigo" href="/usuarios/remover?usuario={destino}">{icone("lixeira")}Remover</a>'
         dele = limites.resumo(proprios[nome]) if nome in proprios else ''
         if dele:
             marca += f' <span class="etiqueta" title="Limites próprios: {e(dele)}">limites</span>'
@@ -107,27 +108,27 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
         coluna_tls = ''
         if excecoes:
             if nome in marcados:
-                coluna_tls = '<td><span class="etiqueta atencao">sem TLS</span></td>'
-                acoes += f' <a class="botao" href="/usuarios/tls?usuario={destino}">Exigir TLS</a>'
+                coluna_tls = '<td data-rotulo="TLS"><span class="etiqueta atencao">sem TLS</span></td>'
+                acoes += f' <a class="botao" href="/usuarios/tls?usuario={destino}">{icone("cadeado")}Exigir TLS</a>'
             else:
-                coluna_tls = '<td>obrigatório</td>'
-                acoes += f' <a class="botao" href="/usuarios/tls?usuario={destino}">Dispensar TLS</a>'
-        acoes += remover
+                coluna_tls = '<td data-rotulo="TLS">obrigatório</td>'
+                acoes += f' <a class="botao" href="/usuarios/tls?usuario={destino}">{icone("cadeado-aberto")}Dispensar TLS</a>'
+        acoes += senha + remover
         linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}'
                       f'<span class="perfil">{NOME_DO_PERFIL[papeis.get(nome, "completo")]}</span></td>'
-                      f'<td class="pasta">{celula}</td>'
-                      f'<td>{e(tamanho(uso["bytes"]))}{mais}</td><td>{uso["arquivos"]}{mais}</td>'
-                      f'<td>{e(quando(uso["ultimo"]))}</td>{coluna_tls}<td class="acoes">{acoes}</td></tr>')
+                      f'<td class="pasta" data-rotulo="Pasta">{celula}</td>'
+                      f'<td data-rotulo="Uso">{e(tamanho(uso["bytes"]))}{mais}</td><td data-rotulo="Arquivos">{uso["arquivos"]}{mais}</td>'
+                      f'<td data-rotulo="Último envio">{e(quando(uso["ultimo"]))}</td>{coluna_tls}<td class="acoes">{acoes}</td></tr>')
     corpo = ''.join(linhas) or f'<tr><td colspan="{colunas}" class="suave">Nenhum usuário ainda.</td></tr>'
     nota_tls = ('<li><span class="etiqueta atencao">sem TLS</span> Dispensado do TLS pelo administrador, em Editar ou ao criar: '
                 'a senha e os arquivos desse usuário trafegam em texto puro.</li>') if excecoes else ''
     pedido.enviar(200, pagina('Usuários', f'''{cabeca('Usuários', 'As contas do painel e do FTP, cada uma com o seu perfil.',
         f'<a class="botao principal" href="/usuarios/novo">{icone("mais")}Novo usuário</a>')}
 {f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}
-<section class="cartao lista"><div class="rolagem"><table>
+<section class="cartao lista"><div class="rolagem"><table class="blocos contas">
 <thead><tr><th>Usuário e perfil</th><th>Pasta</th><th>Uso</th><th>Arquivos</th><th>Último envio</th>{'<th>TLS</th>' if excecoes else ''}<th>Ações</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
-<ul class="legenda">
+{como('Como funcionam os perfis e as etiquetas', f'''<ul class="legenda">
 <li><strong>Administrador</strong> entra neste painel e administra tudo; não é conta do FTP. Alterar administrador pede a sua senha
 atual, e ninguém remove a própria conta. Até {ADMINS_MAX} administradores.</li>
 <li><strong>Completo</strong> envia, baixa, renomeia e apaga. <strong>Envio</strong> envia e baixa, sem apagar nem alterar o que já
@@ -139,7 +140,7 @@ perfil dele deixa.</li>
 <li><span class="etiqueta">limites</span> Limite próprio, ajustado em Editar.</li>
 <li><span class="etiqueta ruim">bloqueado</span> Recusado pelo FTP por senhas erradas demais vindas de um endereço: o bloqueio sai
 sozinho no fim do prazo, ou em Editar.</li>
-{nota_tls}</ul></section>''',
+{nota_tls}</ul>''')}</section>''',
                             sessao, '/usuarios'))
 
 

@@ -75,12 +75,26 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP, o modo de TLS do FTP, a faixa **Servidor e containers** (processador e memória do servidor e dos containers da stack, cada um com o uso contra o que há ou o que foi alocado), os arquivos recebidos por dia nos últimos 14 dias, o último envio de cada usuário, o espaço de cada pasta, os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) e os últimos registros da atividade | Só consultar; cada cartão termina no atalho para a aba do detalhe |
 | Usuários | Todas as contas em uma lista, cada uma com o **perfil** embaixo do nome. Primeiro os administradores do painel, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas; depois os usuários do FTP, um por linha: pasta, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo o perfil (Administrador, Completo, Envio, Só envio ou Leitura), a pasta e, para equipamento sem suporte a TLS, já dispensado do TLS; editar, para trocar o perfil, a pasta e os limites e tirar um bloqueio; trocar a senha; remover, com a pasta dele ou sem ela; abrir a pasta do usuário na aba Arquivos; dispensar um usuário do TLS e voltar a exigir; trocar a senha e o nome de um administrador e removê-lo |
-| Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
+| Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, pelo nome ou pelo botão **Abrir**, baixar um arquivo pelo navegador, criar uma pasta e abrir o cadastro de usuário já com a pasta aberta |
 | Servidor | Os três containers da stack (servidor FTP, painel e frente web), cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, e, separados, os recursos do servidor em que a stack roda: processador, memória, disco e rede do FTP, com o estado, a medida de agora e o histórico dos últimos minutos | Só consultar; **Atualizar sozinha** refaz a leitura a cada 10 s, sem contar como uso da sessão: veja [Servidor](#servidor) |
 | Segurança | Conferência da instalação, com o resumo de quantos itens estão em ordem, pedem atenção ou são conferidos no servidor: se endereço público é aceito, se o painel está publicado por proxy ou túnel, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
 | Atividade | Os últimos 300 registros do painel: entradas, recusas, downloads, pastas criadas e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
 
 O menu fica à esquerda em tela de 1280 px de largura ou mais: o símbolo e o nome, as abas em dois grupos (**Operação**, com Visão geral, Usuários e Arquivos, e **Sistema**, com Servidor, Segurança e Atividade), a aba em uso marcada e, embaixo, o nome e o papel de quem entrou e o botão **Sair**, que encerra a sessão na hora. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada (endereço público aceito ou painel por proxy ou túnel), o administrador vê um sinal de alerta ao lado de **Segurança**, em qualquer aba em que estiver. Os gráficos são desenhados pelo próprio painel, sem script, e todo número do desenho está também escrito ao lado dele. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
+
+Cada aba abre com uma faixa no azul da marca, o mesmo do menu e da tela de entrada, nos temas claro e escuro: o ícone da aba, o título, uma linha que diz o que a tela mostra e, à direita, a ação principal. Em tela com mais de 900 px de largura, a faixa leva também a cena do caminho do backup, a da tela de entrada, em miniatura: os pacotes atravessam uma vez, na chegada à tela, e param. Com **Atualizar sozinha** ligada na aba Servidor, ou com o sistema pedindo menos movimento, nada se mexe. Tela de formulário (novo usuário, editar, trocar senha, renomear, apagar) leva a faixa fina, só com o título.
+
+As listas se ajustam à largura da tela, sem rolagem lateral da página:
+
+| Largura da tela | Usuários | Arquivos e Meus arquivos | Atividade |
+|---|---|---|---|
+| Até 640 px | Um bloco por conta, com o rótulo de cada dado e as ações embaixo | Um bloco por item, com o tamanho, a data e as ações embaixo do nome | Um bloco por registro |
+| De 641 a 899 px | Um bloco por conta: nome e perfil em cima, os cinco dados lado a lado e as ações embaixo | Nome, tamanho e data em uma linha e as ações na linha de baixo | Tabela |
+| De 900 a 1095 px | O mesmo bloco | Tabela, com as ações em uma linha | Tabela |
+| De 1096 a 1599 px | Tabela, com as ações duas por linha | Tabela | Tabela |
+| 1600 px ou mais | Tabela, com as ações em uma linha | Tabela | Tabela |
+
+Lista sem nada para mostrar (pasta vazia, atividade sem registro) diz o que falta e quando passa a aparecer. O texto longo de cada tela, como a explicação dos perfis e das etiquetas da aba Usuários, fica recolhido em uma linha embaixo da lista e abre com um clique.
 
 Quem entra com a conta do FTP não vê nenhuma dessas abas: vê uma tela só, **Meus arquivos**, descrita em [Usuário do FTP no painel](#usuario-ftp).
 
@@ -272,9 +286,9 @@ A aba Arquivos mostra as pastas de `DATA_DIR/dados`, entrega pelo navegador qual
 
 | Na lista | O que aparece | O que dá para fazer |
 |---|---|---|
-| Pasta | Nome e data da última alteração; dentro dela, a linha `Pasta do usuário do FTP` diz de quem é | Entrar, renomear e apagar |
+| Pasta | Nome e data da última alteração; dentro dela, a linha `Pasta do usuário do FTP` diz de quem é | Entrar, pelo nome ou pelo botão **Abrir**, renomear e apagar |
 | Arquivo | Nome, tamanho e data da última alteração | Baixar, renomear e apagar |
-| Item marcado `link simbólico` ou `arquivo especial` | Nome e data | Renomear e apagar; o painel não abre nem baixa. Apagar um link simbólico apaga só o link, nunca aquilo para onde ele aponta |
+| Item marcado `link simbólico` ou `arquivo especial` | Nome e data | Renomear e apagar; o painel não abre nem baixa, e mostra **não abre aqui** no lugar do botão. Apagar um link simbólico apaga só o link, nunca aquilo para onde ele aponta |
 
 Limites:
 
@@ -321,7 +335,7 @@ O dono dos arquivos pega os próprios backups pelo navegador, sem depender de qu
 
 1. Abra o endereço do painel, de uma rede que esteja em `PAINEL_REDES_PERMITIDAS`.
 2. Digite o usuário e a senha do FTP, os mesmos que o equipamento usa. A entrada leva alguns segundos: quem confere a senha é o próprio servidor FTP.
-3. Na tela **Meus arquivos**, clique no nome de uma pasta para entrar; o caminho no alto da lista volta a qualquer nível, a partir de **Início**.
+3. Na tela **Meus arquivos**, clique no nome de uma pasta, ou em **Abrir**, para entrar; o caminho no alto da lista volta a qualquer nível, a partir de **Início**.
 4. Clique em **Baixar** na linha do arquivo. O navegador salva o arquivo com o nome original.
 5. Com o perfil Envio ou Completo, o cartão **Nova pasta**, abaixo da lista, cria uma pasta vazia dentro da que está aberta.
 6. Com o perfil Completo, cada linha tem **Renomear** e **Apagar**. Apagar pede a caixa de confirmação e a senha do FTP da própria conta, e não tem lixeira.
@@ -836,7 +850,7 @@ O código fica em [`painel/`](../painel/), um assunto por arquivo, e vai inteiro
 | [`pagina.py`](../painel/pagina.py) | Moldura das telas, com o menu, o símbolo e a autoria no rodapé, e os textos que mais de uma aba usa |
 | [`icones.py`](../painel/icones.py) | Os ícones do painel, desenhados em linha: saem dentro do HTML de cada tela, sem arquivo de imagem |
 | [`graficos.py`](../painel/graficos.py) | Os gráficos (colunas por dia, faixa dividida, barras e linha do tempo), em SVG montado no servidor, sem script e sem estilo dentro do HTML; os números ficam também em texto |
-| [`cena.py`](../painel/cena.py) | A cena em três dimensões da tela de entrada, só com HTML e CSS |
+| [`cena.py`](../painel/cena.py) | A cena em três dimensões da tela de entrada e a miniatura dela na faixa que abre cada aba, só com HTML e CSS |
 | [`atendimento.py`](../painel/atendimento.py) | Soquete Unix, cabeçalhos de segurança, conferências de todo pedido (endereço do cliente, rede, `Host`, origem, sessão e CSRF), roteamento por papel (administrador ou usuário do FTP) e a entrega de arquivo em blocos |
 | [`rotas.py`](../painel/rotas.py) | Tabelas de método e caminho para a função que responde: uma para o administrador e uma para cada perfil de usuário do FTP |
 | [`entrada.py`](../painel/entrada.py) | Tela de entrada, entrada com usuário e senha, do administrador e do usuário do FTP, e saída |

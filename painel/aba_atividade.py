@@ -4,7 +4,7 @@ import re
 
 from auditoria import fim_da_auditoria, ler_auditoria
 from icones import icone
-from pagina import cabeca, e, pagina, tamanho
+from pagina import cabeca, como, e, pagina, tamanho, vazio
 
 EVENTOS = {
     'painel_iniciado': ('inicio', 'Painel iniciado'),
@@ -100,12 +100,13 @@ def recentes():
 def atividade(pedido, sessao, consulta, formulario, token):
     linhas = []
     for dia, hora, ip, evento, campos in filter(None, map(registro, ler_auditoria())):
-        linhas.append(f'<tr><td class="quando">{dia}\u00a0{hora}</td><td class="origem">{origem(ip)}</td>'
-                      f'<td>{acontecido(evento)}</td><td class="detalhe">{detalhe(campos)}</td></tr>')
-    corpo = ''.join(linhas) or '<tr><td colspan="4" class="suave">Nada registrado ainda.</td></tr>'
+        linhas.append(f'<tr><td class="quando">{dia}\u00a0{hora}</td><td class="origem" data-rotulo="De onde">{origem(ip)}</td>'
+                      f'<td class="fato">{acontecido(evento)}</td><td class="detalhe">{detalhe(campos)}</td></tr>')
+    corpo = ''.join(linhas) or vazio(4, 'atividade', 'Nada registrado ainda',
+                                     'Cada entrada no painel e cada alteração feita por ele passa a aparecer aqui.')
     pedido.enviar(200, pagina('Atividade', f'''{cabeca('Atividade', 'Quem entrou e o que foi feito no painel: os últimos 300 registros, do mais novo para o mais antigo.')}
-<section class="cartao lista"><div class="rolagem"><table>
+<section class="cartao lista"><div class="rolagem"><table class="blocos">
 <thead><tr><th>Quando</th><th>De onde</th><th>O que aconteceu</th><th>Detalhe</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
-<p class="suave">Senha e token nunca são gravados.
-As transferências dos equipamentos ficam no log do serviço FTP.</p></section>''', sessao, '/atividade'))
+{como('O que fica registrado', '''<p class="suave">Senha e token nunca são gravados.
+As transferências dos equipamentos ficam no log do serviço FTP.</p>''')}</section>''', sessao, '/atividade'))
