@@ -561,6 +561,9 @@ tbody tr.vazio:hover { background: none; }
 .como .legenda { margin-top: 4px; }
 .cartao.lista > .como { margin: 0; padding: 4px 20px; border-top: 1px solid var(--borda); }
 .cartao.lista > .como[open] { padding-bottom: 16px; }
+/* Cartão que é só a explicação recolhida, no alto da tela: fechado, tem a altura da linha do título. */
+.cartao.dobra { padding: 4px 20px; }
+.cartao.dobra > .como[open] { padding-bottom: 16px; }
 
 /* Caminho em passos, lado a lado: o desenho, o que acontece e uma linha de detalhe; a seta leva ao próximo. */
 .passos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 12px; margin: 0; padding: 0; list-style: none; }
@@ -1024,6 +1027,7 @@ p > .botao { margin-top: 0; }
   .cabeca > div:not(.cena) { flex-basis: 10rem; }
   main > h1 { padding: 12px 16px; }
   .cartao.lista > .como { padding: 4px 16px; }
+  .cartao.dobra { padding: 4px 16px; }
   .passos { grid-template-columns: minmax(0, 1fr); }
   .passos li { padding-right: 0; }
   .passos li:not(:last-child)::after { display: none; }

@@ -21,7 +21,7 @@ from config import CFG
 from confirmacao import campo_senha_atual, confirmacao_recusada
 from icones import icone
 from idioma import N, t, tn
-from pagina import cabeca, e, pagina, quando, tamanho
+from pagina import cabeca, como, e, pagina, quando, tamanho
 
 ABA = '/destinos'
 TITULOS = {'s3': N('Armazenamento S3'), 'telegram': N('Bot do Telegram')}
@@ -54,6 +54,7 @@ MOTIVOS = {
     'mudou': N('o arquivo mudou durante o envio: repita quando ele terminar de chegar'),
     'enviando': N('outro envio pedido pela tela está em andamento: tente de novo em instantes'),
     'desligado': N('o destino está desligado ou sem os segredos'),
+    'proibido': N('o painel não faz esse pedido a um destino: ele só grava e só envia, e não apaga nada lá'),
 }
 # Campo que destinos.defeito() aponta ➜ o erro que o formulário mostra.
 ERROS = {
@@ -220,18 +221,17 @@ def lista(pedido, sessao, consulta, formulario, token):
     resumo = t('Cópia automática dos arquivos para fora do servidor: um armazenamento S3 e um bot do Telegram.')
     pedido.enviar(200, pagina(t('Destinos'), f'''{cabeca('Destinos', resumo)}
 {f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
-<div class="fichas">
-{cartao(sessao, 's3')}
-{cartao(sessao, 'telegram')}
-<section class="cartao medio"><h2>{icone('escudo')}{t('Como o painel envia')}</h2>
-<p class="suave">{t('O painel só sai do servidor para os destinos gravados aqui, sempre por HTTPS com o certificado '
+<section class="cartao dobra">{como(t('Como o painel envia'), '<p class="suave">' + t('O painel só sai do servidor para os destinos gravados aqui, sempre por HTTPS com o certificado '
                     'conferido. Sai arquivo comum: link simbólico e nome começado por ponto ficam de fora. O bot do '
                     'Telegram envia em instantes o arquivo que chega inteiro por FTP ou pelo painel; nos outros casos, e sempre '
                     'no S3, o arquivo só entra na passada depois de dois minutos sem mudar, para o que ainda está chegando não '
                     'sair pela metade. A ordem é a da chegada ao servidor; uma falha do destino encerra a passada e a seguinte recomeça do mesmo '
-                    'arquivo. Pasta que troca de nome não reenvia os arquivos de dentro.')}</p>
-<p class="suave">{t('Os segredos ficam no servidor, na pasta <code>destinos</code> dos segredos da instalação, um por arquivo, e '
-                    'não entram na cópia de segurança: depois de restaurar uma cópia, grave-os de novo.')}</p></section>
+                    'arquivo. Pasta que troca de nome não reenvia os arquivos de dentro.') + '</p>\n<p class="suave">'
+      + t('Os segredos ficam no servidor, na pasta <code>destinos</code> dos segredos da instalação, um por arquivo, e '
+                    'não entram na cópia de segurança: depois de restaurar uma cópia, grave-os de novo.') + '</p>')}</section>
+<div class="fichas">
+{cartao(sessao, 's3')}
+{cartao(sessao, 'telegram')}
 </div>''',
                               sessao, ABA))
 

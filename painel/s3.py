@@ -3,7 +3,7 @@
 
 O painel só grava: PutObject para arquivo de até 32 MiB e envio em partes acima disso (criar, enviar cada parte,
 concluir; abandonar quando falha). Nada é lido, listado nem apagado no destino: a chave só precisa das permissões
-s3:PutObject e s3:AbortMultipartUpload. Cada pedido é assinado com a assinatura versão 4 (AWS4-HMAC-SHA256), com o
+s3:PutObject e s3:AbortMultipartUpload, e Destino.pedir recusa, antes de sair, o pedido que não está em FORMAS. Cada pedido é assinado com a assinatura versão 4 (AWS4-HMAC-SHA256), com o
 SHA-256 do corpo dentro da assinatura: o arquivo é lido duas vezes, uma para a soma e outra para o envio, e o destino
 recusa o que chegar diferente do que foi assinado. Serve para qualquer serviço que fale o protocolo do S3, com o
 endereço por caminho (https://servico/bucket/chave) ou por nome (https://bucket.servico/chave).
@@ -26,6 +26,14 @@ BUCKET = re.compile(r'[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]')
 REGIAO = re.compile(r'[a-z0-9][a-z0-9-]{0,31}')
 PREFIXO = re.compile(r'[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(?:/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,7}')
 ENVIO = re.compile(rb'<UploadId>([^<]{1,1024})</UploadId>')
+# Tudo o que o painel pode pedir a um bucket: o método e os nomes da consulta, em ordem. O DELETE da lista desfaz um
+# envio em partes que não foi concluído, que não é objeto. Apagar ou ler objeto, apagar vários, mexer no bucket e nas
+# regras dele não estão aqui, e por isso não saem do painel por nenhum caminho: tela, rotina, terminal ou cópia.
+FORMAS = {
+    'PUT': ((), ('partNumber', 'uploadId')),
+    'POST': (('uploads',), ('uploadId',)),
+    'DELETE': (('uploadId',),),
+}
 
 
 def codificar(texto):
@@ -81,8 +89,12 @@ class Destino:
         self.ligacao.close()
 
     def pedir(self, metodo, chave, consulta=(), corpo=b'', soma=None, tamanho=None, extras=None):
+        consulta = list(consulta)
+        if (tuple(sorted(nome for nome, _ in consulta)) not in FORMAS.get(metodo, ()) or not chave.strip('/')
+                or any(nome == 'uploadId' and not valor for nome, valor in consulta)):
+            raise saida.Falha('proibido')
         caminho = self.raiz + '/' + '/'.join(codificar(parte) for parte in chave.split('/'))
-        cabecalhos = assinar(metodo, caminho, list(consulta), {'Host': self.host, **(extras or {})},
+        cabecalhos = assinar(metodo, caminho, consulta, {'Host': self.host, **(extras or {})},
                              soma or hashlib.sha256(corpo).hexdigest(), self.regiao, self.chave_id, self.chave_secreta)
         cabecalhos['content-length'] = str(len(corpo) if tamanho is None else tamanho)
         if consulta:

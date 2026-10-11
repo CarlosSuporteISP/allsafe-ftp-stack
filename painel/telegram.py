@@ -18,6 +18,7 @@ TOKEN = re.compile(r'[0-9]{6,12}:[A-Za-z0-9_-]{30,64}')
 CONVERSA = re.compile(r'-?[0-9]{1,20}|@[A-Za-z][A-Za-z0-9_]{4,31}')
 LEGENDA_MAX = 1024     # caracteres da legenda de um arquivo
 TEXTO_MAX = 4096       # caracteres de uma mensagem
+OPERACOES = ('sendDocument', 'sendMessage')   # as duas da API de bot que o painel chama; nenhuma lê nem apaga
 ESPERA_MAX = 30        # segundos que o painel aceita esperar quando a API pede para ir mais devagar
 
 
@@ -39,6 +40,8 @@ class Bot:
         self.ligacao.close()
 
     def chamar(self, operacao, tipo, corpo, tamanho):
+        if operacao not in OPERACOES:
+            raise saida.Falha('proibido')
         for tentativa in (1, 2):
             codigo, _, dados = saida.pedir(self.ligacao, 'POST', self.base + operacao,
                                            {'Content-Type': tipo, 'Content-Length': str(tamanho)}, corpo)

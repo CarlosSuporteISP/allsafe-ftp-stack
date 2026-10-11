@@ -240,7 +240,7 @@ def amostrar():
         with TRAVA:
             PROPRIO.clear()
             PROPRIO.update(proprio or {})
-        por_container = {nome: (leitura['cpu'], leitura['memoria']) if leitura else (None, None)
+        por_container = {nome: (leitura['cpu'], leitura['memoria'], leitura['contido']) if leitura else (None, None, None)
                          for nome, leitura in containers()}
         with TRAVA:
             HISTORICO.append((uso, usada, recebendo, enviando, por_container))
@@ -253,6 +253,7 @@ def iniciar():
 
 def historico():
     """As amostras guardadas, da mais antiga para a mais nova: (processador %, memória %, recebendo, enviando e,
-    por container, o processador em núcleos e a memória em bytes)."""
+    por container, o processador em núcleos, a memória em bytes e o contador de vezes em que o limite de processador
+    o segurou desde que ele subiu)."""
     with TRAVA:
         return list(HISTORICO)

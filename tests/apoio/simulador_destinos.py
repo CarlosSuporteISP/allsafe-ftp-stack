@@ -143,7 +143,7 @@ class Pedido(http.server.BaseHTTPRequestHandler):
             bucket, chave, estilo = host.split('.')[0], urllib.parse.unquote(caminho[1:]), 'host'
         else:
             (bucket, _, chave), estilo = urllib.parse.unquote(caminho[1:]).partition('/'), 'caminho'
-        campos = {'bucket': bucket, 'chave': chave, 'estilo': estilo}
+        campos = {'bucket': bucket, 'chave': chave, 'estilo': estilo, 'consulta': sorted(nomes)}
         parte = self.command == 'PUT' and set(nomes) == {'partNumber', 'uploadId'} and nomes['partNumber'].isdigit()
         guardado = tempfile.TemporaryFile() if parte else None
         try:
@@ -210,7 +210,7 @@ class Pedido(http.server.BaseHTTPRequestHandler):
             if self.command == 'POST' and set(nomes) == {'uploadId'}:
                 return self.concluir(nomes['uploadId'], envio, campos)
         # Ler, listar e apagar não são do painel: a linha fica, e a etapa falha se ela aparecer.
-        return self.erro_s3(405, 'MethodNotAllowed', op='outra', consulta=sorted(nomes), **campos)
+        return self.erro_s3(405, 'MethodNotAllowed', op='outra', **campos)
 
     def concluir(self, identificador, envio, campos):
         """O fim de um envio em partes: a lista pedida precisa ser a das partes recebidas, na ordem."""
