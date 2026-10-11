@@ -11,8 +11,8 @@
 
 Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Version](https://img.shields.io/badge/version-0.32.0-blue)
-![Status](https://img.shields.io/badge/status-in_development-yellow)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Status](https://img.shields.io/badge/status-stable_LTS-brightgreen)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -25,7 +25,7 @@ Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf
 
 <a href="doc/en/images/painel-principal.png"><img src="doc/en/images/painel-principal.png" alt="Overview tab with the menu on the left, in two groups, the FTP server band, which says Up and TLS required on sign-in, the four measurements Users, Space used, Last upload and FTP certificate, each with the shortcut to the detail, the Server and containers card, with the CPU and the memory of the server and of the containers, the charts Files received per day, Last upload per user and Space per folder, the Recent activity card, with the last six records, and the Details to set up the device card" width="100%"></a>
 
-<sub><b>v0.32.0</b> · web panel, Overview tab · captured on 2026-10-11</sub>
+<sub><b>v1.1.0</b> · web panel, Overview tab · captured on 2026-10-11</sub>
 
 <!-- diagrama: doc/en/diagrams/overview-diagram.mmd -->
 ```mermaid
@@ -41,7 +41,7 @@ flowchart LR
 ```
 <sub>Level 1 · Diagram · [source](doc/en/diagrams/)</sub>
 
-<sub><b>v0.29.0</b> · stack overview · 2026-10-09</sub>
+<sub><b>v0.48.0</b> · stack overview · 2026-10-09</sub>
 
 </div>
 
@@ -131,7 +131,7 @@ The web panel, tab by tab. The Overview tab is the image at the top of this page
 | <a href="doc/en/images/aba-meus-arquivos.png"><img src="doc/en/images/aba-meus-arquivos.png" alt="My files screen of the user olt-centro, with the Full profile, with the folders 2026-09 and 2026-10 and a configuration file, the automatic cleanup warning above the list, the Open or Download, Rename and Delete buttons on each row, the New folder and Upload file cards and, in the menu, only the My files tab, the PT and EN buttons, the name of the user and the Sign out button" width="100%"></a> | |
 | **My files** — the FTP user sees their own folder and does in it what their profile allows | |
 
-<sub><b>v0.32.0</b> · web panel, one screenshot per tab · captured on 2026-10-11</sub>
+<sub><b>v1.1.0</b> · web panel, one screenshot per tab · captured on 2026-10-11</sub>
 
 Every screen, menu by menu, with the explanation of each one: [application screenshots](doc/en/application/README.md).
 
@@ -538,7 +538,7 @@ Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python and Bash, with the 
 <details>
 <summary>Weight of the languages and of the services, measured — click to expand</summary>
 
-Measured on 2026-10-05, on version `0.20.1`, with the three containers idle, on the `small` size:
+Measured on 2026-10-05, on version `0.32.0`, with the three containers idle, on the `small` size:
 
 | Service | Language or program | Memory in use | Limit of the size | Image |
 |---|---|---|---|---|
@@ -548,13 +548,13 @@ Measured on 2026-10-05, on version `0.20.1`, with the three containers idle, on 
 
 - **Total when idle:** about 19 MiB of memory and processor close to zero.
 - **Panel response:** the sign-in screen, with a new HTTPS connection at every request, answered in 2.8 ms at the median of 30 requests (from 2.4 ms to 3.8 ms).
-- **Web front end, measured on 2026-10-07, on version `0.26.1`:** the whole sign-in screen (page, style and three images) arrived in 8.8 ms over a single connection, on HTTP/2; before, it was 11.0 ms over five connections. The style went from 6957 to 2175 bytes on the network. The click made after 20 and after 45 seconds idle took 0.8 ms, over the same connection; before, 2.0 ms, with a new connection. The nginx memory stayed at 3.5 MiB.
+- **Web front end, measured on 2026-10-07, on version `0.42.0`:** the whole sign-in screen (page, style and three images) arrived in 8.8 ms over a single connection, on HTTP/2; before, it was 11.0 ms over five connections. The style went from 6957 to 2175 bytes on the network. The click made after 20 and after 45 seconds idle took 0.8 ms, over the same connection; before, 2.0 ms, with a new connection. The nginx memory stayed at 3.5 MiB.
 - **No third-party dependency:** the panel installs no PyPI package and has no JavaScript; what there is to update is the base image and the Debian packages.
-- **Size of the code, on version `0.30.0`:** 7302 lines of Python in 30 modules, of which 1750 are the catalog of the English texts, 1073 of CSS, 7710 of Bash and 708 of Perl, counting the test suite.
+- **Size of the code, on version `0.51.0`:** 7302 lines of Python in 30 modules, of which 1750 are the catalog of the English texts, 1073 of CSS, 7710 of Bash and 708 of Perl, counting the test suite.
 - **Where the weight of the images comes from:** from the `debian:13-slim` base, with 119 MB, common to the three.
-- **FTP image, measured on 2026-10-09, on version `0.29.0`:** it went from 208 MB to 218 MB with `age`, which encrypts the backup copy. The other two did not change, and nothing new is installed on the host.
-- **Panel with hundreds of users, measured on 2026-10-09, on version `0.29.2`:** with 501 users in the database, the Users tab (297 KB of page) answers in 8.5 ms and the Overview in 5.1 ms, at the median of 30 requests; before, it was 33.2 ms and 17.0 ms, because the folder of each user was compared with that of all the others. Reading the user database takes 1.2 ms and is still done at every request.
-- **Redesigned panel, measured on 2026-10-10, on version `0.30.0`:** with 10 users, the seven administrator screens answer in 2.3 ms to 3.7 ms at the median of 30 requests. With 501 users, the Users tab (491 KB of page) answers in 10.8 ms, the Files tab (355 KB) in 7.8 ms and the Overview in 6.2 ms; in English, the difference is up to 0.4 ms. When idle, the three services add up to about 27 MiB of memory, and the images are still 218 MB, 258 MB and 145 MB.
+- **FTP image, measured on 2026-10-09, on version `0.48.0`:** it went from 208 MB to 218 MB with `age`, which encrypts the backup copy. The other two did not change, and nothing new is installed on the host.
+- **Panel with hundreds of users, measured on 2026-10-09, on version `0.50.0`:** with 501 users in the database, the Users tab (297 KB of page) answers in 8.5 ms and the Overview in 5.1 ms, at the median of 30 requests; before, it was 33.2 ms and 17.0 ms, because the folder of each user was compared with that of all the others. Reading the user database takes 1.2 ms and is still done at every request.
+- **Redesigned panel, measured on 2026-10-10, on version `0.51.0`:** with 10 users, the seven administrator screens answer in 2.3 ms to 3.7 ms at the median of 30 requests. With 501 users, the Users tab (491 KB of page) answers in 10.8 ms, the Files tab (355 KB) in 7.8 ms and the Overview in 6.2 ms; in English, the difference is up to 0.4 ms. When idle, the three services add up to about 27 MiB of memory, and the images are still 218 MB, 258 MB and 145 MB.
 
 </details>
 
@@ -691,6 +691,7 @@ At the root are `compose.yaml`, the `Dockerfile` and the day-to-day commands (`d
 | [`.env.example`](.env.example) | Configuration template, copied to `.env` |
 | `.secrets/` | One file per secret, named after what it keeps, and the `LEIAME.txt` that explains each one (ignored by Git) |
 | [`VERSION`](VERSION) | Current version, in one place only |
+| [`.github/repo.meta`](.github/repo.meta) | Description and topics of the repository and the long-term support lines, applied at each publication |
 | [`CHANGELOG.md`](CHANGELOG.md) | History of changes per version, in Portuguese |
 | [`LICENSE`](LICENSE) | Apache 2.0 license: it covers the code, the configuration, the scripts, the tests and the documentation |
 | [`NOTICE`](NOTICE) | Notice of authorship, which goes with every copy and every derived version |
@@ -738,9 +739,9 @@ The plan for creating and changing the stack (phases, tests, evidence and progre
 
 ## 🏷️ Version
 
-**0.32.0**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
+**1.1.0**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
 
-The version advances at every publication: `0.x` is the construction phase, one version per phase of the plan; **`1.0.0` is the first version ready for production** and opens the long-term line `1.x`. What changed in each version is in [`CHANGELOG.md`](CHANGELOG.md).
+The version advances at every publication, always in the middle number (`1.1.0`, `1.2.0`) or in the first one: the correction number stays at zero. `0.x` was the construction phase; **`1.0.0` is the first version ready for production** and opens the long-term support (LTS) line `1.x`. The versions were renumbered on 2026-10-11: [`CHANGELOG.md`](CHANGELOG.md) has what changed in each one and the table with the numbers from before.
 
 ---
 

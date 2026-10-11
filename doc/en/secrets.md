@@ -130,9 +130,9 @@ chmod 600 .secrets/ftp-usuario-inicial-senha.txt
 
 ## 🔀 Installation with the old names
 
-Up to version `0.10.0` the files had other names. `./deploy.sh` recognizes the old ones and **only changes the name**, without reading, copying or changing the content: the passwords stay the same.
+Up to version `0.17.0` the files had other names. `./deploy.sh` recognizes the old ones and **only changes the name**, without reading, copying or changing the content: the passwords stay the same.
 
-| Name up to `0.10.0` | Name from `0.11.0` on |
+| Name up to `0.17.0` | Name from `0.18.0` on |
 |---|---|
 | `ftp_password.txt` | `ftp-usuario-inicial-senha.txt` |
 | `painel_password.txt` | `painel-admin-inicial-senha.txt` |
@@ -142,7 +142,7 @@ Up to version `0.10.0` the files had other names. `./deploy.sh` recognizes the o
 ./deploy.sh
 ```
 
-**Expected result:** one line `Convertido: <nome antigo> virou <nome novo>.` for each file that existed, and the three containers `healthy` at the end. Coming from `0.10.0`, the FTP and panel containers are recreated once, because the name of the secret inside them also changed, and the nginx one stays the same; coming from an earlier version, the three are recreated, because the images change. Data, users and passwords stay as they were.
+**Expected result:** one line `Convertido: <nome antigo> virou <nome novo>.` for each file that existed, and the three containers `healthy` at the end. Coming from `0.17.0`, the FTP and panel containers are recreated once, because the name of the secret inside them also changed, and the nginx one stays the same; coming from an earlier version, the three are recreated, because the images change. Data, users and passwords stay as they were.
 
 With `./deploy.sh --check-only` nothing is changed: only the warning `AVISO: esta instalação usa nomes antigos` comes out. If the old file and the new one exist at the same time, the new one holds and the script warns you to check and delete the old one.
 
@@ -170,7 +170,7 @@ With `./deploy.sh --check-only` nothing is changed: only the warning `AVISO: est
 - **No password in a variable:** the `.env` keeps only what is adjustable. `deploy.sh` refuses `FTP_PASSWORD`, `PAINEL_PASSWORD` and `PAINEL_PASSWORD_HASH` in the `.env` and the containers refuse those variables.
 - **Reading:** [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh) reads the file without the line breaks, validates the minimum of 12 characters and delivers the password to `pure-pw` through `stdin`. At the first start it creates the user (`pure-pw useradd`); at the following ones, it rewrites the password (`pure-pw passwd`), because `pure-pw usermod` does not change the password. In both cases it passes `-C FTP_MAX_CLIENTS`, which sets the cost of the `argon2id` hash: [Security](security.md#custo-das-senhas).
 - **Change in the panel:** each time it applies the secret, the entrypoint writes to `/auth/senha-inicial.aplicada` a fingerprint of it (`sha512-crypt` with its own salt, `0600`), never the password. The change in the panel or with `manage-user.sh passwd` writes `/auth/senha-inicial.trocada`, with the user name only. At start, with the mark present and the fingerprint equal to that of the secret, the password in the user database is kept and the log says `mantida a senha trocada pelo painel`; with a different secret, it is applied and the mark goes away. Both files go into the backup, with the user database.
-- **Created once:** when creating the initial user, the entrypoint writes `/auth/usuario-inicial.criado` (`0600`), with its name only. With the mark present and the user out of the database, it is not recreated, and the log says `removido pelo administrador; não é recriado`. An installation earlier than `0.27.0` gets the mark at the first start, with the user that already exists. The mark goes into the backup, with the user database.
+- **Created once:** when creating the initial user, the entrypoint writes `/auth/usuario-inicial.criado` (`0600`), with its name only. With the mark present and the user out of the database, it is not recreated, and the log says `removido pelo administrador; não é recriado`. An installation earlier than `0.44.0` gets the mark at the first start, with the user that already exists. The mark goes into the backup, with the user database.
 - **Disposal:** before the `exec` of `pure-ftpd`, the entrypoint does an `unset` of the internal variable of the password.
 - **Panel:** the hash is `scrypt` (N=2^15, r=8, p=1, random salt of 16 bytes), computed inside the panel image, in a disposable container without network. The secret `painel_admin_inicial_senha_hash` reaches **only** the `painel` service, at `/run/secrets/painel_admin_inicial_senha_hash`, read-only, and it is only read at the start in which no administrator exists yet. The current password of each administrator stays as a hash in `DATA_DIR/painel/administradores` (`0600`, owned by `root`), outside `.secrets/`. `painel-admin-inicial-senha.txt` is never mounted in a container.
 - **Key of the backup copy:** `age` pair (X25519), generated by `age-keygen` inside the FTP image, in a disposable container without network; nothing is installed on the host. `deploy.sh` only creates the pair when **neither** of the two files exists, never rewrites the private one and, at every run, remakes the public one from it. With the public one only, the server makes copies and does not restore. Neither of the two is mounted in the services: the public one goes to the container of the copy, and the private one, only to the one of the restore, read-only.

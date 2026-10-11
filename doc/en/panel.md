@@ -181,7 +181,7 @@ Profile of each account, chosen in **New user** and changed in **Edit**, **Profi
 | Upload only | Uploads and creates folders. Does not list and does not download anything, not even what it uploaded itself | File upload screen: the data to upload by FTP and, with the administrator's permission, the upload through the panel |
 | Read only | Only lists and downloads | My files screen: browses and downloads |
 
-- A user created before `0.30.0`, or with no profile given, is **Full**: nothing changes for whoever already uses the stack.
+- A user created before `0.51.0`, or with no profile given, is **Full**: nothing changes for whoever already uses the stack.
 - **Upload keeps what it received.** The file becomes the server's as soon as it finishes arriving: from then on the user does not delete it, does not rename it and does not overwrite it. A device that always uploads with the same file name needs the Full profile, or a name with the date.
 - **Upload only does not see the backups.** The account signs in to an entry area of its own, outside the backup folder, and the server takes each file to the user's folder as soon as it finishes arriving. Whoever has the password of that device uploads, and nothing else: they do not list, download, delete or rename any file already received.
 - **Read only writes nothing:** neither file nor folder, at any level of its folder.
@@ -689,7 +689,7 @@ Rules:
 
 - **File:** `DATA_DIR/painel/administradores` (`/painel/administradores` in the container), `0600`, owned by `root`, one line `nome:hash` per administrator. Only the `scrypt` hash is written; the password in text stays nowhere.
 - **First startup:** with no administrator in the file, the panel creates the one in `PAINEL_ADMIN_USER` with the hash of the secret `painel_admin_inicial_senha_hash` and records `admin_inicial_criado`. After that, the file rules.
-- **Installation earlier than `0.13.0`:** at the first startup after the update, the panel creates the administrator `admin` (or the name in `PAINEL_ADMIN_USER`) with the same password that was already valid.
+- **Installation earlier than `0.22.0`:** at the first startup after the update, the panel creates the administrator `admin` (or the name in `PAINEL_ADMIN_USER`) with the same password that was already valid.
 - **Writing:** the panel writes a file alongside and swaps it at once, one change at a time: a crash in the middle does not leave the panel without an administrator.
 - **Current password refused:** it answers `403`, records `admin_senha_atual_recusada` and counts in the same limit as the sign-in screen: five refusals in 15 minutes block the address (`429`).
 - **Sessions:** the password change, the name change and the removal end the sessions of the administrator changed. When the change is on one's own account, the session in use goes on and the others drop.

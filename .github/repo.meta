@@ -1,0 +1,4 @@
+# Repository description, topics and long-term support lines, applied at each publication.
+DESC="Dedicated FTP server (Pure-FTPd) with FTPS, virtual users, chroot and a secure web panel behind nginx, for backups and files on a private network."
+TOPICS="backup,docker,docker-compose,ftp,ftps,isp,nginx,pure-ftpd,self-hosted"
+LTS="1"

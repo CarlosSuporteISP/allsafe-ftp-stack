@@ -18,7 +18,7 @@ usage() {
 Uso: scripts/restaurar.sh <cópia> [--sim]
      scripts/restaurar.sh --listar
   <cópia>    arquivo .tar.gz.age feito pelo scripts/backup.sh: o caminho ou só o nome, procurado em BACKUP_DIR
-             (a cópia .tar.gz, sem cifra, feita antes da 0.29.0, também é aceita)
+             (a cópia .tar.gz, sem cifra, feita antes da 0.48.0, também é aceita)
   --sim      não pede confirmação (uso em automação)
   --listar   mostra as cópias que existem em BACKUP_DIR
 O conteúdo atual de dados/, auth/, certs/ e painel/ é substituído pelo da cópia. Antes, o estado
@@ -95,7 +95,7 @@ grep -q -x -F 'auth/pureftpd.passwd' <<< "$lista" \
 
 echo "Cópia: $arquivo ($(du -h -- "$arquivo" | cut -f1), $(wc -l <<< "$lista") itens, $soma_texto)"
 [[ "$cifrada" == true ]] \
-  || echo "AVISO: esta cópia não é cifrada (feita antes da 0.29.0). Depois de restaurar, faça uma nova e apague a antiga." >&2
+  || echo "AVISO: esta cópia não é cifrada (feita antes da 0.48.0). Depois de restaurar, faça uma nova e apague a antiga." >&2
 if [[ "$sim" == false ]]; then
   [[ -t 0 ]] || die "restauração sem terminal exige --sim."
   echo "O conteúdo atual de dados/, auth/, certs/ e painel/ em $data_dir será substituído pelo da cópia."

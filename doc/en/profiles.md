@@ -83,7 +83,7 @@ The numbers are **starting points**, not a guarantee of capacity. A backup FTP r
 
 `deploy.sh --size <profile>` copies each `KEY=VALUE` from `profiles/<profile>.env` to the `.env` (it replaces the line of the key or adds it at the end) and writes `FTP_PROFILE=<profile>`. Compose reads only the `.env`: the limits also hold for a direct `docker compose up -d`. Changing the profile recreates the FTP container, because the published port range changes; the data stays. The profiles do not touch the panel or nginx: their limits are the same at any size.
 
-> Installed with `--size medium` or `large` before version `0.4.0`? Run `./deploy.sh --size <profile>` once to write the profile to the `.env`.
+> Installed with `--size medium` or `large` before version `0.6.0`? Run `./deploy.sh --size <profile>` once to write the profile to the `.env`.
 
 </details>
 
@@ -144,7 +144,7 @@ Docker publishes the passive ports one by one. On the large profiles, starting, 
 | `xlarge` | 800 | 380 s |
 | `extended` | 1600 | 580 s |
 
-The maximum wait is 180 s plus a quarter of a second per passive port. At the gate of version `0.5.0`, on a host with 16 CPUs, the installation of `small` finished in 25 s and the change to `extended` in about 200 s; your time varies with the machine. Going back from `extended` to a smaller profile or removing the stack also takes minutes, because Docker undoes the same ports one by one. Schedule the change of profile outside the backup window.
+The maximum wait is 180 s plus a quarter of a second per passive port. At the gate of version `0.7.0`, on a host with 16 CPUs, the installation of `small` finished in 25 s and the change to `extended` in about 200 s; your time varies with the machine. Going back from `extended` to a smaller profile or removing the stack also takes minutes, because Docker undoes the same ports one by one. Schedule the change of profile outside the backup window.
 
 ---
 

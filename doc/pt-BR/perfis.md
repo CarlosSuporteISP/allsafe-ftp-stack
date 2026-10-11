@@ -84,7 +84,7 @@ Os números são **pontos de partida**, não garantia de capacidade. FTP de back
 
 O `deploy.sh --size <perfil>` copia cada `CHAVE=VALOR` de `profiles/<perfil>.env` para o `.env` (troca a linha da chave ou acrescenta no fim) e grava `FTP_PROFILE=<perfil>`. O Compose lê só o `.env`: os limites valem também para um `docker compose up -d` direto. Trocar de perfil recria o container do FTP, porque a faixa de portas publicada muda; os dados ficam. Os perfis não mexem no painel nem no nginx: os limites deles são os mesmos em qualquer porte.
 
-> Instalou com `--size medium` ou `large` antes da versão `0.4.0`? Rode uma vez `./deploy.sh --size <perfil>` para gravar o perfil no `.env`.
+> Instalou com `--size medium` ou `large` antes da versão `0.6.0`? Rode uma vez `./deploy.sh --size <perfil>` para gravar o perfil no `.env`.
 
 </details>
 
@@ -145,7 +145,7 @@ O Docker publica as portas passivas uma a uma. Nos perfis grandes, subir, trocar
 | `xlarge` | 800 | 380 s |
 | `extended` | 1600 | 580 s |
 
-A espera máxima é de 180 s mais um quarto de segundo por porta passiva. No portão da versão `0.5.0`, em um host de 16 CPUs, a instalação do `small` terminou em 25 s e a troca para o `extended` em cerca de 200 s; o seu tempo varia com a máquina. Voltar do `extended` para um perfil menor ou remover a stack também leva minutos, porque o Docker desfaz as mesmas portas uma a uma. Programe a troca de perfil para fora da janela de backup.
+A espera máxima é de 180 s mais um quarto de segundo por porta passiva. No portão da versão `0.7.0`, em um host de 16 CPUs, a instalação do `small` terminou em 25 s e a troca para o `extended` em cerca de 200 s; o seu tempo varia com a máquina. Voltar do `extended` para um perfil menor ou remover a stack também leva minutos, porque o Docker desfaz as mesmas portas uma a uma. Programe a troca de perfil para fora da janela de backup.
 
 ---
 

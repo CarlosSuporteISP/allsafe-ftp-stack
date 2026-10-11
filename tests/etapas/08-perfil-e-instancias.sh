@@ -30,7 +30,7 @@ r_a="$(ftp_curl tls equip09 "$W/u6.senha" "$F/")"; r_ab="$(ftp_curl tls equip09 
 painel_b="$(c -o /dev/null -w '%{http_code}' "https://$IP:$((PAINEL_PORTA + 1))/saude")"
 sub_b="$(docker network inspect -f '{{range .IPAM.Config}}{{.Subnet}}{{end}}' "$NOME-b-network" 2>/dev/null)"
 
-# Conversão dos nomes antigos, na segunda instância: ela volta aos nomes usados até a 0.10.0 (a variável
+# Conversão dos nomes antigos, na segunda instância: ela volta aos nomes usados até a 0.17.0 (a variável
 # FTP_PUBLIC_IP e os três arquivos *_password*.txt) e o deploy.sh tem de converter sozinho, sem perder nada.
 SB="$T/segredos-b"; b_ids="$(docker inspect -f '{{.Id}}' "$NOME-b" "$NOME-b-painel" "$NOME-b-nginx" 2>/dev/null | cut -c1-12 | tr '\n' ' ')"
 sed -i 's/^FTP_PASSIVE_IP=/FTP_PUBLIC_IP=/' "$ENVB"

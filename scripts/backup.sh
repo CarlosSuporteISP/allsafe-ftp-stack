@@ -61,7 +61,7 @@ if [[ "$listar" == true ]]; then
   echo "Cópias em $backup_dir:"
   for copia in "${copias[@]}"; do
     sem_cifra=""
-    [[ "$copia" == *.age ]] || sem_cifra="  (sem cifra: feita antes da 0.29.0)"
+    [[ "$copia" == *.age ]] || sem_cifra="  (sem cifra: feita antes da 0.48.0)"
     printf '  %6s  %s%s\n' "$(du -h -- "$copia" | cut -f1)" "$(basename -- "$copia")" "$sem_cifra"
   done
   exit 0

@@ -136,7 +136,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 
 > **Para que serve `FTP_PASSIVE_IP`?** No modo passivo, o servidor diz ao cliente em qual IP e em qual porta abrir a conexão de dados. O Pure-FTPd, dentro do container, só conhece o endereço da rede Docker, que o equipamento não alcança; por isso a stack informa a ele qual endereço anunciar (opção `-P`). O valor é o IP **privado** do host pelo qual os equipamentos chegam, em geral o mesmo de `FTP_BIND_IP`. Só é diferente quando existe NAT interno entre o equipamento e o servidor. IP de internet é recusado.
 
-> **Instalação anterior à `0.10.0`:** a variável se chamava `FTP_PUBLIC_IP`. O `./deploy.sh` troca o nome sozinho, mantém o valor e guarda o `.env` de antes em `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env`. Até ele rodar, os comandos que chamam o Compose param com `defina FTP_PASSIVE_IP no .env`. Os arquivos de `.secrets/` também mudaram de nome, na `0.11.0`, e são convertidos na mesma execução: [Segredos](segredos.md#nomes-antigos).
+> **Instalação anterior à `0.17.0`:** a variável se chamava `FTP_PUBLIC_IP`. O `./deploy.sh` troca o nome sozinho, mantém o valor e guarda o `.env` de antes em `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env`. Até ele rodar, os comandos que chamam o Compose param com `defina FTP_PASSIVE_IP no .env`. Os arquivos de `.secrets/` também mudaram de nome, na `0.18.0`, e são convertidos na mesma execução: [Segredos](segredos.md#nomes-antigos).
 
 ---
 

@@ -127,7 +127,7 @@ data_dir="$(env_valor DATA_DIR)"
 secrets_dir="$(env_valor SECRETS_DIR ./.secrets)"
 [[ "$data_dir" == /* ]] || die "DATA_DIR tem de ser um caminho absoluto em $env_file (veja o .env.example)"
 
-# Nomes antigos, de instalação feita até a 0.10.0: a variável FTP_PUBLIC_IP e os três arquivos de
+# Nomes antigos, de instalação feita até a 0.17.0: a variável FTP_PUBLIC_IP e os três arquivos de
 # segredo. São convertidos aqui, sem perguntas: o .env é copiado antes para BACKUP_DIR e os arquivos
 # de segredo só mudam de nome (o conteúdo não é lido nem copiado). Com --check-only nada é alterado.
 segredos_renomeados=(

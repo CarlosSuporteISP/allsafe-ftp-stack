@@ -181,7 +181,7 @@ Perfil de cada conta, escolhido em **Novo usuário** e trocado em **Editar**, ca
 | Só envio | Envia e cria pasta. Não lista e não baixa nada, nem o que ele mesmo enviou | Tela Envio de arquivos: os dados para enviar por FTP e, com a permissão do administrador, o envio pelo painel |
 | Leitura | Só lista e baixa | Tela Meus arquivos: navega e baixa |
 
-- Usuário criado antes da `0.30.0`, ou sem perfil informado, é **Completo**: nada muda para quem já usa a stack.
+- Usuário criado antes da `0.51.0`, ou sem perfil informado, é **Completo**: nada muda para quem já usa a stack.
 - **Envio guarda o que recebeu.** O arquivo passa a ser do servidor assim que termina de chegar: daí em diante o usuário não o apaga, não o renomeia e não grava por cima. Equipamento que envia sempre com o mesmo nome de arquivo precisa do perfil Completo, ou de um nome com data.
 - **Só envio não vê os backups.** A conta entra em uma área de entrada só dela, fora da pasta dos backups, e o servidor leva cada arquivo para a pasta do usuário assim que ele termina de chegar. Quem tem a senha desse equipamento envia, e mais nada: não lista, não baixa, não apaga e não troca o nome de nenhum arquivo já recebido.
 - **Leitura não grava nada:** nem arquivo, nem pasta, em nenhum nível da pasta dele.
@@ -689,7 +689,7 @@ Regras:
 
 - **Arquivo:** `DATA_DIR/painel/administradores` (`/painel/administradores` no container), `0600`, do `root`, uma linha `nome:hash` por administrador. Só o hash `scrypt` é gravado; a senha em texto não fica em lugar nenhum.
 - **Primeira subida:** sem nenhum administrador no arquivo, o painel cria o de `PAINEL_ADMIN_USER` com o hash do segredo `painel_admin_inicial_senha_hash` e registra `admin_inicial_criado`. Depois disso, quem manda é o arquivo.
-- **Instalação anterior à `0.13.0`:** na primeira subida depois da atualização, o painel cria o administrador `admin` (ou o nome de `PAINEL_ADMIN_USER`) com a mesma senha que já valia.
+- **Instalação anterior à `0.22.0`:** na primeira subida depois da atualização, o painel cria o administrador `admin` (ou o nome de `PAINEL_ADMIN_USER`) com a mesma senha que já valia.
 - **Gravação:** o painel escreve um arquivo ao lado e troca de uma vez, uma alteração por vez: uma queda no meio não deixa o painel sem administrador.
 - **Senha atual recusada:** responde `403`, registra `admin_senha_atual_recusada` e conta no mesmo limite da tela de entrada: cinco recusas em 15 minutos bloqueiam o endereço (`429`).
 - **Sessões:** a troca de senha, a troca de nome e a remoção encerram as sessões do administrador alterado. Quando a alteração é na própria conta, a sessão em uso continua e as outras caem.

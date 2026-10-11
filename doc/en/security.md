@@ -884,7 +884,7 @@ The step by step, in the order in which it is done:
 2. `FTP_BIND_IP` with the dedicated **private** IP and a **rule in the firewall** of the host opening only the backup sources: [private network](#rede-privada).
 3. **Panel:** change the initial password ([Secrets](secrets.md#senha-do-painel)), reduce `PAINEL_REDES_PERMITIDAS` to the administration network and open the port of the panel in the firewall only to it. With `PAINEL_BIND_IP=127.0.0.1` the panel only opens on the server itself.
 4. Review the [blocking by attempts](#bloqueio-por-tentativa) of the FTP: the default of the stack and the own limit of the users that need another one. Review the [blocking by address](#bloqueio-por-endereco) as well: the limit of errors, the hours in which they add up and the days of block.
-5. Review `FTP_MAX_CLIENTS` and the passive range according to the real number of devices: [Profiles](profiles.md). After changing the size profile, or after updating an installation older than `0.19.1`, change the password of the users that the Security tab lists in `Cost of FTP passwords`: [Cost of the FTP passwords](#custo-das-senhas).
+5. Review `FTP_MAX_CLIENTS` and the passive range according to the real number of devices: [Profiles](profiles.md). After changing the size profile, or after updating an installation older than `0.29.0`, change the password of the users that the Security tab lists in `Cost of FTP passwords`: [Cost of the FTP passwords](#custo-das-senhas).
 6. Backup copy scheduled and taken off the server, and the key that opens it kept in a vault, apart from the copies: [Backup and restore](backup.md#chave).
 7. Check that `FTP_TLS_MODE` is at `2` or `3`. If an old device does not speak TLS, follow [FTP without TLS](#ftp-sem-tls) first and prefer to exempt only its user: [per-user TLS](#tls-por-usuario).
 8. Evaluate `FTP_TLS_MODE=3`, which requires the encryption of the file as well: [Configuration](configuration.md#tls).
@@ -988,7 +988,7 @@ Everything else stays internal to the containers. The panel does not publish a p
 
 What each protection means in practice and the flowchart of the decision: [Web panel](panel.md#protecoes).
 
-> Everything above was checked at the validation gates of versions `0.3.0` (panel), `0.5.0` (nginx in front), `0.13.0` (administrators), `0.14.0` (Files tab), `0.15.0` (folders), `0.16.0` (sign-in of the FTP user), `0.17.0` (per-user TLS), `0.18.0` (logo and icon delivered by nginx), `0.19.0` (`robots.txt` and `security.txt`), `0.19.1` (no password, random password, exhaustion and direct access to the user database), `0.23.0` (user editing), `0.24.0` (renaming and deleting through the panel), `0.25.0` (limits per user), `0.26.0` (blocking by attempts on FTP), `0.26.1` (HTTP/2 and compression of the stylesheet), `0.28.0` (per-user TLS through the panel), `0.30.0` (profiles, blocking by address and language of the screens), `0.31.0` (upload through the panel, blocking of IPv6 and of prefix and automatic cleanup) and `0.32.0` (outside destinations: S3 and Telegram bot), in a test instance. The host firewall is still up to whoever operates the server.
+> Everything above was checked at the validation gates of versions `0.5.0` (panel), `0.7.0` (nginx in front), `0.22.0` (administrators), `0.23.0` (Files tab), `0.24.0` (folders), `0.25.0` (sign-in of the FTP user), `0.26.0` (per-user TLS), `0.27.0` (logo and icon delivered by nginx), `0.28.0` (`robots.txt` and `security.txt`), `0.29.0` (no password, random password, exhaustion and direct access to the user database), `0.38.0` (user editing), `0.39.0` (renaming and deleting through the panel), `0.40.0` (limits per user), `0.41.0` (blocking by attempts on FTP), `0.42.0` (HTTP/2 and compression of the stylesheet), `0.45.0` (per-user TLS through the panel), `0.51.0` (profiles, blocking by address and language of the screens), `0.52.0` (upload through the panel, blocking of IPv6 and of prefix and automatic cleanup) and `1.1.0` (outside destinations: S3 and Telegram bot), in a test instance. The host firewall is still up to whoever operates the server.
 
 ---
 
@@ -1087,7 +1087,7 @@ The password already stored does not change its cost on its own: the cost of the
 <summary>Technical detail — the computation and what was measured</summary>
 
 - **Computation:** `pure-pw useradd` and `pure-pw passwd` receive `-C FTP_MAX_CLIENTS`. The memory of `argon2id` stays at `65536 / FTP_MAX_CLIENTS` KiB, and the number of passes is chosen by `pure-pw` at each write, by the time the hash takes at that moment: that is why it varies from one user to another. On the test machine, the check stayed between half a second and one second in all the size profiles.
-- **Without the option**, `pure-pw` assumes 8 sessions: 8192 KiB and about 3 seconds of CPU per check. It was like that until `0.19.0`. On the test machine, 7 wrong passwords at the same time, from a single address, held back for about 50 seconds the sign-in of whoever had the right password; with the cost of the `small` size profile, about 8 seconds.
+- **Without the option**, `pure-pw` assumes 8 sessions: 8192 KiB and about 3 seconds of CPU per check. It was like that until `0.28.0`. On the test machine, 7 wrong passwords at the same time, from a single address, held back for about 50 seconds the sign-in of whoever had the right password; with the cost of the `small` size profile, about 8 seconds.
 - **Where it is applied:** in [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh), for the initial user, and in [`ftp/usuario.sh`](../../ftp/usuario.sh), for the users created or changed through the panel and through `manage-user.sh`. The `painel` service receives the same `FTP_MAX_CLIENTS` of the `ftp` service and passes it on to the command that writes the password.
 - **Warning of the panel:** the Security tab reads only the memory parameter of each line of the user database and compares it with that of the size profile, `65536 / FTP_MAX_CLIENTS` KiB, with the minimum of 8; the hash does not leave the file nor appear on the screen.
 
@@ -1171,7 +1171,7 @@ Where each point is explained: [FTP without TLS](#ftp-sem-tls), [Protections of 
 <details>
 <summary>Technical detail — what was measured and what stays outside the RFCs</summary>
 
-Measured on 2026-10-05, in a test instance, at version `0.20.1`; the methods, at `0.20.2`:
+Measured on 2026-10-05, in a test instance, at version `0.32.0`; the methods, at `0.33.0`:
 
 - **`FEAT` of the FTP, after `AUTH TLS`:** `UTF8`, `EPRT`, `IDLE`, `MDTM`, `SIZE`, `MFMT`, `REST STREAM`, `MLST`, `MLSD`, `PRET`, `AUTH TLS`, `PBSZ`, `PROT`, `TVFS`, `ESTA`, `PASV` and `EPSV`. The greeting brings `[privsep] [TLS]` and `No anonymous login`.
 - **TLS versions:** `openssl s_client` with TLS 1.0 and with TLS 1.1 does not complete the connection, on the FTP nor on the panel. With TLS 1.2, the panel completed with `ECDHE-ECDSA-AES256-GCM-SHA384` and the FTP with `ECDHE-RSA-CHACHA20-POLY1305`; with TLS 1.3, both with `TLS_AES_256_GCM_SHA384`.

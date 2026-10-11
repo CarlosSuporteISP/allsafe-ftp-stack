@@ -146,9 +146,9 @@ To get **a single file**, uploaded by a device, use the Files tab of the panel: 
 
 <a name="migracao"></a>
 
-## 🚚 Migrating from the named volumes (installation before 0.2.0)
+## 🚚 Migrating from the named volumes (installation before 0.3.0)
 
-Up to version `0.1.x` the data stayed in named Docker volumes (`allsafe-ftp-data`, `allsafe-ftp-auth`, `allsafe-ftp-certs`). From `0.2.0` on it stays in `DATA_DIR`. The migration **copies**, it does not move: the old volumes stay intact until you decide to delete them.
+Up to version `0.1.x` the data stayed in named Docker volumes (`allsafe-ftp-data`, `allsafe-ftp-auth`, `allsafe-ftp-certs`). From `0.3.0` on it stays in `DATA_DIR`. The migration **copies**, it does not move: the old volumes stay intact until you decide to delete them.
 
 ```bash
 docker compose down                       # 1. stops the old stack (without -v)
@@ -230,13 +230,13 @@ The data, the users, the passwords and the certificates stay in `DATA_DIR` and i
 
 ```bash
 ./deploy.sh --remover      # 1. current version: takes down the three containers and the network; the data stays
-git checkout v0.4.0        # 2. takes the files of the project back to the tag of the previous version
+git checkout v0.6.0        # 2. takes the files of the project back to the tag of the previous version
 ./deploy.sh                # 3. starts the previous version with the same data
 ```
 
 **Expected result:** the containers of the previous version in `healthy`, with the same users, passwords and certificates.
 
-> ⚠️ `FTP_TLS_MODE=0` only exists from `0.5.0` on: before step 3, set the variable back to `1`, `2` or `3`. The new keys of the `.env` (the `NGINX_*` ones) are ignored by the previous version and can stay.
+> ⚠️ `FTP_TLS_MODE=0` only exists from `0.7.0` on: before step 3, set the variable back to `1`, `2` or `3`. The new keys of the `.env` (the `NGINX_*` ones) are ignored by the previous version and can stay.
 
 </details>
 
