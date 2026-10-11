@@ -1,5 +1,7 @@
 # 🏷️ Marca ALL-SAFE — allsafe-ftp-stack
 
+🌐 [English](TRADEMARK.md) · **Português (Brasil)**
+
 ↩ [README do projeto](README.pt-BR.md) · [Licença](LICENSE) · [Aviso de autoria](NOTICE)
 
 ## 💡 Em poucas palavras

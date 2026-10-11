@@ -1,0 +1,35 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Source"]
+        equip@{ shape: hex, label: "Network device<br>FTP client" }
+    end
+    subgraph ENTRADA["Entry"]
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+        tls@{ shape: diam, label: "asked for<br>TLS?" }
+        cert@{ shape: doc, label: "certificate<br>pure-ftpd.pem" }
+        logs@{ shape: docs, label: "container log<br>logins and transfers" }
+    end
+    subgraph AUTH["Authentication"]
+        login@{ shape: diam, label: "user and password<br>match?" }
+        puredb@{ shape: cyl, label: "PureDB<br>virtual users" }
+    end
+    subgraph DADOS["Data"]
+        sessao@{ shape: rect, label: "chroot session<br>locked to the folder" }
+        dados@{ shape: lin-cyl, label: "/data<br>user folder" }
+    end
+    subgraph RESULTADO["Result"]
+        fim@{ shape: stadium, label: "backup stored" }
+        recusa@{ shape: stadium, label: "connection refused" }
+    end
+
+    equip -- "1 · connects, TCP 21" --> ftp
+    ftp -- "2 · requires AUTH TLS, by default" --> tls
+    tls -- "3a · yes: user and password" --> login
+    tls -- "3b · no: refused by default" --> recusa
+    login -. "4 · looks up the user" .-> puredb
+    login -- "5a · yes: opens the session" --> sessao
+    login -- "5b · no: 5 wrong passwords block" --> recusa
+    sessao -- "6 · uploads the file, passive range of the profile" --> dados
+    dados -- "7 · file written" --> fim
+    ftp -. "presents" .-> cert
+    ftp -. "logs logins and transfers" .-> logs

@@ -1,0 +1,10 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    usuario@{ shape: person, label: "User<br>saw the problem" }
+    estado@{ shape: console, label: "docker compose ps<br>state and health" }
+    logs@{ shape: docs, label: "docker compose logs<br>FALHA message" }
+    tabela@{ shape: doc, label: "tables in this guide<br>cause and fix" }
+    valida@{ shape: console, label: "validate.sh --runtime<br>checks again" }
+    fim@{ shape: stadium, label: "service healthy" }
+
+    usuario --> estado --> logs --> tabela --> valida --> fim

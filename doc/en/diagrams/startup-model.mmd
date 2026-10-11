@@ -1,0 +1,49 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph OPERACAO["Operation"]
+        operador@{ shape: person, label: "User" }
+        deploy@{ shape: console, label: "deploy.sh<br>installs in one command" }
+    end
+    subgraph HOST["Host"]
+        env@{ shape: doc, label: ".env<br>configuration and limits" }
+        segredo@{ shape: doc, label: ".secrets<br>ftp-usuario-inicial-senha.txt" }
+        compose@{ shape: rect, label: "Docker Compose<br>compose.yaml" }
+    end
+    subgraph CONTAINER["allsafe-ftp container · read-only root"]
+        entry@{ shape: rect, label: "entrypoint<br>allsafe-ftp-entrypoint" }
+        valida@{ shape: diam, label: "variables<br>valid?" }
+        pw@{ shape: rect, label: "pure-pw<br>creates or updates the user" }
+        puredb@{ shape: cyl, label: "PureDB<br>/auth/pureftpd.pdb" }
+        dados@{ shape: lin-cyl, label: "/data<br>user folder" }
+        certq@{ shape: diam, label: "certificate<br>exists?" }
+        gera@{ shape: rect, label: "openssl<br>self-signed, 825 days" }
+        cert@{ shape: doc, label: "pure-ftpd.pem<br>/etc/ssl/private" }
+        pure@{ shape: rect, label: "pure-ftpd<br>0.0.0.0, 2121" }
+        authd@{ shape: rect, label: "watcher and pure-authd<br>blocking and gatekeeper, lists in /auth" }
+        saude@{ shape: rect, label: "healthcheck<br>greeting on port 2121" }
+    end
+    subgraph RESULTADO["Result"]
+        pronto@{ shape: stadium, label: "FTP ready<br>healthy" }
+        falha@{ shape: stadium, label: "FALHA in the log<br>container does not start" }
+    end
+
+    operador -- "1 · runs" --> deploy
+    deploy -- "2 · docker compose build and up -d --wait" --> compose
+    compose -- "3 · starts the container" --> entry
+    entry -- "4 · checks user, password, range and TLS" --> valida
+    valida -- "5a · yes" --> pw
+    valida -- "5b · no" --> falha
+    pw -- "6 · database compiled" --> certq
+    certq -- "7a · yes: reuses" --> cert
+    certq -- "7b · no: generates" --> gera
+    gera -- "8 · writes the certificate" --> cert
+    cert -- "9 · read at start" --> pure
+    pure -- "10 · checked every 20 s" --> saude
+    saude -- "11 · server answers" ---> pronto
+    deploy -. "generates the password if empty, 0600" .-> segredo
+    compose -. "reads" .-> env
+    entry -. "reads, read-only" .-> segredo
+    entry -. "creates the folder" .-> dados
+    pw -. "writes" .-> puredb
+    pure -. "looks up" .-> puredb
+    pure -. "asks at every login and reports the wrong password" .-> authd

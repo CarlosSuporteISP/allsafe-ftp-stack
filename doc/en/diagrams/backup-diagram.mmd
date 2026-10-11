@@ -1,0 +1,10 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    origem@{ shape: lin-cyl, label: "DATA_DIR<br>dados, auth, certs and painel" }
+    backup@{ shape: console, label: "scripts/backup.sh<br>reads and encrypts, no network" }
+    copia@{ shape: doc, label: "BACKUP_DIR<br>encrypted copy and sha256 sum" }
+    restaurar@{ shape: console, label: "scripts/restaurar.sh<br>opens, keeps the current one and swaps" }
+    destino@{ shape: lin-cyl, label: "DATA_DIR<br>contents of the copy" }
+    fim@{ shape: stadium, label: "stack back" }
+
+    origem --> backup --> copia --> restaurar --> destino --> fim

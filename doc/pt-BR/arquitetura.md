@@ -1,5 +1,7 @@
 # 🏗️ Arquitetura — allsafe-ftp-stack
 
+🌐 [English](../en/architecture.md) · **Português (Brasil)**
+
 ↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras

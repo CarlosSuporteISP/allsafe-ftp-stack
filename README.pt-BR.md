@@ -6,6 +6,9 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para guardar em um lugar só os backups e arquivos de equipamentos de rede, câmeras, empresas e pessoas, em rede privada.**
 
+[![English](https://img.shields.io/badge/English-6e7781?style=for-the-badge)](README.md)
+[![Português (Brasil)](https://img.shields.io/badge/Portugu%C3%AAs_(Brasil)-0969da?style=for-the-badge)](README.pt-BR.md)
+
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
 ![Versão](https://img.shields.io/badge/vers%C3%A3o-0.30.0-blue)
@@ -693,8 +696,9 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`LICENSE`](LICENSE) | Licença Apache 2.0: vale para o código, a configuração, os roteiros, os testes e a documentação |
 | [`NOTICE`](NOTICE) | Aviso de autoria, que acompanha toda cópia e toda versão derivada |
 | [`MARCA.md`](MARCA.md) | Pedido sobre a logo e o ícone da ALL-SAFE: ficam no uso próprio, saem em contrato ou venda para terceiros |
-| [`SECURITY.md`](SECURITY.md) | Política de segurança: para quem avisar de uma falha, o que mandar e quais versões recebem correção |
+| [`SECURITY.pt-BR.md`](SECURITY.pt-BR.md) | Política de segurança: para quem avisar de uma falha, o que mandar e quais versões recebem correção |
 | [`doc/pt-BR/`](doc/pt-BR/README.md) | Documentação, diagramas e fotos da aplicação, em português |
+| `doc/en/` | A mesma documentação, em inglês |
 
 </details>
 

@@ -1,0 +1,37 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Source"]
+        equip@{ shape: hex, label: "Network device<br>FTP client" }
+    end
+    subgraph ENTRADA["Entry"]
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+        authd@{ shape: rect, label: "pure-authd<br>calls the gatekeeper" }
+        preso@{ shape: diam, label: "user blocked<br>for the address?" }
+        bloqueios@{ shape: docs, label: "bloqueios<br>/auth, one per user and address" }
+    end
+    subgraph AUTH["Authentication"]
+        login@{ shape: diam, label: "user and password<br>match?" }
+        puredb@{ shape: cyl, label: "PureDB<br>virtual users" }
+        limite@{ shape: diam, label: "watcher adds up the errors<br>limit reached?" }
+        limites@{ shape: doc, label: "limites.lista<br>the user's own limit" }
+        bloqueia@{ shape: rect, label: "watcher<br>blocks user and address" }
+    end
+    subgraph RESULTADO["Result"]
+        sessao@{ shape: stadium, label: "chroot session<br>locked to the folder" }
+        recusa@{ shape: stadium, label: "530<br>login refused" }
+    end
+
+    equip -- "1 · connects and sends user and password, TCP 21" --> ftp
+    ftp -- "2 · asks before checking the password" --> authd
+    authd -- "3 · gatekeeper: is a block in force?" --> preso
+    preso -- "4a · yes: final refusal" --> recusa
+    preso -- "4b · no: goes on" --> login
+    login -- "5a · yes: opens the session" --> sessao
+    login -- "5b · no: reports the wrong password to the watcher" --> limite
+    limite -- "6a · yes: blocks" --> bloqueia
+    limite -- "6b · no: only refuses" --> recusa
+    bloqueia -- "7 · refuses" --> recusa
+    preso -. "reads" .-> bloqueios
+    login -. "looks up the user" .-> puredb
+    limite -. "reads" .-> limites
+    bloqueia -. "writes the block" .-> bloqueios

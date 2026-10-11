@@ -1,0 +1,37 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Source"]
+        equip@{ shape: hex, label: "Network device<br>FTP client" }
+    end
+    subgraph ENTRADA["Entry · per-user TLS"]
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+        tls@{ shape: diam, label: "session<br>with TLS?" }
+        algum@{ shape: diam, label: "is any user<br>exempt?" }
+        marcado@{ shape: diam, label: "is this user<br>exempt?" }
+        lista@{ shape: doc, label: "sem-tls.lista<br>/auth, one name per line" }
+        registro@{ shape: docs, label: "container log<br>login without TLS refused" }
+    end
+    subgraph AUTH["Authentication"]
+        puredb@{ shape: cyl, label: "PureDB<br>virtual users" }
+        login@{ shape: diam, label: "user and password<br>match?" }
+    end
+    subgraph RESULTADO["Result"]
+        sessao@{ shape: stadium, label: "chroot session<br>locked to the folder" }
+        recusa@{ shape: stadium, label: "530<br>login refused" }
+        antes@{ shape: stadium, label: "421<br>refused before the password" }
+    end
+
+    equip -- "1 · connects, TCP 21" --> ftp
+    ftp -- "2 · checks the session" --> tls
+    tls -- "3a · yes: receives user and password" --> login
+    tls -- "3b · no" --> algum
+    algum -- "4a · yes: receives user and password" --> marcado
+    algum -- "4b · no: refuses" --> antes
+    marcado -- "5a · yes: goes on" --> login
+    marcado -- "5b · no: final refusal" --> recusa
+    login -- "6a · yes: opens the session" ---> sessao
+    login -- "6b · no" ---> recusa
+    algum -. "observer reads every second" .-> lista
+    marcado -. "gatekeeper reads at every login" .-> lista
+    marcado -. "writes the refusal" .-> registro
+    login -. "looks up the user" .-> puredb
