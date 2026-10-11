@@ -866,6 +866,9 @@ EN = {
     '<code>.env</code>), sem swap; a memória em uso não conta o cache de arquivo que o sistema solta '
     'quando precisa. O histórico guarda os últimos {periodo}, com uma leitura a cada {intervalo} s, e '
     'recomeça quando o painel reinicia; cada desenho vai de zero até pouco acima do pico do período. '
+    '<strong>Limite de processador atingido</strong> é a parte desse período em que a cota do '
+    'container acabou: ele usa a cota inteira por um instante quando sobe e em cada pedido mais pesado, '
+    'e só falta processador quando essa parte é grande e não baixa. '
     'Na rede, a linha cheia é o que chega e a tracejada, o que sai, e os totais contam desde que o '
     'serviço do FTP iniciou; o disco é o da pasta dos dados.':
         'Each container reads its own usage and the limits it received in <code>compose.yaml</code> '
@@ -873,9 +876,16 @@ EN = {
         '<code>.env</code>), without swap; memory in use does not count the file cache that the system '
         'releases when needed. The history keeps the last {periodo}, with one reading every '
         '{intervalo} s, and starts over when the panel restarts; each chart goes from zero to just '
-        'above the peak of the period. On the network, the solid line is what arrives and the dashed '
+        'above the peak of the period. <strong>CPU limit reached</strong> is the share of that period in '
+        'which the quota of the container ran out: it uses the whole quota for an instant when it starts '
+        'and in every heavier request, and CPU is only lacking when that share is large and does not go '
+        'down. On the network, the solid line is what arrives and the dashed '
         'one is what leaves, and the totals count from when the FTP service started; the disk is the '
         'one holding the data folder.',
+    'menos de 1% do tempo':
+        'less than 1% of the time',
+    '{parte}% do tempo':
+        '{parte}% of the time',
     'nunca':
         'never',
     'Servidor FTP':

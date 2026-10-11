@@ -117,6 +117,28 @@ def periodo(series, teto, resumo):
 SERVICOS = {'ftp': ('servidor', N('Servidor FTP')), 'painel': ('painel', N('Painel')), 'nginx': ('escudo', N('Frente web'))}
 
 
+PERIODO_DA_COTA = 0.1   # segundos: o período do limite de processador que o Docker usa com `cpus` (cpu.max)
+
+
+def contido_no_periodo(nome, amostras):
+    """Parte do histórico, em %, em que o limite de processador segurou o container. O contador do grupo de controle
+    (nr_throttled) vale desde que o container subiu, soma cada período de 100 ms em que a cota acabou e nunca volta:
+    a subida deixa alguns, um pedido mais pesado deixa outro, e o número só cresce sem dizer se falta processador.
+    Aqui entra o que o contador andou entre uma amostra e a seguinte, contra o tempo do histórico; quando ele recua,
+    o container reiniciou, e a diferença não conta."""
+    contador = [amostra[4][nome][2] for amostra in amostras if nome in amostra[4] and amostra[4][nome][2] is not None]
+    if len(contador) < 2:
+        return 0
+    periodos = sum(max(depois - antes, 0) for antes, depois in zip(contador, contador[1:]))
+    return min(100 * periodos * PERIODO_DA_COTA / ((len(contador) - 1) * recursos.INTERVALO), 100)
+
+
+def parte_do_tempo(parte):
+    if not parte:
+        return t('nunca')
+    return t('menos de 1% do tempo') if parte < 1 else t('{parte}% do tempo', parte=f'{parte:.0f}')
+
+
 def container(nome, leitura, amostras, servidor_, no_ar, dados):
     """Cartão de um container: se está no ar, o que usa de processador, memória e processos contra o que foi
     alocado a ele, o processador nos últimos minutos e os avisos do limite."""
@@ -161,7 +183,7 @@ def container(nome, leitura, amostras, servidor_, no_ar, dados):
             f'<p class="suave"><code>{nome}</code> · '
             f'{t("no ar há {tempo}", tempo=duracao(max(time.time() - leitura["inicio"], 0)))}</p>'
             f'{processador_}{memoria_}{processos_}{historico}'
-            + pares(((t('Limite de processador atingido'), vezes(leitura['contido'])),
+            + pares(((t('Limite de processador atingido'), parte_do_tempo(contido_no_periodo(nome, amostras))),
                      (t('Encerrado por falta de memória'), vezes(leitura['faltou']))) + tuple(dados)) + '</section>')
 
 
@@ -351,7 +373,9 @@ def servidor(pedido, sessao, consulta, formulario, token):
                 '<code>*_MEMORY_LIMIT</code> e <code>*_PIDS_LIMIT</code> no <code>.env</code>), sem swap; a memória em uso não '
                 'conta o cache de arquivo que o sistema solta quando precisa. O histórico guarda os últimos {periodo}, com uma '
                 'leitura a cada {intervalo} s, e recomeça quando o painel reinicia; cada desenho vai de zero até pouco acima do '
-                'pico do período. Na rede, a linha cheia é o que chega e a tracejada, o que sai, e os totais contam desde que o '
+                'pico do período. <strong>Limite de processador atingido</strong> é a parte desse período em que a cota do container '
+                'acabou: ele usa a cota inteira por um instante quando sobe e em cada pedido mais pesado, e só falta '
+                'processador quando essa parte é grande e não baixa. Na rede, a linha cheia é o que chega e a tracejada, o que sai, e os totais contam desde que o '
                 'serviço do FTP iniciou; o disco é o da pasta dos dados.',
                 periodo=duracao(recursos.AMOSTRAS * recursos.INTERVALO), intervalo=recursos.INTERVALO)
     pedido.enviar(200, pagina(t('Servidor'), f"""{cabeca('Servidor', t('Os containers desta stack e o servidor em que ela roda.'), acao, quieta=sozinha)}

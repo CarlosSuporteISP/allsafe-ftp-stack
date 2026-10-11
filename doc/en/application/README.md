@@ -1204,7 +1204,7 @@ What each reason means and what to do is in [Troubleshooting](../troubleshooting
 | **Auto-refresh** | Reloads the tab every 10 seconds; turned on, it becomes **Stop refreshing**. The automatic reload does not renew the session: without use by whoever is in front of the screen, it closes in the usual time |
 | Summary line | How many cores and how much memory were allocated to the three containers, how much is in use now and the size of the server |
 | **FTP server** · **Panel** · **Web front end** | One box per container (`ftp`, `painel` and `nginx`): `Up` and for how long, CPU, memory and processes, each with the use and the allocated limit, and the chart of the CPU in the last minute, with the peak |
-| CPU limit reached · Killed for lack of memory | How many times the container hit the CPU limit and how many times it was killed for lack of memory |
+| CPU limit reached · Killed for lack of memory | In which share of the period of the chart the CPU quota of the container ran out and how many times it was killed for lack of memory since it started |
 | Last line of each box | What is specific to the service: sign-in blocks in force, on FTP; administrator sessions, on the panel; validity of the certificate, on the web front end |
 | **Server resources** ➜ CPU | Use of the whole machine, with the 1-minute average, the load average, how long it has been on and the model of the processor |
 | **Server resources** ➜ Memory | In use, available, cached and swap |

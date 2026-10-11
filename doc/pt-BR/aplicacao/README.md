@@ -1204,7 +1204,7 @@ O que cada motivo quer dizer e o que fazer está em [Solução de problemas](../
 | **Atualizar sozinha** | Recarrega a aba a cada 10 segundos; ligada, vira **Parar a atualização**. A recarga automática não renova a sessão: sem uso de quem está na frente da tela, ela encerra no prazo de sempre |
 | Linha de resumo | Quantos núcleos e quanta memória foram alocados aos três containers, quanto está em uso agora e o tamanho do servidor |
 | **Servidor FTP** · **Painel** · **Frente web** | Um quadro por container (`ftp`, `painel` e `nginx`): `No ar` e há quanto tempo, processador, memória e processos, cada um com o uso e o limite alocado, e o gráfico do processador no último minuto, com o pico |
-| Limite de processador atingido · Encerrado por falta de memória | Quantas vezes o container bateu no limite de processador e quantas foi encerrado por falta de memória |
+| Limite de processador atingido · Encerrado por falta de memória | Em que parte do período do gráfico a cota de processador do container acabou e quantas vezes ele foi encerrado por falta de memória desde que subiu |
 | Última linha de cada quadro | O que é próprio do serviço: bloqueios de entrada em vigor, no FTP; sessões de administrador, no painel; validade do certificado, na frente web |
 | **Recursos do servidor** ➜ Processador | Uso da máquina inteira, com a média de 1 minuto, a carga média, há quanto tempo ela está ligada e o modelo do processador |
 | **Recursos do servidor** ➜ Memória | Em uso, disponível, em cache e swap |

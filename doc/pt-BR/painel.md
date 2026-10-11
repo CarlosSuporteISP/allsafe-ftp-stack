@@ -625,7 +625,7 @@ A aba **Servidor** tem duas partes separadas: os containers desta stack, cada um
 | Memória | Memória em uso contra a alocada (`*_MEMORY_LIMIT`) | **Atenção** a partir de 80%; **Memória no limite** a partir de 95% |
 | Processos | Processos de agora contra o teto (`*_PIDS_LIMIT`) | Barra em outra cor a partir de 80% e de 95% |
 | Histórico | O uso do processador nos últimos minutos, em % do que foi alocado, com o pico escrito embaixo | Só informa |
-| Limite de processador atingido | Quantas vezes o limite segurou o container desde que ele subiu | Só informa: acontece em toda rajada curta |
+| Limite de processador atingido | Parte do período do histórico em que a cota de processador do container acabou: `nunca`, `menos de 1% do tempo` ou a porcentagem. O contador do grupo de controle (`nr_throttled`) vale desde a subida, soma cada período de 100 ms em que a cota acabou e nunca volta; a tela usa só o que ele andou entre as leituras guardadas | Só informa: a subida do container e todo pedido mais pesado usam a cota inteira por um instante. Falta processador quando a porcentagem é grande e não baixa: aumente `*_CPU_LIMIT` |
 | Encerrado por falta de memória | Quantas vezes o sistema encerrou um processo do container por falta de memória | **Atenção** quando não é `nunca` |
 | Linha própria | No servidor FTP, os bloqueios de entrada em vigor; no painel, as sessões de administrador abertas; na frente web, a validade do certificado | Bloqueio em vigor ou certificado perto do fim |
 

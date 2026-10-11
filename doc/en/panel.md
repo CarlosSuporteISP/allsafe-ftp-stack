@@ -625,7 +625,7 @@ The **Server** tab has two separate parts: the containers of this stack, each wi
 | Memory | Memory in use against the allocated (`*_MEMORY_LIMIT`) | **Attention** from 80%; **Memory at the limit** from 95% |
 | Processes | Processes now against the ceiling (`*_PIDS_LIMIT`) | Bar in another colour from 80% and from 95% |
 | History | The CPU use in the last minutes, in % of what was allocated, with the peak written below | Informs only |
-| CPU limit reached | How many times the limit held the container back since it started | Informs only: it happens in every short burst |
+| CPU limit reached | Share of the period of the history in which the CPU quota of the container ran out: `never`, `less than 1% of the time` or the percentage. The counter of the control group (`nr_throttled`) runs since the start, adds every 100 ms period in which the quota ran out and never goes back; the screen uses only how much it moved between the stored readings | Informs only: the start of the container and every heavier request use the whole quota for an instant. CPU is lacking when the percentage is large and does not go down: raise `*_CPU_LIMIT` |
 | Killed for lack of memory | How many times the system killed a process of the container for lack of memory | **Attention** when it is not `never` |
 | Own line | In the FTP server, the sign-in blocks in force; in the panel, the administrator sessions open; in the web front end, the validity of the certificate | Block in force or certificate near the end |
 
