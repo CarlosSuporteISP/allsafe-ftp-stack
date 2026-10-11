@@ -1004,9 +1004,9 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 
 ## ☁️ Destinations
 
-<a href="images/destinos.png"><img src="images/destinos.png" alt="Destinations tab with the S3 storage card turned on, with the address, the bucket and the prefix, the region, the folder sent, the runs every 60 minutes, Copy after sending, the keys saved without being shown on screen, the last run and the total sent, the Telegram bot card turned on, with the folder, the runs every 5 minutes, the largest file the bot sends, the message language, the last run and the total sent, the Test, Send now, Change and Remove buttons on each card and the How the panel sends card" width="100%"></a>
+<a href="images/destinos.png"><img src="images/destinos.png" alt="Destinations tab with the S3 storage card turned on, with the address, the bucket and the prefix, the region, the folder sent, the runs every 60 minutes, Copy after sending, the keys saved without being shown on screen, the last run and the total sent, the Telegram bot card turned on, with the folder, the runs every 5 minutes, the largest file the bot sends, the message language, the last run and the total sent, the Test, Send now, Change and Remove buttons on each card and, at the top of the screen, the How the panel sends explanation, collapsed" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Destinations menu · captured on 2026-10-11</sub>
+<sub><b>v1.2.0</b> · Destinations menu · captured on 2026-10-11</sub>
 
 **What it is for:** sending by itself, out of the server, the files that arrive in a folder. There are two destinations: an S3 storage, which holds the second copy or keeps the files and frees the disk, and a Telegram bot, which delivers each new file to a person, a group or a channel.
 
@@ -1038,9 +1038,9 @@ Each destination has a single connection, and one does not depend on the other. 
 
 ### Destinations ➜ Before configuring
 
-<a href="images/destinos-sem-destino.png"><img src="images/destinos-sem-destino.png" alt="Destinations tab of a new installation, with the S3 storage and Telegram bot cards marked as not configured, each with the explanation of what it sends and the Configure button, and the How the panel sends card" width="100%"></a>
+<a href="images/destinos-sem-destino.png"><img src="images/destinos-sem-destino.png" alt="Destinations tab of a new installation, with the S3 storage and Telegram bot cards marked as not configured, each with the explanation of what it sends and the Configure button, and, at the top of the screen, the How the panel sends explanation, collapsed" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Destinations menu, no destination saved · captured on 2026-10-11</sub>
+<sub><b>v1.2.0</b> · Destinations menu, no destination saved · captured on 2026-10-11</sub>
 
 The installation is born with no destination: until the administrator saves one, nothing leaves the server and the panel opens no connection to the outside. Each card says what the destination does and leads to its form, through the **Configure** button.
 
@@ -1079,7 +1079,7 @@ Any service that speaks the S3 protocol works, in the cloud or on the internal n
 
 <a href="images/destinos-gravado.png"><img src="images/destinos-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, and the S3 storage and Telegram bot cards turned on, each with what was saved, the secrets saved without being shown on screen and the last run as none yet" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Destinations menu, after saving · captured on 2026-10-11</sub>
+<sub><b>v1.2.0</b> · Destinations menu, after saving · captured on 2026-10-11</sub>
 
 **Expected result:** the tab comes back with the notice `Destination saved. It takes effect on the next run.`, and the card shows the `on` tag, the address, the bucket, the folder and that the keys are saved, without showing them. The first run starts within a minute and sends everything already in the folder.
 
@@ -1139,7 +1139,7 @@ Before you start, create the bot with the Telegram bot creator and keep the toke
 
 <a href="images/destinos-teste.png"><img src="images/destinos-teste.png" alt="Destinations tab with the notice Test finished, the destination received it, above the S3 storage and Telegram bot cards, each with the date of the last run" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Destinations menu, after the test · captured on 2026-10-11</sub>
+<sub><b>v1.2.0</b> · Destinations menu, after the test · captured on 2026-10-11</sub>
 
 1. On the card of the destination, click **Test**.
 2. To skip the wait for the interval, click **Send now** and refresh the page afterwards.
@@ -1191,9 +1191,9 @@ What each reason means and what to do is in [Troubleshooting](../troubleshooting
 
 ## 🖥️ Server
 
-<a href="images/servidor.png"><img src="images/servidor.png" alt="Server tab with the Auto-refresh button, the Stack containers card, with one box for the FTP server, one for the Panel and one for the Web front end, each with CPU, memory and processes in use and allocated and the chart of the last minute, and the Server resources card, with CPU, memory, disk and FTP network" width="100%"></a>
+<a href="images/servidor.png"><img src="images/servidor.png" alt="Server tab with the Auto-refresh button, the Stack containers card, with one box for the FTP server, one for the Panel and one for the Web front end, each with CPU, memory and processes in use and allocated, the chart of the last minutes and the share of the time in which the CPU limit was reached, and the Server resources card, with CPU, memory, disk and FTP network" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Server menu · captured on 2026-10-11</sub>
+<sub><b>v1.2.0</b> · Server menu · captured on 2026-10-11</sub>
 
 **What it is for:** following how much each container of the stack uses of what was allocated to it and how much is left on the machine the stack runs on.
 

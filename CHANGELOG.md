@@ -6,6 +6,24 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.2.0] - 2026-10-11
+
+Nada apaga nem lê no destino, por nenhum caminho: o que o painel pode pedir a um bucket e a um bot virou lista fechada. A explicação da aba Destinos foi para o alto da tela, e a linha do limite de processador da aba Servidor passou a mostrar o que acontece agora, e não o que aconteceu desde a subida.
+
+### Adicionado
+
+- **Lista fechada do que sai do painel para um destino**: no S3, só gravar um objeto e criar, concluir ou abandonar um envio em partes; no bot, só enviar arquivo e enviar mensagem. O pedido que não está na lista é recusado antes de sair do servidor, com o motivo "o painel não faz esse pedido a um destino". Apagar ou ler objeto, apagar vários, mexer no bucket ou nas regras dele, e apagar, editar ou ler mensagem não saem do painel pela tela, pela rotina nem pelo terminal.
+- **Bateria**: caso de segurança novo, que chama os módulos de saída direto, dentro do container do painel, com 28 pedidos de apagar, ler e alterar, e confere pelo registro do serviço de exemplo que nenhum chegou. São 83 casos funcionais, 131 de segurança e 14 de rede.
+
+### Alterado
+
+- **Explicação "Como o painel envia" no alto da aba Destinos**, na largura da tela e recolhida, como a explicação das outras abas. Os cartões dos destinos mudam de tamanho conforme o que está gravado, e a explicação não muda mais de lugar com eles.
+- **Fotos da aba Destinos e da aba Servidor**, nos dois idiomas, com as telas desta versão.
+
+### Corrigido
+
+- **"Limite de processador atingido" contando vezes que não voltavam**: a linha da aba Servidor mostrava o contador do grupo de controle do container, que vale desde a subida, soma cada período de 100 ms em que a cota acabou e nunca volta. Toda subida deixava algumas vezes na tela para sempre, sem faltar processador. A linha passa a mostrar a parte dos últimos 10 minutos em que a cota acabou: `nunca`, `menos de 1% do tempo` ou a porcentagem. Vale a pena aumentar `FTP_CPU_LIMIT`, `PAINEL_CPU_LIMIT` ou `NGINX_CPU_LIMIT` só quando a porcentagem é alta e não baixa.
+
 ## [1.1.0] - 2026-10-11
 
 O administrador liga uma pasta dos dados a um armazenamento S3 e a um bot do Telegram pelo painel, e o painel passa a enviar sozinho o que chega nela. Cada arquivo também pode ser enviado na hora, por um botão na aba Arquivos.

@@ -1004,9 +1004,9 @@ Quem precisa conferir ou baixar o que foi enviado pede a um administrador ou usa
 
 ## ☁️ Destinos
 
-<a href="imagens/destinos.png"><img src="imagens/destinos.png" alt="Aba Destinos com o cartão Armazenamento S3 ligado, com o endereço, o bucket e o prefixo, a região, a pasta enviada, as passadas a cada 60 minutos, Copiar depois do envio, as chaves gravadas sem aparecer na tela, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, as passadas a cada 5 minutos, o maior arquivo que o bot envia, o idioma das mensagens, a última passada e o total enviado, os botões Testar, Enviar agora, Alterar e Remover em cada cartão e o cartão Como o painel envia" width="100%"></a>
+<a href="imagens/destinos.png"><img src="imagens/destinos.png" alt="Aba Destinos com o cartão Armazenamento S3 ligado, com o endereço, o bucket e o prefixo, a região, a pasta enviada, as passadas a cada 60 minutos, Copiar depois do envio, as chaves gravadas sem aparecer na tela, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, as passadas a cada 5 minutos, o maior arquivo que o bot envia, o idioma das mensagens, a última passada e o total enviado, os botões Testar, Enviar agora, Alterar e Remover em cada cartão e, no alto da tela, a explicação Como o painel envia, recolhida" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Destinos · captura de 2026-10-11</sub>
+<sub><b>v1.2.0</b> · menu Destinos · captura de 2026-10-11</sub>
 
 **Para que serve:** mandar sozinho, para fora do servidor, os arquivos que chegam em uma pasta. São dois destinos: um armazenamento S3, que guarda a segunda cópia ou fica com os arquivos e libera o disco, e um bot do Telegram, que entrega cada arquivo novo a uma pessoa, a um grupo ou a um canal.
 
@@ -1038,9 +1038,9 @@ Cada destino tem uma ligação só, e um não depende do outro. O S3 envia tudo 
 
 ### Destinos ➜ Antes de configurar
 
-<a href="imagens/destinos-sem-destino.png"><img src="imagens/destinos-sem-destino.png" alt="Aba Destinos de uma instalação nova, com os cartões Armazenamento S3 e Bot do Telegram marcados como não configurado, cada um com a explicação do que envia e o botão Configurar, e o cartão Como o painel envia" width="100%"></a>
+<a href="imagens/destinos-sem-destino.png"><img src="imagens/destinos-sem-destino.png" alt="Aba Destinos de uma instalação nova, com os cartões Armazenamento S3 e Bot do Telegram marcados como não configurado, cada um com a explicação do que envia e o botão Configurar, e, no alto da tela, a explicação Como o painel envia, recolhida" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Destinos, sem destino gravado · captura de 2026-10-11</sub>
+<sub><b>v1.2.0</b> · menu Destinos, sem destino gravado · captura de 2026-10-11</sub>
 
 A instalação nasce sem destino: enquanto o administrador não gravar um, nada sai do servidor e o painel não abre conexão para fora. Cada cartão diz o que o destino faz e leva ao formulário dele, pelo botão **Configurar**.
 
@@ -1079,7 +1079,7 @@ Serve qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna.
 
 <a href="imagens/destinos-gravado.png"><img src="imagens/destinos-gravado.png" alt="Aba Destinos com o aviso Destino gravado, vale a partir da próxima passada, e os cartões Armazenamento S3 e Bot do Telegram ligados, cada um com o que foi gravado, os segredos gravados sem aparecer na tela e a última passada como nenhuma ainda" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Destinos, depois de gravar · captura de 2026-10-11</sub>
+<sub><b>v1.2.0</b> · menu Destinos, depois de gravar · captura de 2026-10-11</sub>
 
 **Resultado esperado:** a aba volta com o aviso `Destino gravado. Vale a partir da próxima passada.`, e o cartão mostra a etiqueta `ligado`, o endereço, o bucket, a pasta e que as chaves estão gravadas, sem mostrá-las. A primeira passada começa em até um minuto e envia tudo o que já está na pasta.
 
@@ -1139,7 +1139,7 @@ Antes de começar, crie o bot no criador de bots do Telegram e guarde o token qu
 
 <a href="imagens/destinos-teste.png"><img src="imagens/destinos-teste.png" alt="Aba Destinos com o aviso Teste concluído, o destino recebeu, acima dos cartões Armazenamento S3 e Bot do Telegram, cada um com a data da última passada" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Destinos, depois do teste · captura de 2026-10-11</sub>
+<sub><b>v1.2.0</b> · menu Destinos, depois do teste · captura de 2026-10-11</sub>
 
 1. No cartão do destino, clique em **Testar**.
 2. Para não esperar o intervalo, clique em **Enviar agora** e atualize a tela em seguida.
@@ -1191,9 +1191,9 @@ O que cada motivo quer dizer e o que fazer está em [Solução de problemas](../
 
 ## 🖥️ Servidor
 
-<a href="imagens/servidor.png"><img src="imagens/servidor.png" alt="Aba Servidor com o botão Atualizar sozinha, o cartão Containers da stack, com um quadro para o Servidor FTP, um para o Painel e um para a Frente web, cada um com processador, memória e processos em uso e alocados e o gráfico do último minuto, e o cartão Recursos do servidor, com processador, memória, disco e rede do FTP" width="100%"></a>
+<a href="imagens/servidor.png"><img src="imagens/servidor.png" alt="Aba Servidor com o botão Atualizar sozinha, o cartão Containers da stack, com um quadro para o Servidor FTP, um para o Painel e um para a Frente web, cada um com processador, memória e processos em uso e alocados, o gráfico dos últimos minutos e a parte do tempo em que o limite de processador foi atingido, e o cartão Recursos do servidor, com processador, memória, disco e rede do FTP" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Servidor · captura de 2026-10-11</sub>
+<sub><b>v1.2.0</b> · menu Servidor · captura de 2026-10-11</sub>
 
 **Para que serve:** acompanhar quanto cada container da stack usa do que foi alocado para ele e quanto sobra na máquina em que a stack roda.
 
