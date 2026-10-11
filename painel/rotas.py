@@ -51,6 +51,7 @@ ROTAS = {
     ('POST', '/destinos/telegram'): aba_destinos.gravar_telegram,
     ('POST', '/destinos/testar'): aba_destinos.testar,
     ('POST', '/destinos/agora'): aba_destinos.agora,
+    ('GET', '/destinos/arquivo'): aba_destinos.tela_escolher,
     ('POST', '/destinos/arquivo'): aba_destinos.arquivo,
     ('GET', '/destinos/remover'): aba_destinos.tela_remover,
     ('POST', '/destinos/remover'): aba_destinos.remover,

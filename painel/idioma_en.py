@@ -1975,8 +1975,8 @@ EN = {
         'the chosen folder no longer exists inside the data',
     'faltam os segredos do destino: grave-os de novo':
         'the destination secrets are missing: save them again',
-    'o S3 espera o bot do Telegram entregar o que falta antes de apagar mais arquivos':
-        'S3 is waiting for the Telegram bot to deliver what is left before deleting more files',
+    'o S3 espera os outros destinos da mesma pasta entregarem o que falta antes de apagar mais arquivos':
+        'S3 is waiting for the other destinations of the same folder to deliver what is left before deleting more files',
     'outro teste está em andamento: tente de novo em instantes':
         'another test is running: try again in a moment',
     'o arquivo está vazio, e o bot não envia arquivo vazio':
@@ -2031,8 +2031,8 @@ EN = {
         'every {n} minute',
     'a cada {n} minutos':
         'every {n} minutes',
-    'Cópia automática dos arquivos para fora do servidor: um armazenamento S3 e um bot do Telegram.':
-        'Automatic copy of the files out of the server: an S3 storage and a Telegram bot.',
+    'Cópia automática dos arquivos para fora do servidor: armazenamentos S3 e bots do Telegram.':
+        'Automatic copy of the files out of the server: S3 storages and Telegram bots.',
     'Remover destino':
         'Remove destination',
     'o serviço respondeu com o código {codigo}':
@@ -2131,10 +2131,10 @@ EN = {
         '{n} file',
     '{n} arquivos':
         '{n} files',
-    '{n} arquivo já gravado no S3 sai do servidor quando o bot do Telegram o entregar':
-        '{n} file already stored in S3 leaves the server when the Telegram bot delivers it',
-    '{n} arquivos já gravados no S3 saem do servidor quando o bot do Telegram os entregar':
-        '{n} files already stored in S3 leave the server when the Telegram bot delivers them',
+    '{n} arquivo já gravado no S3 sai do servidor quando os outros destinos da pasta o entregarem':
+        '{n} file already stored in S3 leaves the server when the other destinations of the folder deliver it',
+    '{n} arquivos já gravados no S3 saem do servidor quando os outros destinos da pasta os entregarem':
+        '{n} files already stored in S3 leave the server when the other destinations of the folder deliver them',
     'Agora':
         'Now',
     'passada em andamento':
@@ -2203,8 +2203,8 @@ EN = {
         'Remove <strong>{destino}</strong>? The panel deletes the settings, the progress and the secrets of this destination and stops sending to it. What was already sent stays there, and no file on the server is deleted.',
     'Sim, remover o destino':
         'Yes, remove the destination',
-    'À espera do bot':
-        'Waiting for the bot',
+    'À espera de outro destino':
+        'Waiting for another destination',
     'para gravar o destino':
         'to save the destination',
     'No caminho':
@@ -2233,6 +2233,38 @@ EN = {
         'File larger than the bot sending limit ({limite}): it was not sent through here.',
     'Teste do painel da allsafe-ftp-stack: o bot consegue enviar para esta conversa.':
         'allsafe-ftp-stack panel test: the bot can send to this chat.',
+    'Novo S3':
+        'New S3',
+    'Novo bot':
+        'New bot',
+    'Novo com o mesmo acesso':
+        'New with the same access',
+    'novo destino':
+        'new destination',
+    'Este tipo já tem os {n} destinos que o painel aceita: remova um antes de criar outro.':
+        'This type already has the {n} destinations the panel accepts: remove one before creating another.',
+    'Nome inválido: até 40 caracteres.':
+        'Invalid name: up to 40 characters.',
+    'opcional, para reconhecer o destino na tela; até 40 caracteres':
+        'optional, to recognise the destination on the screen; up to 40 characters',
+    'em branco usa o do destino de origem':
+        'blank uses the one of the source destination',
+    'Destino novo com o acesso de <strong>{origem}</strong>: o segredo deixado em branco é copiado dele, '
+    'aqui no servidor. Troque a pasta ou o lugar: dois destinos não levam a mesma pasta ao mesmo lugar.':
+        'New destination with the access of <strong>{origem}</strong>: a secret left blank is copied from it, '
+        'here on the server. Change the folder or the place: two destinations do not take the same folder to the same place.',
+    'Este destino já existe: {outro} leva a mesma pasta, ou uma que a contém, ao mesmo lugar. '
+    'Troque a pasta ou o lugar.':
+        'This destination already exists: {outro} takes the same folder, or one that contains it, to the same place. '
+        'Change the folder or the place.',
+    'pasta enviada: {pasta}':
+        'folder sent: {pasta}',
+    'Arquivo: <code>{arquivo}</code>. O arquivo continua no servidor e o andamento das passadas não muda.':
+        'File: <code>{arquivo}</code>. The file stays on the server and the progress of the runs does not change.',
+    'Destino que recebe':
+        'Destination that receives',
+    'Enviar':
+        'Send',
 }
 
 # Mensagem de erro do allsafe-ftp-user (ftp/usuario.sh), que fala português sem acento: a expressão que a

@@ -435,10 +435,12 @@ backup-chave-publica.txt
   pelo ./deploy.sh enquanto a privada estiver aqui. Não é segredo: com ela só se cifra, não se abre.
 
 destinos/
-  Segredos dos destinos de fora, gravados pelo painel na aba Destinos, um arquivo por segredo:
-  s3-chave-de-acesso.txt e s3-chave-secreta.txt (a chave do armazenamento S3), telegram-token.txt
-  (o token do bot) e telegram-conversa.txt (a conversa ou o grupo que recebe). O painel só grava e
-  lê: nenhum deles volta para a tela. Trocar ou remover: pela aba Destinos. Apagar um arquivo aqui
+  Segredos dos destinos de fora, gravados pelo painel na aba Destinos, um arquivo por segredo, com
+  o nome do destino na frente: <destino>-chave-de-acesso.txt e <destino>-chave-secreta.txt (a chave
+  do armazenamento S3), <destino>-token.txt (o token do bot) e <destino>-conversa.txt (a conversa
+  ou o grupo que recebe). O primeiro destino de cada tipo é s3 e telegram; os seguintes, s3-2,
+  s3-3, telegram-2 e assim por diante, como a aba e o --destinos mostram. O painel só grava e lê:
+  nenhum deles volta para a tela. Trocar ou remover: pela aba Destinos. Apagar um arquivo aqui
   desliga o envio daquele destino na passada seguinte.
 
 Perdeu a senha do painel: ./scripts/painel-senha.sh --gerar   (outro administrador: --usuario NOME)

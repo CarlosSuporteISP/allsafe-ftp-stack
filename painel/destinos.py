@@ -1,10 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Destinos de fora: o painel envia sozinho os arquivos de uma pasta para um armazenamento S3 e para um bot do Telegram.
+"""Destinos de fora: o painel envia sozinho os arquivos de uma pasta para armazenamentos S3 e para bots do Telegram.
 
-Cada destino tem uma ligação só, gravada pelo administrador na aba Destinos: a configuração fica em
-/painel/destinos/<destino>.conf e os segredos, um por arquivo, em /segredos (SECRETS_DIR/destinos, no host). Uma linha
-de execução do próprio painel confere a cada minuto e faz a passada do destino que está na hora; a mesma passada sai
-pelo terminal (servidor.py --destinos enviar <destino>).
+O administrador grava na aba Destinos quantos destinos quiser de cada tipo, até POR_TIPO: cada um leva uma pasta a um
+lugar. O primeiro de cada tipo se chama `s3` ou `telegram` e os seguintes, `s3-2`, `telegram-2` e assim por diante. A
+configuração fica em /painel/destinos/<destino>.conf e os segredos, um por arquivo, em /segredos (SECRETS_DIR/destinos,
+no host), com o nome do destino na frente. Dois destinos podem usar o mesmo acesso: o destino novo criado a partir de
+outro recebe uma cópia dos segredos dele, feita aqui no servidor. Uma linha de execução do próprio painel confere a
+cada minuto e faz a passada do destino que está na hora; a mesma passada sai pelo terminal (servidor.py --destinos
+enviar <destino>).
 
 A passada percorre a pasta pelo descritor dela, sem seguir link simbólico, como a aba Arquivos. Só sai arquivo comum:
 ficam de fora o link, tudo o que tem o nome começado por ponto, o que está em outro sistema de arquivos e o nome que
@@ -22,8 +25,9 @@ O administrador também envia um arquivo só, pela aba Arquivos (enviar_arquivo)
 passadas e nunca apaga o arquivo.
 
 No S3, o modo `copiar` deixa o arquivo no servidor e o `mover` apaga o arquivo depois que o destino confirma a
-gravação, e só se ele não mudou desde o envio. O Telegram só envia o que chegar depois de ligado. Com os dois na
-mesma pasta, o Telegram passa primeiro e o `mover` só apaga o que o bot já entregou.
+gravação, e só se ele não mudou desde o envio. O Telegram só envia o que chegar depois de ligado. Com mais de um
+destino na mesma pasta, os bots e os S3 em `copiar` passam primeiro, e o `mover` só apaga o arquivo depois que todos
+os outros destinos operantes que o cobrem passaram por ele.
 """
 import contextlib
 import fcntl
@@ -48,9 +52,11 @@ from estado import limpar_cache
 from idioma import t
 from pagina import quando, tamanho as com_unidade
 
-NOMES = ('telegram', 's3')    # a ordem da passada: o bot entrega antes de o S3 poder apagar
-SEGREDOS = {'s3': ('s3-chave-de-acesso.txt', 's3-chave-secreta.txt'),
-            'telegram': ('telegram-token.txt', 'telegram-conversa.txt')}
+TIPOS = ('telegram', 's3')    # a ordem da passada: os bots entregam antes de um S3 poder apagar
+POR_TIPO = 20                 # destinos de cada tipo
+IDENTIFICADOR = re.compile(r'(telegram|s3)(-([2-9]|1[0-9]|20))?')
+NOME = re.compile(r'[^\x00-\x1f\x7f-\x9f]{0,40}')   # o nome que o administrador dá ao destino, para a tela
+SEGREDOS = {'s3': ('chave-de-acesso', 'chave-secreta'), 'telegram': ('token', 'conversa')}
 FORMATO = {'s3': (r'[\x21-\x7e]{3,128}', r'[\x21-\x7e]{8,256}'),
            'telegram': (telegram.TOKEN.pattern, telegram.CONVERSA.pattern)}
 ARQ_TRAVA = os.path.join(PASTA_DESTINOS, '.trava')
@@ -58,7 +64,7 @@ ASSENTAR = 120               # segundos sem mudar para o arquivo entrar na passa
 LOTE = 20000                 # arquivos escolhidos por vez, dos mais antigos para os mais novos
 INTERVALO = (5, 1440)        # minutos entre as passadas de um destino
 PAUSA_TELEGRAM = 3           # segundos entre um envio e o seguinte: a API limita as mensagens por minuto de um grupo
-ADIADOS_MAX = 20000          # arquivos já gravados no S3 à espera do bot para serem apagados
+ADIADOS_MAX = 20000          # arquivos já gravados no S3 à espera dos outros destinos para serem apagados
 SEGREDO_MAX = 512            # bytes lidos de um arquivo de segredo
 PRAZO_TESTE = 8              # segundos por operação de rede do teste pedido pela tela...
 TESTE_MAX = 25               # ...e o teto do teste inteiro: abaixo do tempo que o nginx espera pelo painel
@@ -78,8 +84,43 @@ TRAVA_AVULSO = threading.Lock()   # um envio de arquivo pedido pela tela por vez
 ANDAMENTO = {}               # destino ➜ o que a passada em curso já fez, para a tela
 
 
-def arquivo(destino, tipo):
-    return os.path.join(PASTA_DESTINOS, f'{destino}.{tipo}')
+def arquivo(destino, parte):
+    return os.path.join(PASTA_DESTINOS, f'{destino}.{parte}')
+
+
+# ------------------------------------------------------------ os destinos e os nomes deles
+
+def tipo(destino):
+    """'s3' ou 'telegram': o primeiro destino do tipo tem o nome dele, e os seguintes, <tipo>-2 a <tipo>-20."""
+    return destino.partition('-')[0]
+
+
+def valido(destino):
+    return isinstance(destino, str) and bool(IDENTIFICADOR.fullmatch(destino))
+
+
+def do_tipo(qual):
+    """Todos os nomes que um destino do tipo pode ter, em ordem."""
+    return [qual] + [f'{qual}-{numero}' for numero in range(2, POR_TIPO + 1)]
+
+
+def todos(qual=None):
+    """Os destinos gravados, de um tipo ou de todos: os bots e depois os S3, cada tipo na ordem dos nomes."""
+    return [destino for cada in ((qual,) if qual else TIPOS) for destino in do_tipo(cada) if ler(destino)]
+
+
+def livre(qual):
+    """O nome que o próximo destino do tipo recebe: o primeiro sem configuração. None quando o tipo está cheio."""
+    return next((destino for destino in do_tipo(qual) if not ler(destino)), None)
+
+
+def nomes_dos_segredos(destino):
+    return tuple(f'{destino}-{sufixo}.txt' for sufixo in SEGREDOS[tipo(destino)])
+
+
+def cruzam(uma, outra):
+    """As duas pastas são a mesma, ou uma está dentro da outra? A pasta vazia é a dos dados inteira."""
+    return not uma or not outra or uma == outra or uma.startswith(outra + '/') or outra.startswith(uma + '/')
 
 
 # ------------------------------------------------------------ segredos
@@ -100,8 +141,8 @@ def ler_segredo(nome):
 
 def segredos_de(destino):
     """Os dois segredos do destino, ou None quando falta algum ou algum não tem o formato dele."""
-    valores = tuple(ler_segredo(nome) for nome in SEGREDOS[destino])
-    return valores if all(re.fullmatch(regra, valor) for regra, valor in zip(FORMATO[destino], valores)) else None
+    valores = tuple(ler_segredo(nome) for nome in nomes_dos_segredos(destino))
+    return valores if all(re.fullmatch(regra, valor) for regra, valor in zip(FORMATO[tipo(destino)], valores)) else None
 
 
 def gravar_texto(caminho, texto, dono=None):
@@ -144,11 +185,13 @@ def defeito(destino, conf):
     try:
         if conf['ligado'] not in (True, False):
             return 'situacao'
+        if not (isinstance(conf.get('nome', ''), str) and NOME.fullmatch(conf.get('nome', ''))):
+            return 'nome'
         if conf['pasta'] and not PASTA.fullmatch(conf['pasta']):
             return 'pasta'
         if type(conf['intervalo']) is not int or not INTERVALO[0] <= conf['intervalo'] <= INTERVALO[1]:
             return 'intervalo'
-        if destino == 'telegram':
+        if tipo(destino) == 'telegram':
             return '' if conf['idioma'] in idioma.IDIOMAS else 'idioma'
         if not ENDERECO_HTTPS.fullmatch(conf['endpoint']):
             return 'endpoint'
@@ -179,6 +222,7 @@ def ler(destino):
         return None
     if not (isinstance(conf.get('serie'), str) and type(conf.get('desde')) is int):
         return None
+    conf.setdefault('nome', '')   # a configuração gravada antes de haver vários destinos não tem o nome
     return conf
 
 
@@ -188,30 +232,57 @@ def operante(destino, conf=None):
     return bool(conf and conf['ligado'] and segredos_de(destino))
 
 
-def gravar(destino, novo, novos_segredos):
-    """Grava a configuração e os segredos que vieram (o vazio mantém o gravado). O andamento continua quando o lugar
-    é o mesmo; destino ou pasta diferente recomeça. O Telegram recomeça também quando volta a ficar operante: o que
-    chegou enquanto ele estava parado não é enviado."""
+def segredos_finais(destino, novos_segredos, origem=None):
+    """Os segredos com que o destino fica depois de gravado: o que veio; onde veio vazio, o do destino de origem (em
+    destino novo, criado com o acesso de outro) ou o que já está gravado nele."""
+    guardados = (segredos_de(origem) if origem else None) or tuple(ler_segredo(nome) for nome in nomes_dos_segredos(destino))
+    return tuple(valor or guardado for valor, guardado in zip(novos_segredos, guardados))
+
+
+def repetido(destino, conf, novos_segredos, origem=None):
+    """O outro destino que já leva a mesma pasta, ou uma que a contém ou está dentro dela, ao mesmo lugar: no S3, o
+    mesmo endereço, bucket e prefixo; no bot, o mesmo token e a mesma conversa. '' quando não há. Os segredos são
+    comparados aqui, no servidor."""
+    qual = tipo(destino)
+    meus = segredos_finais(destino, novos_segredos, origem) if qual == 'telegram' else None
+    for outro in todos(qual):
+        dele = ler(outro)
+        if outro == destino or not dele or not cruzam(dele['pasta'], conf['pasta']):
+            continue
+        if qual == 's3' and all(dele[chave] == conf[chave] for chave in ('endpoint', 'bucket', 'prefixo')):
+            return outro
+        if qual == 'telegram' and all(meus) and segredos_de(outro) == meus:
+            return outro
+    return ''
+
+
+def gravar(destino, novo, novos_segredos, origem=None):
+    """Grava a configuração e os segredos que vieram. O segredo vazio mantém o gravado; em destino novo criado com o
+    acesso de outro (`origem`), o vazio é copiado do destino de origem, aqui no servidor. O andamento continua quando
+    o lugar é o mesmo; destino ou pasta diferente recomeça. O Telegram recomeça também quando volta a ficar operante:
+    o que chegou enquanto ele estava parado não é enviado."""
     antes = ler(destino)
     seguia = operante(destino, antes)
-    fixos = ('pasta',) if destino == 'telegram' else ('endpoint', 'bucket', 'prefixo', 'estilo', 'pasta')
+    bot = tipo(destino) == 'telegram'
+    fixos = ('pasta',) if bot else ('endpoint', 'bucket', 'prefixo', 'estilo', 'pasta')
     mesmo = bool(antes) and all(antes[chave] == novo[chave] for chave in fixos)
-    if destino == 'telegram':
+    if bot:
         mesmo = mesmo and seguia
     novo = dict(novo)
     novo['serie'] = antes['serie'] if mesmo else secrets.token_hex(8)
-    novo['desde'] = antes['desde'] if mesmo else (time.time_ns() if destino == 'telegram' else 0)
-    for nome, valor in zip(SEGREDOS[destino], novos_segredos):
-        if valor:
-            gravar_segredo(nome, valor)
+    novo['desde'] = antes['desde'] if mesmo else (time.time_ns() if bot else 0)
+    copiados = (segredos_de(origem) if origem else None) or ('', '')
+    for nome, valor, copiado in zip(nomes_dos_segredos(destino), novos_segredos, copiados):
+        if valor or copiado:
+            gravar_segredo(nome, valor or copiado)
     gravar_texto(arquivo(destino, 'conf'), json.dumps(novo, ensure_ascii=False, sort_keys=True) + '\n')
 
 
 def remover(destino):
-    """Apaga a configuração, o andamento e os segredos do destino."""
-    for tipo in ('conf', 'estado'):
-        apagar(arquivo(destino, tipo))
-    for nome in SEGREDOS[destino]:
+    """Apaga a configuração, o andamento e os segredos do destino. Nada é apagado no destino de fora."""
+    for parte in ('conf', 'estado'):
+        apagar(arquivo(destino, parte))
+    for nome in nomes_dos_segredos(destino):
         apagar(os.path.join(PASTA_SEGREDOS, nome))
 
 
@@ -349,28 +420,31 @@ def apagar_local(caminho, inode, tamanho, chegada):
 
 # ------------------------------------------------------------ a passada
 
-def falta_o_bot(bot, caminho, chegada, tamanho):
-    """O bot do Telegram ainda vai enviar este arquivo? `bot` é (pasta, marca) do Telegram operante, ou None."""
-    if not bot or not tamanho:
-        return False
-    pasta, marca = bot
-    return (not pasta or caminho.startswith(pasta + '/')) and marca < (chegada, caminho)
+def falta(outros, caminho, chegada, tamanho):
+    """Algum outro destino ainda vai enviar este arquivo? `outros` vem de outros_agora(). O bot não envia arquivo vazio."""
+    return any((tamanho or qual != 'telegram') and (not pasta or caminho.startswith(pasta + '/')) and marca < (chegada, caminho)
+               for qual, pasta, marca in outros)
 
 
-def bot_agora():
-    conf = ler('telegram')
-    return (conf['pasta'], tuple(ler_estado('telegram', conf)['marca'])) if operante('telegram', conf) else None
+def outros_agora(destino):
+    """(tipo, pasta, marca) de cada outro destino operante, bot ou S3: é por eles que o `mover` espera antes de apagar."""
+    lista = []
+    for outro in todos():
+        conf = ler(outro)
+        if outro != destino and operante(outro, conf):
+            lista.append((tipo(outro), conf['pasta'], tuple(ler_estado(outro, conf)['marca'])))
+    return lista
 
 
-def entregar_s3(conf, canal, estado, item, resumo, bot):
+def entregar_s3(conf, canal, estado, item, resumo, outros):
     chegada, caminho, tamanho, inode = item
     chave = s3.chave_do_objeto(conf['prefixo'], caminho)
     if chave is None or tamanho > s3.OBJETO_MAX:
         resumo['ignorados'] += 1
         return
-    adiar = conf['modo'] == 'mover' and falta_o_bot(bot, caminho, chegada, tamanho)
+    adiar = conf['modo'] == 'mover' and falta(outros, caminho, chegada, tamanho)
     if adiar and len(estado['adiados']) >= ADIADOS_MAX:
-        raise saida.Falha('espera')   # o bot está parado e a fila do que espera por ele encheu: nada mais sai até ele voltar
+        raise saida.Falha('espera')   # outro destino está parado e a fila do que espera por ele encheu: nada mais sai até ele voltar
     descritor = abrir_igual(item)
     if descritor is None:
         return
@@ -395,10 +469,11 @@ def entregar_s3(conf, canal, estado, item, resumo, bot):
         resumo['apagados'] += 1
 
 
-def apagar_adiados(estado, resumo, bot):
-    """Arquivos que o S3 já tinha confirmado e que esperavam o bot: apaga os que ele entregou; o que mudou sai da lista."""
+def apagar_adiados(estado, resumo, outros):
+    """Arquivos que o S3 já tinha confirmado e que esperavam outro destino: apaga os que todos já entregaram; o que
+    mudou ou já saiu do servidor sai da lista."""
     for caminho, (inode, tamanho, chegada) in list(estado['adiados'].items()):
-        if falta_o_bot(bot, caminho, chegada, tamanho):
+        if falta(outros, caminho, chegada, tamanho):
             continue
         if apagar_local(caminho, inode, tamanho, chegada):
             resumo['apagados'] += 1
@@ -409,7 +484,7 @@ def texto_do_arquivo(caminho, tamanho, chegada):
     return f'{caminho}\n{com_unidade(tamanho)} · {quando(chegada // 10**9)}'
 
 
-def entregar_telegram(conf, canal, estado, item, resumo, bot):
+def entregar_telegram(conf, canal, estado, item, resumo, outros):
     chegada, caminho, tamanho, _ = item
     if not tamanho:
         resumo['ignorados'] += 1   # a API de bot não aceita arquivo vazio
@@ -456,7 +531,7 @@ def canal_de(destino, conf, prazo=saida.PRAZO):
     valores = segredos_de(destino)
     if not valores:
         raise saida.Falha('segredo')
-    if destino == 's3':
+    if tipo(destino) == 's3':
         return s3.Destino(conf, *valores, prazo=prazo)
     return telegram.Bot(CFG['telegram_api'], *valores, prazo=prazo)
 
@@ -469,29 +544,30 @@ def passada(destino, conf, recentes=False, anunciados=None):
     resumo = {'quando': int(time.time()), 'arquivos': 0, 'bytes': 0, 'apagados': 0, 'grandes': 0, 'ignorados': 0, 'erros': 0,
               'esperando': 0, 'motivo': ''}
     corte = time.time_ns() - (0 if recentes else ASSENTAR * 10**9)
-    entregar = entregar_s3 if destino == 's3' else entregar_telegram
-    bot = bot_agora() if destino == 's3' else None
+    qual = tipo(destino)
+    entregar = entregar_s3 if qual == 's3' else entregar_telegram
+    outros = outros_agora(destino) if qual == 's3' else ()
     canal, gravado = None, time.monotonic()
     ANDAMENTO[destino] = resumo
-    if destino == 'telegram':
+    if qual == 'telegram':
         idioma.usar(conf['idioma'])
     try:
         canal = canal_de(destino, conf)
-        if destino == 's3':
-            apagar_adiados(estado, resumo, bot)
+        if qual == 's3':
+            apagar_adiados(estado, resumo, outros)
         while True:
             conta = {'ignorados': 0}
             itens, esperando = escolher(conf, tuple(estado['marca']), corte, conta, anunciados)
             for item in itens:
                 try:
-                    entregar(conf, canal, estado, item, resumo, bot)
+                    entregar(conf, canal, estado, item, resumo, outros)
                 except saida.Falha as falha:
                     if not desistir(estado, item[1], falha.motivo):
                         raise
                     resumo['erros'] += 1
                     auditar('-', 'destino_pulado', f'destino={destino} arquivo={limpo(item[1], 200)} motivo={falha.motivo}')
                 estado['marca'] = [item[0], item[1]]
-                if destino == 'telegram' or time.monotonic() - gravado > GRAVAR_A_CADA:
+                if qual == 'telegram' or time.monotonic() - gravado > GRAVAR_A_CADA:
                     gravar_estado(destino, estado)
                     gravado = time.monotonic()
             if len(itens) < LOTE:
@@ -547,19 +623,23 @@ def na_hora(destino, conf):
 def executar(pedidos=None, recentes=False):
     """Faz as passadas dos destinos operantes: os pedidos, quando vêm, ou os que estão na hora. Devolve
     {destino: resumo}, ou None quando outra passada está em curso."""
-    confs = {destino: ler(destino) for destino in NOMES}
-    vez = {destino for destino in NOMES if operante(destino, confs[destino])
-           and (destino in pedidos if pedidos is not None else na_hora(destino, confs[destino]))}
-    # Antes de o S3 apagar o que gravou, o bot entrega o que falta: a passada dele vem junto.
-    if 's3' in vez and confs['s3']['modo'] == 'mover' and operante('telegram', confs['telegram']):
-        vez.add('telegram')
+    confs = {destino: ler(destino) for destino in todos()}
+    operantes = [destino for destino, conf in confs.items() if conf and operante(destino, conf)]
+    vez = {destino for destino in operantes
+           if (destino in pedidos if pedidos is not None else na_hora(destino, confs[destino]))}
+    # Antes de um S3 apagar o que gravou, os outros destinos da mesma pasta entregam o que falta: a passada deles vem junto.
+    for destino in [destino for destino in vez if confs[destino].get('modo') == 'mover']:
+        vez.update(outro for outro in operantes if cruzam(confs[outro]['pasta'], confs[destino]['pasta']))
     if not vez:
         return {}
-    with uma_por_vez() as livre:
-        if not livre:
+    # Os bots, depois os S3 que copiam e, por último, os que guardam: quem apaga encontra os outros já passados.
+    ordem = sorted(vez, key=lambda destino: (TIPOS.index(tipo(destino)), confs[destino].get('modo') == 'mover',
+                                             operantes.index(destino)))
+    with uma_por_vez() as vaga:
+        if not vaga:
             return None
-        return {destino: passada(destino, confs[destino], recentes, chegadas.validos() if destino == 'telegram' else None)
-                for destino in NOMES if destino in vez}
+        return {destino: passada(destino, confs[destino], recentes, chegadas.validos() if tipo(destino) == 'telegram' else None)
+                for destino in ordem}
 
 
 def pedir(destino):
@@ -570,13 +650,14 @@ def pedir(destino):
 
 
 def rodar():
-    """Colhe os anúncios de chegada a cada COLHER segundos e faz as passadas: a pedida pela tela, a do bot quando
+    """Colhe os anúncios de chegada a cada COLHER segundos e faz as passadas: a pedida pela tela, a dos bots quando
     chega arquivo (`urgente`) ou quando o que estava à espera já assentou (`rever`), e a de quem está na hora."""
     conferido, urgente, rever, depois = time.monotonic(), 0.0, 0.0, False
 
     def volta(feitas):
-        """A passada do bot deixou arquivo à espera: a seguinte é quando ele assentar, e não só no intervalo."""
-        return time.monotonic() + ASSENTAR + CALMA if (feitas or {}).get('telegram', {}).get('esperando') else 0.0
+        """A passada de um bot deixou arquivo à espera: a seguinte é quando ele assentar, e não só no intervalo."""
+        espera = any(tipo(destino) == 'telegram' and conta.get('esperando') for destino, conta in (feitas or {}).items())
+        return time.monotonic() + ASSENTAR + CALMA if espera else 0.0
     while True:
         agora = time.monotonic()
         ACORDAR.wait(min([COLHER] + [max(prazo - agora, 0.1) for prazo in (urgente, rever) if prazo]))
@@ -593,15 +674,16 @@ def rodar():
                     depois = True   # chegou mais um com a passada do bot já marcada: ele ganha a dele em seguida
                 else:
                     urgente = agora + CALMA
-            if 0 < urgente <= agora or 0 < rever <= agora:
-                pedidos.add('telegram')
-            if pedidos:
+            dos_bots = 0 < urgente <= agora or 0 < rever <= agora
+            if dos_bots:
+                pedidos.update(todos('telegram'))
+            if pedidos or dos_bots:
                 feitas = executar(pedidos)
                 if feitas is None:
                     with TRAVA_PEDIDOS:
                         PEDIDOS.update(pedidos)   # o terminal está fazendo uma passada: o pedido fica para a volta seguinte
                     urgente, rever = 0.0, 0.0
-                elif 'telegram' in pedidos:
+                elif dos_bots or any(tipo(destino) == 'telegram' for destino in pedidos):
                     urgente, depois, rever = (time.monotonic() + CALMA if depois else 0.0), False, volta(feitas)
             if agora - conferido >= CONFERIR:
                 conferido = agora
@@ -634,7 +716,7 @@ def testar(destino):
         canal = None
         try:
             canal = canal_de(destino, conf, PRAZO_TESTE)
-            if destino == 's3':
+            if tipo(destino) == 's3':
                 chave = s3.chave_do_objeto(conf['prefixo'], 'allsafe-ftp-stack-teste.txt')
                 canal.pedir('PUT', chave, corpo=f'Teste de gravação da allsafe-ftp-stack, em {time.strftime("%Y-%m-%d %H:%M:%S")}.\n'.encode())
             else:
@@ -665,10 +747,10 @@ def enviar_arquivo(destino, caminho, ao_terminar):
     descritor = abrir(partes(caminho), False)
     dados = os.fstat(descritor)
     item = (dados.st_ctime_ns, caminho, dados.st_size, dados.st_ino)
-    conf, chave, motivo = ler(destino), None, ''
+    conf, chave, motivo, qual = ler(destino), None, '', tipo(destino)
     if not conf or not segredos_de(destino):
         motivo = 'segredo'
-    elif destino == 'telegram':
+    elif qual == 'telegram':
         motivo = 'vazio' if not item[2] else 'limite' if item[2] > CFG['telegram_max'] else ''
     else:
         chave = s3.chave_do_objeto(conf['prefixo'], caminho)
@@ -684,10 +766,10 @@ def enviar_arquivo(destino, caminho, ao_terminar):
     def tentar():
         canal = None
         try:
-            if destino == 'telegram':
+            if qual == 'telegram':
                 idioma.usar(conf['idioma'])
             canal = canal_de(destino, conf)
-            if destino == 's3':
+            if qual == 's3':
                 canal.enviar(chave, descritor, item[2])
             else:
                 canal.enviar(descritor, item[2], caminho.rsplit('/', 1)[-1], texto_do_arquivo(caminho, item[2], item[0]))

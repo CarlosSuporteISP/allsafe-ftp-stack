@@ -749,12 +749,17 @@ Once a destination is saved in the [Destinations](#destinos) tab, each file gets
 
 1. Enter the folder of the file.
 2. On the line of the file, click **Telegram** or **S3**.
+3. With more than one destination of that type ready, choose the **Destination that receives** and click **Send**.
 
-**Expected result:** the page comes back to the same folder with the message `S3 storage: file sent.` or `Telegram bot: file sent.`, and the Log tab gets the line `File sent to the destination on request`, with the administrator, the destination and the file.
+<a href="images/arquivos-escolher-destino.png"><img src="images/arquivos-escolher-destino.png" alt="Send this file to the S3 storage screen, with the path of the file, the sentence saying that it stays on the server and that the progress of the runs does not change, the choice Destination that receives with S3 storage and S3 storage: Customers, each with the bucket and the prefix, and the Send and Cancel buttons" width="100%"></a>
+
+<sub><b>v1.3.0</b> · Files menu, choice of the destination · captured on 2026-10-11</sub>
+
+**Expected result:** the page comes back to the same folder with the message `S3 storage: file sent.` or `Telegram bot: file sent.`, with the name of the destination when it has one, and the Log tab gets the line `File sent to the destination on request`, with the administrator, the destination and the file.
 
 | Item | How it works |
 |---|---|
-| When the buttons appear | Only for the destination saved with its secrets; with no destination, the list stays as before |
+| When the buttons appear | Only for the type that has a destination saved with its secrets; with no destination, the list stays as before |
 | Who has the buttons | Only the administrator: the My files screen, of the FTP user, does not show them |
 | File of another folder | The button works for any file of the data, inside or outside the folder of the destination, and works with the destination turned off |
 | The file on the server | It is never deleted by this send, not even with S3 in **Keep in S3** |
@@ -1004,11 +1009,11 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 
 ## ☁️ Destinations
 
-<a href="images/destinos.png"><img src="images/destinos.png" alt="Destinations tab with the S3 storage card turned on, with the address, the bucket and the prefix, the region, the folder sent, the runs every 60 minutes, Copy after sending, the keys saved without being shown on screen, the last run and the total sent, the Telegram bot card turned on, with the folder, the runs every 5 minutes, the largest file the bot sends, the message language, the last run and the total sent, the Test, Send now, Change and Remove buttons on each card and, at the top of the screen, the How the panel sends explanation, collapsed" width="100%"></a>
+<a href="images/destinos.png"><img src="images/destinos.png" alt="Destinations tab with the S3 storage card turned on, with the address, the bucket and the prefix, the region, the folder sent, the runs every 60 minutes, Copy after sending, the keys saved without being shown on screen, the last run and the total sent, the Telegram bot card turned on, with the folder, the runs every 5 minutes, the largest file the bot sends, the message language, the last run and the total sent, the Test, Send now, Change, New with the same access and Remove buttons on each card and, at the top of the screen, the New S3 and New bot buttons and the How the panel sends explanation, collapsed" width="100%"></a>
 
-<sub><b>v1.2.0</b> · Destinations menu · captured on 2026-10-11</sub>
+<sub><b>v1.3.0</b> · Destinations menu · captured on 2026-10-11</sub>
 
-**What it is for:** sending by itself, out of the server, the files that arrive in a folder. There are two destinations: an S3 storage, which holds the second copy or keeps the files and frees the disk, and a Telegram bot, which delivers each new file to a person, a group or a channel.
+**What it is for:** sending by itself, out of the server, the files that arrive in a folder. There are two types of destination, with up to 20 of each: the S3 storage, which holds the second copy or keeps the files and frees the disk, and the Telegram bot, which delivers each new file to a person, a group or a channel.
 
 **How to get there:** menu ➜ **Destinations**. Only the administrator has the tab.
 
@@ -1024,14 +1029,16 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 | Last run | When it was and how many files went, with the total size; when it stops before the end, the reason in one sentence |
 | Sent since it was turned on | The total of files and of size the destination has already received |
 | Still arriving | Files that changed less than two minutes ago: they go in a later run |
-| Waiting for the bot | In S3 with **Keep in S3**, files already stored at the destination that only leave the server when the bot delivers them |
+| Waiting for another destination | In S3 with **Keep in S3**, files already stored there that only leave the server when the other destinations of the folder deliver them |
 | **Test** | Writes a small object to S3 or sends the test message through the bot, with what is saved |
 | **Send now** | Requests a run out of schedule; refresh the page to follow it |
 | **Change** | Opens the form with what is saved; a blank secret keeps the saved one |
-| **Remove** | Opens the confirmation that deletes the settings, the progress and the secrets of the destination |
+| **New with the same access** | Opens the form of a new destination of the same type, with the secrets of this one |
+| **Remove** | Opens the confirmation that deletes the settings, the progress and the secrets of that destination, and only of it |
+| **New S3** · **New bot** | At the top of the screen, after the first destination of the type: they open the blank form of one more |
 | **How the panel sends** | At the top of the screen, collapsed: one click opens the summary of the rules, HTTPS only, regular files only and where the secrets are kept |
 
-Each destination has a single connection, and one does not depend on the other. S3 sends everything in the folder, including what was already there when it was turned on, at each interval. The bot sends only what arrives after it is turned on: within a few seconds when the file arrives whole by FTP or through the panel, and at each interval what showed up in the folder another way. The complete rules are in [Web panel](../panel.md#destinos).
+Each destination has its own folder, interval and secrets, and one does not depend on the other. S3 sends everything in the folder, including what was already there when it was turned on, at each interval. The bot sends only what arrives after it is turned on: within a few seconds when the file arrives whole by FTP or through the panel, and at each interval what showed up in the folder another way. The complete rules are in [Web panel](../panel.md#destinos).
 
 <details>
 <summary>Destinations ➜ Before configuring — click to expand</summary>
@@ -1040,7 +1047,7 @@ Each destination has a single connection, and one does not depend on the other. 
 
 <a href="images/destinos-sem-destino.png"><img src="images/destinos-sem-destino.png" alt="Destinations tab of a new installation, with the S3 storage and Telegram bot cards marked as not configured, each with the explanation of what it sends and the Configure button, and, at the top of the screen, the How the panel sends explanation, collapsed" width="100%"></a>
 
-<sub><b>v1.2.0</b> · Destinations menu, no destination saved · captured on 2026-10-11</sub>
+<sub><b>v1.3.0</b> · Destinations menu, no destination saved · captured on 2026-10-11</sub>
 
 The installation is born with no destination: until the administrator saves one, nothing leaves the server and the panel opens no connection to the outside. Each card says what the destination does and leads to its form, through the **Configure** button.
 
@@ -1051,9 +1058,9 @@ The installation is born with no destination: until the administrator saves one,
 
 ### Destinations ➜ S3 storage
 
-<a href="images/destinos-s3.png"><img src="images/destinos-s3.png" alt="S3 storage form filled in with an example service: service address, region, bucket, prefix, bucket address in the path, example access key, masked secret key, the On box, the folder sent, the 60-minute interval, Copy after sending, the notices about Keep in S3 and about the object name, the Your current password field and the Save and Cancel buttons" width="100%"></a>
+<a href="images/destinos-s3.png"><img src="images/destinos-s3.png" alt="S3 storage form filled in with an example service: service address, region, bucket, prefix, bucket address in the path, example access key, masked secret key, the Name field, the On box, the folder sent, the 60-minute interval, Copy after sending, the notices about Keep in S3 and about the object name, the Your current password field and the Save and Cancel buttons" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Destinations menu, S3 form · captured on 2026-10-11</sub>
+<sub><b>v1.3.0</b> · Destinations menu, S3 form · captured on 2026-10-11</sub>
 
 Any service that speaks the S3 protocol works, in the cloud or on the internal network. Before you start, create the bucket at the service and a key that can only write to it.
 
@@ -1071,6 +1078,7 @@ Any service that speaks the S3 protocol works, in the cloud or on the internal n
 | Bucket address | Yes | **In the path** (`https://name/bucket/file`) or **In the name** (`https://bucket.name/file`), as the service requires |
 | Access key | Yes | The key that can write to the bucket. In **Change**, blank keeps the saved one |
 | Secret key | Yes | The other half of the key. In **Change**, blank keeps the saved one |
+| Name | No | Up to 40 characters, to recognise the destination on the screen when there is more than one of the type |
 | On | No | Checked, the panel sends by itself; unchecked, the settings are kept and nothing leaves |
 | Folder sent | No | The folder inside the data, which must exist; blank is the whole data folder |
 | Interval between runs | Yes | Minutes, 5 to 1440 |
@@ -1079,7 +1087,7 @@ Any service that speaks the S3 protocol works, in the cloud or on the internal n
 
 <a href="images/destinos-gravado.png"><img src="images/destinos-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, and the S3 storage and Telegram bot cards turned on, each with what was saved, the secrets saved without being shown on screen and the last run as none yet" width="100%"></a>
 
-<sub><b>v1.2.0</b> · Destinations menu, after saving · captured on 2026-10-11</sub>
+<sub><b>v1.3.0</b> · Destinations menu, after saving · captured on 2026-10-11</sub>
 
 **Expected result:** the tab comes back with the notice `Destination saved. It takes effect on the next run.`, and the card shows the `on` tag, the address, the bucket, the folder and that the keys are saved, without showing them. The first run starts within a minute and sends everything already in the folder.
 
@@ -1100,9 +1108,9 @@ Any service that speaks the S3 protocol works, in the cloud or on the internal n
 
 ### Destinations ➜ Telegram bot
 
-<a href="images/destinos-telegram.png"><img src="images/destinos-telegram.png" alt="Telegram bot form with the sentence that says the bot only sends, the masked bot token, the receiving chat with an example channel name, the On box, the folder sent, the 5-minute interval, the message language, the explanation of the 50 MiB limit per file and of the send in a moment, the Your current password field and the Save and Cancel buttons" width="100%"></a>
+<a href="images/destinos-telegram.png"><img src="images/destinos-telegram.png" alt="Telegram bot form with the sentence that says the bot only sends, the masked bot token, the receiving chat with an example channel name, the Name field, the On box, the folder sent, the 5-minute interval, the message language, the explanation of the 50 MiB limit per file and of the send in a moment, the Your current password field and the Save and Cancel buttons" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Destinations menu, bot form · captured on 2026-10-11</sub>
+<sub><b>v1.3.0</b> · Destinations menu, bot form · captured on 2026-10-11</sub>
 
 Before you start, create the bot with the Telegram bot creator and keep the token it hands over. Add the bot to the group or the channel that will receive; for a person, they must have started the chat with the bot.
 
@@ -1115,6 +1123,7 @@ Before you start, create the bot with the Telegram bot creator and keep the toke
 |---|---|---|
 | Bot token | Yes | The whole text the bot creator hands over. In **Change**, blank keeps the saved one |
 | Receiving chat | Yes | The number of the person or of the group (a group one starts with `-`) or the `@name` of the channel. In **Change**, blank keeps the saved one |
+| Name | No | Up to 40 characters, to recognise the destination on the screen when there is more than one of the type |
 | On | No | Checked, the panel sends by itself; unchecked, the settings are kept and nothing leaves |
 | Folder sent | No | The folder inside the data, which must exist; blank is the whole data folder |
 | Interval between runs | Yes | Minutes, 5 to 1440: it is the check of what did not go right away |
@@ -1133,13 +1142,44 @@ Before you start, create the bot with the Telegram bot creator and keep the toke
 </details>
 
 <details>
+<summary>Destinations ➜ Several destinations of the same type — click to expand</summary>
+
+### Destinations ➜ Several destinations of the same type
+
+<a href="images/destinos-mesmo-acesso.png"><img src="images/destinos-mesmo-acesso.png" alt="S3 storage: new destination form, with the sentence saying that the secret left blank is copied from the S3 storage destination inside the server, the address, the region and the bucket already filled in with its values, the prefix clientes, the two keys blank with the note that blank uses the one of the source destination, the name Customers, the On box, the folder sent clientes, the 60-minute interval, Copy after sending, the Your current password field and the Save and Cancel buttons" width="100%"></a>
+
+<sub><b>v1.3.0</b> · Destinations menu, new destination with the access of another one · captured on 2026-10-11</sub>
+
+Each type accepts up to 20 destinations. A new destination can use the access of one that already works: it is the way to send another folder to the same bucket, the same folder to another bucket or another folder to another group through the same bot.
+
+1. On the card of the destination that already works, click **New with the same access**.
+2. Give the destination a **Name** and change the **Folder sent** or the place: the prefix or the bucket, in S3; the chat, in the bot.
+3. Leave the secrets blank, type your password and click **Save**.
+
+<a href="images/destinos-varios.png"><img src="images/destinos-varios.png" alt="Destinations tab with the notice Destination saved, the New S3 and New bot buttons at the top and three cards turned on: S3 storage, with the prefix copias and the folder roteador-borda; S3 storage: Customers, with the same address and the same bucket, the prefix clientes, the folder clientes and no run yet; and Telegram bot, with the folder clientes" width="100%"></a>
+
+<sub><b>v1.3.0</b> · Destinations menu, with two S3 destinations · captured on 2026-10-11</sub>
+
+**Expected result:** the tab comes back with the notice `Destination saved. It takes effect on the next run.` and one more card, with the type and the given name. The secret left blank was copied from the other destination inside the server, without going through the browser.
+
+| Item | How it works |
+|---|---|
+| **New S3** · **New bot** | They open the blank form, for a destination with other keys or with another bot |
+| Same folder to the same place | Refused, with `This destination already exists`: change the folder or the place |
+| Limit | 20 destinations per type; with the 20 saved, the buttons for a new destination disappear until one is removed |
+| Progress | Each destination has its own: changing, testing or removing one does not touch the others |
+| Several destinations on the same folder | The bots deliver first, then the S3 destinations that copy and, last, the ones that keep; the one that keeps only deletes from the server after all the others have delivered |
+
+</details>
+
+<details>
 <summary>Destinations ➜ Test and Send now — click to expand</summary>
 
 ### Destinations ➜ Test and Send now
 
 <a href="images/destinos-teste.png"><img src="images/destinos-teste.png" alt="Destinations tab with the notice Test finished, the destination received it, above the S3 storage and Telegram bot cards, each with the date of the last run" width="100%"></a>
 
-<sub><b>v1.2.0</b> · Destinations menu, after the test · captured on 2026-10-11</sub>
+<sub><b>v1.3.0</b> · Destinations menu, after the test · captured on 2026-10-11</sub>
 
 1. On the card of the destination, click **Test**.
 2. To skip the wait for the interval, click **Send now** and refresh the page afterwards.
@@ -1176,7 +1216,7 @@ What each reason means and what to do is in [Troubleshooting](../troubleshooting
 <details>
 <summary>Technical detail — routes, secrets and events</summary>
 
-- Routes `GET /destinos`, `GET` and `POST /destinos/s3` and `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `POST /destinos/arquivo` and `GET` and `POST /destinos/remover`. Every `POST` carries the token of the session; saving and removing also ask for the current password. For the FTP user, all of them answer `404`.
+- Routes `GET /destinos`, `GET` and `POST /destinos/s3` and `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `GET` and `POST /destinos/arquivo` and `GET` and `POST /destinos/remover`. Every `POST` carries the token of the session; saving and removing also ask for the current password. For the FTP user, all of them answer `404`.
 - The settings are in `DATA_DIR/painel/destinos/<destino>.conf` and the progress, in `<destino>.estado`. The secrets are in `SECRETS_DIR/destinos`, one per file, with mode `0600`, and never go back to the screen, to the Log tab or to the audit log.
 - The panel only leaves the server over HTTPS, with the certificate checked, and does not follow redirects.
 - The events `destino_gravado`, `destino_teste`, `destino_pedido`, `destino_arquivo`, `destino_enviado`, `destino_falhou`, `destino_pulado` and `destino_removido` stay in the [audit log](../panel.md#auditoria).

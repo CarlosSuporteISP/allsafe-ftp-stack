@@ -13,7 +13,7 @@ Modos: sem argumento, sobe o servidor; --hash lê uma senha da entrada padrão e
 --administrador <nome> lê um hash da entrada padrão e cria o administrador ou troca a senha dele;
 --saude confere /saude pelo soquete e sai com 0 ou 1 (o healthcheck do container roda o saude.py direto, sem subir o painel);
 --retencao aplica agora a limpeza automática de cada usuário que tem uma, e com --simular só conta o que sairia;
---destinos mostra a situação do S3 e do bot do Telegram, e --destinos enviar <s3|telegram> faz agora a passada dele
+--destinos mostra a situação de cada destino (S3 e bot do Telegram), e --destinos enviar <destino> faz agora a passada dele
 (com --sem-espera, sem aguardar os dois minutos de um arquivo sem mudar).
 """
 import sys
@@ -81,19 +81,21 @@ def modo_destinos(argumentos):
     if not CFG['destinos']:
         falha('os destinos estão desligados nesta instalação (PAINEL_DESTINOS=nao)')
     if not argumentos:
-        for destino in destinos.NOMES:
-            visto = destinos.situacao(destino)
-            if not visto['conf']:
-                print(f'{destino}: não configurado')
-                continue
-            estado = ('ligado' if visto['conf']['ligado'] else 'desligado') + ('' if visto['segredos'] else ', faltam os segredos')
-            ultima = visto['ultima']
-            print(f'{destino}: {estado}; pasta /data/{visto["conf"]["pasta"]}; a cada {visto["conf"]["intervalo"]} min; '
-                  + (f'última passada: {linha_da_passada(ultima)}' if ultima.get('quando') else 'nenhuma passada ainda'))
+        for tipo in destinos.TIPOS:
+            gravados = destinos.todos(tipo)
+            if not gravados:
+                print(f'{tipo}: não configurado')
+            for destino in gravados:
+                visto = destinos.situacao(destino)
+                estado = ('ligado' if visto['conf']['ligado'] else 'desligado') + ('' if visto['segredos'] else ', faltam os segredos')
+                ultima = visto['ultima']
+                print(f'{destino}: {estado}; pasta /data/{visto["conf"]["pasta"]}; a cada {visto["conf"]["intervalo"]} min; '
+                      + (f'última passada: {linha_da_passada(ultima)}' if ultima.get('quando') else 'nenhuma passada ainda')
+                      + (f'; nome: {visto["conf"]["nome"]}' if visto['conf']['nome'] else ''))
         return
-    if len(argumentos) < 2 or argumentos[0] != 'enviar' or argumentos[1] not in destinos.NOMES \
+    if len(argumentos) < 2 or argumentos[0] != 'enviar' or not destinos.valido(argumentos[1]) \
             or set(argumentos[2:]) - {'--sem-espera'}:
-        falha('uso: --destinos [enviar <s3|telegram> [--sem-espera]]')
+        falha('uso: --destinos [enviar <destino> [--sem-espera]]; o destino é o nome que a lista mostra: s3, telegram, s3-2, telegram-2 ...')
     feitas = destinos.executar({argumentos[1]}, '--sem-espera' in argumentos)
     if feitas is None:
         falha('outra passada está em andamento: tente de novo em instantes')

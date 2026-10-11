@@ -215,8 +215,8 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
   printf '%-9s %s → %s\n' "$tipo" "$resultado" "$arquivo"
 }
 declare -A ESPERADOS=(
-  [testes]="$(seq -s ' ' 1 83)"
-  [seguranca]="$(seq -s ' ' 1 131)"
+  [testes]="$(seq -s ' ' 1 86)"
+  [seguranca]="$(seq -s ' ' 1 132)"
   [rede]="$(seq -s ' ' 1 14)"
 )
 ARQUIVOS=()

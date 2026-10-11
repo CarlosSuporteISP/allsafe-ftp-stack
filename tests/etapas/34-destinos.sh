@@ -44,8 +44,8 @@ aguarda34() { # <expressão> <vezes> [segundos]: espera a auditoria ter a linha 
 }
 testa34() { envio /destinos/testar --max-time 40 --data-urlencode "csrf=$K" --data-urlencode "destino=$1"; }  # <destino>: o botão Testar
 conf34() { # [texto a recusar]: grava o config.json do simulador, de uma vez
-  ( umask 077; printf '{"s3_id":"%s","s3_segredo":"%s","regiao":"sa-teste-1","buckets":["balde34"],"bot_token":"%s","conversa":"%s","telegram_max":600000,"recusar":"%s"}\n' \
-      "$(cat "$D34/s3-id")" "$(cat "$D34/s3-secreta")" "$(cat "$D34/token")" "$(cat "$D34/conversa")" "${1:-}" > "$D34/config.novo" ) && mv "$D34/config.novo" "$D34/config.json"
+  ( umask 077; printf '{"s3_id":"%s","s3_segredo":"%s","regiao":"sa-teste-1","buckets":["balde34"],"bot_token":"%s","conversa":"%s","conversas":["%s"],"telegram_max":600000,"recusar":"%s"}\n' \
+      "$(cat "$D34/s3-id")" "$(cat "$D34/s3-secreta")" "$(cat "$D34/token")" "$(cat "$D34/conversa")" "$(cat "$D34/conversa-b")" "${1:-}" > "$D34/config.novo" ) && mv "$D34/config.novo" "$D34/config.json"
 }
 sim34() { # <linhas a pular> <condição em Python sobre a linha l> [o que imprimir de cada uma]: sem o 3º, a contagem
   docker exec -i "$SIM34" python3 - "$@" <<'PYTHON'
@@ -80,7 +80,7 @@ passa34() { # <destino>: passada pelo terminal, sem a espera dos dois minutos; s
   done
   return "$codigo"
 }
-grava34() { # <s3|telegram> <pote> <token> <arquivo da senha ou ""> [campo=valor | campo@arquivo | -campo]... → "código destino"
+grava34() { # <s3|telegram> <pote> <token> <arquivo da senha ou ""> [campo=valor | campo@arquivo | -campo]... → "código destino"; id=novo cria outro do tipo, id=<destino> altera, copiar=<destino> traz o acesso dele
   local destino="$1" pote="$2" token="$3" senha="$4" par nome; shift 4
   local -A campo=([pasta]=dst34 [intervalo]=1440 [ligado]=sim) arquivo=()
   if [[ "$destino" == s3 ]]; then
@@ -110,9 +110,9 @@ prova34() { # <motivo esperado> <o que é> [campo...]: grava o S3 desligado com 
   [[ "$g" == "303 /destinos?m=gravado" && "$r" == "303 /destinos?m=falha&d=s3&f=$esperado" ]] || ok_prova=1
   ev_prova+="$nome ($(rotulo34 "$@")): gravação $g, teste $r; "
 }
-rotas34() { # <pote> <token> → os códigos das dez rotas dos destinos: quatro de leitura e seis de envio
+rotas34() { # <pote> <token> → os códigos das onze rotas dos destinos: cinco de leitura e seis de envio
   local pote="$1" token="$2" rota r=""
-  for rota in /destinos /destinos/s3 /destinos/telegram '/destinos/remover?destino=s3'; do r+="$(aba -b "$pote" "$B$rota" | cut -c1-3) "; done
+  for rota in /destinos /destinos/s3 /destinos/telegram '/destinos/remover?destino=s3' '/destinos/arquivo?tipo=s3&arquivo=dst34/a1.txt'; do r+="$(aba -b "$pote" "$B$rota" | cut -c1-3) "; done
   for rota in s3 telegram testar agora remover arquivo; do
     r+="$(POTE="$pote" envio "/destinos/$rota" --data-urlencode "csrf=$token" --data-urlencode "destino=s3" | cut -c1-3) "
   done
@@ -135,10 +135,10 @@ n34=$(( RANDOM * RANDOM + 1000 ))
   for n in token token-errado; do
     printf '%s:%s' "$(( 100000000 + RANDOM * RANDOM % 900000000 ))" "$(openssl rand -base64 48 | tr -d '\n=' | tr '+/' '-_' | cut -c1-35)" > "$n"
   done
-  printf -- '-100%010d' "$n34" > conversa; printf -- '-100%010d' "$((n34 + 1))" > conversa-errada
+  printf -- '-100%010d' "$n34" > conversa; printf -- '-100%010d' "$((n34 + 1))" > conversa-errada; printf -- '-100%010d' "$((n34 + 2))" > conversa-b
 ) > "$W/cert34.log" 2>&1; r_cert=$?
 : > "$D34/lista"
-for n in s3-id s3-secreta s3-secreta-errada token token-errado conversa conversa-errada; do
+for n in s3-id s3-secreta s3-secreta-errada token token-errado conversa conversa-errada conversa-b; do
   proibir "$(cat "$D34/$n")"; { cat "$D34/$n"; echo; } >> "$D34/lista"
 done
 proibir "$(sed -n 2p "$D34/ca.key")"; proibir "$(sed -n 2p "$D34/servidor.key")"
@@ -200,7 +200,7 @@ recusa34 telegram 'Token inválido:' token=123
 recusa34 telegram 'Conversa inválida:' conversa=abc
 recusa34 telegram 'Idioma não aceito.' idioma=xx
 x_dest_p="$(envio /destinos/testar --data-urlencode "csrf=$K" --data-urlencode "destino=x")"; x_dest_g="$(aba -b "$J" "$B/destinos/remover?destino=x")"
-# O usuário do FTP, com a sessão e o token dele: nenhuma das dez rotas existe para ele.
+# O usuário do FTP, com a sessão e o token dele: nenhuma das onze rotas existe para ele.
 e_usu="$(COMO=dst34 entrar "$W/dst34.jar" "$W/dst34.senha")"; proibir "$(biscoito_de "$W/dst34.jar")"; K_u="$(token34 "$W/dst34.jar")"; proibir "$K_u"
 u_rotas="$(rotas34 "$W/dst34.jar" "$K_u")"; u_meus="$(aba -b "$W/dst34.jar" "$B/meus-arquivos")"; u_menu="$(tem34 '/destinos')"
 auditoria; d_gra=$(( $(eventos destino_gravado) - n_gra )); d_sen=$(( $(eventos admin_senha_atual_recusada) - n_sen )); d_pap=$(( $(eventos recusa_papel) - n_pap ))
@@ -208,8 +208,8 @@ c_conf="$(docker exec "$PAINEL" sh -c 'ls /painel/destinos 2>/dev/null | grep -c
 [[ "$r_dep0" == 0 && "$e_adm" == 303 && "$r_cert" == 0 && "$r_sim" == 0 && "$sim_pronto" == 1 && "$r_usu$r_pla" == 00 && "$t_ini" == "200 " && "$f_ini" == 2 && "$f_menu" -ge 1 \
   && "$x_semtoken" == "403 " && "$x_token" == "403 " && "$x_origem" == "403 " && "$x_semsessao" == "303 /entrar" && "$x_errada" == "403 " && "$x_errada_f" -ge 1 \
   && "$x_semsenha" == "403 " && "$x_semsenha_f" -ge 1 && "$e_adm2" == 303 && "$ok_inv" == 0 && "$x_dest_p" == "404 " && "$x_dest_g" == "404 " && "$e_usu" == 303 && -n "$K_u" \
-  && "$u_rotas" == "404 404 404 404 404 404 404 404 404 404 " && "$u_meus" == "200 " && "$u_menu" == 0 && "$d_gra" == 0 && "$d_sen" == 2 && "$d_pap" -ge 1 && "$c_conf" == 0 && "$c_seg" == 0 ]]
-caso $? seguranca 125 "Destinos: só o administrador grava, com sessão, token e senha" "deploy.sh com a API do bot apontada para o serviço de exemplo: saída $r_dep0; simulador na rede da instância: docker run $r_sim, pronto $sim_pronto; tela dos destinos com o administrador: $t_ini, os dois 'não configurado' ($f_ini) e a aba no menu ($f_menu); formulário do S3 com a sessão dele: sem token $x_semtoken, token errado $x_token, Origin de fora $x_origem; sem sessão: $x_semsessao; senha atual errada: $x_errada, sem a senha: $x_semsenha (telas com 'A sua senha atual não confere. Nada foi alterado.': $x_errada_f e $x_semsenha_f; admin_senha_atual_recusada a mais: $d_sen); formulário fora da regra, recusado com 400 e o motivo na tela antes de qualquer senha: $ev_inv destino que não existe: no teste $x_dest_p, na tela de remover $x_dest_g; usuário do FTP dst34 com a sessão e o token dele, nas dez rotas (4 de leitura, 6 de envio): $u_rotas (recusa_papel a mais: $d_pap), tela dele: $u_meus, sem '/destinos' ($u_menu); depois de tudo: destino_gravado a mais: $d_gra, arquivos de configuração em /painel/destinos: $c_conf, arquivos de segredo na pasta dos segredos: $c_seg"
+  && "$u_rotas" == "404 404 404 404 404 404 404 404 404 404 404 " && "$u_meus" == "200 " && "$u_menu" == 0 && "$d_gra" == 0 && "$d_sen" == 2 && "$d_pap" -ge 1 && "$c_conf" == 0 && "$c_seg" == 0 ]]
+caso $? seguranca 125 "Destinos: só o administrador grava, com sessão, token e senha" "deploy.sh com a API do bot apontada para o serviço de exemplo: saída $r_dep0; simulador na rede da instância: docker run $r_sim, pronto $sim_pronto; tela dos destinos com o administrador: $t_ini, os dois 'não configurado' ($f_ini) e a aba no menu ($f_menu); formulário do S3 com a sessão dele: sem token $x_semtoken, token errado $x_token, Origin de fora $x_origem; sem sessão: $x_semsessao; senha atual errada: $x_errada, sem a senha: $x_semsenha (telas com 'A sua senha atual não confere. Nada foi alterado.': $x_errada_f e $x_semsenha_f; admin_senha_atual_recusada a mais: $d_sen); formulário fora da regra, recusado com 400 e o motivo na tela antes de qualquer senha: $ev_inv destino que não existe: no teste $x_dest_p, na tela de remover $x_dest_g; usuário do FTP dst34 com a sessão e o token dele, nas onze rotas (5 de leitura, 6 de envio): $u_rotas (recusa_papel a mais: $d_pap), tela dele: $u_meus, sem '/destinos' ($u_menu); depois de tudo: destino_gravado a mais: $d_gra, arquivos de configuração em /painel/destinos: $c_conf, arquivos de segredo na pasta dos segredos: $c_seg"
 
 # ------------------------------------------------------------------ só HTTPS, com certificado conferido e endereço aceito
 # O S3 fica gravado desligado: o botão Testar funciona assim, e nenhuma passada sai enquanto o conjunto A assenta.
@@ -386,10 +386,10 @@ c_m2="$(doc34 0 dst34/m2.bin "$s_m2" 3000) $(obj34 0 dst34/m2.bin "$s_m2" 3000)"
 # m3: o bot falha. O S3 grava e o arquivo fica à espera do bot; quando ele entrega, a passada do S3 apaga.
 novo34 m3.bin; s_m3="$(soma34 dst34/m3.bin)"
 echo 'telegram 500' > "$D34/falhar"; passa34 s3; r_m3=$?; p_m3="$(doterminal34 telegram) | $(doterminal34 s3)"; rm -f "$D34/falhar"; h_m3="$(ha34 dst34/m3.bin)"
-aba -b "$J" "$B/destinos" > /dev/null; f_esp="$(faltam34 'À espera do bot' '1 arquivo já gravado no S3 sai do servidor quando o bot do Telegram o entregar')"
+aba -b "$J" "$B/destinos" > /dev/null; f_esp="$(faltam34 'À espera de outro destino' '1 arquivo já gravado no S3 sai do servidor quando os outros destinos da pasta o entregarem')"
 passa34 s3; r_m3b=$?; p_m3b="$(doterminal34 telegram) | $(doterminal34 s3)"; h_m3b="$(ha34 dst34/m3.bin)"
 c_m3="$(doc34 0 dst34/m3.bin "$s_m3" 3000) $(obj34 0 dst34/m3.bin "$s_m3" 3000)"
-aba -b "$J" "$B/destinos" > /dev/null; f_esp2="$(tem34 'À espera do bot')"
+aba -b "$J" "$B/destinos" > /dev/null; f_esp2="$(tem34 'À espera de outro destino')"
 [[ "$r_c0" == 0 && "$g_tm" == "303 /destinos?m=gravado" && "$r_tm" == 0 && "$g_mv" == "303 /destinos?m=gravado" && "$f_mv" -ge 1 \
   && "$r_m1" == 0 && "$p_m1" == "telegram: 1 arquivo(s), $L3; chegou ao fim | s3: 1 arquivo(s), $A3; chegou ao fim" && "$h_m1" == nao && "$h_a1" == sim && "$c_m1" == "1 1 1" \
   && "$r_m2" == 1 && "$p_m2" == "telegram: 1 arquivo(s), $L3; chegou ao fim | s3: 0 arquivo(s), 0 bytes, $SEM34; parou: http_500" && "$h_m2" == sim \
@@ -397,7 +397,7 @@ aba -b "$J" "$B/destinos" > /dev/null; f_esp2="$(tem34 'À espera do bot')"
   && "$r_m3" == 1 && "$p_m3" == "telegram: 0 arquivo(s), 0 bytes, $SEM34; parou: http_500 | s3: 1 arquivo(s), $L3; chegou ao fim" && "$h_m3" == sim && "$f_esp" == 0 \
   && "$r_m3b" == 0 && "$p_m3b" == "telegram: 1 arquivo(s), $L3; chegou ao fim | s3: 0 arquivo(s), 0 bytes, 1 apagado(s) do servidor, 0 acima do limite do bot, 0 ignorado(s), 0 recusado(s); chegou ao fim" \
   && "$h_m3b" == nao && "$c_m3" == "1 1" && "$f_esp2" == 0 ]]
-caso $? testes 78 "Guardar no S3: o arquivo sai do servidor depois de gravado e de o bot entregar" "passada de cópia antes da troca: saída $r_c0; bot regravado na pasta do S3: $g_tm (primeira passada dele: $r_tm); S3 regravado com o modo Guardar: $g_mv, cartão com o modo ($f_mv); m1, com tudo no ar: saída $r_m1, '$p_m1', ainda no servidor: $h_m1, a1.txt (enviado antes da troca) ainda no servidor: $h_a1; documento do m1, objeto do m1 e objeto do a1.txt no simulador: $c_m1; m2, com o S3 respondendo 500: saída $r_m2, '$p_m2', no servidor: $h_m2; passada seguinte: saída $r_m2b, '$p_m2b', no servidor: $h_m2b, documento e objeto do m2: $c_m2; m3, com o bot respondendo 500: saída $r_m3, '$p_m3', no servidor: $h_m3, textos de 'À espera do bot' que faltam no cartão: $f_esp; passada seguinte: saída $r_m3b, '$p_m3b', no servidor: $h_m3b, documento e objeto do m3: $c_m3, 'À espera do bot' no cartão: $f_esp2"
+caso $? testes 78 "Guardar no S3: o arquivo sai do servidor depois de gravado e de o bot entregar" "passada de cópia antes da troca: saída $r_c0; bot regravado na pasta do S3: $g_tm (primeira passada dele: $r_tm); S3 regravado com o modo Guardar: $g_mv, cartão com o modo ($f_mv); m1, com tudo no ar: saída $r_m1, '$p_m1', ainda no servidor: $h_m1, a1.txt (enviado antes da troca) ainda no servidor: $h_a1; documento do m1, objeto do m1 e objeto do a1.txt no simulador: $c_m1; m2, com o S3 respondendo 500: saída $r_m2, '$p_m2', no servidor: $h_m2; passada seguinte: saída $r_m2b, '$p_m2b', no servidor: $h_m2b, documento e objeto do m2: $c_m2; m3, com o bot respondendo 500: saída $r_m3, '$p_m3', no servidor: $h_m3, textos de 'À espera de outro destino' que faltam no cartão: $f_esp; passada seguinte: saída $r_m3b, '$p_m3b', no servidor: $h_m3b, documento e objeto do m3: $c_m3, 'À espera de outro destino' no cartão: $f_esp2"
 
 # ------------------------------------------------------------------ S3: o bucket no nome do endereço
 # Estilo e pasta trocados: é outro lugar, e a primeira passada envia o que há na pasta nova.
@@ -516,6 +516,186 @@ caso $? testes 81 "Bot do Telegram: o arquivo que chega inteiro sai em instantes
   && "$d_arq" == 6 && "$l_arq" == "1 1 1 1 1" ]]
 caso $? testes 82 "Envio de um arquivo pelo botão da aba Arquivos" "com o S3 gravado e desligado, antes de qualquer passada, arquivo de fora da pasta dele (tg34/antes.txt): $v_des, objeto com o SHA-256 no simulador: $v_obj, e o terminal segue com '$v_sit'; com os dois destinos ligados, aba Arquivos em dst34: $t_82, links Baixar: $n_bx; formulários ocultos do bot e do S3 e, depois, a diferença entre os botões de cada destino e os links Baixar: $b_82; linha do link simbólico e linha do FIFO, cada uma com a quantidade de botões de destino: $b_esp; a1.txt pelo bot: $x_tg, documento com nome, tamanho, SHA-256 e legenda na conversa: $d_a1, tela com 'Bot do Telegram: arquivo enviado.' ($f_tgok); arquivo vazio pelo bot: $x_vaz, tela com o motivo ($f_vaz); arquivo de 41943040 bytes pelo bot, com o limite em 1 MB: $x_lim; pedidos que o bot do simulador recebeu nos três: $d_82; andamento do bot igual antes e depois: $([[ "$e_tg0" == "$e_tg1" ]] && echo sim || echo nao); a1.txt e arquivo vazio para o S3: $x_s3 e $x_s3v, objetos no simulador (a1.txt com o bucket no nome do endereço e o SHA-256; vazio com 0 bytes): $o_82, tela com 'Armazenamento S3: arquivo enviado.' ($f_s3ok); andamento do S3 igual antes e depois: $([[ "$e_s30" == "$e_s31" ]] && echo sim || echo nao); S3 regravado no modo Guardar: $g_mv2, sub/a3.txt pelo botão: $x_mv, objeto gravado: $o_mv, arquivo ainda no servidor: $h_a3; S3 de volta ao modo Copiar: $g_cp2; destino_arquivo a mais na auditoria: $d_arq, com administrador, destino, arquivo, bytes e resultado (a1 pelo bot ok, vazio, limite, a1 no S3 ok, a3 no S3 ok): $l_arq"
 
+# ------------------------------------------------------------------ vários destinos do mesmo tipo
+# Até aqui a etapa tinha um S3 e um bot. O segundo de cada tipo nasce com o acesso do primeiro (o segredo é copiado no
+# servidor, sem passar pelo navegador) e leva outra pasta a outro lugar: outro prefixo no bucket, outra conversa do bot.
+planta34 <<'SH'
+mkdir -p /data/tg34/dois && cd /data/tg34/dois && for n in d1 d2; do echo "$n da pasta dos dois destinos" > "$n.txt"; done
+chown -R ftpdata:ftpdata /data/tg34/dois
+SH
+auditoria; n_ua="$(eventos destino_gravado)"; m_ua=$(marca34)
+ua_tela="$(aba -b "$J" "$B/destinos")"
+ua_links="$(faltam34 'href="/destinos/s3?id=novo"' 'href="/destinos/s3?id=novo&amp;copiar=s3"' 'href="/destinos/telegram?id=novo"' 'href="/destinos/telegram?id=novo&amp;copiar=telegram"')"
+ua_form="$(aba -b "$J" "$B/destinos/s3?id=novo&copiar=s3")"
+ua_campos="$(faltam34 'name="id" value="novo"' 'name="copiar" value="s3"' 'Destino novo com o acesso de' 'em branco usa o do destino de origem' 'name="nome"')"
+ua_g="$(grava34 s3 "$J" "$K" "$W/painel.senha" id=novo copiar=s3 'nome=Cópia B' pasta=tg34/dois prefixo=copias/outra)"
+auditoria; ua_l="$(linhas34 " evento=destino_gravado admin=$ADMIN destino=s3-2 situacao=ligado pasta=tg34/dois intervalo=1440 modo=copiar segredos=copiados origem=s3\$")"
+aba -b "$J" "$B/destinos" > /dev/null
+ua_cartao="$(faltam34 'Armazenamento S3: Cópia B' 'href="/destinos/s3?id=s3-2"' 'href="/destinos/remover?destino=s3-2"' 'name="destino" value="s3-2"')"
+# O segredo copiado assina certo: o teste do destino novo grava o objeto dele, no prefixo dele.
+ua_t="$(testa34 s3-2)"; ua_ot="$(sim34 "$m_ua" "l['op']=='gravar' and l['chave']=='copias/outra/allsafe-ftp-stack-teste.txt' and l['bucket']=='balde34'")"
+passa34 s3-2; ua_r=$?
+ua_o="$(sim34 "$m_ua" "l['op']=='gravar' and l['chave']=='copias/outra/tg34/dois/d1.txt' and l['sha256']=='$(soma34 tg34/dois/d1.txt)'")"
+ua_o+=" $(sim34 "$m_ua" "l['op']=='gravar' and l['chave']=='copias/outra/tg34/dois/d2.txt' and l['sha256']=='$(soma34 tg34/dois/d2.txt)'")"
+ua_o+=" $(sim34 "$m_ua" "l['op']=='gravar' and (l['chave'].startswith('copias/teste/tg34/') or l['chave'].startswith('copias/outra/dst34/'))")"
+# O segundo bot: o token do primeiro, copiado, e outra conversa, digitada. Só o que chega depois de gravado é enviado.
+ua_gb="$(grava34 telegram "$J" "$K" "$W/painel.senha" id=novo copiar=telegram nome=Plantao pasta=tg34/dois "conversa@$D34/conversa-b")"
+auditoria; ua_lb="$(linhas34 " evento=destino_gravado admin=$ADMIN destino=telegram-2 situacao=ligado pasta=tg34/dois intervalo=1440 segredos=copiados origem=telegram\$")"
+ua_tb="$(testa34 telegram-2)"; ua_om="$(sim34 "$m_ua" "l['op']=='sendMessage' and l['codigo']==200 and l['qual']==1") $(sim34 "$m_ua" "l['op']=='sendMessage' and l['qual']!=1")"
+planta34 <<'SH'
+cd /data/tg34/dois && echo 'd3 chegou depois do segundo bot' > d3.txt && chown ftpdata:ftpdata d3.txt
+SH
+passa34 telegram-2; ua_rb=$?
+ua_d="$(sim34 "$m_ua" "l['op']=='sendDocument' and l['codigo']==200 and l['arquivo']=='d3.txt' and l['qual']==1 and l['sha256']=='$(soma34 tg34/dois/d3.txt)'")"
+ua_d+=" $(sim34 "$m_ua" "l['op']=='sendDocument' and l['qual']!=1") $(sim34 "$m_ua" "l['op']=='sendDocument' and l['arquivo'] in ('d1.txt', 'd2.txt')")"
+# Um arquivo por segredo, cada destino com os dele; a comparação é entre os arquivos, sem mostrar o conteúdo.
+ua_seg="$(LC_ALL=C ls "$S/destinos" 2>/dev/null | tr '\n' ' ')"; ua_modo="$(stat -c %a "$S/destinos"/*.txt 2>/dev/null | sort -u | tr '\n' ' ')"
+cmp -s "$S/destinos/s3-chave-de-acesso.txt" "$S/destinos/s3-2-chave-de-acesso.txt" && cmp -s "$S/destinos/s3-chave-secreta.txt" "$S/destinos/s3-2-chave-secreta.txt" \
+  && cmp -s "$S/destinos/telegram-token.txt" "$S/destinos/telegram-2-token.txt"; ua_igual=$?
+cmp -s "$S/destinos/telegram-conversa.txt" "$S/destinos/telegram-2-conversa.txt"; ua_outra=$?
+terminal34; ua_ordem="$(cut -d: -f1 "$W/terminal34" | tr '\n' ' ')"
+ua_nomes="$(grep -c -E '^s3-2: ligado; pasta /data/tg34/dois; a cada 1440 min; última passada: [0-9]+ arquivo\(s\), .*; nome: Cópia B$' "$W/terminal34" || true)"
+ua_nomes+=" $(grep -c -E '^telegram-2: ligado; pasta /data/tg34/dois; a cada 1440 min; última passada: [0-9]+ arquivo\(s\), .*; nome: Plantao$' "$W/terminal34" || true)"
+# Alterar o segundo sem digitar segredo: ficam os dele, e o primeiro não muda.
+ua_s3="$(situ34 s3)"
+ua_ga="$(grava34 s3 "$J" "$K" "$W/painel.senha" id=s3-2 'nome=Cópia B' pasta=tg34/dois prefixo=copias/outra intervalo=720)"
+auditoria; ua_la="$(linhas34 " evento=destino_gravado admin=$ADMIN destino=s3-2 situacao=ligado pasta=tg34/dois intervalo=720 modo=copiar segredos=mantidos\$")"
+ua_s3b="$(situ34 s3)"; ua_ta="$(testa34 s3-2)"; d_ua=$(( $(eventos destino_gravado) - n_ua ))
+[[ "$ua_tela" == "200 " && "$ua_links" == 0 && "$ua_form" == "200 " && "$ua_campos" == 0 && "$ua_g" == "303 /destinos?m=gravado" && "$ua_l" == 1 && "$ua_cartao" == 0 \
+  && "$ua_t" == "303 /destinos?m=teste" && "$ua_ot" == 1 && "$ua_r" == 0 && "$ua_o" == "1 1 0" \
+  && "$ua_gb" == "303 /destinos?m=gravado" && "$ua_lb" == 1 && "$ua_tb" == "303 /destinos?m=teste" && "$ua_om" == "1 0" && "$ua_rb" == 0 && "$ua_d" == "1 0 0" \
+  && "$ua_seg" == "s3-2-chave-de-acesso.txt s3-2-chave-secreta.txt s3-chave-de-acesso.txt s3-chave-secreta.txt telegram-2-conversa.txt telegram-2-token.txt telegram-conversa.txt telegram-token.txt " \
+  && "$ua_modo" == "600 " && "$ua_igual" == 0 && "$ua_outra" == 1 && "$ua_ordem" == "telegram telegram-2 s3 s3-2 " && "$ua_nomes" == "1 1" \
+  && "$ua_ga" == "303 /destinos?m=gravado" && "$ua_la" == 1 && "$ua_s3" == "$ua_s3b" && "$ua_s3" == "s3: ligado; pasta /data/dst34/sub; a cada 1440 min; "* \
+  && "$ua_ta" == "303 /destinos?m=teste" && "$d_ua" == 3 ]]
+caso $? testes 84 "Segundo S3 e segundo bot, criados com o acesso do primeiro" "tela dos destinos ($ua_tela) com um S3 e um bot: links de destino novo e de 'Novo com o mesmo acesso' que faltam: $ua_links; formulário de S3 novo com o acesso do primeiro: $ua_form, campos ocultos id e copiar, aviso da cópia, nota 'em branco usa o do destino de origem' e campo Nome que faltam: $ua_campos; gravado sem digitar nenhuma chave, com o nome 'Cópia B', a pasta tg34/dois e o prefixo copias/outra: $ua_g, linha destino_gravado destino=s3-2 com segredos=copiados origem=s3: $ua_l; cartão 'Armazenamento S3: Cópia B' com Alterar, Remover e os botões dele, itens que faltam: $ua_cartao; botão Testar do destino novo: $ua_t, objeto de teste em copias/outra no simulador (assinatura conferida com a chave copiada): $ua_ot; passada dele: saída $ua_r; d1.txt e d2.txt em copias/outra com o SHA-256 de cada um, e objetos no prefixo ou na pasta do outro S3: $ua_o; segundo bot com o token copiado e outra conversa, nome 'Plantao': $ua_gb, linha destino_gravado destino=telegram-2 com segredos=copiados origem=telegram: $ua_lb; teste dele: $ua_tb, mensagens na segunda conversa e fora dela: $ua_om; d3.txt, plantado depois: passada com saída $ua_rb, documento na segunda conversa com o SHA-256, documentos fora dela e documentos de d1 e d2 (anteriores ao bot): $ua_d; arquivos de segredo: $ua_seg(modos: $ua_modo), chaves e token do segundo iguais aos do primeiro (cmp: $ua_igual) e conversa diferente (cmp: $ua_outra); ordem das linhas do terminal: $ua_ordem, linhas do s3-2 e do telegram-2 com pasta, intervalo e nome: $ua_nomes; s3-2 alterado para 720 minutos sem digitar segredo: $ua_ga, linha com segredos=mantidos: $ua_la, teste depois da alteração: $ua_ta; linha do primeiro S3 no terminal igual antes e depois ('${ua_s3%%; última*}'); linhas destino_gravado a mais: $d_ua"
+
+# ------------------------------------------------------------------ o mesmo lugar duas vezes, o limite por tipo e o Guardar com outro S3
+REP34='Este destino já existe:'; CHEIO34='Este tipo já tem os 20 destinos que o painel aceita: remova um antes de criar outro.'
+auditoria; n_ub="$(eventos destino_gravado)"
+ub_rep="$(grava34 s3 "$J" "$K" "$W/painel.senha" id=novo copiar=s3 pasta=dst34)"; ub_repf="$(tem34 "$REP34")"
+ub_rep+="$(grava34 s3 "$J" "$K" "$W/painel.senha" id=s3-2 'nome=Cópia B' pasta=dst34/sub intervalo=720)"; ub_repf+=" $(tem34 "$REP34")"; ub_s2="$(situ34 s3-2)"
+ub_rep+="$(grava34 telegram "$J" "$K" "$W/painel.senha" id=novo copiar=telegram pasta=dst34/sub)"; ub_repf+=" $(tem34 "$REP34")"
+ub_rep+="$(grava34 telegram "$J" "$K" "$W/painel.senha" id=novo copiar=telegram pasta=tg34 "conversa@$D34/conversa-b")"; ub_repf+=" $(tem34 "$REP34")"
+auditoria; ub_n=$(( $(eventos destino_gravado) - n_ub ))
+# O mesmo bot e a mesma conversa em outra pasta, que não cruza com nenhuma: é outro destino.
+ub_t3="$(grava34 telegram "$J" "$K" "$W/painel.senha" id=novo copiar=telegram pasta=tg34/sub)"; ub_t3s="$(situ34 telegram-3)"
+cmp -s "$S/destinos/telegram-token.txt" "$S/destinos/telegram-3-token.txt" && cmp -s "$S/destinos/telegram-conversa.txt" "$S/destinos/telegram-3-conversa.txt"; ub_t3i=$?
+ub_t3r="$(envio /destinos/remover --data-urlencode "csrf=$K" --data-urlencode "destino=telegram-3" --data-urlencode "senha_atual@$W/painel.senha")"
+ub_t3k="$(ls "$S/destinos" 2>/dev/null | grep -c '^telegram-3-' || true)"
+# O limite por tipo: com os vinte nomes do S3 ocupados (configurações plantadas, sem segredos), não se cria outro.
+docker exec "$PAINEL" sh -c 'cd /painel/destinos && for n in $(seq 3 20); do cp s3-2.conf "s3-$n.conf" || exit 1; done'; ub_pl=$?
+ub_ch="$(aba -b "$J" "$B/destinos/s3?id=novo")"
+ub_chg="$(grava34 s3 "$J" "$K" "$W/painel.senha" id=novo "${S3_34[@]}" pasta=tg34/sub prefixo=copias/cheio)"
+ub_cht="$(aba -b "$J" "$B/destinos?m=cheio")"; ub_chl="$(tem34 "$CHEIO34") $(vezes34 'href="/destinos/s3?id=novo') $(vezes34 'href="/destinos/telegram?id=novo"')"
+ub_lp="$(docker exec "$PAINEL" sh -c 'cd /painel/destinos && for n in $(seq 3 20); do rm -f "s3-$n.conf" "s3-$n.estado"; done; ls | grep -c -E "^s3-([3-9]|1[0-9]|20)\."' || true)"
+ub_liv="$(aba -b "$J" "$B/destinos/s3?id=novo")"; ub_k="$(ls "$S/destinos" 2>/dev/null | wc -l)"
+# Guardar com outro S3 na mesma pasta: o arquivo só sai do servidor depois que todos os destinos da pasta o têm.
+ub_g2="$(grava34 s3 "$J" "$K" "$W/painel.senha" id=s3-2 'nome=Cópia B' pasta=dst34/sub prefixo=copias/outra)"; passa34 s3-2; ub_r0=$?; passa34 s3; ub_r0="$ub_r0$?"; passa34 telegram; ub_r0="$ub_r0$?"
+ub_gm="$(grava34 s3 "$J" "$K" "$W/painel.senha" modo=mover estilo=host pasta=dst34/sub)"
+novo34 sub/n1.bin; ub_s="$(soma34 dst34/sub/n1.bin)"; auditoria; n_ubf="$(linhas34 ' evento=destino_falhou destino=s3-2 motivo=http_400$')"
+conf34 copias/outra
+passa34 s3; ub_r1=$?; ub_p1="$(doterminal34 telegram) | $(doterminal34 s3-2) | $(doterminal34 s3)"; ub_h1="$(ha34 dst34/sub/n1.bin)"
+aba -b "$J" "$B/destinos" > /dev/null; ub_esp="$(faltam34 'À espera de outro destino' '1 arquivo já gravado no S3 sai do servidor quando os outros destinos da pasta o entregarem')"
+conf34
+passa34 s3; ub_r2=$?; ub_p2="$(doterminal34 telegram) | $(doterminal34 s3-2) | $(doterminal34 s3)"; ub_h2="$(ha34 dst34/sub/n1.bin)"
+ub_o="$(obj34 0 dst34/sub/n1.bin "$ub_s" 3000) $(sim34 0 "l['op']=='gravar' and l['chave']=='copias/outra/dst34/sub/n1.bin' and l['bytes']==3000 and l['sha256']=='$ub_s'") $(doc34 0 dst34/sub/n1.bin "$ub_s" 3000)"
+aba -b "$J" "$B/destinos" > /dev/null; ub_esp2="$(tem34 'À espera de outro destino')"
+auditoria; ub_lf=$(( $(linhas34 ' evento=destino_falhou destino=s3-2 motivo=http_400$') - n_ubf ))
+ub_gc="$(grava34 s3 "$J" "$K" "$W/painel.senha" estilo=host pasta=dst34/sub)"
+[[ "$ub_rep" == "400 400 400 400 " && "$ub_repf" != *0* && "$ub_s2" == "s3-2: ligado; pasta /data/tg34/dois; a cada 720 min; "* && "$ub_n" == 0 \
+  && "$ub_t3" == "303 /destinos?m=gravado" && "$ub_t3s" == "telegram-3: ligado; pasta /data/tg34/sub; a cada 1440 min; "* && "$ub_t3i" == 0 && "$ub_t3r" == "303 /destinos?m=removido" && "$ub_t3k" == 0 \
+  && "$ub_pl" == 0 && "$ub_ch" == "303 /destinos?m=cheio" && "$ub_chg" == "303 /destinos?m=cheio" && "$ub_cht" == "200 " && "$ub_chl" == "1 0 1" && "$ub_lp" == 0 && "$ub_liv" == "200 " && "$ub_k" == 8 \
+  && "$ub_g2" == "303 /destinos?m=gravado" && "$ub_r0" == 000 && "$ub_gm" == "303 /destinos?m=gravado" \
+  && "$ub_r1" == 1 && "$ub_p1" == "telegram: 1 arquivo(s), $L3; chegou ao fim | s3-2: 0 arquivo(s), 0 bytes, $SEM34; parou: http_400 | s3: 1 arquivo(s), $L3; chegou ao fim" && "$ub_h1" == sim && "$ub_esp" == 0 \
+  && "$ub_r2" == 0 && "$ub_p2" == "telegram: 0 arquivo(s), 0 bytes, $SEM34; chegou ao fim | s3-2: 1 arquivo(s), $L3; chegou ao fim | s3: 0 arquivo(s), 0 bytes, 1 apagado(s) do servidor, 0 acima do limite do bot, 0 ignorado(s), 0 recusado(s); chegou ao fim" \
+  && "$ub_h2" == nao && "$ub_o" == "1 1 1" && "$ub_esp2" == 0 && "$ub_lf" == 1 && "$ub_gc" == "303 /destinos?m=gravado" ]]
+caso $? testes 85 "Destino repetido, limite por tipo e Guardar à espera de outro S3" "a mesma pasta, ou uma que a contém, ao mesmo lugar, quatro tentativas (S3 novo com o endereço, o bucket e o prefixo do primeiro na pasta que contém a dele; s3-2 alterado para a pasta e o prefixo do primeiro; bot novo com o token e a conversa do primeiro em pasta de dentro da dele; bot novo com o token e a conversa do telegram-2 na pasta que contém a dele): $ub_rep, cada tela com '$REP34' ($ub_repf vezes), s3-2 segue em '${ub_s2%%; última*}' e linhas destino_gravado a mais: $ub_n; o mesmo bot e a mesma conversa em pasta que não cruza com nenhuma (tg34/sub): $ub_t3, vira '${ub_t3s%%; nenhuma*}', com token e conversa iguais aos do primeiro (cmp: $ub_t3i); removido com a senha: $ub_t3r, arquivos de segredo dele que sobraram: $ub_t3k; limite: configurações s3-3 a s3-20 plantadas (saída $ub_pl), formulário de S3 novo: $ub_ch, gravação de S3 novo com as chaves digitadas: $ub_chg, tela da lista: $ub_cht, com o aviso '$CHEIO34', links de S3 novo e link de bot novo: $ub_chl; configurações plantadas que sobraram depois de apagadas: $ub_lp, formulário de S3 novo de volta: $ub_liv, arquivos de segredo: $ub_k; Guardar: s3-2 regravado na pasta do primeiro (dst34/sub) com o prefixo copias/outra: $ub_g2, passadas dos dois S3 e do bot antes da troca: saídas $ub_r0, primeiro S3 no modo Guardar: $ub_gm; n1.bin com o simulador recusando copias/outra: saída $ub_r1, '$ub_p1', no servidor: $ub_h1, textos de 'À espera de outro destino' que faltam no cartão: $ub_esp; passada seguinte: saída $ub_r2, '$ub_p2', no servidor: $ub_h2; objeto em copias/teste, objeto em copias/outra e documento do bot, com o SHA-256: $ub_o; 'À espera de outro destino' no cartão: $ub_esp2; destino_falhou destino=s3-2 motivo=http_400 a mais: $ub_lf; primeiro S3 de volta ao modo de cópia: $ub_gc"
+
+# ------------------------------------------------------------------ vários destinos: identificador fora da regra e telas só do administrador
+# Com o s3-2 e o telegram-2 gravados. Nada daqui chega ao serviço de fora, grava destino ou muda arquivo de segredo.
+auditoria; n_uc="$(eventos destino_gravado)"; m_uc=$(marca34); uc_seg="$(LC_ALL=C ls "$S/destinos" 2>/dev/null | tr '\n' ' ')"
+uc_get=""
+for n in telegram s3-21 s3-9 s3-1 ../s3 'novo&copiar=telegram' 'novo&copiar=s3-9' 'novo&copiar=x'; do uc_get+="$(aba -b "$J" "$B/destinos/s3?id=$n" | cut -c1-3) "; done
+uc_get+="$(aba -b "$J" "$B/destinos/telegram?id=s3-2" | cut -c1-3) $(aba -b "$J" "$B/destinos/telegram?id=novo&copiar=s3" | cut -c1-3) "
+# Formulário completo, com as chaves certas e a senha: o que recusa é o identificador.
+uc_post=""
+for n in id=s3-9 id=s3-21 id=telegram-2 'id=novo copiar=telegram' 'id=novo copiar=s3-9'; do
+  # shellcheck disable=SC2086  # um ou dois campos por volta
+  uc_post+="$(grava34 s3 "$J" "$K" "$W/painel.senha" $n "${S3_34[@]}" pasta=tg34/sub prefixo=copias/fora | cut -c1-3) "
+done
+uc_post+="$(grava34 telegram "$J" "$K" "$W/painel.senha" id=s3-2 "${TG_34[@]}" pasta=tg34/sub | cut -c1-3) "
+auditoria; uc_n=$(( $(eventos destino_gravado) - n_uc )); uc_seg2="$(LC_ALL=C ls "$S/destinos" 2>/dev/null | tr '\n' ' ')"
+uc_conf="$(docker exec "$PAINEL" sh -c 'ls /painel/destinos | grep -c "\.conf$"' || true)"
+# O usuário do FTP dono da pasta, com a sessão e o token dele: não cria destino com o acesso do administrador nem chega à escolha.
+E34='/destinos/arquivo?tipo=s3&arquivo=dst34/a1.txt'
+uc_usu="$(aba -b "$W/dst34.jar" "$B/destinos/s3?id=novo&copiar=s3" | cut -c1-3) $(aba -b "$W/dst34.jar" "$B/destinos/s3?id=s3-2" | cut -c1-3) $(aba -b "$W/dst34.jar" "$B$E34" | cut -c1-3)"
+uc_usu+=" $(grava34 s3 "$W/dst34.jar" "$K_u2" "" id=novo copiar=s3 pasta=dst34 prefixo=copias/usuario | cut -c1-3) $(POTE="$W/dst34.jar" arq34 "$K_u2" s3-2 dst34/a1.txt | cut -c1-3) $(POTE="$W/dst34.jar" arq34 "$K_u2" telegram-2 a1.txt | cut -c1-3)"
+uc_sem="$(aba -b "$W/vazio34.jar" "$B$E34")$(aba -b "$W/vazio34.jar" "$B/destinos/s3?id=novo&copiar=s3")"
+# A tela de escolha: só para tipo que existe e arquivo comum de dentro dos dados.
+uc_esc="$(aba -b "$J" "$B$E34")"; uc_tipo=""
+for n in ftp s3-2 S3 ''; do uc_tipo+="$(aba -b "$J" "$B/destinos/arquivo?tipo=$n&arquivo=dst34/a1.txt" | cut -c1-3) "; done
+uc_cam=""
+for n in dst34/../dst34/a1.txt /dst34/a1.txt dst34/nao-existe.txt dst34/sub ''; do uc_cam+="$(aba -b "$J" "$B/destinos/arquivo?tipo=s3&arquivo=$n" | cut -c1-3) "; done
+uc_arq="$(arq34 "$K" s3-21 dst34/a1.txt)$(arq34 "$K" telegram-1 dst34/a1.txt)$(arq34 "$K" s3-9 dst34/a1.txt)"
+d_uc=$(( $(marca34) - m_uc ))
+# Depois da cópia de acesso, os segredos seguem fora das telas, da auditoria, do terminal e das configurações.
+: > "$W/telas34b"; uc_tel=""
+for n in /destinos '/destinos/s3?id=s3-2' '/destinos/s3?id=novo&copiar=s3' '/destinos/telegram?id=telegram-2' '/destinos/telegram?id=novo&copiar=telegram' '/destinos/remover?destino=s3-2' "$E34" '/destinos/arquivo?tipo=telegram&arquivo=dst34/a1.txt'; do
+  uc_tel+="$(aba -b "$J" "$B$n" | cut -c1-3) "; cat "$W/corpo" >> "$W/telas34b"
+done
+uc_rej="$(grava34 s3 "$J" "$K" "$W/painel.senha" id=novo copiar=s3 intervalo=4 pasta=tg34/sub prefixo=copias/fora "${S3_34[@]}")"; cat "$W/corpo" >> "$W/telas34b"
+uc_rej+="$(grava34 telegram "$J" "$K" "$W/painel.senha" id=novo copiar=telegram intervalo=4 pasta=tg34/sub "conversa@$D34/conversa-b")"; cat "$W/corpo" >> "$W/telas34b"
+uc_v="$(vaza34 "$W/telas34b")"; uc_nt="$(grep -c -F 'em branco usa o do destino de origem' "$W/telas34b" || true)"
+auditoria; uc_va="$(vaza34 "$W/auditoria")"; terminal34; uc_vt="$(vaza34 "$W/terminal34")"; uc_lt="$(grep -c -E '^(s3|telegram)(-2)?: ' "$W/terminal34" || true)"
+docker exec "$PAINEL" sh -c 'cat /painel/destinos/*.conf /painel/destinos/*.estado' > "$W/estado34b" 2>&1; uc_ve="$(vaza34 "$W/estado34b")"; uc_ne="$(grep -c -F 'Cópia B' "$W/estado34b" || true)"
+# Controle: a mesma busca acha os oito segredos onde eles têm de estar, um por arquivo.
+uc_c="$(cat "$S/destinos"/*.txt 2>/dev/null | grep -c -F -f "$D34/lista" || true)"
+[[ "$uc_get" == "404 404 404 404 404 404 404 404 404 404 " && "$uc_post" == "404 404 404 404 404 404 " && "$uc_n" == 0 && "$uc_seg2" == "$uc_seg" && "$uc_conf" == 4 \
+  && "$uc_usu" == "404 404 404 404 404 404" && "$uc_sem" == "303 /entrar303 /entrar" && "$uc_esc" == "200 " && "$uc_tipo" == "404 404 404 404 " && "$uc_cam" == "400 400 404 404 404 " \
+  && "$uc_arq" == "404 404 303 /arquivos?pasta=dst34&m=destino_falha&d=s3-9&f=segredo" && "$d_uc" == 0 \
+  && "$uc_tel" == "200 200 200 200 200 200 200 200 " && "$uc_rej" == "400 400 " && "$uc_v" == 0 && "$uc_nt" -ge 2 && "$uc_va" == 0 && "$uc_vt" == 0 && "$uc_lt" == 4 \
+  && "$uc_ve" == 0 && "$uc_ne" -ge 1 && "$uc_c" == 8 ]]
+caso $? seguranca 132 "Vários destinos: identificador fora da regra, telas só do administrador e segredo copiado fora das telas" "com s3, s3-2, telegram e telegram-2 gravados; formulário do S3 com id de outro tipo, fora da faixa (s3-21, s3-1), sem configuração (s3-9), com '..' e com copiar de outro tipo, sem configuração ou fora do formato, e formulário do bot com id e copiar de S3: $uc_get; gravação com o formulário completo, as chaves certas e a senha, com id sem configuração, fora da faixa, de outro tipo e copiar de outro tipo ou sem configuração, e a do bot com id de S3: $uc_post; linhas destino_gravado a mais: $uc_n, configurações gravadas: $uc_conf, arquivos de segredo iguais antes e depois: $([[ "$uc_seg2" == "$uc_seg" ]] && echo sim || echo nao); usuário do FTP dst34 com a sessão e o token dele (formulário de destino novo com o acesso do primeiro, formulário do s3-2, tela de escolha, gravação de destino novo com copiar=s3, envio de arquivo ao s3-2 e ao telegram-2): $uc_usu; sem sessão, a tela de escolha e o formulário de cópia: $uc_sem; tela de escolha com o administrador: $uc_esc; com tipo que não existe (ftp, s3-2, S3, vazio): $uc_tipo; com caminho que sai da pasta, absoluto, inexistente, de pasta e vazio: $uc_cam; envio de arquivo para s3-21, telegram-1 e s3-9 (nome aceito, sem configuração): $uc_arq; pedidos que o simulador recebeu em tudo isso: $d_uc; busca pelos segredos da etapa (com a segunda conversa) nas telas da lista, dos formulários de alterar e de copiar dos dois tipos, de remover e de escolha (códigos $uc_tel) e em dois formulários de cópia recusados com segredo digitado ($uc_rej): $uc_v linhas (a nota 'em branco usa o do destino de origem' aparece $uc_nt vezes); na auditoria: $uc_va; no terminal: $uc_vt (com $uc_lt linhas de destino); nas configurações e nos andamentos: $uc_ve (com o nome 'Cópia B' $uc_ne vez); controle, a mesma busca na pasta dos segredos: $uc_c arquivos"
+
+# ------------------------------------------------------------------ com dois destinos do tipo, o botão pergunta qual; remover tira só o escolhido
+ud_t="$(aba -b "$J" "$B/arquivos?pasta=dst34")"
+ud_f="$(faltam34 '<form id="para-s3" method="get" action="/destinos/arquivo" hidden><input type="hidden" name="tipo" value="s3"></form>' '<form id="para-telegram" method="get" action="/destinos/arquivo" hidden><input type="hidden" name="tipo" value="telegram"></form>') $(vezes34 'method="post" action="/destinos/arquivo"')"
+ud_e="$(aba -b "$J" "$B$E34")"
+ud_ef="$(faltam34 'Destino que recebe' 'name="destino" value="s3" checked>' 'name="destino" value="s3-2">' '<code>dst34/a1.txt</code>' '<strong>Armazenamento S3: Cópia B</strong>: <code>balde34</code> / <code>copias/outra</code>' 'name="arquivo" value="dst34/a1.txt"')"
+ud_et="$(aba -b "$J" "$B/destinos/arquivo?tipo=telegram&arquivo=dst34/a1.txt")"
+ud_etf="$(faltam34 'name="destino" value="telegram" checked>' 'name="destino" value="telegram-2">' '<strong>Bot do Telegram: Plantao</strong>')"
+m_ud=$(marca34); ud_e0="$(estado34 s3-2) $(estado34 telegram-2)"; auditoria; n_ud="$(eventos destino_arquivo)"
+ud_x="$(arq34 "$K" s3-2 dst34/a1.txt)"
+ud_o="$(sim34 "$m_ud" "l['op']=='gravar' and l['chave']=='copias/outra/dst34/a1.txt' and l['sha256']=='$(soma34 dst34/a1.txt)'") $(sim34 "$m_ud" "l['op']=='gravar' and l['chave'].startswith('copias/teste/')")"
+aba -b "$J" "$B/arquivos?pasta=dst34&m=destino_ok&d=s3-2" > /dev/null; ud_ok="$(tem34 'Armazenamento S3: Cópia B: arquivo enviado.')"
+ud_xb="$(arq34 "$K" telegram-2 dst34/a1.txt)"
+ud_d="$(sim34 "$m_ud" "l['op']=='sendDocument' and l['codigo']==200 and l['arquivo']=='a1.txt' and l['qual']==1 and l['sha256']=='$(soma34 dst34/a1.txt)'") $(sim34 "$m_ud" "l['op']=='sendDocument' and l['qual']!=1")"
+ud_e1="$(estado34 s3-2) $(estado34 telegram-2)"
+auditoria; d_ud=$(( $(eventos destino_arquivo) - n_ud ))
+ud_l="$(linhas34 " evento=destino_arquivo admin=$ADMIN destino=s3-2 arquivo=dst34/a1\.txt bytes=$(tam34 dst34/a1.txt) resultado=ok\$")"
+ud_l+=" $(linhas34 " evento=destino_arquivo admin=$ADMIN destino=telegram-2 arquivo=dst34/a1\.txt bytes=$(tam34 dst34/a1.txt) resultado=ok\$")"
+# Remover o segundo S3: saem a configuração, o andamento e os segredos dele, e só os dele.
+ud_rt="$(aba -b "$J" "$B/destinos/remover?destino=s3-2")"; ud_rtf="$(tem34 'Armazenamento S3: Cópia B')"
+ud_r="$(envio /destinos/remover --data-urlencode "csrf=$K" --data-urlencode "destino=s3-2" --data-urlencode "senha_atual@$W/painel.senha")"
+ud_seg="$(LC_ALL=C ls "$S/destinos" 2>/dev/null | tr '\n' ' ')"; ud_conf="$(docker exec "$PAINEL" sh -c 'ls /painel/destinos | grep -c "^s3-2\."' || true)"
+aba -b "$J" "$B/arquivos?pasta=dst34" > /dev/null
+ud_um="$(faltam34 '<form id="para-s3" method="post" action="/destinos/arquivo" autocomplete="off" hidden>' '<input type="hidden" name="destino" value="s3"></form>' '<form id="para-telegram" method="get" action="/destinos/arquivo" hidden>') $(vezes34 'name="tipo" value="s3"')"
+terminal34; ud_ter="$(cut -d: -f1 "$W/terminal34" | tr '\n' ' ')"
+ud_rb="$(envio /destinos/remover --data-urlencode "csrf=$K" --data-urlencode "destino=telegram-2" --data-urlencode "senha_atual@$W/painel.senha")"
+ud_seg2="$(LC_ALL=C ls "$S/destinos" 2>/dev/null | tr '\n' ' ')"; terminal34; ud_ter2="$(cut -d: -f1 "$W/terminal34" | tr '\n' ' ')"
+auditoria; ud_lr="$(linhas34 " evento=destino_removido admin=$ADMIN destino=s3-2\$") $(linhas34 " evento=destino_removido admin=$ADMIN destino=telegram-2\$")"
+# O que já foi enviado continua no destino, e os primeiros seguem com os segredos deles.
+ud_del="$(sim34 "$m_ua" "l['metodo']=='DELETE'")"; ud_fica="$(sim34 "$m_ua" "l['op']=='gravar' and l['chave'].startswith('copias/outra/')")"; ud_tes="$(testa34 s3) $(testa34 telegram)"
+[[ "$ud_t" == "200 " && "$ud_f" == "0 0" && "$ud_e" == "200 " && "$ud_ef" == 0 && "$ud_et" == "200 " && "$ud_etf" == 0 \
+  && "$ud_x" == "303 /arquivos?pasta=dst34&m=destino_ok&d=s3-2" && "$ud_o" == "1 0" && "$ud_ok" -ge 1 && "$ud_xb" == "303 /arquivos?pasta=dst34&m=destino_ok&d=telegram-2" && "$ud_d" == "1 0" \
+  && "$ud_e0" == "$ud_e1" && ${#ud_e0} == 129 && "$d_ud" == 2 && "$ud_l" == "1 1" && "$ud_rt" == "200 " && "$ud_rtf" -ge 1 && "$ud_r" == "303 /destinos?m=removido" \
+  && "$ud_seg" == "s3-chave-de-acesso.txt s3-chave-secreta.txt telegram-2-conversa.txt telegram-2-token.txt telegram-conversa.txt telegram-token.txt " && "$ud_conf" == 0 \
+  && "$ud_um" == "0 0" && "$ud_ter" == "telegram telegram-2 s3 " && "$ud_rb" == "303 /destinos?m=removido" \
+  && "$ud_seg2" == "s3-chave-de-acesso.txt s3-chave-secreta.txt telegram-conversa.txt telegram-token.txt " && "$ud_ter2" == "telegram s3 " && "$ud_lr" == "1 1" \
+  && "$ud_del" == 0 && "$ud_fica" -ge 4 && "$ud_tes" == "303 /destinos?m=teste 303 /destinos?m=teste" ]]
+caso $? testes 86 "Com dois destinos do tipo, o botão do arquivo pergunta qual; remover tira só o escolhido" "aba Arquivos em dst34 ($ud_t) com dois S3 e dois bots prontos: formulários ocultos de escolha (method=get, com o tipo) que faltam e formulários de envio direto: $ud_f; tela de escolha do S3: $ud_e, itens que faltam (legenda, os dois destinos com o primeiro marcado, o arquivo, o nome 'Cópia B' com o bucket e o prefixo dele): $ud_ef; a do bot: $ud_et, itens que faltam: $ud_etf; a1.txt enviado ao s3-2: $ud_x, objeto em copias/outra com o SHA-256 e objetos novos em copias/teste: $ud_o, aviso 'Armazenamento S3: Cópia B: arquivo enviado.': $ud_ok; ao telegram-2: $ud_xb, documento na segunda conversa e documentos fora dela: $ud_d; andamento dos dois igual antes e depois (somas com ${#ud_e0} caracteres); linhas destino_arquivo a mais: $d_ud, a do s3-2 e a do telegram-2 com resultado=ok: $ud_l; tela de remover o s3-2: $ud_rt, com o nome dele: $ud_rtf; removido com a senha: $ud_r, arquivos de segredo: $ud_seg, configuração e andamento dele que sobraram: $ud_conf; aba Arquivos depois: formulário de envio direto ao S3 e de escolha do bot que faltam, e campo de tipo do S3: $ud_um; terminal: $ud_ter; telegram-2 removido: $ud_rb, arquivos de segredo: $ud_seg2, terminal: $ud_ter2; linhas destino_removido do s3-2 e do telegram-2: $ud_lr; pedidos DELETE que o simulador recebeu desde a criação do segundo destino: $ud_del, objetos de copias/outra que seguem no registro dele: $ud_fica; teste do primeiro S3 e do primeiro bot depois das remoções: $ud_tes"
+
 # ------------------------------------------------------------------ segredos fora das telas e dos registros
 : > "$W/telas34"
 for n in /destinos /destinos/s3 /destinos/telegram '/destinos/remover?destino=s3' /atividade '/arquivos?pasta=dst34' '/arquivos?pasta=dst34&m=destino_ok&d=telegram'; do aba -b "$J" "$B$n" > /dev/null; cat "$W/corpo" >> "$W/telas34"; done
@@ -526,7 +706,7 @@ v_tel="$(vaza34 "$W/telas34")"; n_tel="$(grep -c -F 'gravados; não aparecem na 
 auditoria; v_aud="$(vaza34 "$W/auditoria")"; n_aud="$(eventos destino_gravado)"
 for n in "$FTP" "$PAINEL" "$NGINX"; do docker logs "$n" 2>&1; done > "$W/logs34"; v_log="$(vaza34 "$W/logs34")"; n_log="$(grep -c -F 'destino_enviado' "$W/logs34" || true)"
 docker inspect "$FTP" "$PAINEL" "$NGINX" > "$W/inspect34" 2>&1; v_ins="$(vaza34 "$W/inspect34")"; n_ins="$(grep -c -F 'PAINEL_TELEGRAM_API' "$W/inspect34" || true)"
-terminal34; cat "$W/passada" >> "$W/terminal34"; v_ter="$(vaza34 "$W/terminal34")"; n_ter="$(grep -c -E '^(s3|telegram): ' "$W/terminal34" || true)"
+terminal34; cat "$W/passada" >> "$W/terminal34"; v_ter="$(vaza34 "$W/terminal34")"; n_ter="$(grep -c -E '^(s3|telegram)(-[0-9]+)?: ' "$W/terminal34" || true)"
 docker exec "$PAINEL" sh -c 'cat /painel/destinos/*.conf /painel/destinos/*.estado' > "$W/estado34" 2>&1; v_est="$(vaza34 "$W/estado34")"; n_est="$(grep -c -F 'serie' "$W/estado34" || true)"
 # Controle: a mesma busca acha os quatro segredos onde eles têm de estar, na pasta dos segredos, um por arquivo.
 v_seg="$(cat "$S/destinos"/*.txt 2>/dev/null | grep -c -F -f "$D34/lista" || true)"; s_arq2="$(ls "$S/destinos" 2>/dev/null | wc -l)"; s_modo2="$(stat -c %a "$S/destinos"/*.txt 2>/dev/null | sort -u | tr '\n' ' ')"
@@ -633,17 +813,17 @@ t_men2="$(aba -b "$J" "$B/usuarios")"; f_men2="$(tem34 'href="/destinos"')"
 # Controle: com as passadas de volta, o a3.txt é reenviado sozinho.
 marca=$SECONDS; while (( SECONDS - marca < 110 )) && [[ "$(sim34 "$m_nao" "l['op']=='gravar' and l['chave']=='copias/teste/dst34/sub/a3.txt'")" == 0 ]]; do sleep 3; done
 d_sim="$(sim34 "$m_nao" "l['op']=='gravar' and l['chave']=='copias/teste/dst34/sub/a3.txt'")"
-[[ "$r_dep1" == 0 && "$e_adm3" == 303 && "$t_men" == "200 " && "$f_men" == 0 && "$a_rotas" == "404 404 404 404 404 404 404 404 404 404 " && "$r_ter1" == 1 && "$f_ter1" == 1 \
+[[ "$r_dep1" == 0 && "$e_adm3" == 303 && "$t_men" == "200 " && "$f_men" == 0 && "$a_rotas" == "404 404 404 404 404 404 404 404 404 404 404 " && "$r_ter1" == 1 && "$f_ter1" == 1 \
   && "$ok_var" == 0 && "$d_nao" == 0 && "$r_dep2" == 0 && "$e_adm4" == 303 && "$t_men2" == "200 " && "$f_men2" -ge 1 && "$d_sim" == 1 ]]
-caso $? seguranca 129 "PAINEL_DESTINOS=nao desliga os destinos; variável fora da regra é recusada" "deploy.sh com PAINEL_DESTINOS=nao: saída $r_dep1; menu do administrador ($t_men) com a aba Destinos: $f_men; as dez rotas com a sessão e o token dele: $a_rotas; terminal: saída $r_ter1, 'os destinos estão desligados nesta instalação' ($f_ter1); com o andamento do S3 apagado, pedidos que o simulador recebeu em 75 s: $d_nao; container do painel com a variável fora da regra: $ev_var de volta a PAINEL_DESTINOS=sim: saída $r_dep2, aba no menu ($f_men2) e o arquivo reenviado sozinho pela passada (controle): $d_sim"
+caso $? seguranca 129 "PAINEL_DESTINOS=nao desliga os destinos; variável fora da regra é recusada" "deploy.sh com PAINEL_DESTINOS=nao: saída $r_dep1; menu do administrador ($t_men) com a aba Destinos: $f_men; as onze rotas com a sessão e o token dele: $a_rotas; terminal: saída $r_ter1, 'os destinos estão desligados nesta instalação' ($f_ter1); com o andamento do S3 apagado, pedidos que o simulador recebeu em 75 s: $d_nao; container do painel com a variável fora da regra: $ev_var de volta a PAINEL_DESTINOS=sim: saída $r_dep2, aba no menu ($f_men2) e o arquivo reenviado sozinho pela passada (controle): $d_sim"
 
 # ------------------------------------------------------------------ pelo terminal e a remoção
 passou34 s3; terminal34; r_sit=$?
 l_sit="$(grep -c -E '^telegram: ligado; pasta /data/dst34; a cada 1440 min; última passada: [0-9]+ arquivo\(s\), ' "$W/terminal34" || true) $(grep -c -E '^s3: ligado; pasta /data/dst34/sub; a cada 1440 min; última passada: [0-9]+ arquivo\(s\), ' "$W/terminal34" || true)"
 u_ter=""
-terminal34 enviar; u_ter+="$? $(grep -c -F 'FALHA: uso: --destinos [enviar <s3|telegram> [--sem-espera]]' "$W/terminal34" || true) · "
-terminal34 enviar ftp; u_ter+="$? $(grep -c -F 'FALHA: uso: --destinos [enviar <s3|telegram> [--sem-espera]]' "$W/terminal34" || true) · "
-terminal34 enviar s3 --depressa; u_ter+="$? $(grep -c -F 'FALHA: uso: --destinos [enviar <s3|telegram> [--sem-espera]]' "$W/terminal34" || true) · "
+terminal34 enviar; u_ter+="$? $(grep -c -F 'FALHA: uso: --destinos [enviar <destino> [--sem-espera]]; o destino é o nome que a lista mostra' "$W/terminal34" || true) · "
+terminal34 enviar ftp; u_ter+="$? $(grep -c -F 'FALHA: uso: --destinos [enviar <destino> [--sem-espera]]; o destino é o nome que a lista mostra' "$W/terminal34" || true) · "
+terminal34 enviar s3 --depressa; u_ter+="$? $(grep -c -F 'FALHA: uso: --destinos [enviar <destino> [--sem-espera]]; o destino é o nome que a lista mostra' "$W/terminal34" || true) · "
 # Destino desligado: nem o botão nem o terminal fazem a passada.
 g_des="$(grava34 s3 "$J" "$K" "$W/painel.senha" -ligado estilo=host pasta=dst34/sub)"
 a_des="$(envio /destinos/agora --data-urlencode "csrf=$K" --data-urlencode "destino=s3")"
@@ -679,12 +859,12 @@ m_xfim=$(marca34); x_fim="$(POTE="$J" envio /destinos/arquivo --data-urlencode "
   && "$u_arq" == "404 404 " && "$z_semtoken" == "403 " && "$z_token" == "403 " && "$z_origem" == "403 " && "$z_semsessao" == "303 /entrar" && "$z_dest" == "404 " \
   && "$z_cam" == "400 400 403 404 404 404 404 " && "$d_130" == 0 && "$d_arq2" == 0 && "$d_cam" -ge 1 && "$b_nao" == "200 0" && "$b_nao_bx" -ge 4 \
   && "$b_bot" == "0 1" && "$b_fim" == "200 0" && "$b_fim_bx" -ge 4 && "$x_fim" == "303 /arquivos?pasta=dst34&m=destino_falha&d=s3&f=segredo" && "$d_xfim" == 0 ]]
-caso $? seguranca 130 "Envio de um arquivo ao destino: só o administrador, com token, e botão só com o destino gravado" "aba Arquivos em dst34 antes de qualquer destino gravado: código e botões de envio $b_ini (links Baixar na mesma tela: $b_ini_bx); só com o S3 gravado: formulário do S3, formulário do bot e a diferença entre os botões do S3 e os links Baixar: $b_s3; com os dois gravados e a sessão do administrador: sem token $z_semtoken, token errado $z_token, Origin de fora $z_origem; sem sessão: $z_semsessao; destino que não existe: $z_dest; caminho com '..', caminho começado por barra, link simbólico, arquivo que não existe, pasta, FIFO e campo vazio: $z_cam(recusa_caminho a mais na auditoria: $d_cam); usuário do FTP dono da pasta, com a sessão ($e_usu2) e o token dele: Meus arquivos $u_tela, com o a1.txt na lista, botões de envio e '/destinos' na tela: $u_bot; a rota com o caminho como ele vê e como o administrador vê: $u_arq; pedidos que o simulador recebeu durante todas as recusas: $d_130, destino_arquivo a mais na auditoria: $d_arq2; com PAINEL_DESTINOS=nao, a aba Arquivos do administrador: $b_nao (links Baixar: $b_nao_bx) e a rota entre as dez que respondem 404; depois de removido o S3: formulário do S3 e do bot na tela: $b_bot; depois de removidos os dois: $b_fim (links Baixar: $b_fim_bx), e a rota pedida mesmo assim: $x_fim, pedidos ao simulador: $d_xfim"
+caso $? seguranca 130 "Envio de um arquivo ao destino: só o administrador, com token, e botão só com o destino gravado" "aba Arquivos em dst34 antes de qualquer destino gravado: código e botões de envio $b_ini (links Baixar na mesma tela: $b_ini_bx); só com o S3 gravado: formulário do S3, formulário do bot e a diferença entre os botões do S3 e os links Baixar: $b_s3; com os dois gravados e a sessão do administrador: sem token $z_semtoken, token errado $z_token, Origin de fora $z_origem; sem sessão: $z_semsessao; destino que não existe: $z_dest; caminho com '..', caminho começado por barra, link simbólico, arquivo que não existe, pasta, FIFO e campo vazio: $z_cam(recusa_caminho a mais na auditoria: $d_cam); usuário do FTP dono da pasta, com a sessão ($e_usu2) e o token dele: Meus arquivos $u_tela, com o a1.txt na lista, botões de envio e '/destinos' na tela: $u_bot; a rota com o caminho como ele vê e como o administrador vê: $u_arq; pedidos que o simulador recebeu durante todas as recusas: $d_130, destino_arquivo a mais na auditoria: $d_arq2; com PAINEL_DESTINOS=nao, a aba Arquivos do administrador: $b_nao (links Baixar: $b_nao_bx) e a rota entre as onze que respondem 404; depois de removido o S3: formulário do S3 e do bot na tela: $b_bot; depois de removidos os dois: $b_fim (links Baixar: $b_fim_bx), e a rota pedida mesmo assim: $x_fim, pedidos ao simulador: $d_xfim"
 
 docker rm -f "$SIM34" > /dev/null 2>&1
 mu del dst34
 docker exec "$FTP" rm -rf /data/dst34 /data/tg34
 docker exec "$PAINEL" rm -f /painel/destinos/ca.pem
-rm -rf "$D34"; rm -f "$W"/dst34.* "$W"/i34.* "$W/vazio34.jar" "$W/passada" "$W/cert34.log" "$W/sim34.log" "$W/telas34" "$W/logs34" "$W/inspect34" "$W/terminal34" "$W/estado34"
+rm -rf "$D34"; rm -f "$W"/dst34.* "$W"/i34.* "$W/vazio34.jar" "$W/passada" "$W/cert34.log" "$W/sim34.log" "$W/telas34" "$W/logs34" "$W/inspect34" "$W/terminal34" "$W/estado34" "$W/telas34b" "$W/estado34b"
 gravar_env "$ENVA" PAINEL_TELEGRAM_API "$api_0"; gravar_env "$ENVA" PAINEL_TELEGRAM_MAX_MB "$max_0"; gravar_env "$ENVA" PAINEL_DESTINOS "$des_0"; dep
 painel_de_pe
