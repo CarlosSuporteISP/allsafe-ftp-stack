@@ -6,16 +6,16 @@
 
 ## 💡 Em poucas palavras
 
-Todas as telas do painel web, menu por menu, com a foto de cada uma e a explicação do que dá para fazer nela. As fotos são capturas reais da versão **0.31.1**, em tema escuro e em português, com usuários de exemplo, como `olt-centro`, `switch-core` e `roteador-borda`. O painel acompanha o tema claro ou escuro do sistema e também abre em inglês: veja [Idioma](#idioma). Clique em qualquer foto para abri-la em tamanho real.
+Todas as telas do painel web, menu por menu, com a foto de cada uma e a explicação do que dá para fazer nela. As fotos são capturas reais da versão **0.32.0**, em tema escuro e em português, com usuários de exemplo, como `olt-centro`, `switch-core` e `roteador-borda`. O painel acompanha o tema claro ou escuro do sistema e também abre em inglês: veja [Idioma](#idioma). Clique em qualquer foto para abri-la em tamanho real.
 
-O painel tem uma tela de entrada, sete abas para quem administra (Visão geral, Usuários, Arquivos, Servidor, Segurança, Bloqueios e Log) e uma tela para o usuário do FTP, que muda com o perfil da conta: Meus arquivos ou Envio de arquivos. Os administradores ficam na aba Usuários, junto com as contas do FTP. Como abrir, criar administradores e o que protege o painel está em [Painel web](../painel.md).
+O painel tem uma tela de entrada, oito abas para quem administra (Visão geral, Usuários, Arquivos, Destinos, Servidor, Segurança, Bloqueios e Log) e uma tela para o usuário do FTP, que muda com o perfil da conta: Meus arquivos ou Envio de arquivos. Os administradores ficam na aba Usuários, junto com as contas do FTP. Como abrir, criar administradores e o que protege o painel está em [Painel web](../painel.md).
 
 > 🧱 **Uso só em rede privada:** por padrão, o painel abre apenas em IP privado, atrás de firewall, fora da internet. Veja [Segurança](../seguranca.md#rede-privada).
 
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Entrar](#entrar) · [Visão geral](#visao-geral) · [Usuários](#usuarios) · [Administradores](#administradores) · [Arquivos](#arquivos) · [Meus arquivos](#meus-arquivos) · [Servidor](#servidor) · [Segurança](#seguranca) · [Bloqueios](#bloqueios) · [Log](#atividade) · [Idioma](#idioma) · [Como as fotos foram feitas](#como-foram-feitas)
+[Entrar](#entrar) · [Visão geral](#visao-geral) · [Usuários](#usuarios) · [Administradores](#administradores) · [Arquivos](#arquivos) · [Meus arquivos](#meus-arquivos) · [Destinos](#destinos) · [Servidor](#servidor) · [Segurança](#seguranca) · [Bloqueios](#bloqueios) · [Log](#atividade) · [Idioma](#idioma) · [Como as fotos foram feitas](#como-foram-feitas)
 
 </details>
 
@@ -27,7 +27,7 @@ O painel tem uma tela de entrada, sete abas para quem administra (Visão geral, 
 
 <a href="imagens/entrar.png"><img src="imagens/entrar.png" alt="Tela de entrada do painel: à esquerda, a logo, a chamada Backups e arquivos, guardados em um lugar só, quatro pontos sobre a stack e a cena de OLT, rádio, roteador, switch, empresa, pessoa e câmera enviando por FTPS para as pastas do servidor, com o botão Pausar movimento; à direita, o título Entrar no painel, os campos Usuário e Senha, o botão Entrar, a nota de uso restrito a quem foi autorizado e os botões PT e EN" width="100%"></a>
 
-<sub><b>v0.31.1</b> · tela de entrada · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · tela de entrada · captura de 2026-10-11</sub>
 
 **Para que serve:** conferir o usuário e a senha antes de mostrar qualquer dado da stack. É a mesma tela para quem administra e para o usuário do FTP.
 
@@ -51,7 +51,7 @@ O painel tem uma tela de entrada, sete abas para quem administra (Visão geral, 
 
 <a href="imagens/entrar-recusada.png"><img src="imagens/entrar-recusada.png" alt="Tela de entrada com a mensagem Não foi possível entrar acima dos campos Usuário e Senha" width="100%"></a>
 
-<sub><b>v0.31.1</b> · tela de entrada, entrada recusada · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · tela de entrada, entrada recusada · captura de 2026-10-11</sub>
 
 | Mensagem | Quando aparece | O que fazer |
 |---|---|---|
@@ -82,7 +82,7 @@ O painel tem uma tela de entrada, sete abas para quem administra (Visão geral, 
 
 <a href="imagens/visao-geral.png"><img src="imagens/visao-geral.png" alt="Aba Visão geral com o menu à esquerda, em dois grupos, a faixa Servidor FTP, que diz No ar e TLS obrigatório no login, as quatro medidas Usuários, Espaço usado, Último envio e Certificado do FTP, cada uma com o atalho para o detalhe, o cartão Servidor e containers, com o processador e a memória do servidor e dos containers, os gráficos Arquivos recebidos por dia, Último envio por usuário e Espaço por pasta, o cartão Atividade recente, com os seis últimos registros, e o cartão Dados para configurar o equipamento" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Visão geral · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Visão geral · captura de 2026-10-11</sub>
 
 **Para que serve:** ver de uma vez se o FTP está no ar e quais dados digitar no equipamento que vai mandar o backup.
 
@@ -101,7 +101,7 @@ O painel tem uma tela de entrada, sete abas para quem administra (Visão geral, 
 | **Espaço por pasta** | As pastas que mais ocupam, da maior para a menor, cada uma com a barra, o tamanho e a quantidade de arquivos, e o atalho para a pasta na aba Arquivos |
 | **Atividade recente** | Os seis últimos registros do painel, com a hora e o endereço de quem fez, e o atalho para a aba Log |
 | **Dados para configurar o equipamento** | Servidor, porta de controle, portas passivas, protocolo e de onde vem o usuário: o que preencher no equipamento |
-| Menu de todas as telas | À esquerda, em tela de 1280 px de largura ou mais: o símbolo e o nome, as sete abas em dois grupos (**Operação** e **Sistema**), cada uma com o seu ícone e a aba em uso marcada, e, embaixo, os botões de idioma **PT** e **EN**, o nome e o papel de quem entrou e o botão **Sair**. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada, um sinal de alerta fica ao lado de **Segurança** |
+| Menu de todas as telas | À esquerda, em tela de 1280 px de largura ou mais: o símbolo e o nome, as oito abas em dois grupos (**Operação** e **Sistema**), cada uma com o seu ícone e a aba em uso marcada, e, embaixo, os botões de idioma **PT** e **EN**, o nome e o papel de quem entrou e o botão **Sair**. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada, um sinal de alerta fica ao lado de **Segurança** |
 | Título de cada aba | O nome da aba e uma frase que diz para que ela serve |
 | Rodapé de todas as telas | A versão da stack, o lembrete de rede privada (ou, só para o administrador, como a instalação está publicada), a autoria e o endereço do repositório oficial |
 
@@ -114,7 +114,7 @@ Nada é alterado por esta aba.
 
 <a href="imagens/visao-geral-alerta-tls.png"><img src="imagens/visao-geral-alerta-tls.png" alt="Aba Visão geral com o alerta no topo de que dois usuários, central-pabx e radio-antigo, entram no FTP sem TLS, e o cartão Servidor FTP indicando TLS obrigatório no login, com exceção por usuário" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Visão geral, alerta de usuário sem TLS · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Visão geral, alerta de usuário sem TLS · captura de 2026-10-11</sub>
 
 | Alerta no começo da tela | Quando aparece | Como some |
 |---|---|---|
@@ -144,7 +144,7 @@ O mesmo alerta abre a aba Segurança. As condições para dispensar um usuário 
 
 <a href="imagens/usuarios.png"><img src="imagens/usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista das contas: primeiro o administrador admin, com a etiqueta você, depois os usuários do FTP, cada um com o perfil embaixo do nome e as etiquetas inicial, limites, limpeza e bloqueado, a pasta, com a etiqueta dividida em duas, uso, arquivos, último envio, a coluna TLS, com obrigatório em todas as linhas, as ações Editar, Dispensar TLS, Trocar senha e Remover e, abaixo da lista, o recolhido Como funcionam os perfis e as etiquetas" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários · captura de 2026-10-11</sub>
 
 **Para que serve:** criar a conta de cada equipamento ou pessoa, escolher o perfil dela, escolher e trocar a pasta em que ela fica presa, trocar a senha, dar limites próprios, permitir o envio de arquivo pelo painel, ligar a limpeza automática dos arquivos antigos, tirar o bloqueio por senha errada e remover a conta, com ou sem a pasta, sem linha de comando. É também onde ficam os administradores do painel.
 
@@ -190,7 +190,7 @@ A tela de cada perfil está em [Meus arquivos](#meus-arquivos); as regras, a pas
 
 <a href="imagens/usuarios-novo.png"><img src="imagens/usuarios-novo.png" alt="Formulário Novo usuário com o campo Perfil, que lista Administrador, Completo, Envio, Só envio e Leitura, cada um com o que permite, os campos Nome do usuário, Pasta, Senha e Repita a senha, o aviso de pasta dividida, a caixa Equipamento sem suporte a TLS, desmarcada, com o alerta do texto puro, e os botões Criar usuário e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, formulário Novo usuário · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, formulário Novo usuário · captura de 2026-10-11</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -214,7 +214,7 @@ A tela de cada perfil está em [Meus arquivos](#meus-arquivos); as regras, a pas
 
 <a href="imagens/usuarios-novo-recusado.png"><img src="imagens/usuarios-novo-recusado.png" alt="Formulário Novo usuário com a mensagem Já existe um usuário com este nome acima dos campos" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, cadastro recusado · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, cadastro recusado · captura de 2026-10-11</sub>
 
 O painel devolve o formulário com o motivo no topo e nada é criado.
 
@@ -237,7 +237,7 @@ Pasta que passa por link simbólico, ou por um nome que já é de um arquivo, ta
 
 <a href="imagens/usuarios-senha-gerada.png"><img src="imagens/usuarios-senha-gerada.png" alt="Tela Usuário criado com a senha gerada pelo painel, aqui substituída por REDACTED, e o aviso de que ela não será mostrada de novo" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, senha gerada · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, senha gerada · captura de 2026-10-11</sub>
 
 Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca de senha. A senha é mostrada **uma única vez**: copie para o equipamento ou para o cofre de senhas antes de sair da tela. Na foto, o valor foi trocado por `<REDACTED>`.
 
@@ -250,7 +250,7 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 <a href="imagens/usuarios-editar.png"><img src="imagens/usuarios-editar.png" alt="Tela Editar usuário de roteador-borda, com o cartão Perfil, que lista os quatro perfis do FTP, com o que cada um permite, e traz o botão Gravar perfil, o cartão Pasta, que mostra a pasta atual e o campo Pasta nova, o cartão TLS, que diz que o usuário só entra com TLS e traz o botão Dispensar TLS, o cartão Limites preenchido com sessões, taxas, horário, downloads pelo painel, senhas erradas até o bloqueio e minutos de bloqueio, com a caixa que permite o envio de arquivo pelo painel, e o cartão Limpeza automática, desligada" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, tela Editar usuário · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, tela Editar usuário · captura de 2026-10-11</sub>
 
 Reúne o que muda em um usuário sem criá-lo de novo. O nome não muda: é com ele que o equipamento entra no FTP.
 
@@ -293,7 +293,7 @@ Administrador não está entre as opções: administrador e usuário do FTP são
 
 <a href="imagens/usuarios-limites-gravados.png"><img src="imagens/usuarios-limites-gravados.png" alt="Aba Usuários com a mensagem Limites gravados, valem na próxima entrada do usuário no FTP, e a etiqueta limites ao lado do nome roteador-borda" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, limites gravados · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, limites gravados · captura de 2026-10-11</sub>
 
 O cartão **Limites** da tela **Editar** vale só para aquele usuário, seja a conta de um equipamento, que só envia, seja a de uma pessoa, que entra, envia e baixa. Campo em branco quer dizer sem limite próprio: vale o da stack.
 
@@ -325,7 +325,7 @@ Na foto da tela **Editar**, `roteador-borda` está com 2 sessões, 2048 KB por s
 
 <a href="imagens/usuarios-editar-limpeza.png"><img src="imagens/usuarios-editar-limpeza.png" alt="Tela Editar usuário de olt-centro no cartão Limpeza automática: o estado Desligada, os campos Manter só os arquivos mais recentes, com 30, e Apagar o arquivo com mais de tantos dias, com 60, o aviso de que o painel não tem lixeira, o campo Sua senha atual e o botão Gravar limpeza" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, cartão Limpeza automática · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, cartão Limpeza automática · captura de 2026-10-11</sub>
 
 O cartão **Limpeza automática** da tela **Editar** faz o painel apagar sozinho os arquivos antigos da pasta daquele usuário e das pastas de dentro dela. Nasce desligada: sem regra gravada, nenhum arquivo é apagado sozinho.
 
@@ -339,7 +339,7 @@ Campo em branco desliga aquela regra, e os dois em branco desligam a limpeza. Co
 
 <a href="imagens/usuarios-limpeza-gravada.png"><img src="imagens/usuarios-limpeza-gravada.png" alt="Aba Usuários com a mensagem Limpeza automática gravada, vale na próxima passada do painel, e a etiqueta limpeza ao lado do nome olt-centro" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, limpeza automática gravada · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, limpeza automática gravada · captura de 2026-10-11</sub>
 
 **Resultado esperado:** depois de **Gravar limpeza**, a lista volta com a mensagem `Limpeza automática gravada. Vale na próxima passada do painel.` e a etiqueta `limpeza` ao lado do nome; passando o mouse sobre ela, aparece a regra. Gravada com os dois campos em branco, a mensagem é `Limpeza automática desligada. Nenhum arquivo deste usuário é apagado sozinho.`
 
@@ -365,7 +365,7 @@ Na foto, `olt-centro` fica com os 30 arquivos mais recentes de cada pasta e sem 
 
 <a href="imagens/usuarios-editar-bloqueios.png"><img src="imagens/usuarios-editar-bloqueios.png" alt="Tela Editar usuário de switch-core com o cartão Bloqueios: a origem bloqueada, a quantidade de senhas erradas, a hora do bloqueio, até quando ele vale e o botão Desbloquear" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, cartão Bloqueios · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, cartão Bloqueios · captura de 2026-10-11</sub>
 
 O endereço que erra a senha de um usuário no FTP vezes demais fica bloqueado para aquele usuário, pelo tempo configurado: até lá, nem a senha certa entra dali. Na lista, o nome ganha a etiqueta `bloqueado`; passando o mouse sobre ela, aparecem os endereços.
 
@@ -381,7 +381,7 @@ O endereço que erra a senha de um usuário no FTP vezes demais fica bloqueado p
 
 <a href="imagens/usuarios-desbloqueado.png"><img src="imagens/usuarios-desbloqueado.png" alt="Aba Usuários com a mensagem Bloqueio removido, o usuário volta a poder entrar no FTP, e o nome switch-core sem a etiqueta bloqueado" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, depois do desbloqueio · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, depois do desbloqueio · captura de 2026-10-11</sub>
 
 **Resultado esperado:** a lista volta com a mensagem `Bloqueio removido. O usuário volta a poder entrar no FTP.`, sem a etiqueta `bloqueado`, e a entrada seguinte do equipamento passa.
 
@@ -398,7 +398,7 @@ Este é o bloqueio curto, de um usuário para um endereço. O endereço que erra
 
 <a href="imagens/usuarios-trocar-senha.png"><img src="imagens/usuarios-trocar-senha.png" alt="Formulário Trocar senha do usuário switch-core, com os campos Senha e Repita a senha e os botões Trocar senha e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, formulário Trocar senha · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, formulário Trocar senha · captura de 2026-10-11</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -416,7 +416,7 @@ Este é o bloqueio curto, de um usuário para um endereço. O endereço que erra
 
 <a href="imagens/usuarios-remover.png"><img src="imagens/usuarios-remover.png" alt="Tela Remover usuário de ap-deposito, com o aviso dos arquivos da pasta, a caixa Apagar também a pasta e tudo o que há nela marcada, o campo Sua senha atual e os botões Sim, remover o usuário e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, confirmação de remoção · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, confirmação de remoção · captura de 2026-10-11</sub>
 
 | Item da tela | O que faz |
 |---|---|
@@ -428,13 +428,13 @@ Este é o bloqueio curto, de um usuário para um endereço. O endereço que erra
 
 <a href="imagens/usuarios-removido.png"><img src="imagens/usuarios-removido.png" alt="Aba Usuários depois da remoção, com a mensagem Usuário removido e pasta apagada" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, depois da remoção · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, depois da remoção · captura de 2026-10-11</sub>
 
 **Resultado esperado:** com a caixa marcada e a senha certa, como na foto, a lista volta com a mensagem `Usuário removido e pasta apagada.` e a pasta some. Sem a caixa, a mensagem é `Usuário removido. Os arquivos continuam na pasta.`: a pasta fica em `DATA_DIR/dados` e continua visível na aba Arquivos, onde pode ser apagada depois.
 
 <a href="imagens/usuarios-remover-inicial.png"><img src="imagens/usuarios-remover-inicial.png" alt="Tela Remover usuário do usuário inicial transfer, com o aviso de que, removido, ele não volta nas próximas subidas do serviço ftp, a caixa Apagar também a pasta e tudo o que há nela marcada, o campo Sua senha atual e os botões Sim, remover o usuário e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, remoção do usuário inicial · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, remoção do usuário inicial · captura de 2026-10-11</sub>
 
 O usuário inicial, o `FTP_USER` da instalação (`transfer`, no exemplo), é removido do mesmo jeito, com ou sem a pasta. A tela avisa que ele não volta nas próximas subidas do serviço `ftp`: para tê-lo de novo, crie um usuário com o mesmo nome.
 
@@ -447,7 +447,7 @@ O usuário inicial, o `FTP_USER` da instalação (`transfer`, no exemplo), é re
 
 <a href="imagens/usuarios-tls.png"><img src="imagens/usuarios-tls.png" alt="Aba Usuários com o aviso de que o usuário foi dispensado do TLS e a senha e os arquivos dele passam em texto puro, a coluna TLS, que mostra obrigatório ou sem TLS em cada linha, e os botões Dispensar TLS e Exigir TLS ao lado de Editar, Trocar senha e Remover" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, coluna TLS · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, coluna TLS · captura de 2026-10-11</sub>
 
 A coluna e os dois botões servem para o equipamento antigo que não fala TLS: ele é dispensado sozinho, e os demais continuam obrigados. O mesmo se faz na criação, com a caixa **Equipamento sem suporte a TLS** do **Novo usuário**, e no cartão **TLS** da tela **Editar**.
 
@@ -461,19 +461,19 @@ A coluna e os dois botões servem para o equipamento antigo que não fala TLS: e
 
 <a href="imagens/usuarios-novo-sem-tls.png"><img src="imagens/usuarios-novo-sem-tls.png" alt="Formulário Novo usuário preenchido para central-pabx, com a caixa Equipamento sem suporte a TLS marcada e o alerta de que a senha e os arquivos deste usuário passam a trafegar em texto puro" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, usuário novo sem TLS · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, usuário novo sem TLS · captura de 2026-10-11</sub>
 
 Na criação, a caixa marcada grava o usuário já dispensado, e a lista volta com a mensagem `Usuário criado e dispensado do TLS: a senha e os arquivos dele passam em texto puro.`
 
 <a href="imagens/usuarios-editar-tls.png"><img src="imagens/usuarios-editar-tls.png" alt="Tela Editar usuário de central-pabx, com o cartão TLS avisando que este usuário entra sem TLS e o botão Exigir TLS" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, cartão TLS da tela Editar · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, cartão TLS da tela Editar · captura de 2026-10-11</sub>
 
 Na tela **Editar**, o cartão **TLS** diz como o usuário entra e traz o botão para trocar: **Dispensar TLS** para quem é obrigado, **Exigir TLS** para quem está dispensado. Para o usuário que já existe, o botão abre a confirmação:
 
 <a href="imagens/usuarios-tls-dispensar.png"><img src="imagens/usuarios-tls-dispensar.png" alt="Tela Dispensar TLS do usuário radio-antigo, com o aviso de que a senha e os arquivos passam a trafegar em texto puro e os botões Sim, deixar este usuário entrar sem TLS e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, confirmação da dispensa do TLS · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, confirmação da dispensa do TLS · captura de 2026-10-11</sub>
 
 **Resultado esperado:** a lista volta com a mensagem `Usuário dispensado do TLS: a senha e os arquivos dele passam em texto puro.`, a linha dele mostra `sem TLS` e as abas Visão geral e Segurança abrem com o alerta. A dispensa vale em instantes, sem derrubar quem está conectado. Ao voltar a exigir, a mensagem é `O usuário volta a ser obrigado a usar TLS.`
 
@@ -505,7 +505,7 @@ Na tela **Editar**, o cartão **TLS** diz como o usuário entra e traz o botão 
 
 <a href="imagens/administradores.png"><img src="imagens/administradores.png" alt="Aba Usuários com três administradores no começo da lista, admin, com a etiqueta você, noc-plantao e suporte, cada um com o perfil Administrador, as sessões abertas e as ações Trocar senha, Trocar nome e Remover, e, abaixo deles, os usuários do FTP" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, administradores na lista · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, administradores na lista · captura de 2026-10-11</sub>
 
 **Para que serve:** dar a cada pessoa que administra o painel o próprio usuário e a própria senha, e trocar o usuário e a senha do primeiro administrador depois da instalação.
 
@@ -529,7 +529,7 @@ Todos têm o mesmo acesso, e o que cada um faz fica na aba Log com o nome de que
 
 <a href="imagens/administradores-novo.png"><img src="imagens/administradores-novo.png" alt="Formulário Novo usuário com o perfil Administrador marcado: o campo Perfil, os campos Nome do usuário, Senha, Repita a senha e Sua senha atual, sem a pasta e sem a caixa do TLS, e os botões Criar usuário e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, formulário Novo usuário com o perfil Administrador · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, formulário Novo usuário com o perfil Administrador · captura de 2026-10-11</sub>
 
 Clique em **Novo usuário** e marque o perfil **Administrador**: os campos da pasta e do TLS dão lugar à sua senha atual.
 
@@ -552,7 +552,7 @@ Clique em **Novo usuário** e marque o perfil **Administrador**: os campos da pa
 
 <a href="imagens/administradores-trocar-senha.png"><img src="imagens/administradores-trocar-senha.png" alt="Formulário Trocar senha de administrador, do administrador suporte, com os campos Senha, Repita a senha e Sua senha atual e os botões Trocar senha e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, formulário Trocar senha de administrador · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, formulário Trocar senha de administrador · captura de 2026-10-11</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -573,7 +573,7 @@ Clique em **Novo usuário** e marque o perfil **Administrador**: os campos da pa
 
 <a href="imagens/administradores-trocar-nome.png"><img src="imagens/administradores-trocar-nome.png" alt="Formulário Trocar nome de administrador, do administrador suporte, com o campo Nome novo preenchido com suporte-redes, o campo Sua senha atual e os botões Trocar nome e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, formulário Trocar nome de administrador · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, formulário Trocar nome de administrador · captura de 2026-10-11</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -593,7 +593,7 @@ Trocar o nome do primeiro administrador pelo painel não mexe no `.env`: o `PAIN
 
 <a href="imagens/administradores-remover.png"><img src="imagens/administradores-remover.png" alt="Tela Remover administrador pedindo a confirmação para remover noc-plantao, com o campo Sua senha atual e os botões Sim, remover o administrador e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, confirmação de remoção de administrador · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, confirmação de remoção de administrador · captura de 2026-10-11</sub>
 
 | Item da tela | O que faz |
 |---|---|
@@ -631,7 +631,7 @@ Trocar o nome do primeiro administrador pelo painel não mexe no `.env`: o `PAIN
 
 <a href="imagens/arquivos.png"><img src="imagens/arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma, os botões Renomear e Apagar em cada linha e os cartões Nova pasta e Enviar arquivo" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Arquivos · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Arquivos · captura de 2026-10-11</sub>
 
 **Para que serve:** ver o que cada equipamento enviou, baixar um backup pelo navegador, enviar um arquivo para qualquer pasta, criar a pasta de um usuário novo, trocar o nome e apagar arquivo e pasta, sem cliente de FTP.
 
@@ -643,6 +643,7 @@ Trocar o nome do primeiro administrador pelo painel não mexe no `.env`: o `PAIN
 | Nome de uma pasta | Entra na pasta |
 | Tamanho · Modificado | Tamanho do arquivo e data da última alteração |
 | **Baixar** | Entrega o arquivo ao navegador, com o nome original |
+| **Telegram** · **S3** | Com o destino gravado na aba Destinos, envia aquele arquivo ao destino na hora |
 | **Renomear** | Abre a tela que troca o nome do arquivo ou da pasta, dentro da mesma pasta, e pede a sua senha atual; nome que já existe é recusado |
 | **Apagar** | Abre a tela de confirmação: mostra o que vai sair, pede a caixa marcada e a sua senha atual e apaga de vez, sem lixeira |
 | **Nova pasta** | Cria uma pasta vazia dentro da que está aberta |
@@ -658,7 +659,7 @@ O painel navega, baixa, envia, cria pasta, troca o nome e apaga. Os equipamentos
 
 <a href="imagens/arquivos-pasta.png"><img src="imagens/arquivos-pasta.png" alt="Aba Arquivos dentro da pasta roteador-borda, com o caminho no alto, a linha que diz de qual usuário do FTP é a pasta, o botão Novo usuário nesta pasta e os botões Baixar, Renomear e Apagar em cada arquivo" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Arquivos, pasta de um usuário · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Arquivos, pasta de um usuário · captura de 2026-10-11</sub>
 
 1. Clique no nome da pasta para entrar.
 2. Confira, na linha `Pasta do usuário do FTP`, de quem é a pasta.
@@ -681,7 +682,7 @@ O painel navega, baixa, envia, cria pasta, troca o nome e apaga. Os equipamentos
 
 <a href="imagens/arquivos-pasta-criada.png"><img src="imagens/arquivos-pasta-criada.png" alt="Aba Arquivos com a mensagem Pasta criada e a pasta clientes na lista" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Arquivos, pasta criada · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Arquivos, pasta criada · captura de 2026-10-11</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -705,7 +706,7 @@ O painel navega, baixa, envia, cria pasta, troca o nome e apaga. Os equipamentos
 
 <a href="imagens/arquivos-enviado.png"><img src="imagens/arquivos-enviado.png" alt="Aba Arquivos dentro da pasta clientes, com a mensagem Arquivo enviado, o arquivo planilha-de-clientes.csv na lista e o cartão Enviar arquivo, com os campos Gravar com o nome e Arquivo e o botão Enviar arquivo" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Arquivos, depois do envio · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Arquivos, depois do envio · captura de 2026-10-11</sub>
 
 1. Entre na pasta em que o arquivo deve ficar.
 2. No cartão **Enviar arquivo**, escolha o arquivo.
@@ -736,13 +737,41 @@ O painel navega, baixa, envia, cria pasta, troca o nome e apaga. Os equipamentos
 </details>
 
 <details>
+<summary>Arquivos ➜ Enviar a um destino — clique para expandir</summary>
+
+### Arquivos ➜ Enviar a um destino
+
+<a href="imagens/arquivos-enviado-ao-destino.png"><img src="imagens/arquivos-enviado-ao-destino.png" alt="Aba Arquivos dentro da pasta clientes, com a mensagem Armazenamento S3: arquivo enviado e, na linha do arquivo planilha-de-clientes.csv, os botões Baixar, Telegram, S3, Renomear e Apagar" width="100%"></a>
+
+<sub><b>v0.32.0</b> · menu Arquivos, depois do envio a um destino · captura de 2026-10-11</sub>
+
+Depois que um destino é gravado na aba [Destinos](#destinos), cada arquivo ganha um botão com o nome dele, **Telegram** ou **S3**, ao lado do **Baixar**. O botão envia aquele arquivo ao destino na hora, sem esperar a passada.
+
+1. Entre na pasta do arquivo.
+2. Na linha do arquivo, clique em **Telegram** ou em **S3**.
+
+**Resultado esperado:** a tela volta para a mesma pasta com a mensagem `Armazenamento S3: arquivo enviado.` ou `Bot do Telegram: arquivo enviado.`, e a aba Log ganha a linha `Arquivo enviado para o destino a pedido`, com o administrador, o destino e o arquivo.
+
+| Item | Como funciona |
+|---|---|
+| Quando os botões aparecem | Só para o destino gravado com os segredos; sem destino, a lista fica como antes |
+| Quem tem os botões | Só o administrador: a tela Meus arquivos, do usuário do FTP, não os mostra |
+| Arquivo de outra pasta | O botão serve para qualquer arquivo dos dados, dentro ou fora da pasta do destino, e funciona com o destino desligado |
+| O arquivo no servidor | Nunca é apagado por esse envio, nem com o S3 em **Guardar no S3** |
+| Enviar de novo | Pelo bot, a conversa recebe outra mensagem; no S3, o mesmo objeto é gravado por cima |
+| Envio demorado | Passando de 20 segundos, a mensagem diz que o envio continua em segundo plano, e o resultado aparece na aba Log |
+| Envio que não dá certo | A mensagem traz o motivo em uma frase, como o arquivo vazio ou maior que o limite do bot |
+
+</details>
+
+<details>
 <summary>Arquivos ➜ Renomear — clique para expandir</summary>
 
 ### Arquivos ➜ Renomear
 
 <a href="imagens/arquivos-renomear.png"><img src="imagens/arquivos-renomear.png" alt="Tela Renomear do arquivo switch-core-antigo.cfg, com a pasta em que ele fica, o campo Nome novo preenchido, o campo Sua senha atual e os botões Trocar nome e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Arquivos, tela Renomear · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Arquivos, tela Renomear · captura de 2026-10-11</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -751,7 +780,7 @@ O painel navega, baixa, envia, cria pasta, troca o nome e apaga. Os equipamentos
 
 <a href="imagens/arquivos-renomeado.png"><img src="imagens/arquivos-renomeado.png" alt="Aba Arquivos dentro da pasta switch-core, com a mensagem Nome trocado e o arquivo com o nome novo na lista" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Arquivos, depois da troca de nome · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Arquivos, depois da troca de nome · captura de 2026-10-11</sub>
 
 **Resultado esperado:** a pasta volta com a mensagem `Nome trocado.` e o item com o nome novo, no mesmo lugar. O painel não move de uma pasta para outra, e o equipamento que grava com o nome antigo cria outro arquivo no envio seguinte.
 
@@ -771,7 +800,7 @@ O painel navega, baixa, envia, cria pasta, troca o nome e apaga. Os equipamentos
 
 <a href="imagens/arquivos-apagar.png"><img src="imagens/arquivos-apagar.png" alt="Tela Apagar do arquivo teste-de-envio.txt, com o tamanho, a data e a pasta dele, o aviso de que o painel não tem lixeira, a caixa de confirmação marcada, o campo Sua senha atual e os botões Apagar de vez e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Arquivos, confirmação de apagar · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Arquivos, confirmação de apagar · captura de 2026-10-11</sub>
 
 | Item da tela | O que faz |
 |---|---|
@@ -783,7 +812,7 @@ O painel navega, baixa, envia, cria pasta, troca o nome e apaga. Os equipamentos
 
 <a href="imagens/arquivos-apagado.png"><img src="imagens/arquivos-apagado.png" alt="Aba Arquivos dentro da pasta switch-core, com a mensagem Apagado e a lista sem o arquivo teste-de-envio.txt" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Arquivos, depois de apagar · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Arquivos, depois de apagar · captura de 2026-10-11</sub>
 
 **Resultado esperado:** a pasta volta com a mensagem `Apagado.` e sem o item, e a aba Log ganha a linha `Arquivo ou pasta apagado`.
 
@@ -798,7 +827,7 @@ O painel navega, baixa, envia, cria pasta, troca o nome e apaga. Os equipamentos
 
 <a href="imagens/arquivos-pasta-de-usuario.png"><img src="imagens/arquivos-pasta-de-usuario.png" alt="Tela Pasta de usuário do FTP, que recusa apagar a pasta roteador-borda por ser a pasta de um usuário e indica Usuários, Editar e Usuários, Remover" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Arquivos, pasta de usuário recusada · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Arquivos, pasta de usuário recusada · captura de 2026-10-11</sub>
 
 A pasta de um usuário do FTP, e a pasta que tem a de um usuário dentro, não é renomeada nem apagada pela aba Arquivos: o cadastro ficaria apontando para uma pasta que não existe. Para dar outra pasta ao usuário, use **Usuários ➜ Editar**; para apagar a pasta junto com ele, **Usuários ➜ Remover**. O que está dentro dela é renomeado e apagado item por item.
 
@@ -828,7 +857,7 @@ A pasta de um usuário do FTP, e a pasta que tem a de um usuário dentro, não �
 
 <a href="imagens/meus-arquivos.png"><img src="imagens/meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, de perfil Completo, com as pastas 2026-09 e 2026-10 e um arquivo de configuração, o aviso da limpeza automática acima da lista, os botões Abrir ou Baixar, Renomear e Apagar em cada linha, os cartões Nova pasta e Enviar arquivo e, no menu, só a aba Meus arquivos, os botões PT e EN, o nome do usuário e o botão Sair" width="100%"></a>
 
-<sub><b>v0.31.1</b> · tela Meus arquivos, do usuário do FTP de perfil Completo · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · tela Meus arquivos, do usuário do FTP de perfil Completo · captura de 2026-10-11</sub>
 
 **Para que serve:** o dono dos arquivos navega na própria pasta e baixa os backups pelo navegador, sem depender de quem administra e sem conta nova. O que mais ele faz depende do perfil da conta e, no envio de arquivo, da permissão que o administrador dá.
 
@@ -858,7 +887,7 @@ O usuário vê só a pasta do cadastro dele e o que há dentro dela. O caminho d
 
 <a href="imagens/meus-arquivos-pasta.png"><img src="imagens/meus-arquivos-pasta.png" alt="Tela Meus arquivos do usuário olt-centro dentro da pasta 2026-10, com dez arquivos de backup, o tamanho e a data de cada um e os botões Baixar, Renomear e Apagar em cada linha" width="100%"></a>
 
-<sub><b>v0.31.1</b> · tela Meus arquivos, dentro de uma pasta · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · tela Meus arquivos, dentro de uma pasta · captura de 2026-10-11</sub>
 
 1. Clique no nome da pasta para entrar.
 2. Clique em **Baixar** na linha do arquivo.
@@ -881,7 +910,7 @@ O usuário vê só a pasta do cadastro dele e o que há dentro dela. O caminho d
 
 <a href="imagens/meus-arquivos-enviado.png"><img src="imagens/meus-arquivos-enviado.png" alt="Tela Meus arquivos do usuário olt-centro com a mensagem Arquivo enviado, o arquivo olt-centro-manual.cfg na lista e o cartão Enviar arquivo, com os campos Gravar com o nome e Arquivo e o botão Enviar arquivo" width="100%"></a>
 
-<sub><b>v0.31.1</b> · tela Meus arquivos, depois do envio · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · tela Meus arquivos, depois do envio · captura de 2026-10-11</sub>
 
 O cartão **Enviar arquivo** aparece para a conta que tem a permissão **Permitir que este usuário envie arquivo pelo painel**, marcada pelo administrador em [Usuários ➜ Limites](#usuarios). O perfil Leitura não envia, com ou sem a permissão.
 
@@ -913,7 +942,7 @@ O cartão **Enviar arquivo** aparece para a conta que tem a permissão **Permiti
 
 <a href="imagens/meus-arquivos-envio.png"><img src="imagens/meus-arquivos-envio.png" alt="Tela Meus arquivos do usuário roteador-borda, de perfil Envio, com os arquivos de backup do roteador, só o botão Baixar em cada linha e o formulário Nova pasta, sem Renomear, Apagar nem Enviar arquivo" width="100%"></a>
 
-<sub><b>v0.31.1</b> · tela Meus arquivos, perfil Envio · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · tela Meus arquivos, perfil Envio · captura de 2026-10-11</sub>
 
 A conta de perfil Envio navega, baixa e cria pasta. Não há **Renomear** nem **Apagar**: o que já chegou ao servidor fica como chegou, no FTP e no painel. Na foto, `roteador-borda` não tem a permissão de envio pelo painel, e o cartão **Enviar arquivo** não aparece.
 
@@ -926,7 +955,7 @@ A conta de perfil Envio navega, baixa e cria pasta. Não há **Renomear** nem **
 
 <a href="imagens/meus-arquivos-leitura.png"><img src="imagens/meus-arquivos-leitura.png" alt="Tela Meus arquivos do usuário consulta-filiais, de perfil Leitura, com a pasta olt-norte e só o botão Abrir, sem Nova pasta, Renomear nem Apagar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · tela Meus arquivos, perfil Leitura · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · tela Meus arquivos, perfil Leitura · captura de 2026-10-11</sub>
 
 A conta de perfil Leitura só navega e baixa, e não envia por nenhum caminho. Na foto, a pasta de `consulta-filiais` é `filiais`, que tem dentro a pasta de `olt-filial-norte`: a conta de consulta baixa o que a OLT enviou e não grava nada.
 
@@ -939,7 +968,7 @@ A conta de perfil Leitura só navega e baixa, e não envia por nenhum caminho. N
 
 <a href="imagens/meus-arquivos-so-envio.png"><img src="imagens/meus-arquivos-so-envio.png" alt="Tela Envio de arquivos do usuário olt-pop-sul, de perfil Só envio, com o cartão Enviar arquivo, o caminho de cada arquivo em três passos, do equipamento até a pasta do usuário, os dados para enviar por FTP e a explicação do que a conta faz, sem lista de arquivos" width="100%"></a>
 
-<sub><b>v0.31.1</b> · tela Envio de arquivos, perfil Só envio · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · tela Envio de arquivos, perfil Só envio · captura de 2026-10-11</sub>
 
 A conta de perfil Só envio não vê os backups, nem os que ela mesma enviou. No lugar de Meus arquivos, ela abre a tela **Envio de arquivos**, que explica o caminho do arquivo e traz os dados para configurar o equipamento.
 
@@ -971,13 +1000,200 @@ Quem precisa conferir ou baixar o que foi enviado pede a um administrador ou usa
 
 ---
 
+<a name="destinos"></a>
+
+## ☁️ Destinos
+
+<a href="imagens/destinos.png"><img src="imagens/destinos.png" alt="Aba Destinos com o cartão Armazenamento S3 ligado, com o endereço, o bucket e o prefixo, a região, a pasta enviada, as passadas a cada 60 minutos, Copiar depois do envio, as chaves gravadas sem aparecer na tela, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, as passadas a cada 5 minutos, o maior arquivo que o bot envia, o idioma das mensagens, a última passada e o total enviado, os botões Testar, Enviar agora, Alterar e Remover em cada cartão e o cartão Como o painel envia" width="100%"></a>
+
+<sub><b>v0.32.0</b> · menu Destinos · captura de 2026-10-11</sub>
+
+**Para que serve:** mandar sozinho, para fora do servidor, os arquivos que chegam em uma pasta. São dois destinos: um armazenamento S3, que guarda a segunda cópia ou fica com os arquivos e libera o disco, e um bot do Telegram, que entrega cada arquivo novo a uma pessoa, a um grupo ou a um canal.
+
+**Como chegar:** menu ➜ **Destinos**. Só o administrador tem a aba.
+
+| Item da tela | O que mostra ou faz |
+|---|---|
+| Etiqueta ao lado do nome | `não configurado`, `ligado`, `desligado` ou `faltam os segredos` |
+| Endereço · Bucket e prefixo · Região | Para onde o S3 envia, como foi gravado |
+| Pasta enviada | A pasta dos dados que o destino acompanha, com as pastas de dentro dela |
+| Passadas | De quanto em quanto tempo o painel confere a pasta |
+| Depois do envio | No S3, **Copiar** ou **Guardar no S3** |
+| Maior arquivo que o bot envia · Idioma das mensagens | O limite de cada envio pelo bot e a língua da legenda e dos avisos |
+| Chave de acesso e chave secreta · Token do bot e conversa | Só dizem que os segredos estão gravados: o valor não aparece na tela |
+| Última passada | Quando foi e quantos arquivos saíram, com o tamanho somado; quando ela para antes do fim, o motivo em uma frase |
+| Enviado desde que foi ligado | O total de arquivos e de tamanho que o destino já recebeu |
+| Ainda chegando | Arquivos que mudaram há menos de dois minutos: saem em uma próxima passada |
+| À espera do bot | No S3 em **Guardar no S3**, arquivos já gravados no destino que só saem do servidor quando o bot os entregar |
+| **Testar** | Grava um objeto pequeno no S3 ou envia a mensagem de teste pelo bot, com o que está gravado |
+| **Enviar agora** | Pede uma passada fora de hora; atualize a tela para acompanhar |
+| **Alterar** | Abre o formulário com o que está gravado; segredo em branco mantém o gravado |
+| **Remover** | Abre a confirmação que apaga a configuração, o andamento e os segredos do destino |
+| **Como o painel envia** | O resumo das regras: só por HTTPS, só arquivo comum e onde os segredos ficam |
+
+Cada destino tem uma ligação só, e um não depende do outro. O S3 envia tudo o que está na pasta, inclusive o que já estava lá quando foi ligado, a cada intervalo. O bot envia só o que chega depois de ligado: em poucos segundos quando o arquivo chega inteiro por FTP ou pelo painel, e a cada intervalo o que apareceu na pasta de outro jeito. As regras completas estão em [Painel web](../painel.md#destinos).
+
+<details>
+<summary>Destinos ➜ Antes de configurar — clique para expandir</summary>
+
+### Destinos ➜ Antes de configurar
+
+<a href="imagens/destinos-sem-destino.png"><img src="imagens/destinos-sem-destino.png" alt="Aba Destinos de uma instalação nova, com os cartões Armazenamento S3 e Bot do Telegram marcados como não configurado, cada um com a explicação do que envia e o botão Configurar, e o cartão Como o painel envia" width="100%"></a>
+
+<sub><b>v0.32.0</b> · menu Destinos, sem destino gravado · captura de 2026-10-11</sub>
+
+A instalação nasce sem destino: enquanto o administrador não gravar um, nada sai do servidor e o painel não abre conexão para fora. Cada cartão diz o que o destino faz e leva ao formulário dele, pelo botão **Configurar**.
+
+</details>
+
+<details>
+<summary>Destinos ➜ Armazenamento S3 — clique para expandir</summary>
+
+### Destinos ➜ Armazenamento S3
+
+<a href="imagens/destinos-s3.png"><img src="imagens/destinos-s3.png" alt="Formulário Armazenamento S3 preenchido com um serviço de exemplo: endereço do serviço, região, bucket, prefixo, endereço do bucket no caminho, chave de acesso de exemplo, chave secreta mascarada, a caixa Ligado, a pasta enviada, o intervalo de 60 minutos, Copiar depois do envio, os avisos sobre Guardar no S3 e sobre o nome do objeto, o campo Sua senha atual e os botões Gravar e Cancelar" width="100%"></a>
+
+<sub><b>v0.32.0</b> · menu Destinos, formulário do S3 · captura de 2026-10-11</sub>
+
+Serve qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna. Antes de começar, crie o bucket no serviço e uma chave que só possa gravar nele.
+
+1. Na aba Destinos, clique em **Configurar** no cartão **Armazenamento S3**.
+2. Preencha o endereço, a região, o bucket e as duas chaves.
+3. Escolha a pasta enviada, o intervalo e o que acontece depois do envio.
+4. Digite a sua senha e clique em **Gravar**.
+
+| Campo | Obrigatório | O que preencher |
+|---|---|---|
+| Endereço do serviço | Sim | `https://nome` ou `https://nome:porta`, só HTTPS e sem o bucket |
+| Região | Sim | A que o serviço informa; onde não há, `us-east-1` |
+| Bucket | Sim | O nome do bucket, já criado no serviço |
+| Prefixo | Não | A pasta dentro do bucket; em branco, grava na raiz dele |
+| Endereço do bucket | Sim | **No caminho** (`https://nome/bucket/arquivo`) ou **No nome** (`https://bucket.nome/arquivo`), como o serviço pede |
+| Chave de acesso | Sim | A chave que pode gravar no bucket. Em **Alterar**, em branco mantém a gravada |
+| Chave secreta | Sim | A outra metade da chave. Em **Alterar**, em branco mantém a gravada |
+| Ligado | Não | Marcada, o painel envia sozinho; desmarcada, a configuração fica guardada e nada sai |
+| Pasta enviada | Não | A pasta dentro dos dados, que precisa existir; em branco é a pasta dos dados inteira |
+| Intervalo entre as passadas | Sim | Minutos, de 5 a 1440 |
+| Depois do envio | Sim | **Copiar**: o arquivo continua no servidor. **Guardar no S3**: o arquivo sai do servidor depois que o destino confirma a gravação |
+| Sua senha atual | Sim | A senha de quem está na sessão, para gravar o destino |
+
+<a href="imagens/destinos-gravado.png"><img src="imagens/destinos-gravado.png" alt="Aba Destinos com o aviso Destino gravado, vale a partir da próxima passada, e os cartões Armazenamento S3 e Bot do Telegram ligados, cada um com o que foi gravado, os segredos gravados sem aparecer na tela e a última passada como nenhuma ainda" width="100%"></a>
+
+<sub><b>v0.32.0</b> · menu Destinos, depois de gravar · captura de 2026-10-11</sub>
+
+**Resultado esperado:** a aba volta com o aviso `Destino gravado. Vale a partir da próxima passada.`, e o cartão mostra a etiqueta `ligado`, o endereço, o bucket, a pasta e que as chaves estão gravadas, sem mostrá-las. A primeira passada começa em até um minuto e envia tudo o que já está na pasta.
+
+> ⚠️ **Guardar no S3 deixa uma cópia só:** o arquivo sai do servidor depois de gravado no destino, e o painel não tem lixeira nem baixa de volta. Comece com **Copiar**, confira os objetos no bucket e só então troque.
+
+| Mensagem | Motivo |
+|---|---|
+| Endereço inválido: use https://nome ou https://nome:porta, em minúsculas e sem caminho. | O endereço não é HTTPS, tem maiúscula ou traz o bucket ou um caminho |
+| Bucket inválido: de 3 a 63 caracteres, com letras minúsculas, números, ponto e hífen. | O nome do bucket foge da regra |
+| A pasta não existe dentro dos dados. Crie em Arquivos ou confira o nome. | A pasta enviada não foi encontrada |
+| Preencha os dois segredos do destino: nenhum deles está gravado ainda. | Na primeira gravação, uma das chaves ficou em branco |
+| Intervalo inválido: de 5 a 1440 minutos. | O intervalo está fora da faixa |
+
+</details>
+
+<details>
+<summary>Destinos ➜ Bot do Telegram — clique para expandir</summary>
+
+### Destinos ➜ Bot do Telegram
+
+<a href="imagens/destinos-telegram.png"><img src="imagens/destinos-telegram.png" alt="Formulário Bot do Telegram com a frase que diz que o bot só envia, o token do bot mascarado, a conversa que recebe com um nome de canal de exemplo, a caixa Ligado, a pasta enviada, o intervalo de 5 minutos, o idioma das mensagens, a explicação do limite de 50 MiB por arquivo e do envio em instantes, o campo Sua senha atual e os botões Gravar e Cancelar" width="100%"></a>
+
+<sub><b>v0.32.0</b> · menu Destinos, formulário do bot · captura de 2026-10-11</sub>
+
+Antes de começar, crie o bot no criador de bots do Telegram e guarde o token que ele entrega. Coloque o bot no grupo ou no canal que vai receber; para uma pessoa, ela precisa ter iniciado a conversa com o bot.
+
+1. Na aba Destinos, clique em **Configurar** no cartão **Bot do Telegram**.
+2. Preencha o token do bot e a conversa que recebe.
+3. Escolha a pasta enviada, o intervalo e o idioma das mensagens.
+4. Digite a sua senha e clique em **Gravar**.
+
+| Campo | Obrigatório | O que preencher |
+|---|---|---|
+| Token do bot | Sim | O texto inteiro que o criador de bots entrega. Em **Alterar**, em branco mantém o gravado |
+| Conversa que recebe | Sim | O número da pessoa ou do grupo (o de grupo começa com `-`) ou o `@nome` do canal. Em **Alterar**, em branco mantém a gravada |
+| Ligado | Não | Marcada, o painel envia sozinho; desmarcada, a configuração fica guardada e nada sai |
+| Pasta enviada | Não | A pasta dentro dos dados, que precisa existir; em branco é a pasta dos dados inteira |
+| Intervalo entre as passadas | Sim | Minutos, de 5 a 1440: é a conferência do que não saiu na hora |
+| Idioma das mensagens | Sim | Português ou English, para a legenda de cada arquivo e os avisos |
+| Sua senha atual | Sim | A senha de quem está na sessão, para gravar o destino |
+
+**Resultado esperado:** a aba volta com o aviso `Destino gravado. Vale a partir da próxima passada.` e o cartão com a etiqueta `ligado`. Dali em diante, cada arquivo que chega inteiro na pasta, por FTP ou pelo painel, vai para a conversa em poucos segundos, como documento, com o caminho, o tamanho e a data na legenda.
+
+| Situação | O que o bot faz |
+|---|---|
+| Arquivo que já estava na pasta quando o destino foi ligado | Não envia: só vai o que chegar depois |
+| Arquivo maior que o limite, de 50 MiB por padrão | Não envia o arquivo: a conversa recebe um aviso com o caminho, o tamanho e a data |
+| Arquivo vazio | Não envia |
+| Mensagem escrita na conversa | Nada: o bot só envia, não lê a conversa e não aceita comando |
+
+</details>
+
+<details>
+<summary>Destinos ➜ Testar e Enviar agora — clique para expandir</summary>
+
+### Destinos ➜ Testar e Enviar agora
+
+<a href="imagens/destinos-teste.png"><img src="imagens/destinos-teste.png" alt="Aba Destinos com o aviso Teste concluído, o destino recebeu, acima dos cartões Armazenamento S3 e Bot do Telegram, cada um com a data da última passada" width="100%"></a>
+
+<sub><b>v0.32.0</b> · menu Destinos, depois do teste · captura de 2026-10-11</sub>
+
+1. No cartão do destino, clique em **Testar**.
+2. Para não esperar o intervalo, clique em **Enviar agora** e atualize a tela em seguida.
+
+**Resultado esperado:** o teste responde `Teste concluído: o destino recebeu.`: no S3, ficou gravado o objeto `allsafe-ftp-stack-teste.txt` no prefixo escolhido; pelo bot, a conversa recebeu a mensagem de teste do painel. **Enviar agora** responde `Passada pedida: o painel começa em instantes. Atualize a tela para acompanhar.`, e a linha **Última passada** passa a mostrar quantos arquivos saíram.
+
+| Item | Como funciona |
+|---|---|
+| **Testar** com o destino desligado | Funciona: o teste usa o que está gravado e não envia nenhum arquivo |
+| Teste que não dá certo | O aviso traz o nome do destino e o motivo em uma frase, como `o serviço recusou a credencial ou a permissão` |
+| **Enviar agora** no S3 | Respeita a espera de dois minutos do arquivo sem mudar; o que ainda está chegando fica na linha **Ainda chegando** |
+| Senha | Nenhum dos dois botões pede a senha: não mudam a configuração |
+
+O que cada motivo quer dizer e o que fazer está em [Solução de problemas](../solucao-de-problemas.md#destinos).
+
+</details>
+
+<details>
+<summary>Destinos ➜ Remover — clique para expandir</summary>
+
+### Destinos ➜ Remover
+
+<a href="imagens/destinos-remover.png"><img src="imagens/destinos-remover.png" alt="Tela Remover destino do Bot do Telegram, com a frase que diz o que o painel apaga e que nenhum arquivo do servidor sai, o campo Sua senha atual e os botões Sim, remover o destino e Cancelar" width="100%"></a>
+
+<sub><b>v0.32.0</b> · menu Destinos, confirmação de remoção · captura de 2026-10-11</sub>
+
+1. No cartão do destino, clique em **Remover**.
+2. Digite a sua senha e clique em **Sim, remover o destino**.
+
+**Resultado esperado:** a aba volta com o aviso `Destino removido: a configuração e os segredos dele foram apagados.` e o cartão como `não configurado`. O que já foi enviado continua no destino, e nenhum arquivo do servidor é apagado.
+
+</details>
+
+<details>
+<summary>Detalhe técnico — rotas, segredos e eventos</summary>
+
+- Rotas `GET /destinos`, `GET` e `POST /destinos/s3` e `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `POST /destinos/arquivo` e `GET` e `POST /destinos/remover`. Todo `POST` leva o token da sessão; gravar e remover pedem também a senha atual. Para o usuário do FTP, todas respondem `404`.
+- A configuração fica em `DATA_DIR/painel/destinos/<destino>.conf` e o andamento, em `<destino>.estado`. Os segredos ficam em `SECRETS_DIR/destinos`, um por arquivo, com modo `0600`, e não voltam para a tela, para a aba Log nem para a auditoria.
+- O painel só sai do servidor por HTTPS, com o certificado conferido, e não segue redirecionamento.
+- Os eventos `destino_gravado`, `destino_teste`, `destino_pedido`, `destino_arquivo`, `destino_enviado`, `destino_falhou`, `destino_pulado` e `destino_removido` ficam na [auditoria](../painel.md#auditoria).
+- Com `PAINEL_DESTINOS=nao` no `.env`, a aba sai do menu e nenhuma passada acontece: veja [Configuração](../configuracao.md#painel).
+- O funcionamento completo está em [Destinos: S3 e bot do Telegram](../painel.md#destinos).
+
+</details>
+
+---
+
 <a name="servidor"></a>
 
 ## 🖥️ Servidor
 
 <a href="imagens/servidor.png"><img src="imagens/servidor.png" alt="Aba Servidor com o botão Atualizar sozinha, o cartão Containers da stack, com um quadro para o Servidor FTP, um para o Painel e um para a Frente web, cada um com processador, memória e processos em uso e alocados e o gráfico do último minuto, e o cartão Recursos do servidor, com processador, memória, disco e rede do FTP" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Servidor · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Servidor · captura de 2026-10-11</sub>
 
 **Para que serve:** acompanhar quanto cada container da stack usa do que foi alocado para ele e quanto sobra na máquina em que a stack roda.
 
@@ -1018,7 +1234,7 @@ Nada é alterado por esta aba, e só o administrador a vê. Os limites de cada c
 
 <a href="imagens/seguranca.png"><img src="imagens/seguranca.png" alt="Aba Segurança com o resumo da conferência no alto, que diz quantos itens estão em ordem, e uma linha por item: endereço público, painel por proxy ou túnel, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, bloqueio por endereço, com a quantidade de endereços bloqueados, custo das senhas, contato de segurança, container e firewall" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Segurança · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Segurança · captura de 2026-10-11</sub>
 
 **Para que serve:** conferir, em uma tela, se a instalação está dentro do que a stack exige: rede privada, TLS, certificados válidos, painel isolado e contato de segurança publicado.
 
@@ -1052,7 +1268,7 @@ Nada é alterado por esta aba. As regras de firewall de exemplo estão em [Segur
 
 <a href="imagens/seguranca-tls-por-usuario.png"><img src="imagens/seguranca-tls-por-usuario.png" alt="Aba Segurança com o alerta no topo de que dois usuários, central-pabx e radio-antigo, entram no FTP sem TLS, e a linha TLS do FTP com a marca de atenção e os nomes dos usuários dispensados" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Segurança, alerta de usuário sem TLS · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Segurança, alerta de usuário sem TLS · captura de 2026-10-11</sub>
 
 Com pelo menos um usuário dispensado do TLS, a aba abre com o alerta e a linha **TLS do FTP** troca a marca de conferido pela de atenção, com a quantidade e os nomes de quem entra sem TLS.
 
@@ -1080,7 +1296,7 @@ Com pelo menos um usuário dispensado do TLS, a aba abre com o alerta e a linha 
 
 <a href="imagens/bloqueios.png"><img src="imagens/bloqueios.png" alt="Aba Bloqueios com a regra em uso abaixo do título, o botão Bloquear endereço, quatro endereços bloqueados, em IPv4 e em IPv6, por erros no FTP, por erros no painel e por um administrador, cada um com desde quando, até quando e os botões Mudar prazo e Desbloquear, e o cartão Usuários bloqueados no FTP, com o usuário switch-core" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Bloqueios · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Bloqueios · captura de 2026-10-11</sub>
 
 **Para que serve:** acompanhar os endereços que erraram usuário e senha vezes demais, liberar um deles, bloquear por mais ou por menos tempo e bloquear um endereço novo, ou uma rede inteira, antes que ele erre.
 
@@ -1110,7 +1326,7 @@ O endereço bloqueado é recusado com qualquer conta, mesmo com a senha certa, n
 
 <a href="imagens/bloqueios-novo.png"><img src="imagens/bloqueios-novo.png" alt="Tela Bloquear endereço ou prefixo, com o campo Endereço ou prefixo preenchido com 2001:db8:12::/64, o campo Manter bloqueado por com 90, a nota do que o painel não bloqueia e os botões Bloquear e Cancelar" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Bloqueios, tela Bloquear endereço ou prefixo · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Bloqueios, tela Bloquear endereço ou prefixo · captura de 2026-10-11</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -1119,7 +1335,7 @@ O endereço bloqueado é recusado com qualquer conta, mesmo com a senha certa, n
 
 <a href="imagens/bloqueios-bloqueado.png"><img src="imagens/bloqueios-bloqueado.png" alt="Aba Bloqueios com a mensagem Bloqueio gravado, vale no FTP e no painel a partir do próximo pedido, e o prefixo 2001:db8:12::/64 na lista, bloqueado por Administrador, por 90 dias" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Bloqueios, depois do bloqueio · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Bloqueios, depois do bloqueio · captura de 2026-10-11</sub>
 
 **Resultado esperado:** depois de **Bloquear**, a lista volta com a mensagem `Bloqueio gravado: vale no FTP e no painel a partir do próximo pedido.` e a linha nova, com `Administrador` na coluna **Bloqueado por**. O que foi bloqueado não entra mais no FTP nem no painel, com conta nenhuma, até o prazo vencer ou alguém desbloquear. Endereço que já estava na lista só tem o prazo trocado, com a mensagem `Prazo do bloqueio alterado.`
 
@@ -1142,7 +1358,7 @@ O endereço bloqueado é recusado com qualquer conta, mesmo com a senha certa, n
 
 <a href="imagens/bloqueios-endereco.png"><img src="imagens/bloqueios-endereco.png" alt="Tela Bloqueio de 192.0.2.61 com o cartão Prazo, que diz quem bloqueou, desde quando e até quando, o campo Manter bloqueado por preenchido com 365 e o botão Gravar prazo, e o cartão Desbloquear, com o botão Desbloquear" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Bloqueios, tela do endereço · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Bloqueios, tela do endereço · captura de 2026-10-11</sub>
 
 | Campo | Obrigatório | O que preencher |
 |---|---|---|
@@ -1150,7 +1366,7 @@ O endereço bloqueado é recusado com qualquer conta, mesmo com a senha certa, n
 
 <a href="imagens/bloqueios-prazo-alterado.png"><img src="imagens/bloqueios-prazo-alterado.png" alt="Aba Bloqueios com a mensagem Prazo do bloqueio alterado e o endereço 192.0.2.61 bloqueado por 365 dias" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Bloqueios, depois da troca do prazo · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Bloqueios, depois da troca do prazo · captura de 2026-10-11</sub>
 
 **Resultado esperado:** depois de **Gravar prazo**, a lista volta com a mensagem `Prazo do bloqueio alterado.` e a coluna **Até** mostra a data nova. Número fora da faixa devolve a tela com `Prazo inválido: de 1 a 3650 dias.`
 
@@ -1167,7 +1383,7 @@ O endereço bloqueado é recusado com qualquer conta, mesmo com a senha certa, n
 
 <a href="imagens/bloqueios-liberado.png"><img src="imagens/bloqueios-liberado.png" alt="Aba Bloqueios com a mensagem Bloqueio desfeito, quem estava nele volta a entrar no FTP e no painel, e três endereços na lista, sem o 198.51.100.24" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Bloqueios, depois do desbloqueio · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Bloqueios, depois do desbloqueio · captura de 2026-10-11</sub>
 
 **Resultado esperado:** a lista volta com a mensagem `Bloqueio desfeito: quem estava nele volta a entrar no FTP e no painel.`, o endereço volta a entrar no próximo pedido e a contagem dos erros dele recomeça. No prefixo, voltam a entrar todos os endereços dele. Se o bloqueio já tinha saído, a mensagem é `Este bloqueio não está mais em vigor.`
 
@@ -1191,9 +1407,9 @@ O administrador que ficou com o próprio endereço bloqueado não abre o painel:
 
 ## 📜 Log
 
-<a href="imagens/atividade.png"><img src="imagens/atividade.png" alt="Aba Log com os registros do painel em quatro colunas: quando, de onde, com o endereço inteiro em uma linha só ou no servidor, o que aconteceu, com um ícone por evento, e o detalhe, como arquivo baixado, pasta criada, administrador criado, endereço desbloqueado e tela fora do papel ou do perfil pedida por usuário do FTP" width="100%"></a>
+<a href="imagens/atividade.png"><img src="imagens/atividade.png" alt="Aba Log com os registros do painel em quatro colunas: quando, de onde, com o endereço inteiro em uma linha só ou no servidor, o que aconteceu, com um ícone por evento, e o detalhe, como arquivos enviados para o destino, arquivo baixado, pasta criada, administrador criado, endereço desbloqueado e tela fora do papel ou do perfil pedida por usuário do FTP" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Log · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Log · captura de 2026-10-11</sub>
 
 **Para que serve:** saber quem entrou no painel, de onde, o que foi alterado e quem baixou cada arquivo.
 
@@ -1217,6 +1433,8 @@ O administrador que ficou com o próprio endereço bloqueado não abre o painel:
 | Usuário dispensado do TLS · Usuário volta a exigir TLS | Alteração do TLS de um usuário |
 | Arquivo baixado · Download interrompido | Download pela aba Arquivos ou pela tela Meus arquivos, completo ou cortado antes do fim |
 | Arquivo enviado pelo painel · Envio interrompido · Envio pelo painel sem a permissão | Envio pela aba Arquivos, pela tela Meus arquivos ou pela tela Envio de arquivos, completo ou cortado antes do fim, e o envio pedido por uma conta que não tem a permissão |
+| Destino de envio gravado · Teste de destino de envio · Envio para o destino pedido fora de hora · Destino de envio removido | Alteração, teste e passada pedida na aba Destinos, com o administrador que fez e o destino; segredo nenhum é registrado |
+| Arquivos enviados para o destino · Arquivo enviado para o destino a pedido · Envio para o destino não concluído · Arquivo recusado pelo destino deixado para trás | Cada passada que enviou algo, com a quantidade e o tamanho; o envio pedido pelo botão de um arquivo; a passada que parou antes do fim, com o motivo; e o arquivo que o destino recusou três vezes |
 | Pasta criada · Arquivo ou pasta renomeado · Arquivo ou pasta apagado | Alteração pela aba Arquivos ou pela tela Meus arquivos, com o caminho; o apagado aparece também quando a pasta sai junto com o usuário |
 | Administrador criado · Senha de administrador trocada · Administrador renomeado · Administrador removido | Alteração de administrador, com quem fez e quem foi alterado |
 | Senha atual recusada | Alteração de administrador recusada pela senha de confirmação |
@@ -1245,7 +1463,7 @@ A aba mostra os últimos 300 registros, e o recolhido **O que fica registrado**,
 
 <a href="imagens/entrar-ingles.png"><img src="imagens/entrar-ingles.png" alt="Tela de entrada em inglês: a chamada Backups and files, kept in one place, o título Sign in to the panel, os campos User e Password, o botão Sign in e, abaixo da nota, os botões PT e EN" width="100%"></a>
 
-<sub><b>v0.31.1</b> · tela de entrada, em inglês · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · tela de entrada, em inglês · captura de 2026-10-11</sub>
 
 **Para que serve:** usar o painel em português ou em inglês. Cada conta escolhe o seu, e a escolha de uma não muda a tela das outras.
 
@@ -1262,11 +1480,11 @@ A aba mostra os últimos 300 registros, e o recolhido **O que fica registrado**,
 
 <a href="imagens/visao-geral-ingles.png"><img src="imagens/visao-geral-ingles.png" alt="Aba Visão geral em inglês, com o menu, o alerta de usuários sem TLS, as medidas, os gráficos e a atividade recente traduzidos, as datas em ano-mês-dia e os números com ponto decimal" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Visão geral, em inglês · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Visão geral, em inglês · captura de 2026-10-11</sub>
 
 <a href="imagens/usuarios-ingles.png"><img src="imagens/usuarios-ingles.png" alt="Aba Usuários em inglês: o título Users, os perfis Full, Upload, Upload only e Read only, as etiquetas you, limits, shared e initial, a coluna TLS com required e no TLS e os botões Edit, Exempt from TLS, Require TLS, Change password, Change name e Remove" width="100%"></a>
 
-<sub><b>v0.31.1</b> · menu Usuários, em inglês · captura de 2026-10-10</sub>
+<sub><b>v0.32.0</b> · menu Usuários, em inglês · captura de 2026-10-11</sub>
 
 <details>
 <summary>Detalhe técnico — onde a escolha fica</summary>
@@ -1287,7 +1505,9 @@ A aba mostra os últimos 300 registros, e o recolhido **O que fica registrado**,
 
 Capturas reais do painel no ar, feitas com Playwright no Google Chrome, em 1440×900, tema escuro e português; três telas foram repetidas em inglês, para a seção [Idioma](#idioma). O guia em inglês tem as mesmas telas, fotografadas com o painel em inglês. A stack fotografada foi uma instalação de demonstração, separada da instalação em uso: subiu em `127.0.0.4`, com nomes de container, rede, pasta de dados e segredos próprios, e recebeu usuários e arquivos de exemplo por FTPS; os envios pelo painel usaram arquivos de exemplo, criados para a foto. Onde o painel diz a pasta do servidor, como na legenda da aba Usuários e na tela **Editar**, a demonstração mostra a pasta padrão do `.env.example`, no lugar da pasta temporária em que ela de fato subiu.
 
-Nenhuma senha aparece nas imagens: os campos de senha são mascarados pelo navegador e a senha gerada foi trocada por `<REDACTED>` antes da captura. As impressões digitais são dos certificados autoassinados da instalação fotografada; cada instalação gera os seus. O e-mail do contato de segurança é um endereço de exemplo.
+Os destinos das fotos são um serviço de exemplo, que subiu junto com a demonstração e só existe na rede interna dela: os nomes terminam em `.example`, a chave de acesso é um identificador de exemplo, e nenhum arquivo saiu da máquina. O bot de exemplo só recebe o que o painel envia.
+
+Nenhuma senha aparece nas imagens: os campos de senha, de chave secreta e de token são mascarados pelo navegador e a senha gerada foi trocada por `<REDACTED>` antes da captura. As impressões digitais são dos certificados autoassinados da instalação fotografada; cada instalação gera os seus. O e-mail do contato de segurança é um endereço de exemplo.
 
 Os endereços da aba Bloqueios são de documentação (RFC 5737 e `2001:db8::/32`, da RFC 3849) e entraram na lista pelo mesmo comando que o FTP e o painel usam para bloquear. `172.29.5.1` é o host visto pela rede interna da demonstração: o acesso e as senhas erradas partiram do próprio servidor. Na aba Servidor e no cartão **Servidor e containers**, os recursos do servidor são os da máquina em que a demonstração rodou.
 

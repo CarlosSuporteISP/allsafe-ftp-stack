@@ -6,6 +6,35 @@ Em 2026-10-10 as versões foram renumeradas: cada versão passou a levar no máx
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [0.32.0] - 2026-10-11
+
+O administrador liga uma pasta dos dados a um armazenamento S3 e a um bot do Telegram pelo painel, e o painel passa a enviar sozinho o que chega nela. Cada arquivo também pode ser enviado na hora, por um botão na aba Arquivos.
+
+### Adicionado
+
+- **Aba Destinos, só do administrador**: um cartão para o armazenamento S3 e outro para o bot do Telegram, cada um com a pasta enviada, o intervalo das passadas (de 5 a 1440 minutos), a última passada, o total enviado e os botões **Testar**, **Enviar agora**, **Alterar** e **Remover**. Gravar e remover pedem a senha do administrador; testar e enviar agora levam o token do formulário. Cada alteração, teste, passada e falha fica na aba Log, sem segredo nenhum.
+- **Armazenamento S3**: qualquer serviço que fale o protocolo, com endereço, região, bucket e prefixo. O painel só grava no bucket, com assinatura versão 4 e envio em partes acima de 32 MiB. Em **Copiar**, o arquivo fica também no servidor; em **Guardar no S3**, o arquivo é apagado do servidor depois que o serviço confirma o recebimento. Só é enviado o arquivo que está há dois minutos sem mudar, e a primeira passada envia o que já está na pasta.
+- **Bot do Telegram, só de envio**: o bot manda cada arquivo novo da pasta para uma pessoa ou um grupo, com o caminho, o tamanho e a data, no idioma escolhido. O painel nunca lê mensagens nem aceita comando pelo bot. Arquivo maior que o limite não é enviado: a conversa recebe só o aviso com o nome e o tamanho. Só vai o que chega depois de o destino ser ligado.
+- **Envio imediato pelo bot**: o arquivo que chega inteiro por FTP ou pelo painel sai pelo bot em poucos segundos, sem esperar a passada. O vigia do FTP avisa o painel de cada envio concluído (`/auth/chegadas`), e o aviso só dispensa a espera de um arquivo que a passada encontraria de qualquer jeito.
+- **Botões Telegram e S3 em cada arquivo da aba Arquivos**: com o destino gravado, o administrador envia aquele arquivo na hora. Esse envio não apaga o arquivo, não mexe no andamento das passadas, serve para qualquer pasta e funciona com o destino desligado. O usuário do FTP não vê os botões nem alcança a rota.
+- **`PAINEL_DESTINOS`** (`sim` por padrão): com `nao`, a aba some do menu, as rotas dela respondem como caminho desconhecido e nada sai do servidor. **`PAINEL_TELEGRAM_MAX_MB`** (`50` por padrão, de 1 a 2000) é o maior arquivo que o bot envia de uma vez, e **`PAINEL_TELEGRAM_API`** é o endereço da API de bot, para quem roda um servidor próprio dela.
+- **Segredos dos destinos em `SECRETS_DIR/destinos`**: as chaves do S3, o token do bot e a conversa que recebe, um por arquivo, gravados pelo painel. Nenhum volta para a tela, para o registro ou para a cópia do `scripts/backup.sh`; depois de uma restauração, são digitados de novo em **Alterar**.
+- **Saída do painel só por HTTPS**, com o certificado conferido e sem seguir redirecionamento. O painel não fala com endereço que não seja o do destino gravado.
+- **`--destinos`**, no comando do painel: mostra o estado de cada destino pelo terminal e pede uma passada.
+- **Bateria**: etapa dos destinos, com um serviço de exemplo próprio de S3 e de bot dentro da rede da instância de teste (`tests/apoio/simulador_destinos.py`). São 10 casos funcionais e 6 de segurança novos: 83 funcionais, 130 de segurança e 14 de rede.
+- **Documentação nos dois idiomas**: seção Destinos no guia das telas, com as fotos de cada tela, e os guias do painel, de configuração, de solução de problemas, de scripts, de segurança, de arquitetura, de backup e de segredos.
+
+### Alterado
+
+- **Ícone do Log no menu**: o relógio de histórico no lugar da lista.
+- **Menu do administrador com oito abas**: Destinos entra entre Arquivos e Servidor.
+- **Galeria do README**: uma foto por aba, na ordem do menu, com a aba Destinos.
+- **Fotos do painel**: todas tiradas de novo nos dois idiomas, com a aba Destinos no menu e os botões de envio na lista de arquivos.
+
+### Corrigido
+
+- **Contador "Limite de processador atingido" do painel subindo sem carga**: a verificação de saúde do container subia o painel inteiro a cada 20 s só para fazer um pedido, gastava por volta de 100 ms de processador de uma vez e batia duas vezes no limite a cada verificação. Passa a ser um arquivo à parte (`painel/saude.py`), que só usa o soquete e gasta por volta de 10 ms, dentro da cota. O painel em si não estava lento: o gasto era só da verificação.
+
 ## [0.31.1] - 2026-10-10
 
 Só documentação e fotos: os guias que faltavam em inglês e as telas do painel fotografadas de novo, nos dois idiomas. O código da stack é o da `0.31.0`.
