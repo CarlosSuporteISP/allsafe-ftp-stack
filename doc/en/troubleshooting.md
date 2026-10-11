@@ -270,4 +270,4 @@ docker inspect allsafe-ftp allsafe-ftp-painel allsafe-ftp-nginx > "$TEMP_DIR/all
 
 ---
 
-⬅️ [Application screenshots](../pt-BR/aplicacao/README.md) · 🏠 [Documentation](README.md)
+⬅️ [Application screenshots](application/README.md) · 🏠 [Documentation](README.md)

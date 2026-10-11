@@ -101,7 +101,7 @@ A list with nothing to show (empty folder, Log without records) says what is mis
 
 Whoever signs in with the FTP account sees none of these tabs: they see a single screen, **My files**, described in [FTP user in the panel](#usuario-ftp).
 
-The picture of each screen, with the explanation item by item, is in [Application screenshots](../pt-BR/aplicacao/README.md).
+The picture of each screen, with the explanation item by item, is in [Application screenshots](application/README.md).
 
 > ⚠️ With `FTP_TLS_MODE` at `0` or `1`, the Overview and Security tabs open with an alert at the top of the screen: the FTP is accepting passwords and files in plain text. The alert only goes away when the variable goes back to `2` or `3`. See [Security](security.md#ftp-sem-tls).
 
@@ -157,7 +157,7 @@ In English, all the screens, the notices, the form errors and the description of
 
 **Expected result:** the user created signs in by FTPS right after, without restarting the FTP.
 
-The forms, the refusal messages and the screen of the generated password are in [Application screenshots](../pt-BR/aplicacao/README.md#usuarios).
+The forms, the refusal messages and the screen of the generated password are in [Application screenshots](application/README.md#usuarios).
 
 Rules, the same as those of [`manage-user.sh`](../../manage-user.sh):
 
@@ -993,4 +993,4 @@ The modules write nothing in the image: the root of the container is read-only a
 
 ---
 
-⬅️ [Backup and restore](backup.md) · 🏠 [Documentation](README.md) · ➡️ [Application screenshots](../pt-BR/aplicacao/README.md)
+⬅️ [Backup and restore](backup.md) · 🏠 [Documentation](README.md) · ➡️ [Application screenshots](application/README.md)
