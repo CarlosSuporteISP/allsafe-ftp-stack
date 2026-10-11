@@ -1029,7 +1029,7 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 | **Send now** | Requests a run out of schedule; refresh the page to follow it |
 | **Change** | Opens the form with what is saved; a blank secret keeps the saved one |
 | **Remove** | Opens the confirmation that deletes the settings, the progress and the secrets of the destination |
-| **How the panel sends** | The summary of the rules: HTTPS only, regular files only and where the secrets are kept |
+| **How the panel sends** | At the top of the screen, collapsed: one click opens the summary of the rules, HTTPS only, regular files only and where the secrets are kept |
 
 Each destination has a single connection, and one does not depend on the other. S3 sends everything in the folder, including what was already there when it was turned on, at each interval. The bot sends only what arrives after it is turned on: within a few seconds when the file arrives whole by FTP or through the panel, and at each interval what showed up in the folder another way. The complete rules are in [Web panel](../panel.md#destinos).
 

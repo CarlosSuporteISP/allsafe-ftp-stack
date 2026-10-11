@@ -1029,7 +1029,7 @@ Quem precisa conferir ou baixar o que foi enviado pede a um administrador ou usa
 | **Enviar agora** | Pede uma passada fora de hora; atualize a tela para acompanhar |
 | **Alterar** | Abre o formulário com o que está gravado; segredo em branco mantém o gravado |
 | **Remover** | Abre a confirmação que apaga a configuração, o andamento e os segredos do destino |
-| **Como o painel envia** | O resumo das regras: só por HTTPS, só arquivo comum e onde os segredos ficam |
+| **Como o painel envia** | No alto da tela, recolhido: abre com um clique e traz o resumo das regras, só por HTTPS, só arquivo comum e onde os segredos ficam |
 
 Cada destino tem uma ligação só, e um não depende do outro. O S3 envia tudo o que está na pasta, inclusive o que já estava lá quando foi ligado, a cada intervalo. O bot envia só o que chega depois de ligado: em poucos segundos quando o arquivo chega inteiro por FTP ou pelo painel, e a cada intervalo o que apareceu na pasta de outro jeito. As regras completas estão em [Painel web](../painel.md#destinos).
 
