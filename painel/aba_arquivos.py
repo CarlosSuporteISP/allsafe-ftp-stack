@@ -267,7 +267,7 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
                     if PASTA.fullmatch(caminho) else '')
     ajuda = ('<p class="suave">'
              + t('O painel navega, baixa, envia arquivo, cria pasta, troca o nome e apaga; arquivo enviado não substitui outro. '
-                 'Apagar pede a sua senha atual e não tem lixeira. Todo download e toda alteração ficam registrados na aba '
+                 'Trocar o nome e apagar pedem a sua senha atual, e apagar não tem lixeira. Todo download e toda alteração ficam registrados na aba '
                  'Log.') + '</p>')
     pedido.enviar(200, pagina(t('Arquivos'), f'''{cabeca('Arquivos', t('O que os equipamentos já enviaram, pasta por pasta.'))}
 {f'<p class="ok" role="status">{e(t(feito))}</p>' if feito else ''}

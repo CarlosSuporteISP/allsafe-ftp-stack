@@ -182,7 +182,7 @@ r_w_dentro="$(p29 w /meus-arquivos/pasta --data-urlencode 'pasta=web29' --data-u
 w_ftp="$(f29 w -T "$W/p29.a" "$F/web29/w2.cfg")"; ate29 15 e29 /data/perfis29/w/web29/w2.cfg 'ftpdata:ftpdata 644'; r_w_ftp=$?
 b_w="$(baixa29 w web29/w2.cfg)"; cmp -s "$W/p29.baixado" "$W/p29.a"; b_w_igual=$?
 # Completo: cria pasta, troca o nome e apaga, com a senha do FTP dele.
-t_c="$(v29 c /meus-arquivos)"; c_fala="$(tem29 'Apagar pede a sua senha do FTP')"; c_form="$(tem29 'action="/meus-arquivos/pasta"')"
+t_c="$(v29 c /meus-arquivos)"; c_fala="$(tem29 'Trocar o nome e apagar pedem a sua senha do FTP')"; c_form="$(tem29 'action="/meus-arquivos/pasta"')"
 c_b_ren="$(tem29 'href="/meus-arquivos/renomear\?item=c1\.cfg"')"; c_b_apa="$(tem29 'href="/meus-arquivos/apagar\?item=c1\.cfg"')"; c_adm="$(tem29 'href="/arquivos')"
 r_c_pasta="$(p29 c /meus-arquivos/pasta --data-urlencode 'pasta=' --data-urlencode 'nome=org29')"; m_org="$(modo29 $P29/org29)"; m_casa_c="$(modo29 $P29)"
 tela_ren="$(v29 c '/meus-arquivos/renomear?item=c1.cfg')"; ren_acao="$(tem29 'action="/meus-arquivos/renomear"')"; ren_onde="$(tem29 '<code>Início</code>')"
