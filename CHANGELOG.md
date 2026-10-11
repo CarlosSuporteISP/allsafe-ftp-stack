@@ -6,7 +6,7 @@ Em 2026-10-10 as versões foram renumeradas: cada versão passou a levar no máx
 
 ↩ [README do projeto](README.pt-BR.md)
 
-## [Não lançado]
+## [0.31.0] - 2026-10-10
 
 O painel passa a receber arquivo, o bloqueio por endereço vale para IPv4 e IPv6 e ganha o bloqueio feito pelo administrador, de endereço e de prefixo, e cada conta pode ter a limpeza automática dos arquivos antigos. A tela de entrada mostra que a stack guarda arquivos de equipamentos de rede, câmeras, empresas e pessoas.
 
