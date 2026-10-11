@@ -21,6 +21,7 @@ from config import ENDERECO_HTTPS, PASTA_DESTINOS
 ARQ_CA = os.path.join(PASTA_DESTINOS, 'ca.pem')
 PRAZO = 30                  # segundos por operação de rede de um envio
 RESPOSTA_MAX = 256 * 1024   # bytes lidos de uma resposta
+METODOS = ('PUT', 'POST', 'DELETE')   # o que o painel pede a um serviço de fora: ler e listar ficam de fora
 BLOCO = 256 * 1024          # bytes de arquivo lidos e enviados por vez
 ENDERECOS_MAX = 3           # endereços de um mesmo nome tentados por conexão
 # Metadados das nuvens em IPv6: fora da faixa de enlace, então são recusados pelo nome da rede.
@@ -29,7 +30,7 @@ RECUSADAS = (ipaddress.ip_network('fd00:ec2::/32'),)
 
 class Falha(Exception):
     """Envio que não deu certo. `motivo` é uma palavra: dns, endereco, conexao, tls, tempo, resposta, recusado,
-    nao_encontrado, limite, arquivo ou http_<código>."""
+    nao_encontrado, limite, arquivo, proibido ou http_<código>."""
 
     def __init__(self, motivo):
         super().__init__(motivo)
@@ -124,7 +125,10 @@ class Ligacao(http.client.HTTPSConnection):
 def pedir(ligacao, metodo, caminho, cabecalhos, corpo=None, teto=RESPOSTA_MAX):
     """Faz um pedido e devolve (código, cabeçalhos, corpo). `corpo` é bytes ou uma função sem argumento que devolve os
     blocos a enviar: sendo função, o envio pode ser refeito do começo. Conexão que já tinha servido a um pedido e caiu
-    neste é reaberta uma vez; resposta maior que o teto vem cortada e fecha a conexão."""
+    neste é reaberta uma vez; resposta maior que o teto vem cortada e fecha a conexão. Método fora de METODOS é
+    recusado antes de qualquer byte sair."""
+    if metodo not in METODOS:
+        raise Falha('proibido')
     for tentativa in (1, 2):
         reusada = ligacao.sock is not None and ligacao.pedidos > 0
         try:

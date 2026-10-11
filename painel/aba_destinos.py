@@ -54,6 +54,7 @@ MOTIVOS = {
     'mudou': N('o arquivo mudou durante o envio: repita quando ele terminar de chegar'),
     'enviando': N('outro envio pedido pela tela está em andamento: tente de novo em instantes'),
     'desligado': N('o destino está desligado ou sem os segredos'),
+    'proibido': N('o painel não faz esse pedido a um destino: ele só grava e só envia, e não apaga nada lá'),
 }
 # Campo que destinos.defeito() aponta ➜ o erro que o formulário mostra.
 ERROS = {

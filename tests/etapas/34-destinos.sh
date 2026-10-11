@@ -558,6 +558,57 @@ f_cod="$(grep -l -E 'getUpdates|setWebhook|getMe\b|deleteMessage|editMessage|get
   && "$s_son" == "200 403 " && "$k_bot" == 1 && "$k_s3" == 1 && "$f_cod" == 0 ]]
 caso $? seguranca 128 "O bot só envia e o S3 só grava" "registro do simulador, de todos os pedidos do painel na etapa: operações pedidas à API do bot: $b_ops(métodos: $b_met), outras operações: $b_out; operações no S3: $s_ops(método dos pedidos recusados: $s_met), leitura, lista ou remoção de objeto: $s_ler; controle do registro, com dois pedidos feitos pela etapa (ler mensagens do bot e ler um objeto): respostas $s_son, linha de operação estranha ao bot $k_bot, leitura de objeto $k_s3; arquivos do painel com o nome de alguma operação de leitura ou de comando da API do bot: $f_cod"
 
+# ------------------------------------------------------------------ nada apaga nem lê no destino, por nenhum caminho do código
+# Os três módulos de saída são chamados direto, dentro do container do painel, como faria um código novo que tentasse
+# apagar: o pedido tem de morrer antes de sair. Os dois de controle, com credencial que não vale, chegam ao simulador.
+m_131=$(marca34)
+r_131="$(docker exec -i "$PAINEL" python3 - <<'PYTHON'
+import sys
+sys.path.insert(0, '/opt/painel')
+import s3, saida, telegram
+
+
+def tenta(chamada):
+    try:
+        chamada()
+    except saida.Falha as falha:
+        return falha.motivo
+    return 'passou'
+
+
+balde = s3.Destino({'endpoint': 'https://s3.simulador.test:8443', 'estilo': 'caminho', 'bucket': 'balde34', 'regiao': 'sa-teste-1'},
+                   'AKIACONTROLE131', 'nao-vale-131', prazo=10)
+bot = telegram.Bot('https://bot.simulador.test:8443', '123456:' + 'A' * 35, '-100131', prazo=10)
+chave, vazio = 'copias/teste/a1.txt', 'application/x-www-form-urlencoded'
+recusas = [tenta(lambda: balde.pedir(metodo, alvo, consulta)) for metodo, alvo, consulta in (
+    ('DELETE', chave, []), ('DELETE', chave, [('versionId', 'x')]), ('DELETE', chave, [('uploadId', '')]),
+    ('DELETE', chave, [('uploadId', 'x'), ('versionId', 'x')]), ('DELETE', '', [('uploadId', 'x')]), ('DELETE', '', []),
+    ('POST', chave, [('delete', '')]), ('POST', '', [('delete', '')]), ('POST', chave, []), ('PUT', chave, [('lifecycle', '')]),
+    ('PUT', '', [('lifecycle', '')]), ('PUT', '', []), ('GET', chave, []), ('GET', '', []), ('HEAD', chave, []), ('delete', chave, []))]
+recusas += [tenta(lambda: saida.pedir(balde.ligacao, metodo, '/balde34/' + chave, {})) for metodo in ('GET', 'HEAD', 'PATCH', 'OPTIONS')]
+recusas += [tenta(lambda: bot.chamar(operacao, vazio, b'', 0)) for operacao in (
+    'deleteMessage', 'deleteMessages', 'editMessageText', 'getUpdates', 'setWebhook', 'banChatMember', 'sendmessage', '')]
+controle = [tenta(lambda: balde.pedir('PUT', 'copias/teste/controle-131', corpo=b'x')), tenta(lambda: bot.avisar('controle 131'))]
+print(len(recusas), ' '.join(sorted(set(recusas))), '·', ' '.join(controle))
+PYTHON
+)"
+d_131="$(sim34 "$m_131" "True")"; c_131="$(sim34 "$m_131" "l['erro']=='InvalidAccessKeyId' and l['metodo']=='PUT'") $(sim34 "$m_131" "l['servico']=='telegram' and l['codigo']==401 and l['op']=='sendMessage'")"
+# Em toda a etapa: nenhum pedido de apagar que não seja o de desfazer um envio em partes.
+a_131="$(sim34 0 "l['servico']=='s3' and (l['op']=='outra' or (l['metodo']=='DELETE' and l['consulta']!=['uploadId']))")"; b_131="$(( $(sim34 0 "l['servico']=='telegram' and l['op'] not in ('sendDocument', 'sendMessage')") - k_bot ))"
+# Controle: o registro acusa quem apaga um objeto, mesmo com a chave certa de quem só deveria gravar.
+m_k131=$(marca34)
+s_131="$(docker exec -i "$SIM34" python3 - <<'PYTHON'
+import http.client, ssl
+ligacao = http.client.HTTPSConnection('127.0.0.1', 8443, context=ssl._create_unverified_context(), timeout=10)
+ligacao.request('DELETE', '/balde34/copias/teste/a1.txt')
+print(ligacao.getresponse().status)
+PYTHON
+)"
+k_131="$(sim34 "$m_k131" "l['servico']=='s3' and l['metodo']=='DELETE' and l['consulta']==[]")"
+f_131="$(grep -c -F ".pedir('DELETE'" "$root_dir"/painel/*.py | awk -F: '{n += $2} END {print n}') $(grep -c -E "^    '(GET|HEAD|PATCH)'" "$root_dir/painel/s3.py" || true)"
+[[ "$r_131" == "28 proibido · recusado recusado" && "$d_131" == 2 && "$c_131" == "1 1" && "$a_131" == 0 && "$b_131" == 0 && "$s_131" == 403 && "$k_131" == 1 && "$f_131" == "1 0" ]]
+caso $? seguranca 131 "Nenhum pedido de apagar, ler ou mexer no bucket e na conversa sai do painel" "chamadas feitas direto aos módulos de saída, dentro do container do painel (DELETE de objeto, com versão, com identificador de envio vazio, com parâmetro a mais e no bucket; apagar vários por POST; POST sem consulta; PUT de regra do bucket e de bucket; GET e HEAD; método em minúsculas; GET, HEAD, PATCH e OPTIONS direto na conexão; deleteMessage, deleteMessages, editMessageText, getUpdates, setWebhook, banChatMember, operação em minúsculas e vazia): quantas e o que cada uma levantou: $r_131 (depois do ponto, os dois pedidos de controle, permitidos e com credencial que não vale); pedidos que chegaram ao simulador durante as chamadas: $d_131, sendo o PUT e o sendMessage de controle: $c_131; em toda a etapa, pedidos ao S3 com DELETE de objeto ou fora da lista: $a_131, operações do bot fora das duas, descontado o pedido de controle do caso 128, feito de dentro do simulador: $b_131; controle, DELETE de objeto feito de dentro do simulador: código $s_131, linhas no registro: $k_131; no código do painel, chamadas com DELETE e métodos de leitura na lista do s3.py: $f_131"
+
 # ------------------------------------------------------------------ PAINEL_DESTINOS=nao desliga tudo
 gravar_env "$ENVA" PAINEL_DESTINOS nao; dep; r_dep1=$?; painel_de_pe
 e_adm3="$(entrar "$J" "$W/painel.senha")"; proibir "$(biscoito_de "$J")"; K="$(csrf)"; proibir "$K"

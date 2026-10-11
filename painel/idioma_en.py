@@ -1951,6 +1951,8 @@ EN = {
         'the service did not answer in time',
     'a resposta do serviço não foi entendida':
         'the service answer was not understood',
+    'o painel não faz esse pedido a um destino: ele só grava e só envia, e não apaga nada lá':
+        'the panel does not make that request to a destination: it only writes and only sends, and deletes nothing there',
     'o serviço recusou a credencial ou a permissão':
         'the service refused the credential or the permission',
     'o bucket ou a conversa não existe para esta credencial':
