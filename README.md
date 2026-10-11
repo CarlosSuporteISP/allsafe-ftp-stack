@@ -47,7 +47,7 @@ flowchart LR
 
 **Sequence:** Network device ➜ Pure-FTPd (`allsafe-ftp`) ➜ PureDB ➜ `/data` ➜ backup stored
 
-> 🧱 **For private networks only.** By default, this stack is for an internal network: it listens **only on a private IP** (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` or `127.0.0.1`), **behind a firewall**, and must not be published on the internet or receive a port forward from the edge. A public address is only accepted by choice of whoever installs, with `REDE_PERMITIR_IP_PUBLICO=sim` and a firewall on the server: read the [warning](doc/pt-BR/seguranca.md#ip-publico) first. Details in [doc/en/security.md](doc/pt-BR/seguranca.md#rede-privada).
+> 🧱 **For private networks only.** By default, this stack is for an internal network: it listens **only on a private IP** (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` or `127.0.0.1`), **behind a firewall**, and must not be published on the internet or receive a port forward from the edge. A public address is only accepted by choice of whoever installs, with `REDE_PERMITIR_IP_PUBLICO=sim` and a firewall on the server: read the [warning](doc/en/security.md#ip-publico) first. Details in [doc/en/security.md](doc/en/security.md#rede-privada).
 
 > 📌 **Official repository:** [github.com/allsafe-inf/allsafe-ftp-stack](https://github.com/allsafe-inf/allsafe-ftp-stack). Versions are released there first, and that is where issues and pull requests are received. The copy at `github.com/CarlosSuporteISP/allsafe-ftp-stack` is a mirror, updated afterwards.
 
@@ -79,9 +79,9 @@ There are **three containers**: the FTP server, the panel and **nginx**, the onl
 
 > **Web panel:** internal network only, behind a firewall, like the rest of the stack. It refuses, in code, any address that is not private. How to use it: [doc/en/panel.md](doc/en/panel.md).
 
-> ⚠️ **Old device without TLS:** for the device that does not support TLS there is the option `FTP_TLS_MODE=0` (or `1`). With it, **password and files travel in plain text**: use it only on an isolated internal network, and the stack warns about it in `deploy.sh`, in the container log and in the panel. See [doc/en/security.md](doc/pt-BR/seguranca.md#ftp-sem-tls).
+> ⚠️ **Old device without TLS:** for the device that does not support TLS there is the option `FTP_TLS_MODE=0` (or `1`). With it, **password and files travel in plain text**: use it only on an isolated internal network, and the stack warns about it in `deploy.sh`, in the container log and in the panel. See [doc/en/security.md](doc/en/security.md#ftp-sem-tls).
 >
-> To exempt from TLS **only the users of the old devices**, keeping the others required to use it, the administrator marks each one in the Users tab of the panel, when creating the user or later: [per-user TLS](doc/pt-BR/seguranca.md#tls-por-usuario).
+> To exempt from TLS **only the users of the old devices**, keeping the others required to use it, the administrator marks each one in the Users tab of the panel, when creating the user or later: [per-user TLS](doc/en/security.md#tls-por-usuario).
 
 ---
 
@@ -158,7 +158,7 @@ To serve the internal network, adjust the `.env` (template in [`.env.example`](.
 
 | Variable | Change to |
 |---|---|
-| `FTP_BIND_IP` | the **private** IP of the server on the internal network (`0.0.0.0` is always refused; a public IP, only with its [own option](doc/pt-BR/seguranca.md#ip-publico)) |
+| `FTP_BIND_IP` | the **private** IP of the server on the internal network (`0.0.0.0` is always refused; a public IP, only with its [own option](doc/en/security.md#ip-publico)) |
 | `FTP_PASSIVE_IP` | the private IP that the device sees (normally the same) |
 | `FTP_CERT_CN` | the hostname (or IP) that goes into the certificate |
 | `PAINEL_BIND_IP` | the **private** IP through which the panel will be opened; with `127.0.0.1` it only opens on the server itself |
@@ -180,7 +180,7 @@ To serve the internal network, adjust the `.env` (template in [`.env.example`](.
 | Let the owner of the files download their own | they open the panel with the FTP user and password and see only their own folder; for the panel to accept only administrators, `PAINEL_ACESSO_USUARIOS_FTP=nao` in the `.env` and `./deploy.sh` |
 | Let a user upload files in the browser | in the panel, Users tab, **Edit**, checkbox **Allow this user to upload files through the panel**, or `./manage-user.sh limites backup-olt enviar=1`: see [Uploading files through the panel](doc/en/panel.md#enviar-arquivo) |
 | Keep only the newest files of an account | in the panel, Users tab, **Edit**, **Automatic cleanup** card, or `./manage-user.sh retencao backup-olt ultimos=30`: see [Automatic cleanup](doc/en/panel.md#limpeza) |
-| Block an address or a prefix | in the panel, Blocks tab, **Block address**, or `./manage-user.sh endereco-bloquear 203.0.113.7 30`: see [blocking by address](doc/pt-BR/seguranca.md#bloqueio-por-endereco) |
+| Block an address or a prefix | in the panel, Blocks tab, **Block address**, or `./manage-user.sh endereco-bloquear 203.0.113.7 30`: see [blocking by address](doc/en/security.md#bloqueio-por-endereco) |
 | Create a folder and lock a user to it | in the panel, Files tab, **New folder** and **New user in this folder**, or `./manage-user.sh add olt01 clientes/olt-01` |
 | Keep a backup copy | `./scripts/backup.sh`, which writes it encrypted; to go back to it, `./scripts/restaurar.sh <copy>`. Keep `.secrets/backup-chave-privada.txt` off the server |
 | See the state | `docker compose ps` |
@@ -245,10 +245,10 @@ flowchart LR
 | 1 | Network device ➜ Pure-FTPd | The device opens the control connection on port `21/tcp` of the host, delivered to the container on `2121/tcp` |
 | 2 | Pure-FTPd ➜ asked for TLS? | By default (`FTP_TLS_MODE=2`), the server only goes on if the client asks for `AUTH TLS`; the `pure-ftpd.pem` certificate is presented |
 | 3a | asked for TLS? ➜ user and password match? | Yes: the client sends user and password, already encrypted |
-| 3b | asked for TLS? ➜ connection refused | No: by default, a plain-text session is refused. Without TLS, only the user exempted by an administrator in the panel gets in, or whoever is on an installation with `FTP_TLS_MODE=0` or `1`, options for [old devices](doc/pt-BR/seguranca.md#ftp-sem-tls) |
+| 3b | asked for TLS? ➜ connection refused | No: by default, a plain-text session is refused. Without TLS, only the user exempted by an administrator in the panel gets in, or whoever is on an installation with `FTP_TLS_MODE=0` or `1`, options for [old devices](doc/en/security.md#ftp-sem-tls) |
 | 4 | user and password match? ➜ PureDB | The account is looked up in the virtual users database (`/auth/pureftpd.pdb`) |
 | 5a | user and password match? ➜ chroot session | Yes: the session opens locked to the user folder |
-| 5b | user and password match? ➜ connection refused | No: `530 Login authentication failed`. By default, 5 wrong passwords from the same address in 15 minutes block the user for that address for 15 minutes; the limit of each user is adjusted in the panel: [blocking by attempts](doc/pt-BR/seguranca.md#bloqueio-por-tentativa). The address, IPv4 or IPv6, that goes over 5 errors in 24 hours, with any user, stays 120 days without signing in to the FTP and to the panel: [blocking by address](doc/pt-BR/seguranca.md#bloqueio-por-endereco) |
+| 5b | user and password match? ➜ connection refused | No: `530 Login authentication failed`. By default, 5 wrong passwords from the same address in 15 minutes block the user for that address for 15 minutes; the limit of each user is adjusted in the panel: [blocking by attempts](doc/en/security.md#bloqueio-por-tentativa). The address, IPv4 or IPv6, that goes over 5 errors in 24 hours, with any user, stays 120 days without signing in to the FTP and to the panel: [blocking by address](doc/en/security.md#bloqueio-por-endereco) |
 | 6 | chroot session ➜ `/data` | The file goes up through the data channel in passive mode, in the range of the profile (`30000-30049/tcp` on `small`) |
 | 7 | `/data` ➜ backup stored | The file is written to the user folder, inside the volume |
 
@@ -604,29 +604,29 @@ Each profile widens the passive range together with `FTP_MAX_CLIENTS`: adjust th
 
 ## 🔐 Security
 
-- **Private network by default:** private IP, behind a firewall, with no port forward from the internet. See [private network and firewall](doc/pt-BR/seguranca.md#rede-privada).
-- **Public IP only by choice:** `REDE_PERMITIR_IP_PUBLICO=sim` accepts a public address and requires TLS; the stack warns about it in `deploy.sh`, in the container logs and in the panel. Only with a firewall on the server. See [public IP](doc/pt-BR/seguranca.md#ip-publico).
-- **Only the panel published, without exposing the FTP:** `PAINEL_PROXY_CONFIAVEL` declares the proxy or the tunnel that runs on the server itself. The panel then counts the wrong password and the session by the client address that it reports, and the address written in a header by anyone else is ignored. See [panel through proxy or tunnel](doc/pt-BR/seguranca.md#painel-por-proxy).
+- **Private network by default:** private IP, behind a firewall, with no port forward from the internet. See [private network and firewall](doc/en/security.md#rede-privada).
+- **Public IP only by choice:** `REDE_PERMITIR_IP_PUBLICO=sim` accepts a public address and requires TLS; the stack warns about it in `deploy.sh`, in the container logs and in the panel. Only with a firewall on the server. See [public IP](doc/en/security.md#ip-publico).
+- **Only the panel published, without exposing the FTP:** `PAINEL_PROXY_CONFIAVEL` declares the proxy or the tunnel that runs on the server itself. The panel then counts the wrong password and the session by the client address that it reports, and the address written in a header by anyone else is ignored. See [panel through proxy or tunnel](doc/en/security.md#painel-por-proxy).
 <details>
 <summary>Protections applied, one by one — click to expand</summary>
 
 - Bind on `127.0.0.1` by default: open only one dedicated private IP and allow in the host firewall only the networks that send backups.
 - TLS **required** to sign in by default (`FTP_TLS_MODE=2`), `chroot` for everyone, no anonymous user, no reverse DNS.
-- **Blocking by attempts on the FTP:** the address that gets the password of a user wrong five times in 15 minutes is blocked for that user for the same time; the limit and the time are adjusted per user, and the administrator unblocks in the panel. See [blocking by attempts](doc/pt-BR/seguranca.md#bloqueio-por-tentativa).
-- **Blocking by address, on the FTP and on the panel:** the address, IPv4 or IPv6, that goes over five user and password errors in 24 hours, with any user name, stays 120 days without signing in to either, with any account; a successful sign-in resets the count. The Blocks tab of the panel lists the addresses, and the administrator blocks an address or a prefix, unblocks it or changes the period. A prefix is only blocked by the administrator. See [blocking by address](doc/pt-BR/seguranca.md#bloqueio-por-endereco).
-- **Without TLS only for whoever the administrator exempts:** in the panel, when creating the user or in Edit, the administrator marks the users of the old devices, one by one; the others are still required to use TLS, and with nobody exempt the session without TLS is refused before the password. See [per-user TLS](doc/pt-BR/seguranca.md#tls-por-usuario).
-- **Without TLS for everyone only by choice:** `FTP_TLS_MODE=0` or `1` exists for the old device that does not speak TLS. Password and files travel in plain text, and the stack warns about it in `deploy.sh`, in the container log and in the panel. Only on an isolated internal network. See [device without TLS](doc/pt-BR/seguranca.md#ftp-sem-tls).
+- **Blocking by attempts on the FTP:** the address that gets the password of a user wrong five times in 15 minutes is blocked for that user for the same time; the limit and the time are adjusted per user, and the administrator unblocks in the panel. See [blocking by attempts](doc/en/security.md#bloqueio-por-tentativa).
+- **Blocking by address, on the FTP and on the panel:** the address, IPv4 or IPv6, that goes over five user and password errors in 24 hours, with any user name, stays 120 days without signing in to either, with any account; a successful sign-in resets the count. The Blocks tab of the panel lists the addresses, and the administrator blocks an address or a prefix, unblocks it or changes the period. A prefix is only blocked by the administrator. See [blocking by address](doc/en/security.md#bloqueio-por-endereco).
+- **Without TLS only for whoever the administrator exempts:** in the panel, when creating the user or in Edit, the administrator marks the users of the old devices, one by one; the others are still required to use TLS, and with nobody exempt the session without TLS is refused before the password. See [per-user TLS](doc/en/security.md#tls-por-usuario).
+- **Without TLS for everyone only by choice:** `FTP_TLS_MODE=0` or `1` exists for the old device that does not speak TLS. Password and files travel in plain text, and the stack warns about it in `deploy.sh`, in the container log and in the panel. Only on an isolated internal network. See [device without TLS](doc/en/security.md#ftp-sem-tls).
 - `read_only` on the root file system, `cap_drop: ALL` (only the strictly necessary ones come back), `no-new-privileges`, CPU, memory, PID and `nofile` limits.
 - Password in `.secrets/ftp-usuario-inicial-senha.txt` (minimum of 12 characters, `0600`), outside the image and ignored by Git. See [doc/en/secrets.md](doc/en/secrets.md).
 - **Encrypted backup copy:** `scripts/backup.sh` encrypts with the public key in `.secrets/` and nothing unencrypted reaches the disk; only the private key opens the copy. See [the key of the copy](doc/en/backup.md#chave).
 - nginx in front of the panel: it is the only published port, runs without `root` and without `capability`, accepts only the networks in `PAINEL_REDES_PERMITIDAS` and limits requests and connections per address.
-- **Standards followed:** FTP over TLS, TLS 1.2 and 1.3, HTTP, cookie, download, `security.txt` and `robots.txt` checked against the RFCs, with the status of each one. See [RFC conformance](doc/pt-BR/seguranca.md#conformidade-rfc).
+- **Standards followed:** FTP over TLS, TLS 1.2 and 1.3, HTTP, cookie, download, `security.txt` and `robots.txt` checked against the RFCs, with the status of each one. See [RFC conformance](doc/en/security.md#conformidade-rfc).
 - Panel only over HTTPS and only from a private network: password stored as a `scrypt` hash, a session that ends after 4 hours without use and after 12 hours in any case, blocking after five wrong passwords, CSRF protection, no JavaScript, no access to Docker and a record of every action. See [doc/en/panel.md](doc/en/panel.md#protecoes).
 - Rotated logs (`max-size: 10m`, `max-file: 3`).
 
 </details>
 
-The safest path for each decision of whoever installs, as a flowchart, is in [best practices before production](doc/pt-BR/seguranca.md#boas-praticas); what is attacked at every version, in [tests run](doc/pt-BR/seguranca.md#testes-executados). Threat model and the hardening line by line in [doc/en/security.md](doc/pt-BR/seguranca.md).
+The safest path for each decision of whoever installs, as a flowchart, is in [best practices before production](doc/en/security.md#boas-praticas); what is attacked at every version, in [tests run](doc/en/security.md#testes-executados). Threat model and the hardening line by line in [doc/en/security.md](doc/en/security.md).
 
 ---
 
@@ -640,7 +640,7 @@ The safest path for each decision of whoever installs, as a flowchart, is in [be
 | Check the running installation | `./scripts/validate.sh --runtime` | the same, plus `servico ftp: running, healthy`, likewise for `painel` and `nginx`, and the initial user in PureDB or removed by the administrator |
 | Run the full suite: functional, security and network | `./tests/testar.sh` | one line per case and, at the end, `Bateria aprovada: nenhum desvio.` |
 
-The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 73 functional cases, 124 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/pt-BR/seguranca.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
+The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 73 functional cases, 124 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
 
 ---
 
@@ -711,7 +711,7 @@ Index: [doc/en/README.md](doc/en/README.md).
 | [Configuration](doc/en/configuration.md) | All the variables of the `.env` |
 | [Profiles](doc/en/profiles.md) | Profiles `small`, `medium`, `large`, `xlarge` and `extended`: sizing and passive range |
 | [Architecture](doc/en/architecture.md) | Containers, entrypoints, volumes and Pure-FTPd options |
-| [Security](doc/pt-BR/seguranca.md) | Private network, mode without TLS for old devices, threat model and hardening applied |
+| [Security](doc/en/security.md) | Private network, mode without TLS for old devices, threat model and hardening applied |
 | [Secrets](doc/en/secrets.md) | What stays in `.secrets/` and how to change it |
 | [Scripts](doc/en/scripts.md) | What each script does, parameters and expected output |
 | [Operation](doc/en/operation.md) | Users, real certificate, logs and update |

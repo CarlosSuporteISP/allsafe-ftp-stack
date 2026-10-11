@@ -126,7 +126,7 @@ For a **second instance** on the same host, change the five names, the three ima
 
 <a name="rede-permitir-ip-publico"></a>
 
-> ⚠️ **Alert — `REDE_PERMITIR_IP_PUBLICO=sim` puts the FTP and the panel on the internet.** From the factory the option comes turned off; turning it on is the choice of whoever installs. An exposed server is scanned and receives password attempts all the time. Turn it on only with a firewall on the server allowing the ports only for the addresses of the devices and of whoever administers, with `FTP_TLS_MODE` at `2` or `3` (with the option, `0` and `1` are refused), generated passwords and a reduced `PAINEL_REDES_PERMITIDAS`. Even with `sim`, `0.0.0.0` and a network wider than `/8` are still refused. Without a firewall, the risk belongs to whoever turned the option on. The step by step is in [Security](../pt-BR/seguranca.md#ip-publico). To publish **only the panel**, without exposing the FTP, the path is another one: [`PAINEL_PROXY_CONFIAVEL`](#painel-proxy-confiavel).
+> ⚠️ **Alert — `REDE_PERMITIR_IP_PUBLICO=sim` puts the FTP and the panel on the internet.** From the factory the option comes turned off; turning it on is the choice of whoever installs. An exposed server is scanned and receives password attempts all the time. Turn it on only with a firewall on the server allowing the ports only for the addresses of the devices and of whoever administers, with `FTP_TLS_MODE` at `2` or `3` (with the option, `0` and `1` are refused), generated passwords and a reduced `PAINEL_REDES_PERMITIDAS`. Even with `sim`, `0.0.0.0` and a network wider than `/8` are still refused. Without a firewall, the risk belongs to whoever turned the option on. The step by step is in [Security](security.md#ip-publico). To publish **only the panel**, without exposing the FTP, the path is another one: [`PAINEL_PROXY_CONFIAVEL`](#painel-proxy-confiavel).
 
 > ⚠️ The passive range is published **1:1** (same port on the host and in the container). When widening it, adjust the host firewall too.
 
@@ -170,9 +170,9 @@ Only the initial user comes from the `.env`. The others are created through the 
 | `2` | **refused**: only whoever negotiates TLS gets in | accepted, if the client asks | **default** |
 | `3` | **refused** | **refused**: the data also has to be encrypted | all the devices support `PROT P` |
 
-> ⚠️ **Modes `0` and `1`: FTP without encryption.** They exist only for an old device that does not speak TLS. In them, user, password and file pass in **plain text** and can be read by whoever is on the same network path. Use them only on an isolated internal network, with the firewall allowing the port only for those devices, with a user and password dedicated to them, and go back to `2` as soon as you can. While one of those modes is on, the stack warns in three places: at the end of `./deploy.sh`, in the log of the FTP container and on the screens of the panel. Read [Security](../pt-BR/seguranca.md#ftp-sem-tls) first.
+> ⚠️ **Modes `0` and `1`: FTP without encryption.** They exist only for an old device that does not speak TLS. In them, user, password and file pass in **plain text** and can be read by whoever is on the same network path. Use them only on an isolated internal network, with the firewall allowing the port only for those devices, with a user and password dedicated to them, and go back to `2` as soon as you can. While one of those modes is on, the stack warns in three places: at the end of `./deploy.sh`, in the log of the FTP container and on the screens of the panel. Read [Security](security.md#ftp-sem-tls) first.
 
-> ⚠️ **`FTP_TLS_EXCECOES=sim`: without TLS only for whoever the administrator exempts.** The option comes turned on and, by itself, lets nobody through: the server requires TLS from everyone until an administrator exempts a user, in the Users tab of the panel (when creating or in **Exempt from TLS**) or with `manage-user.sh`. The exempt user sends password and file in **plain text**, and the conditions of use are the same as those of modes `0` and `1`. With `nao`, nobody gets in without TLS, even if already exempted before: the list stays stored and does not hold, and the panel stops offering the exemption. Read [Security](../pt-BR/seguranca.md#tls-por-usuario) first.
+> ⚠️ **`FTP_TLS_EXCECOES=sim`: without TLS only for whoever the administrator exempts.** The option comes turned on and, by itself, lets nobody through: the server requires TLS from everyone until an administrator exempts a user, in the Users tab of the panel (when creating or in **Exempt from TLS**) or with `manage-user.sh`. The exempt user sends password and file in **plain text**, and the conditions of use are the same as those of modes `0` and `1`. With `nao`, nobody gets in without TLS, even if already exempted before: the list stays stored and does not hold, and the panel stops offering the exemption. Read [Security](security.md#tls-por-usuario) first.
 
 A value outside `0` to `3` is refused by `deploy.sh` before any change and, if it reaches the container, it stops with `FALHA: FTP_TLS_MODE deve ser 0, 1, 2 ou 3`. The certificate of the FTP is generated in any mode: when going back to `2`, it is already there.
 
@@ -190,11 +190,11 @@ Replacing the self-signed certificate with a real one: [Operation](operation.md#
 
 | Variable | What it is for | Values | Default |
 |---|---|---|---|
-| `FTP_MAX_CLIENTS` | Maximum of simultaneous connections (option `-c`). Align it with the size of the passive range. It also sets the cost of the stored password of each FTP user: [Security](../pt-BR/seguranca.md#custo-das-senhas) | integer greater than zero | `50` |
+| `FTP_MAX_CLIENTS` | Maximum of simultaneous connections (option `-c`). Align it with the size of the passive range. It also sets the cost of the stored password of each FTP user: [Security](security.md#custo-das-senhas) | integer greater than zero | `50` |
 | `FTP_MAX_CLIENTS_PER_IP` | Maximum of connections per source IP (option `-C`) | integer greater than zero | `8` |
 | `FTP_BLOQUEIO_TENTATIVAS` | Blocking by attempts: how many wrong passwords coming from the same address block the user for that address. It is the default of the stack; the limit of each user is adjusted in the panel: [Panel](panel.md#limites) | `0` to `100`; `0` turns it off | `5` |
-| `FTP_BLOQUEIO_MINUTOS` | Minutes that the block lasts. It is also the time in which the wrong passwords add up: [Security](../pt-BR/seguranca.md#bloqueio-por-tentativa) | `1` to `1440` | `15` |
-| `BLOQUEIO_ENDERECO_ERROS` | Blocking by address: the address that goes past this number of user and password errors, on the FTP or in the panel, no longer gets into either of the two, with any account: [Security](../pt-BR/seguranca.md#bloqueio-por-endereco) | `0` to `100`; `0` turns it off | `5` |
+| `FTP_BLOQUEIO_MINUTOS` | Minutes that the block lasts. It is also the time in which the wrong passwords add up: [Security](security.md#bloqueio-por-tentativa) | `1` to `1440` | `15` |
+| `BLOQUEIO_ENDERECO_ERROS` | Blocking by address: the address that goes past this number of user and password errors, on the FTP or in the panel, no longer gets into either of the two, with any account: [Security](security.md#bloqueio-por-endereco) | `0` to `100`; `0` turns it off | `5` |
 | `BLOQUEIO_ENDERECO_HORAS` | Hours in which the errors of the same address add up | `1` to `720` | `24` |
 | `BLOQUEIO_ENDERECO_DIAS` | Days that the block of the address lasts, and the period that the block made by the administrator gets when no other is given. The administrator blocks an address or a prefix, unblocks and changes the period in the Blocks tab of the panel | `1` to `3650` | `120` |
 
@@ -228,7 +228,7 @@ Replacing the self-signed certificate with a real one: [Operation](operation.md#
 
 <a name="painel-proxy-confiavel"></a>
 
-> ⚠️ **Alert — `PAINEL_PROXY_CONFIAVEL` filled in puts the sign-in screen of the panel within reach of whoever gets to the proxy or to the tunnel.** With the variable empty, which is the default, the address of whoever accesses is always that of the connection and `X-Forwarded-For` is ignored. Filled in, nginx starts using the **last** address of that header, only when the connection comes from an address on the list, for the limit of password attempts, the session, the audit log and the request limits. Who can reach the screen becomes decided at the proxy or at the tunnel: restrict the access there. The FTP does not go through it and stays only on the addresses of the stack. The public name through which the panel is opened goes in `PAINEL_CERT_CN`. The step by step is in [Security](../pt-BR/seguranca.md#painel-por-proxy).
+> ⚠️ **Alert — `PAINEL_PROXY_CONFIAVEL` filled in puts the sign-in screen of the panel within reach of whoever gets to the proxy or to the tunnel.** With the variable empty, which is the default, the address of whoever accesses is always that of the connection and `X-Forwarded-For` is ignored. Filled in, nginx starts using the **last** address of that header, only when the connection comes from an address on the list, for the limit of password attempts, the session, the audit log and the request limits. Who can reach the screen becomes decided at the proxy or at the tunnel: restrict the access there. The FTP does not go through it and stays only on the addresses of the stack. The public name through which the panel is opened goes in `PAINEL_CERT_CN`. The step by step is in [Security](security.md#painel-por-proxy).
 
 With `PAINEL_SESSAO_MINUTOS`, `PAINEL_ENVIO_MAX_MB` or `PAINEL_RETENCAO_MINUTOS` outside the values of the table, the panel container does not start: it stops with `FALHA: <variável> deve ficar entre <mínimo> e <máximo>` in the log (`docker compose logs painel`), before touching any folder.
 
@@ -286,7 +286,7 @@ With the variable empty, the same address answers `404` with `contato de seguran
 - **Only that address:** `/security.txt` at the root, the listing of `/.well-known/` and any other name inside it do not exist; without a session, they lead to the sign-in screen.
 - **Whose contact it is:** of whoever operates this installation, not of whoever developed the stack. The [security policy](../../SECURITY.md) of the project brings no fixed address: it sends whoever found the flaw to the contact published here.
 
-What else stays open without a password, and why: [Security](../pt-BR/seguranca.md#contato-de-seguranca).
+What else stays open without a password, and why: [Security](security.md#contato-de-seguranca).
 
 </details>
 

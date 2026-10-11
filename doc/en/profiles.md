@@ -119,7 +119,7 @@ That minimum is only what the FTP container can take. The reference host of the 
 
 | Field | Effect |
 |---|---|
-| `FTP_MAX_CLIENTS` | option `-c` of `pure-ftpd`: ceiling of simultaneous connections. It is also the option `-C` of `pure-pw`, which sets the cost of the stored password: [Security](../pt-BR/seguranca.md#custo-das-senhas) |
+| `FTP_MAX_CLIENTS` | option `-c` of `pure-ftpd`: ceiling of simultaneous connections. It is also the option `-C` of `pure-pw`, which sets the cost of the stored password: [Security](security.md#custo-das-senhas) |
 | `FTP_MAX_CLIENTS_PER_IP` | option `-C`: ceiling per source IP |
 | `FTP_PASSIVE_PORT_START` and `FTP_PASSIVE_PORT_END` | range of data ports (passive mode), published **1:1** on the host |
 | `FTP_MEMORY_LIMIT` and `FTP_CPU_LIMIT` | `mem_limit` (without swap) and `cpus` of the service |

@@ -45,7 +45,7 @@ flowchart LR
 | CPU and memory for the profile | `small` asks for 1 CPU and 256 MB; `extended`, 16 CPUs and 4 GB. `deploy.sh` checks and refuses the profile larger than the server: [Profiles](profiles.md#o-servidor-aguenta) |
 | One dedicated IP for the FTP | Do not share the IP with other services; passive mode opens from 50 to 1600 ports, depending on the profile |
 | Firewall on the host | Allow `21/tcp` and the passive range of the profile (`30000-30049/tcp` on `small`) **only** for the management networks of the devices, and the panel port (`8443/tcp`) **only** for whoever administers |
-| Private network | By default the stack only accepts an internal IP: see [Security](../pt-BR/seguranca.md#rede-privada). A public address depends on an option with a warning: [Public IP](../pt-BR/seguranca.md#ip-publico) |
+| Private network | By default the stack only accepts an internal IP: see [Security](security.md#rede-privada). A public address depends on an option with a warning: [Public IP](security.md#ip-publico) |
 | Folder for the data | The default is `/srv/allsafe-ftp-stack`, with `data`, `backups` and `tmp` inside. Whoever installs without being root creates the folder once: `sudo install -d -o "$USER" /srv/allsafe-ftp-stack`. Another place: `DATA_DIR`, `BACKUP_DIR` and `TEMP_DIR` in [Configuration](configuration.md#pastas-e-nomes) |
 | Synchronized clock | The TLS certificate depends on the correct date and time (the `allsafe-ntp-nts-stack` stack takes care of that) |
 
@@ -139,7 +139,7 @@ Open the address of the panel in the browser and sign in with the user `admin` (
 
 Which profile to use: [Profiles](profiles.md). On the `xlarge` and `extended` profiles the startup takes minutes, because Docker publishes the passive ports one by one: [startup time](profiles.md#tempo-de-subida).
 
-> ⚠️ **Old device that does not speak TLS?** The default requires TLS and refuses that device. To accept without TLS only its user, an administrator exempts it in the panel, when creating the user or in Users ➜ **Exempt from TLS**; to accept it from everyone, there is `FTP_TLS_MODE=0` (or `1`). On either path, whoever gets in without TLS leaves password and file readable to whoever is on the same network. Read the conditions first: [Security](../pt-BR/seguranca.md#ftp-sem-tls).
+> ⚠️ **Old device that does not speak TLS?** The default requires TLS and refuses that device. To accept without TLS only its user, an administrator exempts it in the panel, when creating the user or in Users ➜ **Exempt from TLS**; to accept it from everyone, there is `FTP_TLS_MODE=0` (or `1`). On either path, whoever gets in without TLS leaves password and file readable to whoever is on the same network. Read the conditions first: [Security](security.md#ftp-sem-tls).
 
 <details>
 <summary>Technical detail — what <code>deploy.sh</code> and the entrypoint do</summary>
@@ -220,7 +220,7 @@ The files of the users, PureDB and the certificates stay in `DATA_DIR`, on the h
 
 - Changing the initial password of the panel: [Secrets](secrets.md#senha-do-painel).
 - Creating more users: in the [panel](panel.md#usuarios) or through [Operation](operation.md#usuarios).
-- Going to production: [Security](../pt-BR/seguranca.md#o-que-endurecer-antes-de-producao) and the real certificate.
+- Going to production: [Security](security.md#o-que-endurecer-antes-de-producao) and the real certificate.
 - Monitoring: the `allsafe-zabbix-isp-stack` stack follows the container.
 
 ---
