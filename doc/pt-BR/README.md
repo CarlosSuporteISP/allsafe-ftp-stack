@@ -52,7 +52,7 @@ flowchart LR
 | 6 | [Segredos](segredos.md) | O que fica em `.secrets/`, quem gera cada arquivo e como trocar as senhas do FTP e do painel |
 | 7 | [Scripts](scripts.md) | O que cada script faz, parâmetros e saída esperada |
 | 8 | [Operação](operacao.md) | Usuários, certificado real, logs e atualização da imagem |
-| 9 | [Backup e restauração](backup.md) | Cópia de segurança em um comando, restauração conferida e reversível, o que guardar à parte, outro servidor e cópia agendada |
+| 9 | [Backup e restauração](backup.md) | Cópia de segurança em um comando, restauração conferida e reversível, o que guardar à parte, outro servidor, cópia agendada e cópia no S3, pelo painel |
 | 10 | [Painel web](painel.md) | Abrir o painel, o que há em cada aba, usuários pelo navegador, download dos arquivos, senha, certificado, auditoria e proteções |
 | 11 | [Fotos da aplicação](aplicacao/README.md) | Todas as telas do painel, menu por menu: a foto, para que serve, como chegar e o que há em cada uma |
 | 12 | [Solução de problemas](solucao-de-problemas.md) | Sintoma, causa, como verificar e correção |
@@ -123,6 +123,7 @@ Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com o
 | [scripts-diagrama.mmd](diagramas/scripts-diagrama.mmd) | 1 | [Scripts](scripts.md) |
 | [usuarios-diagrama.mmd](diagramas/usuarios-diagrama.mmd) | 1 | [Operação](operacao.md) |
 | [backup-diagrama.mmd](diagramas/backup-diagrama.mmd) | 1 | [Backup e restauração](backup.md) |
+| [backup-s3-diagrama.mmd](diagramas/backup-s3-diagrama.mmd) | 1 | [Cópia no S3, pelo painel](backup.md#no-s3) |
 | [painel-diagrama.mmd](diagramas/painel-diagrama.mmd) | 1 | [Painel web](painel.md) |
 | [painel-fluxograma.mmd](diagramas/painel-fluxograma.mmd) | 2 | [README do projeto](../../README.pt-BR.md#como-funciona) e [Painel web](painel.md#como-decide) |
 | [painel-pedidos-fluxograma.mmd](diagramas/painel-pedidos-fluxograma.mmd) | 2 | [README do projeto](../../README.pt-BR.md#como-funciona) e [Painel web](painel.md#como-decide) |

@@ -119,6 +119,7 @@ services:
         condition: service_healthy
     environment:
       TZ: ${TZ:-America/Sao_Paulo}
+      STACK_NAME: ${STACK_NAME:-allsafe-ftp-stack}
       REDE_PERMITIR_IP_PUBLICO: ${REDE_PERMITIR_IP_PUBLICO:-nao}
       PAINEL_BIND_IP: ${PAINEL_BIND_IP:-127.0.0.1}
       PAINEL_PORT: ${PAINEL_PORT:-8443}
@@ -179,8 +180,17 @@ services:
         target: /segredos
         bind:
           create_host_path: false
+      # Certificados e chaves do FTP, só para leitura: entram na cópia do sistema que o painel envia para o S3.
+      - type: bind
+        source: ${DATA_DIR}/certs
+        target: /certs
+        read_only: true
+        bind:
+          create_host_path: false
     secrets:
       - painel_admin_inicial_senha_hash
+      # Com a chave pública só se cifra: a chave que abre a cópia do sistema não chega ao painel.
+      - backup_chave_publica
     read_only: true
     tmpfs:
       - /run:rw,noexec,nosuid,nodev,size=8m,mode=0755
@@ -294,6 +304,8 @@ secrets:
     file: ${SECRETS_DIR:-./.secrets}/ftp-usuario-inicial-senha.txt
   painel_admin_inicial_senha_hash:
     file: ${SECRETS_DIR:-./.secrets}/painel-admin-inicial-senha-hash.txt
+  backup_chave_publica:
+    file: ${SECRETS_DIR:-./.secrets}/backup-chave-publica.txt
 
 networks:
   ftp:

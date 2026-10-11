@@ -14,11 +14,14 @@ Modos: sem argumento, sobe o servidor; --hash lê uma senha da entrada padrão e
 --saude confere /saude pelo soquete e sai com 0 ou 1 (o healthcheck do container roda o saude.py direto, sem subir o painel);
 --retencao aplica agora a limpeza automática de cada usuário que tem uma, e com --simular só conta o que sairia;
 --destinos mostra a situação de cada destino (S3 e bot do Telegram), e --destinos enviar <destino> faz agora a passada dele
-(com --sem-espera, sem aguardar os dois minutos de um arquivo sem mudar).
+(com --sem-espera, sem aguardar os dois minutos de um arquivo sem mudar);
+--copia mostra a situação da cópia do sistema para o S3, e --copia enviar faz a cópia agora e só volta quando ela termina.
 """
+import os
 import sys
 
 import administradores
+import copia
 import destinos
 import limpeza
 import recursos
@@ -106,9 +109,53 @@ def modo_destinos(argumentos):
     sys.exit(1 if any(conta.get('motivo') for conta in feitas.values()) else 0)
 
 
+def linha_da_copia(resumo):
+    if resumo.get('motivo') == 'soma':
+        return f'falhou: o objeto {resumo.get("lugar", "")} foi gravado, mas o arquivo .sha256 dele não; faça outra cópia'
+    if resumo.get('motivo'):
+        return f'falhou: {resumo["motivo"]}; nenhum objeto ficou no destino'
+    return (f'{resumo["lugar"]}; {resumo["bytes"]} bytes em {resumo["partes"]} parte(s); {resumo["arquivos"]} arquivo(s), '
+            f'{resumo["mudaram"]} mudaram durante a leitura, {resumo["fora"]} de fora (soquete, fila ou dispositivo); '
+            f'sha256 {resumo["sha256"]}')
+
+
+def modo_copia(argumentos):
+    """A cópia do sistema para o S3, pelo terminal: a situação dela ou uma cópia agora. Nenhum segredo é mostrado."""
+    CFG.update(configuracao())
+    if not CFG['destinos']:
+        falha('os destinos estão desligados nesta instalação (PAINEL_DESTINOS=nao)')
+    if not argumentos:
+        visto = copia.situacao()
+        conf = visto['conf']
+        if not conf:
+            print('cópia do sistema: não configurada')
+        else:
+            pasta = f'{visto["destino"]["bucket"]}/{conf["prefixo"]}'.rstrip('/') if visto['destino'] else 'destino removido'
+            rotina = f'a cada {conf["dias"]} dia(s), às {conf["hora"]}' if conf['dias'] else 'só pelo botão ou pelo terminal'
+            print(f'cópia do sistema: {conf["destino"]} ({pasta}); {rotina}'
+                  + ('' if visto['segredos'] else '; faltam os segredos do destino'))
+        if not visto['chave']:
+            print('falta a chave pública da cópia: rode ./deploy.sh')
+        if visto['andamento']:
+            print(f'em andamento: {visto["andamento"].get("bytes", 0)} bytes em {visto["andamento"].get("partes", 0)} parte(s)')
+        elif visto['interrompida']:
+            print('a cópia anterior foi interrompida pelo reinício do painel')
+        print(f'última cópia: {linha_da_copia(visto["ultima"])}' if visto['ultima'].get('quando') else 'nenhuma cópia ainda')
+        return
+    if argumentos != ['enviar']:
+        falha('uso: --copia [enviar]')
+    resumo = copia.enviar(os.environ.get('PAINEL_COPIA_ORIGEM', 'terminal'))
+    if resumo['motivo'] == 'copiando':
+        falha('outra cópia está em andamento: tente de novo quando ela terminar')
+    print(f'cópia do sistema: {linha_da_copia(resumo)}')
+    sys.exit(1 if resumo['motivo'] else 0)
+
+
 def principal():
     if '--hash' in sys.argv[1:]:
         return modo_hash()
+    if '--copia' in sys.argv[1:]:
+        return modo_copia(sys.argv[sys.argv.index('--copia') + 1:])
     if '--destinos' in sys.argv[1:]:
         return modo_destinos(sys.argv[sys.argv.index('--destinos') + 1:])
     if '--retencao' in sys.argv[1:]:
@@ -134,6 +181,7 @@ def principal():
     recursos.iniciar()
     limpeza.iniciar()
     destinos.iniciar()
+    copia.iniciar()
     auditar('-', 'painel_iniciado', f'versao={limpo(CFG["versao"])}')
     print(f'Painel pronto no soquete {ARQ_SOQUETE}, atrás do nginx; sessão de {CFG["inatividade"] // 60} min; '
           f'redes permitidas: {", ".join(str(r) for r in CFG["redes"])}', flush=True)

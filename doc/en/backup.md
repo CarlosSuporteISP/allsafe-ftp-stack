@@ -30,7 +30,7 @@ flowchart LR
 <details>
 <summary>Contents — click to expand</summary>
 
-[What goes into the copy](#o-que-entra) · [The key of the copy](#chave) · [Making the copy](#fazer) · [Restoring](#restaurar) · [Undoing a restore](#desfazer) · [Keeping the `.env` and the secrets](#segredos) · [Restoring on another server](#outro-servidor) · [Automatic copy and cleanup](#automatica)
+[What goes into the copy](#o-que-entra) · [The key of the copy](#chave) · [Making the copy](#fazer) · [Restoring](#restaurar) · [Undoing a restore](#desfazer) · [Keeping the `.env` and the secrets](#segredos) · [Restoring on another server](#outro-servidor) · [Automatic copy and cleanup](#automatica) · [Copy in S3, by the panel](#no-s3)
 
 </details>
 
@@ -45,7 +45,7 @@ flowchart LR
 | `dados/` | Files uploaded by the devices, one folder per user, and `.entrada/`, the entry area of the accounts with the Upload only profile, empty outside the instant of each upload | Yes |
 | `auth/` | FTP users, with the hash of each password, the limits of each one, the list of who is exempt from TLS and the blocks in effect, by attempts and by address | Yes |
 | `certs/` | Certificate and private key of the FTP | Yes |
-| `painel/` | Certificate and private key of the panel, the administrators (name and password hash), the `auditoria.log`, the language of the screens chosen by each account and the settings and the progress of the [destinations](panel.md#destinos), without their secrets | Yes |
+| `painel/` | Certificate and private key of the panel, the administrators (name and password hash), the `auditoria.log`, the language of the screens chosen by each account and the settings and the progress of the [destinations](panel.md#destinos) and of the system copy to S3, without their secrets | Yes |
 | `nginx/` | Panel socket and copy of the certificate, remade at every start | No |
 
 These stay out, and need to be kept apart: the `.env` and the `.secrets/` folder, where the key that opens the copy is. See [The key of the copy](#chave) and [Keeping the `.env` and the secrets](#segredos).
@@ -62,7 +62,7 @@ The copy is encrypted with a key pair, created by `./deploy.sh` the first time a
 
 | File | What it does | Where it needs to be |
 |---|---|---|
-| `backup-chave-publica.txt` | Encrypts. With it a copy is made, but none is opened | On the server, for `scripts/backup.sh` |
+| `backup-chave-publica.txt` | Encrypts. With it a copy is made, but none is opened | On the server, for `scripts/backup.sh` and for the [copy the panel sends to S3](#no-s3) |
 | `backup-chave-privada.txt` | Opens. It is the only thing that reads a copy | In a password vault, off the server. On the server, only `scripts/restaurar.sh` uses it |
 
 > ⚠️ **Without the private key no copy opens, and there is no way to recover it.** Keep `backup-chave-privada.txt` off the server right after the installation, separate from the backup copies. Whoever has the key and a copy reads everything that is in it.
@@ -73,7 +73,7 @@ What to do in each situation:
 |---|---|
 | New installation, or update from a version before `0.48.0` | Run `./deploy.sh`: it creates the pair and warns `Gerada a chave da cópia de segurança`. Keep the private one in the vault |
 | Server that makes the copy and must not open it | With the private one already in the vault, delete it from the server. `scripts/backup.sh` keeps working with the public one. To restore, bring the private one back to `.secrets/backup-chave-privada.txt`, with mode `0600` |
-| Replacing the pair | Delete the two files and run `./deploy.sh`, which creates a new pair. The copies made before only open with the old private one: keep it in the vault while those copies exist |
+| Replacing the pair | Delete the two files and run `./deploy.sh`, which creates a new pair and recreates the panel container, so that the copy it sends to S3 leaves encrypted with the new key. The copies made before only open with the old private one: keep it in the vault while those copies exist |
 | The public key disappeared or was changed | Run `./deploy.sh`: with the private one present, it remakes the public one from it |
 | Copy made before `0.48.0`, without encryption | It still restores, with the warning `esta cópia não é cifrada`, and `--listar` marks it with `(sem cifra: feita antes da 0.48.0)`. Make a new copy and delete the old one |
 
@@ -280,6 +280,58 @@ find "$BACKUP_DIR" -maxdepth 1 -name 'allsafe-ftp-stack-*.tar.gz*' -mtime +30 -p
 ```
 
 **Expected result:** the path of each file removed; no line when there is no copy older than 30 days.
+
+To have the copy outside the server without depending on `cron`, the panel makes the same copy and sends it to an S3, with its own schedule: see [Copy in S3, by the panel](#no-s3).
+
+---
+
+<a name="no-s3"></a>
+
+## ☁️ Copy in S3, by the panel
+
+The panel makes the same copy and sends it straight to an S3 storage, without going through `BACKUP_DIR`: by the **Copy and send now** button, by schedule or by the terminal. How to set it up is in [System copy to S3](panel.md#copia-do-sistema). Each copy is two objects in the chosen folder of the bucket, and the panel deletes neither:
+
+| Object | What it is |
+|---|---|
+| `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age` | The copy, encrypted with the same public key of `scripts/backup.sh` |
+| `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age.sha256` | The sum the restore checks |
+
+<!-- diagrama: diagrams/backup-s3-diagram.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    origem@{ shape: lin-cyl, label: "DATA_DIR<br>dados, auth, certs and painel" }
+    painel@{ shape: rect, label: "panel<br>reads, encrypts and sends" }
+    bucket@{ shape: bucket, label: "S3 bucket<br>encrypted copy and sha256 sum" }
+    baixar@{ shape: manual, label: "download the two objects<br>to BACKUP_DIR" }
+    restaurar@{ shape: console, label: "scripts/restaurar.sh<br>checks, opens and swaps" }
+    destino@{ shape: lin-cyl, label: "DATA_DIR<br>contents of the copy" }
+    fim@{ shape: stadium, label: "stack back" }
+
+    origem --> painel --> bucket --> baixar --> restaurar --> destino --> fim
+```
+
+<sub>Level 1 · Diagram · [source](diagrams/)</sub>
+
+**Sequence:** `DATA_DIR` (`dados`, `auth`, `certs` and `painel`) ➜ panel (reads, encrypts and sends) ➜ S3 bucket (encrypted copy and `.sha256` sum) ➜ download the two objects to `BACKUP_DIR` ➜ `scripts/restaurar.sh` ➜ `DATA_DIR` (contents of the copy) ➜ stack back
+
+To restore from it:
+
+1. Download the two objects from the bucket to the `BACKUP_DIR` folder of the server, with the tool of your S3 service. The panel does not download: it only writes to the bucket.
+2. Check that the private key is in `.secrets/backup-chave-privada.txt`: see [The key of the copy](#chave).
+3. Restore:
+
+   ```bash
+   ./scripts/restaurar.sh allsafe-ftp-stack-AAAAMMDD-HHMMSS.tar.gz.age
+   ```
+
+**Expected result:** the first line brings `soma sha256 conferida` (sum checked), and the restore ends with `Restaurado e no ar (healthy).`, as in [Restoring](#restaurar).
+
+- The copy of the panel takes the same four folders, and the same stays out: the `.env` and the `.secrets/` folder, with the secrets of the destinations.
+- After restoring, the settings of the system copy are the ones that were in the copy, and the **Last copy** line of the card starts again at **none yet**.
+- On another server, without the `.secrets/destinos` folder, the card shows the tag **secrets missing**, and the schedule does not send until the S3 keys are saved again, in **Change**.
+- A file that was arriving during the copy may have gone in incomplete: the card and the terminal say how many changed while being read.
+- The copy of the panel and the one of `scripts/backup.sh` do not depend on each other. The one in S3 is the one that survives the loss of the server; the one in `BACKUP_DIR` is the one `restaurar.sh` finds without downloading anything.
 
 ---
 

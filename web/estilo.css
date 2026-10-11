@@ -580,6 +580,8 @@ tbody tr.vazio:hover { background: none; }
 .dados dt { color: var(--suave); font-size: var(--texto-rotulo); }
 .dados dd { margin: 2px 0 0; }
 .dados code { overflow-wrap: normal; white-space: nowrap; }
+/* Na linha inteira o valor pode ser um nome longo (o objeto da cópia do sistema): quebra em vez de alargar a tela. */
+.dados .larga code { overflow-wrap: anywhere; white-space: normal; }
 
 .etiqueta {
   display: inline-block;

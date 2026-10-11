@@ -186,6 +186,9 @@ def configuracao():
     telegram_max = amb('PAINEL_TELEGRAM_MAX_MB', '50')
     if not (re.fullmatch(r'[1-9][0-9]{0,3}', telegram_max) and int(telegram_max) <= 2000):
         falha('PAINEL_TELEGRAM_MAX_MB deve ficar entre 1 e 2000')
+    stack = amb('STACK_NAME', 'allsafe-ftp-stack')
+    if not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,62}', stack):
+        falha('STACK_NAME deve ter letras minúsculas, números, _ e -, começar por letra ou número e ter até 63 caracteres')
     try:
         with open(os.path.join(RAIZ, 'VERSION'), encoding='utf-8') as arq:
             versao = arq.read().strip()
@@ -211,6 +214,7 @@ def configuracao():
         'destinos': amb('PAINEL_DESTINOS', 'sim') == 'sim',
         'telegram_api': telegram_api,
         'telegram_max': int(telegram_max) * 1024 * 1024,
+        'stack': stack,
         'cert_cn': amb('PAINEL_CERT_CN', '').strip().lower(),
         'contato_seguranca': contato,
         'painel_bind': amb('PAINEL_BIND_IP', '127.0.0.1'),

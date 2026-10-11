@@ -31,7 +31,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[O que entra na cópia](#o-que-entra) · [A chave da cópia](#chave) · [Fazer a cópia](#fazer) · [Restaurar](#restaurar) · [Desfazer uma restauração](#desfazer) · [Guardar o `.env` e os segredos](#segredos) · [Restaurar em outro servidor](#outro-servidor) · [Cópia automática e limpeza](#automatica)
+[O que entra na cópia](#o-que-entra) · [A chave da cópia](#chave) · [Fazer a cópia](#fazer) · [Restaurar](#restaurar) · [Desfazer uma restauração](#desfazer) · [Guardar o `.env` e os segredos](#segredos) · [Restaurar em outro servidor](#outro-servidor) · [Cópia automática e limpeza](#automatica) · [Cópia no S3, pelo painel](#no-s3)
 
 </details>
 
@@ -46,7 +46,7 @@ flowchart LR
 | `dados/` | Arquivos enviados pelos equipamentos, uma pasta por usuário, e `.entrada/`, a área de entrada das contas de perfil Só envio, vazia fora do instante de cada envio | Sim |
 | `auth/` | Usuários do FTP, com o hash de cada senha, os limites próprios de cada um, a lista de quem está dispensado do TLS e os bloqueios em vigor, por tentativa e por endereço | Sim |
 | `certs/` | Certificado e chave privada do FTP | Sim |
-| `painel/` | Certificado e chave privada do painel, os administradores (nome e hash da senha), o `auditoria.log`, o idioma das telas escolhido por cada conta e a configuração e o andamento dos [destinos](painel.md#destinos), sem os segredos deles | Sim |
+| `painel/` | Certificado e chave privada do painel, os administradores (nome e hash da senha), o `auditoria.log`, o idioma das telas escolhido por cada conta e a configuração e o andamento dos [destinos](painel.md#destinos) e da cópia do sistema para o S3, sem os segredos deles | Sim |
 | `nginx/` | Soquete do painel e cópia do certificado, refeitos a cada subida | Não |
 
 Ficam fora, e precisam ser guardados à parte: o `.env` e a pasta `.secrets/`, onde está a chave que abre a cópia. Veja [A chave da cópia](#chave) e [Guardar o `.env` e os segredos](#segredos).
@@ -63,7 +63,7 @@ A cópia é cifrada com um par de chaves, criado pelo `./deploy.sh` na primeira 
 
 | Arquivo | O que faz | Onde precisa estar |
 |---|---|---|
-| `backup-chave-publica.txt` | Cifra. Com ela se faz cópia, mas não se abre nenhuma | No servidor, para o `scripts/backup.sh` |
+| `backup-chave-publica.txt` | Cifra. Com ela se faz cópia, mas não se abre nenhuma | No servidor, para o `scripts/backup.sh` e para a [cópia que o painel envia ao S3](#no-s3) |
 | `backup-chave-privada.txt` | Abre. É a única coisa que lê uma cópia | Em um cofre de senhas, fora do servidor. No servidor, só o `scripts/restaurar.sh` a usa |
 
 > ⚠️ **Sem a chave privada nenhuma cópia abre, e não há como recuperá-la.** Guarde `backup-chave-privada.txt` fora do servidor logo depois da instalação, separada das cópias de segurança. Quem tem a chave e uma cópia lê tudo o que está nela.
@@ -74,7 +74,7 @@ O que fazer em cada situação:
 |---|---|
 | Instalação nova, ou atualização de versão anterior à `0.48.0` | Rode `./deploy.sh`: ele cria o par e avisa `Gerada a chave da cópia de segurança`. Guarde a privada no cofre |
 | Servidor que faz cópia e não pode abri-la | Com a privada já no cofre, apague-a do servidor. O `scripts/backup.sh` continua funcionando com a pública. Para restaurar, traga a privada de volta para `.secrets/backup-chave-privada.txt`, com modo `0600` |
-| Trocar o par | Apague os dois arquivos e rode `./deploy.sh`, que cria um par novo. As cópias feitas antes só abrem com a privada antiga: mantenha-a no cofre enquanto essas cópias existirem |
+| Trocar o par | Apague os dois arquivos e rode `./deploy.sh`, que cria um par novo e recria o container do painel, para a cópia que ele envia ao S3 sair cifrada com a chave nova. As cópias feitas antes só abrem com a privada antiga: mantenha-a no cofre enquanto essas cópias existirem |
 | A chave pública sumiu ou foi alterada | Rode `./deploy.sh`: com a privada presente, ele refaz a pública a partir dela |
 | Cópia feita antes da `0.48.0`, sem cifra | Continua restaurando, com o aviso `esta cópia não é cifrada`, e o `--listar` a marca com `(sem cifra: feita antes da 0.48.0)`. Faça uma cópia nova e apague a antiga |
 
@@ -281,6 +281,58 @@ find "$BACKUP_DIR" -maxdepth 1 -name 'allsafe-ftp-stack-*.tar.gz*' -mtime +30 -p
 ```
 
 **Resultado esperado:** o caminho de cada arquivo removido; nenhuma linha quando não há cópia com mais de 30 dias.
+
+Para ter a cópia fora do servidor sem depender do `cron`, o painel faz a mesma cópia e a envia a um S3, com rotina própria: veja [Cópia no S3, pelo painel](#no-s3).
+
+---
+
+<a name="no-s3"></a>
+
+## ☁️ Cópia no S3, pelo painel
+
+O painel faz a mesma cópia e a envia direto a um armazenamento S3, sem passar por `BACKUP_DIR`: pelo botão **Copiar e enviar agora**, por rotina ou pelo terminal. Como configurar está em [Cópia do sistema para o S3](painel.md#copia-do-sistema). Cada cópia são dois objetos na pasta escolhida do bucket, e o painel não apaga nenhum:
+
+| Objeto | O que é |
+|---|---|
+| `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age` | A cópia, cifrada com a mesma chave pública do `scripts/backup.sh` |
+| `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age.sha256` | A soma que a restauração confere |
+
+<!-- diagrama: diagramas/backup-s3-diagrama.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    origem@{ shape: lin-cyl, label: "DATA_DIR<br>dados, auth, certs e painel" }
+    painel@{ shape: rect, label: "painel<br>lê, cifra e envia" }
+    bucket@{ shape: bucket, label: "bucket S3<br>cópia cifrada e soma sha256" }
+    baixar@{ shape: manual, label: "baixar os dois objetos<br>para BACKUP_DIR" }
+    restaurar@{ shape: console, label: "scripts/restaurar.sh<br>confere, abre e troca" }
+    destino@{ shape: lin-cyl, label: "DATA_DIR<br>conteúdo da cópia" }
+    fim@{ shape: stadium, label: "stack de volta" }
+
+    origem --> painel --> bucket --> baixar --> restaurar --> destino --> fim
+```
+
+<sub>Nível 1 · Diagrama · [fonte](diagramas/)</sub>
+
+**Sequência:** `DATA_DIR` (`dados`, `auth`, `certs` e `painel`) ➜ painel (lê, cifra e envia) ➜ bucket S3 (cópia cifrada e soma `.sha256`) ➜ baixar os dois objetos para `BACKUP_DIR` ➜ `scripts/restaurar.sh` ➜ `DATA_DIR` (conteúdo da cópia) ➜ stack de volta
+
+Para restaurar a partir dela:
+
+1. Baixe os dois objetos do bucket para a pasta `BACKUP_DIR` do servidor, com a ferramenta do seu serviço S3. O painel não baixa: ele só grava no bucket.
+2. Confira que a chave privada está em `.secrets/backup-chave-privada.txt`: veja [A chave da cópia](#chave).
+3. Restaure:
+
+   ```bash
+   ./scripts/restaurar.sh allsafe-ftp-stack-AAAAMMDD-HHMMSS.tar.gz.age
+   ```
+
+**Resultado esperado:** a primeira linha traz `soma sha256 conferida`, e a restauração termina com `Restaurado e no ar (healthy).`, como em [Restaurar](#restaurar).
+
+- A cópia do painel leva as mesmas quatro pastas, e fica de fora o mesmo: o `.env` e a pasta `.secrets/`, com os segredos dos destinos.
+- Depois de restaurar, a configuração da cópia do sistema é a que estava na cópia, e a linha **Última cópia** do cartão recomeça em **nenhuma ainda**.
+- Em outro servidor, sem a pasta `.secrets/destinos`, o cartão mostra a marca **faltam os segredos**, e a rotina não envia até as chaves do S3 serem gravadas de novo, em **Alterar**.
+- O arquivo que estava chegando durante a cópia pode ter entrado incompleto: o cartão e o terminal dizem quantos mudaram durante a leitura.
+- A cópia do painel e a do `scripts/backup.sh` não dependem uma da outra. A do S3 é a que sobrevive à perda do servidor; a de `BACKUP_DIR` é a que o `restaurar.sh` encontra sem baixar nada.
 
 ---
 

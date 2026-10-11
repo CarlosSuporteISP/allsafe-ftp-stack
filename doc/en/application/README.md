@@ -1009,9 +1009,9 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 
 ## ☁️ Destinations
 
-<a href="images/destinos.png"><img src="images/destinos.png" alt="Destinations tab with the S3 storage card turned on, with the address, the bucket and the prefix, the region, the folder sent, the runs every 60 minutes, Copy after sending, the keys saved without being shown on screen, the last run and the total sent, the Telegram bot card turned on, with the folder, the runs every 5 minutes, the largest file the bot sends, the message language, the last run and the total sent, the Test, Send now, Change, New with the same access and Remove buttons on each card and, at the top of the screen, the New S3 and New bot buttons and the How the panel sends explanation, collapsed" width="100%"></a>
+<a href="images/destinos.png"><img src="images/destinos.png" alt="Destinations tab with the System copy card at the top, marked as not configured and with the Configure button, the S3 storage card turned on, with the address, the bucket and the prefix, the region, the folder sent, the runs every 60 minutes, Copy after sending, the keys saved without being shown on screen, the last run and the total sent, the Telegram bot card turned on, with the folder, the runs every 5 minutes, the largest file the bot sends, the message language, the last run and the total sent, the Test, Send now, Change, New with the same access and Remove buttons on each card and, at the top of the screen, the New S3 and New bot buttons and the How the panel sends explanation, collapsed" width="100%"></a>
 
-<sub><b>v1.3.0</b> · Destinations menu · captured on 2026-10-11</sub>
+<sub><b>v1.4.0</b> · Destinations menu · captured on 2026-10-11</sub>
 
 **What it is for:** sending by itself, out of the server, the files that arrive in a folder. There are two types of destination, with up to 20 of each: the S3 storage, which holds the second copy or keeps the files and frees the disk, and the Telegram bot, which delivers each new file to a person, a group or a channel.
 
@@ -1028,6 +1028,8 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 | Access key and secret key · Bot token and chat | They only say the secrets are saved: the value is not shown on screen |
 | Last run | When it was and how many files went, with the total size; when it stops before the end, the reason in one sentence |
 | Sent since it was turned on | The total of files and of size the destination has already received |
+| **System copy** card | At the top of the tab: the tag `not configured`, `schedule on`, `button only`, `in progress` or `secrets missing`; the destination, the bucket and the folder, the schedule and the last copy, with the date, the size, the files and the name of the object |
+| Copy and send now · Change | Requests the system copy right away, in the background · opens the form of the copy: the S3 that receives it, the folder in the bucket, the days and the time of the schedule |
 | Still arriving | Files that changed less than two minutes ago: they go in a later run |
 | Waiting for another destination | In S3 with **Keep in S3**, files already stored there that only leave the server when the other destinations of the folder deliver them |
 | **Test** | Writes a small object to S3 or sends the test message through the bot, with what is saved |
@@ -1045,9 +1047,9 @@ Each destination has its own folder, interval and secrets, and one does not depe
 
 ### Destinations ➜ Before configuring
 
-<a href="images/destinos-sem-destino.png"><img src="images/destinos-sem-destino.png" alt="Destinations tab of a new installation, with the S3 storage and Telegram bot cards marked as not configured, each with the explanation of what it sends and the Configure button, and, at the top of the screen, the How the panel sends explanation, collapsed" width="100%"></a>
+<a href="images/destinos-sem-destino.png"><img src="images/destinos-sem-destino.png" alt="Destinations tab of a new installation, with the System copy card marked as not configured, with the sentence that tells to save an S3 storage first, and the S3 storage and Telegram bot cards marked as not configured, each with the explanation of what it sends and the Configure button, and, at the top of the screen, the How the panel sends explanation, collapsed" width="100%"></a>
 
-<sub><b>v1.3.0</b> · Destinations menu, no destination saved · captured on 2026-10-11</sub>
+<sub><b>v1.4.0</b> · Destinations menu, no destination saved · captured on 2026-10-11</sub>
 
 The installation is born with no destination: until the administrator saves one, nothing leaves the server and the panel opens no connection to the outside. Each card says what the destination does and leads to its form, through the **Configure** button.
 
@@ -1085,9 +1087,9 @@ Any service that speaks the S3 protocol works, in the cloud or on the internal n
 | After sending | Yes | **Copy**: the file stays on the server. **Keep in S3**: the file leaves the server after the destination confirms it was stored |
 | Your current password | Yes | The password of whoever is in the session, to save the destination |
 
-<a href="images/destinos-gravado.png"><img src="images/destinos-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, and the S3 storage and Telegram bot cards turned on, each with what was saved, the secrets saved without being shown on screen and the last run as none yet" width="100%"></a>
+<a href="images/destinos-gravado.png"><img src="images/destinos-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, the System copy card, not configured, with the Configure button, and the S3 storage and Telegram bot cards turned on, each with what was saved, the secrets saved without being shown on screen and the last run as none yet" width="100%"></a>
 
-<sub><b>v1.3.0</b> · Destinations menu, after saving · captured on 2026-10-11</sub>
+<sub><b>v1.4.0</b> · Destinations menu, after saving · captured on 2026-10-11</sub>
 
 **Expected result:** the tab comes back with the notice `Destination saved. It takes effect on the next run.`, and the card shows the `on` tag, the address, the bucket, the folder and that the keys are saved, without showing them. The first run starts within a minute and sends everything already in the folder.
 
@@ -1156,9 +1158,9 @@ Each type accepts up to 20 destinations. A new destination can use the access of
 2. Give the destination a **Name** and change the **Folder sent** or the place: the prefix or the bucket, in S3; the chat, in the bot.
 3. Leave the secrets blank, type your password and click **Save**.
 
-<a href="images/destinos-varios.png"><img src="images/destinos-varios.png" alt="Destinations tab with the notice Destination saved, the New S3 and New bot buttons at the top and three cards turned on: S3 storage, with the prefix copias and the folder roteador-borda; S3 storage: Customers, with the same address and the same bucket, the prefix clientes, the folder clientes and no run yet; and Telegram bot, with the folder clientes" width="100%"></a>
+<a href="images/destinos-varios.png"><img src="images/destinos-varios.png" alt="Destinations tab with the notice Destination saved, the New S3 and New bot buttons at the top, the System copy card and three cards turned on: S3 storage, with the prefix copias and the folder roteador-borda; S3 storage: Customers, with the same address and the same bucket, the prefix clientes, the folder clientes and no run yet; and Telegram bot, with the folder clientes" width="100%"></a>
 
-<sub><b>v1.3.0</b> · Destinations menu, with two S3 destinations · captured on 2026-10-11</sub>
+<sub><b>v1.4.0</b> · Destinations menu, with two S3 destinations · captured on 2026-10-11</sub>
 
 **Expected result:** the tab comes back with the notice `Destination saved. It takes effect on the next run.` and one more card, with the type and the given name. The secret left blank was copied from the other destination inside the server, without going through the browser.
 
@@ -1177,9 +1179,9 @@ Each type accepts up to 20 destinations. A new destination can use the access of
 
 ### Destinations ➜ Test and Send now
 
-<a href="images/destinos-teste.png"><img src="images/destinos-teste.png" alt="Destinations tab with the notice Test finished, the destination received it, above the S3 storage and Telegram bot cards, each with the date of the last run" width="100%"></a>
+<a href="images/destinos-teste.png"><img src="images/destinos-teste.png" alt="Destinations tab with the notice Test finished, the destination received it, above the System copy card and the S3 storage and Telegram bot cards, each of these with the date of the last run" width="100%"></a>
 
-<sub><b>v1.3.0</b> · Destinations menu, after the test · captured on 2026-10-11</sub>
+<sub><b>v1.4.0</b> · Destinations menu, after the test · captured on 2026-10-11</sub>
 
 1. On the card of the destination, click **Test**.
 2. To skip the wait for the interval, click **Send now** and refresh the page afterwards.
@@ -1194,6 +1196,42 @@ Each type accepts up to 20 destinations. A new destination can use the access of
 | Password | Neither button asks for the password: they do not change the settings |
 
 What each reason means and what to do is in [Troubleshooting](../troubleshooting.md#destinos).
+
+</details>
+
+<details>
+<summary>Destinations ➜ System copy — click to expand</summary>
+
+### Destinations ➜ System copy
+
+<a href="images/destinos-copia.png"><img src="images/destinos-copia.png" alt="System copy form, with the sentence saying that the copy takes the folders auth, dados, certs and painel, encrypted with the public key of the copy, and that the .env and the secrets do not go in, the choice S3 storage that receives it with the two saved destinations, the Folder in the bucket with copia-do-sistema, the Schedule of 1 day, the Time of the schedule at 03:00, the Your current password field and the Save and Cancel buttons" width="100%"></a>
+
+<sub><b>v1.4.0</b> · Destinations menu, system copy form · captured on 2026-10-11</sub>
+
+The **System copy** card, at the top of the tab, sends the whole system, encrypted, to one of the saved S3 storages. It offers **Configure** once there is an S3 with its secrets.
+
+1. On the **System copy** card, click **Configure**.
+2. Choose the **S3 storage that receives it** and the **Folder in the bucket**.
+3. In **Schedule**, type every how many days the copy is made, and the **Time of the schedule**; with `0`, only by the button.
+4. Type your password and click **Save**.
+5. Back on the tab, click **Copy and send now** and refresh the screen right after.
+
+<a href="images/destinos-copia-feita.png"><img src="images/destinos-copia-feita.png" alt="Destinations tab with the System copy card at the top, with the tag schedule on, the destination S3 storage, the bucket backups-da-rede and the folder copia-do-sistema, the schedule of every day at 03:00, the Last copy line with the date, the size, the number of files and the name of the object, and the Copy and send now and Change buttons, above the cards of the two S3 storages and of the Telegram bot" width="100%"></a>
+
+<sub><b>v1.4.0</b> · Destinations menu, after the system copy · captured on 2026-10-11</sub>
+
+**Expected result:** on saving, the notice is `System copy saved. The schedule applies from now on.`; after the button, `System copy requested: it runs in the background. Refresh the screen to follow it.` At the end, the **Last copy** line brings the date, the size, the number of files and the name of the object written to the bucket.
+
+| Item | How it works |
+|---|---|
+| What goes | The folders `auth`, `dados`, `certs` and `painel`, in a single file, encrypted with the public key of the copy, plus its `.sha256` |
+| What does not go | The `.env` and the secrets of the installation and of the destinations: they are kept apart, with the private key of the copy |
+| Old copies | The panel only sends: none is deleted, and how long they stay is up to the rule of the bucket |
+| One at a time | With a copy in progress, the card has the tag `in progress` and the button is gone |
+| Copy that does not finish | No object stays at the destination, and the card tells the reason in one sentence |
+| Restore | Download the two objects and use `scripts/restaurar.sh`: see [Copy in S3, by the panel](../backup.md#no-s3) |
+
+The complete operation is in [System copy to S3](../panel.md#copia-do-sistema).
 
 </details>
 
@@ -1216,12 +1254,12 @@ What each reason means and what to do is in [Troubleshooting](../troubleshooting
 <details>
 <summary>Technical detail — routes, secrets and events</summary>
 
-- Routes `GET /destinos`, `GET` and `POST /destinos/s3` and `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `GET` and `POST /destinos/arquivo` and `GET` and `POST /destinos/remover`. Every `POST` carries the token of the session; saving and removing also ask for the current password. For the FTP user, all of them answer `404`.
+- Routes `GET /destinos`, `GET` and `POST /destinos/s3` and `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `GET` and `POST /destinos/arquivo`, `GET` and `POST /destinos/remover`, `GET` and `POST /destinos/copia` and `POST /destinos/copia/agora`. Every `POST` carries the token of the session; saving and removing also ask for the current password. For the FTP user, all of them answer `404`.
 - The settings are in `DATA_DIR/painel/destinos/<destino>.conf` and the progress, in `<destino>.estado`. The secrets are in `SECRETS_DIR/destinos`, one per file, with mode `0600`, and never go back to the screen, to the Log tab or to the audit log.
 - The panel only leaves the server over HTTPS, with the certificate checked, and does not follow redirects.
-- The events `destino_gravado`, `destino_teste`, `destino_pedido`, `destino_arquivo`, `destino_enviado`, `destino_falhou`, `destino_pulado` and `destino_removido` stay in the [audit log](../panel.md#auditoria).
+- The events `destino_gravado`, `destino_teste`, `destino_pedido`, `destino_arquivo`, `destino_enviado`, `destino_falhou`, `destino_pulado` and `destino_removido`, and those of the system copy, `copia_gravada`, `copia_pedida`, `copia_enviada`, `copia_falhou` and `copia_sem_destino`, stay in the [audit log](../panel.md#auditoria).
 - With `PAINEL_DESTINOS=nao` in the `.env`, the tab leaves the menu and no run happens: see [Configuration](../configuration.md#painel).
-- The complete operation is in [Destinations: S3 and Telegram bot](../panel.md#destinos).
+- The complete operation is in [Destinations: S3 and Telegram bot](../panel.md#destinos), and the one of the system copy, in [System copy to S3](../panel.md#copia-do-sistema).
 
 </details>
 

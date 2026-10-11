@@ -82,7 +82,12 @@ fi
 if [[ "$PAINEL_DESTINOS" == sim ]]; then
   grep -q ' /segredos ' /proc/self/mountinfo \
     || die "pasta /segredos não veio do host: rode ./deploy.sh, que cria SECRETS_DIR/destinos, ou use PAINEL_DESTINOS=nao"
+  # A cópia do sistema leva os certificados do FTP: sem a pasta deles, a cópia sairia incompleta sem ninguém notar.
+  grep -q ' /certs ' /proc/self/mountinfo \
+    || die "pasta /certs não veio do host: use o compose.yaml desta versão (rode ./deploy.sh) ou PAINEL_DESTINOS=nao"
 fi
+[[ "${STACK_NAME:-allsafe-ftp-stack}" =~ ^[a-z0-9][a-z0-9_-]{0,62}$ ]] \
+  || die "STACK_NAME deve ter letras minúsculas, números, _ e -, começar por letra ou número e ter até 63 caracteres"
 
 # /painel vem do host por bind mount: dono e modo são normalizados a cada subida.
 chown root:root /painel

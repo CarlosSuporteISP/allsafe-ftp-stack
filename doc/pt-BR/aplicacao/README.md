@@ -1009,9 +1009,9 @@ Quem precisa conferir ou baixar o que foi enviado pede a um administrador ou usa
 
 ## ☁️ Destinos
 
-<a href="imagens/destinos.png"><img src="imagens/destinos.png" alt="Aba Destinos com o cartão Armazenamento S3 ligado, com o endereço, o bucket e o prefixo, a região, a pasta enviada, as passadas a cada 60 minutos, Copiar depois do envio, as chaves gravadas sem aparecer na tela, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, as passadas a cada 5 minutos, o maior arquivo que o bot envia, o idioma das mensagens, a última passada e o total enviado, os botões Testar, Enviar agora, Alterar, Novo com o mesmo acesso e Remover em cada cartão e, no alto da tela, os botões Novo S3 e Novo bot e a explicação Como o painel envia, recolhida" width="100%"></a>
+<a href="imagens/destinos.png"><img src="imagens/destinos.png" alt="Aba Destinos com o cartão Cópia do sistema no alto, marcado como não configurada e com o botão Configurar, o cartão Armazenamento S3 ligado, com o endereço, o bucket e o prefixo, a região, a pasta enviada, as passadas a cada 60 minutos, Copiar depois do envio, as chaves gravadas sem aparecer na tela, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, as passadas a cada 5 minutos, o maior arquivo que o bot envia, o idioma das mensagens, a última passada e o total enviado, os botões Testar, Enviar agora, Alterar, Novo com o mesmo acesso e Remover em cada cartão e, no alto da tela, os botões Novo S3 e Novo bot e a explicação Como o painel envia, recolhida" width="100%"></a>
 
-<sub><b>v1.3.0</b> · menu Destinos · captura de 2026-10-11</sub>
+<sub><b>v1.4.0</b> · menu Destinos · captura de 2026-10-11</sub>
 
 **Para que serve:** mandar sozinho, para fora do servidor, os arquivos que chegam em uma pasta. São dois tipos de destino, com até 20 de cada um: o armazenamento S3, que guarda a segunda cópia ou fica com os arquivos e libera o disco, e o bot do Telegram, que entrega cada arquivo novo a uma pessoa, a um grupo ou a um canal.
 
@@ -1028,6 +1028,8 @@ Quem precisa conferir ou baixar o que foi enviado pede a um administrador ou usa
 | Chave de acesso e chave secreta · Token do bot e conversa | Só dizem que os segredos estão gravados: o valor não aparece na tela |
 | Última passada | Quando foi e quantos arquivos saíram, com o tamanho somado; quando ela para antes do fim, o motivo em uma frase |
 | Enviado desde que foi ligado | O total de arquivos e de tamanho que o destino já recebeu |
+| Cartão **Cópia do sistema** | No alto da aba: a marca `não configurada`, `rotina ligada`, `só pelo botão`, `em andamento` ou `faltam os segredos`; o destino, o bucket e a pasta, a rotina e a última cópia, com a data, o tamanho, os arquivos e o nome do objeto |
+| Copiar e enviar agora · Alterar | Pede a cópia do sistema na hora, em segundo plano · abre o formulário da cópia: o S3 que recebe, a pasta no bucket, os dias e a hora da rotina |
 | Ainda chegando | Arquivos que mudaram há menos de dois minutos: saem em uma próxima passada |
 | À espera de outro destino | No S3 em **Guardar no S3**, arquivos já gravados nele que só saem do servidor quando os outros destinos da pasta os entregarem |
 | **Testar** | Grava um objeto pequeno no S3 ou envia a mensagem de teste pelo bot, com o que está gravado |
@@ -1045,9 +1047,9 @@ Cada destino tem a pasta, o intervalo e os segredos dele, e um não depende do o
 
 ### Destinos ➜ Antes de configurar
 
-<a href="imagens/destinos-sem-destino.png"><img src="imagens/destinos-sem-destino.png" alt="Aba Destinos de uma instalação nova, com os cartões Armazenamento S3 e Bot do Telegram marcados como não configurado, cada um com a explicação do que envia e o botão Configurar, e, no alto da tela, a explicação Como o painel envia, recolhida" width="100%"></a>
+<a href="imagens/destinos-sem-destino.png"><img src="imagens/destinos-sem-destino.png" alt="Aba Destinos de uma instalação nova, com o cartão Cópia do sistema marcado como não configurada, com a frase que manda gravar primeiro um armazenamento S3, e os cartões Armazenamento S3 e Bot do Telegram marcados como não configurado, cada um com a explicação do que envia e o botão Configurar, e, no alto da tela, a explicação Como o painel envia, recolhida" width="100%"></a>
 
-<sub><b>v1.3.0</b> · menu Destinos, sem destino gravado · captura de 2026-10-11</sub>
+<sub><b>v1.4.0</b> · menu Destinos, sem destino gravado · captura de 2026-10-11</sub>
 
 A instalação nasce sem destino: enquanto o administrador não gravar um, nada sai do servidor e o painel não abre conexão para fora. Cada cartão diz o que o destino faz e leva ao formulário dele, pelo botão **Configurar**.
 
@@ -1085,9 +1087,9 @@ Serve qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna.
 | Depois do envio | Sim | **Copiar**: o arquivo continua no servidor. **Guardar no S3**: o arquivo sai do servidor depois que o destino confirma a gravação |
 | Sua senha atual | Sim | A senha de quem está na sessão, para gravar o destino |
 
-<a href="imagens/destinos-gravado.png"><img src="imagens/destinos-gravado.png" alt="Aba Destinos com o aviso Destino gravado, vale a partir da próxima passada, e os cartões Armazenamento S3 e Bot do Telegram ligados, cada um com o que foi gravado, os segredos gravados sem aparecer na tela e a última passada como nenhuma ainda" width="100%"></a>
+<a href="imagens/destinos-gravado.png"><img src="imagens/destinos-gravado.png" alt="Aba Destinos com o aviso Destino gravado, vale a partir da próxima passada, o cartão Cópia do sistema, não configurada, com o botão Configurar, e os cartões Armazenamento S3 e Bot do Telegram ligados, cada um com o que foi gravado, os segredos gravados sem aparecer na tela e a última passada como nenhuma ainda" width="100%"></a>
 
-<sub><b>v1.3.0</b> · menu Destinos, depois de gravar · captura de 2026-10-11</sub>
+<sub><b>v1.4.0</b> · menu Destinos, depois de gravar · captura de 2026-10-11</sub>
 
 **Resultado esperado:** a aba volta com o aviso `Destino gravado. Vale a partir da próxima passada.`, e o cartão mostra a etiqueta `ligado`, o endereço, o bucket, a pasta e que as chaves estão gravadas, sem mostrá-las. A primeira passada começa em até um minuto e envia tudo o que já está na pasta.
 
@@ -1156,9 +1158,9 @@ Cada tipo aceita até 20 destinos. O destino novo pode usar o acesso de um que j
 2. Dê um **Nome** ao destino e troque a **Pasta enviada** ou o lugar: o prefixo ou o bucket, no S3; a conversa, no bot.
 3. Deixe os segredos em branco, digite a sua senha e clique em **Gravar**.
 
-<a href="imagens/destinos-varios.png"><img src="imagens/destinos-varios.png" alt="Aba Destinos com o aviso Destino gravado, os botões Novo S3 e Novo bot no alto e três cartões ligados: Armazenamento S3, com o prefixo copias e a pasta roteador-borda; Armazenamento S3: Clientes, com o mesmo endereço e o mesmo bucket, o prefixo clientes, a pasta clientes e nenhuma passada ainda; e Bot do Telegram, com a pasta clientes" width="100%"></a>
+<a href="imagens/destinos-varios.png"><img src="imagens/destinos-varios.png" alt="Aba Destinos com o aviso Destino gravado, os botões Novo S3 e Novo bot no alto, o cartão Cópia do sistema e três cartões ligados: Armazenamento S3, com o prefixo copias e a pasta roteador-borda; Armazenamento S3: Clientes, com o mesmo endereço e o mesmo bucket, o prefixo clientes, a pasta clientes e nenhuma passada ainda; e Bot do Telegram, com a pasta clientes" width="100%"></a>
 
-<sub><b>v1.3.0</b> · menu Destinos, com dois destinos S3 · captura de 2026-10-11</sub>
+<sub><b>v1.4.0</b> · menu Destinos, com dois destinos S3 · captura de 2026-10-11</sub>
 
 **Resultado esperado:** a aba volta com o aviso `Destino gravado. Vale a partir da próxima passada.` e um cartão a mais, com o tipo e o nome dado. O segredo deixado em branco foi copiado do outro destino dentro do servidor, sem passar pelo navegador.
 
@@ -1177,9 +1179,9 @@ Cada tipo aceita até 20 destinos. O destino novo pode usar o acesso de um que j
 
 ### Destinos ➜ Testar e Enviar agora
 
-<a href="imagens/destinos-teste.png"><img src="imagens/destinos-teste.png" alt="Aba Destinos com o aviso Teste concluído, o destino recebeu, acima dos cartões Armazenamento S3 e Bot do Telegram, cada um com a data da última passada" width="100%"></a>
+<a href="imagens/destinos-teste.png"><img src="imagens/destinos-teste.png" alt="Aba Destinos com o aviso Teste concluído, o destino recebeu, acima do cartão Cópia do sistema e dos cartões Armazenamento S3 e Bot do Telegram, cada um destes com a data da última passada" width="100%"></a>
 
-<sub><b>v1.3.0</b> · menu Destinos, depois do teste · captura de 2026-10-11</sub>
+<sub><b>v1.4.0</b> · menu Destinos, depois do teste · captura de 2026-10-11</sub>
 
 1. No cartão do destino, clique em **Testar**.
 2. Para não esperar o intervalo, clique em **Enviar agora** e atualize a tela em seguida.
@@ -1194,6 +1196,42 @@ Cada tipo aceita até 20 destinos. O destino novo pode usar o acesso de um que j
 | Senha | Nenhum dos dois botões pede a senha: não mudam a configuração |
 
 O que cada motivo quer dizer e o que fazer está em [Solução de problemas](../solucao-de-problemas.md#destinos).
+
+</details>
+
+<details>
+<summary>Destinos ➜ Cópia do sistema — clique para expandir</summary>
+
+### Destinos ➜ Cópia do sistema
+
+<a href="imagens/destinos-copia.png"><img src="imagens/destinos-copia.png" alt="Formulário Cópia do sistema, com a frase que diz que a cópia leva as pastas auth, dados, certs e painel, cifradas com a chave pública da cópia, e que o .env e os segredos não entram, a escolha Armazenamento S3 que recebe com os dois destinos gravados, a Pasta no bucket com copia-do-sistema, a Rotina de 1 dia, a Hora da rotina às 03:00, o campo Sua senha atual e os botões Gravar e Cancelar" width="100%"></a>
+
+<sub><b>v1.4.0</b> · menu Destinos, formulário da cópia do sistema · captura de 2026-10-11</sub>
+
+O cartão **Cópia do sistema**, no alto da aba, manda o sistema inteiro, cifrado, para um dos armazenamentos S3 gravados. Ele oferece o **Configurar** depois que existe um S3 com os segredos.
+
+1. No cartão **Cópia do sistema**, clique em **Configurar**.
+2. Escolha o **Armazenamento S3 que recebe** e a **Pasta no bucket**.
+3. Em **Rotina**, digite de quantos em quantos dias a cópia é feita, e a **Hora da rotina**; com `0`, só pelo botão.
+4. Digite a sua senha e clique em **Gravar**.
+5. De volta à aba, clique em **Copiar e enviar agora** e atualize a tela em seguida.
+
+<a href="imagens/destinos-copia-feita.png"><img src="imagens/destinos-copia-feita.png" alt="Aba Destinos com o cartão Cópia do sistema no alto, com a marca rotina ligada, o destino Armazenamento S3, o bucket backups-da-rede e a pasta copia-do-sistema, a rotina de todo dia às 03:00, a linha Última cópia com a data, o tamanho, a quantidade de arquivos e o nome do objeto, e os botões Copiar e enviar agora e Alterar, acima dos cartões dos dois armazenamentos S3 e do Bot do Telegram" width="100%"></a>
+
+<sub><b>v1.4.0</b> · menu Destinos, depois da cópia do sistema · captura de 2026-10-11</sub>
+
+**Resultado esperado:** ao gravar, o aviso é `Cópia do sistema gravada. A rotina vale a partir de agora.`; depois do botão, `Cópia do sistema pedida: ela é feita em segundo plano. Atualize a tela para acompanhar.` No fim, a linha **Última cópia** traz a data, o tamanho, a quantidade de arquivos e o nome do objeto gravado no bucket.
+
+| Item | Como funciona |
+|---|---|
+| O que vai | As pastas `auth`, `dados`, `certs` e `painel`, em um arquivo só, cifrado com a chave pública da cópia, mais o `.sha256` dele |
+| O que não vai | O `.env` e os segredos da instalação e dos destinos: ficam guardados à parte, com a chave privada da cópia |
+| Cópias antigas | O painel só envia: nenhuma é apagada, e o prazo delas é o da regra do bucket |
+| Uma por vez | Com uma cópia em andamento, o cartão tem a marca `em andamento` e o botão some |
+| Cópia que não termina | Nenhum objeto fica no destino, e o cartão diz o motivo em uma frase |
+| Restaurar | Baixe os dois objetos e use o `scripts/restaurar.sh`: veja [Cópia no S3, pelo painel](../backup.md#no-s3) |
+
+O funcionamento completo está em [Cópia do sistema para o S3](../painel.md#copia-do-sistema).
 
 </details>
 
@@ -1216,12 +1254,12 @@ O que cada motivo quer dizer e o que fazer está em [Solução de problemas](../
 <details>
 <summary>Detalhe técnico — rotas, segredos e eventos</summary>
 
-- Rotas `GET /destinos`, `GET` e `POST /destinos/s3` e `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `GET` e `POST /destinos/arquivo` e `GET` e `POST /destinos/remover`. Todo `POST` leva o token da sessão; gravar e remover pedem também a senha atual. Para o usuário do FTP, todas respondem `404`.
+- Rotas `GET /destinos`, `GET` e `POST /destinos/s3` e `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `GET` e `POST /destinos/arquivo`, `GET` e `POST /destinos/remover`, `GET` e `POST /destinos/copia` e `POST /destinos/copia/agora`. Todo `POST` leva o token da sessão; gravar e remover pedem também a senha atual. Para o usuário do FTP, todas respondem `404`.
 - A configuração fica em `DATA_DIR/painel/destinos/<destino>.conf` e o andamento, em `<destino>.estado`. Os segredos ficam em `SECRETS_DIR/destinos`, um por arquivo, com modo `0600`, e não voltam para a tela, para a aba Log nem para a auditoria.
 - O painel só sai do servidor por HTTPS, com o certificado conferido, e não segue redirecionamento.
-- Os eventos `destino_gravado`, `destino_teste`, `destino_pedido`, `destino_arquivo`, `destino_enviado`, `destino_falhou`, `destino_pulado` e `destino_removido` ficam na [auditoria](../painel.md#auditoria).
+- Os eventos `destino_gravado`, `destino_teste`, `destino_pedido`, `destino_arquivo`, `destino_enviado`, `destino_falhou`, `destino_pulado` e `destino_removido`, e os da cópia do sistema, `copia_gravada`, `copia_pedida`, `copia_enviada`, `copia_falhou` e `copia_sem_destino`, ficam na [auditoria](../painel.md#auditoria).
 - Com `PAINEL_DESTINOS=nao` no `.env`, a aba sai do menu e nenhuma passada acontece: veja [Configuração](../configuracao.md#painel).
-- O funcionamento completo está em [Destinos: S3 e bot do Telegram](../painel.md#destinos).
+- O funcionamento completo está em [Destinos: S3 e bot do Telegram](../painel.md#destinos), e o da cópia do sistema, em [Cópia do sistema para o S3](../painel.md#copia-do-sistema).
 
 </details>
 

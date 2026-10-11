@@ -51,7 +51,7 @@ flowchart LR
 | 6 | [Secrets](secrets.md) | What stays in `.secrets/`, who generates each file and how to change the FTP and panel passwords |
 | 7 | [Scripts](scripts.md) | What each script does, parameters and expected output |
 | 8 | [Operation](operation.md) | Users, real certificate, logs and image update |
-| 9 | [Backup and restore](backup.md) | Backup copy in one command, checked and reversible restore, what to keep apart, another server and scheduled copy |
+| 9 | [Backup and restore](backup.md) | Backup copy in one command, checked and reversible restore, what to keep apart, another server, scheduled copy and copy in S3, by the panel |
 | 10 | [Web panel](panel.md) | Opening the panel, what there is in each tab, users in the browser, download of the files, password, certificate, audit log and protections |
 | 11 | [Application screenshots](application/README.md) | Every screen of the panel, menu by menu: the screenshot, what it is for, how to get there and what there is in each one |
 | 12 | [Troubleshooting](troubleshooting.md) | Symptom, cause, how to check and fix |
@@ -122,6 +122,7 @@ Every diagram appears in the guides straight from the `.mmd` source, with a dark
 | [scripts-diagram.mmd](diagrams/scripts-diagram.mmd) | 1 | [Scripts](scripts.md) |
 | [users-diagram.mmd](diagrams/users-diagram.mmd) | 1 | [Operation](operation.md) |
 | [backup-diagram.mmd](diagrams/backup-diagram.mmd) | 1 | [Backup and restore](backup.md) |
+| [backup-s3-diagram.mmd](diagrams/backup-s3-diagram.mmd) | 1 | [Copy in S3, by the panel](backup.md#no-s3) |
 | [panel-diagram.mmd](diagrams/panel-diagram.mmd) | 1 | [Web panel](panel.md) |
 | [panel-flowchart.mmd](diagrams/panel-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](panel.md#como-decide) |
 | [panel-requests-flowchart.mmd](diagrams/panel-requests-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](panel.md#como-decide) |

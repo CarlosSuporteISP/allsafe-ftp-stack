@@ -6,6 +6,26 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.4.0] - 2026-10-11
+
+O painel passa a mandar a cópia do sistema inteiro para um armazenamento S3, pelo botão ou por rotina.
+
+### Adicionado
+
+- **Cópia do sistema para o S3**: o cartão **Cópia do sistema**, no alto da aba Destinos, junta as pastas `auth`, `dados`, `certs` e `painel` em um arquivo só, cifrado com a chave pública da cópia, e o envia a um dos armazenamentos S3 gravados. É a mesma cópia que o `scripts/backup.sh` faz, e o `scripts/restaurar.sh` a abre sem mudança, com a soma conferida pelo arquivo `.sha256` que vai junto.
+- **Botão e rotina**: **Copiar e enviar agora** pede a cópia na hora; a rotina a faz a cada 1 a 30 dias, na hora marcada. O cartão mostra a cópia em andamento, a última cópia e, quando ela não é concluída, o motivo em uma frase.
+- **Pelo terminal**: `servidor.py --copia` mostra a situação, e `--copia enviar` faz a cópia e só volta quando ela termina.
+- **Nada é apagado no destino**: as cópias se acumulam no bucket, e o prazo delas é da regra do próprio bucket. A cópia que para no meio não deixa objeto no destino.
+- **Só o administrador**: o cartão, o formulário, que pede a senha atual, e o botão. Cada passo fica na aba Log: `copia_gravada`, `copia_pedida`, `copia_enviada`, `copia_falhou` e `copia_sem_destino`.
+- **Bateria**: quatro casos funcionais e um de segurança para a cópia do sistema. São 90 casos funcionais, 133 de segurança e 14 de rede.
+
+### Alterado
+
+- **Container do painel**: passa a ter o `age`, a pasta dos certificados só para leitura e a chave pública da cópia como segredo montado. A chave privada continua fora dele. A cópia roda em um processo à parte, com a prioridade mais baixa, dentro dos limites de memória e de processador do painel.
+- **`deploy.sh`**: quando a chave pública da cópia muda, recria o painel, para a cópia enviada ao S3 sair cifrada com a chave atual.
+- **Fotos da aba Destinos**, nos dois idiomas, com as telas desta versão.
+- **Selos do README**: o estágio da versão e o suporte da linha passam a ter um selo cada (`estável` e `LTS`), no lugar do selo único.
+
 ## [1.3.0] - 2026-10-11
 
 Cada tipo de destino aceita vários: várias pastas ligadas ao S3 e ao Telegram, e o mesmo acesso S3 ou o mesmo bot servindo a outra pasta, outro bucket ou outra conversa.

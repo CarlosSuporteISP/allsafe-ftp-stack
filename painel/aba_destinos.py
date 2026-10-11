@@ -19,6 +19,7 @@ import re
 import threading
 
 import aba_arquivos
+import copia
 import destinos
 import idioma
 from auditoria import auditar, limpo
@@ -37,7 +38,9 @@ DESENHOS = {'s3': 'nuvem', 'telegram': 'aviao'}
 MENSAGENS = {'gravado': N('Destino gravado. Vale a partir da próxima passada.'),
              'removido': N('Destino removido: a configuração e os segredos dele foram apagados.'),
              'teste': N('Teste concluído: o destino recebeu.'),
-             'pedido': N('Passada pedida: o painel começa em instantes. Atualize a tela para acompanhar.')}
+             'pedido': N('Passada pedida: o painel começa em instantes. Atualize a tela para acompanhar.'),
+             'copia_gravada': N('Cópia do sistema gravada. A rotina vale a partir de agora.'),
+             'copia_pedida': N('Cópia do sistema pedida: ela é feita em segundo plano. Atualize a tela para acompanhar.')}
 # O botão de cada destino na linha de um arquivo da aba Arquivos: o nome curto e a dica.
 NA_LINHA = {'telegram': ('Telegram', N('Enviar este arquivo pelo bot do Telegram')),
             's3': ('S3', N('Enviar este arquivo para o armazenamento S3'))}
@@ -63,6 +66,17 @@ MOTIVOS = {
     'enviando': N('outro envio pedido pela tela está em andamento: tente de novo em instantes'),
     'desligado': N('o destino está desligado ou sem os segredos'),
     'proibido': N('o painel não faz esse pedido a um destino: ele só grava e só envia, e não apaga nada lá'),
+    # Os da cópia do sistema (copia.py).
+    'sem_destino': N('a cópia do sistema não tem um S3 escolhido com os segredos gravados'),
+    'chave': N('falta a chave pública da cópia nesta instalação'),
+    'cifra': N('a cifra da cópia falhou'),
+    'cadastro': N('os usuários estavam sendo alterados e a lista deles não pôde ser lida a tempo'),
+    'espaco': N('falta espaço em disco no servidor para montar uma parte da cópia'),
+    'profundo': N('há pastas demais, uma dentro da outra, para o painel abrir'),
+    'disco': N('erro de disco no servidor'),
+    'interno': N('erro interno do painel'),
+    'copiando': N('outra cópia do sistema está em andamento'),
+    'soma': N('a cópia foi gravada no destino, mas o arquivo com a soma dela não: faça outra cópia'),
 }
 # Campo que destinos.defeito() aponta ➜ o erro que o formulário mostra.
 ERROS = {
@@ -77,6 +91,10 @@ ERROS = {
     'pasta': N('Pasta inválida: até 4 níveis separados por barra, com letras, números, _, - e ponto.'),
     'intervalo': N('Intervalo inválido: de 5 a 1440 minutos.'),
     'idioma': N('Idioma não aceito.'),
+    # Os da cópia do sistema (copia.defeito).
+    'destino': N('Escolha um armazenamento S3 com os segredos gravados.'),
+    'dias': N('Rotina inválida: de 0 a 30 dias.'),
+    'hora': N('Hora inválida: use HH:MM, de 00:00 a 23:59.'),
 }
 
 
@@ -247,6 +265,8 @@ def lista(pedido, sessao, consulta, formulario, token):
                  motivo=explicar(consulta.get('f', '')))
     elif consulta.get('m') == 'cheio':
         erro = t(CHEIO, n=destinos.POR_TIPO)
+    elif consulta.get('m') == 'copia_falha':
+        erro = t('Cópia do sistema: não começou. Motivo: {motivo}.', motivo=explicar(consulta.get('f', '')))
     elif consulta.get('m') in MENSAGENS:
         aviso = t(MENSAGENS[consulta['m']])
     fichas, novos = [], ''
@@ -267,6 +287,7 @@ def lista(pedido, sessao, consulta, formulario, token):
                     'arquivo. Pasta que troca de nome não reenvia os arquivos de dentro.') + '</p>\n<p class="suave">'
       + t('Os segredos ficam no servidor, na pasta <code>destinos</code> dos segredos da instalação, um por arquivo, e '
                     'não entram na cópia de segurança: depois de restaurar uma cópia, grave-os de novo.') + '</p>')}</section>
+{cartao_da_copia(sessao)}
 <div class="fichas">
 {fichas}
 </div>''',
@@ -640,11 +661,13 @@ def tela_remover(pedido, sessao, consulta, formulario=None, token=None, erro='',
     if not destino:
         return None
     titulo = t('Remover destino')
+    da_copia = ('<p class="aviso">' + t('Este é o destino da cópia do sistema: sem ele, a cópia fica sem destino e a rotina dela '
+                                        'para.') + '</p>\n') if (copia.ler() or {}).get('destino') == destino else ''
     pedido.enviar(codigo, pagina(titulo, f'''<h1>{titulo}</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>{t('Remover <strong>{destino}</strong>? O painel apaga a configuração, o andamento e os segredos deste destino e para de '
       'enviar para ele. O que já foi enviado continua lá, e nenhum arquivo do servidor é apagado.', destino=e(rotulo(destino)))}</p>
-<form method="post" action="{ABA}/remover" autocomplete="off">
+{da_copia}<form method="post" action="{ABA}/remover" autocomplete="off">
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
 <input type="hidden" name="destino" value="{destino}">
 {campo_senha_atual(sessao, para=t('para remover o destino'))}
@@ -661,6 +684,9 @@ def remover(pedido, sessao, consulta, formulario, token):
     codigo, erro = confirmacao_recusada(pedido, sessao, formulario)
     if not erro:
         try:
+            # A cópia do sistema não fica apontando para um nome que outro destino pode vir a receber.
+            if copia.esquecer(destino):
+                auditar(pedido.ip, 'copia_sem_destino', f'admin={sessao["admin"]} destino={destino}')
             destinos.remover(destino)
         except OSError as motivo:
             codigo, erro = 500, t('Não foi possível remover o destino:') + ' ' + (motivo.strerror or t('erro de disco'))
@@ -669,3 +695,128 @@ def remover(pedido, sessao, consulta, formulario, token):
         return tela_remover(pedido, sessao, {'destino': destino}, erro=erro, codigo=codigo)
     auditar(pedido.ip, 'destino_removido', f'admin={sessao["admin"]} destino={destino}')
     return pedido.redirecionar(ABA + '?m=removido')
+
+
+# ------------------------------------------------------------ a cópia do sistema
+
+def rotina_da(conf):
+    if not conf['dias']:
+        return t('só pelo botão ou pelo terminal')
+    if conf['dias'] == 1:
+        return t('todo dia, às {hora} (hora do servidor)', hora=e(conf['hora']))
+    return tn(conf['dias'], 'a cada {n} dia, às {hora} (hora do servidor)', 'a cada {n} dias, às {hora} (hora do servidor)',
+              hora=e(conf['hora']))
+
+
+def cartao_da_copia(sessao):
+    """O cartão da cópia do sistema, no alto da tela: para onde ela vai, a rotina, a última e a que está em curso."""
+    visto = copia.situacao()
+    conf, dele, ultima, andamento = visto['conf'], visto['destino'], visto['ultima'], visto['andamento']
+    pronta = bool(conf and dele)
+    marca = (f'<span class="etiqueta">{t("em andamento")}</span>' if andamento else
+             f'<span class="etiqueta">{t("não configurada")}</span>' if not pronta else
+             f'<span class="etiqueta atencao">{t("faltam os segredos")}</span>' if not visto['segredos'] else
+             f'<span class="etiqueta">{t("rotina ligada") if conf["dias"] else t("só pelo botão")}</span>')
+    inicio = (f'<section class="cartao"><h2>{icone("servidor")}{t("Cópia do sistema")} {marca}</h2>\n<p>'
+              + t('O sistema inteiro em um arquivo só, cifrado, em um armazenamento S3: os usuários do FTP, os arquivos, os '
+                  'certificados e os dados do painel. É a mesma cópia que o <code>scripts/backup.sh</code> grava no servidor, '
+                  'e o <code>scripts/restaurar.sh</code> a abre com a chave privada da cópia. O painel só envia: as cópias se '
+                  'acumulam no bucket, e o prazo delas é da regra do bucket.') + '</p>')
+    if not visto['chave']:
+        return (inicio + '\n<p class="aviso">' + t('Falta a chave pública da cópia nesta instalação: rode '
+                                                   '<code>./deploy.sh</code>, que a cria, e volte aqui.') + '</p></section>')
+    if not pronta:
+        if not prontos_do('s3'):
+            return (inicio + '\n<p class="suave">' + t('Grave primeiro um armazenamento S3, com os segredos: a cópia do sistema '
+                                                       'vai para um deles.') + '</p></section>')
+        return (inicio + f'\n<p><a class="botao principal" href="{ABA}/copia">{icone("mais")}{t("Configurar")}</a></p></section>')
+    falha = ''
+    if visto['interrompida']:
+        falha = '<p class="aviso">' + t('A cópia anterior foi interrompida pelo reinício do painel: faça outra.') + '</p>'
+    elif ultima.get('motivo'):
+        falha = ('<p class="aviso">' + t('A última cópia, de {quando}, não foi concluída: {motivo}.',
+                                         quando=e(quando(inteiro(ultima, 'quando'))), motivo=e(explicar(str(ultima['motivo']))))
+                 + '</p>')
+    lugar = f'<code>{e(dele["bucket"])}</code>' + (f' / <code>{e(conf["prefixo"])}</code>' if conf['prefixo'] else '')
+    if inteiro(ultima, 'quando') and not ultima.get('motivo'):
+        feita = (f'{e(quando(inteiro(ultima, "fim")))} · {e(tamanho(inteiro(ultima, "bytes")))} · '
+                 f'{tn(inteiro(ultima, "arquivos"), "{n} arquivo", "{n} arquivos")}'
+                 + (' · ' + tn(inteiro(ultima, 'mudaram'), '{n} arquivo mudou durante a leitura',
+                               '{n} arquivos mudaram durante a leitura') if inteiro(ultima, 'mudaram') else '')
+                 + f' · <code>{e(str(ultima.get("objeto", "")))}</code>')
+    else:
+        feita = t('nenhuma ainda')
+    agora_ = ''
+    if andamento:
+        agora_ = (f'<div class="larga"><dt>{t("Agora")}</dt><dd>{t("cópia em andamento")}: {e(tamanho(inteiro(andamento, "bytes")))} · '
+                  f'{tn(inteiro(andamento, "partes"), "{n} parte enviada", "{n} partes enviadas")}</dd></div>')
+    botao = '' if andamento else f'<button type="submit">{icone("envio")}{t("Copiar e enviar agora")}</button> '
+    return f'''{inicio}{falha}
+<dl class="dados"><div><dt>{t('Destino')}</dt><dd>{e(rotulo(conf['destino'], dele))}</dd></div>
+<div><dt>{t('Bucket e pasta')}</dt><dd>{lugar}</dd></div>
+<div><dt>{t('Rotina')}</dt><dd>{rotina_da(conf)}</dd></div>
+<div class="larga"><dt>{t('Última cópia')}</dt><dd>{feita}</dd></div>{agora_}</dl>
+<form method="post" action="{ABA}/copia/agora" autocomplete="off">
+<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+{botao}<a class="botao" href="{ABA}/copia">{icone('lapis')}{t('Alterar')}</a>
+</form></section>'''
+
+
+@ligada
+def tela_copia(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, dele=None):
+    prontos = prontos_do('s3')
+    if not prontos or not copia.chave_publica():
+        return pedido.redirecionar(f'{ABA}?m=copia_falha&f={"sem_destino" if copia.chave_publica() else "chave"}')
+    dele = dele or copia.ler() or {'destino': prontos[0], 'prefixo': 'copia-do-sistema', 'dias': 1, 'hora': '03:00'}
+    opcoes = tuple((destino, e(rotulo(destino)), f'<code>{e(destinos.ler(destino)["bucket"])}</code>') for destino in prontos)
+    titulo = t('Cópia do sistema')
+    pedido.enviar(codigo, pagina(titulo, f'''<h1>{titulo}</h1>
+<section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
+<form method="post" action="{ABA}/copia" autocomplete="off">
+<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+<p>{t('A cópia leva as pastas <code>auth</code>, <code>dados</code>, <code>certs</code> e <code>painel</code>, cifradas com a '
+      'chave pública da cópia. O arquivo <code>.env</code> e os segredos da instalação não entram: guarde-os à parte, junto com '
+      'a chave privada da cópia.')}</p>
+{escolha('destino', t('Armazenamento S3 que recebe'), opcoes, dele['destino'] if dele['destino'] in prontos else prontos[0])}
+{texto('prefixo', t('Pasta no bucket'), t('só para as cópias do sistema; em branco é a raiz do bucket'), dele['prefixo'], ' maxlength="255"')}
+<label for="dias">{t('Rotina')} <span class="suave">({t('de quantos em quantos dias, de 1 a 30; 0 é só pelo botão')})</span></label>
+<input id="dias" name="dias" type="number" min="0" max="30" step="1" inputmode="numeric" required value="{e(str(max(dele['dias'], 0)))}">
+<label for="hora">{t('Hora da rotina')} <span class="suave">({t('hora do servidor')})</span></label>
+<input id="hora" name="hora" type="time" required value="{e(dele['hora'])}">
+<p class="suave">{t('A cópia é feita em segundo plano, com a prioridade mais baixa. Marque a rotina para a hora de menos uso: o '
+                    'tempo dela cresce com o tamanho dos dados.')}</p>
+{campo_senha_atual(sessao, para=t('para gravar a cópia do sistema'))}
+<button type="submit">{t('Gravar')}</button> <a class="botao" href="{ABA}">{t('Cancelar')}</a>
+</form></section>''', sessao, ABA))
+    return None
+
+
+@ligada
+def gravar_copia(pedido, sessao, consulta, formulario, token):
+    dias, hora = formulario.get('dias', '').strip(), formulario.get('hora', '').strip()
+    conf = {'destino': formulario.get('destino', ''), 'prefixo': formulario.get('prefixo', '').strip().strip('/'),
+            'dias': int(dias) if re.fullmatch(r'[0-9]{1,2}', dias) else -1,
+            'hora': hora[:5] if re.fullmatch(r'[0-9]{2}:[0-9]{2}:[0-9]{2}', hora) else hora}   # o campo de hora pode trazer os segundos
+    campo = copia.defeito(conf) or ('' if conf['destino'] in prontos_do('s3') else 'destino')
+    codigo, erro = (400, t(ERROS[campo])) if campo else confirmacao_recusada(pedido, sessao, formulario)
+    if not erro:
+        try:
+            copia.gravar(conf)
+        except OSError as motivo:
+            codigo, erro = 500, t('Não foi possível gravar a cópia do sistema:') + ' ' + (motivo.strerror or t('erro de disco'))
+            auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=gravar_copia destino={conf["destino"]}')
+    if erro:
+        if campo == 'destino':
+            conf['destino'] = ''
+        return tela_copia(pedido, sessao, {}, erro=erro, codigo=codigo, dele=conf)
+    auditar(pedido.ip, 'copia_gravada', f'admin={sessao["admin"]} destino={conf["destino"]} '
+                                        f'prefixo={limpo(conf["prefixo"], 255) or "-"} dias={conf["dias"]} hora={conf["hora"]}')
+    return pedido.redirecionar(ABA + '?m=copia_gravada')
+
+
+@ligada
+def copia_agora(pedido, sessao, consulta, formulario, token):
+    """A cópia fora de hora: quem faz é um processo à parte, e a tela não espera por ele."""
+    motivo = copia.disparar('tela')
+    auditar(pedido.ip, 'copia_pedida', f'admin={sessao["admin"]} resultado={motivo or "ok"}')
+    return pedido.redirecionar(f'{ABA}?m=copia_falha&f={motivo}' if motivo else ABA + '?m=copia_pedida')

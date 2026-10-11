@@ -3,8 +3,9 @@
 """Serviços de exemplo para a etapa dos destinos da bateria: um armazenamento S3 e uma API de bot do Telegram.
 
 Roda dentro da rede da instância de teste, só com a biblioteca padrão, e atende HTTPS com o certificado que a etapa
-gera. Não guarda o conteúdo de nada: de cada pedido fica uma linha em <pasta>/chamadas.jsonl, com o serviço, a
-operação, o código da resposta e, do que foi recebido, o tamanho e o SHA-256. É por essas linhas que a etapa confere
+gera. De cada pedido fica uma linha em <pasta>/chamadas.jsonl, com o serviço, a operação, o código da resposta e, do
+que foi recebido, o tamanho e o SHA-256. O conteúdo não é guardado, a não ser o do objeto que a etapa pede: com
+"guardar" no config.json, o objeto que tem esse texto na chave fica em <pasta>/objetos/, com o último nome da chave. É por essas linhas que a etapa confere
 o que o painel enviou, e que ele não pediu nenhuma operação além das de gravar e de enviar.
 
 O S3 de exemplo refaz a assinatura versão 4 de cada pedido, com uma implementação que não é a do painel, e recusa o
@@ -45,6 +46,15 @@ def conversas(conf):
     """As conversas que o bot alcança: a de "conversa" e, quando há, as de "conversas". A linha de cada envio leva em
     `qual` a posição da conversa que recebeu, para a etapa conferir o destino sem levar a conversa à evidência."""
     return [conf['conversa']] + list(conf.get('conversas', ()))
+
+
+def lugar_guardado(conf, chave):
+    """O arquivo de <pasta>/objetos/ em que fica o objeto que a etapa mandou guardar, ou None."""
+    nome = os.path.basename(chave)
+    if not conf.get('guardar') or conf['guardar'] not in chave or nome in ('', '.', '..'):
+        return None
+    os.makedirs(os.path.join(PASTA, 'objetos'), exist_ok=True)
+    return os.path.join(PASTA, 'objetos', nome)
 
 
 def anotar(**campos):
@@ -151,7 +161,8 @@ class Pedido(http.server.BaseHTTPRequestHandler):
             (bucket, _, chave), estilo = urllib.parse.unquote(caminho[1:]).partition('/'), 'caminho'
         campos = {'bucket': bucket, 'chave': chave, 'estilo': estilo, 'consulta': sorted(nomes)}
         parte = self.command == 'PUT' and set(nomes) == {'partNumber', 'uploadId'} and nomes['partNumber'].isdigit()
-        guardado = tempfile.TemporaryFile() if parte else None
+        inteiro = self.command == 'PUT' and not nomes and lugar_guardado(conf, chave)
+        guardado = tempfile.TemporaryFile() if parte or inteiro else None
         try:
             return self.s3_conferido(conf, caminho, consulta, nomes, campos, guardado)
         finally:
@@ -188,6 +199,10 @@ class Pedido(http.server.BaseHTTPRequestHandler):
         if conf.get('recusar') and conf['recusar'] in chave:
             return self.erro_s3(400, 'InvalidRequest', **campos)
         if self.command == 'PUT' and not consulta:
+            if guardado is not None:
+                guardado.seek(0)
+                with open(lugar_guardado(conf, chave), 'wb') as arquivo:
+                    arquivo.write(guardado.read())
             anotar(servico='s3', op='gravar', codigo=200, bytes=tamanho, sha256=soma, **campos)
             return self.responder(200, extras=(('ETag', f'"{marca}"'),))
         if self.command == 'POST' and consulta == [('uploads', '')]:
@@ -224,6 +239,8 @@ class Pedido(http.server.BaseHTTPRequestHandler):
             ENVIOS.pop(identificador, None)
         # A lista veio no corpo, que já foi lido para a soma: aqui só vale o que foi recebido, em ordem.
         soma, tamanho = hashlib.sha256(), 0
+        inteiro = sorted(envio['partes']) == list(range(1, len(envio['partes']) + 1)) and lugar_guardado(config(), envio['chave'])
+        arquivo = open(inteiro, 'wb') if inteiro else None
         for numero in sorted(envio['partes']):
             copia = envio['partes'][numero]
             copia.seek(0)
@@ -233,7 +250,11 @@ class Pedido(http.server.BaseHTTPRequestHandler):
                     break
                 soma.update(pedaco)
                 tamanho += len(pedaco)
+                if arquivo:
+                    arquivo.write(pedaco)
             copia.close()
+        if arquivo:
+            arquivo.close()
         if sorted(envio['partes']) != list(range(1, len(envio['partes']) + 1)) or not envio['partes']:
             return self.erro_s3(400, 'InvalidPartOrder', **campos)
         anotar(servico='s3', op='gravar', codigo=200, bytes=tamanho, sha256=soma.hexdigest(), partes=len(envio['partes']), **campos)

@@ -4,7 +4,8 @@
 # dele; o painel envia sozinho o que chega na pasta escolhida, em passadas. A etapa sobe, na rede da instância de
 # teste, um serviço de exemplo dos dois (tests/apoio/simulador_destinos.py), com certificado de uma autoridade criada
 # aqui, e confere pelo registro dele o que chegou: nome, tamanho e soma de cada arquivo, e nenhuma operação além das
-# de gravar e de enviar. As chaves, o token e a conversa são gerados na hora e não entram em evidência.
+# de gravar e de enviar. As chaves, o token e a conversa são gerados na hora e não entram em evidência. No fim, a cópia
+# do sistema: o painel cifra as quatro pastas e envia ao S3 de exemplo, e o scripts/restaurar.sh abre o que chegou.
 # Trecho da bateria: carregado pelo tests/testar.sh, na ordem do nome do arquivo; não roda sozinho.
 
 api_0="$(env_file="$ENVA" env_valor PAINEL_TELEGRAM_API https://api.telegram.org)"
@@ -43,8 +44,34 @@ aguarda34() { # <expressão> <vezes> [segundos]: espera a auditoria ter a linha 
   (( $(linhas34 "$1") >= $2 ))
 }
 testa34() { envio /destinos/testar --max-time 40 --data-urlencode "csrf=$K" --data-urlencode "destino=$1"; }  # <destino>: o botão Testar
+copia34() { docker exec "$PAINEL" python3 /opt/painel/servidor.py --copia "$@" > "$W/copia34" 2>&1; }  # [enviar]: a cópia do sistema pelo terminal; saída em $W/copia34
+tc34() { grep -c -x -F -- "$1" "$W/copia34" || true; }                                         # <linha>: vezes em que a última saída do terminal da cópia a traz
+botao34() { envio /destinos/copia/agora --data-urlencode "csrf=${1-$K}"; }                     # [token]: o botão Copiar e enviar agora
+gcopia34() { # <pote> <token> <arquivo da senha ou ""> [campo=valor]... → "código destino" do formulário da cópia do sistema
+  local pote="$1" token="$2" senha="$3" par nome; shift 3
+  local -A campo=([destino]=s3 [prefixo]=copia34/sistema [dias]=0 [hora]=03:00)
+  for par in "$@"; do campo[${par%%=*}]="${par#*=}"; done
+  local -a dados=(--data-urlencode "csrf=$token")
+  for nome in "${!campo[@]}"; do dados+=(--data-urlencode "$nome=${campo[$nome]}"); done
+  [[ -n "$senha" ]] && dados+=(--data-urlencode "senha_atual@$senha")
+  c -o "$W/corpo" -w '%{http_code} %{redirect_url}' -b "$pote" -H "Origin: ${ORIGEM34:-$B}" "${dados[@]}" "$B/destinos/copia" | sed "s|$B||"
+}
+rotasc34() { # <pote> <token> → os códigos das três rotas da cópia do sistema: o formulário, a gravação e o botão
+  local pote="$1" token="$2" r
+  r="$(aba -b "$pote" "$B/destinos/copia" | cut -c1-3) "
+  r+="$(gcopia34 "$pote" "$token" "" | cut -c1-3) "
+  r+="$(POTE="$pote" botao34 "$token" | cut -c1-3) "
+  echo "$r"
+}
+recusac34() { # <frase> <campo=valor>: formulário da cópia fora da regra ➜ 400 com a frase na tela; acumula em ok_ci e ev_ci
+  local frase="$1" r; shift
+  r="$(gcopia34 "$J" "$K" "$W/painel.senha" "$@")"
+  [[ "$r" == "400 " && "$(tem34 "$frase")" -ge 1 ]] || ok_ci=1
+  ev_ci+="$*: $r'$frase' $(tem34 "$frase"); "
+}
+copias34() { sim34 "$1" "(l['chave'] or '').startswith('copia34/')${2:+ and ($2)}"; }            # <linhas a pular> [condição]: pedidos ao S3 com chave da cópia do sistema
 conf34() { # [texto a recusar]: grava o config.json do simulador, de uma vez
-  ( umask 077; printf '{"s3_id":"%s","s3_segredo":"%s","regiao":"sa-teste-1","buckets":["balde34"],"bot_token":"%s","conversa":"%s","conversas":["%s"],"telegram_max":600000,"recusar":"%s"}\n' \
+  ( umask 077; printf '{"s3_id":"%s","s3_segredo":"%s","regiao":"sa-teste-1","buckets":["balde34"],"bot_token":"%s","conversa":"%s","conversas":["%s"],"telegram_max":600000,"recusar":"%s","guardar":"copia34/"}\n' \
       "$(cat "$D34/s3-id")" "$(cat "$D34/s3-secreta")" "$(cat "$D34/token")" "$(cat "$D34/conversa")" "$(cat "$D34/conversa-b")" "${1:-}" > "$D34/config.novo" ) && mv "$D34/config.novo" "$D34/config.json"
 }
 sim34() { # <linhas a pular> <condição em Python sobre a linha l> [o que imprimir de cada uma]: sem o 3º, a contagem
@@ -148,7 +175,7 @@ S3_34=("chave_id@$D34/s3-id" "chave_secreta@$D34/s3-secreta"); TG_34=("token@$D3
 docker rm -f "$SIM34" > /dev/null 2>&1
 docker run -d --name "$SIM34" --no-healthcheck --network "$NOME-network" --network-alias s3.simulador.test \
   --network-alias balde34.s3.simulador.test --network-alias bot.simulador.test --network-alias outro.simulador.test \
-  --read-only --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" --tmpfs /tmp:size=128m \
+  --read-only --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" --tmpfs /tmp:size=512m \
   -v "$D34:/sim" -v "$root_dir/tests/apoio/simulador_destinos.py:/simulador.py:ro" \
   --entrypoint python3 "$IMG_PAINEL" /simulador.py /sim /sim/servidor.pem /sim/servidor.key 8443 > /dev/null 2> "$W/sim34.log"; r_sim=$?
 for n in $(seq 1 30); do docker logs "$SIM34" 2>&1 | grep -q -F 'simulador dos destinos pronto' && break; sleep 1; done
@@ -793,6 +820,7 @@ caso $? seguranca 131 "Nenhum pedido de apagar, ler ou mexer no bucket e na conv
 gravar_env "$ENVA" PAINEL_DESTINOS nao; dep; r_dep1=$?; painel_de_pe
 e_adm3="$(entrar "$J" "$W/painel.senha")"; proibir "$(biscoito_de "$J")"; K="$(csrf)"; proibir "$K"
 t_men="$(aba -b "$J" "$B/usuarios")"; f_men="$(tem34 'href="/destinos"')"; a_rotas="$(rotas34 "$J" "$K")"
+a_rotasc="$(rotasc34 "$J" "$K")"; copia34; r_cnao="$? $(grep -c -F 'FALHA: os destinos estão desligados nesta instalação (PAINEL_DESTINOS=nao)' "$W/copia34" || true)"
 b_nao="$(aba -b "$J" "$B/arquivos?pasta=dst34")$(vezes34 'para-')"; b_nao_bx="$(vezes34 ' download>')"
 terminal34; r_ter1=$?; f_ter1="$(grep -c -F 'FALHA: os destinos estão desligados nesta instalação (PAINEL_DESTINOS=nao)' "$W/terminal34" || true)"
 # O andamento do S3 é apagado: se as passadas estivessem rodando, a primeira reenviaria o a3.txt em até um minuto.
@@ -817,6 +845,161 @@ d_sim="$(sim34 "$m_nao" "l['op']=='gravar' and l['chave']=='copias/teste/dst34/s
   && "$ok_var" == 0 && "$d_nao" == 0 && "$r_dep2" == 0 && "$e_adm4" == 303 && "$t_men2" == "200 " && "$f_men2" -ge 1 && "$d_sim" == 1 ]]
 caso $? seguranca 129 "PAINEL_DESTINOS=nao desliga os destinos; variável fora da regra é recusada" "deploy.sh com PAINEL_DESTINOS=nao: saída $r_dep1; menu do administrador ($t_men) com a aba Destinos: $f_men; as onze rotas com a sessão e o token dele: $a_rotas; terminal: saída $r_ter1, 'os destinos estão desligados nesta instalação' ($f_ter1); com o andamento do S3 apagado, pedidos que o simulador recebeu em 75 s: $d_nao; container do painel com a variável fora da regra: $ev_var de volta a PAINEL_DESTINOS=sim: saída $r_dep2, aba no menu ($f_men2) e o arquivo reenviado sozinho pela passada (controle): $d_sim"
 
+# ------------------------------------------------------------------ a cópia do sistema para o S3
+# O sistema inteiro (auth, dados, certs e painel) em um arquivo só, cifrado com a chave pública da cópia e enviado em
+# partes pelo próprio painel. O simulador guarda em $D34/objetos o que chega no prefixo copia34/, e é esse arquivo que
+# a etapa abre com a chave privada da instância de teste e entrega ao scripts/restaurar.sh. A pasta cop34 fica fora
+# das que o S3 e o bot vigiam: o que a etapa muda nela não vira envio.
+planta34 <<'SH'
+mkdir -p /data/cop34 && cd /data/cop34 && echo 'fica na cópia do sistema' > fica.txt && head -c 300000 /dev/urandom > corpo.bin
+chown -R ftpdata:ftpdata /data/cop34
+SH
+cs_fica="$(soma34 cop34/fica.txt)"; m_c0=$(marca34)
+# Antes de configurar: o cartão oferece a configuração, o terminal diz que não há, e o botão pedido mesmo assim não copia.
+cs_t0="$(aba -b "$J" "$B/destinos")"; cs_f0="$(faltam34 'Cópia do sistema <span class="etiqueta">não configurada</span>' 'href="/destinos/copia"')"
+copia34; cs_r0="$? $(tc34 'cópia do sistema: não configurada') $(tc34 'nenhuma cópia ainda')"
+cs_b0="$(botao34)"
+cs_tf="$(aba -b "$J" "$B/destinos/copia")"; cs_ff="$(faltam34 'name="destino" value="s3" checked' 'name="prefixo" value="copia-do-sistema"' 'name="dias"' 'name="hora"' 'name="senha_atual"')"
+# Formulário fora da regra: recusado antes de pedir a senha, e nada é gravado.
+ok_ci=0; ev_ci=""
+recusac34 'Escolha um armazenamento S3 com os segredos gravados.' destino=telegram
+recusac34 'Escolha um armazenamento S3 com os segredos gravados.' destino=s3-9
+recusac34 'Prefixo inválido: até 8 níveis separados por barra, com letras, números, _, - e ponto.' prefixo=../fora
+recusac34 'Rotina inválida: de 0 a 30 dias.' dias=31
+recusac34 'Rotina inválida: de 0 a 30 dias.' dias=x
+recusac34 'Hora inválida: use HH:MM, de 00:00 a 23:59.' hora=25:00
+cs_x="$(gcopia34 "$J" "$K" "")"; cs_fx="$(tem34 'A sua senha atual não confere. Nada foi alterado.')"
+cs_cx="$(docker exec "$PAINEL" test -e /painel/destinos/copia.conf && echo sim || echo nao)"
+cs_e1="$(entrar "$J" "$W/painel.senha")"; proibir "$(biscoito_de "$J")"; K="$(csrf)"; proibir "$K"
+# Gravada com a senha do administrador, só pelo botão: a rotina fica para o caso 90.
+cs_g="$(gcopia34 "$J" "$K" "$W/painel.senha")"
+cs_tg="$(aba -b "$J" "$B/destinos?m=copia_gravada")"
+cs_fg="$(faltam34 'Cópia do sistema gravada. A rotina vale a partir de agora.' 'Cópia do sistema <span class="etiqueta">só pelo botão</span>' '<code>balde34</code> / <code>copia34/sistema</code>' 'só pelo botão ou pelo terminal' 'nenhuma ainda' 'action="/destinos/copia/agora"')"
+auditoria; cs_lg="$(linhas34 " evento=copia_gravada admin=$ADMIN destino=s3 prefixo=copia34/sistema dias=0 hora=03:00\$")"
+# O botão: a tela volta na hora e a cópia é feita em segundo plano, por um processo à parte do painel.
+m_c1=$(marca34); cs_b="$(botao34)"
+aba -b "$J" "$B/destinos?m=copia_pedida" > /dev/null; cs_fb="$(tem34 'Cópia do sistema pedida: ela é feita em segundo plano. Atualize a tela para acompanhar.')"
+aguarda34 ' evento=copia_enviada origem=tela destino=s3 objeto=copia34/sistema/' 1 180; cs_ra=$?
+cs_l="$(grep -E " evento=copia_enviada origem=tela destino=s3 objeto=copia34/sistema/$NOME-[0-9]{8}-[0-9]{6}\.tar\.gz\.age bytes=[0-9]+ partes=[0-9]+ arquivos=[0-9]+ mudaram=[0-9]+ fora=[0-9]+\$" "$W/auditoria" | tail -n 1)"
+cs_n="$(sed -n -E 's|.* objeto=copia34/sistema/([^ ]+) bytes=.*|\1|p' <<< "$cs_l")"; cs_by="$(sed -n -E 's|.* bytes=([0-9]+) partes=.*|\1|p' <<< "$cs_l")"
+cs_pa="$(sed -n -E 's|.* partes=([0-9]+) arquivos=.*|\1|p' <<< "$cs_l")"; cs_ar="$(sed -n -E 's|.* arquivos=([0-9]+) mudaram=.*|\1|p' <<< "$cs_l")"; cs_fo="$(sed -n -E 's|.* fora=([0-9]+)$|\1|p' <<< "$cs_l")"
+cs_lp="$(linhas34 " evento=copia_pedida admin=$ADMIN resultado=sem_destino\$") $(linhas34 " evento=copia_pedida admin=$ADMIN resultado=ok\$")"
+cs_va="$(vaza34 "$W/auditoria")"
+# O que chegou ao S3: um envio em partes concluído, o arquivo da soma, e nada além de gravar.
+cs_sa="$(copias34 "$m_c1" "l['op']=='abrir_partes' and l['chave']=='copia34/sistema/$cs_n'")"; cs_sp="$(copias34 "$m_c1" "l['op']=='parte' and l['chave']=='copia34/sistema/$cs_n'")"
+cs_ss="$(sim34 "$m_c1" "l['op']=='gravar' and l['chave']=='copia34/sistema/$cs_n' and l['bytes']==${cs_by:-0} and l['partes']==${cs_pa:-0}" "l['sha256']")"
+cs_s2="$(copias34 "$m_c1" "l['op']=='gravar' and l['chave']=='copia34/sistema/$cs_n.sha256' and l['bytes']==$(( 67 + ${#cs_n} ))")"
+cs_so="$(copias34 "$m_c1" "l['op'] not in ('abrir_partes', 'parte', 'gravar')")"
+# O objeto guardado: cifrado, com a soma que o arquivo ao lado diz, e só abre com a chave privada da cópia.
+cs_arq="$D34/objetos/$cs_n"
+cs_o="$( cd "$D34/objetos" 2> /dev/null && sha256sum --status -c "$cs_n.sha256" 2> /dev/null; echo $? ) $(sha256sum "$cs_arq" 2> /dev/null | cut -c1-64) $(head -c 21 "$cs_arq" 2> /dev/null) $(stat -c %s "$cs_arq" 2> /dev/null)"
+abrir_copia "$cs_arq" "$S/backup-chave-privada.txt" tar -tzf - > "$W/copia34.lista" 2> /dev/null; cs_ab=$?
+cs_li="$(grep -c -v -E '^(dados|auth|certs|painel)(/|$)' "$W/copia34.lista" || true) $(grep -c -x -F -e auth/pureftpd.passwd -e dados/cop34/fica.txt -e dados/cop34/corpo.bin -e painel/destinos/copia.conf -e painel/auditoria.log "$W/copia34.lista" || true) $(grep -c -E '^painel/destinos/(copia\.estado|\.trava-copia)$' "$W/copia34.lista" || true)"
+cs_ce="$(grep -c -E '^certs/.' "$W/copia34.lista" || true)"
+# Fila (o cano do conjunto A) não entra na cópia e é contada como de fora.
+docker exec "$FTP" sh -c 'cd /data && find . -type p | sed "s|^\./|dados/|"' > "$W/copia34.canos"
+cs_can="$(wc -l < "$W/copia34.canos") $(grep -c -x -F -f "$W/copia34.canos" "$W/copia34.lista" || true)"
+cs_cf="$(abrir_copia "$cs_arq" "$S/backup-chave-privada.txt" tar -xzOf - dados/cop34/fica.txt 2> /dev/null | sha256sum | cut -c1-64)"
+cs_se="$(abrir_copia "$cs_arq" "$S/backup-chave-privada.txt" tar -xzOf - 2> /dev/null | vaza34 /dev/stdin)"
+aba -b "$J" "$B/destinos" > /dev/null; cs_fu="$(faltam34 "<code>$cs_n</code>" 'action="/destinos/copia/agora"')$(tem34 'não foi concluída')"; cs_v="$(vaza34 "$W/corpo") $cs_va"
+[[ "$cs_t0" == "200 " && "$cs_f0" == 0 && "$cs_r0" == "0 1 1" && "$cs_b0" == "303 /destinos?m=copia_falha&f=sem_destino" && "$cs_tf" == "200 " && "$cs_ff" == 0 && "$ok_ci" == 0 \
+  && "$cs_x" == "403 " && "$cs_fx" -ge 1 && "$cs_cx" == nao && "$cs_e1" == 303 && "$cs_g" == "303 /destinos?m=copia_gravada" && "$cs_tg" == "200 " && "$cs_fg" == 0 && "$cs_lg" == 1 \
+  && "$cs_b" == "303 /destinos?m=copia_pedida" && "$cs_fb" -ge 1 && "$cs_ra" == 0 && -n "$cs_n" && "$cs_by" -gt 0 && "$cs_pa" -ge 1 && "$cs_ar" -ge 5 && "$cs_lp" == "1 1" \
+  && "$cs_sa" == 1 && "$cs_sp" == "$cs_pa" && "$cs_ss" =~ ^[0-9a-f]{64}$ && "$cs_s2" == 1 && "$cs_so" == 0 && "$cs_o" == "0 $cs_ss age-encryption.org/v1 $cs_by" \
+  && "$cs_ab" == 0 && "$cs_li" == "0 5 0" && "$cs_ce" -ge 1 && "${cs_can%% *}" -ge 1 && "${cs_can##* }" == 0 && "$cs_fo" -ge "${cs_can%% *}" && "$cs_cf" == "$cs_fica" && "$cs_se" == 0 \
+  && "$cs_fu" == 00 && "$cs_v" == "0 0" ]]
+caso $? testes 87 "Cópia do sistema: configurada e pedida pelo painel, chega cifrada ao S3 com o arquivo da soma" "antes de configurar: aba Destinos ($cs_t0) com o cartão 'não configurada' e o link Configurar, textos que faltam: $cs_f0; servidor.py --copia: saída, 'não configurada' e 'nenhuma cópia ainda': $cs_r0; botão pedido assim mesmo: $cs_b0; formulário ($cs_tf), campos que faltam: $cs_ff; formulário fora da regra: $ev_ci; gravação sem a senha: $cs_x, 'A sua senha atual não confere' ($cs_fx), copia.conf gravado: $cs_cx; nova entrada: $cs_e1; gravação com a senha: $cs_g, tela ($cs_tg) com a mensagem, 'só pelo botão', bucket e pasta e o botão, textos que faltam: $cs_fg, linha copia_gravada na auditoria: $cs_lg; botão Copiar e enviar agora: $cs_b, tela com 'feita em segundo plano' ($cs_fb); espera pela linha copia_enviada origem=tela: saída $cs_ra; objeto $cs_n, $cs_by bytes em $cs_pa parte(s), $cs_ar arquivo(s), $cs_fo de fora; linhas copia_pedida com sem_destino e com ok: $cs_lp; no simulador, para a chave do objeto: envios em partes abertos $cs_sa, partes $cs_sp, conclusão com o mesmo tamanho e as mesmas partes: soma ${cs_ss:0:16}…, arquivo .sha256 com o tamanho esperado: $cs_s2, pedidos com chave da cópia que não são de gravar: $cs_so; o arquivo guardado: sha256sum -c do .sha256, soma, cabeçalho e tamanho: $(cut -d' ' -f1 <<< "$cs_o") ${cs_o:2:16}… $(cut -d' ' -f3- <<< "$cs_o"); aberto com a chave privada da cópia (saída $cs_ab): itens fora de dados, auth, certs e painel, os cinco esperados (cadastro, os dois arquivos de cop34, copia.conf e a auditoria) e o andamento ou a trava da própria cópia: $cs_li; itens de certs: $cs_ce; filas em /data e quantas delas estão na cópia: $cs_can; soma do fica.txt de dentro da cópia igual à do servidor: $([[ "$cs_cf" == "$cs_fica" ]] && echo sim || echo nao); linhas do conteúdo com segredo dos destinos: $cs_se; cartão com o nome do objeto e o botão (faltam) e 'não foi concluída': $cs_fu; linhas com segredo dos destinos na tela e na auditoria: $cs_v"
+
+# A restauração: o que mudou depois da cópia some, e o que ela levou volta. A auditoria também volta ao momento da
+# cópia: por isso as linhas dela foram conferidas antes.
+cs_u0="$(usuarios_ftp)"
+planta34 <<'SH'
+cd /data/cop34 && echo 'criado depois da cópia' > depois34.txt && chown ftpdata:ftpdata depois34.txt && rm -f fica.txt
+SH
+nova_senha "$W/cop34.senha"; mu add depois34 "$W/cop34.senha"; cs_ua=$?; cs_u1="$(usuarios_ftp)"; cs_h0="$(ha34 cop34/depois34.txt) $(ha34 cop34/fica.txt)"
+restaurar "$cs_arq" "$W/copia34.restaura"; cs_rr=$?
+cs_rl="$(grep -c -E '^Cópia: .*, soma sha256 conferida\)$' "$W/copia34.restaura" || true) $(grep -c -x -F 'Restaurado e no ar (healthy).' "$W/copia34.restaura" || true)"
+painel_de_pe; cs_sd="$(saude "$FTP" "$PAINEL" "$NGINX")"
+cs_e2="$(entrar "$J" "$W/painel.senha")"; proibir "$(biscoito_de "$J")"; K="$(csrf)"; proibir "$K"
+cs_h="$(ha34 cop34/depois34.txt) $(ha34 cop34/fica.txt)"; cs_f2="$(soma34 cop34/fica.txt 2> /dev/null)"; cs_u2="$(usuarios_ftp)"
+# O andamento da cópia não vai dentro dela: depois de restaurar, o painel tem a configuração e nenhuma cópia feita.
+copia34; cs_r2="$? $(tc34 'cópia do sistema: s3 (balde34/copia34/sistema); só pelo botão ou pelo terminal') $(tc34 'nenhuma cópia ainda') $(grep -c -F 'interrompida' "$W/copia34" || true)"
+[[ "$cs_ua" == 0 && " $cs_u1" == *" depois34 "* && " $cs_u0" != *" depois34 "* && "$cs_h0" == "sim nao" && "$cs_rr" == 0 && "$cs_rl" == "1 1" && "$cs_sd" == "healthy healthy healthy " && "$cs_e2" == 303 \
+  && "$cs_h" == "nao sim" && "$cs_f2" == "$cs_fica" && "$cs_u2" == "$cs_u0" && "$cs_r2" == "0 1 1 0" ]]
+caso $? testes 88 "Cópia do sistema feita pelo painel é restaurada pelo restaurar.sh" "depois da cópia: usuário depois34 criado (saída $cs_ua), arquivo novo em cop34 e fica.txt apagado (depois34.txt e fica.txt no servidor: $cs_h0); restaurar.sh com o objeto que o S3 de exemplo guardou: saída $cs_rr, linhas 'soma sha256 conferida' e 'Restaurado e no ar (healthy).': $cs_rl; containers: $cs_sd; entrada do administrador: $cs_e2; depois34.txt e fica.txt no servidor: $cs_h, soma do fica.txt igual à de antes: $([[ "$cs_f2" == "$cs_fica" ]] && echo sim || echo nao); usuários do FTP iguais aos de antes da mudança: $([[ "$cs_u2" == "$cs_u0" ]] && echo sim || echo nao) ($cs_u2); servidor.py --copia: saída, linha da configuração, 'nenhuma cópia ainda' e 'interrompida': $cs_r2"
+
+# Falha no meio: o serviço aceita abrir o envio em partes e recusa a primeira parte. O painel desfaz o envio (o único
+# pedido de apagar que existe, e ele não toca em objeto) e nada fica no destino.
+m_c2=$(marca34); cs_no="$(ls "$D34/objetos" | wc -l)"
+echo 's3 500 1 1 copia34' > "$D34/falhar"; copia34 enviar; cs_rf=$?; rm -f "$D34/falhar"
+cs_lf="$(tc34 'cópia do sistema: falhou: http_500; nenhum objeto ficou no destino')"
+cs_sf="$(copias34 "$m_c2" "l['op']=='abrir_partes'") $(copias34 "$m_c2" "l['codigo']==500 and l['erro']=='Forcado' and l['metodo']=='PUT' and l['consulta']==['partNumber', 'uploadId']") $(copias34 "$m_c2" "l['op']=='abandonar'") $(copias34 "$m_c2" "l['op'] in ('gravar', 'parte')")"
+auditoria; cs_af="$(linhas34 ' evento=copia_falhou origem=terminal motivo=http_500 partes=0$')"; cs_nf="$(ls "$D34/objetos" | wc -l)"
+aba -b "$J" "$B/destinos" > /dev/null; cs_ft="$(faltam34 'não foi concluída: o serviço respondeu com o código 500.' 'action="/destinos/copia/agora"')"
+copia34; cs_r3="$? $(tc34 'última cópia: falhou: http_500; nenhum objeto ficou no destino')"
+[[ "$cs_rf" == 1 && "$cs_lf" == 1 && "$cs_sf" == "1 1 1 0" && "$cs_af" == 1 && "$cs_no" == 2 && "$cs_nf" == 2 && "$cs_ft" == 0 && "$cs_r3" == "0 1" ]]
+caso $? testes 89 "Cópia do sistema: a falha no meio desfaz o envio em partes e nada fica no destino" "S3 de exemplo recusando com 500 a primeira parte; servidor.py --copia enviar: saída $cs_rf, linha 'falhou: http_500; nenhum objeto ficou no destino': $cs_lf; no simulador, com chave da cópia: envios em partes abertos, parte recusada com 500, envio desfeito e pedidos de parte ou de objeto aceitos: $cs_sf; linha copia_falhou origem=terminal motivo=http_500 partes=0 na auditoria: $cs_af; arquivos guardados pelo simulador antes e depois: $cs_no e $cs_nf; cartão com 'não foi concluída: o serviço respondeu com o código 500' e o botão, textos que faltam: $cs_ft; servidor.py --copia: saída e 'última cópia: falhou: http_500': $cs_r3"
+
+# Pelo terminal: uso errado recusado, e a cópia feita na hora diz o objeto, o tamanho e a soma, que é a do simulador.
+copia34 outra; cs_uo="$? $(grep -c -F 'FALHA: uso: --copia [enviar]' "$W/copia34" || true)"
+m_c3=$(marca34); copia34 enviar; cs_rt=$?
+cs_lt="$(grep -E "^cópia do sistema: s3:balde34/copia34/sistema/$NOME-[0-9]{8}-[0-9]{6}\.tar\.gz\.age; [0-9]+ bytes em [0-9]+ parte\(s\); [0-9]+ arquivo\(s\), [0-9]+ mudaram durante a leitura, [0-9]+ de fora \(soquete, fila ou dispositivo\); sha256 [0-9a-f]{64}\$" "$W/copia34" | tail -n 1)"
+cs_nt="$(sed -n -E 's|^cópia do sistema: s3:balde34/copia34/sistema/([^;]+);.*|\1|p' <<< "$cs_lt")"; cs_ht="${cs_lt##* }"; cs_vt="$(vaza34 "$W/copia34")"
+cs_st="$(sim34 "$m_c3" "l['op']=='gravar' and l['chave']=='copia34/sistema/$cs_nt'" "l['sha256']")"; cs_dt="$(sha256sum "$D34/objetos/$cs_nt" 2> /dev/null | cut -c1-64)"
+auditoria; cs_at="$(linhas34 " evento=copia_enviada origem=terminal destino=s3 objeto=copia34/sistema/$cs_nt ")"
+# A rotina: marcada para daqui a um minuto e meio, faz a cópia sozinha na hora, uma vez só.
+cs_hr="$(docker exec "$PAINEL" python3 -c 'import time; print(time.strftime("%H:%M", time.localtime(time.time() + 90)))')"
+cs_gr="$(gcopia34 "$J" "$K" "$W/painel.senha" dias=1 "hora=$cs_hr")"
+aba -b "$J" "$B/destinos" > /dev/null; cs_fr="$(faltam34 'Cópia do sistema <span class="etiqueta">rotina ligada</span>' "todo dia, às $cs_hr (hora do servidor)")"
+aguarda34 ' evento=copia_enviada origem=rotina destino=s3 objeto=copia34/sistema/' 1 240; cs_rw=$?; cs_ini=$SECONDS
+
+# Enquanto a rotina tem mais de um minuto para provar que não repete: quem não é o administrador não alcança a cópia.
+e_usu3="$(COMO=dst34 entrar "$W/dst34.jar" "$W/dst34.senha")"; proibir "$(biscoito_de "$W/dst34.jar")"; K_u3="$(token34 "$W/dst34.jar")"; proibir "$K_u3"
+m_133=$(marca34); auditoria; n_cp="$(eventos copia_pedida)"; n_cg="$(eventos copia_gravada)"
+cs_k0="$(docker exec "$PAINEL" sha256sum /painel/destinos/copia.conf | cut -c1-64)"
+cs_ru="$(rotasc34 "$W/dst34.jar" "$K_u3")"
+cs_z="$(gcopia34 "$J" "" "$W/painel.senha" prefixo=copia34/invasor)$(gcopia34 "$J" token-errado "$W/painel.senha" prefixo=copia34/invasor)$(ORIGEM34=https://fora.example gcopia34 "$J" "$K" "$W/painel.senha" prefixo=copia34/invasor)$(gcopia34 "$W/vazio34.jar" "$K" "$W/painel.senha" prefixo=copia34/invasor)"
+cs_zb="$(botao34 '')$(botao34 token-errado)$(c -o /dev/null -w '%{http_code} %{redirect_url}' -b "$J" -H 'Origin: https://fora.example' --data-urlencode "csrf=$K" "$B/destinos/copia/agora" | sed "s|$B||")$(POTE="$W/vazio34.jar" botao34)"
+# A chave privada da cópia não existe no painel: ele só tem a pública, e enxerga os certificados sem poder escrever.
+cs_seg="$(docker exec "$PAINEL" ls /run/secrets | tr '\n' ' ')"
+cs_pub="$(docker exec "$PAINEL" cat /run/secrets/backup_chave_publica | cmp -s - "$S/backup-chave-publica.txt"; echo $?)"
+cs_priv="$(docker exec "$PAINEL" sh -c 'grep -r -l -a -F AGE-SECRET-KEY /run/secrets /painel /certs /auth 2> /dev/null | wc -l') $(grep -c -F AGE-SECRET-KEY "$S/backup-chave-privada.txt" || true)"
+cs_ro="$(docker exec "$PAINEL" sh -c 'touch /certs/x34 2> /dev/null && echo gravou || echo recusou') $(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/certs"}}{{.RW}}{{end}}{{end}}' "$PAINEL")"
+while (( SECONDS - cs_ini < 75 )); do sleep 3; done
+auditoria; cs_d133="$(copias34 "$m_133") $(( $(eventos copia_pedida) - n_cp )) $(( $(eventos copia_gravada) - n_cg ))"; cs_lr="$(linhas34 ' evento=copia_enviada origem=rotina ') $(linhas34 ' evento=copia_falhou origem=rotina ')"
+cs_k1="$(docker exec "$PAINEL" sha256sum /painel/destinos/copia.conf | cut -c1-64)"
+
+# A cópia vai para o S3 escolhido mesmo com ele desligado para as pastas; removido esse destino, ela fica sem destino.
+cs_g2="$(grava34 s3 "$J" "$K" "$W/painel.senha" id=novo copiar=s3 pasta=cop34 prefixo=copias/outra34 -ligado)"
+cs_g3="$(gcopia34 "$J" "$K" "$W/painel.senha" destino=s3-2 prefixo=copia34/outra)"
+m_c4=$(marca34); copia34 enviar; cs_r4=$?; cs_s4="$(copias34 "$m_c4" "l['op']=='gravar' and l['chave'].startswith('copia34/outra/$NOME-') and l['chave'].endswith('.tar.gz.age')") $(copias34 "$m_c4" "l['chave'].startswith('copia34/sistema/')")"
+cs_tr="$(aba -b "$J" "$B/destinos/remover?destino=s3-2")$(tem34 'Este é o destino da cópia do sistema: sem ele, a cópia fica sem destino e a rotina dela para.')"
+cs_tr+=" $(aba -b "$J" "$B/destinos/remover?destino=s3")$(tem34 'Este é o destino da cópia do sistema')"
+auditoria; n_rs="$(linhas34 " evento=destino_removido admin=$ADMIN destino=s3-2\$")"
+cs_rm="$(envio /destinos/remover --data-urlencode "csrf=$K" --data-urlencode "destino=s3-2" --data-urlencode "senha_atual@$W/painel.senha")"
+auditoria; cs_ls="$(linhas34 " evento=copia_sem_destino admin=$ADMIN destino=s3-2\$") $(( $(linhas34 " evento=destino_removido admin=$ADMIN destino=s3-2\$") - n_rs ))"
+m_c5=$(marca34)
+copia34; cs_r5="$? $(tc34 'cópia do sistema: não configurada')"
+copia34 enviar; cs_r6="$? $(tc34 'cópia do sistema: falhou: sem_destino; nenhum objeto ficou no destino')"
+cs_b5="$(botao34)"
+aba -b "$J" "$B/destinos?m=copia_falha&f=sem_destino" > /dev/null
+cs_f5="$(faltam34 'Cópia do sistema: não começou. Motivo: a cópia do sistema não tem um S3 escolhido com os segredos gravados.' 'Cópia do sistema <span class="etiqueta">não configurada</span>')"
+cs_d5="$(copias34 "$m_c5")"; cs_c5="$(docker exec "$PAINEL" test -e /painel/destinos/copia.conf && echo sim || echo nao) $(ls "$S/destinos" 2> /dev/null | tr '\n' ' ')"
+# Em todo o trecho da cópia: nenhum pedido de ler, listar ou apagar; o único envio em partes desfeito é o da falha forçada.
+cs_ap="$(sim34 "$m_c0" "l['servico']=='s3' and l['op']=='outra'") $(sim34 "$m_c0" "l['op']=='abandonar'")"
+
+[[ "$e_usu3" == 303 && -n "$K_u3" && "$cs_ru" == "404 404 404 " && "$cs_z" == "403 403 403 303 /entrar" && "$cs_zb" == "403 403 403 303 /entrar" && "$cs_d133" == "0 0 0" && "$cs_k1" == "$cs_k0" && -n "$cs_k0" \
+  && "$a_rotasc" == "404 404 404 " && "$r_cnao" == "1 1" && "$cs_seg" == "backup_chave_publica painel_admin_inicial_senha_hash " && "$cs_pub" == 0 && "$cs_priv" == "0 1" && "$cs_ro" == "recusou false" \
+  && "$cs_ap" == "0 1" && "$cs_vt" == 0 ]]
+caso $? seguranca 133 "Cópia do sistema: só o administrador, com sessão, token e senha; a chave privada fica fora do painel e nada é apagado no destino" "usuário do FTP dst34 (entrada $e_usu3) nas três rotas da cópia (formulário, gravação e botão): $cs_ru; gravação pelo administrador sem token, com token errado, com origem de fora e sem sessão: $cs_z; o botão, nas mesmas quatro: $cs_zb; depois delas e de mais de um minuto: pedidos ao S3 com chave da cópia, linhas copia_pedida e linhas copia_gravada a mais: $cs_d133; copia.conf igual ao de antes: $([[ -n "$cs_k0" && "$cs_k1" == "$cs_k0" ]] && echo sim || echo nao); com PAINEL_DESTINOS=nao, as três rotas com a sessão do administrador: $a_rotasc, e servidor.py --copia (saída e 'os destinos estão desligados nesta instalação'): $r_cnao; segredos montados no painel: $cs_seg; chave pública igual à do host (cmp): $cs_pub; arquivos com chave privada da cópia em /run/secrets, /painel, /certs e /auth, e o controle (a mesma busca no arquivo da chave privada, no host): $cs_priv; escrita em /certs e o modo da montagem (RW): $cs_ro; no simulador, em todo o trecho da cópia: pedidos de ler, listar ou apagar e envios em partes desfeitos (o da falha forçada): $cs_ap; linhas com segredo dos destinos na saída do terminal: $cs_vt"
+
+[[ "$cs_uo" == "1 1" && "$cs_rt" == 0 && -n "$cs_nt" && "$cs_nt" != "$cs_n" && "$cs_ht" =~ ^[0-9a-f]{64}$ && "$cs_st" == "$cs_ht" && "$cs_dt" == "$cs_ht" && "$cs_at" == 1 \
+  && "$cs_gr" == "303 /destinos?m=copia_gravada" && "$cs_fr" == 0 && "$cs_rw" == 0 && "$cs_lr" == "1 0" \
+  && "$cs_g2" == "303 /destinos?m=gravado" && "$cs_g3" == "303 /destinos?m=copia_gravada" && "$cs_r4" == 0 && "$cs_s4" == "1 0" && "$cs_tr" == "200 1 200 0" \
+  && "$cs_rm" == "303 /destinos?m=removido" && "$cs_ls" == "1 1" && "$cs_r5" == "0 1" && "$cs_r6" == "1 1" && "$cs_b5" == "303 /destinos?m=copia_falha&f=sem_destino" && "$cs_f5" == 0 && "$cs_d5" == 0 \
+  && "$cs_c5" == "nao s3-chave-de-acesso.txt s3-chave-secreta.txt telegram-conversa.txt telegram-token.txt " ]]
+caso $? testes 90 "Cópia do sistema pelo terminal, pela rotina e sem o destino dela" "servidor.py --copia com argumento que não existe: saída e mensagem de uso: $cs_uo; --copia enviar: saída $cs_rt, objeto $cs_nt, soma da linha igual à do simulador e à do arquivo guardado: $([[ -n "$cs_ht" && "$cs_st" == "$cs_ht" && "$cs_dt" == "$cs_ht" ]] && echo sim || echo nao), linha copia_enviada origem=terminal: $cs_at; rotina gravada para $cs_hr, todo dia: $cs_gr, cartão com 'rotina ligada' e a hora, textos que faltam: $cs_fr; espera pela cópia da rotina: saída $cs_rw; mais de um minuto depois, linhas copia_enviada e copia_falhou da rotina: $cs_lr; segundo S3 com o acesso do primeiro, desligado: $cs_g2; cópia apontada para ele: $cs_g3; --copia enviar: saída $cs_r4, objetos no prefixo novo e pedidos no prefixo antigo: $cs_s4; tela de remover o s3-2 e o aviso do destino da cópia, e a do s3 sem ele: $cs_tr; remoção com a senha: $cs_rm, linhas copia_sem_destino e destino_removido: $cs_ls; depois: --copia (saída e 'não configurada'): $cs_r5, --copia enviar (saída e 'falhou: sem_destino'): $cs_r6, botão: $cs_b5, tela com o motivo e o cartão 'não configurada', textos que faltam: $cs_f5, pedidos ao S3 com chave da cópia: $cs_d5; copia.conf no painel e os segredos que restaram: $cs_c5"
+
 # ------------------------------------------------------------------ pelo terminal e a remoção
 passou34 s3; terminal34; r_sit=$?
 l_sit="$(grep -c -E '^telegram: ligado; pasta /data/dst34; a cada 1440 min; última passada: [0-9]+ arquivo\(s\), ' "$W/terminal34" || true) $(grep -c -E '^s3: ligado; pasta /data/dst34/sub; a cada 1440 min; última passada: [0-9]+ arquivo\(s\), ' "$W/terminal34" || true)"
@@ -837,11 +1020,11 @@ s_antes="$(ls "$S/destinos" 2>/dev/null | tr '\n' ' ')"
 g_rem="$(envio /destinos/remover --data-urlencode "csrf=$K" --data-urlencode "destino=s3" --data-urlencode "senha_atual@$W/painel.senha")"
 t_rem2="$(aba -b "$J" "$B/destinos?m=removido")"; f_rem2="$(faltam34 'Destino removido: a configuração e os segredos dele foram apagados.' '<span class="etiqueta">não configurado</span>' '<span class="etiqueta">ligado</span>')"
 aba -b "$J" "$B/arquivos?pasta=dst34" > /dev/null; b_bot="$(vezes34 'id="para-s3"') $(vezes34 'id="para-telegram"')"
-s_depois="$(ls "$S/destinos" 2>/dev/null | tr '\n' ' ')"; c_depois="$(docker exec "$PAINEL" sh -c 'ls /painel/destinos | grep -E "\.(conf|estado)$" | tr "\n" " "')"
+s_depois="$(ls "$S/destinos" 2>/dev/null | tr '\n' ' ')"; c_depois="$(docker exec "$PAINEL" sh -c 'ls /painel/destinos | grep -E "^(s3|telegram)(-[0-9]+)?\.(conf|estado)$" | tr "\n" " "')"
 h_fim="$(ha34 dst34/a1.txt) $(ha34 dst34/sub/a3.txt) $(ha34 dst34/grande.bin)"
 # Remoção do bot e, sem nenhum destino, nada sai: nem pelo terminal.
 g_rem2="$(envio /destinos/remover --data-urlencode "csrf=$K" --data-urlencode "destino=telegram" --data-urlencode "senha_atual@$W/painel.senha")"
-s_fim="$(ls -A "$S/destinos" 2>/dev/null | wc -l)"; c_fim="$(docker exec "$PAINEL" sh -c 'ls /painel/destinos | grep -c -E "\.(conf|estado)$"' || true)"
+s_fim="$(ls -A "$S/destinos" 2>/dev/null | wc -l)"; c_fim="$(docker exec "$PAINEL" sh -c 'ls /painel/destinos | grep -c -E "^(s3|telegram)(-[0-9]+)?\.(conf|estado)$"' || true)"
 terminal34; r_sit2=$?; l_sit2="$(tr '\n' ';' < "$W/terminal34")"
 novo34 depois.bin; m_fim=$(marca34); terminal34 enviar s3 --sem-espera; r_fim=$?; terminal34 enviar telegram --sem-espera; r_fim="$r_fim$?"; d_fim=$(( $(marca34) - m_fim ))
 auditoria; l_rem="$(linhas34 " evento=destino_removido admin=$ADMIN destino=s3\$") $(linhas34 " evento=destino_removido admin=$ADMIN destino=telegram\$")"
@@ -863,8 +1046,8 @@ caso $? seguranca 130 "Envio de um arquivo ao destino: só o administrador, com 
 
 docker rm -f "$SIM34" > /dev/null 2>&1
 mu del dst34
-docker exec "$FTP" rm -rf /data/dst34 /data/tg34
-docker exec "$PAINEL" rm -f /painel/destinos/ca.pem
-rm -rf "$D34"; rm -f "$W"/dst34.* "$W"/i34.* "$W/vazio34.jar" "$W/passada" "$W/cert34.log" "$W/sim34.log" "$W/telas34" "$W/logs34" "$W/inspect34" "$W/terminal34" "$W/estado34" "$W/telas34b" "$W/estado34b"
+docker exec "$FTP" rm -rf /data/dst34 /data/tg34 /data/cop34
+docker exec "$PAINEL" rm -f /painel/destinos/ca.pem /painel/destinos/copia.conf /painel/destinos/copia.estado /painel/destinos/.trava-copia
+rm -rf "$D34"; rm -f "$W"/dst34.* "$W"/i34.* "$W/vazio34.jar" "$W/passada" "$W/cert34.log" "$W/sim34.log" "$W/telas34" "$W/logs34" "$W/inspect34" "$W/terminal34" "$W/estado34" "$W/telas34b" "$W/estado34b" "$W/copia34" "$W/copia34.lista" "$W/copia34.canos" "$W/copia34.restaura" "$W/cop34.senha"
 gravar_env "$ENVA" PAINEL_TELEGRAM_API "$api_0"; gravar_env "$ENVA" PAINEL_TELEGRAM_MAX_MB "$max_0"; gravar_env "$ENVA" PAINEL_DESTINOS "$des_0"; dep
 painel_de_pe
