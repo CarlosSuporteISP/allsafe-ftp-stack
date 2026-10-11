@@ -47,7 +47,7 @@ Whoever installs the stack to keep their own backups does not need to change any
 
 Selling is allowed by the license, and does not depend on a contract with ALL-SAFE. The request is this: whoever delivers the stack under a contract or sells it to third parties takes the ALL-SAFE logo and icon out of the panel, so that the customer does not take the delivery for an ALL-SAFE product.
 
-1. Replace the logo and the icon of the panel with your own: [Panel brand](doc/pt-BR/painel.md#marca) shows how, in one command.
+1. Replace the logo and the icon of the panel with your own: [Panel brand](doc/en/panel.md#marca) shows how, in one command.
 2. Check the sign-in screen, the top and the browser tab.
 
 **Expected result:** the end customer sees the brand of whoever delivered on the sign-in screen, at the top and in the browser tab.
@@ -86,4 +86,4 @@ The panel carries the same line in the footer of the screens. It comes like that
 
 ---
 
-⬅️ [Project README](README.md) · 🏠 [Documentation](doc/en/README.md) · ➡️ [Panel brand](doc/pt-BR/painel.md#marca)
+⬅️ [Project README](README.md) · 🏠 [Documentation](doc/en/README.md) · ➡️ [Panel brand](doc/en/panel.md#marca)

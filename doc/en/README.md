@@ -24,7 +24,7 @@ flowchart LR
 
 **Sequence:** Network device ➜ Pure-FTPd (`allsafe-ftp`) ➜ PureDB ➜ `/data` ➜ backup stored
 
-> 🧱 **For private networks only:** by default, private IP, behind a firewall, off the internet. A public address only through an explicit option, with a warning. See [Security](../pt-BR/seguranca.md#rede-privada).
+> 🧱 **For private networks only:** by default, private IP, behind a firewall, off the internet. A public address only through an explicit option, with a warning. See [Security](security.md#rede-privada).
 
 ---
 
@@ -47,12 +47,12 @@ flowchart LR
 | 2 | [Configuration](configuration.md) | All the variables of the `.env`: name, what it is for, valid values and default |
 | 3 | [Profiles](profiles.md) | Profiles `small`, `medium`, `large`, `xlarge` and `extended`: sizing, what the server needs to have and the impact on the passive range |
 | 4 | [Architecture](architecture.md) | Containers, images, entrypoints, volumes, network and the options of `pure-ftpd` |
-| 5 | [Security](../pt-BR/seguranca.md) | Private network and firewall, the public IP option and its warning, only the panel published through a proxy or tunnel, the mode without TLS for old devices, the best practices before production as a flowchart, the tests run at every version, threat model, exposed surface, protections of the panel and of nginx, RFC conformance and the hardening of Compose line by line |
+| 5 | [Security](security.md) | Private network and firewall, the public IP option and its warning, only the panel published through a proxy or tunnel, the mode without TLS for old devices, the best practices before production as a flowchart, the tests run at every version, threat model, exposed surface, protections of the panel and of nginx, RFC conformance and the hardening of Compose line by line |
 | 6 | [Secrets](secrets.md) | What stays in `.secrets/`, who generates each file and how to change the FTP and panel passwords |
 | 7 | [Scripts](scripts.md) | What each script does, parameters and expected output |
 | 8 | [Operation](operation.md) | Users, real certificate, logs and image update |
 | 9 | [Backup and restore](backup.md) | Backup copy in one command, checked and reversible restore, what to keep apart, another server and scheduled copy |
-| 10 | [Web panel](../pt-BR/painel.md) | Opening the panel, what there is in each tab, users in the browser, download of the files, password, certificate, audit log and protections |
+| 10 | [Web panel](panel.md) | Opening the panel, what there is in each tab, users in the browser, download of the files, password, certificate, audit log and protections |
 | 11 | [Application screenshots](../pt-BR/aplicacao/README.md) | Every screen of the panel, menu by menu: the screenshot, what it is for, how to get there and what there is in each one |
 | 12 | [Troubleshooting](troubleshooting.md) | Symptom, cause, how to check and fix |
 
@@ -64,15 +64,15 @@ flowchart LR
 
 | Situation | Read, in this order |
 |---|---|
-| First time | [Installation](installation.md) ➜ [Web panel](../pt-BR/painel.md) ➜ [Configuration](configuration.md) ➜ [Profiles](profiles.md) |
-| Creating the account of a device | [Web panel](../pt-BR/painel.md#usuarios) or [Operation](operation.md#usuarios) |
-| Downloading a backup that a device uploaded | [Files and download](../pt-BR/painel.md#arquivos) |
-| Downloading your own files with the FTP account | [FTP user in the panel](../pt-BR/painel.md#usuario-ftp) |
-| Creating a folder or choosing the folder of a user | [Users in the panel](../pt-BR/painel.md#usuarios) ➜ [Files and download](../pt-BR/painel.md#arquivos) |
+| First time | [Installation](installation.md) ➜ [Web panel](panel.md) ➜ [Configuration](configuration.md) ➜ [Profiles](profiles.md) |
+| Creating the account of a device | [Web panel](panel.md#usuarios) or [Operation](operation.md#usuarios) |
+| Downloading a backup that a device uploaded | [Files and download](panel.md#arquivos) |
+| Downloading your own files with the FTP account | [FTP user in the panel](panel.md#usuario-ftp) |
+| Creating a folder or choosing the folder of a user | [Users in the panel](panel.md#usuarios) ➜ [Files and download](panel.md#arquivos) |
 | Seeing the screens of the panel before installing | [Application screenshots](../pt-BR/aplicacao/README.md) |
-| Before production | [Private network and firewall](../pt-BR/seguranca.md#rede-privada) ➜ [Best practices before production](../pt-BR/seguranca.md#boas-praticas) ➜ [Operation](operation.md#certificado-real-de-producao) ➜ [Backup and restore](backup.md#automatica) |
-| Old device that does not speak TLS | [Device without TLS](../pt-BR/seguranca.md#ftp-sem-tls) ➜ [Configuration](configuration.md#tls) ➜ [Troubleshooting](troubleshooting.md#ftp-sem-tls) |
-| Replacing the logo, delivering under a contract or selling | [Panel brand](../pt-BR/painel.md#marca) ➜ [ALL-SAFE trademark](../../TRADEMARK.md) |
+| Before production | [Private network and firewall](security.md#rede-privada) ➜ [Best practices before production](security.md#boas-praticas) ➜ [Operation](operation.md#certificado-real-de-producao) ➜ [Backup and restore](backup.md#automatica) |
+| Old device that does not speak TLS | [Device without TLS](security.md#ftp-sem-tls) ➜ [Configuration](configuration.md#tls) ➜ [Troubleshooting](troubleshooting.md#ftp-sem-tls) |
+| Replacing the logo, delivering under a contract or selling | [Panel brand](panel.md#marca) ➜ [ALL-SAFE trademark](../../TRADEMARK.md) |
 | Reporting a security flaw | [Security policy](../../SECURITY.md) ➜ [Security contact](configuration.md#contato-de-seguranca) |
 | Keeping or recovering the data | [Backup and restore](backup.md) |
 | Something broke | [Troubleshooting](troubleshooting.md) |
@@ -113,18 +113,18 @@ Every diagram appears in the guides straight from the `.mmd` source, with a dark
 | [startup-model.mmd](diagrams/startup-model.mmd) | 3 | [Architecture](architecture.md#subida) |
 | [installation-diagram.mmd](diagrams/installation-diagram.mmd) | 1 | [Installation](installation.md) |
 | [configuration-diagram.mmd](diagrams/configuration-diagram.mmd) | 1 | [Configuration](configuration.md) and [Profiles](profiles.md) |
-| [security-diagram.mmd](diagrams/security-diagram.mmd) | 1 | [Security](../pt-BR/seguranca.md) |
-| [per-user-tls-flowchart.mmd](diagrams/per-user-tls-flowchart.mmd) | 2 | [Security](../pt-BR/seguranca.md#tls-por-usuario) |
-| [blocking-by-attempts-flowchart.mmd](diagrams/blocking-by-attempts-flowchart.mmd) | 2 | [Security](../pt-BR/seguranca.md#bloqueio-por-tentativa) |
-| [blocking-by-address-flowchart.mmd](diagrams/blocking-by-address-flowchart.mmd) | 2 | [Security](../pt-BR/seguranca.md#bloqueio-por-endereco) |
-| [best-practices-flowchart.mmd](diagrams/best-practices-flowchart.mmd) | 2 | [Security](../pt-BR/seguranca.md#boas-praticas) |
+| [security-diagram.mmd](diagrams/security-diagram.mmd) | 1 | [Security](security.md) |
+| [per-user-tls-flowchart.mmd](diagrams/per-user-tls-flowchart.mmd) | 2 | [Security](security.md#tls-por-usuario) |
+| [blocking-by-attempts-flowchart.mmd](diagrams/blocking-by-attempts-flowchart.mmd) | 2 | [Security](security.md#bloqueio-por-tentativa) |
+| [blocking-by-address-flowchart.mmd](diagrams/blocking-by-address-flowchart.mmd) | 2 | [Security](security.md#bloqueio-por-endereco) |
+| [best-practices-flowchart.mmd](diagrams/best-practices-flowchart.mmd) | 2 | [Security](security.md#boas-praticas) |
 | [secrets-diagram.mmd](diagrams/secrets-diagram.mmd) | 1 | [Secrets](secrets.md) |
 | [scripts-diagram.mmd](diagrams/scripts-diagram.mmd) | 1 | [Scripts](scripts.md) |
 | [users-diagram.mmd](diagrams/users-diagram.mmd) | 1 | [Operation](operation.md) |
 | [backup-diagram.mmd](diagrams/backup-diagram.mmd) | 1 | [Backup and restore](backup.md) |
-| [panel-diagram.mmd](diagrams/panel-diagram.mmd) | 1 | [Web panel](../pt-BR/painel.md) |
-| [panel-flowchart.mmd](diagrams/panel-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](../pt-BR/painel.md#como-decide) |
-| [panel-requests-flowchart.mmd](diagrams/panel-requests-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](../pt-BR/painel.md#como-decide) |
+| [panel-diagram.mmd](diagrams/panel-diagram.mmd) | 1 | [Web panel](panel.md) |
+| [panel-flowchart.mmd](diagrams/panel-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](panel.md#como-decide) |
+| [panel-requests-flowchart.mmd](diagrams/panel-requests-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](panel.md#como-decide) |
 | [diagnosis-diagram.mmd](diagrams/diagnosis-diagram.mmd) | 1 | [Troubleshooting](troubleshooting.md) |
 
 ---

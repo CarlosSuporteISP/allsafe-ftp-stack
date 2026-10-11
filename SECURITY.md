@@ -2,7 +2,7 @@
 
 🌐 **English** · [Português (Brasil)](SECURITY.pt-BR.md)
 
-↩ [Project README](README.md) · [Security](doc/pt-BR/seguranca.md) · [Configuration](doc/en/configuration.md#contato-de-seguranca)
+↩ [Project README](README.md) · [Security](doc/en/security.md) · [Configuration](doc/en/configuration.md#contato-de-seguranca)
 
 ## 💡 In a few words
 
@@ -105,10 +105,10 @@ Every fix goes into [`CHANGELOG.md`](CHANGELOG.md) and is applied with `./deploy
 - **Who reaches it:** only the networks in `PAINEL_REDES_PERMITIDAS`; outside them, nginx answers `403` before any content.
 - **Checked value:** `deploy.sh`, the panel container and the panel itself refuse what is not a single e-mail address. The message is `SEGURANCA_CONTATO_EMAIL inválido`.
 - **Installation with a public address:** with `REDE_PERMITIR_IP_PUBLICO=sim`, the Security tab of the panel shows the contact as an alert while the variable is empty.
-- **What the stack already checks:** the controls and the standards followed are in [Security](doc/pt-BR/seguranca.md), and the security test cases, in [Test suite](doc/en/scripts.md#testar).
+- **What the stack already checks:** the controls and the standards followed are in [Security](doc/en/security.md), and the security test cases, in [Test suite](doc/en/scripts.md#testar).
 
 </details>
 
 ---
 
-⬅️ [Project README](README.md) · 🏠 [Documentation](doc/en/README.md) · ➡️ [Security](doc/pt-BR/seguranca.md)
+⬅️ [Project README](README.md) · 🏠 [Documentation](doc/en/README.md) · ➡️ [Security](doc/en/security.md)

@@ -94,7 +94,7 @@ The password changed in the panel or with `manage-user.sh passwd` survives resta
 
 ## 🖥️ Panel password
 
-Each panel administrator has their own user and password. The first one is born at installation, with the name in `PAINEL_ADMIN_USER` and the password in `.secrets/painel-admin-inicial-senha.txt`. Change that password right after the first access, **in the panel**, in the Users tab, and delete the file of the initial password: [Panel administrators](../pt-BR/painel.md#administradores).
+Each panel administrator has their own user and password. The first one is born at installation, with the name in `PAINEL_ADMIN_USER` and the password in `.secrets/painel-admin-inicial-senha.txt`. Change that password right after the first access, **in the panel**, in the Users tab, and delete the file of the initial password: [Panel administrators](panel.md#administradores).
 
 Without access to the panel, the password is set from the host:
 
@@ -106,7 +106,7 @@ Without access to the panel, the password is set from the host:
 
 **Expected result:** `Administrador admin com a senha trocada; painel reiniciado e sessões abertas encerradas.` When the administrator is the one in `PAINEL_ADMIN_USER`, the file `painel-admin-inicial-senha.txt` ceases to exist.
 
-The password must have at least 12 characters and **is not stored anywhere**: the panel keeps only the hash, in `DATA_DIR/painel/administradores`. Keep it in your password vault. Use of the panel: [Web panel](../pt-BR/painel.md).
+The password must have at least 12 characters and **is not stored anywhere**: the panel keeps only the hash, in `DATA_DIR/painel/administradores`. Keep it in your password vault. Use of the panel: [Web panel](panel.md).
 
 ---
 
@@ -167,7 +167,7 @@ With `./deploy.sh --check-only` nothing is changed: only the warning `AVISO: est
 - **Generation:** `openssl rand -base64 36` (48 characters). The script applies `umask 077`, `chmod 0700` on the folder and `chmod 0600` on the file, and never rewrites a secret that already exists.
 - **Mounting:** [`compose.yaml`](../../compose.yaml) declares the secret `ftp_usuario_inicial_senha` (`SECRETS_DIR/ftp-usuario-inicial-senha.txt`) and delivers it **only** to the `ftp` service, at `/run/secrets/ftp_usuario_inicial_senha`, read-only. The whole `.secrets/` folder is not mounted.
 - **No password in a variable:** the `.env` keeps only what is adjustable. `deploy.sh` refuses `FTP_PASSWORD`, `PAINEL_PASSWORD` and `PAINEL_PASSWORD_HASH` in the `.env` and the containers refuse those variables.
-- **Reading:** [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh) reads the file without the line breaks, validates the minimum of 12 characters and delivers the password to `pure-pw` through `stdin`. At the first start it creates the user (`pure-pw useradd`); at the following ones, it rewrites the password (`pure-pw passwd`), because `pure-pw usermod` does not change the password. In both cases it passes `-C FTP_MAX_CLIENTS`, which sets the cost of the `argon2id` hash: [Security](../pt-BR/seguranca.md#custo-das-senhas).
+- **Reading:** [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh) reads the file without the line breaks, validates the minimum of 12 characters and delivers the password to `pure-pw` through `stdin`. At the first start it creates the user (`pure-pw useradd`); at the following ones, it rewrites the password (`pure-pw passwd`), because `pure-pw usermod` does not change the password. In both cases it passes `-C FTP_MAX_CLIENTS`, which sets the cost of the `argon2id` hash: [Security](security.md#custo-das-senhas).
 - **Change in the panel:** each time it applies the secret, the entrypoint writes to `/auth/senha-inicial.aplicada` a fingerprint of it (`sha512-crypt` with its own salt, `0600`), never the password. The change in the panel or with `manage-user.sh passwd` writes `/auth/senha-inicial.trocada`, with the user name only. At start, with the mark present and the fingerprint equal to that of the secret, the password in the user database is kept and the log says `mantida a senha trocada pelo painel`; with a different secret, it is applied and the mark goes away. Both files go into the backup, with the user database.
 - **Created once:** when creating the initial user, the entrypoint writes `/auth/usuario-inicial.criado` (`0600`), with its name only. With the mark present and the user out of the database, it is not recreated, and the log says `removido pelo administrador; não é recriado`. An installation earlier than `0.27.0` gets the mark at the first start, with the user that already exists. The mark goes into the backup, with the user database.
 - **Disposal:** before the `exec` of `pure-ftpd`, the entrypoint does an `unset` of the internal variable of the password.
@@ -181,4 +181,4 @@ With `./deploy.sh --check-only` nothing is changed: only the warning `AVISO: est
 
 ---
 
-⬅️ [Security](../pt-BR/seguranca.md) · 🏠 [Documentation](README.md) · ➡️ [Scripts](scripts.md)
+⬅️ [Security](security.md) · 🏠 [Documentation](README.md) · ➡️ [Scripts](scripts.md)
