@@ -11,7 +11,7 @@ O S3 de exemplo refaz a assinatura versão 4 de cada pedido, com uma implementa�
 corpo que não bate com a soma assinada. A API de bot confere o token e a conversa e mede o arquivo contra o limite.
 
 <pasta>/config.json diz o que vale: {"s3_id", "s3_segredo", "regiao", "buckets", "bot_token", "conversa",
-"telegram_max", "recusar"}. Objeto ou documento com o texto de "recusar" no nome recebe 400, e só ele. <pasta>/falhar,
+"telegram_max", "recusar"} e, quando o bot alcança mais de uma conversa, "conversas", com as outras. Objeto ou documento com o texto de "recusar" no nome recebe 400, e só ele. <pasta>/falhar,
 quando existe, força a resposta de um serviço: uma linha "<s3|telegram> <código> [vezes [pular]]". Sem "vezes", vale
 até o arquivo sair; com "pular", os primeiros pedidos passam e a falha começa depois deles.
 
@@ -39,6 +39,12 @@ BOT = re.compile(r'/bot([^/]+)/([A-Za-z]+)')
 def config():
     with open(os.path.join(PASTA, 'config.json'), encoding='utf-8') as arquivo:
         return json.load(arquivo)
+
+
+def conversas(conf):
+    """As conversas que o bot alcança: a de "conversa" e, quando há, as de "conversas". A linha de cada envio leva em
+    `qual` a posição da conversa que recebeu, para a etapa conferir o destino sem levar a conversa à evidência."""
+    return [conf['conversa']] + list(conf.get('conversas', ()))
 
 
 def anotar(**campos):
@@ -261,9 +267,10 @@ class Pedido(http.server.BaseHTTPRequestHandler):
         tipo = self.headers.get('Content-Type', '')
         if operacao == 'sendMessage' and tipo.startswith('application/x-www-form-urlencoded'):
             dados = dict(urllib.parse.parse_qsl(inteiro.decode('utf-8')))
-            if dados.get('chat_id') != conf['conversa']:
+            if dados.get('chat_id') not in conversas(conf):
                 return self.resposta_do_bot(400, 'Bad Request: chat not found', **campos)
-            return self.resposta_do_bot(200, conversa=dados['chat_id'], texto=dados.get('text', ''), **campos)
+            return self.resposta_do_bot(200, conversa=dados['chat_id'], qual=conversas(conf).index(dados['chat_id']),
+                                        texto=dados.get('text', ''), **campos)
         marca = re.search(r'boundary=([0-9a-f]{32})$', tipo)
         if operacao == 'sendDocument' and marca:
             partes = {}
@@ -275,14 +282,16 @@ class Pedido(http.server.BaseHTTPRequestHandler):
                     partes[nome.group(1).decode()] = (valor[:-2], arquivo.group(1).decode('utf-8') if arquivo else None)
             if not {'chat_id', 'document'} <= set(partes) or set(partes) - {'chat_id', 'caption', 'document'}:
                 return self.resposta_do_bot(400, 'Bad Request: wrong form', campos_do_formulario=sorted(partes), **campos)
-            if partes['chat_id'][0].decode() != conf['conversa']:
+            conversa = partes['chat_id'][0].decode()
+            if conversa not in conversas(conf):
                 return self.resposta_do_bot(400, 'Bad Request: chat not found', **campos)
             documento, nome = partes['document']
             if conf.get('recusar') and conf['recusar'] in (nome or ''):
                 return self.resposta_do_bot(400, 'Bad Request: wrong file', arquivo=nome, **campos)
             if len(documento) > conf['telegram_max']:
                 return self.resposta_do_bot(413, 'Request Entity Too Large', bytes=len(documento), **campos)
-            return self.resposta_do_bot(200, conversa=conf['conversa'], arquivo=nome, bytes=len(documento),
+            return self.resposta_do_bot(200, conversa=conversa, qual=conversas(conf).index(conversa), arquivo=nome,
+                                        bytes=len(documento),
                                         sha256=hashlib.sha256(documento).hexdigest(),
                                         legenda=partes.get('caption', (b'', None))[0].decode('utf-8'), **campos)
         # Qualquer outra operação (ler mensagens, registrar endereço de retorno): a linha fica, e a etapa falha.

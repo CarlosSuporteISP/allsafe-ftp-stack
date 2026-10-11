@@ -749,12 +749,17 @@ Depois que um destino é gravado na aba [Destinos](#destinos), cada arquivo ganh
 
 1. Entre na pasta do arquivo.
 2. Na linha do arquivo, clique em **Telegram** ou em **S3**.
+3. Com mais de um destino pronto daquele tipo, escolha o **Destino que recebe** e clique em **Enviar**.
 
-**Resultado esperado:** a tela volta para a mesma pasta com a mensagem `Armazenamento S3: arquivo enviado.` ou `Bot do Telegram: arquivo enviado.`, e a aba Log ganha a linha `Arquivo enviado para o destino a pedido`, com o administrador, o destino e o arquivo.
+<a href="imagens/arquivos-escolher-destino.png"><img src="imagens/arquivos-escolher-destino.png" alt="Tela Enviar este arquivo para o armazenamento S3, com o caminho do arquivo, a frase que diz que ele continua no servidor e que o andamento das passadas não muda, a escolha Destino que recebe com Armazenamento S3 e Armazenamento S3: Clientes, cada um com o bucket e o prefixo, e os botões Enviar e Cancelar" width="100%"></a>
+
+<sub><b>v1.3.0</b> · menu Arquivos, escolha do destino · captura de 2026-10-11</sub>
+
+**Resultado esperado:** a tela volta para a mesma pasta com a mensagem `Armazenamento S3: arquivo enviado.` ou `Bot do Telegram: arquivo enviado.`, com o nome do destino quando ele tem um, e a aba Log ganha a linha `Arquivo enviado para o destino a pedido`, com o administrador, o destino e o arquivo.
 
 | Item | Como funciona |
 |---|---|
-| Quando os botões aparecem | Só para o destino gravado com os segredos; sem destino, a lista fica como antes |
+| Quando os botões aparecem | Só para o tipo que tem um destino gravado com os segredos; sem destino, a lista fica como antes |
 | Quem tem os botões | Só o administrador: a tela Meus arquivos, do usuário do FTP, não os mostra |
 | Arquivo de outra pasta | O botão serve para qualquer arquivo dos dados, dentro ou fora da pasta do destino, e funciona com o destino desligado |
 | O arquivo no servidor | Nunca é apagado por esse envio, nem com o S3 em **Guardar no S3** |
@@ -1004,11 +1009,11 @@ Quem precisa conferir ou baixar o que foi enviado pede a um administrador ou usa
 
 ## ☁️ Destinos
 
-<a href="imagens/destinos.png"><img src="imagens/destinos.png" alt="Aba Destinos com o cartão Armazenamento S3 ligado, com o endereço, o bucket e o prefixo, a região, a pasta enviada, as passadas a cada 60 minutos, Copiar depois do envio, as chaves gravadas sem aparecer na tela, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, as passadas a cada 5 minutos, o maior arquivo que o bot envia, o idioma das mensagens, a última passada e o total enviado, os botões Testar, Enviar agora, Alterar e Remover em cada cartão e, no alto da tela, a explicação Como o painel envia, recolhida" width="100%"></a>
+<a href="imagens/destinos.png"><img src="imagens/destinos.png" alt="Aba Destinos com o cartão Armazenamento S3 ligado, com o endereço, o bucket e o prefixo, a região, a pasta enviada, as passadas a cada 60 minutos, Copiar depois do envio, as chaves gravadas sem aparecer na tela, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, as passadas a cada 5 minutos, o maior arquivo que o bot envia, o idioma das mensagens, a última passada e o total enviado, os botões Testar, Enviar agora, Alterar, Novo com o mesmo acesso e Remover em cada cartão e, no alto da tela, os botões Novo S3 e Novo bot e a explicação Como o painel envia, recolhida" width="100%"></a>
 
-<sub><b>v1.2.0</b> · menu Destinos · captura de 2026-10-11</sub>
+<sub><b>v1.3.0</b> · menu Destinos · captura de 2026-10-11</sub>
 
-**Para que serve:** mandar sozinho, para fora do servidor, os arquivos que chegam em uma pasta. São dois destinos: um armazenamento S3, que guarda a segunda cópia ou fica com os arquivos e libera o disco, e um bot do Telegram, que entrega cada arquivo novo a uma pessoa, a um grupo ou a um canal.
+**Para que serve:** mandar sozinho, para fora do servidor, os arquivos que chegam em uma pasta. São dois tipos de destino, com até 20 de cada um: o armazenamento S3, que guarda a segunda cópia ou fica com os arquivos e libera o disco, e o bot do Telegram, que entrega cada arquivo novo a uma pessoa, a um grupo ou a um canal.
 
 **Como chegar:** menu ➜ **Destinos**. Só o administrador tem a aba.
 
@@ -1024,14 +1029,16 @@ Quem precisa conferir ou baixar o que foi enviado pede a um administrador ou usa
 | Última passada | Quando foi e quantos arquivos saíram, com o tamanho somado; quando ela para antes do fim, o motivo em uma frase |
 | Enviado desde que foi ligado | O total de arquivos e de tamanho que o destino já recebeu |
 | Ainda chegando | Arquivos que mudaram há menos de dois minutos: saem em uma próxima passada |
-| À espera do bot | No S3 em **Guardar no S3**, arquivos já gravados no destino que só saem do servidor quando o bot os entregar |
+| À espera de outro destino | No S3 em **Guardar no S3**, arquivos já gravados nele que só saem do servidor quando os outros destinos da pasta os entregarem |
 | **Testar** | Grava um objeto pequeno no S3 ou envia a mensagem de teste pelo bot, com o que está gravado |
 | **Enviar agora** | Pede uma passada fora de hora; atualize a tela para acompanhar |
 | **Alterar** | Abre o formulário com o que está gravado; segredo em branco mantém o gravado |
-| **Remover** | Abre a confirmação que apaga a configuração, o andamento e os segredos do destino |
+| **Novo com o mesmo acesso** | Abre o formulário de um destino novo do mesmo tipo, com os segredos deste |
+| **Remover** | Abre a confirmação que apaga a configuração, o andamento e os segredos daquele destino, e só dele |
+| **Novo S3** · **Novo bot** | No alto da tela, depois do primeiro destino do tipo: abrem o formulário em branco de mais um |
 | **Como o painel envia** | No alto da tela, recolhido: abre com um clique e traz o resumo das regras, só por HTTPS, só arquivo comum e onde os segredos ficam |
 
-Cada destino tem uma ligação só, e um não depende do outro. O S3 envia tudo o que está na pasta, inclusive o que já estava lá quando foi ligado, a cada intervalo. O bot envia só o que chega depois de ligado: em poucos segundos quando o arquivo chega inteiro por FTP ou pelo painel, e a cada intervalo o que apareceu na pasta de outro jeito. As regras completas estão em [Painel web](../painel.md#destinos).
+Cada destino tem a pasta, o intervalo e os segredos dele, e um não depende do outro. O S3 envia tudo o que está na pasta, inclusive o que já estava lá quando foi ligado, a cada intervalo. O bot envia só o que chega depois de ligado: em poucos segundos quando o arquivo chega inteiro por FTP ou pelo painel, e a cada intervalo o que apareceu na pasta de outro jeito. As regras completas estão em [Painel web](../painel.md#destinos).
 
 <details>
 <summary>Destinos ➜ Antes de configurar — clique para expandir</summary>
@@ -1040,7 +1047,7 @@ Cada destino tem uma ligação só, e um não depende do outro. O S3 envia tudo 
 
 <a href="imagens/destinos-sem-destino.png"><img src="imagens/destinos-sem-destino.png" alt="Aba Destinos de uma instalação nova, com os cartões Armazenamento S3 e Bot do Telegram marcados como não configurado, cada um com a explicação do que envia e o botão Configurar, e, no alto da tela, a explicação Como o painel envia, recolhida" width="100%"></a>
 
-<sub><b>v1.2.0</b> · menu Destinos, sem destino gravado · captura de 2026-10-11</sub>
+<sub><b>v1.3.0</b> · menu Destinos, sem destino gravado · captura de 2026-10-11</sub>
 
 A instalação nasce sem destino: enquanto o administrador não gravar um, nada sai do servidor e o painel não abre conexão para fora. Cada cartão diz o que o destino faz e leva ao formulário dele, pelo botão **Configurar**.
 
@@ -1051,9 +1058,9 @@ A instalação nasce sem destino: enquanto o administrador não gravar um, nada 
 
 ### Destinos ➜ Armazenamento S3
 
-<a href="imagens/destinos-s3.png"><img src="imagens/destinos-s3.png" alt="Formulário Armazenamento S3 preenchido com um serviço de exemplo: endereço do serviço, região, bucket, prefixo, endereço do bucket no caminho, chave de acesso de exemplo, chave secreta mascarada, a caixa Ligado, a pasta enviada, o intervalo de 60 minutos, Copiar depois do envio, os avisos sobre Guardar no S3 e sobre o nome do objeto, o campo Sua senha atual e os botões Gravar e Cancelar" width="100%"></a>
+<a href="imagens/destinos-s3.png"><img src="imagens/destinos-s3.png" alt="Formulário Armazenamento S3 preenchido com um serviço de exemplo: endereço do serviço, região, bucket, prefixo, endereço do bucket no caminho, chave de acesso de exemplo, chave secreta mascarada, o campo Nome, a caixa Ligado, a pasta enviada, o intervalo de 60 minutos, Copiar depois do envio, os avisos sobre Guardar no S3 e sobre o nome do objeto, o campo Sua senha atual e os botões Gravar e Cancelar" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Destinos, formulário do S3 · captura de 2026-10-11</sub>
+<sub><b>v1.3.0</b> · menu Destinos, formulário do S3 · captura de 2026-10-11</sub>
 
 Serve qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna. Antes de começar, crie o bucket no serviço e uma chave que só possa gravar nele.
 
@@ -1071,6 +1078,7 @@ Serve qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna.
 | Endereço do bucket | Sim | **No caminho** (`https://nome/bucket/arquivo`) ou **No nome** (`https://bucket.nome/arquivo`), como o serviço pede |
 | Chave de acesso | Sim | A chave que pode gravar no bucket. Em **Alterar**, em branco mantém a gravada |
 | Chave secreta | Sim | A outra metade da chave. Em **Alterar**, em branco mantém a gravada |
+| Nome | Não | Até 40 caracteres, para reconhecer o destino na tela quando há mais de um do tipo |
 | Ligado | Não | Marcada, o painel envia sozinho; desmarcada, a configuração fica guardada e nada sai |
 | Pasta enviada | Não | A pasta dentro dos dados, que precisa existir; em branco é a pasta dos dados inteira |
 | Intervalo entre as passadas | Sim | Minutos, de 5 a 1440 |
@@ -1079,7 +1087,7 @@ Serve qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna.
 
 <a href="imagens/destinos-gravado.png"><img src="imagens/destinos-gravado.png" alt="Aba Destinos com o aviso Destino gravado, vale a partir da próxima passada, e os cartões Armazenamento S3 e Bot do Telegram ligados, cada um com o que foi gravado, os segredos gravados sem aparecer na tela e a última passada como nenhuma ainda" width="100%"></a>
 
-<sub><b>v1.2.0</b> · menu Destinos, depois de gravar · captura de 2026-10-11</sub>
+<sub><b>v1.3.0</b> · menu Destinos, depois de gravar · captura de 2026-10-11</sub>
 
 **Resultado esperado:** a aba volta com o aviso `Destino gravado. Vale a partir da próxima passada.`, e o cartão mostra a etiqueta `ligado`, o endereço, o bucket, a pasta e que as chaves estão gravadas, sem mostrá-las. A primeira passada começa em até um minuto e envia tudo o que já está na pasta.
 
@@ -1100,9 +1108,9 @@ Serve qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna.
 
 ### Destinos ➜ Bot do Telegram
 
-<a href="imagens/destinos-telegram.png"><img src="imagens/destinos-telegram.png" alt="Formulário Bot do Telegram com a frase que diz que o bot só envia, o token do bot mascarado, a conversa que recebe com um nome de canal de exemplo, a caixa Ligado, a pasta enviada, o intervalo de 5 minutos, o idioma das mensagens, a explicação do limite de 50 MiB por arquivo e do envio em instantes, o campo Sua senha atual e os botões Gravar e Cancelar" width="100%"></a>
+<a href="imagens/destinos-telegram.png"><img src="imagens/destinos-telegram.png" alt="Formulário Bot do Telegram com a frase que diz que o bot só envia, o token do bot mascarado, a conversa que recebe com um nome de canal de exemplo, o campo Nome, a caixa Ligado, a pasta enviada, o intervalo de 5 minutos, o idioma das mensagens, a explicação do limite de 50 MiB por arquivo e do envio em instantes, o campo Sua senha atual e os botões Gravar e Cancelar" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Destinos, formulário do bot · captura de 2026-10-11</sub>
+<sub><b>v1.3.0</b> · menu Destinos, formulário do bot · captura de 2026-10-11</sub>
 
 Antes de começar, crie o bot no criador de bots do Telegram e guarde o token que ele entrega. Coloque o bot no grupo ou no canal que vai receber; para uma pessoa, ela precisa ter iniciado a conversa com o bot.
 
@@ -1115,6 +1123,7 @@ Antes de começar, crie o bot no criador de bots do Telegram e guarde o token qu
 |---|---|---|
 | Token do bot | Sim | O texto inteiro que o criador de bots entrega. Em **Alterar**, em branco mantém o gravado |
 | Conversa que recebe | Sim | O número da pessoa ou do grupo (o de grupo começa com `-`) ou o `@nome` do canal. Em **Alterar**, em branco mantém a gravada |
+| Nome | Não | Até 40 caracteres, para reconhecer o destino na tela quando há mais de um do tipo |
 | Ligado | Não | Marcada, o painel envia sozinho; desmarcada, a configuração fica guardada e nada sai |
 | Pasta enviada | Não | A pasta dentro dos dados, que precisa existir; em branco é a pasta dos dados inteira |
 | Intervalo entre as passadas | Sim | Minutos, de 5 a 1440: é a conferência do que não saiu na hora |
@@ -1133,13 +1142,44 @@ Antes de começar, crie o bot no criador de bots do Telegram e guarde o token qu
 </details>
 
 <details>
+<summary>Destinos ➜ Vários destinos do mesmo tipo — clique para expandir</summary>
+
+### Destinos ➜ Vários destinos do mesmo tipo
+
+<a href="imagens/destinos-mesmo-acesso.png"><img src="imagens/destinos-mesmo-acesso.png" alt="Formulário Armazenamento S3: novo destino, com a frase que diz que o segredo deixado em branco é copiado do destino Armazenamento S3 dentro do servidor, o endereço, a região e o bucket já preenchidos com os dele, o prefixo clientes, as duas chaves em branco com a legenda em branco usa o do destino de origem, o nome Clientes, a caixa Ligado, a pasta enviada clientes, o intervalo de 60 minutos, Copiar depois do envio, o campo Sua senha atual e os botões Gravar e Cancelar" width="100%"></a>
+
+<sub><b>v1.3.0</b> · menu Destinos, destino novo com o acesso de outro · captura de 2026-10-11</sub>
+
+Cada tipo aceita até 20 destinos. O destino novo pode usar o acesso de um que já funciona: serve para mandar outra pasta ao mesmo bucket, a mesma pasta a outro bucket ou outra pasta a outro grupo pelo mesmo bot.
+
+1. No cartão do destino que já funciona, clique em **Novo com o mesmo acesso**.
+2. Dê um **Nome** ao destino e troque a **Pasta enviada** ou o lugar: o prefixo ou o bucket, no S3; a conversa, no bot.
+3. Deixe os segredos em branco, digite a sua senha e clique em **Gravar**.
+
+<a href="imagens/destinos-varios.png"><img src="imagens/destinos-varios.png" alt="Aba Destinos com o aviso Destino gravado, os botões Novo S3 e Novo bot no alto e três cartões ligados: Armazenamento S3, com o prefixo copias e a pasta roteador-borda; Armazenamento S3: Clientes, com o mesmo endereço e o mesmo bucket, o prefixo clientes, a pasta clientes e nenhuma passada ainda; e Bot do Telegram, com a pasta clientes" width="100%"></a>
+
+<sub><b>v1.3.0</b> · menu Destinos, com dois destinos S3 · captura de 2026-10-11</sub>
+
+**Resultado esperado:** a aba volta com o aviso `Destino gravado. Vale a partir da próxima passada.` e um cartão a mais, com o tipo e o nome dado. O segredo deixado em branco foi copiado do outro destino dentro do servidor, sem passar pelo navegador.
+
+| Item | Como funciona |
+|---|---|
+| **Novo S3** · **Novo bot** | Abrem o formulário em branco, para um destino com outras chaves ou com outro bot |
+| Mesma pasta no mesmo lugar | Recusado, com `Este destino já existe`: troque a pasta ou o lugar |
+| Limite | 20 destinos por tipo; com os 20 gravados, os botões de destino novo somem até um ser removido |
+| Andamento | Cada destino tem o dele: alterar, testar ou remover um não mexe nos outros |
+| Vários destinos na mesma pasta | Os bots entregam primeiro, depois os S3 que copiam e, por último, os que guardam; o que guarda só apaga do servidor depois que todos os outros entregaram |
+
+</details>
+
+<details>
 <summary>Destinos ➜ Testar e Enviar agora — clique para expandir</summary>
 
 ### Destinos ➜ Testar e Enviar agora
 
 <a href="imagens/destinos-teste.png"><img src="imagens/destinos-teste.png" alt="Aba Destinos com o aviso Teste concluído, o destino recebeu, acima dos cartões Armazenamento S3 e Bot do Telegram, cada um com a data da última passada" width="100%"></a>
 
-<sub><b>v1.2.0</b> · menu Destinos, depois do teste · captura de 2026-10-11</sub>
+<sub><b>v1.3.0</b> · menu Destinos, depois do teste · captura de 2026-10-11</sub>
 
 1. No cartão do destino, clique em **Testar**.
 2. Para não esperar o intervalo, clique em **Enviar agora** e atualize a tela em seguida.
@@ -1176,7 +1216,7 @@ O que cada motivo quer dizer e o que fazer está em [Solução de problemas](../
 <details>
 <summary>Detalhe técnico — rotas, segredos e eventos</summary>
 
-- Rotas `GET /destinos`, `GET` e `POST /destinos/s3` e `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `POST /destinos/arquivo` e `GET` e `POST /destinos/remover`. Todo `POST` leva o token da sessão; gravar e remover pedem também a senha atual. Para o usuário do FTP, todas respondem `404`.
+- Rotas `GET /destinos`, `GET` e `POST /destinos/s3` e `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `GET` e `POST /destinos/arquivo` e `GET` e `POST /destinos/remover`. Todo `POST` leva o token da sessão; gravar e remover pedem também a senha atual. Para o usuário do FTP, todas respondem `404`.
 - A configuração fica em `DATA_DIR/painel/destinos/<destino>.conf` e o andamento, em `<destino>.estado`. Os segredos ficam em `SECRETS_DIR/destinos`, um por arquivo, com modo `0600`, e não voltam para a tela, para a aba Log nem para a auditoria.
 - O painel só sai do servidor por HTTPS, com o certificado conferido, e não segue redirecionamento.
 - Os eventos `destino_gravado`, `destino_teste`, `destino_pedido`, `destino_arquivo`, `destino_enviado`, `destino_falhou`, `destino_pulado` e `destino_removido` ficam na [auditoria](../painel.md#auditoria).

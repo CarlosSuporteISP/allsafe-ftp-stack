@@ -6,6 +6,28 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.3.0] - 2026-10-11
+
+Cada tipo de destino aceita vários: várias pastas ligadas ao S3 e ao Telegram, e o mesmo acesso S3 ou o mesmo bot servindo a outra pasta, outro bucket ou outra conversa.
+
+### Adicionado
+
+- **Vários destinos de cada tipo**: até 20 armazenamentos S3 e 20 bots do Telegram, cada um com a pasta, o intervalo, o andamento e os segredos dele, e um cartão por destino na aba Destinos. O campo **Nome**, opcional, identifica o destino na tela.
+- **Novo com o mesmo acesso**: o destino novo aproveita as chaves ou o token e a conversa de um destino que já funciona. O segredo deixado em branco é copiado dentro do servidor, de arquivo para arquivo, sem passar pelo navegador. **Novo S3** e **Novo bot** abrem o formulário em branco.
+- **Destino repetido recusado**: dois destinos não levam a mesma pasta, ou uma pasta de dentro dela, ao mesmo lugar (o mesmo endereço, bucket e prefixo, ou o mesmo bot com a mesma conversa).
+- **Escolha do destino no envio de um arquivo**: na aba Arquivos, com mais de um destino pronto do tipo, o botão **Telegram** ou **S3** abre a tela que pergunta qual recebe. Com um só, o envio continua direto.
+- **Bateria**: três casos funcionais e um de segurança para os vários destinos. São 86 casos funcionais, 132 de segurança e 14 de rede.
+
+### Alterado
+
+- **Guardar no S3 espera todos os outros destinos da pasta**: o arquivo só sai do servidor depois de gravado nesse S3 e entregue por todos os outros destinos ligados que levam aquele arquivo, bots e outros S3. A linha do cartão passa a se chamar **À espera de outro destino**. Em cada passada, os bots entregam primeiro, depois os S3 que copiam e, por último, os que guardam.
+- **Nome fixo de cada destino**: o primeiro de cada tipo continua `s3` e `telegram`, e os seguintes são `s3-2` a `s3-20` e `telegram-2` a `telegram-20`. É o nome que aparece na aba Log, nos arquivos de segredo e no terminal: `--destinos` mostra uma linha por destino, e `--destinos enviar <destino>` faz a passada de um. A instalação com os destinos da `1.2.0` sobe com eles ligados, sem reenvio e sem mudança nos arquivos.
+- **Fotos da aba Destinos**, nos dois idiomas, com as telas desta versão.
+
+### Corrigido
+
+- **Botões com e sem ícone na mesma linha**: ficavam alguns pixels desalinhados, como **Testar** e **Enviar agora** no cartão de um destino. Agora assentam na mesma altura em todas as telas.
+
 ## [1.2.0] - 2026-10-11
 
 Nada apaga nem lê no destino, por nenhum caminho: o que o painel pode pedir a um bucket e a um bot virou lista fechada. A explicação da aba Destinos foi para o alto da tela, e a linha do limite de processador da aba Servidor passou a mostrar o que acontece agora, e não o que aconteceu desde a subida.
