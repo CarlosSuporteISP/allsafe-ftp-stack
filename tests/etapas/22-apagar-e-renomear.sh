@@ -14,9 +14,9 @@ U22="$W/u22.jar"; Q="$B/arquivos"
 existe22() { docker exec "$FTP" sh -c "test -e '/data/$1' || test -L '/data/$1'" && echo sim || echo não; }   # <caminho>: existe nos dados (link conta)
 soma22() { docker exec "$FTP" sh -c "sha256sum < '/data/$1'" 2>/dev/null | cut -c1-64; }                     # <caminho>: soma do conteúdo
 dono22() { docker exec "$FTP" stat -c '%U:%G %a %F' "/data/$1" 2>/dev/null || echo ausente; }                # <caminho>: dono, modo e tipo
-arvore22() { docker exec "$FTP" sh -c 'find /data /auth -xdev | sort | sha256sum | cut -c1-16'; }            # tudo o que existe nos dados e no cadastro
+arvore22() { docker exec "$FTP" sh -c 'find /data /auth -xdev ! -path "/auth/chegadas/*" | sort | sha256sum | cut -c1-16'; }            # tudo o que existe nos dados e no cadastro, menos a fila de chegadas, que se esvazia sozinha
 # Nomes do que há em /auth e o conteúdo do cadastro do FTP: muda se algo de lá for apagado ou regravado. O hash não sai do container.
-auth22() { docker exec "$FTP" sh -c '{ find /auth -xdev | sort; cat /auth/pureftpd.passwd; } | sha256sum | cut -c1-16'; }
+auth22() { docker exec "$FTP" sh -c '{ find /auth -xdev ! -path "/auth/chegadas/*" | sort; cat /auth/pureftpd.passwd; } | sha256sum | cut -c1-16'; }
 cria22() { envio /usuarios/novo --data-urlencode "csrf=$K" --data-urlencode "usuario=$1" --data-urlencode "pasta=$2" --data-urlencode "senha@$3" --data-urlencode "confirmacao@$3"; }  # <usuário> <pasta> <arquivo da senha>
 renomeia22() { envio /arquivos/renomear --data-urlencode "csrf=$K" --data-urlencode "item=$1" --data-urlencode "nome=$2" --data-urlencode "senha_atual@${3:-$W/painel.senha}"; }  # <item> <nome novo> [arquivo da senha atual] → "código destino"
 apaga22() { # <item> [arquivo da senha atual] [valor da caixa de confirmação] → "código destino"

@@ -14,7 +14,7 @@ entra() { COMO="$1" entrar "$2" "$3"; }                                      # <
 destino() { grep -i '^location:' "$W/entrada.cab" | tr -d '\r' | cut -d ' ' -f 2; }  # para onde a última entrada mandou
 token_de() { c -b "$1" "$M" | sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' | head -1; }  # <pote>: token dos formulários do usuário
 soma14() { sha256sum < "$1" 2>/dev/null | cut -c1-64; }
-arvore14() { docker exec "$FTP" sh -c 'find /data /auth -xdev | sort | sha256sum | cut -c1-16'; }
+arvore14() { docker exec "$FTP" sh -c 'find /data /auth -xdev ! -path "/auth/chegadas/*" | sort | sha256sum | cut -c1-16'; }
 tempo() { date +%s.%N; }
 duracao() { awk -v a="$1" -v b="$(tempo)" 'BEGIN { printf "%.1f", b - a }'; }  # <início>: segundos até agora
 sem_token() { sed 's/name="token" value="[^"]*"/name="token"/' "$1" | sha256sum | cut -c1-16; }  # tela de entrada sem o token, que muda a cada pedido

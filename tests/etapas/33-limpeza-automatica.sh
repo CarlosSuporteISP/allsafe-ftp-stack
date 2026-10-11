@@ -20,7 +20,7 @@ etiquetas33() { grep -o -F '<span class="etiqueta atencao" title="Limpeza autom�
 arv33() { docker exec "$FTP" sh -c 'cd "$1" && find . -mindepth 1 -printf "%P\n" | LC_ALL=C sort | tr "\n" " "' sh "$1"; }  # <pasta>: tudo o que há nela, em ordem
 soma33() { docker exec "$FTP" sh -c 'find "$@" -xdev -printf "%M %u:%g %s %T@ %p\n" | LC_ALL=C sort | sha256sum | cut -c1-16' sh "$@"; }  # <pasta...>: soma do que há nelas
 # O cadastro e as listas de /auth, pelo conteúdo, sem os arquivos de estado que o servidor regrava sozinho.
-auth33() { docker exec "$FTP" sh -c 'find /auth -xdev -type f ! -name "*.estado" ! -name ".lock" -exec sha256sum {} + | LC_ALL=C sort -k2 | sha256sum | cut -c1-16'; }
+auth33() { docker exec "$FTP" sh -c 'find /auth -xdev -type f ! -name "*.estado" ! -name ".lock" ! -path "/auth/chegadas/*" -exec sha256sum {} + | LC_ALL=C sort -k2 | sha256sum | cut -c1-16'; }
 lista33() { docker exec "$FTP" sha256sum /auth/limites.lista 2>/dev/null | cut -c1-16; }       # soma da lista em que a regra é gravada
 planta33() { docker exec -i "$FTP" sh -s; }                                                    # roda no container do FTP o que vier pela entrada
 passa33() { docker exec "$PAINEL" python3 /opt/painel/servidor.py --retencao "$@" > "$W/passada" 2>&1; }  # [--simular]: a passada, pedida pelo terminal

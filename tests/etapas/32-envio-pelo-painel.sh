@@ -54,7 +54,7 @@ igual32() { docker exec "$FTP" cat "$1" 2>/dev/null | cmp -s - "$2"; }          
 nomes32() { docker exec "$FTP" ls -A "$1" 2>/dev/null | sort | tr '\n' ' '; }                  # <pasta>: o que há nela
 arvore32() { docker exec "$FTP" sh -c 'find "$@" -xdev -printf "%M %u:%g %s %p\n" | sort | sha256sum | cut -c1-16' sh "$@"; }  # <pasta...>: soma do que há nelas
 # O cadastro e as listas de /auth, sem os arquivos de estado que o servidor regrava sozinho.
-auth32() { docker exec "$FTP" sh -c 'find /auth -xdev ! -name "*.estado" ! -name ".lock" -printf "%M %u:%g %s %p\n" | sort | sha256sum | cut -c1-16'; }
+auth32() { docker exec "$FTP" sh -c 'find /auth -xdev ! -name "*.estado" ! -name ".lock" ! -path "/auth/chegadas*" -printf "%M %u:%g %s %p\n" | sort | sha256sum | cut -c1-16'; }
 dado32() { docker exec "$FTP" stat -c '%U:%G %a %s' "$1" 2>/dev/null; }
 certo32() { [[ "$(dado32 "$1")" == "ftpdata:ftpdata 644 $(stat -c %s "$2")" ]] && igual32 "$1" "$2"; }  # <arquivo no servidor> <arquivo local>: dono, modo, tamanho e conteúdo
 linhas32() { grep -c -E -- "$1" "$W/auditoria" || true; }                                      # <expressão>: linhas da auditoria com ela

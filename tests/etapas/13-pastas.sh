@@ -15,7 +15,7 @@ novo_usuario() { # <usuário> <pasta> <arquivo da senha> → "código destino"
 }
 dono() { docker exec "$FTP" stat -c '%U:%G %a %F' "/data/$1" 2>/dev/null || echo ausente; }   # <pasta>: dono, modo e tipo
 pasta_de() { docker exec "$FTP" sh -c "grep '^$1:' /auth/pureftpd.passwd | cut -d: -f6"; }      # <usuário>: pasta gravada no cadastro do FTP
-arvore() { docker exec "$FTP" sh -c 'find /data /auth -xdev | sort | sha256sum | cut -c1-16'; }  # tudo o que existe nos dados e no cadastro
+arvore() { docker exec "$FTP" sh -c 'find /data /auth -xdev ! -path "/auth/chegadas/*" | sort | sha256sum | cut -c1-16'; }  # tudo o que existe nos dados e no cadastro, menos a fila de chegadas, que se esvazia sozinha
 
 nova_senha "$W/u13a.senha"; nova_senha "$W/u13b.senha"; nova_senha "$W/u13c.senha"; nova_senha "$W/u13d.senha"; nova_senha "$W/u13e.senha"
 

@@ -15,7 +15,7 @@ pasta21() { docker exec "$FTP" sh -c "grep '^$1:' /auth/pureftpd.passwd | cut -d
 resto21() { docker exec "$FTP" sh -c "grep '^$1:' /auth/pureftpd.passwd | cut -d: -f1-5,7- | sha256sum | cut -c1-16"; }
 dono21() { docker exec "$FTP" stat -c '%U:%G %a %F' "/data/$1" 2>/dev/null || echo ausente; }             # <pasta>: dono, modo e tipo
 modo21() { docker exec "$FTP" stat -c '%U:%G %a' "/auth/$1" 2>/dev/null || echo ausente; }                # <arquivo de /auth>: dono e modo
-arvore21() { docker exec "$FTP" sh -c 'find /data /auth -xdev | sort | sha256sum | cut -c1-16'; }         # tudo o que existe nos dados e no cadastro
+arvore21() { docker exec "$FTP" sh -c 'find /data /auth -xdev ! -path "/auth/chegadas/*" | sort | sha256sum | cut -c1-16'; }         # tudo o que existe nos dados e no cadastro, menos a fila de chegadas, que se esvazia sozinha
 cadastro21() { docker exec "$FTP" sh -c 'sha256sum < /auth/pureftpd.passwd' | cut -c1-16; }
 troca21() { envio /usuarios/pasta --data-urlencode "csrf=$K" --data-urlencode "usuario=$1" --data-urlencode "pasta=$2"; }  # <usuário> <pasta> → "código destino"
 login21() { local r; r="$(ftp_curl tls "$1" "$2" -l "$F/")"; echo "$r $(resposta '(226|530) ' | cut -c1-3)"; }  # <usuário> <arquivo da senha> → "0 226" ou "67 530"
