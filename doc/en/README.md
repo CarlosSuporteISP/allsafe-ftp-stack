@@ -53,7 +53,7 @@ flowchart LR
 | 8 | [Operation](operation.md) | Users, real certificate, logs and image update |
 | 9 | [Backup and restore](backup.md) | Backup copy in one command, checked and reversible restore, what to keep apart, another server and scheduled copy |
 | 10 | [Web panel](panel.md) | Opening the panel, what there is in each tab, users in the browser, download of the files, password, certificate, audit log and protections |
-| 11 | [Application screenshots](../pt-BR/aplicacao/README.md) | Every screen of the panel, menu by menu: the screenshot, what it is for, how to get there and what there is in each one |
+| 11 | [Application screenshots](application/README.md) | Every screen of the panel, menu by menu: the screenshot, what it is for, how to get there and what there is in each one |
 | 12 | [Troubleshooting](troubleshooting.md) | Symptom, cause, how to check and fix |
 
 ---
@@ -69,7 +69,7 @@ flowchart LR
 | Downloading a backup that a device uploaded | [Files and download](panel.md#arquivos) |
 | Downloading your own files with the FTP account | [FTP user in the panel](panel.md#usuario-ftp) |
 | Creating a folder or choosing the folder of a user | [Users in the panel](panel.md#usuarios) ➜ [Files and download](panel.md#arquivos) |
-| Seeing the screens of the panel before installing | [Application screenshots](../pt-BR/aplicacao/README.md) |
+| Seeing the screens of the panel before installing | [Application screenshots](application/README.md) |
 | Before production | [Private network and firewall](security.md#rede-privada) ➜ [Best practices before production](security.md#boas-praticas) ➜ [Operation](operation.md#certificado-real-de-producao) ➜ [Backup and restore](backup.md#automatica) |
 | Old device that does not speak TLS | [Device without TLS](security.md#ftp-sem-tls) ➜ [Configuration](configuration.md#tls) ➜ [Troubleshooting](troubleshooting.md#ftp-sem-tls) |
 | Replacing the logo, delivering under a contract or selling | [Panel brand](panel.md#marca) ➜ [ALL-SAFE trademark](../../TRADEMARK.md) |
@@ -137,8 +137,8 @@ The screenshots are real captures of the panel, in the dark theme. In the Markdo
 
 | Folder | What it keeps | Where it appears | Viewer |
 |---|---|---|---|
-| [`images/`](../pt-BR/imagens/) | The main image and one image of each tab of the panel | [Project README](../../README.md#imagens) | [`visualizador.html`](../pt-BR/imagens/visualizador.html) |
-| [`application/images/`](../pt-BR/aplicacao/imagens/) | The screenshots of each menu, form, refusal and confirmation | [Application screenshots](../pt-BR/aplicacao/README.md) | [`visualizador.html`](../pt-BR/aplicacao/imagens/visualizador.html) |
+| [`images/`](images/) | The main image and one image of each tab of the panel | [Project README](../../README.md#imagens) | [`visualizador.html`](images/visualizador.html) |
+| [`application/images/`](application/images/) | The screenshots of each menu, form, refusal and confirmation | [Application screenshots](application/README.md) | [`visualizador.html`](application/images/visualizador.html) |
 
 ---
 
