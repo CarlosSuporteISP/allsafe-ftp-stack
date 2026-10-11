@@ -343,10 +343,10 @@ interval: 20s   timeout: 6s   retries: 5   start_period: 20s
 
 Abre a porta de controle (`2121`), de dentro do container, e espera a saudação do servidor: um `pure-ftpd` vivo que não atende deixa de contar como saudável, e o container passa a `unhealthy` depois de cinco verificações seguidas sem resposta. Servidor no limite de conexões (`421`) conta como atendendo. Antes de abrir a porta, o teste exige o soquete do `pure-authd` e o `/dev/log` do vigia. O teste não faz login: veja [`ftp/saude.sh`](scripts.md#ftp-saude). Para conferir também o usuário no PureDB, use `./scripts/validate.sh --runtime`: veja [Scripts](scripts.md#validate).
 
-O painel tem o dele, que pede `/saude` pelo soquete Unix, do jeito que o nginx faz:
+O painel tem o dele, que pede `/saude` pelo soquete Unix, do jeito que o nginx faz. É um arquivo à parte, que não carrega os módulos do painel: a verificação gasta por volta de 10 ms de processador e cabe na cota do container, sem somar no contador de limite atingido da aba Servidor.
 
 ```yaml
-test: ["CMD", "python3", "/opt/painel/servidor.py", "--saude"]
+test: ["CMD", "python3", "-I", "-S", "/opt/painel/saude.py"]
 interval: 20s   timeout: 8s   retries: 5   start_period: 20s
 ```
 

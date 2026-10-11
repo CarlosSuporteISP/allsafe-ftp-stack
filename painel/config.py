@@ -6,9 +6,9 @@ import re
 import sys
 
 from idioma import N
+from saude import ARQ_SOQUETE
 
-# Soquete Unix na pasta que o painel divide com o nginx; o grupo é o do nginx (alvo `nginx` do Dockerfile).
-ARQ_SOQUETE = '/nginx/painel.sock'
+# O soquete Unix (ARQ_SOQUETE, no saude.py) fica na pasta que o painel divide com o nginx; o grupo é o do nginx (alvo `nginx` do Dockerfile).
 GID_NGINX = 10001
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 ARQ_HASH = '/run/secrets/painel_admin_inicial_senha_hash'

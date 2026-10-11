@@ -340,10 +340,10 @@ interval: 20s   timeout: 6s   retries: 5   start_period: 20s
 
 It opens the control port (`2121`), from inside the container, and waits for the greeting of the server: a live `pure-ftpd` that does not answer stops counting as healthy, and the container becomes `unhealthy` after five checks in a row without an answer. A server at the connection limit (`421`) counts as answering. Before opening the port, the test requires the `pure-authd` socket and the `/dev/log` of the watcher. The test does not log in: see [`ftp/saude.sh`](scripts.md#ftp-saude). To also check the user in PureDB, use `./scripts/validate.sh --runtime`: see [Scripts](scripts.md#validate).
 
-The panel has its own, which requests `/saude` through the Unix socket, the way nginx does:
+The panel has its own, which requests `/saude` through the Unix socket, the way nginx does. It is a separate file, which does not load the modules of the panel: the check spends around 10 ms of processor and fits in the quota of the container, without adding to the limit reached counter of the Server tab.
 
 ```yaml
-test: ["CMD", "python3", "/opt/painel/servidor.py", "--saude"]
+test: ["CMD", "python3", "-I", "-S", "/opt/painel/saude.py"]
 interval: 20s   timeout: 8s   retries: 5   start_period: 20s
 ```
 

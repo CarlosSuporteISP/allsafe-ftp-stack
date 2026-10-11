@@ -200,7 +200,8 @@ services:
     cpus: ${PAINEL_CPU_LIMIT:-0.5}
     stop_grace_period: 10s
     healthcheck:
-      test: ["CMD", "python3", "/opt/painel/servidor.py", "--saude"]
+      # Só o saude.py, sem os módulos do painel (-I -S): a verificação cabe com folga na cota de processador de um período.
+      test: ["CMD", "python3", "-I", "-S", "/opt/painel/saude.py"]
       interval: 20s
       timeout: 8s
       retries: 5

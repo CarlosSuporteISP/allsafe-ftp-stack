@@ -1058,7 +1058,7 @@ Password, token and cookie are **never** written. Neither is the name typed in a
 - **Files:** the Files tab reads the same folder `DATA_DIR/dados`, always opened read-only; the writes are the empty folder of `POST /arquivos/pasta`, the change of name and the deletion, the three relative to the open folder and none with content coming from the browser. Detail in [Files and download](#arquivos).
 - **FTP user in the panel:** the password is checked by a login on the `ftp` service, through the Compose network, and their session only has the routes of `/meus-arquivos` and the sign-out. Detail in [FTP user in the panel](#usuario-ftp).
 - **Capabilities given back:** `CHOWN`, `DAC_OVERRIDE` and `FOWNER`, to create the folders with the owner `ftpdata` and write in `/auth`. None of network.
-- **Health:** `python3 /opt/painel/servidor.py --saude` requests `/saude` through the Unix socket. The nginx healthcheck makes the same request over TLS, on `127.0.0.1:8443`, and checks the whole path.
+- **Health:** `python3 -I -S /opt/painel/saude.py` requests `/saude` through the Unix socket, without loading the modules of the panel, to fit in the processor quota of the container; `servidor.py --saude` makes the same request. The nginx healthcheck makes the same request over TLS, on `127.0.0.1:8443`, and checks the whole path.
 - **Limits:** `PAINEL_MEMORY_LIMIT`, `PAINEL_CPU_LIMIT` and `PAINEL_PIDS_LIMIT`, in [Configuration](configuration.md#painel).
 
 </details>
@@ -1073,6 +1073,7 @@ The code is in [`painel/`](../../painel/), one subject per file, and goes whole 
 | Module | What it has |
 |---|---|
 | [`servidor.py`](../../painel/servidor.py) | Entry point: starts the server, creates the first administrator and serves the modes `--hash`, `--saude`, `--administrador`, `--retencao` and `--destinos` |
+| [`saude.py`](../../painel/saude.py) | Health check of the container: the `/saude` request through the Unix socket, with the socket library only |
 | [`config.py`](../../painel/config.py) | Paths, limits and the reading of the container variables, with the refusals of network and of session |
 | [`senha.py`](../../painel/senha.py) | `scrypt` hash of the administrators' passwords and the check in constant time |
 | [`administradores.py`](../../painel/administradores.py) | Reading and writing of the administrators file, one change at a time |

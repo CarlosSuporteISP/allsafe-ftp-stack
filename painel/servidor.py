@@ -11,18 +11,18 @@ allsafe-ftp-user do serviço ftp, na pasta /auth que os dois containers comparti
 
 Modos: sem argumento, sobe o servidor; --hash lê uma senha da entrada padrão e imprime o hash;
 --administrador <nome> lê um hash da entrada padrão e cria o administrador ou troca a senha dele;
---saude confere /saude pelo soquete e sai com 0 ou 1 (healthcheck do container);
+--saude confere /saude pelo soquete e sai com 0 ou 1 (o healthcheck do container roda o saude.py direto, sem subir o painel);
 --retencao aplica agora a limpeza automática de cada usuário que tem uma, e com --simular só conta o que sairia;
 --destinos mostra a situação do S3 e do bot do Telegram, e --destinos enviar <s3|telegram> faz agora a passada dele
 (com --sem-espera, sem aguardar os dois minutos de um arquivo sem mudar).
 """
-import socket
 import sys
 
 import administradores
 import destinos
 import limpeza
 import recursos
+import saude
 from atendimento import Painel, Servidor
 from auditoria import auditar, limpo
 from config import ARQ_ADMINS, ARQ_HASH, ARQ_SOQUETE, CFG, NOME, SENHA_MIN, configuracao, falha
@@ -51,26 +51,6 @@ def modo_administrador(nome):
         falha(erro)
     auditar('-', 'admin_definido_no_host', f'admin={nome} resultado={feito}')
     print(f'administrador {nome}: {feito}')
-
-
-def modo_saude():
-    """Pede /saude pelo soquete, como o nginx faria a partir do próprio host."""
-    pedido = b'GET /saude HTTP/1.1\r\nHost: localhost\r\nX-Real-IP: 127.0.0.1\r\nConnection: close\r\n\r\n'
-    resposta = b''
-    try:
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as conexao:
-            conexao.settimeout(4)
-            conexao.connect(ARQ_SOQUETE)
-            conexao.sendall(pedido)
-            while len(resposta) < 8192:
-                parte = conexao.recv(4096)
-                if not parte:
-                    break
-                resposta += parte
-    except OSError:
-        sys.exit(1)
-    cabecalho, _, corpo = resposta.partition(b'\r\n\r\n')
-    sys.exit(0 if cabecalho.startswith(b'HTTP/1.1 200 ') and corpo.strip() == b'ok' else 1)
 
 
 def modo_retencao(simular):
@@ -132,7 +112,7 @@ def principal():
     if '--retencao' in sys.argv[1:]:
         return modo_retencao('--simular' in sys.argv[1:])
     if '--saude' in sys.argv[1:]:
-        return modo_saude()
+        return saude.conferir()
     if '--administrador' in sys.argv[1:]:
         posicao = sys.argv.index('--administrador')
         return modo_administrador(sys.argv[posicao + 1] if len(sys.argv) > posicao + 1 else '')
