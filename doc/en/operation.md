@@ -6,7 +6,7 @@
 
 ## 💡 In a few words
 
-This guide gathers the day-to-day tasks: creating the account of a new device, changing a password, installing the definitive certificate, keeping a copy of the files, reading the logs and updating the server. The accounts can also be administered in the browser, in the [web panel](../pt-BR/painel.md); here is the path through the command line. All the commands run in the root folder of the stack.
+This guide gathers the day-to-day tasks: creating the account of a new device, changing a password, installing the definitive certificate, keeping a copy of the files, reading the logs and updating the server. The accounts can also be administered in the browser, in the [web panel](panel.md); here is the path through the command line. All the commands run in the root folder of the stack.
 
 <!-- diagrama: diagrams/users-diagram.mmd -->
 ```mermaid
@@ -40,7 +40,7 @@ flowchart LR
 
 ## 👤 Users
 
-Management from the host with [`manage-user.sh`](../../manage-user.sh). The [panel](../pt-BR/painel.md#usuarios) does the same operations, with the same rules:
+Management from the host with [`manage-user.sh`](../../manage-user.sh). The [panel](panel.md#usuarios) does the same operations, with the same rules:
 
 ```bash
 ./manage-user.sh add cliente01      # creates the user and /data/cliente01 (asks for the password)
@@ -74,10 +74,10 @@ Rules:
 - Password: minimum of **12 characters** (refused below that).
 - Folder: without the third parameter, it is `/data/<user>`. With it, it always stays inside `/data` (`DATA_DIR/dados` on the host), with up to 4 levels separated by `/`; each level has letters, numbers, `_`, `-` and dot, does not start with a dot and goes up to 64 characters. The folder is created if it does not exist. A folder that goes through a symbolic link or through a file is refused, and nothing is created.
 - `add` of an existing name answers `Usuario ja existe`. To change the folder of someone who already exists, use `pasta`, with the same rules: it takes effect at the next sign-in, does not change the password and neither moves nor deletes a file. A user that does not exist: `Usuario nao existe: <nome>`.
-- `limites` accepts one or more `key=value` pairs, and only touches the keys given: `sessoes` (sessions at the same time on the FTP), `download` and `envio` (KB per second, from 1 to 10,000,000), `horario` (`HHMM-HHMM`, in the time zone of `TZ`, and it may go past midnight), `baixar` (downloads at the same time through the panel, from 1 to 8), `tentativas` (wrong passwords on the FTP until the block, from 0 to 100; `0`: never blocked) and `minutos` (time of the block, from 1 to 1440). An empty value (`download=`) takes the limit off; without any pair, it shows those the user has. It takes effect at its next sign-in on the FTP. What each limit does is in [Web panel](../pt-BR/painel.md#limites).
+- `limites` accepts one or more `key=value` pairs, and only touches the keys given: `sessoes` (sessions at the same time on the FTP), `download` and `envio` (KB per second, from 1 to 10,000,000), `horario` (`HHMM-HHMM`, in the time zone of `TZ`, and it may go past midnight), `baixar` (downloads at the same time through the panel, from 1 to 8), `tentativas` (wrong passwords on the FTP until the block, from 0 to 100; `0`: never blocked) and `minutos` (time of the block, from 1 to 1440). An empty value (`download=`) takes the limit off; without any pair, it shows those the user has. It takes effect at its next sign-in on the FTP. What each limit does is in [Web panel](panel.md#limites).
 - `bloqueios` lists the blocks by attempts in effect, one per line, with the user, the address, the wrong passwords, the start and the end; with a name, only its own. With none, it answers `Nenhum bloqueio em vigor.` `desbloquear <user>` takes all the blocks off the user, and with the address at the end, only the one of that address. It takes effect at the next sign-in. Changing `tentativas` or `minutos`, changing the password and removing the user also take its blocks off: [Security](../pt-BR/seguranca.md#bloqueio-por-tentativa).
 - `enderecos` lists the addresses and the prefixes with blocking by address, IPv4 and IPv6, one per line, with who blocked, the errors, the start and the end; with none, it answers `Nenhum endereco bloqueado.` `endereco-liberar <address or prefix>` takes the block off, and is the way out for the administrator whose own address got blocked. `endereco-bloquear <address or prefix> [days]` blocks an address, or a whole network, on the FTP and in the panel or, for what is already blocked, changes only the period; without the days, `BLOQUEIO_ENDERECO_DIAS` holds. A prefix is only blocked by the administrator, here or in the Blocks tab: the stack never blocks a network by itself. Everything takes effect at the next request: [Security](../pt-BR/seguranca.md#bloqueio-por-endereco).
-- `del` **does not delete files** and answers with the folder that stayed. To take the folder out together with the user, use the panel: Users ➜ **Remove**, with the box to delete the folder, in [Web panel](../pt-BR/painel.md#usuarios). After `del`, the folder that stayed is deleted in the Files tab.
+- `del` **does not delete files** and answers with the folder that stayed. To take the folder out together with the user, use the panel: Users ➜ **Remove**, with the box to delete the folder, in [Web panel](panel.md#usuarios). After `del`, the folder that stayed is deleted in the Files tab.
 - `tls-dispensar` and `tls-exigir` take effect in moments, without restarting the container and without dropping whoever is connected, and only for a user that exists (`Usuario nao existe: <nome>`). The exemption only has effect with `FTP_TLS_EXCECOES=sim` (the default), `FTP_TLS_MODE=2` and without `REDE_PERMITIR_IP_PUBLICO=sim`; outside that, it stays stored. `del` takes the user off the list.
 
 > ⚠️ **Shared folder:** two users with the same folder, or with one inside the other, read, write and delete each other's files. `add` accepts and warns, one `Aviso:` line per user that starts sharing the folder. For a device not to reach the backup of another, give each one its own folder.
@@ -138,7 +138,7 @@ One command keeps the files of the devices, the users, the certificates and the 
 
 What goes into the copy, how to keep the key that opens it, how to undo a restore, how to restore on another server and how to schedule the copy are in [Backup and restore](backup.md).
 
-To get **a single file**, uploaded by a device, use the Files tab of the panel: [Files and download](../pt-BR/painel.md#arquivos). The owner of the files gets its own the same way, signing in to the panel with the FTP user and password: [FTP user in the panel](../pt-BR/painel.md#usuario-ftp). On the host, the same file is in the folder of the user, inside `DATA_DIR/dados`: the Users tab shows the path of each one.
+To get **a single file**, uploaded by a device, use the Files tab of the panel: [Files and download](panel.md#arquivos). The owner of the files gets its own the same way, signing in to the panel with the FTP user and password: [FTP user in the panel](panel.md#usuario-ftp). On the host, the same file is in the folder of the user, inside `DATA_DIR/dados`: the Users tab shows the path of each one.
 
 > ⚠️ The copy contains the hash of the passwords and the private keys of the certificates, and that is why it comes out encrypted: take it off the server too. Only `.secrets/backup-chave-privada.txt` opens it: keep that key in a password vault, separate from the copies, together with the `.env` and the other files in `.secrets/`, which do not go into the copy either.
 
@@ -195,7 +195,7 @@ docker compose logs ftp | grep 'vigia:'
 
 **Expected result:** one line per sign-in, per refusal and per transfer, without a password; who is blocked now comes out in `./manage-user.sh bloqueios`. To see only what a user uploaded and downloaded: `docker compose logs ftp | grep -E 'vigia: (envio|download): usuario=<nome> '`.
 
-What was done through the panel (sign-ins, sign-outs, users created, changed and removed, files downloaded) stays in `auditoria.log`, visible in the Log tab: see [Web panel](../pt-BR/painel.md#auditoria).
+What was done through the panel (sign-ins, sign-outs, users created, changed and removed, files downloaded) stays in `auditoria.log`, visible in the Log tab: see [Web panel](panel.md#auditoria).
 
 Rotation by Docker: `max-size: 10m`, `max-file: 3` (see [`compose.yaml`](../../compose.yaml)).
 

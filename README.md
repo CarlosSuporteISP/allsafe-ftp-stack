@@ -77,7 +77,7 @@ There are **three containers**: the FTP server, the panel and **nginx**, the onl
 | **Access** | FTP client with **explicit TLS** (`AUTH TLS`) on port `21/tcp`, passive mode in the range of the profile (`30000-30049/tcp` on `small`) · panel at `https://<private IP>:8443`, through nginx |
 | **Requirements** | Docker Engine with Docker Compose v2 or newer · CPU and memory of the chosen profile (2 vCPU and 2 GB on `small`) · one dedicated **private** IP · firewall on the host allowing only the internal network |
 
-> **Web panel:** internal network only, behind a firewall, like the rest of the stack. It refuses, in code, any address that is not private. How to use it: [doc/en/panel.md](doc/pt-BR/painel.md).
+> **Web panel:** internal network only, behind a firewall, like the rest of the stack. It refuses, in code, any address that is not private. How to use it: [doc/en/panel.md](doc/en/panel.md).
 
 > ⚠️ **Old device without TLS:** for the device that does not support TLS there is the option `FTP_TLS_MODE=0` (or `1`). With it, **password and files travel in plain text**: use it only on an isolated internal network, and the stack warns about it in `deploy.sh`, in the container log and in the panel. See [doc/en/security.md](doc/pt-BR/seguranca.md#ftp-sem-tls).
 >
@@ -175,11 +175,11 @@ To serve the internal network, adjust the `.env` (template in [`.env.example`](.
 | Create another panel administrator | in the panel, Users tab, **New user** with the Administrator profile |
 | Recover access to the panel | `./scripts/painel-senha.sh --gerar` (another administrator: `--usuario NOME`) |
 | Create a user | in the panel, Users tab, or `./manage-user.sh add backup-olt` |
-| Limit what a user does (uploads without deleting, only uploads without seeing the backups, or only downloads) | in the panel, Users tab, **Edit**, **Profile** card, or `./manage-user.sh perfil backup-olt envio`: see [Profiles](doc/pt-BR/painel.md#perfis) |
+| Limit what a user does (uploads without deleting, only uploads without seeing the backups, or only downloads) | in the panel, Users tab, **Edit**, **Profile** card, or `./manage-user.sh perfil backup-olt envio`: see [Profiles](doc/en/panel.md#perfis) |
 | Download a backup that was received | in the panel, Files tab, **Download** button on the row of the file |
 | Let the owner of the files download their own | they open the panel with the FTP user and password and see only their own folder; for the panel to accept only administrators, `PAINEL_ACESSO_USUARIOS_FTP=nao` in the `.env` and `./deploy.sh` |
-| Let a user upload files in the browser | in the panel, Users tab, **Edit**, checkbox **Allow this user to upload files through the panel**, or `./manage-user.sh limites backup-olt enviar=1`: see [Uploading files through the panel](doc/pt-BR/painel.md#enviar-arquivo) |
-| Keep only the newest files of an account | in the panel, Users tab, **Edit**, **Automatic cleanup** card, or `./manage-user.sh retencao backup-olt ultimos=30`: see [Automatic cleanup](doc/pt-BR/painel.md#limpeza) |
+| Let a user upload files in the browser | in the panel, Users tab, **Edit**, checkbox **Allow this user to upload files through the panel**, or `./manage-user.sh limites backup-olt enviar=1`: see [Uploading files through the panel](doc/en/panel.md#enviar-arquivo) |
+| Keep only the newest files of an account | in the panel, Users tab, **Edit**, **Automatic cleanup** card, or `./manage-user.sh retencao backup-olt ultimos=30`: see [Automatic cleanup](doc/en/panel.md#limpeza) |
 | Block an address or a prefix | in the panel, Blocks tab, **Block address**, or `./manage-user.sh endereco-bloquear 203.0.113.7 30`: see [blocking by address](doc/pt-BR/seguranca.md#bloqueio-por-endereco) |
 | Create a folder and lock a user to it | in the panel, Files tab, **New folder** and **New user in this folder**, or `./manage-user.sh add olt01 clientes/olt-01` |
 | Keep a backup copy | `./scripts/backup.sh`, which writes it encrypted; to go back to it, `./scripts/restaurar.sh <copy>`. Keep `.secrets/backup-chave-privada.txt` off the server |
@@ -621,7 +621,7 @@ Each profile widens the passive range together with `FTP_MAX_CLIENTS`: adjust th
 - **Encrypted backup copy:** `scripts/backup.sh` encrypts with the public key in `.secrets/` and nothing unencrypted reaches the disk; only the private key opens the copy. See [the key of the copy](doc/en/backup.md#chave).
 - nginx in front of the panel: it is the only published port, runs without `root` and without `capability`, accepts only the networks in `PAINEL_REDES_PERMITIDAS` and limits requests and connections per address.
 - **Standards followed:** FTP over TLS, TLS 1.2 and 1.3, HTTP, cookie, download, `security.txt` and `robots.txt` checked against the RFCs, with the status of each one. See [RFC conformance](doc/pt-BR/seguranca.md#conformidade-rfc).
-- Panel only over HTTPS and only from a private network: password stored as a `scrypt` hash, a session that ends after 4 hours without use and after 12 hours in any case, blocking after five wrong passwords, CSRF protection, no JavaScript, no access to Docker and a record of every action. See [doc/en/panel.md](doc/pt-BR/painel.md#protecoes).
+- Panel only over HTTPS and only from a private network: password stored as a `scrypt` hash, a session that ends after 4 hours without use and after 12 hours in any case, blocking after five wrong passwords, CSRF protection, no JavaScript, no access to Docker and a record of every action. See [doc/en/panel.md](doc/en/panel.md#protecoes).
 - Rotated logs (`max-size: 10m`, `max-file: 3`).
 
 </details>
@@ -663,7 +663,7 @@ At the root are `compose.yaml`, the `Dockerfile` and the day-to-day commands (`d
 | [`ftp/saude.sh`](ftp/saude.sh) | FTP healthcheck: opens the control port and waits for the greeting of the server |
 | [`ftp/usuario.sh`](ftp/usuario.sh) | User management **inside** the containers (called by `manage-user.sh` and by the panel) |
 | [`painel/servidor.py`](painel/servidor.py) | Web panel, in Python with the standard library only, behind nginx: entry point, with the `--hash` and `--saude` modes |
-| [`painel/`](painel/), other `.py` files | The other modules of the panel, one subject per file: configuration, password, session, audit log, state of the stack, request handling, routes and one tab per file. List in [Web panel](doc/pt-BR/painel.md#modulos) |
+| [`painel/`](painel/), other `.py` files | The other modules of the panel, one subject per file: configuration, password, session, audit log, state of the stack, request handling, routes and one tab per file. List in [Web panel](doc/en/panel.md#modulos) |
 | [`painel/entrypoint.sh`](painel/entrypoint.sh) | Checks the private network, generates the panel certificate and runs the server |
 | [`nginx/nginx.conf.modelo`](nginx/nginx.conf.modelo) | Template of the nginx configuration: HTTPS, HTTP/2, allowed networks, limits, static files and forwarding to the panel |
 | [`nginx/cabecalhos.conf`](nginx/cabecalhos.conf) | Security headers of the responses that nginx itself gives (error pages and static files) |
@@ -716,7 +716,7 @@ Index: [doc/en/README.md](doc/en/README.md).
 | [Scripts](doc/en/scripts.md) | What each script does, parameters and expected output |
 | [Operation](doc/en/operation.md) | Users, real certificate, logs and update |
 | [Backup and restore](doc/en/backup.md) | Backup copy in one command, restore and what to keep apart |
-| [Web panel](doc/pt-BR/painel.md) | Opening the panel, tabs, users, download of the files, password, certificate, audit log and protections |
+| [Web panel](doc/en/panel.md) | Opening the panel, tabs, users, download of the files, password, certificate, audit log and protections |
 | [Application screenshots](doc/pt-BR/aplicacao/README.md) | Every screen of the panel, menu by menu, with the explanation of each one |
 | [Troubleshooting](doc/en/troubleshooting.md) | Common errors and how to diagnose them |
 
@@ -792,4 +792,4 @@ The ALL-SAFE name, the logo and the icon are a trademark of ALL-SAFE, and there 
 | Own use, or distribution for free | They can stay |
 | Contract or sale to third parties | They come out: they are removed or replaced by those of whoever delivers |
 
-The full request is in [ALL-SAFE trademark](TRADEMARK.md). Replacing the logo and the icon, in one command, is in [Panel brand](doc/pt-BR/painel.md#marca).
+The full request is in [ALL-SAFE trademark](TRADEMARK.md). Replacing the logo and the icon, in one command, is in [Panel brand](doc/en/panel.md#marca).

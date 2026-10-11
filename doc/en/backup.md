@@ -282,4 +282,4 @@ find "$BACKUP_DIR" -maxdepth 1 -name 'allsafe-ftp-stack-*.tar.gz*' -mtime +30 -p
 
 ---
 
-⬅️ [Operation](operation.md) · 🏠 [Documentation](README.md) · ➡️ [Web panel](../pt-BR/painel.md)
+⬅️ [Operation](operation.md) · 🏠 [Documentation](README.md) · ➡️ [Web panel](panel.md)

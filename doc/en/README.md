@@ -52,7 +52,7 @@ flowchart LR
 | 7 | [Scripts](scripts.md) | What each script does, parameters and expected output |
 | 8 | [Operation](operation.md) | Users, real certificate, logs and image update |
 | 9 | [Backup and restore](backup.md) | Backup copy in one command, checked and reversible restore, what to keep apart, another server and scheduled copy |
-| 10 | [Web panel](../pt-BR/painel.md) | Opening the panel, what there is in each tab, users in the browser, download of the files, password, certificate, audit log and protections |
+| 10 | [Web panel](panel.md) | Opening the panel, what there is in each tab, users in the browser, download of the files, password, certificate, audit log and protections |
 | 11 | [Application screenshots](../pt-BR/aplicacao/README.md) | Every screen of the panel, menu by menu: the screenshot, what it is for, how to get there and what there is in each one |
 | 12 | [Troubleshooting](troubleshooting.md) | Symptom, cause, how to check and fix |
 
@@ -64,15 +64,15 @@ flowchart LR
 
 | Situation | Read, in this order |
 |---|---|
-| First time | [Installation](installation.md) ➜ [Web panel](../pt-BR/painel.md) ➜ [Configuration](configuration.md) ➜ [Profiles](profiles.md) |
-| Creating the account of a device | [Web panel](../pt-BR/painel.md#usuarios) or [Operation](operation.md#usuarios) |
-| Downloading a backup that a device uploaded | [Files and download](../pt-BR/painel.md#arquivos) |
-| Downloading your own files with the FTP account | [FTP user in the panel](../pt-BR/painel.md#usuario-ftp) |
-| Creating a folder or choosing the folder of a user | [Users in the panel](../pt-BR/painel.md#usuarios) ➜ [Files and download](../pt-BR/painel.md#arquivos) |
+| First time | [Installation](installation.md) ➜ [Web panel](panel.md) ➜ [Configuration](configuration.md) ➜ [Profiles](profiles.md) |
+| Creating the account of a device | [Web panel](panel.md#usuarios) or [Operation](operation.md#usuarios) |
+| Downloading a backup that a device uploaded | [Files and download](panel.md#arquivos) |
+| Downloading your own files with the FTP account | [FTP user in the panel](panel.md#usuario-ftp) |
+| Creating a folder or choosing the folder of a user | [Users in the panel](panel.md#usuarios) ➜ [Files and download](panel.md#arquivos) |
 | Seeing the screens of the panel before installing | [Application screenshots](../pt-BR/aplicacao/README.md) |
 | Before production | [Private network and firewall](../pt-BR/seguranca.md#rede-privada) ➜ [Best practices before production](../pt-BR/seguranca.md#boas-praticas) ➜ [Operation](operation.md#certificado-real-de-producao) ➜ [Backup and restore](backup.md#automatica) |
 | Old device that does not speak TLS | [Device without TLS](../pt-BR/seguranca.md#ftp-sem-tls) ➜ [Configuration](configuration.md#tls) ➜ [Troubleshooting](troubleshooting.md#ftp-sem-tls) |
-| Replacing the logo, delivering under a contract or selling | [Panel brand](../pt-BR/painel.md#marca) ➜ [ALL-SAFE trademark](../../TRADEMARK.md) |
+| Replacing the logo, delivering under a contract or selling | [Panel brand](panel.md#marca) ➜ [ALL-SAFE trademark](../../TRADEMARK.md) |
 | Reporting a security flaw | [Security policy](../../SECURITY.md) ➜ [Security contact](configuration.md#contato-de-seguranca) |
 | Keeping or recovering the data | [Backup and restore](backup.md) |
 | Something broke | [Troubleshooting](troubleshooting.md) |
@@ -122,9 +122,9 @@ Every diagram appears in the guides straight from the `.mmd` source, with a dark
 | [scripts-diagram.mmd](diagrams/scripts-diagram.mmd) | 1 | [Scripts](scripts.md) |
 | [users-diagram.mmd](diagrams/users-diagram.mmd) | 1 | [Operation](operation.md) |
 | [backup-diagram.mmd](diagrams/backup-diagram.mmd) | 1 | [Backup and restore](backup.md) |
-| [panel-diagram.mmd](diagrams/panel-diagram.mmd) | 1 | [Web panel](../pt-BR/painel.md) |
-| [panel-flowchart.mmd](diagrams/panel-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](../pt-BR/painel.md#como-decide) |
-| [panel-requests-flowchart.mmd](diagrams/panel-requests-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](../pt-BR/painel.md#como-decide) |
+| [panel-diagram.mmd](diagrams/panel-diagram.mmd) | 1 | [Web panel](panel.md) |
+| [panel-flowchart.mmd](diagrams/panel-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](panel.md#como-decide) |
+| [panel-requests-flowchart.mmd](diagrams/panel-requests-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](panel.md#como-decide) |
 | [diagnosis-diagram.mmd](diagrams/diagnosis-diagram.mmd) | 1 | [Troubleshooting](troubleshooting.md) |
 
 ---

@@ -135,7 +135,7 @@ Contato de segurança: não publicado. Para publicar, preencha SEGURANCA_CONTATO
 
 The summary says **where** each password is and never shows it. The `LEIAME.txt` of the `.secrets/` folder explains what each of its files is for. The first time, these also appear: `Gerada uma senha forte em .secrets/ftp-usuario-inicial-senha.txt (0600). Guarde-a para o cliente FTP.`, `Gerada uma senha forte para o painel em .secrets/painel-admin-inicial-senha.txt (0600).` and `Gerada a chave da cópia de segurança em .secrets/backup-chave-privada.txt (0600).`, with the reminder to keep that key off the server: [Backup and restore](backup.md#chave).
 
-Open the address of the panel in the browser and sign in with the user `admin` (the one in `PAINEL_ADMIN_USER`) and the password in `.secrets/painel-admin-inicial-senha.txt`. The first access, the certificate warning and the change of the user and of the password are in [Web panel](../pt-BR/painel.md#abrir).
+Open the address of the panel in the browser and sign in with the user `admin` (the one in `PAINEL_ADMIN_USER`) and the password in `.secrets/painel-admin-inicial-senha.txt`. The first access, the certificate warning and the change of the user and of the password are in [Web panel](panel.md#abrir).
 
 Which profile to use: [Profiles](profiles.md). On the `xlarge` and `extended` profiles the startup takes minutes, because Docker publishes the passive ports one by one: [startup time](profiles.md#tempo-de-subida).
 
@@ -219,7 +219,7 @@ The files of the users, PureDB and the certificates stay in `DATA_DIR`, on the h
 ## ⏭️ Next steps
 
 - Changing the initial password of the panel: [Secrets](secrets.md#senha-do-painel).
-- Creating more users: in the [panel](../pt-BR/painel.md#usuarios) or through [Operation](operation.md#usuarios).
+- Creating more users: in the [panel](panel.md#usuarios) or through [Operation](operation.md#usuarios).
 - Going to production: [Security](../pt-BR/seguranca.md#o-que-endurecer-antes-de-producao) and the real certificate.
 - Monitoring: the `allsafe-zabbix-isp-stack` stack follows the container.
 

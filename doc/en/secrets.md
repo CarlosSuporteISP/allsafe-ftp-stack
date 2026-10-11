@@ -94,7 +94,7 @@ The password changed in the panel or with `manage-user.sh passwd` survives resta
 
 ## 🖥️ Panel password
 
-Each panel administrator has their own user and password. The first one is born at installation, with the name in `PAINEL_ADMIN_USER` and the password in `.secrets/painel-admin-inicial-senha.txt`. Change that password right after the first access, **in the panel**, in the Users tab, and delete the file of the initial password: [Panel administrators](../pt-BR/painel.md#administradores).
+Each panel administrator has their own user and password. The first one is born at installation, with the name in `PAINEL_ADMIN_USER` and the password in `.secrets/painel-admin-inicial-senha.txt`. Change that password right after the first access, **in the panel**, in the Users tab, and delete the file of the initial password: [Panel administrators](panel.md#administradores).
 
 Without access to the panel, the password is set from the host:
 
@@ -106,7 +106,7 @@ Without access to the panel, the password is set from the host:
 
 **Expected result:** `Administrador admin com a senha trocada; painel reiniciado e sessões abertas encerradas.` When the administrator is the one in `PAINEL_ADMIN_USER`, the file `painel-admin-inicial-senha.txt` ceases to exist.
 
-The password must have at least 12 characters and **is not stored anywhere**: the panel keeps only the hash, in `DATA_DIR/painel/administradores`. Keep it in your password vault. Use of the panel: [Web panel](../pt-BR/painel.md).
+The password must have at least 12 characters and **is not stored anywhere**: the panel keeps only the hash, in `DATA_DIR/painel/administradores`. Keep it in your password vault. Use of the panel: [Web panel](panel.md).
 
 ---
 
