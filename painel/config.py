@@ -27,7 +27,12 @@ PASTA_BLOQUEIOS = '/auth/bloqueios'   # bloqueios por tentativa no FTP, um arqui
 # Bloqueios por endereço, um arquivo por endereço: valem no FTP e no painel; gravam o vigia do ftp e o allsafe-ftp-user
 PASTA_ENDERECOS = '/auth/enderecos'
 PASTA_PREFIXOS = '/auth/prefixos'
+PASTA_CHEGADAS = '/auth/chegadas'     # anúncios de arquivo que acabou de chegar pelo FTP; quem grava é o vigia do ftp
 CMD_USUARIO = '/usr/local/sbin/allsafe-ftp-user'
+# Destinos de fora (S3 e bot do Telegram): a configuração e o andamento ficam com o painel; os segredos, um por
+# arquivo, na pasta que vem de SECRETS_DIR/destinos, no host.
+PASTA_DESTINOS = '/painel/destinos'
+PASTA_SEGREDOS = '/segredos'
 PASTA_DADOS = '/data'
 
 # Mesma regra de nome do allsafe-ftp-user; aqui ela só antecipa a mensagem de erro. Vale também para administrador.
@@ -38,6 +43,8 @@ NIVEL = re.compile(r'[A-Za-z0-9_][A-Za-z0-9._-]{0,63}')
 PASTA = re.compile(r'[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(?:/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,3}')
 # Contato de segurança (SEGURANCA_CONTATO_EMAIL): um endereço de e-mail só, que cabe em um `mailto:` sem codificação.
 EMAIL = re.compile(r'[A-Za-z0-9._+-]{1,64}@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,24}')
+# Endereço de um serviço de fora: só HTTPS, nome ou IPv4 em minúsculas, porta opcional, sem caminho.
+ENDERECO_HTTPS = re.compile(r'https://([a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?)(?::([0-9]{1,5}))?')
 DONO_DADOS = 'ftpdata'      # usuário do sistema dono das pastas e dos arquivos do FTP
 PRIVADAS = [ipaddress.ip_network(r) for r in ('127.0.0.0/8', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16')]
 
@@ -171,6 +178,14 @@ def configuracao():
     retencao = amb('PAINEL_RETENCAO_MINUTOS', '60')
     if not (re.fullmatch(r'0|[1-9][0-9]{0,3}', retencao) and int(retencao) <= 1440):
         falha('PAINEL_RETENCAO_MINUTOS deve ficar entre 0 e 1440')
+    if amb('PAINEL_DESTINOS', 'sim') not in ('nao', 'sim'):
+        falha("PAINEL_DESTINOS deve ser 'sim' ou 'nao'")
+    telegram_api = amb('PAINEL_TELEGRAM_API', 'https://api.telegram.org')
+    if not ENDERECO_HTTPS.fullmatch(telegram_api):
+        falha('PAINEL_TELEGRAM_API deve ser um endereço https://nome[:porta], em minúsculas e sem caminho')
+    telegram_max = amb('PAINEL_TELEGRAM_MAX_MB', '50')
+    if not (re.fullmatch(r'[1-9][0-9]{0,3}', telegram_max) and int(telegram_max) <= 2000):
+        falha('PAINEL_TELEGRAM_MAX_MB deve ficar entre 1 e 2000')
     try:
         with open(os.path.join(RAIZ, 'VERSION'), encoding='utf-8') as arq:
             versao = arq.read().strip()
@@ -193,6 +208,9 @@ def configuracao():
         'inatividade': int(minutos) * 60,
         'envio_max': int(envio) * 1024 * 1024,
         'retencao_minutos': int(retencao),
+        'destinos': amb('PAINEL_DESTINOS', 'sim') == 'sim',
+        'telegram_api': telegram_api,
+        'telegram_max': int(telegram_max) * 1024 * 1024,
         'cert_cn': amb('PAINEL_CERT_CN', '').strip().lower(),
         'contato_seguranca': contato,
         'painel_bind': amb('PAINEL_BIND_IP', '127.0.0.1'),

@@ -102,6 +102,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão que encerra com 4 horas sem uso, bloqueio depois de cinco senhas erradas e registro de cada ação |
 | **Arquivos pelo navegador** | O administrador navega, envia, baixa, renomeia e apaga; o dono dos arquivos entra com o usuário e a senha do FTP, vê só a própria pasta e faz o que o perfil dele deixa. Enviar pelo painel depende de permissão dada a cada usuário |
 | **Limpeza automática** | Por conta, o administrador manda guardar só os últimos arquivos de cada pasta ou só os dos últimos dias; o painel apaga o resto sozinho, de tempos em tempos. Desligada por padrão |
+| **Envio para S3 e bot do Telegram** | Na aba Destinos, o administrador liga uma pasta a um armazenamento S3, para a segunda cópia ou para guardar fora e liberar o disco, e a um bot do Telegram, que entrega em instantes cada arquivo que chega a uma pessoa, um grupo ou um canal, até o tamanho que o bot aceita. O bot só envia. Na aba Arquivos, um botão manda um arquivo na hora. Sem configuração por padrão |
 | **Saúde do servidor no painel** | A aba Servidor mostra os três containers da stack, cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, e o processador, a memória, o disco e a rede do FTP do servidor, com o histórico dos últimos minutos |
 | **nginx na frente do painel** | Só o nginx publica a porta do painel: TLS 1.2 e 1.3, HTTP/2, lista de redes permitidas, limite de pedidos e de conexões por endereço; o painel fica sem porta de rede |
 | **Containers endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs; o nginx roda sem `root` e sem nenhuma `capability` |
@@ -181,6 +182,7 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | Deixar o dono dos arquivos baixar os dele | ele abre o painel com o usuário e a senha do FTP e vê só a própria pasta; para o painel aceitar só administradores, `PAINEL_ACESSO_USUARIOS_FTP=nao` no `.env` e `./deploy.sh` |
 | Deixar um usuário enviar arquivo pelo navegador | pelo painel, aba Usuários, **Editar**, caixa **Permitir que este usuário envie arquivo pelo painel**, ou `./manage-user.sh limites backup-olt enviar=1`: veja [Enviar arquivo pelo painel](doc/pt-BR/painel.md#enviar-arquivo) |
 | Guardar só os arquivos mais novos de uma conta | pelo painel, aba Usuários, **Editar**, cartão **Limpeza automática**, ou `./manage-user.sh retencao backup-olt ultimos=30`: veja [Limpeza automática](doc/pt-BR/painel.md#limpeza) |
+| Mandar os arquivos de uma pasta para um S3 ou para o Telegram | pelo painel, aba Destinos, **Configurar** no cartão do destino; para um arquivo só, aba Arquivos, botão **Telegram** ou **S3** na linha dele: veja [Destinos](doc/pt-BR/painel.md#destinos) |
 | Bloquear um endereço ou um prefixo | pelo painel, aba Bloqueios, **Bloquear endereço**, ou `./manage-user.sh endereco-bloquear 203.0.113.7 30`: veja [bloqueio por endereço](doc/pt-BR/seguranca.md#bloqueio-por-endereco) |
 | Criar uma pasta e prender um usuário a ela | pelo painel, aba Arquivos, **Nova pasta** e **Novo usuário nesta pasta**, ou `./manage-user.sh add olt01 clientes/olt-01` |
 | Guardar uma cópia de segurança | `./scripts/backup.sh`, que a grava cifrada; para voltar a ela, `./scripts/restaurar.sh <cópia>`. Guarde `.secrets/backup-chave-privada.txt` fora do servidor |
@@ -645,7 +647,7 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 73 casos funcionais, 124 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 82 casos funcionais, 130 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
 
 ---
 

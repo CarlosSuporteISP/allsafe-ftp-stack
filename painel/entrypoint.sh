@@ -63,6 +63,12 @@ SEGURANCA_CONTATO_EMAIL="${SEGURANCA_CONTATO_EMAIL:-}"
   || die "PAINEL_ENVIO_MAX_MB deve ficar entre 1 e 102400"
 [[ "${PAINEL_RETENCAO_MINUTOS:-60}" =~ ^(0|[1-9][0-9]{0,3})$ ]] && (( ${PAINEL_RETENCAO_MINUTOS:-60} <= 1440 )) \
   || die "PAINEL_RETENCAO_MINUTOS deve ficar entre 0 e 1440"
+PAINEL_DESTINOS="${PAINEL_DESTINOS:-sim}"
+[[ "$PAINEL_DESTINOS" == sim || "$PAINEL_DESTINOS" == nao ]] || die "PAINEL_DESTINOS deve ser 'sim' ou 'nao'"
+[[ "${PAINEL_TELEGRAM_API:-https://api.telegram.org}" =~ ^https://[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?(:[0-9]{1,5})?$ ]] \
+  || die "PAINEL_TELEGRAM_API deve ser um endereço https://nome[:porta], em minúsculas e sem caminho"
+[[ "${PAINEL_TELEGRAM_MAX_MB:-50}" =~ ^[1-9][0-9]{0,3}$ ]] && (( ${PAINEL_TELEGRAM_MAX_MB:-50} <= 2000 )) \
+  || die "PAINEL_TELEGRAM_MAX_MB deve ficar entre 1 e 2000"
 cn_ip=false
 if [[ "$PAINEL_CERT_CN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   cn_ip=true
@@ -71,11 +77,19 @@ fi
 
 [[ -d /auth && -d /data ]] || die "pastas /auth e /data ausentes: o painel usa as mesmas do serviço ftp"
 [[ -d /nginx ]] || die "pasta /nginx ausente: é por ela que o nginx alcança o painel (rode ./deploy.sh)"
+# A pasta dos segredos dos destinos vem do host, de SECRETS_DIR/destinos; a imagem traz uma vazia no lugar, e gravar
+# nela seria gravar na raiz somente leitura. Com os destinos desligados, o painel nem a abre.
+if [[ "$PAINEL_DESTINOS" == sim ]]; then
+  grep -q ' /segredos ' /proc/self/mountinfo \
+    || die "pasta /segredos não veio do host: rode ./deploy.sh, que cria SECRETS_DIR/destinos, ou use PAINEL_DESTINOS=nao"
+fi
 
 # /painel vem do host por bind mount: dono e modo são normalizados a cada subida.
 chown root:root /painel
 chmod 0700 /painel
 install -d -o root -g root -m 0700 /painel/tls
+# Configuração e andamento dos destinos de fora (S3 e bot do Telegram). Os segredos deles não ficam aqui: ficam em /segredos.
+install -d -o root -g root -m 0700 /painel/destinos
 touch /painel/auditoria.log
 chmod 0600 /painel/auditoria.log
 # Administradores do painel (nome e hash da senha): só o root lê, também depois de uma restauração.

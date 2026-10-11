@@ -1891,6 +1891,336 @@ EN = {
         'allowed',
     'envio pelo painel':
         'upload through the panel',
+    'destino':
+        'destination',
+    'motivo':
+        'reason',
+    'apagados do servidor':
+        'deleted from the server',
+    'acima do limite do bot':
+        'above the bot limit',
+    'ignorados':
+        'skipped',
+    'depois do envio':
+        'after sending',
+    'minutos entre as passadas':
+        'minutes between runs',
+    'resultado':
+        'result',
+    'arquivo':
+        'file',
+    'situação':
+        'state',
+    'segredos':
+        'secrets',
+    'Destino de envio gravado':
+        'Upload destination saved',
+    'Destino de envio removido':
+        'Upload destination removed',
+    'Teste de destino de envio':
+        'Upload destination test',
+    'Envio para o destino pedido fora de hora':
+        'Upload to the destination requested ahead of time',
+    'Arquivos enviados para o destino':
+        'Files sent to the destination',
+    'Envio para o destino não concluído':
+        'Upload to the destination not completed',
+    'Arquivo recusado pelo destino deixado para trás':
+        'File refused by the destination left behind',
+    'Armazenamento S3':
+        'S3 storage',
+    'Bot do Telegram':
+        'Telegram bot',
+    'Destino gravado. Vale a partir da próxima passada.':
+        'Destination saved. It takes effect on the next run.',
+    'Destino removido: a configuração e os segredos dele foram apagados.':
+        'Destination removed: its settings and secrets were deleted.',
+    'Teste concluído: o destino recebeu.':
+        'Test finished: the destination received it.',
+    'Passada pedida: o painel começa em instantes. Atualize a tela para acompanhar.':
+        'Run requested: the panel starts in a moment. Refresh the page to follow it.',
+    'o nome do endereço não foi encontrado':
+        'the address name was not found',
+    'o endereço não é aceito pelo painel, ou o serviço mandou o pedido para outro endereço':
+        'the address is not accepted by the panel, or the service sent the request to another address',
+    'não foi possível conectar ao serviço':
+        'could not connect to the service',
+    'o certificado do serviço não foi aceito':
+        'the service certificate was not accepted',
+    'o serviço não respondeu a tempo':
+        'the service did not answer in time',
+    'a resposta do serviço não foi entendida':
+        'the service answer was not understood',
+    'o serviço recusou a credencial ou a permissão':
+        'the service refused the credential or the permission',
+    'o bucket ou a conversa não existe para esta credencial':
+        'the bucket or the chat does not exist for this credential',
+    'o arquivo é maior do que o serviço aceita':
+        'the file is larger than the service accepts',
+    'um arquivo não pôde ser lido':
+        'a file could not be read',
+    'a pasta escolhida não existe mais dentro dos dados':
+        'the chosen folder no longer exists inside the data',
+    'faltam os segredos do destino: grave-os de novo':
+        'the destination secrets are missing: save them again',
+    'o S3 espera o bot do Telegram entregar o que falta antes de apagar mais arquivos':
+        'S3 is waiting for the Telegram bot to deliver what is left before deleting more files',
+    'outro teste está em andamento: tente de novo em instantes':
+        'another test is running: try again in a moment',
+    'o arquivo está vazio, e o bot não envia arquivo vazio':
+        'the file is empty, and the bot does not send an empty file',
+    'o nome do arquivo não cabe no destino':
+        'the file name does not fit the destination',
+    'o arquivo mudou durante o envio: repita quando ele terminar de chegar':
+        'the file changed during the send: repeat when it has finished arriving',
+    'outro envio pedido pela tela está em andamento: tente de novo em instantes':
+        'another send requested from the screen is running: try again in a moment',
+    'Enviar este arquivo pelo bot do Telegram':
+        'Send this file through the Telegram bot',
+    'Enviar este arquivo para o armazenamento S3':
+        'Send this file to the S3 storage',
+    'Ainda chegando':
+        'Still arriving',
+    '{n} arquivo mudou há menos de dois minutos e ainda pode estar chegando: vai em uma próxima passada':
+        '{n} file changed less than two minutes ago and may still be arriving: it goes in a later run',
+    '{n} arquivos mudaram há menos de dois minutos e ainda podem estar chegando: vão em uma próxima passada':
+        '{n} files changed less than two minutes ago and may still be arriving: they go in a later run',
+    'O arquivo que chega inteiro por FTP ou pelo painel sai em instantes, sem esperar o intervalo. O intervalo confere o que ficou para trás: o arquivo que trocou de nome e o que chegou por outro caminho.':
+        'A file that arrives whole by FTP or through the panel leaves in a moment, without waiting for the interval. The interval checks what was left behind: a file that changed its name and one that arrived another way.',
+    '{destino}: arquivo enviado.':
+        '{destino}: file sent.',
+    '{destino}: o envio continua em segundo plano. O resultado aparece na aba Log.':
+        '{destino}: the send continues in the background. The result appears in the Log tab.',
+    'Arquivo enviado para o destino a pedido':
+        'File sent to the destination on request',
+    'o destino está desligado ou sem os segredos':
+        'the destination is off or has no secrets',
+    'Formulário incompleto: abra a tela de novo.':
+        'Incomplete form: open the page again.',
+    'Endereço inválido: use https://nome ou https://nome:porta, em minúsculas e sem caminho.':
+        'Invalid address: use https://name or https://name:port, in lowercase and without a path.',
+    'Região inválida: letras minúsculas, números e hífen, até 32 caracteres.':
+        'Invalid region: lowercase letters, digits and hyphen, up to 32 characters.',
+    'Bucket inválido: de 3 a 63 caracteres, com letras minúsculas, números, ponto e hífen.':
+        'Invalid bucket: 3 to 63 characters, with lowercase letters, digits, dot and hyphen.',
+    'Prefixo inválido: até 8 níveis separados por barra, com letras, números, _, - e ponto.':
+        'Invalid prefix: up to 8 levels separated by slash, with letters, digits, _, - and dot.',
+    'Escolha a forma do endereço do bucket.':
+        'Choose the form of the bucket address.',
+    'Escolha o que acontece com o arquivo depois do envio.':
+        'Choose what happens to the file after it is sent.',
+    'Pasta inválida: até 4 níveis separados por barra, com letras, números, _, - e ponto.':
+        'Invalid folder: up to 4 levels separated by slash, with letters, digits, _, - and dot.',
+    'Intervalo inválido: de 5 a 1440 minutos.':
+        'Invalid interval: 5 to 1440 minutes.',
+    'falha não identificada':
+        'unidentified failure',
+    'a cada {n} minuto':
+        'every {n} minute',
+    'a cada {n} minutos':
+        'every {n} minutes',
+    'Cópia automática dos arquivos para fora do servidor: um armazenamento S3 e um bot do Telegram.':
+        'Automatic copy of the files out of the server: an S3 storage and a Telegram bot.',
+    'Remover destino':
+        'Remove destination',
+    'o serviço respondeu com o código {codigo}':
+        'the service answered with code {codigo}',
+    'toda a pasta dos dados':
+        'the whole data folder',
+    '{n} arquivo enviado':
+        '{n} file sent',
+    '{n} arquivos enviados':
+        '{n} files sent',
+    'Guardar no S3: o arquivo sai do servidor depois de gravado no destino':
+        'Keep in S3: the file leaves the server once it is stored at the destination',
+    'Copiar: o arquivo continua no servidor':
+        'Copy: the file stays on the server',
+    'gravados; não aparecem na tela':
+        'saved; they are not shown on screen',
+    'faltando':
+        'missing',
+    '{destino}: não deu certo. Motivo: {motivo}.':
+        '{destino}: it did not work. Reason: {motivo}.',
+    'em branco mantém o gravado':
+        'blank keeps the saved one',
+    '{n} apagado do servidor':
+        '{n} deleted from the server',
+    '{n} apagados do servidor':
+        '{n} deleted from the server',
+    '{n} acima do limite do bot (foi só o aviso)':
+        '{n} above the bot limit (only the notice went)',
+    '{n} ignorado':
+        '{n} skipped',
+    '{n} ignorados':
+        '{n} skipped',
+    '{n} recusado pelo destino':
+        '{n} refused by the destination',
+    '{n} recusados pelo destino':
+        '{n} refused by the destination',
+    'Endereço':
+        'Address',
+    'Bucket e prefixo':
+        'Bucket and prefix',
+    'Região':
+        'Region',
+    'Pasta enviada':
+        'Folder sent',
+    'Passadas':
+        'Runs',
+    'Depois do envio':
+        'After sending',
+    'Maior arquivo que o bot envia':
+        'Largest file the bot sends',
+    'Idioma das mensagens':
+        'Message language',
+    'Envia os arquivos de uma pasta para um bucket de qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna. Pode só copiar, ou guardar lá e liberar o disco do servidor.':
+        'Sends the files of a folder to a bucket of any service that speaks the S3 protocol, in the cloud or on the internal network. It can just copy, or keep them there and free the server disk.',
+    'Envia cada arquivo que chega em uma pasta para uma pessoa, um grupo ou um canal, por um bot do Telegram. O bot só envia: o painel não lê mensagem nem aceita comando pela conversa.':
+        'Sends each file that arrives in a folder to a person, a group or a channel, through a Telegram bot. The bot only sends: the panel reads no message and accepts no command through the chat.',
+    'Testar':
+        'Test',
+    'Enviar agora':
+        'Send now',
+    'Alterar':
+        'Change',
+    'Destinos':
+        'Destinations',
+    'Ligado: o painel envia sozinho, no intervalo abaixo':
+        'On: the panel sends by itself, at the interval below',
+    'Intervalo entre as passadas':
+        'Interval between runs',
+    'minutos, de 5 a 1440':
+        'minutes, 5 to 1440',
+    'Chave de acesso inválida: de 3 a 128 caracteres, sem espaço.':
+        'Invalid access key: 3 to 128 characters, no spaces.',
+    'Chave secreta inválida: de 8 a 256 caracteres, sem espaço.':
+        'Invalid secret key: 8 to 256 characters, no spaces.',
+    'Token inválido: é o texto inteiro que o criador de bots entrega, com os números, os dois-pontos e o resto.':
+        'Invalid token: it is the whole text the bot creator hands over, with the digits, the colon and the rest.',
+    'Conversa inválida: o número da pessoa ou do grupo, ou o @nome do canal.':
+        'Invalid chat: the number of the person or of the group, or the @name of the channel.',
+    'A pasta não existe dentro dos dados. Crie em Arquivos ou confira o nome.':
+        'The folder does not exist inside the data. Create it in Files or check the name.',
+    'não configurado':
+        'not configured',
+    'faltam os segredos':
+        'secrets missing',
+    'ligado':
+        'on',
+    'desligado':
+        'off',
+    'Última passada':
+        'Last run',
+    'nenhuma ainda':
+        'none yet',
+    'Enviado desde que foi ligado':
+        'Sent since it was turned on',
+    '{n} arquivo':
+        '{n} file',
+    '{n} arquivos':
+        '{n} files',
+    '{n} arquivo já gravado no S3 sai do servidor quando o bot do Telegram o entregar':
+        '{n} file already stored in S3 leaves the server when the Telegram bot delivers it',
+    '{n} arquivos já gravados no S3 saem do servidor quando o bot do Telegram os entregar':
+        '{n} files already stored in S3 leave the server when the Telegram bot delivers them',
+    'Agora':
+        'Now',
+    'passada em andamento':
+        'run in progress',
+    'Configurar':
+        'Configure',
+    'A configuração está gravada, mas faltam os segredos deste destino (eles não entram na cópia de segurança). Abra <strong>Alterar</strong> e grave-os de novo; até lá, nada é enviado.':
+        'The settings are saved, but the secrets of this destination are missing (they are not part of the backup). Open <strong>Change</strong> and save them again; until then, nothing is sent.',
+    'Chave de acesso e chave secreta':
+        'Access key and secret key',
+    'Token do bot e conversa':
+        'Bot token and chat',
+    'dentro dos dados, com as pastas de dentro dela; em branco é a pasta dos dados inteira':
+        'inside the data, with the folders inside it; blank is the whole data folder',
+    'Serve qualquer serviço que fale o protocolo do S3. A chave só precisa poder gravar no bucket (<code>s3:PutObject</code> e <code>s3:AbortMultipartUpload</code>): o painel não lê, não lista e não apaga nada no destino.':
+        'Any service that speaks the S3 protocol works. The key only needs to be able to write to the bucket (<code>s3:PutObject</code> and <code>s3:AbortMultipartUpload</code>): the panel does not read, list or delete anything at the destination.',
+    'Em <strong>Guardar no S3</strong>, o destino passa a ter a única cópia: o painel não tem lixeira e não baixa de volta. A primeira passada envia tudo o que já está na pasta; com Guardar no S3, tudo isso sai do servidor. Trocar de Copiar para Guardar vale para o que for enviado dali em diante.':
+        'With <strong>Keep in S3</strong>, the destination holds the only copy: the panel has no recycle bin and does not download it back. The first run sends everything already in the folder; with Keep in S3, all of that leaves the server. Switching from Copy to Keep applies to what is sent from then on.',
+    'O nome do objeto é o prefixo mais o caminho do arquivo dentro dos dados. Trocar o endereço, o bucket, o prefixo ou a pasta recomeça do zero: tudo o que está na pasta é enviado de novo.':
+        'The object name is the prefix plus the path of the file inside the data. Changing the address, the bucket, the prefix or the folder starts from scratch: everything in the folder is sent again.',
+    'O bot <strong>só envia</strong>: o painel usa o envio de arquivo e o envio de mensagem, e nada mais. Não lê a conversa, não registra endereço de retorno e não aceita comando.':
+        'The bot <strong>only sends</strong>: the panel uses file sending and message sending, and nothing else. It does not read the chat, does not register a return address and accepts no command.',
+    'A conversa é o número da pessoa ou do grupo (o de grupo começa com <code>-</code>) ou o <code>@nome</code> de um canal. O bot precisa estar no grupo ou no canal, e a pessoa precisa ter iniciado a conversa com ele.':
+        'The chat is the number of the person or of the group (a group one starts with <code>-</code>) or the <code>@name</code> of a channel. The bot must be in the group or in the channel, and the person must have started the chat with it.',
+    'Vai um arquivo por mensagem, com o caminho, o tamanho e a data. O maior arquivo que o bot envia tem {limite}: acima disso vai só um aviso com o nome e o tamanho. Só é enviado o que chegar depois de o destino ser ligado; desligar e ligar de novo, ou trocar a pasta, recomeça dali.':
+        'One file goes per message, with the path, the size and the date. The largest file the bot sends is {limite}: above that, only a notice with the name and the size goes. Only what arrives after the destination is turned on is sent; turning it off and on again, or changing the folder, starts from there.',
+    'Preencha os dois segredos do destino: nenhum deles está gravado ainda.':
+        'Fill in both secrets of the destination: neither is saved yet.',
+    'A última passada parou antes do fim: {motivo}. A seguinte recomeça do mesmo arquivo.':
+        'The last run stopped before the end: {motivo}. The next one resumes from the same file.',
+    'Como o painel envia':
+        'How the panel sends',
+    'O painel só sai do servidor para os destinos gravados aqui, sempre por HTTPS com o certificado conferido. Sai arquivo comum: link simbólico e nome começado por ponto ficam de fora. O bot do Telegram envia em instantes o arquivo que chega inteiro por FTP ou pelo painel; nos outros casos, e sempre no S3, o arquivo só entra na passada depois de dois minutos sem mudar, para o que ainda está chegando não sair pela metade. A ordem é a da chegada ao servidor; uma falha do destino encerra a passada e a seguinte recomeça do mesmo arquivo. Pasta que troca de nome não reenvia os arquivos de dentro.':
+        'The panel only leaves the server for the destinations saved here, always over HTTPS with the certificate checked. Regular files go: symbolic links and names starting with a dot stay out. The Telegram bot sends in a moment the file that arrives whole by FTP or through the panel; in the other cases, and always in S3, a file only enters the run after two minutes without changing, so that what is still arriving does not leave half done. The order is the order of arrival at the server; a destination failure ends the run and the next one resumes from the same file. A folder that changes its name does not resend the files inside it.',
+    'Os segredos ficam no servidor, na pasta <code>destinos</code> dos segredos da instalação, um por arquivo, e não entram na cópia de segurança: depois de restaurar uma cópia, grave-os de novo.':
+        'The secrets stay on the server, in the <code>destinos</code> folder of the installation secrets, one per file, and are not part of the backup: after restoring a backup, save them again.',
+    'Gravar':
+        'Save',
+    'Endereço do serviço':
+        'Service address',
+    'só HTTPS, sem o bucket: <code>https://nome</code> ou <code>https://nome:porta</code>':
+        'HTTPS only, without the bucket: <code>https://name</code> or <code>https://name:port</code>',
+    'a que o serviço informa; onde não há, <code>us-east-1</code>':
+        'the one the service states; where there is none, <code>us-east-1</code>',
+    'Bucket':
+        'Bucket',
+    'já criado no serviço':
+        'already created at the service',
+    'Prefixo':
+        'Prefix',
+    'pasta dentro do bucket; em branco grava na raiz dele':
+        'folder inside the bucket; blank writes to its root',
+    'Endereço do bucket':
+        'Bucket address',
+    'Chave de acesso':
+        'Access key',
+    'Chave secreta':
+        'Secret key',
+    'Token do bot':
+        'Bot token',
+    'Conversa que recebe':
+        'Receiving chat',
+    'Voltar para os destinos':
+        'Back to the destinations',
+    'Remover <strong>{destino}</strong>? O painel apaga a configuração, o andamento e os segredos deste destino e para de enviar para ele. O que já foi enviado continua lá, e nenhum arquivo do servidor é apagado.':
+        'Remove <strong>{destino}</strong>? The panel deletes the settings, the progress and the secrets of this destination and stops sending to it. What was already sent stays there, and no file on the server is deleted.',
+    'Sim, remover o destino':
+        'Yes, remove the destination',
+    'À espera do bot':
+        'Waiting for the bot',
+    'para gravar o destino':
+        'to save the destination',
+    'No caminho':
+        'In the path',
+    '<code>https://nome/bucket/arquivo</code>, o que a maioria dos serviços próprios usa':
+        '<code>https://name/bucket/file</code>, what most self-hosted services use',
+    'No nome':
+        'In the name',
+    '<code>https://bucket.nome/arquivo</code>, o que as nuvens grandes pedem':
+        '<code>https://bucket.name/file</code>, what the large clouds require',
+    'Copiar':
+        'Copy',
+    'o arquivo continua no servidor; o S3 é a segunda cópia':
+        'the file stays on the server; S3 is the second copy',
+    'Guardar no S3':
+        'Keep in S3',
+    'o arquivo sai do servidor depois que o destino confirma a gravação':
+        'the file leaves the server after the destination confirms it was stored',
+    'Não foi possível gravar o destino:':
+        'Could not save the destination:',
+    'para remover o destino':
+        'to remove the destination',
+    'Não foi possível remover o destino:':
+        'Could not remove the destination:',
+    'Arquivo maior que o limite de envio do bot ({limite}): não foi enviado por aqui.':
+        'File larger than the bot sending limit ({limite}): it was not sent through here.',
+    'Teste do painel da allsafe-ftp-stack: o bot consegue enviar para esta conversa.':
+        'allsafe-ftp-stack panel test: the bot can send to this chat.',
 }
 
 # Mensagem de erro do allsafe-ftp-user (ftp/usuario.sh), que fala português sem acento: a expressão que a

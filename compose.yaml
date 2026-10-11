@@ -127,6 +127,9 @@ services:
       PAINEL_SESSAO_MINUTOS: ${PAINEL_SESSAO_MINUTOS:-240}
       PAINEL_ENVIO_MAX_MB: ${PAINEL_ENVIO_MAX_MB:-1024}
       PAINEL_RETENCAO_MINUTOS: ${PAINEL_RETENCAO_MINUTOS:-60}
+      PAINEL_DESTINOS: ${PAINEL_DESTINOS:-sim}
+      PAINEL_TELEGRAM_API: ${PAINEL_TELEGRAM_API:-https://api.telegram.org}
+      PAINEL_TELEGRAM_MAX_MB: ${PAINEL_TELEGRAM_MAX_MB:-50}
       PAINEL_ACESSO_USUARIOS_FTP: ${PAINEL_ACESSO_USUARIOS_FTP:-sim}
       PAINEL_CERT_CN: ${PAINEL_CERT_CN:-}
       PAINEL_PROXY_CONFIAVEL: ${PAINEL_PROXY_CONFIAVEL:-}
@@ -167,6 +170,13 @@ services:
       - type: bind
         source: ${DATA_DIR}/nginx
         target: /nginx
+        bind:
+          create_host_path: false
+      # Segredos dos destinos de fora (chaves do S3, token e conversa do bot do Telegram): o administrador grava
+      # pelo painel, um arquivo por segredo, em SECRETS_DIR/destinos. É a única pasta de segredos em que o painel escreve.
+      - type: bind
+        source: ${SECRETS_DIR:-./.secrets}/destinos
+        target: /segredos
         bind:
           create_host_path: false
     secrets:

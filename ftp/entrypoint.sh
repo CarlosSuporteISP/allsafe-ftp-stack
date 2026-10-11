@@ -166,6 +166,11 @@ install -d -o root -g root -m 0700 /auth/enderecos
 # pelo painel; o porteiro e o painel aplicam.
 [[ ! -L /auth/prefixos ]] || die "/auth/prefixos é link simbólico: remova-o"
 install -d -o root -g root -m 0700 /auth/prefixos
+# Anúncios de chegada (um arquivo por envio concluído, com o caminho dele dentro dos dados): o vigia grava, o
+# painel lê e apaga, para o bot do Telegram enviar em instantes. Valem por minutos: o que sobrou de antes sai.
+[[ ! -L /auth/chegadas ]] || die "/auth/chegadas é link simbólico: remova-o"
+install -d -o root -g root -m 0700 /auth/chegadas
+find /auth/chegadas -mindepth 1 -maxdepth 1 -type f -delete
 exec 9>&-  # solta a trava: o descritor não pode ir para o pure-ftpd
 # Com perfil de envio, de só envio ou de leitura no cadastro, as pastas voltam ao modo que os perfis pedem e o que
 # um envio deixou sem entrega é entregue, antes de o servidor aceitar sessão. Sem esses perfis, nada é percorrido.

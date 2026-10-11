@@ -44,10 +44,11 @@ flowchart LR
 |---|---|---|---|
 | `ftp-usuario-inicial-senha.txt` | [`deploy.sh`](../../deploy.sh), on the first run, if the file does not exist or is empty | Only if you want a password of your own | Password of the initial user (`FTP_USER`) |
 | `painel-admin-inicial-senha.txt` | [`deploy.sh`](../../deploy.sh), on the first run | No | **Initial** password of the first panel administrator (`PAINEL_ADMIN_USER`), in text. It stays only on the host and is valid until it is changed in the Users tab; once changed, delete the file |
-| `painel-admin-inicial-senha-hash.txt` | [`deploy.sh`](../../deploy.sh) and [`scripts/painel-senha.sh`](../../scripts/painel-senha.sh) | No | `scrypt` hash of that initial password. It is the only file of the folder that the panel sees, and it is only used to create the first administrator |
+| `painel-admin-inicial-senha-hash.txt` | [`deploy.sh`](../../deploy.sh) and [`scripts/painel-senha.sh`](../../scripts/painel-senha.sh) | No | `scrypt` hash of that initial password. Of the loose files of the folder, it is the only one the panel sees, and it is only used to create the first administrator |
 | `backup-chave-privada.txt` | [`deploy.sh`](../../deploy.sh), if neither of the two keys exists | No | Key that **opens** the backup copy. Keep a copy off the server: without it no copy restores. See [Backup and restore](backup.md#chave) |
 | `backup-chave-publica.txt` | [`deploy.sh`](../../deploy.sh), at every run, from the private one | No | Key that **encrypts** the backup copy. It opens nothing and can stay on the server |
 | `LEIAME.txt` | [`deploy.sh`](../../deploy.sh), at every run | No | Says what each file of the folder is for. It keeps no secret |
+| `destinos/` | [`deploy.sh`](../../deploy.sh) creates the folder, empty; the panel writes the files | No: through the Destinations tab | Secrets of S3 and of the Telegram bot, one per file: `s3-chave-de-acesso.txt`, `s3-chave-secreta.txt`, `telegram-token.txt` and `telegram-conversa.txt`. The panel writes and reads them, and none goes back to the screen. To change or remove: through the [Destinations](panel.md#destinos) tab |
 | `.gitkeep` | already comes in the repository | No | Keeps the folder in the clone |
 
 The name of each file follows the same order: **whose** secret it is (`ftp-usuario-inicial`, `painel-admin-inicial`, `backup`) and **what** is written (`senha` in text, `senha-hash`, `chave-privada` or `chave-publica`).

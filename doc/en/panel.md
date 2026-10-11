@@ -33,7 +33,7 @@ flowchart LR
 <details>
 <summary>Contents — click to expand</summary>
 
-[Open the panel](#abrir) · [What is in each tab](#abas) · [Language of the screens](#idioma) · [Users through the panel](#usuarios) · [Profiles](#perfis) · [Files and download](#arquivos) · [FTP user in the panel](#usuario-ftp) · [Server: containers and resources](#servidor) · [Panel administrators](#administradores) · [Recover access](#senha) · [Panel certificate](#certificado) · [Open to the internal network](#rede-interna) · [Panel brand](#marca) · [How the panel decides](#como-decide) · [Audit log](#auditoria) · [What protects the panel](#protecoes)
+[Open the panel](#abrir) · [What is in each tab](#abas) · [Language of the screens](#idioma) · [Users through the panel](#usuarios) · [Profiles](#perfis) · [Files and download](#arquivos) · [FTP user in the panel](#usuario-ftp) · [Destinations: S3 and Telegram bot](#destinos) · [Server: containers and resources](#servidor) · [Panel administrators](#administradores) · [Recover access](#senha) · [Panel certificate](#certificado) · [Open to the internal network](#rede-interna) · [Panel brand](#marca) · [How the panel decides](#como-decide) · [Audit log](#auditoria) · [What protects the panel](#protecoes)
 
 </details>
 
@@ -77,13 +77,14 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 |---|---|---|
 | Overview | FTP up or down, number of users, space used and free, last upload, validity of the FTP certificate, the TLS mode of the FTP, the **Server and containers** band (processor and memory of the server and of the stack containers, each with the use against what exists or what was allocated), the files received per day in the last 14 days, the last upload of each user, the space of each folder, the data to configure the device (server, control port, passive ports, protocol) and the latest activity records | View only; each card ends with the shortcut to the tab with the detail |
 | Users | All the accounts in one list, each with the **profile** under the name. First the panel administrators, with the **you** mark on the account of whoever is using the panel and how many sessions each one has open; then the FTP users, one per row: folder, with the **shared** mark when another user also reaches it, and the name, with the **blocked** mark when the FTP is refusing it because of too many wrong passwords, space used, number of files and last upload; the **TLS** column says whether the user is required to use TLS | Create, choosing the profile (Administrator, Full, Upload, Upload only or Read only), the folder and, for a device without TLS support, already exempt from TLS; edit, to change the profile, the folder and the limits and to lift a block; change the password; remove, with their folder or without it; open the user's folder in the Files tab; exempt a user from TLS and require it again; change the password and the name of an administrator and remove them |
-| Files | The folders of the FTP users and what is in each one: name, size and date of each file | Enter the folders, by the name or by the **Open** button, download a file through the browser, upload a file to the open folder, create a folder, change the name of and delete files and folders, and open the user form already with the open folder |
+| Files | The folders of the FTP users and what is in each one: name, size and date of each file | Enter the folders, by the name or by the **Open** button, download a file through the browser, upload a file to the open folder, create a folder, change the name of and delete files and folders, send a file right away to a saved [destination](#destinos), and open the user form already with the open folder |
+| Destinations | The two outside places to which the panel sends by itself the files of a folder, an S3 storage and a Telegram bot: whether each one is on, the folder, the interval, the last run and the total sent, without showing the secrets | **Configure**, **Test**, **Send now**, **Change** and **Remove** each destination; with the destination saved, the Files tab gets the button to send a file right away: see [Destinations](#destinos) |
 | Server | The three containers of the stack (FTP server, panel and web front end), each with what it uses of processor, memory and processes against what was allocated to it, and, separately, the resources of the server the stack runs on: processor, memory, disk and FTP network, with the state, the current measurement and the history of the last minutes | View only; **Auto-refresh** redoes the reading every 10 s, without counting as use of the session: see [Server](#servidor) |
 | Security | Check of the installation, with the summary of how many items are in order, need attention or are checked on the server: whether a public address is accepted, whether the panel is published through a proxy or tunnel, addresses of the FTP and of the panel, TLS mode, with the per-user exception and who is exempt, the sign-in of the FTP users, the web front end (nginx), validity and fingerprint of the two certificates, networks that can open the panel, session rules, the cost of the FTP passwords, with the users that still have the previous cost, the security contact published at `/.well-known/security.txt`, container isolation and the firewall reminder | View only |
 | Blocks | The addresses and the prefixes, IPv4 and IPv6, with [blocking by address](security.md#bloqueio-por-endereco): the rule in force, the total and, per block, who blocked it (the FTP, the panel or the administrator), with how many errors, since when and until when. Below, when there are any, the users with blocking by attempts on the FTP | **Block address**, to block an address or a prefix by hand, search for an address, **Change period**, to block for longer or shorten it, and **Unblock**; open the user that has blocking by attempts |
 | Log | The last 300 records of the panel: sign-ins, refusals, downloads, uploads, folders created, blocks and changes to users and administrators, with date, source address and who did it, administrator or FTP user | View only |
 
-The menu stays on the left on a screen 1280 px wide or more: the symbol and the name, the tabs in two groups (**Operation**, with Overview, Users and Files, and **System**, with Server, Security, Blocks and Log), the tab in use marked and, at the bottom, the [language](#idioma) button (**PT** and **EN**), the name and the role of whoever signed in and the **Sign out** button, which ends the session right away. On a narrower screen, the menu becomes a strip at the top, with the tabs in a row that scrolls sideways. With the installation published (public address accepted or panel through a proxy or tunnel), the administrator sees a warning sign next to **Security**, in whatever tab they are in. The charts are drawn by the panel itself, without script, and every number in the drawing is also written next to it. The footer of every screen carries the version and the authorship: see [Panel brand](#marca).
+The menu stays on the left on a screen 1280 px wide or more: the symbol and the name, the tabs in two groups (**Operation**, with Overview, Users, Files and Destinations, and **System**, with Server, Security, Blocks and Log), the tab in use marked and, at the bottom, the [language](#idioma) button (**PT** and **EN**), the name and the role of whoever signed in and the **Sign out** button, which ends the session right away. On a narrower screen, the menu becomes a strip at the top, with the tabs in a row that scrolls sideways. With the installation published (public address accepted or panel through a proxy or tunnel), the administrator sees a warning sign next to **Security**, in whatever tab they are in. The charts are drawn by the panel itself, without script, and every number in the drawing is also written next to it. The footer of every screen carries the version and the authorship: see [Panel brand](#marca).
 
 Each tab opens with a band in the blue of the brand, the same as the menu and the sign-in screen, in the light and dark themes: the icon of the tab, the title, a line that says what the screen shows and, on the right, the main action. On a screen more than 900 px wide, the band also carries the scene of the backup path, the one from the sign-in screen, in miniature: the packets cross once, when the screen is reached, and stop. With **Auto-refresh** on in the Server tab, or with the system asking for less motion, nothing moves. A form screen (new user, edit, change password, rename, delete) carries the thin band, with the title only.
 
@@ -353,6 +354,7 @@ The Files tab shows the folders of `DATA_DIR/dados`, delivers through the browse
 6. To tie a user to a folder, enter it and click **New user in this folder**: the form opens with the **Folder** field filled in.
 7. To change the name of a file or a folder, click **Rename** on its row, write the new name, type your current password and click **Change name**. The item stays in the same folder.
 8. To delete a file or a folder, click **Delete** on its row, tick the confirmation box, type your current password and click **Delete for good**.
+9. To send a file to the Telegram bot or to S3 right away, click **Telegram** or **S3** on its row. The buttons appear after the destination is saved: see [Destinations](#destinos).
 
 **Expected result:** the saved file is identical to the one the device uploaded, and the Log tab gets the line `File downloaded`, with the administrator, the path and the size. The folder created appears in the list with the notice `Folder created.`, empty, already with the owner and the permission the FTP uses, and stays in the Log tab as `Folder created`. The uploaded file appears in the list with the notice `File uploaded.`, with the owner and the permission of the files that arrive by FTP, and stays in the Log tab as `File uploaded through the panel`. The renamed item appears with the new name and the notice `Name changed.`, with the same content, owner and permission; the deleted one disappears from the list with the notice `Deleted.`. Both stay in the Log tab, as `File or folder renamed` and `File or folder deleted`.
 
@@ -361,7 +363,7 @@ The Files tab shows the folders of `DATA_DIR/dados`, delivers through the browse
 | In the list | What appears | What can be done |
 |---|---|---|
 | Folder | Name and date of the last change; inside it, the line `Folder of the FTP user` says whose it is | Enter, by the name or by the **Open** button, rename and delete |
-| File | Name, size and date of the last change | Download, rename and delete |
+| File | Name, size and date of the last change | Download, rename and delete; with a saved destination, send to the Telegram bot or to S3 |
 | Item marked `symbolic link` or `special file` | Name and date | Rename and delete; the panel neither opens nor downloads it, and shows **does not open here** in place of the button. Deleting a symbolic link deletes only the link, never what it points to |
 
 Limits:
@@ -491,6 +493,118 @@ PAINEL_ACESSO_USUARIOS_FTP=nao
 - **Path:** always relative to the folder of the record, which is its root. It goes through the same checks as the [Files tab](#arquivos): part by part, without `..`, without following symbolic links, regular files only, delivery as an attachment, in blocks and without resuming. In the audit log, the path goes whole, from the data folder.
 - **Folder not created yet:** the folder of a new user is born at the first login by FTP; before that, the screen shows the empty list.
 - **Sessions full:** when the panel reaches the ceiling of 50 sessions, the least used session of an FTP user goes first; the sign-in of a user does not drop that of an administrator.
+
+</details>
+
+---
+
+<a name="destinos"></a>
+
+## ☁️ Destinations: S3 and Telegram bot
+
+In the **Destinations** tab, the administrator connects a folder of the data to two places outside the server, and the panel starts sending by itself whatever arrives in it: an **S3 storage**, to hold the second copy or to keep the files elsewhere and free the disk, and a **Telegram bot**, which delivers each new file to a person, a group or a channel. Each destination has a single connection, one does not depend on the other, and both come with no settings: until the administrator saves one, nothing leaves the server. Only an administrator opens the tab.
+
+| Destination | What it sends | When | What stays on the server |
+|---|---|---|---|
+| S3 storage | Every file in the chosen folder and in the folders inside it, including the ones already there when the destination was turned on | At each saved interval, 5 to 1440 minutes | With **Copy**, everything; with **Keep in S3**, the file leaves after the destination confirms it was stored |
+| Telegram bot | Only the files that arrive after the destination is turned on, one per message, with the path, the size and the date | Within a few seconds, when the file arrives whole by FTP or through the panel; what shows up in the folder any other way, at each saved interval, 5 to 1440 minutes | Everything: the bot never deletes |
+
+**S3 storage.** Any service that speaks the S3 protocol works, in the cloud or on the internal network. Before you start, create the bucket at the service and a key that can only write to it.
+
+1. In the Destinations tab, click **Configure** on the **S3 storage** card.
+2. Fill in the **Service address** (`https://name` or `https://name:port`, without the bucket), the **Region**, the **Bucket** and, if you want, the **Prefix**, which is the folder inside the bucket.
+3. Under **Bucket address**, choose **In the path** (`https://name/bucket/file`) or **In the name** (`https://bucket.name/file`), as the service requires.
+4. Type the **Access key** and the **Secret key**.
+5. Fill in the **Folder sent** (blank is the whole data folder) and the **Interval between runs**.
+6. Under **After sending**, choose **Copy** or **Keep in S3**.
+7. Type your password and click **Save**.
+8. Back in the tab, click **Test**.
+
+**Expected result:** the tab comes back with the notice **Destination saved**, and the card shows the **on** tag, the address, the bucket, the folder and that the keys are saved, without showing them. **Test** writes a small object, `allsafe-ftp-stack-teste.txt`, under the chosen prefix and answers **Test finished: the destination received it**. The first run starts within a minute and sends everything already in the folder; the **Last run** line says how many files went.
+
+> ⚠️ **Keep in S3 leaves a single copy:** the file leaves the server once it is stored at the destination, and the panel has no recycle bin and does not download it back. The first run sends everything already in the folder and, with Keep in S3, all of that leaves the server. Start with **Copy**, check the objects in the bucket and only then switch: the switch applies to what is sent from then on.
+
+> ⚠️ **Changing the address, the bucket, the prefix, the form of the address or the folder starts from scratch:** everything in the folder is sent again, to the new place.
+
+**Telegram bot.** Before you start, create the bot with the Telegram bot creator and keep the token it hands over. Add the bot to the group or the channel that will receive; for a person, they must have started the chat with the bot.
+
+1. In the Destinations tab, click **Configure** on the **Telegram bot** card.
+2. Type the **Bot token** and the **Receiving chat**: the number of the person or of the group (a group one starts with `-`) or the `@name` of the channel.
+3. Fill in the **Folder sent** and the **Interval between runs**, and choose the **Message language**.
+4. Type your password and click **Save**.
+5. Back in the tab, click **Test**.
+
+**Expected result:** the chat receives the test message from the panel, and the tab answers **Test finished: the destination received it**. From then on, each file that arrives in the folder by FTP or through the panel goes to the chat within a few seconds, as a document, with the path, the size and the date in the caption.
+
+The bot **only sends**. The panel uses the file sending and the message sending of the bot API, and nothing else: it does not read the chat, does not register a return address and accepts no command.
+
+The largest file the bot sends at once is the one in [`PAINEL_TELEGRAM_MAX_MB`](configuration.md#painel), 50 MB by default, which is the ceiling of the public API. A larger file is not sent: the chat receives a notice with the path, the size and the date, and the file stays on the server. An empty file is not sent, because the API does not accept it.
+
+**Both on the same folder.** In each run, the bot delivers first. With S3 in **Keep in S3**, the file only leaves the server after it is stored in S3 and delivered by the bot; while the bot has not delivered, the S3 card shows the **Waiting for the bot** line.
+
+**The buttons on each card:**
+
+| Button | What it does | Asks for the password |
+|---|---|---|
+| Test | Writes the test object to S3 or sends the test message through the bot, with what is saved. It works with the destination turned off | No |
+| Send now | Requests a run out of schedule. The panel starts in a moment, and the page does not wait for it: refresh to follow | No |
+| Change | Opens the form with what is saved. A blank secret field keeps the saved one | Yes, to save |
+| Remove | Deletes the settings, the progress and the secrets of the destination. What was already sent stays there, and no file on the server is deleted | Yes |
+
+**Send one file right away.** Once a destination is saved, each file in the [Files](#arquivos) tab gets a button with its name, **Telegram** or **S3**, next to **Download**. The button sends that file to the destination at that moment, with what is saved.
+
+1. Open the **Files** tab and enter the folder of the file.
+2. On the line of the file, click **Telegram** or **S3**.
+
+**Expected result:** the page comes back to the same folder with the notice **Telegram bot: file sent** or **S3 storage: file sent**. When the send takes more than 20 seconds, the notice says it continues in the background, and the result appears in the Log tab. When it does not work, the notice gives the reason in one sentence.
+
+- The button works for any file of the data, inside or outside the folder of the destination, and works with the destination turned off.
+- The file is never deleted by this send, not even with S3 in **Keep in S3**, and what the runs send does not change: a file that has not gone yet keeps its turn.
+- Through the bot, an empty file and one above the limit do not go, and the notice says why. Sending again a file that already went delivers another message to the chat; in S3, it writes over the same object.
+- One send requested by the button at a time: while one has not finished, the next is refused with the notice to try again.
+- Only the administrator has the button, and it only appears for the destination that is saved with its secrets.
+
+**What enters a run:**
+
+- Regular files only. Symbolic links and everything whose name starts with a dot, file or folder, stay out.
+- A file enters after two minutes without changing, so that what is still arriving does not leave half done. The **Send now** button respects this wait, and the card shows in the **Still arriving** line how many files were left for a later run.
+- The bot does not wait the two minutes for a file the FTP server announced as finished, nor for one sent through the panel: that one goes within a few seconds. S3 always waits.
+- A file renamed or moved by FTP, and one copied straight onto the server, has no arrival notice: it waits the two minutes and, while it waits, holds the ones that arrived after it, so the order is not lost.
+- The order is the order of arrival at the server. A failure at the destination ends the run, and the next one resumes from the same file: nothing is skipped or sent twice.
+- In S3, the object name is the prefix plus the path of the file inside the data: `backups/router/config.rsc`, with the prefix `copies`, becomes `copies/backups/router/config.rsc`.
+- A file that is renamed is sent again, under the new name. A folder that is renamed does not resend the files inside it.
+
+When the last run stops before the end, the card shows the reason in one sentence. What each reason means and what to do is in [Troubleshooting](troubleshooting.md#destinos).
+
+**Where the secrets are kept.** The S3 keys, the bot token and the chat stay on the server, one per file, in the `destinos` folder of `SECRETS_DIR`, and never go back to the screen, to the Log or to the audit log. Like the other secrets of the installation, they are not part of the [backup](backup.md): after restoring a backup, the card shows the **secrets missing** tag and nothing is sent until they are saved again, in **Change**.
+
+**S3 on the internal network with its own authority.** The panel only speaks HTTPS and checks the certificate of the service. If the certificate of your S3 was issued by an authority of the network itself, hand its certificate to the panel, in PEM:
+
+```bash
+docker compose exec -T painel sh -c 'cat > /painel/destinos/ca.pem' < network-authority.pem
+```
+
+**Expected result:** the command returns with no message, and the next **Test** already accepts the certificate, with nothing restarted.
+
+**Turn everything off.** With [`PAINEL_DESTINOS=nao`](configuration.md#painel) in the `.env` and a `./deploy.sh`, the tab leaves the menu, no run happens and the panel opens no connection to the outside. What was saved is kept and takes effect again with `sim`.
+
+<details>
+<summary>Technical detail — the outside destinations</summary>
+
+- **Routes:** `GET /destinos` shows the two cards; `GET` and `POST /destinos/s3` and `/destinos/telegram` show and save the form; `POST /destinos/testar` and `POST /destinos/agora` take the `destino` field (`s3` or `telegram`); `POST /destinos/arquivo` takes `destino` and `arquivo`, the path inside the data; `GET` and `POST /destinos/remover` confirm and remove. Every `POST` carries the CSRF token of the session. Saving and removing also ask for `senha_atual`, the password of whoever is in the session: wrong or blank gets `403`, writes `admin_senha_atual_recusada` and counts as a sign-in error. Only an administrator has these routes: for the FTP user, they answer `404`.
+- **Form:** a field outside the rule answers `400`, with the page back and what was typed, except the secrets, which are never returned. The folder must exist inside the data. A destination other than `s3` and `telegram` answers `404`.
+- **Who stores it:** the settings are in `DATA_DIR/painel/destinos/<destino>.conf` and the progress, in `<destino>.estado`; both are part of the backup. The secrets are in `SECRETS_DIR/destinos`, with mode `0600`: `s3-chave-de-acesso.txt`, `s3-chave-secreta.txt`, `telegram-token.txt` and `telegram-conversa.txt`. It is the only secrets folder the panel writes to. Deleting one of these files on the server turns off the sending to that destination on the next run.
+- **Who applies it:** [`destinos.py`](../../painel/destinos.py), in a thread of the panel itself, which collects the arrival notices every 2 s and checks every minute which destination is due. One run at a time: the bot's comes before the S3 one.
+- **Announced arrival:** the [watcher](scripts.md#vigia) of the FTP server writes a notice in `/auth/chegadas`, a `0700` folder owned by root, for each upload Pure-FTPd logs as finished, and an upload through the panel announces directly. [`chegadas.py`](../../painel/chegadas.py) collects and deletes the notices, and 3 s after a new one the panel does a run of the bot. The notice does not choose what is sent: it only waives the wait of a file the run would find anyway, inside the folder of the destination. It is valid for 4 minutes in the panel, and the watcher deletes what nobody collected in 5. With the FTP user file in use at that instant, or with 2000 notices waiting, the watcher writes no notice, and the file goes after the two-minute wait. When the run of the bot leaves a file waiting, the panel comes back by itself about two minutes later. A run requested from the terminal does not use the notices.
+- **One file only:** `POST /destinos/arquivo` opens the file with the same checks as the Files tab (`400`, `403` or `404` for a path outside the rule, a symbolic link, a folder or a file that does not exist) and sends it in a thread of its own. The page waits up to 20 s; after that, the send goes on by itself. It neither reads nor writes the progress of the runs. A file that changes during the send answers with the reason, to be repeated.
+- **Panel way out:** [`saida.py`](../../painel/saida.py) is the only door through which the panel talks to anyone outside the stack. HTTPS only, with TLS 1.2 or newer and the certificate checked against the authorities of the image and against the one in `ca.pem`, when it exists. The name is resolved once, and the connection goes to the address that was checked. The panel does not go out to its own container, to a link-local, multicast or reserved address, and does not follow redirects. Each network operation has a 30 s deadline.
+- **S3:** [`s3.py`](../../painel/s3.py) signs each request with signature version 4, with the SHA-256 of the body inside it. A file of up to 32 MiB goes in one request; above that, in parts of 16 MiB or more, and the multipart upload is aborted at the destination when it fails. The panel only writes: it does not read, list or delete anything in the bucket, and the key only needs `s3:PutObject` and `s3:AbortMultipartUpload`. A file larger than 5 TiB counts as skipped.
+- **Keep in S3:** the file is only deleted after the destination confirms it was stored, and only if it has not changed since it was sent. With the bot stopped, the files already stored in S3 wait for it in a queue of up to 20,000; once full, S3 stops sending until the bot is back.
+- **Telegram:** [`telegram.py`](../../painel/telegram.py) only calls `sendDocument` and `sendMessage`, always by `POST`, at the address in `PAINEL_TELEGRAM_API`. Between one send and the next there is a 3 s pause. When the API asks to slow down, the panel waits the requested time, up to 30 s, and repeats the send once. A file the API refuses for its size, even below `PAINEL_TELEGRAM_MAX_MB`, becomes a notice.
+- **File the destination refuses:** a `4xx` answer that is not about permission, timeout (`408`) or rate (`429`), on the third consecutive run with the same file, leaves that file behind, so the following ones can go, and writes `destino_pulado`.
+- **Series:** changing the address, the bucket, the prefix, the form of the address or the folder of S3, or the folder of the bot, starts a new series, and the previous progress is forgotten. The same happens when the bot is turned off and on again: it then sends only what arrives from that point on. Changing the interval, the mode, the language or the secrets keeps the progress.
+- **From the terminal:** `docker compose exec painel python3 /opt/painel/servidor.py --destinos` shows the state of each destination and the last run, with no secret; `--destinos enviar <s3|telegram>` does the run right away and exits with `1` when it stops before the end; with `--sem-espera`, it does not wait for the two minutes of a file without changes. The output of these commands is in Portuguese.
+- **Audit log:** `destino_gravado`, with the administrator, the destination, the state, the folder, the interval, the S3 mode and whether the secrets were replaced or kept; `destino_teste`, with the result; `destino_pedido`; `destino_removido`; `destino_arquivo`, with the administrator, the destination, the file, the bytes and the result of the send requested by the button; `destino_enviado`, at each run that sent, deleted, warned about the limit or had a file refused, with the files, the bytes, the deleted ones, the ones above the bot limit, the skipped ones and the refused ones; `destino_falhou`, with the reason, when it changes; `destino_pulado`, with the file and the reason. The last three have no address: the panel did it. None carries a secret or text coming from the outside service.
 
 </details>
 
@@ -884,6 +998,10 @@ Everything the panel does stays in `DATA_DIR/painel/auditoria.log` (`0600`, owne
 | `arquivo_baixado` · `arquivo_interrompido` | Download through the Files tab or the My files screen, complete · cut before the end; with who downloaded, the path and the bytes delivered |
 | `arquivo_enviado` · `envio_interrompido` | File uploaded through the panel, through the Files tab or the screen of the FTP user · upload that stopped before the end, with nothing written; with who uploaded, the path and the bytes |
 | `recusa_envio` | FTP user who asked for the upload through the panel without having the permission, with the user and the profile |
+| `destino_gravado` · `destino_removido` | An administrator saved the settings of a [destination](#destinos), S3 or Telegram bot · removed the destination; with the administrator and the destination, and, when saving, the state, the folder, the interval, the S3 mode and whether the secrets were replaced or kept |
+| `destino_teste` · `destino_pedido` | An administrator clicked **Test**, with the result · **Send now**; with the administrator and the destination |
+| `destino_arquivo` | An administrator sent a file to the destination with the button of the Files tab, with the administrator, the destination, the file, the bytes and the result |
+| `destino_enviado` · `destino_falhou` · `destino_pulado` | A run sent, deleted, warned about the limit or had a file refused, with the destination and the counts · stopped before the end, with the reason, when it changes · left behind a file the destination refuses, with the file and the reason. No address: the panel did it |
 | `admin_inicial_criado` | First start: the panel created the administrator of `PAINEL_ADMIN_USER` |
 | `admin_criado` · `admin_senha_trocada` · `admin_renomeado` · `admin_removido` | Change of an administrator through the panel, with who made it and who was changed |
 | `admin_senha_atual_recusada` | Change of an administrator or deletion refused: the current password of whoever asked did not match; with the administrator and the path requested |
@@ -919,6 +1037,7 @@ Password, token and cookie are **never** written. Neither is the name typed in a
 | User folders | Each FTP user is confined (`chroot`) to the folder of the record; the folder chosen does not leave `DATA_DIR/dados` nor go through a symbolic link; a folder reached by more than one user appears marked as **shared** |
 | Forms | CSRF token per session and check of `Origin`: the submission has to start from the panel itself; body limited to 8 KiB, except in the file upload, which has its own two routes and the ceiling of `PAINEL_ENVIO_MAX_MB` |
 | Language | The change is a form like the others, with token and `Origin`; the language cookie only carries `pt` or `en` and is not valid as a session; the return after the change only leads to a screen of the panel itself |
+| Outside destinations | Only the administrator configures them, with the current password, and only the administrator sends a file with the button of the Files tab; the panel goes out by HTTPS only, with the certificate checked, and does not go to its own container nor to a reserved address; the S3 keys, the bot token and the chat stay in `0600` files and never go back to the screen or to the audit log; the bot only sends: the panel does not read the chat nor accept a command; `PAINEL_DESTINOS=nao` turns everything off |
 | Browser | `Content-Security-Policy` without script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS and `no-store`; the page loads nothing from outside |
 | Containers | Read-only root, `cap_drop: ALL`, `no-new-privileges`, no Docker socket, limits of CPU, memory and processes; nginx runs without root and without any capability |
 
@@ -953,7 +1072,7 @@ The code is in [`painel/`](../../painel/), one subject per file, and goes whole 
 
 | Module | What it has |
 |---|---|
-| [`servidor.py`](../../painel/servidor.py) | Entry point: starts the server, creates the first administrator and serves the modes `--hash`, `--saude` and `--administrador` |
+| [`servidor.py`](../../painel/servidor.py) | Entry point: starts the server, creates the first administrator and serves the modes `--hash`, `--saude`, `--administrador`, `--retencao` and `--destinos` |
 | [`config.py`](../../painel/config.py) | Paths, limits and the reading of the container variables, with the refusals of network and of session |
 | [`senha.py`](../../painel/senha.py) | `scrypt` hash of the administrators' passwords and the check in constant time |
 | [`administradores.py`](../../painel/administradores.py) | Reading and writing of the administrators file, one change at a time |
@@ -976,9 +1095,15 @@ The code is in [`painel/`](../../painel/), one subject per file, and goes whole 
 | [`retencao.py`](../../painel/retencao.py) | Automatic cleanup: the rule of each FTP user, read from `limites.lista`, the check of the form and the summary of the list |
 | [`limpeza.py`](../../painel/limpeza.py) | Automatic cleanup: the run that applies the rule of each user in their folder, by the thread of the panel or from the terminal (`servidor.py --retencao`) |
 | [`aba_usuarios.py`](../../painel/aba_usuarios.py) | Users tab: single list of administrators and FTP users, creation with the profile and the folder chosen, editing (profile, folder, limits and blocks), change of password, removal and the exemption from TLS per user |
-| [`aba_arquivos.py`](../../painel/aba_arquivos.py) | Files tab: navigation through the user folders, download, file upload, creation of an empty folder, change of name and deletion of a file and of a folder |
+| [`aba_arquivos.py`](../../painel/aba_arquivos.py) | Files tab: navigation through the user folders, download, file upload, creation of an empty folder, change of name and deletion of a file and of a folder, and the buttons that send a file to a saved destination |
 | [`envio.py`](../../painel/envio.py) | File upload through the browser: reading of the `multipart/form-data` body as a stream, from the socket to the disk, without keeping the file in memory |
 | [`aba_meus_arquivos.py`](../../painel/aba_meus_arquivos.py) | My files screen, of the FTP user: navigation, download and the actions of the profile inside their folder; for the Upload only profile, the File upload screen |
+| [`destinos.py`](../../painel/destinos.py) | Outside destinations: the settings, the secrets and the progress of each one, the run that sends what arrived, by the thread of the panel or from the terminal (`servidor.py --destinos`), the test and the send of a single file |
+| [`chegadas.py`](../../painel/chegadas.py) | Arrival notices: the files the FTP server and the upload through the panel report as whole, for the Telegram bot to send without waiting |
+| [`saida.py`](../../painel/saida.py) | Way out of the panel to outside the stack: HTTPS with the certificate checked, the refusal of the addresses the panel does not reach and the failure reasons |
+| [`s3.py`](../../painel/s3.py) | S3 storage: the version 4 signature of the requests, the upload in one request or in parts and the check of the form fields |
+| [`telegram.py`](../../painel/telegram.py) | Telegram bot: the sending of a document and of a message, and the check of the token and of the chat |
+| [`aba_destinos.py`](../../painel/aba_destinos.py) | Destinations tab: the two cards, the forms, the test, the request of a run, the removal and the send of a file with the button of the Files tab |
 | [`recursos.py`](../../painel/recursos.py) | Resources of the server and of each container of the stack: reading of the processor, of the memory and of the FTP network, of the control group of the panel and of what the ftp and the nginx publish, and the history of the last 10 minutes, kept in memory |
 | [`aba_servidor.py`](../../painel/aba_servidor.py) | Server tab: the containers of the stack, with the use against the allocated, the cards of CPU, memory, disk and network of the server, and the summary band of the Overview |
 | [`aba_administradores.py`](../../painel/aba_administradores.py) | Panel administrators: creation through the New user form, change of password, change of name and removal; the list is that of the Users tab |

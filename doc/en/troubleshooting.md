@@ -30,7 +30,7 @@ flowchart LR
 <details>
 <summary>Contents — click to expand</summary>
 
-[Diagnosis in 30 seconds](#diagnostico-em-30-segundos) · [The container does not start](#o-container-nao-sobe) · [Connects but fails at login or listing](#conecta-mas-falha-no-login-ou-na-listagem) · [Device without TLS](#ftp-sem-tls) · [File and permission](#problemas-de-arquivo-permissao) · [Certificate and TLS](#certificado-tls) · [Web panel](#painel) · [Validation tools](#ferramentas-de-validacao)
+[Diagnosis in 30 seconds](#diagnostico-em-30-segundos) · [The container does not start](#o-container-nao-sobe) · [Connects but fails at login or listing](#conecta-mas-falha-no-login-ou-na-listagem) · [Device without TLS](#ftp-sem-tls) · [File and permission](#problemas-de-arquivo-permissao) · [Certificate and TLS](#certificado-tls) · [Web panel](#painel) · [Destinations: S3 and Telegram bot](#destinos) · [Validation tools](#ferramentas-de-validacao)
 
 </details>
 
@@ -239,6 +239,48 @@ While there is any exempt user, the same test changes its answer: the server ask
 | `allsafe-ftp-nginx` restarting in a loop | The nginx entrypoint refused the configuration or found neither the socket nor the certificate of the panel | `docker compose logs --tail 20 nginx` | Fix it according to the `FALHA:` message: [Scripts](scripts.md#nginx-entrypoint). When in doubt, `./deploy.sh` recreates the `nginx/` folder and starts in the right order |
 | `dependency failed to start: container allsafe-ftp is unhealthy` | The panel only starts after the FTP, and nginx after the panel | `docker compose logs --tail 50 ftp` | Solve the FTP first, through the table [The container does not start](#o-container-nao-sobe) |
 | `bind: address already in use` on the panel port (container `allsafe-ftp-nginx`) | `PAINEL_PORT` taken by another service on the same IP | `ss -ltnp` | Change `PAINEL_PORT` in the `.env` |
+
+---
+
+<a name="destinos"></a>
+
+## ☁️ Destinations: S3 and Telegram bot
+
+When a test, a send with the button or a run does not work, the panel gives the reason in one sentence: in the notice on the page, on the card of the destination (**The last run stopped before the end**) and in the Log tab. The state of each destination and the last run also come out from the terminal, with no secret. The output of this command is in Portuguese:
+
+```bash
+docker compose exec painel python3 /opt/painel/servidor.py --destinos
+```
+
+**Expected result:** one line per destination: `não configurado` (not configured), or `ligado` (on) or `desligado` (off) with the folder, the interval and the last run.
+
+| The panel says | Cause | How to check | Fix |
+|---|---|---|---|
+| `the address name was not found` | The name of the service does not resolve from inside the panel container | `docker compose exec painel getent hosts <name>` | Fix the **Service address**, or the DNS of the server |
+| `the address is not accepted by the panel, or the service sent the request to another address` | The name leads to an address the panel does not reach (its own container, a link-local, multicast or reserved address), or S3 answered with a redirect: a bucket in another region or an address that is not the one of the service | The **Region** and the **Service address** in the record of the bucket, at the service | In **Change**, save the region and the address of the bucket |
+| `could not connect to the service` | Service down, port closed or server with no way out to the internet | On the server: `curl -sS -o /dev/null -w '%{http_code}\n' https://<name>:<port>` | Allow HTTPS from the server out to the service; the next run resumes from the same file |
+| `the service certificate was not accepted` | Certificate expired, for another name or issued by an authority the panel does not know | `openssl s_client -connect <name>:<port> -servername <name> </dev/null 2>/dev/null \| openssl x509 -noout -subject -issuer -dates` | S3 on the internal network with its own authority: hand its certificate to the panel, as in [Destinations](panel.md#destinos) |
+| `the service did not answer in time` | Slow link or service: each network operation has 30 s | The time of the `Upload to the destination not completed` lines in the Log tab | Nothing to do if it happened once: the next run resumes from the same file. If it repeats, check the link |
+| `the service answer was not understood` | The address is not that of an S3 service, or an intermediary is answering in its place | The **Service address** | Save the address of the service, without the bucket and without a path |
+| `the service refused the credential or the permission` | S3: wrong key, key without permission to write to the bucket or server clock off. Bot: token no longer valid, bot out of the group or the channel, or blocked by the person | `date` on the server; **Test** on the card | In **Change**, save the keys or the token again; put the bot back in the chat |
+| `the bucket or the chat does not exist for this credential` | S3: wrong bucket name, bucket of another account or **Bucket address** in the form the service does not use. Bot: wrong chat number, or the person has not started the chat with the bot yet | The bucket name at the service; the chat number | Fix it in **Change** and click **Test** |
+| `the file is larger than the service accepts` | With the **Telegram** button: the file is above [`PAINEL_TELEGRAM_MAX_MB`](configuration.md#painel). In S3: more than 5 TiB, or the service refused it for its size | The size in the Files tab | Through the bot, the large file does not go; send it with the **S3** button or download it through the panel |
+| `the file is empty, and the bot does not send an empty file` | A 0-byte file sent with the **Telegram** button | The size in the Files tab | Nothing to do: the bot API does not accept it. S3 stores an empty file |
+| `the file name does not fit the destination` | The prefix plus the path of the file go over 1024 bytes, the maximum of an object name | The path of the file | Shorten the prefix or the path |
+| `the file changed during the send: repeat when it has finished arriving` | The file was still arriving when the button was clicked | The date of the file in the Files tab | Wait for the upload of the device to finish and click again |
+| `another send requested from the screen is running: try again in a moment` | The previous send requested with the button has not finished yet | Log tab: the line `File sent to the destination on request` appears when it ends | Wait and click again |
+| `another test is running: try again in a moment` | Two clicks on **Test** at the same time | — | Wait a few seconds |
+| `a file could not be read` | Permission changed by hand in `DATA_DIR/dados` or disk error | `docker compose logs --tail 30 painel` | Check owner and permission of the folder on the host and the disk |
+| `the chosen folder no longer exists inside the data` | The folder of the destination was renamed or deleted | Files tab | In **Change**, choose the folder that exists, or create the folder again |
+| `the destination secrets are missing: save them again`, or the card with the **secrets missing** tag | A backup was restored, or the files in `SECRETS_DIR/destinos` were deleted | The tag on the card | In **Change**, type the keys or the token and the chat again |
+| `the destination is off or has no secrets` when clicking **Send now** | A run only happens with the destination on and with its secrets | The tag on the card | In **Change**, mark the destination as on. For a single file, use the button of the Files tab, which works with the destination off |
+| `S3 is waiting for the Telegram bot to deliver what is left before deleting more files` | With **Keep in S3** and the bot stopped, the queue of what waits for the bot is full | The reason on the card of the bot | Solve the bot by its reason, or remove the bot: S3 sends again |
+| `the service answered with code <number>` | An answer the panel did not expect: `5xx` is a problem on the side of the service, `429` is too many requests | The state of the service | Wait: the next run resumes from the same file. If the same file is refused three runs in a row, it is left behind and the Log tab gets `File refused by the destination left behind` |
+| The bot did not send right away a file that arrived | The file arrived under one name and was renamed or moved by FTP, was copied straight onto the server, or the arrival notice was not written: without the notice, the wait of two minutes without changing applies | The **Still arriving** line on the card of the bot | Nothing to do: it goes by itself after the wait. To send it now, use the **Telegram** button on the line of the file |
+| The bot did not send the files that were already in the folder | The bot only sends what arrives after it is turned on | The **Last run** line of the card | Send each one with the **Telegram** button of the Files tab |
+| The chat received a notice instead of the file | The file is above the limit of the bot | The size in the notice | The file stays on the server: download it through the panel |
+| The **Telegram** and **S3** buttons do not appear in the Files tab | The destination was not saved, has no secrets, or `PAINEL_DESTINOS=nao`. The My files screen, of the FTP user, never has these buttons | The Destinations tab; `grep '^PAINEL_DESTINOS=' .env` | Save the destination in the Destinations tab |
+| The Destinations tab is not in the menu | `PAINEL_DESTINOS=nao`, or the session is of an FTP user | `grep '^PAINEL_DESTINOS=' .env` | `PAINEL_DESTINOS=sim` and `./deploy.sh` |
 
 ---
 

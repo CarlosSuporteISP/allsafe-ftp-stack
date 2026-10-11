@@ -45,10 +45,11 @@ flowchart LR
 |---|---|---|---|
 | `ftp-usuario-inicial-senha.txt` | [`deploy.sh`](../../deploy.sh), na primeira execução, se o arquivo não existir ou estiver vazio | Só se quiser uma senha própria | Senha do usuário inicial (`FTP_USER`) |
 | `painel-admin-inicial-senha.txt` | [`deploy.sh`](../../deploy.sh), na primeira execução | Não | Senha **inicial** do primeiro administrador do painel (`PAINEL_ADMIN_USER`), em texto. Fica só no host e vale até ser trocada na aba Usuários; trocou, apague o arquivo |
-| `painel-admin-inicial-senha-hash.txt` | [`deploy.sh`](../../deploy.sh) e [`scripts/painel-senha.sh`](../../scripts/painel-senha.sh) | Não | Hash `scrypt` dessa senha inicial. É o único arquivo da pasta que o painel enxerga, e só é usado para criar o primeiro administrador |
+| `painel-admin-inicial-senha-hash.txt` | [`deploy.sh`](../../deploy.sh) e [`scripts/painel-senha.sh`](../../scripts/painel-senha.sh) | Não | Hash `scrypt` dessa senha inicial. Dos arquivos soltos da pasta, é o único que o painel enxerga, e só é usado para criar o primeiro administrador |
 | `backup-chave-privada.txt` | [`deploy.sh`](../../deploy.sh), se nenhuma das duas chaves existir | Não | Chave que **abre** a cópia de segurança. Guarde uma cópia fora do servidor: sem ela nenhuma cópia restaura. Veja [Backup e restauração](backup.md#chave) |
 | `backup-chave-publica.txt` | [`deploy.sh`](../../deploy.sh), a cada execução, a partir da privada | Não | Chave que **cifra** a cópia de segurança. Não abre nada e pode ficar no servidor |
 | `LEIAME.txt` | [`deploy.sh`](../../deploy.sh), a cada execução | Não | Diz para que serve cada arquivo da pasta. Não guarda segredo nenhum |
+| `destinos/` | [`deploy.sh`](../../deploy.sh) cria a pasta, vazia; o painel grava os arquivos | Não: pela aba Destinos | Segredos do S3 e do bot do Telegram, um por arquivo: `s3-chave-de-acesso.txt`, `s3-chave-secreta.txt`, `telegram-token.txt` e `telegram-conversa.txt`. O painel grava e lê, e nenhum volta para a tela. Trocar ou remover: pela aba [Destinos](painel.md#destinos) |
 | `.gitkeep` | já vem no repositório | Não | Mantém a pasta no clone |
 
 O nome de cada arquivo segue a mesma ordem: **de quem é** o segredo (`ftp-usuario-inicial`, `painel-admin-inicial`, `backup`) e **o que** está gravado (`senha` em texto, `senha-hash`, `chave-privada` ou `chave-publica`).

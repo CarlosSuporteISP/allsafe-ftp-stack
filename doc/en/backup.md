@@ -45,7 +45,7 @@ flowchart LR
 | `dados/` | Files uploaded by the devices, one folder per user, and `.entrada/`, the entry area of the accounts with the Upload only profile, empty outside the instant of each upload | Yes |
 | `auth/` | FTP users, with the hash of each password, the limits of each one, the list of who is exempt from TLS and the blocks in effect, by attempts and by address | Yes |
 | `certs/` | Certificate and private key of the FTP | Yes |
-| `painel/` | Certificate and private key of the panel, the administrators (name and password hash), the `auditoria.log` and the language of the screens chosen by each account | Yes |
+| `painel/` | Certificate and private key of the panel, the administrators (name and password hash), the `auditoria.log`, the language of the screens chosen by each account and the settings and the progress of the [destinations](panel.md#destinos), without their secrets | Yes |
 | `nginx/` | Panel socket and copy of the certificate, remade at every start | No |
 
 These stay out, and need to be kept apart: the `.env` and the `.secrets/` folder, where the key that opens the copy is. See [The key of the copy](#chave) and [Keeping the `.env` and the secrets](#segredos).
@@ -228,8 +228,9 @@ The copy does not take the `.env` or the `.secrets/` folder, so that a backup fi
 | `.env` | Addresses, ports, profile and limits of the installation |
 | `.secrets/ftp-usuario-inicial-senha.txt` | Password of the initial user of the FTP |
 | `.secrets/painel-admin-inicial-senha-hash.txt` | Hash of the initial password of the first administrator of the panel |
+| `.secrets/destinos/` | S3 keys, Telegram bot token and receiving chat, written by the panel in the Destinations tab |
 
-The private key is the only one with no way back: without it the copy does not open. Without the other three, the stack comes back all the same: `./deploy.sh` creates a new `.env` and new passwords. In that case, the initial user gets the new password, which needs to be set on the device that uses it. The other users and the administrators of the panel are not affected: the hash of their password is in the copy. Details of each file in [Secrets](secrets.md).
+The private key is the only one with no way back: without it the copy does not open. Without the others, the stack comes back all the same: `./deploy.sh` creates a new `.env` and new passwords, and the secrets of the destinations are typed again in the Destinations tab, in **Change**; until then, the card shows the **secrets missing** tag and nothing is sent. In that case, the initial user gets the new password, which needs to be set on the device that uses it. The other users and the administrators of the panel are not affected: the hash of their password is in the copy. Details of each file in [Secrets](secrets.md).
 
 ---
 

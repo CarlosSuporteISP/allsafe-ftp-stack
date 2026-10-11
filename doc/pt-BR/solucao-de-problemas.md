@@ -31,7 +31,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Diagnóstico em 30 segundos](#diagnostico-em-30-segundos) · [O container não sobe](#o-container-nao-sobe) · [Conecta mas falha no login ou na listagem](#conecta-mas-falha-no-login-ou-na-listagem) · [Equipamento sem TLS](#ftp-sem-tls) · [Arquivo e permissão](#problemas-de-arquivo-permissao) · [Certificado e TLS](#certificado-tls) · [Painel web](#painel) · [Ferramentas de validação](#ferramentas-de-validacao)
+[Diagnóstico em 30 segundos](#diagnostico-em-30-segundos) · [O container não sobe](#o-container-nao-sobe) · [Conecta mas falha no login ou na listagem](#conecta-mas-falha-no-login-ou-na-listagem) · [Equipamento sem TLS](#ftp-sem-tls) · [Arquivo e permissão](#problemas-de-arquivo-permissao) · [Certificado e TLS](#certificado-tls) · [Painel web](#painel) · [Destinos: S3 e bot do Telegram](#destinos) · [Ferramentas de validação](#ferramentas-de-validacao)
 
 </details>
 
@@ -240,6 +240,48 @@ Enquanto houver algum usuário dispensado, o mesmo teste muda de resposta: o ser
 | `allsafe-ftp-nginx` reiniciando em laço | O entrypoint do nginx recusou a configuração ou não achou o soquete nem o certificado do painel | `docker compose logs --tail 20 nginx` | Corrija conforme a mensagem `FALHA:`: [Scripts](scripts.md#nginx-entrypoint). Na dúvida, `./deploy.sh` recria a pasta `nginx/` e sobe na ordem certa |
 | `dependency failed to start: container allsafe-ftp is unhealthy` | O painel só sobe depois do FTP, e o nginx depois do painel | `docker compose logs --tail 50 ftp` | Resolva primeiro o FTP, pela tabela [O container não sobe](#o-container-nao-sobe) |
 | `bind: address already in use` na porta do painel (container `allsafe-ftp-nginx`) | `PAINEL_PORT` ocupada por outro serviço no mesmo IP | `ss -ltnp` | Troque `PAINEL_PORT` no `.env` |
+
+---
+
+<a name="destinos"></a>
+
+## ☁️ Destinos: S3 e bot do Telegram
+
+Quando um teste, um envio pelo botão ou uma passada não dá certo, o painel diz o motivo em uma frase: no aviso da tela, no cartão do destino (**A última passada parou antes do fim**) e na aba Log. A situação de cada destino e a última passada saem também pelo terminal, sem nenhum segredo:
+
+```bash
+docker compose exec painel python3 /opt/painel/servidor.py --destinos
+```
+
+**Resultado esperado:** uma linha por destino: `não configurado`, ou `ligado` ou `desligado` com a pasta, o intervalo e a última passada.
+
+| O painel diz | Causa | Como verificar | Correção |
+|---|---|---|---|
+| `o nome do endereço não foi encontrado` | O nome do serviço não resolve de dentro do container do painel | `docker compose exec painel getent hosts <nome>` | Corrija o **Endereço do serviço**, ou o DNS do servidor |
+| `o endereço não é aceito pelo painel, ou o serviço mandou o pedido para outro endereço` | O nome leva a um endereço que o painel não alcança (o próprio container, endereço de enlace, de grupo ou reservado), ou o S3 respondeu com um redirecionamento: bucket de outra região ou endereço que não é o do serviço | A **Região** e o **Endereço do serviço** no cadastro do bucket, no serviço | Em **Alterar**, grave a região e o endereço do bucket |
+| `não foi possível conectar ao serviço` | Serviço fora do ar, porta fechada ou servidor sem saída para a internet | No servidor: `curl -sS -o /dev/null -w '%{http_code}\n' https://<nome>:<porta>` | Libere a saída HTTPS do servidor para o serviço; a passada seguinte recomeça do mesmo arquivo |
+| `o certificado do serviço não foi aceito` | Certificado vencido, de outro nome ou emitido por uma autoridade que o painel não conhece | `openssl s_client -connect <nome>:<porta> -servername <nome> </dev/null 2>/dev/null \| openssl x509 -noout -subject -issuer -dates` | S3 da rede interna com autoridade própria: entregue o certificado dela ao painel, como em [Destinos](painel.md#destinos) |
+| `o serviço não respondeu a tempo` | Enlace ou serviço lento: cada operação de rede tem 30 s | A hora das linhas `Envio para o destino não concluído` na aba Log | Nada a fazer se foi uma vez: a passada seguinte recomeça do mesmo arquivo. Se repete, confira o enlace |
+| `a resposta do serviço não foi entendida` | O endereço não é de um serviço S3, ou há um intermediário respondendo no lugar dele | O **Endereço do serviço** | Grave o endereço do serviço, sem o bucket e sem caminho |
+| `o serviço recusou a credencial ou a permissão` | S3: chave errada, chave sem permissão de gravar no bucket ou relógio do servidor fora de hora. Bot: token que não vale mais, bot fora do grupo ou do canal, ou bloqueado pela pessoa | `date` no servidor; **Testar** no cartão | Em **Alterar**, grave as chaves ou o token de novo; ponha o bot de volta na conversa |
+| `o bucket ou a conversa não existe para esta credencial` | S3: nome do bucket errado, bucket de outra conta ou **Endereço do bucket** na forma que o serviço não usa. Bot: número da conversa errado, ou a pessoa ainda não iniciou a conversa com o bot | O nome do bucket no serviço; o número da conversa | Corrija em **Alterar** e clique em **Testar** |
+| `o arquivo é maior do que o serviço aceita` | Pelo botão **Telegram**: o arquivo passa de [`PAINEL_TELEGRAM_MAX_MB`](configuracao.md#painel). No S3: mais de 5 TiB, ou o serviço recusou pelo tamanho | O tamanho na aba Arquivos | Pelo bot, o arquivo grande não sai; mande pelo botão **S3** ou baixe pelo painel |
+| `o arquivo está vazio, e o bot não envia arquivo vazio` | Arquivo de 0 bytes enviado pelo botão **Telegram** | O tamanho na aba Arquivos | Nada a fazer: a API de bot não aceita. O S3 grava arquivo vazio |
+| `o nome do arquivo não cabe no destino` | O prefixo mais o caminho do arquivo passam de 1024 bytes, o máximo do nome de um objeto | O caminho do arquivo | Encurte o prefixo ou o caminho |
+| `o arquivo mudou durante o envio: repita quando ele terminar de chegar` | O arquivo ainda estava chegando quando o botão foi clicado | A data do arquivo na aba Arquivos | Espere o envio do equipamento terminar e clique de novo |
+| `outro envio pedido pela tela está em andamento: tente de novo em instantes` | O envio anterior pedido pelo botão ainda não terminou | Aba Log: a linha `Arquivo enviado para o destino a pedido` aparece quando ele acaba | Espere e clique de novo |
+| `outro teste está em andamento: tente de novo em instantes` | Dois cliques em **Testar** ao mesmo tempo | — | Espere alguns segundos |
+| `um arquivo não pôde ser lido` | Permissão alterada à mão em `DATA_DIR/dados` ou erro de disco | `docker compose logs --tail 30 painel` | Confira dono e permissão da pasta no host e o disco |
+| `a pasta escolhida não existe mais dentro dos dados` | A pasta do destino foi renomeada ou apagada | Aba Arquivos | Em **Alterar**, escolha a pasta que existe, ou crie a pasta de novo |
+| `faltam os segredos do destino: grave-os de novo`, ou o cartão com a marca **faltam os segredos** | Uma cópia de segurança foi restaurada, ou os arquivos de `SECRETS_DIR/destinos` foram apagados | A marca no cartão | Em **Alterar**, digite de novo as chaves ou o token e a conversa |
+| `o destino está desligado ou sem os segredos` ao clicar em **Enviar agora** | A passada só acontece com o destino ligado e com os segredos | A marca no cartão | Em **Alterar**, marque o destino como ligado. Para um arquivo só, use o botão da aba Arquivos, que funciona com o destino desligado |
+| `o S3 espera o bot do Telegram entregar o que falta antes de apagar mais arquivos` | Com **Guardar no S3** e o bot parado, a fila do que espera pelo bot encheu | O motivo no cartão do bot | Resolva o bot pelo motivo dele, ou remova o bot: o S3 volta a enviar |
+| `o serviço respondeu com o código <número>` | Resposta que o painel não esperava: `5xx` é problema do lado do serviço, `429` é pedido demais | A situação do serviço | Espere: a passada seguinte recomeça do mesmo arquivo. Se o mesmo arquivo é recusado três passadas seguidas, ele fica para trás e a aba Log ganha `Arquivo recusado pelo destino deixado para trás` |
+| O bot não mandou na hora um arquivo que chegou | O arquivo chegou com um nome e foi renomeado ou movido por FTP, foi copiado direto no servidor, ou o aviso de chegada não foi gravado: sem o aviso, vale a espera de dois minutos sem mudar | A linha **Ainda chegando** no cartão do bot | Nada a fazer: ele sai sozinho depois da espera. Para mandar já, use o botão **Telegram** na linha do arquivo |
+| O bot não mandou os arquivos que já estavam na pasta | O bot só envia o que chega depois de ser ligado | A linha **Última passada** do cartão | Mande cada um pelo botão **Telegram** da aba Arquivos |
+| A conversa recebeu um aviso no lugar do arquivo | O arquivo passa do limite do bot | O tamanho no aviso | O arquivo continua no servidor: baixe pelo painel |
+| Os botões **Telegram** e **S3** não aparecem na aba Arquivos | O destino não foi gravado, está sem os segredos, ou `PAINEL_DESTINOS=nao`. A tela Meus arquivos, do usuário do FTP, nunca tem esses botões | A aba Destinos; `grep '^PAINEL_DESTINOS=' .env` | Grave o destino na aba Destinos |
+| A aba Destinos não está no menu | `PAINEL_DESTINOS=nao`, ou a sessão é de um usuário do FTP | `grep '^PAINEL_DESTINOS=' .env` | `PAINEL_DESTINOS=sim` e `./deploy.sh` |
 
 ---
 

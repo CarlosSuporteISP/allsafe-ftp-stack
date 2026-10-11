@@ -389,6 +389,9 @@ mkdir -p "$data_dir/dados" "$data_dir/auth" "$data_dir/certs" "$data_dir/painel"
 umask 077
 mkdir -p "$secrets_dir"
 chmod 0700 "$secrets_dir"
+# Segredos dos destinos de fora (S3 e bot do Telegram): quem grava é o painel, pela aba Destinos. A pasta nasce vazia.
+mkdir -p "$secrets_dir/destinos"
+chmod 0700 "$secrets_dir/destinos"
 secret_file="$secrets_dir/ftp-usuario-inicial-senha.txt"
 if [[ ! -s "$secret_file" ]]; then
   command -v openssl >/dev/null 2>&1 || die "openssl não encontrado no host (necessário para gerar a senha)"
@@ -430,6 +433,13 @@ backup-chave-privada.txt
 backup-chave-publica.txt
   Chave que cifra as cópias de segurança (./scripts/backup.sh). Sai da chave privada e é regravada
   pelo ./deploy.sh enquanto a privada estiver aqui. Não é segredo: com ela só se cifra, não se abre.
+
+destinos/
+  Segredos dos destinos de fora, gravados pelo painel na aba Destinos, um arquivo por segredo:
+  s3-chave-de-acesso.txt e s3-chave-secreta.txt (a chave do armazenamento S3), telegram-token.txt
+  (o token do bot) e telegram-conversa.txt (a conversa ou o grupo que recebe). O painel só grava e
+  lê: nenhum deles volta para a tela. Trocar ou remover: pela aba Destinos. Apagar um arquivo aqui
+  desliga o envio daquele destino na passada seguinte.
 
 Perdeu a senha do painel: ./scripts/painel-senha.sh --gerar   (outro administrador: --usuario NOME)
 Estes arquivos não entram na cópia do ./scripts/backup.sh: guarde-os no seu cofre de senhas.

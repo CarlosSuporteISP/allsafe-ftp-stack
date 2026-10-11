@@ -46,7 +46,7 @@ flowchart LR
 | `dados/` | Arquivos enviados pelos equipamentos, uma pasta por usuário, e `.entrada/`, a área de entrada das contas de perfil Só envio, vazia fora do instante de cada envio | Sim |
 | `auth/` | Usuários do FTP, com o hash de cada senha, os limites próprios de cada um, a lista de quem está dispensado do TLS e os bloqueios em vigor, por tentativa e por endereço | Sim |
 | `certs/` | Certificado e chave privada do FTP | Sim |
-| `painel/` | Certificado e chave privada do painel, os administradores (nome e hash da senha), o `auditoria.log` e o idioma das telas escolhido por cada conta | Sim |
+| `painel/` | Certificado e chave privada do painel, os administradores (nome e hash da senha), o `auditoria.log`, o idioma das telas escolhido por cada conta e a configuração e o andamento dos [destinos](painel.md#destinos), sem os segredos deles | Sim |
 | `nginx/` | Soquete do painel e cópia do certificado, refeitos a cada subida | Não |
 
 Ficam fora, e precisam ser guardados à parte: o `.env` e a pasta `.secrets/`, onde está a chave que abre a cópia. Veja [A chave da cópia](#chave) e [Guardar o `.env` e os segredos](#segredos).
@@ -229,8 +229,9 @@ A cópia não leva o `.env` nem a pasta `.secrets/`, para que um arquivo de back
 | `.env` | Endereços, portas, perfil e limites da instalação |
 | `.secrets/ftp-usuario-inicial-senha.txt` | Senha do usuário inicial do FTP |
 | `.secrets/painel-admin-inicial-senha-hash.txt` | Hash da senha inicial do primeiro administrador do painel |
+| `.secrets/destinos/` | Chaves do S3, token do bot do Telegram e conversa que recebe, gravados pelo painel na aba Destinos |
 
-A chave privada é a única sem volta: sem ela a cópia não abre. Sem os outros três, a stack volta do mesmo jeito: o `./deploy.sh` cria um `.env` novo e senhas novas. Nesse caso, o usuário inicial passa a ter a senha nova, que precisa ser configurada no equipamento que o usa. Os demais usuários e os administradores do painel não são afetados: o hash da senha deles está na cópia. Detalhes de cada arquivo em [Segredos](segredos.md).
+A chave privada é a única sem volta: sem ela a cópia não abre. Sem os outros, a stack volta do mesmo jeito: o `./deploy.sh` cria um `.env` novo e senhas novas, e os segredos dos destinos são digitados de novo na aba Destinos, em **Alterar**; até lá, o cartão mostra a marca **faltam os segredos** e nada é enviado. Nesse caso, o usuário inicial passa a ter a senha nova, que precisa ser configurada no equipamento que o usa. Os demais usuários e os administradores do painel não são afetados: o hash da senha deles está na cópia. Detalhes de cada arquivo em [Segredos](segredos.md).
 
 ---
 

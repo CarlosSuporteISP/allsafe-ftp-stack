@@ -85,9 +85,10 @@ LABEL org.opencontainers.image.title="AllSafe FTP - painel" \
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+# ca-certificates: as autoridades que o painel aceita ao falar HTTPS com os destinos de fora (S3 e bot do Telegram).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 \
-    && mkdir -p /painel /nginx /opt/painel \
+    && apt-get install -y --no-install-recommends python3 ca-certificates \
+    && mkdir -p /painel /nginx /segredos /opt/painel \
     && rm -rf /var/lib/apt/lists/*
 
 # Os módulos do painel ficam lado a lado: o servidor.py é o ponto de entrada e importa os demais.

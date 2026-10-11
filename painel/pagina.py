@@ -12,12 +12,12 @@ from icones import bandeira, desenhos, icone
 from idioma import N, t, tn
 
 ABAS = (('/', 'painel', N('Visão geral')), ('/usuarios', 'usuarios', N('Usuários')), ('/arquivos', 'pasta', N('Arquivos')),
-        ('/servidor', 'pulso', N('Servidor')), ('/seguranca', 'cadeado', N('Segurança')),
+        ('/destinos', 'nuvem', N('Destinos')), ('/servidor', 'pulso', N('Servidor')), ('/seguranca', 'cadeado', N('Segurança')),
         ('/bloqueios', 'bloqueio', N('Bloqueios')), ('/atividade', 'atividade', N('Log')))
 ABAS_USUARIO = (('/meus-arquivos', 'pasta', N('Meus arquivos')),)
 ABAS_SOENVIO = (('/meus-arquivos', 'envio', N('Envio de arquivos')),)   # perfil só envio: sem lista de arquivos
 # Menu lateral do administrador: o dia a dia em cima, o que cuida do próprio painel embaixo.
-GRUPOS = ((N('Operação'), ABAS[:3]), (N('Sistema'), ABAS[3:]))
+GRUPOS = ((N('Operação'), ABAS[:4]), (N('Sistema'), ABAS[4:]))
 # Título da aba, em português ➜ ícone dela no menu: é o mesmo que abre a faixa de cabeçalho da tela.
 DESENHO_DA_ABA = {rotulo: desenho for _, desenho, rotulo in ABAS + ABAS_USUARIO + ABAS_SOENVIO}
 # Estado de um item conferido ➜ (ícone, o que o leitor de tela diz). A cor acompanha, mas nunca é o único sinal.
@@ -171,6 +171,8 @@ def menu_lateral(sessao, ativa):
     for grupo, abas in grupos:
         links += f'<span class="grupo">{t(grupo)}</span>' if grupo else ''
         for caminho, desenho, rotulo in abas:
+            if caminho == '/destinos' and not CFG.get('destinos'):
+                continue   # PAINEL_DESTINOS=nao: a aba não existe
             # Instalação publicada: o administrador vê a marca na aba que explica, em qualquer tela em que estiver.
             # É um desenho, e não uma etiqueta escrita: cabe no menu estreito e na faixa de cima sem cortar.
             sinal = (f'<span class="sinal" title="{t("Esta instalação está publicada fora da rede privada: veja como nesta aba")}">'

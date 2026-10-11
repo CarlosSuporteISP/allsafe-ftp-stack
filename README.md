@@ -101,6 +101,7 @@ There are **three containers**: the FTP server, the panel and **nginx**, the onl
 | **Secure web panel** | Creates users, changes passwords and removes users in the browser: HTTPS only, a session that ends after 4 hours without use, blocking after five wrong passwords and a record of every action |
 | **Files in the browser** | The administrator browses, uploads, downloads, renames and deletes; the owner of the files signs in with the FTP user and password, sees only their own folder and does what their profile allows. Uploading through the panel depends on a permission given to each user |
 | **Automatic cleanup** | Per account, the administrator tells the panel to keep only the last files of each folder or only those of the last days; the panel deletes the rest by itself, from time to time. Off by default |
+| **Sending to S3 and Telegram bot** | In the Destinations tab, the administrator connects a folder to an S3 storage, for the second copy or to keep the files elsewhere and free the disk, and to a Telegram bot, which delivers within moments each file that arrives to a person, a group or a channel, up to the size the bot accepts. The bot only sends. In the Files tab, a button sends one file right away. No settings by default |
 | **Server health in the panel** | The Server tab shows the three containers of the stack, each with what it uses of processor, memory and processes against what was allocated to it, and the processor, the memory, the disk and the FTP network of the server, with the history of the last minutes |
 | **nginx in front of the panel** | Only nginx publishes the panel port: TLS 1.2 and 1.3, HTTP/2, list of allowed networks, limit of requests and of connections per address; the panel has no network port |
 | **Hardened containers** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, CPU, memory and PID limits; nginx runs without `root` and without any `capability` |
@@ -180,6 +181,7 @@ To serve the internal network, adjust the `.env` (template in [`.env.example`](.
 | Let the owner of the files download their own | they open the panel with the FTP user and password and see only their own folder; for the panel to accept only administrators, `PAINEL_ACESSO_USUARIOS_FTP=nao` in the `.env` and `./deploy.sh` |
 | Let a user upload files in the browser | in the panel, Users tab, **Edit**, checkbox **Allow this user to upload files through the panel**, or `./manage-user.sh limites backup-olt enviar=1`: see [Uploading files through the panel](doc/en/panel.md#enviar-arquivo) |
 | Keep only the newest files of an account | in the panel, Users tab, **Edit**, **Automatic cleanup** card, or `./manage-user.sh retencao backup-olt ultimos=30`: see [Automatic cleanup](doc/en/panel.md#limpeza) |
+| Send the files of a folder to an S3 or to Telegram | in the panel, Destinations tab, **Configure** on the card of the destination; for a single file, Files tab, **Telegram** or **S3** button on its line: see [Destinations](doc/en/panel.md#destinos) |
 | Block an address or a prefix | in the panel, Blocks tab, **Block address**, or `./manage-user.sh endereco-bloquear 203.0.113.7 30`: see [blocking by address](doc/en/security.md#bloqueio-por-endereco) |
 | Create a folder and lock a user to it | in the panel, Files tab, **New folder** and **New user in this folder**, or `./manage-user.sh add olt01 clientes/olt-01` |
 | Keep a backup copy | `./scripts/backup.sh`, which writes it encrypted; to go back to it, `./scripts/restaurar.sh <copy>`. Keep `.secrets/backup-chave-privada.txt` off the server |
@@ -640,7 +642,7 @@ The safest path for each decision of whoever installs, as a flowchart, is in [be
 | Check the running installation | `./scripts/validate.sh --runtime` | the same, plus `servico ftp: running, healthy`, likewise for `painel` and `nginx`, and the initial user in PureDB or removed by the administrator |
 | Run the full suite: functional, security and network | `./tests/testar.sh` | one line per case and, at the end, `Bateria aprovada: nenhum desvio.` |
 
-The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 73 functional cases, 124 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
+The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 82 functional cases, 130 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
 
 ---
 

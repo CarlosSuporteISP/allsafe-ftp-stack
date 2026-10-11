@@ -17,6 +17,7 @@ import threading
 import time
 import urllib.parse
 
+import chegadas
 import envio
 from auditoria import auditar, limpo
 from config import (APAGAR_MAX, APAGAR_NIVEIS, APAGAR_PRAZO, CFG, DONO_DADOS, DOWNLOADS_MAX, ENVIOS_MAX, LISTA_MAX, NIVEL, PASTA,
@@ -209,9 +210,9 @@ def botoes_de_gestao(rota, item):
             f' <a class="botao perigo" href="{e(endereco(rota + "/apagar", "item", item))}">{icone("lixeira")}{t("Apagar")}</a>')
 
 
-def linhas_da_lista(rota, caminho, pastas, arquivos, gerir=False):
+def linhas_da_lista(rota, caminho, pastas, arquivos, gerir=False, mais=None):
     """Linhas da tabela de uma pasta aberta; `rota` é a tela que mostra a lista e `caminho`, a pasta como ela a vê.
-    Com `gerir`, cada linha ganha os botões de renomear e de apagar."""
+    Com `gerir`, cada linha ganha os botões de renomear e de apagar; `mais(caminho)` dá outros botões ao arquivo comum."""
     base = caminho + '/' if caminho else ''
     linhas = []
     do_tamanho, do_modificado = t('Tamanho'), t('Modificado')
@@ -228,7 +229,7 @@ def linhas_da_lista(rota, caminho, pastas, arquivos, gerir=False):
             linhas.append(f'<tr><td><span class="item">{icone("arquivo")}{e(visivel(nome))}</span></td><td data-rotulo="{do_tamanho}">{e(tamanho(dados.st_size))}</td>'
                           f'<td class="quando" data-rotulo="{do_modificado}">{e(quando(dados.st_mtime))}</td>'
                           f'<td class="acoes"><a class="botao" href="{e(endereco(rota + "/baixar", "arquivo", base + nome))}" download>'
-                          f'{icone("baixar")}{t("Baixar")}</a>{gestao}</td></tr>')
+                          f'{icone("baixar")}{t("Baixar")}</a>{mais(base + nome) if mais else ""}{gestao}</td></tr>')
         else:
             tipo = t('link simbólico') if stat.S_ISLNK(dados.st_mode) else t('arquivo especial')
             linhas.append(f'<tr><td><span class="item">{icone("atalho")}{e(visivel(nome))}</span> <span class="etiqueta">{tipo}</span></td><td class="suave" data-rotulo="{do_tamanho}">—</td>'
@@ -258,8 +259,11 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
         os.close(descritor)
     if not lista:
         pastas = [item for item in pastas if item[0] != AREA_DE_ENTRADA]
-    corpo, aviso = linhas_da_lista('/arquivos', caminho, pastas, arquivos, gerir=True), aviso_de_corte(cortado)
+    import aba_destinos   # aqui, e não no alto do arquivo: destinos.py usa as funções deste módulo
+    para_destinos, botoes = aba_destinos.botoes_do_arquivo(sessao)
+    corpo, aviso = linhas_da_lista('/arquivos', caminho, pastas, arquivos, gerir=True, mais=botoes), aviso_de_corte(cortado)
     feito = MENSAGENS.get(consulta.get('m', ''), '')
+    do_destino, falha = aba_destinos.volta_do_arquivo(consulta)
     donos = [nome for nome, dele in usuarios().items() if dele == caminho] if caminho else []
     de_quem = ('<p class="suave">' + t('Pasta do usuário do FTP: <strong>{donos}</strong>.', donos=e(', '.join(donos))) + '</p>'
                ) if donos else ''
@@ -270,9 +274,10 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
                  'Trocar o nome e apagar pedem a sua senha atual, e apagar não tem lixeira. Todo download e toda alteração ficam registrados na aba '
                  'Log.') + '</p>')
     pedido.enviar(200, pagina(t('Arquivos'), f'''{cabeca('Arquivos', t('O que os equipamentos já enviaram, pasta por pasta.'))}
-{f'<p class="ok" role="status">{e(t(feito))}</p>' if feito else ''}
+{f'<p class="ok" role="status">{e(t(feito) if feito else do_destino)}</p>' if feito or do_destino else ''}
+{f'<p class="erro" role="alert">{e(falha)}</p>' if falha else ''}
 <p class="trilha">{trilha(Vista(sessao), lista)}{novo_usuario}</p>
-{de_quem}{aviso}<section class="cartao lista"><div class="rolagem"><table class="blocos itens">
+{para_destinos}{de_quem}{aviso}<section class="cartao lista"><div class="rolagem"><table class="blocos itens">
 <thead><tr><th>{t('Nome')}</th><th>{t('Tamanho')}</th><th>{t('Modificado')}</th><th>{t('Ações')}</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
 {como(t('O que dá para fazer nesta aba'), ajuda)}</section>
@@ -776,6 +781,7 @@ def enviar(pedido, sessao, consulta, formulario, token):
         return resposta_pasta(pedido, sessao, 409, t('Nome já usado'), t('Já existe uma pasta ou um arquivo com este nome.'), caminho)
     limpar_cache()
     gravado = f'{caminho}/{final}' if caminho else final
+    chegadas.chegou(v.real(gravado))   # o arquivo está inteiro no lugar: o bot do Telegram não precisa esperar por ele
     auditar(pedido.ip, 'arquivo_enviado', f'{quem(sessao)} arquivo={limpo(v.real(gravado), 200)} bytes={bytes_do_arquivo}')
     return pedido.redirecionar(endereco(v.rota, 'pasta', caminho) + ('&m=enviado' if final == nome else '&m=enviado_com_data'))
 
