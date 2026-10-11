@@ -6,6 +6,26 @@ Em 2026-10-10 as versões foram renumeradas: cada versão passou a levar no máx
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [0.31.1] - 2026-10-10
+
+Só documentação e fotos: os guias que faltavam em inglês e as telas do painel fotografadas de novo, nos dois idiomas. O código da stack é o da `0.31.0`.
+
+### Adicionado
+
+- **Guia das telas em inglês** (`doc/en/application/README.md`), com as mesmas seções e âncoras do guia em português e as fotos do painel em inglês.
+- **Guias do painel e de segurança em inglês** (`doc/en/panel.md` e `doc/en/security.md`): na `0.31.0` os dois só existiam em português.
+- **Fotos do painel em cada idioma**: 55 telas do guia e 9 da raiz, em `doc/pt-BR/` com o painel em português e em `doc/en/` com o painel em inglês, cada pasta com o seu `visualizador.html`.
+
+### Alterado
+
+- **Guia das telas em português**: passa a mostrar o envio de arquivo pelo painel e a permissão de envio, o bloqueio de endereço e de prefixo feito pelo administrador, com mudar prazo e desbloquear, o cartão Limpeza automática, a tela Envio de arquivos do perfil Só envio e a tela de entrada nova.
+- **`README.md` e guias em inglês**: os links e as fotos, que na `0.31.0` levavam ao guia das telas e às imagens em português, apontam para o guia e para as imagens em inglês.
+
+### Corrigido
+
+- **Textos alternativos das fotos da raiz**: a aba Bloqueios, a aba Arquivos, a aba Usuários e a tela Meus arquivos descreviam a tela de antes do envio pelo painel, da limpeza automática e do bloqueio feito pelo administrador.
+- **Frases desatualizadas nos guias do painel e de segurança**, em português, conferidas contra as telas e o código da `0.31.0`.
+
 ## [0.31.0] - 2026-10-10
 
 O painel passa a receber arquivo, o bloqueio por endereço vale para IPv4 e IPv6 e ganha o bloqueio feito pelo administrador, de endereço e de prefixo, e cada conta pode ter a limpeza automática dos arquivos antigos. A tela de entrada mostra que a stack guarda arquivos de equipamentos de rede, câmeras, empresas e pessoas.

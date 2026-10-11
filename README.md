@@ -11,7 +11,7 @@
 
 Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Version](https://img.shields.io/badge/version-0.31.0-blue)
+![Version](https://img.shields.io/badge/version-0.31.1-blue)
 ![Status](https://img.shields.io/badge/status-in_development-yellow)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
@@ -734,7 +734,7 @@ The plan for creating and changing the stack (phases, tests, evidence and progre
 
 ## 🏷️ Version
 
-**0.31.0**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
+**0.31.1**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
 
 The version advances at every publication: `0.x` is the construction phase, one version per phase of the plan; **`1.0.0` is the first version ready for production** and opens the long-term line `1.x`. What changed in each version is in [`CHANGELOG.md`](CHANGELOG.md).
 
