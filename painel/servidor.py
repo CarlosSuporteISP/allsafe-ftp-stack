@@ -11,15 +11,18 @@ allsafe-ftp-user do serviço ftp, na pasta /auth que os dois containers comparti
 
 Modos: sem argumento, sobe o servidor; --hash lê uma senha da entrada padrão e imprime o hash;
 --administrador <nome> lê um hash da entrada padrão e cria o administrador ou troca a senha dele;
---saude confere /saude pelo soquete e sai com 0 ou 1 (healthcheck do container);
---retencao aplica agora a limpeza automática de cada usuário que tem uma, e com --simular só conta o que sairia.
+--saude confere /saude pelo soquete e sai com 0 ou 1 (o healthcheck do container roda o saude.py direto, sem subir o painel);
+--retencao aplica agora a limpeza automática de cada usuário que tem uma, e com --simular só conta o que sairia;
+--destinos mostra a situação do S3 e do bot do Telegram, e --destinos enviar <s3|telegram> faz agora a passada dele
+(com --sem-espera, sem aguardar os dois minutos de um arquivo sem mudar).
 """
-import socket
 import sys
 
 import administradores
+import destinos
 import limpeza
 import recursos
+import saude
 from atendimento import Painel, Servidor
 from auditoria import auditar, limpo
 from config import ARQ_ADMINS, ARQ_HASH, ARQ_SOQUETE, CFG, NOME, SENHA_MIN, configuracao, falha
@@ -50,26 +53,6 @@ def modo_administrador(nome):
     print(f'administrador {nome}: {feito}')
 
 
-def modo_saude():
-    """Pede /saude pelo soquete, como o nginx faria a partir do próprio host."""
-    pedido = b'GET /saude HTTP/1.1\r\nHost: localhost\r\nX-Real-IP: 127.0.0.1\r\nConnection: close\r\n\r\n'
-    resposta = b''
-    try:
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as conexao:
-            conexao.settimeout(4)
-            conexao.connect(ARQ_SOQUETE)
-            conexao.sendall(pedido)
-            while len(resposta) < 8192:
-                parte = conexao.recv(4096)
-                if not parte:
-                    break
-                resposta += parte
-    except OSError:
-        sys.exit(1)
-    cabecalho, _, corpo = resposta.partition(b'\r\n\r\n')
-    sys.exit(0 if cabecalho.startswith(b'HTTP/1.1 200 ') and corpo.strip() == b'ok' else 1)
-
-
 def modo_retencao(simular):
     """A passada da limpeza automática, pedida pelo terminal. Diz o que saiu de cada pasta, sem o nome dos arquivos."""
     feitas = limpeza.passada(simular)
@@ -86,13 +69,50 @@ def modo_retencao(simular):
         print('Simulação: nada foi apagado. Pasta que ficaria vazia não entra na conta.')
 
 
+def linha_da_passada(conta):
+    return (f'{conta.get("arquivos", 0)} arquivo(s), {conta.get("bytes", 0)} bytes, {conta.get("apagados", 0)} apagado(s) '
+            f'do servidor, {conta.get("grandes", 0)} acima do limite do bot, {conta.get("ignorados", 0)} ignorado(s), '
+            f'{conta.get("erros", 0)} recusado(s); ' + (f'parou: {conta["motivo"]}' if conta.get('motivo') else 'chegou ao fim'))
+
+
+def modo_destinos(argumentos):
+    """Os destinos de fora, pelo terminal: a situação de cada um ou uma passada agora. Nenhum segredo é mostrado."""
+    CFG.update(configuracao())
+    if not CFG['destinos']:
+        falha('os destinos estão desligados nesta instalação (PAINEL_DESTINOS=nao)')
+    if not argumentos:
+        for destino in destinos.NOMES:
+            visto = destinos.situacao(destino)
+            if not visto['conf']:
+                print(f'{destino}: não configurado')
+                continue
+            estado = ('ligado' if visto['conf']['ligado'] else 'desligado') + ('' if visto['segredos'] else ', faltam os segredos')
+            ultima = visto['ultima']
+            print(f'{destino}: {estado}; pasta /data/{visto["conf"]["pasta"]}; a cada {visto["conf"]["intervalo"]} min; '
+                  + (f'última passada: {linha_da_passada(ultima)}' if ultima.get('quando') else 'nenhuma passada ainda'))
+        return
+    if len(argumentos) < 2 or argumentos[0] != 'enviar' or argumentos[1] not in destinos.NOMES \
+            or set(argumentos[2:]) - {'--sem-espera'}:
+        falha('uso: --destinos [enviar <s3|telegram> [--sem-espera]]')
+    feitas = destinos.executar({argumentos[1]}, '--sem-espera' in argumentos)
+    if feitas is None:
+        falha('outra passada está em andamento: tente de novo em instantes')
+    if not feitas:
+        falha(f'{argumentos[1]}: não configurado, desligado ou sem os segredos')
+    for destino, conta in feitas.items():
+        print(f'{destino}: {linha_da_passada(conta)}')
+    sys.exit(1 if any(conta.get('motivo') for conta in feitas.values()) else 0)
+
+
 def principal():
     if '--hash' in sys.argv[1:]:
         return modo_hash()
+    if '--destinos' in sys.argv[1:]:
+        return modo_destinos(sys.argv[sys.argv.index('--destinos') + 1:])
     if '--retencao' in sys.argv[1:]:
         return modo_retencao('--simular' in sys.argv[1:])
     if '--saude' in sys.argv[1:]:
-        return modo_saude()
+        return saude.conferir()
     if '--administrador' in sys.argv[1:]:
         posicao = sys.argv.index('--administrador')
         return modo_administrador(sys.argv[posicao + 1] if len(sys.argv) > posicao + 1 else '')
@@ -111,6 +131,7 @@ def principal():
     servidor = Servidor(ARQ_SOQUETE, Painel)
     recursos.iniciar()
     limpeza.iniciar()
+    destinos.iniciar()
     auditar('-', 'painel_iniciado', f'versao={limpo(CFG["versao"])}')
     print(f'Painel pronto no soquete {ARQ_SOQUETE}, atrás do nginx; sessão de {CFG["inatividade"] // 60} min; '
           f'redes permitidas: {", ".join(str(r) for r in CFG["redes"])}', flush=True)

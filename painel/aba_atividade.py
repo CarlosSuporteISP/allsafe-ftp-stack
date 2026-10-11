@@ -22,6 +22,14 @@ EVENTOS = {
     'retencao_alterada': ('relogio', N('Limpeza automática do usuário alterada')),
     'retencao_aplicada': ('lixeira', N('Limpeza automática: arquivos antigos apagados')),
     'retencao_falhou': ('alerta', N('Limpeza automática não concluída')),
+    'destino_gravado': ('nuvem', N('Destino de envio gravado')),
+    'destino_removido': ('lixeira', N('Destino de envio removido')),
+    'destino_teste': ('nuvem', N('Teste de destino de envio')),
+    'destino_pedido': ('tocar', N('Envio para o destino pedido fora de hora')),
+    'destino_arquivo': ('envio', N('Arquivo enviado para o destino a pedido')),
+    'destino_enviado': ('envio', N('Arquivos enviados para o destino')),
+    'destino_falhou': ('alerta', N('Envio para o destino não concluído')),
+    'destino_pulado': ('alerta', N('Arquivo recusado pelo destino deixado para trás')),
     'bloqueio_removido': ('cadeado-aberto', N('Bloqueio do usuário no FTP removido')),
     'endereco_bloqueado': ('bloqueio', N('Endereço bloqueado por erros de usuário e senha')),
     'endereco_bloqueado_manual': ('bloqueio', N('Endereço ou prefixo bloqueado pelo administrador')),
@@ -64,7 +72,10 @@ ROTULOS = {'admin': N('administrador'), 'usuario': N('usuário'), 'versao': N('v
            'conferencia': N('conferência'), 'credencial': N('senha'), 'alvo': N('conta'), 'novo': N('conta nova'),
            'anterior': N('pasta anterior'), 'host': N('endereço pedido'), 'bytes': N('tamanho'), 'endereco': N('endereço'),
            'ultimos': N('arquivos mantidos'), 'dias': N('dias'), 'pasta': N('pasta'), 'arquivos': N('arquivos'),
-           'pastas': N('pastas'), 'erros': N('erros')}
+           'pastas': N('pastas'), 'erros': N('erros'), 'destino': N('destino'), 'motivo': N('motivo'),
+           'apagados': N('apagados do servidor'), 'grandes': N('acima do limite do bot'), 'ignorados': N('ignorados'),
+           'modo': N('depois do envio'), 'intervalo': N('minutos entre as passadas'), 'resultado': N('resultado'),
+           'arquivo': N('arquivo'), 'situacao': N('situação'), 'segredos': N('segredos')}
 MOMENTO = re.compile(r'(\d{4})-(\d\d)-(\d\d)T(\d\d:\d\d)(:\d\d)')
 
 

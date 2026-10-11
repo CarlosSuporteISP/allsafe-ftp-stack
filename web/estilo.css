@@ -956,6 +956,7 @@ p > .botao { margin-top: 0; }
 /* Lista de arquivos: os botões da mesma largura, para Abrir, Baixar, Renomear e Apagar formarem colunas. */
 @media (min-width: 720px) {
   .acoes .botao, .sem-acao { min-width: 6.75rem; }
+  .acoes .botao[form] { min-width: 0; }   /* envio a um destino: nome curto, e a coluna do nome do arquivo precisa do espaço */
 }
 
 @media (min-width: 1360px) {

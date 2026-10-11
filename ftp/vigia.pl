@@ -8,7 +8,9 @@
 # arquivo desbloqueia na hora. A senha nunca chega aqui: o aviso traz só o nome e o endereço.
 #
 # É também por aqui que as transferências chegam ao registro do container: o Pure-FTPd avisa pelo syslog de
-# cada arquivo enviado, baixado, renomeado e apagado, e o vigia escreve uma linha para cada um.
+# cada arquivo enviado, baixado, renomeado e apagado, e o vigia escreve uma linha para cada um. Cada envio
+# concluído vira ainda um anúncio em /auth/chegadas, que o painel colhe para o bot do Telegram enviar o arquivo
+# em instantes: só o servidor FTP sabe quando um arquivo terminou de chegar.
 #
 #   limiar e minutos: os do usuário, em /auth/limites.lista (tentativas=N minutos=N), ou os da stack
 #                     (FTP_BLOQUEIO_TENTATIVAS e FTP_BLOQUEIO_MINUTOS); limiar 0 = não bloqueia;
@@ -38,6 +40,7 @@ my $SOQUETE   = '/dev/log';
 my $BLOQUEIOS = '/auth/bloqueios';
 my $ENDERECOS = '/auth/enderecos';
 my $PREFIXOS  = '/auth/prefixos';
+my $CHEGADAS  = '/auth/chegadas';
 my $RECUSAS   = '/run/allsafe/recusa';
 my $CADASTRO  = '/auth/pureftpd.passwd';
 my $LIMITES   = '/auth/limites.lista';
@@ -64,6 +67,9 @@ my $ENDERECOS_MAX = 10000;   # arquivos de bloqueio de endereço
 my $RECUSA_VALE   = 30;      # segundos em que a marca de recusa do porteiro ainda explica uma falha
 my $REDE_CADA     = 5;       # segundos entre duas leituras dos contadores de rede e dos recursos do container
 my $RECURSOS_VALE = 60;      # segundos: container parado publica os recursos uma vez nesse tempo
+my $CHEGADAS_MAX  = 2000;    # anúncios de chegada à espera do painel
+my $CHEGADA_VALE  = 300;     # segundos: o anúncio que o painel não colheu nesse tempo sai
+my ($chegadas, $serie) = (0, 0);
 
 sub registrar { print STDERR "vigia: $_[0]\n"; }
 
@@ -363,6 +369,23 @@ sub limpo {
     return $texto;
 }
 
+# Chegada: o envio terminou e o arquivo está inteiro no lugar em que fica. O anúncio é um arquivo de
+# /auth/chegadas com o caminho dele dentro dos dados, sem quebra de linha. Gravado com a trava do cadastro, como
+# as publicações: a cópia de segurança nunca vê o arquivo de passagem. Trava ocupada, teto atingido ou pasta que
+# não abre: sem anúncio, e o arquivo sai pela espera de sempre do painel.
+sub anunciar {
+    my ($caminho) = @_;
+    $caminho =~ s{/{2,}}{/}g;
+    return unless index($caminho, "$DADOS/") == 0 && length($caminho) <= 4096 && $chegadas < $CHEGADAS_MAX;
+    my $trava;
+    if (open($trava, '<', $TRAVA)) { flock($trava, LOCK_EX | LOCK_NB) or return; }
+    my $novo = "$CHEGADAS/.novo.$$";
+    open(my $saida, '>', $novo) or return;
+    print $saida substr($caminho, length("$DADOS/"));
+    if (close($saida) && rename($novo, sprintf('%s/%d-%d', $CHEGADAS, time, ++$serie))) { $chegadas++; return; }
+    unlink $novo;
+}
+
 # Arquivo enviado, baixado, apagado e renomeado: o texto é o do Pure-FTPd, com o nome do arquivo no meio.
 # O nome vai por último na linha, e o tamanho é lido do fim do texto: nome nenhum se passa por outro campo.
 # O aviso é reconhecido pelo começo, que é do servidor: o de envio e o de download começam pelo caminho
@@ -379,6 +402,7 @@ sub arquivo {
             atualizar();
             if (defined $destino{$conta}) { $caminho = da_entrada($conta, $caminho); }
             else { entregar($conta, $caminho); }
+            anunciar($caminho);
         }
         return registrar(($sentido eq 'uploaded' ? 'envio' : 'download') . ": $quem bytes=$bytes arquivo=" . limpo($caminho, 400));
     }
@@ -423,9 +447,18 @@ sub tirar_vencidos {
     closedir $pasta;
 }
 
-# De minuto em minuto: bloqueio vencido, marca de recusa velha e contagem parada saem.
+# De minuto em minuto: bloqueio vencido, marca de recusa velha, anúncio de chegada sem colher e contagem parada saem.
 sub limpar {
     my $agora = time;
+    $chegadas = 0;
+    if (opendir(my $pasta, $CHEGADAS)) {
+        for my $item (readdir $pasta) {
+            next if $item =~ /^\.\.?$/;
+            my @s = stat("$CHEGADAS/$item");
+            if (@s && $agora - $s[9] > $CHEGADA_VALE) { unlink "$CHEGADAS/$item"; } else { $chegadas++; }
+        }
+        closedir $pasta;
+    }
     tirar_vencidos($BLOQUEIOS, qr/$NOME\@$ENDERECO/);
     tirar_vencidos($ENDERECOS, $GRAVADO);
     tirar_vencidos($PREFIXOS, qr/${GRAVADO}_\d{1,3}/);

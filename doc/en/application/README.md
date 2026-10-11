@@ -6,16 +6,16 @@
 
 ## 💡 In a few words
 
-Every screen of the web panel, menu by menu, with a screenshot of each one and an explanation of what can be done on it. The screenshots are real captures of version **0.31.1**, in dark theme and in English, with example users, such as `olt-centro`, `switch-core` and `roteador-borda`. The panel follows the light or dark theme of the system and also opens in Portuguese: see [Language](#idioma). Click any screenshot to open it at full size.
+Every screen of the web panel, menu by menu, with a screenshot of each one and an explanation of what can be done on it. The screenshots are real captures of version **1.1.0**, in dark theme and in English, with example users, such as `olt-centro`, `switch-core` and `roteador-borda`. The panel follows the light or dark theme of the system and also opens in Portuguese: see [Language](#idioma). Click any screenshot to open it at full size.
 
-The panel has a sign-in screen, seven tabs for whoever administers it (Overview, Users, Files, Server, Security, Blocks and Log) and one screen for the FTP user, which changes with the profile of the account: My files or File upload. The administrators are in the Users tab, together with the FTP accounts. How to open it, how to create administrators and what protects the panel are in [Web panel](../panel.md).
+The panel has a sign-in screen, eight tabs for whoever administers it (Overview, Users, Files, Destinations, Server, Security, Blocks and Log) and one screen for the FTP user, which changes with the profile of the account: My files or File upload. The administrators are in the Users tab, together with the FTP accounts. How to open it, how to create administrators and what protects the panel are in [Web panel](../panel.md).
 
 > 🧱 **Private network use only:** by default, the panel opens only on a private IP, behind a firewall, off the internet. See [Security](../security.md#rede-privada).
 
 <details>
 <summary>Contents — click to expand</summary>
 
-[Sign in](#entrar) · [Overview](#visao-geral) · [Users](#usuarios) · [Administrators](#administradores) · [Files](#arquivos) · [My files](#meus-arquivos) · [Server](#servidor) · [Security](#seguranca) · [Blocks](#bloqueios) · [Log](#atividade) · [Language](#idioma) · [How the screenshots were made](#como-foram-feitas)
+[Sign in](#entrar) · [Overview](#visao-geral) · [Users](#usuarios) · [Administrators](#administradores) · [Files](#arquivos) · [My files](#meus-arquivos) · [Destinations](#destinos) · [Server](#servidor) · [Security](#seguranca) · [Blocks](#bloqueios) · [Log](#atividade) · [Language](#idioma) · [How the screenshots were made](#como-foram-feitas)
 
 </details>
 
@@ -27,7 +27,7 @@ The panel has a sign-in screen, seven tabs for whoever administers it (Overview,
 
 <a href="images/entrar.png"><img src="images/entrar.png" alt="Sign-in screen of the panel: on the left, the logo, the headline Backups and files, kept in one place, four points about the stack and the scene of OLT, radio, router, switch, company, person and camera sending over FTPS to the folders of the server, with the Pause motion button; on the right, the title Sign in to the panel, the User and Password fields, the Sign in button, the note that use is restricted to authorized people and the PT and EN buttons" width="100%"></a>
 
-<sub><b>v0.31.1</b> · sign-in screen · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · sign-in screen · captured on 2026-10-11</sub>
 
 **What it is for:** checking the user name and the password before showing any data of the stack. It is the same screen for whoever administers and for the FTP user.
 
@@ -51,7 +51,7 @@ The panel has a sign-in screen, seven tabs for whoever administers it (Overview,
 
 <a href="images/entrar-recusada.png"><img src="images/entrar-recusada.png" alt="Sign-in screen with the message Could not sign in above the User and Password fields" width="100%"></a>
 
-<sub><b>v0.31.1</b> · sign-in screen, sign-in refused · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · sign-in screen, sign-in refused · captured on 2026-10-11</sub>
 
 | Message | When it appears | What to do |
 |---|---|---|
@@ -82,7 +82,7 @@ The panel has a sign-in screen, seven tabs for whoever administers it (Overview,
 
 <a href="images/visao-geral.png"><img src="images/visao-geral.png" alt="Overview tab with the menu on the left, in two groups, the FTP server band, which says Up and TLS required on sign-in, the four measurements Users, Space used, Last upload and FTP certificate, each with the shortcut to the detail, the Server and containers card, with the CPU and the memory of the server and of the containers, the charts Files received per day, Last upload per user and Space per folder, the Recent activity card, with the last six records, and the Details to set up the device card" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Overview menu · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Overview menu · captured on 2026-10-11</sub>
 
 **What it is for:** seeing at once whether the FTP is up and which details to type into the device that will send the backup.
 
@@ -101,7 +101,7 @@ The panel has a sign-in screen, seven tabs for whoever administers it (Overview,
 | **Space per folder** | The folders that take the most space, from the largest to the smallest, each with the bar, the size and the number of files, and the shortcut to the folder in the Files tab |
 | **Recent activity** | The last six records of the panel, with the time and the address of whoever did it, and the shortcut to the Log tab |
 | **Details to set up the device** | Server, control port, passive ports, protocol and where the user comes from: what to fill in on the device |
-| Menu of every screen | On the left, on a screen 1280 px wide or more: the symbol and the name, the seven tabs in two groups (**Operation** and **System**), each with its icon and the tab in use marked, and, at the bottom, the language buttons **PT** and **EN**, the name and the role of whoever signed in and the **Sign out** button. On a narrower screen, the menu becomes a band at the top, with the tabs in a row that scrolls sideways. With the installation published, a warning sign stays next to **Security** |
+| Menu of every screen | On the left, on a screen 1280 px wide or more: the symbol and the name, the eight tabs in two groups (**Operation** and **System**), each with its icon and the tab in use marked, and, at the bottom, the language buttons **PT** and **EN**, the name and the role of whoever signed in and the **Sign out** button. On a narrower screen, the menu becomes a band at the top, with the tabs in a row that scrolls sideways. With the installation published, a warning sign stays next to **Security** |
 | Title of each tab | The name of the tab and a sentence that says what it is for |
 | Footer of every screen | The version of the stack, the private network reminder (or, for the administrator only, how the installation is published), the authorship and the address of the official repository |
 
@@ -114,7 +114,7 @@ Nothing is changed through this tab.
 
 <a href="images/visao-geral-alerta-tls.png"><img src="images/visao-geral-alerta-tls.png" alt="Overview tab with the alert at the top that two users, central-pabx and radio-antigo, sign in to FTP without TLS, and the FTP server card showing TLS required on sign-in, with per-user exception" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Overview menu, alert of user without TLS · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Overview menu, alert of user without TLS · captured on 2026-10-11</sub>
 
 | Alert at the top of the screen | When it appears | How it goes away |
 |---|---|---|
@@ -144,7 +144,7 @@ The same alert opens the Security tab. The conditions for exempting a user are i
 
 <a href="images/usuarios.png"><img src="images/usuarios.png" alt="Users tab with the New user button and the list of accounts: first the administrator admin, with the tag you, then the FTP users, each with the profile below the name and the tags initial, limits, cleanup and blocked, the folder, with the tag shared on two of them, usage, files, last upload, the TLS column, with required on every row, the actions Edit, Exempt from TLS, Change password and Remove and, below the list, the collapsed section How profiles and tags work" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu · captured on 2026-10-11</sub>
 
 **What it is for:** creating the account of each device or person, choosing its profile, choosing and changing the folder it is confined to, changing the password, giving it limits of its own, allowing file upload through the panel, turning on the automatic cleanup of old files, removing the block for wrong passwords and removing the account, with or without the folder, without the command line. It is also where the administrators of the panel are.
 
@@ -190,7 +190,7 @@ The screen of each profile is in [My files](#meus-arquivos); the rules, the shar
 
 <a href="images/usuarios-novo.png"><img src="images/usuarios-novo.png" alt="New user form with the Profile field, which lists Administrator, Full, Upload, Upload only and Read only, each with what it allows, the fields User name, Folder, Password and Repeat the password, the shared folder warning, the Device without TLS support box, unticked, with the plain text alert, and the Create user and Cancel buttons" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, New user form · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, New user form · captured on 2026-10-11</sub>
 
 | Field | Required | What to fill in |
 |---|---|---|
@@ -214,7 +214,7 @@ The screen of each profile is in [My files](#meus-arquivos); the rules, the shar
 
 <a href="images/usuarios-novo-recusado.png"><img src="images/usuarios-novo-recusado.png" alt="New user form with the message There is already a user with this name above the fields" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, registration refused · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, registration refused · captured on 2026-10-11</sub>
 
 The panel returns the form with the reason at the top and nothing is created.
 
@@ -237,7 +237,7 @@ A folder that goes through a symbolic link, or through a name that already belon
 
 <a href="images/usuarios-senha-gerada.png"><img src="images/usuarios-senha-gerada.png" alt="User created screen with the password generated by the panel, here replaced by REDACTED, and the warning that it will not be shown again" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, generated password · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, generated password · captured on 2026-10-11</sub>
 
 It appears when the two password fields are left blank, on registration or on a password change. The password is shown **only once**: copy it to the device or to the password vault before leaving the screen. In the screenshot, the value was replaced by `<REDACTED>`.
 
@@ -250,7 +250,7 @@ It appears when the two password fields are left blank, on registration or on a 
 
 <a href="images/usuarios-editar.png"><img src="images/usuarios-editar.png" alt="Edit user screen of roteador-borda, with the Profile card, which lists the four FTP profiles, with what each one allows, and has the Save profile button, the Folder card, which shows the current folder and the New folder field, the TLS card, which says the user only signs in with TLS and has the Exempt from TLS button, the Limits card filled in with sessions, rates, hours, downloads through the panel, wrong passwords before the block and minutes of block, with the box that allows file upload through the panel, and the Automatic cleanup card, off" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, Edit user screen · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, Edit user screen · captured on 2026-10-11</sub>
 
 It gathers what changes in a user without creating it again. The name does not change: it is with it that the device signs in to FTP.
 
@@ -293,7 +293,7 @@ Administrator is not among the options: administrator and FTP user are separate 
 
 <a href="images/usuarios-limites-gravados.png"><img src="images/usuarios-limites-gravados.png" alt="Users tab with the message Limits saved, they apply on the user's next FTP sign-in, and the tag limits next to the name roteador-borda" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, limits saved · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, limits saved · captured on 2026-10-11</sub>
 
 The **Limits** card of the **Edit** screen applies only to that user, whether it is the account of a device, which only uploads, or that of a person, who signs in, uploads and downloads. A blank field means no limit of its own: the one of the stack applies.
 
@@ -325,7 +325,7 @@ In the screenshot of the **Edit** screen, `roteador-borda` has 2 sessions, 2048 
 
 <a href="images/usuarios-editar-limpeza.png"><img src="images/usuarios-editar-limpeza.png" alt="Edit user screen of olt-centro at the Automatic cleanup card: the state Off, the fields Keep only the most recent files, with 30, and Delete the file older than this many days, with 60, the warning that the panel has no recycle bin, the Your current password field and the Save cleanup button" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, Automatic cleanup card · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, Automatic cleanup card · captured on 2026-10-11</sub>
 
 The **Automatic cleanup** card of the **Edit** screen makes the panel delete, on its own, the old files of that user's folder and of the folders inside it. It starts turned off: with no rule saved, no file is deleted on its own.
 
@@ -339,7 +339,7 @@ A blank field turns that rule off, and both blank turn the cleanup off. With bot
 
 <a href="images/usuarios-limpeza-gravada.png"><img src="images/usuarios-limpeza-gravada.png" alt="Users tab with the message Automatic cleanup saved, it applies on the next run of the panel, and the tag cleanup next to the name olt-centro" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, automatic cleanup saved · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, automatic cleanup saved · captured on 2026-10-11</sub>
 
 **Expected result:** after **Save cleanup**, the list comes back with the message `Automatic cleanup saved. It applies on the next run of the panel.` and the tag `cleanup` next to the name; hovering the mouse over it shows the rule. Saved with both fields blank, the message is `Automatic cleanup turned off. No file of this user is deleted on its own.`
 
@@ -365,7 +365,7 @@ In the screenshot, `olt-centro` keeps the 30 most recent files of each folder an
 
 <a href="images/usuarios-editar-bloqueios.png"><img src="images/usuarios-editar-bloqueios.png" alt="Edit user screen of switch-core with the Blocks card: the blocked origin, the number of wrong passwords, the time of the block, until when it holds and the Unblock button" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, Blocks card · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, Blocks card · captured on 2026-10-11</sub>
 
 The address that gets the password of a user wrong on FTP too many times is blocked for that user, for the configured time: until then, not even the right password gets in from there. In the list, the name gains the tag `blocked`; hovering the mouse over it shows the addresses.
 
@@ -381,7 +381,7 @@ The address that gets the password of a user wrong on FTP too many times is bloc
 
 <a href="images/usuarios-desbloqueado.png"><img src="images/usuarios-desbloqueado.png" alt="Users tab with the message Block removed, the user can sign in to FTP again, and the name switch-core without the tag blocked" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, after the unblock · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, after the unblock · captured on 2026-10-11</sub>
 
 **Expected result:** the list comes back with the message `Block removed. The user can sign in to FTP again.`, without the tag `blocked`, and the next sign-in of the device goes through.
 
@@ -398,7 +398,7 @@ This is the short block, of one user for one address. The address that fails too
 
 <a href="images/usuarios-trocar-senha.png"><img src="images/usuarios-trocar-senha.png" alt="Change password form of the user switch-core, with the Password and Repeat the password fields and the Change password and Cancel buttons" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, Change password form · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, Change password form · captured on 2026-10-11</sub>
 
 | Field | Required | What to fill in |
 |---|---|---|
@@ -416,7 +416,7 @@ This is the short block, of one user for one address. The address that fails too
 
 <a href="images/usuarios-remover.png"><img src="images/usuarios-remover.png" alt="Remove user screen of ap-deposito, with the warning about the files in the folder, the box Also delete the folder and everything in it ticked, the Your current password field and the buttons Yes, remove the user and Cancel" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, removal confirmation · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, removal confirmation · captured on 2026-10-11</sub>
 
 | Screen item | What it does |
 |---|---|
@@ -428,13 +428,13 @@ This is the short block, of one user for one address. The address that fails too
 
 <a href="images/usuarios-removido.png"><img src="images/usuarios-removido.png" alt="Users tab after the removal, with the message User removed and folder deleted" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, after the removal · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, after the removal · captured on 2026-10-11</sub>
 
 **Expected result:** with the box ticked and the right password, as in the screenshot, the list comes back with the message `User removed and folder deleted.` and the folder is gone. Without the box, the message is `User removed. The files stay in the folder.`: the folder stays in `DATA_DIR/dados` and remains visible in the Files tab, where it can be deleted later.
 
 <a href="images/usuarios-remover-inicial.png"><img src="images/usuarios-remover-inicial.png" alt="Remove user screen of the initial user transfer, with the warning that, once removed, it does not come back on the next starts of the ftp service, the box Also delete the folder and everything in it ticked, the Your current password field and the buttons Yes, remove the user and Cancel" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, removal of the initial user · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, removal of the initial user · captured on 2026-10-11</sub>
 
 The initial user, the `FTP_USER` of the installation (`transfer`, in the example), is removed the same way, with or without the folder. The screen warns that it does not come back on the next starts of the `ftp` service: to have it again, create a user with the same name.
 
@@ -447,7 +447,7 @@ The initial user, the `FTP_USER` of the installation (`transfer`, in the example
 
 <a href="images/usuarios-tls.png"><img src="images/usuarios-tls.png" alt="Users tab with the warning that the user was exempted from TLS and their password and files travel in plain text, the TLS column, which shows required or no TLS on each row, and the Exempt from TLS and Require TLS buttons next to Edit, Change password and Remove" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, TLS column · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, TLS column · captured on 2026-10-11</sub>
 
 The column and the two buttons are for the old device that does not speak TLS: it alone is exempted, and the others remain required. The same is done on creation, with the **Device without TLS support** box of **New user**, and in the **TLS** card of the **Edit** screen.
 
@@ -461,19 +461,19 @@ The column and the two buttons are for the old device that does not speak TLS: i
 
 <a href="images/usuarios-novo-sem-tls.png"><img src="images/usuarios-novo-sem-tls.png" alt="New user form filled in for central-pabx, with the Device without TLS support box ticked and the alert that the password and the files of this user will travel in plain text" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, new user without TLS · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, new user without TLS · captured on 2026-10-11</sub>
 
 On creation, the ticked box saves the user already exempt, and the list comes back with the message `User created and exempted from TLS: their password and files travel in plain text.`
 
 <a href="images/usuarios-editar-tls.png"><img src="images/usuarios-editar-tls.png" alt="Edit user screen of central-pabx, with the TLS card warning that this user signs in without TLS and the Require TLS button" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, TLS card of the Edit screen · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, TLS card of the Edit screen · captured on 2026-10-11</sub>
 
 On the **Edit** screen, the **TLS** card says how the user signs in and has the button to change it: **Exempt from TLS** for whoever is required, **Require TLS** for whoever is exempt. For the user that already exists, the button opens the confirmation:
 
 <a href="images/usuarios-tls-dispensar.png"><img src="images/usuarios-tls-dispensar.png" alt="Exempt from TLS screen of the user radio-antigo, with the warning that the password and the files will travel in plain text and the buttons Yes, let this user sign in without TLS and Cancel" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, confirmation of the exemption from TLS · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, confirmation of the exemption from TLS · captured on 2026-10-11</sub>
 
 **Expected result:** the list comes back with the message `User exempted from TLS: their password and files travel in plain text.`, their row shows `no TLS` and the Overview and Security tabs open with the alert. The exemption applies within moments, without dropping whoever is connected. On requiring it again, the message is `The user is required to use TLS again.`
 
@@ -505,7 +505,7 @@ On the **Edit** screen, the **TLS** card says how the user signs in and has the 
 
 <a href="images/administradores.png"><img src="images/administradores.png" alt="Users tab with three administrators at the top of the list, admin, with the tag you, noc-plantao and suporte, each with the Administrator profile, the open sessions and the actions Change password, Change name and Remove, and, below them, the FTP users" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, administrators in the list · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, administrators in the list · captured on 2026-10-11</sub>
 
 **What it is for:** giving each person who administers the panel their own user name and password, and changing the user name and the password of the first administrator after the installation.
 
@@ -529,7 +529,7 @@ All of them have the same access, and what each one does is in the Log tab with 
 
 <a href="images/administradores-novo.png"><img src="images/administradores-novo.png" alt="New user form with the Administrator profile selected: the Profile field, the fields User name, Password, Repeat the password and Your current password, without the folder and without the TLS box, and the Create user and Cancel buttons" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, New user form with the Administrator profile · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, New user form with the Administrator profile · captured on 2026-10-11</sub>
 
 Click **New user** and select the **Administrator** profile: the folder and TLS fields give way to your current password.
 
@@ -552,7 +552,7 @@ Click **New user** and select the **Administrator** profile: the folder and TLS 
 
 <a href="images/administradores-trocar-senha.png"><img src="images/administradores-trocar-senha.png" alt="Change administrator password form, of the administrator suporte, with the fields Password, Repeat the password and Your current password and the Change password and Cancel buttons" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, Change administrator password form · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, Change administrator password form · captured on 2026-10-11</sub>
 
 | Field | Required | What to fill in |
 |---|---|---|
@@ -573,7 +573,7 @@ This is where the initial password of the installation is changed after the firs
 
 <a href="images/administradores-trocar-nome.png"><img src="images/administradores-trocar-nome.png" alt="Change administrator name form, of the administrator suporte, with the New name field filled in with suporte-redes, the Your current password field and the Change name and Cancel buttons" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, Change administrator name form · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, Change administrator name form · captured on 2026-10-11</sub>
 
 | Field | Required | What to fill in |
 |---|---|---|
@@ -593,7 +593,7 @@ Changing the name of the first administrator through the panel does not touch th
 
 <a href="images/administradores-remover.png"><img src="images/administradores-remover.png" alt="Remove administrator screen asking for confirmation to remove noc-plantao, with the Your current password field and the buttons Yes, remove the administrator and Cancel" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, administrator removal confirmation · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, administrator removal confirmation · captured on 2026-10-11</sub>
 
 | Screen item | What it does |
 |---|---|
@@ -631,7 +631,7 @@ Changing the name of the first administrator through the panel does not touch th
 
 <a href="images/arquivos.png"><img src="images/arquivos.png" alt="Files tab at the first level, with the list of the users' folders, the date of each one, the Rename and Delete buttons on each row and the New folder and Upload file cards" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Files menu · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Files menu · captured on 2026-10-11</sub>
 
 **What it is for:** seeing what each device uploaded, downloading a backup through the browser, uploading a file to any folder, creating the folder of a new user, renaming and deleting files and folders, without an FTP client.
 
@@ -643,6 +643,7 @@ Changing the name of the first administrator through the panel does not touch th
 | Name of a folder | Enters the folder |
 | Size · Modified | Size of the file and date of the last change |
 | **Download** | Hands the file to the browser, with the original name |
+| **Telegram** · **S3** | With the destination saved in the Destinations tab, sends that file to the destination right away |
 | **Rename** | Opens the screen that changes the name of the file or of the folder, inside the same folder, and asks for your current password; a name that already exists is refused |
 | **Delete** | Opens the confirmation screen: it shows what is going away, asks for the ticked box and your current password and deletes for good, with no recycle bin |
 | **New folder** | Creates an empty folder inside the one that is open |
@@ -658,7 +659,7 @@ The panel browses, downloads, uploads, creates folders, renames and deletes. The
 
 <a href="images/arquivos-pasta.png"><img src="images/arquivos-pasta.png" alt="Files tab inside the folder roteador-borda, with the path at the top, the line that says which FTP user the folder belongs to, the New user in this folder button and the Download, Rename and Delete buttons on each file" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Files menu, folder of a user · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Files menu, folder of a user · captured on 2026-10-11</sub>
 
 1. Click the name of the folder to enter it.
 2. Check, in the line `Folder of the FTP user`, whose folder it is.
@@ -681,7 +682,7 @@ The panel browses, downloads, uploads, creates folders, renames and deletes. The
 
 <a href="images/arquivos-pasta-criada.png"><img src="images/arquivos-pasta-criada.png" alt="Files tab with the message Folder created and the folder clientes in the list" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Files menu, folder created · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Files menu, folder created · captured on 2026-10-11</sub>
 
 | Field | Required | What to fill in |
 |---|---|---|
@@ -705,7 +706,7 @@ The panel browses, downloads, uploads, creates folders, renames and deletes. The
 
 <a href="images/arquivos-enviado.png"><img src="images/arquivos-enviado.png" alt="Files tab inside the folder clientes, with the message File uploaded, the file planilha-de-clientes.csv in the list and the Upload file card, with the Save as and File fields and the Upload file button" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Files menu, after the upload · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Files menu, after the upload · captured on 2026-10-11</sub>
 
 1. Enter the folder where the file should stay.
 2. In the **Upload file** card, choose the file.
@@ -736,13 +737,41 @@ The panel browses, downloads, uploads, creates folders, renames and deletes. The
 </details>
 
 <details>
+<summary>Files ➜ Send to a destination — click to expand</summary>
+
+### Files ➜ Send to a destination
+
+<a href="images/arquivos-enviado-ao-destino.png"><img src="images/arquivos-enviado-ao-destino.png" alt="Files tab inside the folder clientes, with the message S3 storage: file sent and, on the line of the file planilha-de-clientes.csv, the Download, Telegram, S3, Rename and Delete buttons" width="100%"></a>
+
+<sub><b>v1.1.0</b> · Files menu, after the send to a destination · captured on 2026-10-11</sub>
+
+Once a destination is saved in the [Destinations](#destinos) tab, each file gets a button with its name, **Telegram** or **S3**, next to **Download**. The button sends that file to the destination right away, without waiting for the run.
+
+1. Enter the folder of the file.
+2. On the line of the file, click **Telegram** or **S3**.
+
+**Expected result:** the page comes back to the same folder with the message `S3 storage: file sent.` or `Telegram bot: file sent.`, and the Log tab gets the line `File sent to the destination on request`, with the administrator, the destination and the file.
+
+| Item | How it works |
+|---|---|
+| When the buttons appear | Only for the destination saved with its secrets; with no destination, the list stays as before |
+| Who has the buttons | Only the administrator: the My files screen, of the FTP user, does not show them |
+| File of another folder | The button works for any file of the data, inside or outside the folder of the destination, and works with the destination turned off |
+| The file on the server | It is never deleted by this send, not even with S3 in **Keep in S3** |
+| Sending again | Through the bot, the chat receives another message; in S3, the same object is written over |
+| Send that takes long | Past 20 seconds, the message says the send continues in the background, and the result appears in the Log tab |
+| Send that does not work | The message gives the reason in one sentence, such as an empty file or one larger than the bot limit |
+
+</details>
+
+<details>
 <summary>Files ➜ Rename — click to expand</summary>
 
 ### Files ➜ Rename
 
 <a href="images/arquivos-renomear.png"><img src="images/arquivos-renomear.png" alt="Rename screen of the file switch-core-antigo.cfg, with the folder it is in, the New name field filled in, the Your current password field and the Change name and Cancel buttons" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Files menu, Rename screen · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Files menu, Rename screen · captured on 2026-10-11</sub>
 
 | Field | Required | What to fill in |
 |---|---|---|
@@ -751,7 +780,7 @@ The panel browses, downloads, uploads, creates folders, renames and deletes. The
 
 <a href="images/arquivos-renomeado.png"><img src="images/arquivos-renomeado.png" alt="Files tab inside the folder switch-core, with the message Name changed and the file with the new name in the list" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Files menu, after the name change · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Files menu, after the name change · captured on 2026-10-11</sub>
 
 **Expected result:** the folder comes back with the message `Name changed.` and the item with the new name, in the same place. The panel does not move from one folder to another, and the device that writes with the old name creates another file on the next upload.
 
@@ -771,7 +800,7 @@ The panel browses, downloads, uploads, creates folders, renames and deletes. The
 
 <a href="images/arquivos-apagar.png"><img src="images/arquivos-apagar.png" alt="Delete screen of the file teste-de-envio.txt, with its size, date and folder, the warning that the panel has no recycle bin, the confirmation box ticked, the Your current password field and the Delete for good and Cancel buttons" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Files menu, delete confirmation · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Files menu, delete confirmation · captured on 2026-10-11</sub>
 
 | Screen item | What it does |
 |---|---|
@@ -783,7 +812,7 @@ The panel browses, downloads, uploads, creates folders, renames and deletes. The
 
 <a href="images/arquivos-apagado.png"><img src="images/arquivos-apagado.png" alt="Files tab inside the folder switch-core, with the message Deleted and the list without the file teste-de-envio.txt" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Files menu, after deleting · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Files menu, after deleting · captured on 2026-10-11</sub>
 
 **Expected result:** the folder comes back with the message `Deleted.` and without the item, and the Log tab gains the line `File or folder deleted`.
 
@@ -798,7 +827,7 @@ The panel browses, downloads, uploads, creates folders, renames and deletes. The
 
 <a href="images/arquivos-pasta-de-usuario.png"><img src="images/arquivos-pasta-de-usuario.png" alt="Folder of an FTP user screen, which refuses to delete the folder roteador-borda because it is the folder of a user and points to Users, Edit and Users, Remove" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Files menu, user folder refused · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Files menu, user folder refused · captured on 2026-10-11</sub>
 
 The folder of an FTP user, and the folder that has the one of a user inside it, is not renamed or deleted through the Files tab: the user database would be left pointing to a folder that does not exist. To give the user another folder, use **Users ➜ Edit**; to delete the folder together with the user, **Users ➜ Remove**. What is inside it is renamed and deleted item by item.
 
@@ -828,7 +857,7 @@ The folder of an FTP user, and the folder that has the one of a user inside it, 
 
 <a href="images/meus-arquivos.png"><img src="images/meus-arquivos.png" alt="My files screen of the user olt-centro, with the Full profile, with the folders 2026-09 and 2026-10 and a configuration file, the automatic cleanup warning above the list, the Open or Download, Rename and Delete buttons on each row, the New folder and Upload file cards and, in the menu, only the My files tab, the PT and EN buttons, the name of the user and the Sign out button" width="100%"></a>
 
-<sub><b>v0.31.1</b> · My files screen, of the FTP user with the Full profile · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · My files screen, of the FTP user with the Full profile · captured on 2026-10-11</sub>
 
 **What it is for:** the owner of the files browses their own folder and downloads the backups through the browser, without depending on whoever administers and without a new account. What else they do depends on the profile of the account and, for file upload, on the permission the administrator gives.
 
@@ -858,7 +887,7 @@ The user sees only the folder of their registration and what is inside it. The p
 
 <a href="images/meus-arquivos-pasta.png"><img src="images/meus-arquivos-pasta.png" alt="My files screen of the user olt-centro inside the folder 2026-10, with ten backup files, the size and the date of each one and the Download, Rename and Delete buttons on each row" width="100%"></a>
 
-<sub><b>v0.31.1</b> · My files screen, inside a folder · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · My files screen, inside a folder · captured on 2026-10-11</sub>
 
 1. Click the name of the folder to enter it.
 2. Click **Download** on the row of the file.
@@ -881,7 +910,7 @@ The user sees only the folder of their registration and what is inside it. The p
 
 <a href="images/meus-arquivos-enviado.png"><img src="images/meus-arquivos-enviado.png" alt="My files screen of the user olt-centro with the message File uploaded, the file olt-centro-manual.cfg in the list and the Upload file card, with the Save as and File fields and the Upload file button" width="100%"></a>
 
-<sub><b>v0.31.1</b> · My files screen, after the upload · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · My files screen, after the upload · captured on 2026-10-11</sub>
 
 The **Upload file** card appears for the account that has the permission **Allow this user to upload files through the panel**, ticked by the administrator in [Users ➜ Limits](#usuarios). The Read only profile does not upload, with or without the permission.
 
@@ -913,7 +942,7 @@ The **Upload file** card appears for the account that has the permission **Allow
 
 <a href="images/meus-arquivos-envio.png"><img src="images/meus-arquivos-envio.png" alt="My files screen of the user roteador-borda, with the Upload profile, with the backup files of the router, only the Download button on each row and the New folder form, without Rename, Delete or Upload file" width="100%"></a>
 
-<sub><b>v0.31.1</b> · My files screen, Upload profile · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · My files screen, Upload profile · captured on 2026-10-11</sub>
 
 The account with the Upload profile browses, downloads and creates folders. There is no **Rename** or **Delete**: what has already reached the server stays as it arrived, on FTP and on the panel. In the screenshot, `roteador-borda` does not have the permission to upload through the panel, and the **Upload file** card does not appear.
 
@@ -926,7 +955,7 @@ The account with the Upload profile browses, downloads and creates folders. Ther
 
 <a href="images/meus-arquivos-leitura.png"><img src="images/meus-arquivos-leitura.png" alt="My files screen of the user consulta-filiais, with the Read only profile, with the folder olt-norte and only the Open button, without New folder, Rename or Delete" width="100%"></a>
 
-<sub><b>v0.31.1</b> · My files screen, Read only profile · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · My files screen, Read only profile · captured on 2026-10-11</sub>
 
 The account with the Read only profile only browses and downloads, and does not upload by any path. In the screenshot, the folder of `consulta-filiais` is `filiais`, which has the folder of `olt-filial-norte` inside it: the lookup account downloads what the OLT uploaded and writes nothing.
 
@@ -939,7 +968,7 @@ The account with the Read only profile only browses and downloads, and does not 
 
 <a href="images/meus-arquivos-so-envio.png"><img src="images/meus-arquivos-so-envio.png" alt="File upload screen of the user olt-pop-sul, with the Upload only profile, with the Upload file card, the path of each file in three steps, from the device to the folder of the user, the details for sending by FTP and the explanation of what the account does, without a list of files" width="100%"></a>
 
-<sub><b>v0.31.1</b> · File upload screen, Upload only profile · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · File upload screen, Upload only profile · captured on 2026-10-11</sub>
 
 The account with the Upload only profile does not see the backups, not even the ones it uploaded itself. In place of My files, it opens the **File upload** screen, which explains the path of the file and has the details to set up the device.
 
@@ -971,13 +1000,200 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 
 ---
 
+<a name="destinos"></a>
+
+## ☁️ Destinations
+
+<a href="images/destinos.png"><img src="images/destinos.png" alt="Destinations tab with the S3 storage card turned on, with the address, the bucket and the prefix, the region, the folder sent, the runs every 60 minutes, Copy after sending, the keys saved without being shown on screen, the last run and the total sent, the Telegram bot card turned on, with the folder, the runs every 5 minutes, the largest file the bot sends, the message language, the last run and the total sent, the Test, Send now, Change and Remove buttons on each card and the How the panel sends card" width="100%"></a>
+
+<sub><b>v1.1.0</b> · Destinations menu · captured on 2026-10-11</sub>
+
+**What it is for:** sending by itself, out of the server, the files that arrive in a folder. There are two destinations: an S3 storage, which holds the second copy or keeps the files and frees the disk, and a Telegram bot, which delivers each new file to a person, a group or a channel.
+
+**How to get there:** menu ➜ **Destinations**. Only the administrator has the tab.
+
+| Item on the screen | What it shows or does |
+|---|---|
+| Tag next to the name | `not configured`, `on`, `off` or `secrets missing` |
+| Address · Bucket and prefix · Region | Where S3 sends to, as it was saved |
+| Folder sent | The folder of the data the destination follows, with the folders inside it |
+| Runs | How often the panel checks the folder |
+| After sending | In S3, **Copy** or **Keep in S3** |
+| Largest file the bot sends · Message language | The limit of each send through the bot and the language of the caption and of the notices |
+| Access key and secret key · Bot token and chat | They only say the secrets are saved: the value is not shown on screen |
+| Last run | When it was and how many files went, with the total size; when it stops before the end, the reason in one sentence |
+| Sent since it was turned on | The total of files and of size the destination has already received |
+| Still arriving | Files that changed less than two minutes ago: they go in a later run |
+| Waiting for the bot | In S3 with **Keep in S3**, files already stored at the destination that only leave the server when the bot delivers them |
+| **Test** | Writes a small object to S3 or sends the test message through the bot, with what is saved |
+| **Send now** | Requests a run out of schedule; refresh the page to follow it |
+| **Change** | Opens the form with what is saved; a blank secret keeps the saved one |
+| **Remove** | Opens the confirmation that deletes the settings, the progress and the secrets of the destination |
+| **How the panel sends** | The summary of the rules: HTTPS only, regular files only and where the secrets are kept |
+
+Each destination has a single connection, and one does not depend on the other. S3 sends everything in the folder, including what was already there when it was turned on, at each interval. The bot sends only what arrives after it is turned on: within a few seconds when the file arrives whole by FTP or through the panel, and at each interval what showed up in the folder another way. The complete rules are in [Web panel](../panel.md#destinos).
+
+<details>
+<summary>Destinations ➜ Before configuring — click to expand</summary>
+
+### Destinations ➜ Before configuring
+
+<a href="images/destinos-sem-destino.png"><img src="images/destinos-sem-destino.png" alt="Destinations tab of a new installation, with the S3 storage and Telegram bot cards marked as not configured, each with the explanation of what it sends and the Configure button, and the How the panel sends card" width="100%"></a>
+
+<sub><b>v1.1.0</b> · Destinations menu, no destination saved · captured on 2026-10-11</sub>
+
+The installation is born with no destination: until the administrator saves one, nothing leaves the server and the panel opens no connection to the outside. Each card says what the destination does and leads to its form, through the **Configure** button.
+
+</details>
+
+<details>
+<summary>Destinations ➜ S3 storage — click to expand</summary>
+
+### Destinations ➜ S3 storage
+
+<a href="images/destinos-s3.png"><img src="images/destinos-s3.png" alt="S3 storage form filled in with an example service: service address, region, bucket, prefix, bucket address in the path, example access key, masked secret key, the On box, the folder sent, the 60-minute interval, Copy after sending, the notices about Keep in S3 and about the object name, the Your current password field and the Save and Cancel buttons" width="100%"></a>
+
+<sub><b>v1.1.0</b> · Destinations menu, S3 form · captured on 2026-10-11</sub>
+
+Any service that speaks the S3 protocol works, in the cloud or on the internal network. Before you start, create the bucket at the service and a key that can only write to it.
+
+1. In the Destinations tab, click **Configure** on the **S3 storage** card.
+2. Fill in the address, the region, the bucket and the two keys.
+3. Choose the folder sent, the interval and what happens after sending.
+4. Type your password and click **Save**.
+
+| Field | Required | What to fill in |
+|---|---|---|
+| Service address | Yes | `https://name` or `https://name:port`, HTTPS only and without the bucket |
+| Region | Yes | The one the service states; where there is none, `us-east-1` |
+| Bucket | Yes | The name of the bucket, already created at the service |
+| Prefix | No | The folder inside the bucket; blank writes to its root |
+| Bucket address | Yes | **In the path** (`https://name/bucket/file`) or **In the name** (`https://bucket.name/file`), as the service requires |
+| Access key | Yes | The key that can write to the bucket. In **Change**, blank keeps the saved one |
+| Secret key | Yes | The other half of the key. In **Change**, blank keeps the saved one |
+| On | No | Checked, the panel sends by itself; unchecked, the settings are kept and nothing leaves |
+| Folder sent | No | The folder inside the data, which must exist; blank is the whole data folder |
+| Interval between runs | Yes | Minutes, 5 to 1440 |
+| After sending | Yes | **Copy**: the file stays on the server. **Keep in S3**: the file leaves the server after the destination confirms it was stored |
+| Your current password | Yes | The password of whoever is in the session, to save the destination |
+
+<a href="images/destinos-gravado.png"><img src="images/destinos-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, and the S3 storage and Telegram bot cards turned on, each with what was saved, the secrets saved without being shown on screen and the last run as none yet" width="100%"></a>
+
+<sub><b>v1.1.0</b> · Destinations menu, after saving · captured on 2026-10-11</sub>
+
+**Expected result:** the tab comes back with the notice `Destination saved. It takes effect on the next run.`, and the card shows the `on` tag, the address, the bucket, the folder and that the keys are saved, without showing them. The first run starts within a minute and sends everything already in the folder.
+
+> ⚠️ **Keep in S3 leaves a single copy:** the file leaves the server once it is stored at the destination, and the panel has no recycle bin and does not download it back. Start with **Copy**, check the objects in the bucket and only then switch.
+
+| Message | Reason |
+|---|---|
+| Invalid address: use https://name or https://name:port, in lowercase and without a path. | The address is not HTTPS, has an uppercase letter or carries the bucket or a path |
+| Invalid bucket: 3 to 63 characters, with lowercase letters, digits, dot and hyphen. | The bucket name is outside the rule |
+| The folder does not exist inside the data. Create it in Files or check the name. | The folder sent was not found |
+| Fill in both secrets of the destination: neither is saved yet. | On the first save, one of the keys was left blank |
+| Invalid interval: 5 to 1440 minutes. | The interval is out of range |
+
+</details>
+
+<details>
+<summary>Destinations ➜ Telegram bot — click to expand</summary>
+
+### Destinations ➜ Telegram bot
+
+<a href="images/destinos-telegram.png"><img src="images/destinos-telegram.png" alt="Telegram bot form with the sentence that says the bot only sends, the masked bot token, the receiving chat with an example channel name, the On box, the folder sent, the 5-minute interval, the message language, the explanation of the 50 MiB limit per file and of the send in a moment, the Your current password field and the Save and Cancel buttons" width="100%"></a>
+
+<sub><b>v1.1.0</b> · Destinations menu, bot form · captured on 2026-10-11</sub>
+
+Before you start, create the bot with the Telegram bot creator and keep the token it hands over. Add the bot to the group or the channel that will receive; for a person, they must have started the chat with the bot.
+
+1. In the Destinations tab, click **Configure** on the **Telegram bot** card.
+2. Fill in the bot token and the receiving chat.
+3. Choose the folder sent, the interval and the message language.
+4. Type your password and click **Save**.
+
+| Field | Required | What to fill in |
+|---|---|---|
+| Bot token | Yes | The whole text the bot creator hands over. In **Change**, blank keeps the saved one |
+| Receiving chat | Yes | The number of the person or of the group (a group one starts with `-`) or the `@name` of the channel. In **Change**, blank keeps the saved one |
+| On | No | Checked, the panel sends by itself; unchecked, the settings are kept and nothing leaves |
+| Folder sent | No | The folder inside the data, which must exist; blank is the whole data folder |
+| Interval between runs | Yes | Minutes, 5 to 1440: it is the check of what did not go right away |
+| Message language | Yes | Português or English, for the caption of each file and the notices |
+| Your current password | Yes | The password of whoever is in the session, to save the destination |
+
+**Expected result:** the tab comes back with the notice `Destination saved. It takes effect on the next run.` and the card with the `on` tag. From then on, each file that arrives whole in the folder, by FTP or through the panel, goes to the chat within a few seconds, as a document, with the path, the size and the date in the caption.
+
+| Situation | What the bot does |
+|---|---|
+| File that was already in the folder when the destination was turned on | Does not send it: only what arrives afterwards goes |
+| File larger than the limit, 50 MiB by default | Does not send the file: the chat receives a notice with the path, the size and the date |
+| Empty file | Does not send it |
+| Message written in the chat | Nothing: the bot only sends, does not read the chat and accepts no command |
+
+</details>
+
+<details>
+<summary>Destinations ➜ Test and Send now — click to expand</summary>
+
+### Destinations ➜ Test and Send now
+
+<a href="images/destinos-teste.png"><img src="images/destinos-teste.png" alt="Destinations tab with the notice Test finished, the destination received it, above the S3 storage and Telegram bot cards, each with the date of the last run" width="100%"></a>
+
+<sub><b>v1.1.0</b> · Destinations menu, after the test · captured on 2026-10-11</sub>
+
+1. On the card of the destination, click **Test**.
+2. To skip the wait for the interval, click **Send now** and refresh the page afterwards.
+
+**Expected result:** the test answers `Test finished: the destination received it.`: in S3, the object `allsafe-ftp-stack-teste.txt` was written under the chosen prefix; through the bot, the chat received the test message from the panel. **Send now** answers `Run requested: the panel starts in a moment. Refresh the page to follow it.`, and the **Last run** line starts showing how many files went.
+
+| Item | How it works |
+|---|---|
+| **Test** with the destination turned off | It works: the test uses what is saved and sends no file |
+| Test that does not work | The notice gives the name of the destination and the reason in one sentence, such as `the service refused the credential or the permission` |
+| **Send now** in S3 | Respects the two-minute wait for a file without changes; what is still arriving stays on the **Still arriving** line |
+| Password | Neither button asks for the password: they do not change the settings |
+
+What each reason means and what to do is in [Troubleshooting](../troubleshooting.md#destinos).
+
+</details>
+
+<details>
+<summary>Destinations ➜ Remove — click to expand</summary>
+
+### Destinations ➜ Remove
+
+<a href="images/destinos-remover.png"><img src="images/destinos-remover.png" alt="Remove destination screen of the Telegram bot, with the sentence that says what the panel deletes and that no file on the server leaves, the Your current password field and the Yes, remove the destination and Cancel buttons" width="100%"></a>
+
+<sub><b>v1.1.0</b> · Destinations menu, removal confirmation · captured on 2026-10-11</sub>
+
+1. On the card of the destination, click **Remove**.
+2. Type your password and click **Yes, remove the destination**.
+
+**Expected result:** the tab comes back with the notice `Destination removed: its settings and secrets were deleted.` and the card as `not configured`. What was already sent stays at the destination, and no file on the server is deleted.
+
+</details>
+
+<details>
+<summary>Technical detail — routes, secrets and events</summary>
+
+- Routes `GET /destinos`, `GET` and `POST /destinos/s3` and `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `POST /destinos/arquivo` and `GET` and `POST /destinos/remover`. Every `POST` carries the token of the session; saving and removing also ask for the current password. For the FTP user, all of them answer `404`.
+- The settings are in `DATA_DIR/painel/destinos/<destino>.conf` and the progress, in `<destino>.estado`. The secrets are in `SECRETS_DIR/destinos`, one per file, with mode `0600`, and never go back to the screen, to the Log tab or to the audit log.
+- The panel only leaves the server over HTTPS, with the certificate checked, and does not follow redirects.
+- The events `destino_gravado`, `destino_teste`, `destino_pedido`, `destino_arquivo`, `destino_enviado`, `destino_falhou`, `destino_pulado` and `destino_removido` stay in the [audit log](../panel.md#auditoria).
+- With `PAINEL_DESTINOS=nao` in the `.env`, the tab leaves the menu and no run happens: see [Configuration](../configuration.md#painel).
+- The complete operation is in [Destinations: S3 and Telegram bot](../panel.md#destinos).
+
+</details>
+
+---
+
 <a name="servidor"></a>
 
 ## 🖥️ Server
 
 <a href="images/servidor.png"><img src="images/servidor.png" alt="Server tab with the Auto-refresh button, the Stack containers card, with one box for the FTP server, one for the Panel and one for the Web front end, each with CPU, memory and processes in use and allocated and the chart of the last minute, and the Server resources card, with CPU, memory, disk and FTP network" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Server menu · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Server menu · captured on 2026-10-11</sub>
 
 **What it is for:** following how much each container of the stack uses of what was allocated to it and how much is left on the machine the stack runs on.
 
@@ -1018,7 +1234,7 @@ Nothing is changed through this tab, and only the administrator sees it. The lim
 
 <a href="images/seguranca.png"><img src="images/seguranca.png" alt="Security tab with the summary of the check at the top, which says how many items are in order, and one line per item: public address, panel behind a proxy or tunnel, addresses of the FTP and of the panel, TLS mode, the two certificates, allowed networks, session, sign-in of FTP users, blocking by attempts on FTP, with the name of the blocked user, blocking by address, with the number of blocked addresses, cost of the passwords, security contact, container and firewall" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Security menu · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Security menu · captured on 2026-10-11</sub>
 
 **What it is for:** checking, on one screen, whether the installation is within what the stack requires: private network, TLS, valid certificates, isolated panel and published security contact.
 
@@ -1052,7 +1268,7 @@ Nothing is changed through this tab. The example firewall rules are in [Security
 
 <a href="images/seguranca-tls-por-usuario.png"><img src="images/seguranca-tls-por-usuario.png" alt="Security tab with the alert at the top that two users, central-pabx and radio-antigo, sign in to FTP without TLS, and the FTP TLS line with the attention mark and the names of the exempt users" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Security menu, alert of user without TLS · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Security menu, alert of user without TLS · captured on 2026-10-11</sub>
 
 With at least one user exempt from TLS, the tab opens with the alert and the **FTP TLS** line swaps the checked mark for the attention one, with the number and the names of those who sign in without TLS.
 
@@ -1080,7 +1296,7 @@ With at least one user exempt from TLS, the tab opens with the alert and the **F
 
 <a href="images/bloqueios.png"><img src="images/bloqueios.png" alt="Blocks tab with the rule in use below the title, the Block address button, four blocked addresses, in IPv4 and in IPv6, for errors on FTP, for errors on the panel and by an administrator, each with since when, until when and the Change period and Unblock buttons, and the Users blocked on FTP card, with the user switch-core" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Blocks menu · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Blocks menu · captured on 2026-10-11</sub>
 
 **What it is for:** following the addresses that got user name and password wrong too many times, releasing one of them, blocking for a longer or a shorter time and blocking a new address, or a whole network, before it gets anything wrong.
 
@@ -1110,7 +1326,7 @@ The blocked address is refused with any account, even with the right password, o
 
 <a href="images/bloqueios-novo.png"><img src="images/bloqueios-novo.png" alt="Block address or prefix screen, with the Address or prefix field filled in with 2001:db8:12::/64, the Keep blocked for field with 90, the note about what the panel does not block and the Block and Cancel buttons" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Blocks menu, Block address or prefix screen · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Blocks menu, Block address or prefix screen · captured on 2026-10-11</sub>
 
 | Field | Required | What to fill in |
 |---|---|---|
@@ -1119,7 +1335,7 @@ The blocked address is refused with any account, even with the right password, o
 
 <a href="images/bloqueios-bloqueado.png"><img src="images/bloqueios-bloqueado.png" alt="Blocks tab with the message Block saved, it applies to FTP and to the panel from the next request, and the prefix 2001:db8:12::/64 in the list, blocked by Administrator, for 90 days" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Blocks menu, after the block · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Blocks menu, after the block · captured on 2026-10-11</sub>
 
 **Expected result:** after **Block**, the list comes back with the message `Block saved: it applies to FTP and to the panel from the next request.` and the new row, with `Administrator` in the **Blocked by** column. What was blocked no longer connects to FTP or to the panel, with any account, until the period ends or someone unblocks it. An address that was already in the list only has its period changed, with the message `Block period changed.`
 
@@ -1142,7 +1358,7 @@ The blocked address is refused with any account, even with the right password, o
 
 <a href="images/bloqueios-endereco.png"><img src="images/bloqueios-endereco.png" alt="Block of 192.0.2.61 screen with the Period card, which says who blocked it, since when and until when, the Keep blocked for field filled in with 365 and the Save period button, and the Unblock card, with the Unblock button" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Blocks menu, screen of the address · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Blocks menu, screen of the address · captured on 2026-10-11</sub>
 
 | Field | Required | What to fill in |
 |---|---|---|
@@ -1150,7 +1366,7 @@ The blocked address is refused with any account, even with the right password, o
 
 <a href="images/bloqueios-prazo-alterado.png"><img src="images/bloqueios-prazo-alterado.png" alt="Blocks tab with the message Block period changed and the address 192.0.2.61 blocked for 365 days" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Blocks menu, after the period change · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Blocks menu, after the period change · captured on 2026-10-11</sub>
 
 **Expected result:** after **Save period**, the list comes back with the message `Block period changed.` and the **Until** column shows the new date. A number out of range returns the screen with `Invalid period: 1 to 3650 days.`
 
@@ -1167,7 +1383,7 @@ The blocked address is refused with any account, even with the right password, o
 
 <a href="images/bloqueios-liberado.png"><img src="images/bloqueios-liberado.png" alt="Blocks tab with the message Block removed, whoever was in it can connect to FTP and to the panel again, and three addresses in the list, without 198.51.100.24" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Blocks menu, after the unblock · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Blocks menu, after the unblock · captured on 2026-10-11</sub>
 
 **Expected result:** the list comes back with the message `Block removed: whoever was in it can connect to FTP and to the panel again.`, the address connects again on the next request and the count of its errors starts over. For a prefix, every address in it connects again. If the block had already gone away, the message is `This block is no longer in force.`
 
@@ -1191,9 +1407,9 @@ The administrator whose own address got blocked does not open the panel: the rel
 
 ## 📜 Log
 
-<a href="images/atividade.png"><img src="images/atividade.png" alt="Log tab with the records of the panel in four columns: when, from where, with the whole address on a single line or on the server, what happened, with one icon per event, and the detail, such as file downloaded, folder created, administrator created, address unblocked and screen outside the role or profile requested by an FTP user" width="100%"></a>
+<a href="images/atividade.png"><img src="images/atividade.png" alt="Log tab with the records of the panel in four columns: when, from where, with the whole address on a single line or on the server, what happened, with one icon per event, and the detail, such as files sent to the destination, file downloaded, folder created, administrator created, address unblocked and screen outside the role or profile requested by an FTP user" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Log menu · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Log menu · captured on 2026-10-11</sub>
 
 **What it is for:** knowing who signed in to the panel, from where, what was changed and who downloaded each file.
 
@@ -1217,6 +1433,8 @@ The administrator whose own address got blocked does not open the panel: the rel
 | User exempted from TLS · User requires TLS again | Change of the TLS of a user |
 | File downloaded · Download interrupted | Download through the Files tab or through the My files screen, complete or cut before the end |
 | File uploaded through the panel · Upload interrupted · Upload through the panel without the permission | Upload through the Files tab, through the My files screen or through the File upload screen, complete or cut before the end, and the upload requested by an account that does not have the permission |
+| Upload destination saved · Upload destination test · Upload to the destination requested ahead of time · Upload destination removed | Change, test and run requested in the Destinations tab, with the administrator who did it and the destination; no secret is recorded |
+| Files sent to the destination · File sent to the destination on request · Upload to the destination not completed · File refused by the destination left behind | Each run that sent something, with the count and the size; the send requested by the button of a file; the run that stopped before the end, with the reason; and the file the destination refused three times |
 | Folder created · File or folder renamed · File or folder deleted | Change through the Files tab or through the My files screen, with the path; the deleted one also appears when the folder goes together with the user |
 | Administrator created · Administrator password changed · Administrator renamed · Administrator removed | Change of an administrator, with who did it and who was changed |
 | Current password refused | Change of an administrator refused by the confirmation password |
@@ -1245,7 +1463,7 @@ The tab shows the last 300 records, and the collapsed **What is recorded**, belo
 
 <a href="images/entrar-portugues.png"><img src="images/entrar-portugues.png" alt="Sign-in screen in Portuguese: the headline Backups e arquivos, guardados em um lugar só, the title Entrar no painel, the Usuário and Senha fields, the Entrar button and, below the note, the PT and EN buttons" width="100%"></a>
 
-<sub><b>v0.31.1</b> · sign-in screen, in Portuguese · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · sign-in screen, in Portuguese · captured on 2026-10-11</sub>
 
 **What it is for:** using the panel in Portuguese or in English. Each account chooses its own, and the choice of one does not change the screen of the others.
 
@@ -1262,11 +1480,11 @@ The tab shows the last 300 records, and the collapsed **What is recorded**, belo
 
 <a href="images/visao-geral-portugues.png"><img src="images/visao-geral-portugues.png" alt="Overview tab in Portuguese, with the menu, the alert of users without TLS, the measurements, the charts and the recent activity in Portuguese, the dates in day/month/year and the numbers with a decimal comma" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Overview menu, in Portuguese · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Overview menu, in Portuguese · captured on 2026-10-11</sub>
 
 <a href="images/usuarios-portugues.png"><img src="images/usuarios-portugues.png" alt="Users tab in Portuguese: the title Usuários, the profiles Completo, Envio, Só envio and Leitura, the tags você, limites, dividida and inicial, the TLS column with obrigatório and sem TLS and the buttons Editar, Dispensar TLS, Exigir TLS, Trocar senha, Trocar nome and Remover" width="100%"></a>
 
-<sub><b>v0.31.1</b> · Users menu, in Portuguese · captured on 2026-10-10</sub>
+<sub><b>v1.1.0</b> · Users menu, in Portuguese · captured on 2026-10-11</sub>
 
 <details>
 <summary>Technical detail — where the choice is kept</summary>
@@ -1287,7 +1505,9 @@ The tab shows the last 300 records, and the collapsed **What is recorded**, belo
 
 Real captures of the running panel, made with Playwright on Google Chrome, at 1440×900, in dark theme and in English; three screens were repeated in Portuguese, for the [Language](#idioma) section. The guide in Portuguese has the same screens, photographed with the panel in Portuguese. The photographed stack was a demonstration installation, separate from the installation in use: it came up on `127.0.0.4`, with its own container names, network, data folder and secrets, and received example users and files over FTPS; the uploads through the panel used example files, created for the screenshot. Where the panel states the folder of the server, as in the caption of the Users tab and on the **Edit** screen, the demonstration shows the default folder of `.env.example`, in place of the temporary folder it actually came up in.
 
-No password appears in the images: the password fields are masked by the browser and the generated password was replaced by `<REDACTED>` before the capture. The fingerprints are those of the self-signed certificates of the photographed installation; each installation generates its own. The e-mail of the security contact is an example address.
+The destinations in the screenshots are an example service, which came up together with the demonstration and only exists on its internal network: the names end in `.example`, the access key is an example identifier, and no file left the machine. The example bot only receives what the panel sends.
+
+No password appears in the images: the password, secret key and token fields are masked by the browser and the generated password was replaced by `<REDACTED>` before the capture. The fingerprints are those of the self-signed certificates of the photographed installation; each installation generates its own. The e-mail of the security contact is an example address.
 
 The addresses of the Blocks tab are documentation addresses (RFC 5737 and `2001:db8::/32`, from RFC 3849) and entered the list through the same command the FTP and the panel use to block. `172.29.5.1` is the host seen by the internal network of the demonstration: the access and the wrong passwords came from the server itself. In the Server tab and in the **Server and containers** card, the server resources are those of the machine the demonstration ran on.
 

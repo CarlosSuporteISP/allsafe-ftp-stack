@@ -45,7 +45,7 @@ flowchart LR
 | `dados/` | Files uploaded by the devices, one folder per user, and `.entrada/`, the entry area of the accounts with the Upload only profile, empty outside the instant of each upload | Yes |
 | `auth/` | FTP users, with the hash of each password, the limits of each one, the list of who is exempt from TLS and the blocks in effect, by attempts and by address | Yes |
 | `certs/` | Certificate and private key of the FTP | Yes |
-| `painel/` | Certificate and private key of the panel, the administrators (name and password hash), the `auditoria.log` and the language of the screens chosen by each account | Yes |
+| `painel/` | Certificate and private key of the panel, the administrators (name and password hash), the `auditoria.log`, the language of the screens chosen by each account and the settings and the progress of the [destinations](panel.md#destinos), without their secrets | Yes |
 | `nginx/` | Panel socket and copy of the certificate, remade at every start | No |
 
 These stay out, and need to be kept apart: the `.env` and the `.secrets/` folder, where the key that opens the copy is. See [The key of the copy](#chave) and [Keeping the `.env` and the secrets](#segredos).
@@ -71,11 +71,11 @@ What to do in each situation:
 
 | Situation | What to do |
 |---|---|
-| New installation, or update from a version before `0.29.0` | Run `./deploy.sh`: it creates the pair and warns `Gerada a chave da cópia de segurança`. Keep the private one in the vault |
+| New installation, or update from a version before `0.48.0` | Run `./deploy.sh`: it creates the pair and warns `Gerada a chave da cópia de segurança`. Keep the private one in the vault |
 | Server that makes the copy and must not open it | With the private one already in the vault, delete it from the server. `scripts/backup.sh` keeps working with the public one. To restore, bring the private one back to `.secrets/backup-chave-privada.txt`, with mode `0600` |
 | Replacing the pair | Delete the two files and run `./deploy.sh`, which creates a new pair. The copies made before only open with the old private one: keep it in the vault while those copies exist |
 | The public key disappeared or was changed | Run `./deploy.sh`: with the private one present, it remakes the public one from it |
-| Copy made before `0.29.0`, without encryption | It still restores, with the warning `esta cópia não é cifrada`, and `--listar` marks it with `(sem cifra: feita antes da 0.29.0)`. Make a new copy and delete the old one |
+| Copy made before `0.48.0`, without encryption | It still restores, with the warning `esta cópia não é cifrada`, and `--listar` marks it with `(sem cifra: feita antes da 0.48.0)`. Make a new copy and delete the old one |
 
 `./deploy.sh` never rewrites the private key that already exists. There is no option to turn the encryption off.
 
@@ -102,7 +102,7 @@ Só a chave privada abre a cópia (backup-chave-privada.txt, de ./.secrets): gua
 Restaurar: ./scripts/restaurar.sh allsafe-ftp-stack-AAAAMMDD-HHMMSS.tar.gz.age
 ```
 
-Next to each copy stays a `.sha256` file, with the sum that the restore checks before using the copy. `--listar` shows `Cópias em <BACKUP_DIR>:` and one line per file, with the size, and the mark `(sem cifra: feita antes da 0.29.0)` on the old copies; with no copy at all, `Nenhuma cópia em <BACKUP_DIR>.`
+Next to each copy stays a `.sha256` file, with the sum that the restore checks before using the copy. `--listar` shows `Cópias em <BACKUP_DIR>:` and one line per file, with the size, and the mark `(sem cifra: feita antes da 0.48.0)` on the old copies; with no copy at all, `Nenhuma cópia em <BACKUP_DIR>.`
 
 The label accepts lowercase letters, numbers and hyphen, up to 40 characters. The copy takes close to the size of `DATA_DIR/dados` after compression: check the free space in `BACKUP_DIR` before the first one.
 
@@ -159,8 +159,8 @@ What changes after restoring:
 
 - Users created after the copy cease to exist; those removed after it come back.
 - Each user comes back with the password and the folder it had in the copy. The initial user (`FTP_USER`) stays with the password in `.secrets/ftp-usuario-inicial-senha.txt`; if in the copy its password had been changed through the panel and the file has not changed since then, the one in the copy holds. If in the copy it had already been removed, it stays removed.
-- The passwords come back with the cost with which they were stored. A copy made before `0.19.1`, or on a smaller size, brings passwords with the previous cost: the Security tab of the panel lists whose, and the current cost takes effect when the password is changed.
-- The administrators of the panel come back as those of the copy, each one with the password it had: whoever was created after it ceases to exist and everyone signs in again. A copy made before `0.13.0` has no administrators: the panel creates the one in `PAINEL_ADMIN_USER` with the hash in `.secrets/painel-admin-inicial-senha-hash.txt`.
+- The passwords come back with the cost with which they were stored. A copy made before `0.29.0`, or on a smaller size, brings passwords with the previous cost: the Security tab of the panel lists whose, and the current cost takes effect when the password is changed.
+- The administrators of the panel come back as those of the copy, each one with the password it had: whoever was created after it ceases to exist and everyone signs in again. A copy made before `0.22.0` has no administrators: the panel creates the one in `PAINEL_ADMIN_USER` with the hash in `.secrets/painel-admin-inicial-senha-hash.txt`.
 - If the stack was stopped, it stays stopped: `Restaurado. A stack estava parada e continua parada: suba com ./deploy.sh`.
 
 > ⚠️ The copy is checked before any change. If the sum does not match, if the file does not open with the key or if it is not a copy of this stack, the command stops with `ERRO: ... Nada foi tocado.` and the stack goes on as it was.
@@ -170,7 +170,7 @@ What changes after restoring:
 
 Order of what the script does:
 
-1. Checks the copy: the sum of the `.sha256` (if the file exists next to it; without it, it warns `soma não conferida` and goes on), the opening of the whole copy with the private key in `SECRETS_DIR/backup-chave-privada.txt` (a copy without encryption, made before `0.29.0`, is read directly and gets a warning), the presence of `auth/pureftpd.passwd` and the absence of any item outside `dados/`, `auth/`, `certs/` and `painel/`.
+1. Checks the copy: the sum of the `.sha256` (if the file exists next to it; without it, it warns `soma não conferida` and goes on), the opening of the whole copy with the private key in `SECRETS_DIR/backup-chave-privada.txt` (a copy without encryption, made before `0.48.0`, is read directly and gets a warning), the presence of `auth/pureftpd.passwd` and the absence of any item outside `dados/`, `auth/`, `certs/` and `painel/`.
 2. Asks for the confirmation: typing `restaurar`, or `--sim`. Without a terminal, it only runs with `--sim`.
 3. Stops the containers, if they were up (`docker compose stop`).
 4. Keeps the current state, also encrypted, with `scripts/backup.sh --rotulo antes-da-restauracao`. If that copy fails, nothing is changed and the stack starts again.
@@ -228,8 +228,9 @@ The copy does not take the `.env` or the `.secrets/` folder, so that a backup fi
 | `.env` | Addresses, ports, profile and limits of the installation |
 | `.secrets/ftp-usuario-inicial-senha.txt` | Password of the initial user of the FTP |
 | `.secrets/painel-admin-inicial-senha-hash.txt` | Hash of the initial password of the first administrator of the panel |
+| `.secrets/destinos/` | S3 keys, Telegram bot token and receiving chat, written by the panel in the Destinations tab |
 
-The private key is the only one with no way back: without it the copy does not open. Without the other three, the stack comes back all the same: `./deploy.sh` creates a new `.env` and new passwords. In that case, the initial user gets the new password, which needs to be set on the device that uses it. The other users and the administrators of the panel are not affected: the hash of their password is in the copy. Details of each file in [Secrets](secrets.md).
+The private key is the only one with no way back: without it the copy does not open. Without the others, the stack comes back all the same: `./deploy.sh` creates a new `.env` and new passwords, and the secrets of the destinations are typed again in the Destinations tab, in **Change**; until then, the card shows the **secrets missing** tag and nothing is sent. In that case, the initial user gets the new password, which needs to be set on the device that uses it. The other users and the administrators of the panel are not affected: the hash of their password is in the copy. Details of each file in [Secrets](secrets.md).
 
 ---
 

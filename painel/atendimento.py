@@ -225,7 +225,7 @@ class Painel(http.server.BaseHTTPRequestHandler):
             return None
         try:
             campos = urllib.parse.parse_qs(self.rfile.read(int(comprimento)).decode('utf-8'),
-                                           keep_blank_values=True, max_num_fields=12, strict_parsing=False)
+                                           keep_blank_values=True, max_num_fields=16, strict_parsing=False)
         except (ValueError, UnicodeDecodeError):
             self.recusar(400, t('Envio malformado.'))
             return None

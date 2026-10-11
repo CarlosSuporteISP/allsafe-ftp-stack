@@ -11,6 +11,7 @@ import aba_administradores
 import aba_arquivos
 import aba_atividade
 import aba_bloqueios
+import aba_destinos
 import aba_meus_arquivos
 import aba_seguranca
 import aba_servidor
@@ -43,6 +44,16 @@ ROTAS = {
     ('POST', '/arquivos/renomear'): aba_arquivos.renomear,
     ('GET', '/arquivos/apagar'): aba_arquivos.tela_apagar,
     ('POST', '/arquivos/apagar'): aba_arquivos.apagar,
+    ('GET', '/destinos'): aba_destinos.lista,
+    ('GET', '/destinos/s3'): aba_destinos.tela_s3,
+    ('POST', '/destinos/s3'): aba_destinos.gravar_s3,
+    ('GET', '/destinos/telegram'): aba_destinos.tela_telegram,
+    ('POST', '/destinos/telegram'): aba_destinos.gravar_telegram,
+    ('POST', '/destinos/testar'): aba_destinos.testar,
+    ('POST', '/destinos/agora'): aba_destinos.agora,
+    ('POST', '/destinos/arquivo'): aba_destinos.arquivo,
+    ('GET', '/destinos/remover'): aba_destinos.tela_remover,
+    ('POST', '/destinos/remover'): aba_destinos.remover,
     ('GET', '/administradores'): aba_administradores.lista,
     ('GET', '/administradores/novo'): aba_administradores.tela_novo,
     ('GET', '/administradores/senha'): aba_administradores.tela_trocar_senha,

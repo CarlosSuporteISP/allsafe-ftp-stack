@@ -33,7 +33,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Idioma das telas](#idioma) · [Usuários pelo painel](#usuarios) · [Perfis](#perfis) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Servidor: containers e recursos](#servidor) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
+[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Idioma das telas](#idioma) · [Usuários pelo painel](#usuarios) · [Perfis](#perfis) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Destinos: S3 e bot do Telegram](#destinos) · [Servidor: containers e recursos](#servidor) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
 
 </details>
 
@@ -77,13 +77,14 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 |---|---|---|
 | Visão geral | FTP no ar ou fora, quantidade de usuários, espaço usado e livre, último envio, validade do certificado do FTP, o modo de TLS do FTP, a faixa **Servidor e containers** (processador e memória do servidor e dos containers da stack, cada um com o uso contra o que há ou o que foi alocado), os arquivos recebidos por dia nos últimos 14 dias, o último envio de cada usuário, o espaço de cada pasta, os dados para configurar o equipamento (servidor, porta de controle, portas passivas, protocolo) e os últimos registros da atividade | Só consultar; cada cartão termina no atalho para a aba do detalhe |
 | Usuários | Todas as contas em uma lista, cada uma com o **perfil** embaixo do nome. Primeiro os administradores do painel, com a marca **você** na conta de quem está usando o painel e quantas sessões cada um tem abertas; depois os usuários do FTP, um por linha: pasta, com a marca **dividida** quando outro usuário também a alcança, e o nome, com a marca **bloqueado** quando o FTP o está recusando por senhas erradas demais, espaço usado, quantidade de arquivos e último envio; a coluna **TLS** diz se o usuário é obrigado a usar TLS | Criar, escolhendo o perfil (Administrador, Completo, Envio, Só envio ou Leitura), a pasta e, para equipamento sem suporte a TLS, já dispensado do TLS; editar, para trocar o perfil, a pasta e os limites e tirar um bloqueio; trocar a senha; remover, com a pasta dele ou sem ela; abrir a pasta do usuário na aba Arquivos; dispensar um usuário do TLS e voltar a exigir; trocar a senha e o nome de um administrador e removê-lo |
-| Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, pelo nome ou pelo botão **Abrir**, baixar um arquivo pelo navegador, enviar um arquivo para a pasta aberta, criar uma pasta, trocar o nome e apagar arquivo e pasta, e abrir o cadastro de usuário já com a pasta aberta |
+| Arquivos | As pastas dos usuários do FTP e o que há em cada uma: nome, tamanho e data de cada arquivo | Entrar nas pastas, pelo nome ou pelo botão **Abrir**, baixar um arquivo pelo navegador, enviar um arquivo para a pasta aberta, criar uma pasta, trocar o nome e apagar arquivo e pasta, mandar um arquivo na hora a um [destino](#destinos) gravado, e abrir o cadastro de usuário já com a pasta aberta |
+| Destinos | Os dois lugares de fora para onde o painel envia sozinho os arquivos de uma pasta, um armazenamento S3 e um bot do Telegram: se cada um está ligado, a pasta, o intervalo, a última passada e o total enviado, sem mostrar os segredos | **Configurar**, **Testar**, **Enviar agora**, **Alterar** e **Remover** cada destino; com o destino gravado, a aba Arquivos ganha o botão de enviar um arquivo na hora: veja [Destinos](#destinos) |
 | Servidor | Os três containers da stack (servidor FTP, painel e frente web), cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, e, separados, os recursos do servidor em que a stack roda: processador, memória, disco e rede do FTP, com o estado, a medida de agora e o histórico dos últimos minutos | Só consultar; **Atualizar sozinha** refaz a leitura a cada 10 s, sem contar como uso da sessão: veja [Servidor](#servidor) |
 | Segurança | Conferência da instalação, com o resumo de quantos itens estão em ordem, pedem atenção ou são conferidos no servidor: se endereço público é aceito, se o painel está publicado por proxy ou túnel, endereços do FTP e do painel, modo TLS, com a exceção por usuário e quem está dispensado, a entrada dos usuários do FTP, a frente web (nginx), validade e impressão digital dos dois certificados, redes que podem abrir o painel, regras da sessão, o custo das senhas do FTP, com os usuários que ainda estão com o custo anterior, o contato de segurança publicado em `/.well-known/security.txt`, isolamento do container e o lembrete do firewall | Só consultar |
 | Bloqueios | Os endereços e os prefixos, IPv4 e IPv6, com [bloqueio por endereço](seguranca.md#bloqueio-por-endereco): a regra em vigor, o total e, por bloqueio, quem bloqueou (o FTP, o painel ou o administrador), com quantos erros, desde quando e até quando. Embaixo, quando há, os usuários com bloqueio por tentativa no FTP | **Bloquear endereço**, para bloquear à mão um endereço ou um prefixo, procurar um endereço, **Mudar prazo**, para bloquear por mais tempo ou encurtar, e **Desbloquear**; abrir o usuário que está com bloqueio por tentativa |
 | Log | Os últimos 300 registros do painel: entradas, recusas, downloads, envios, pastas criadas, bloqueios e alterações de usuário e de administrador, com data, endereço de origem e quem fez, administrador ou usuário do FTP | Só consultar |
 
-O menu fica à esquerda em tela de 1280 px de largura ou mais: o símbolo e o nome, as abas em dois grupos (**Operação**, com Visão geral, Usuários e Arquivos, e **Sistema**, com Servidor, Segurança, Bloqueios e Log), a aba em uso marcada e, embaixo, o botão de [idioma](#idioma) (**PT** e **EN**), o nome e o papel de quem entrou e o botão **Sair**, que encerra a sessão na hora. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada (endereço público aceito ou painel por proxy ou túnel), o administrador vê um sinal de alerta ao lado de **Segurança**, em qualquer aba em que estiver. Os gráficos são desenhados pelo próprio painel, sem script, e todo número do desenho está também escrito ao lado dele. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
+O menu fica à esquerda em tela de 1280 px de largura ou mais: o símbolo e o nome, as abas em dois grupos (**Operação**, com Visão geral, Usuários, Arquivos e Destinos, e **Sistema**, com Servidor, Segurança, Bloqueios e Log), a aba em uso marcada e, embaixo, o botão de [idioma](#idioma) (**PT** e **EN**), o nome e o papel de quem entrou e o botão **Sair**, que encerra a sessão na hora. Em tela mais estreita, o menu vira uma faixa em cima, com as abas numa linha que rola para o lado. Com a instalação publicada (endereço público aceito ou painel por proxy ou túnel), o administrador vê um sinal de alerta ao lado de **Segurança**, em qualquer aba em que estiver. Os gráficos são desenhados pelo próprio painel, sem script, e todo número do desenho está também escrito ao lado dele. No rodapé de todas as telas ficam a versão e a autoria: veja [Marca do painel](#marca).
 
 Cada aba abre com uma faixa no azul da marca, o mesmo do menu e da tela de entrada, nos temas claro e escuro: o ícone da aba, o título, uma linha que diz o que a tela mostra e, à direita, a ação principal. Em tela com mais de 900 px de largura, a faixa leva também a cena do caminho do backup, a da tela de entrada, em miniatura: os pacotes atravessam uma vez, na chegada à tela, e param. Com **Atualizar sozinha** ligada na aba Servidor, ou com o sistema pedindo menos movimento, nada se mexe. Tela de formulário (novo usuário, editar, trocar senha, renomear, apagar) leva a faixa fina, só com o título.
 
@@ -180,7 +181,7 @@ Perfil de cada conta, escolhido em **Novo usuário** e trocado em **Editar**, ca
 | Só envio | Envia e cria pasta. Não lista e não baixa nada, nem o que ele mesmo enviou | Tela Envio de arquivos: os dados para enviar por FTP e, com a permissão do administrador, o envio pelo painel |
 | Leitura | Só lista e baixa | Tela Meus arquivos: navega e baixa |
 
-- Usuário criado antes da `0.30.0`, ou sem perfil informado, é **Completo**: nada muda para quem já usa a stack.
+- Usuário criado antes da `0.51.0`, ou sem perfil informado, é **Completo**: nada muda para quem já usa a stack.
 - **Envio guarda o que recebeu.** O arquivo passa a ser do servidor assim que termina de chegar: daí em diante o usuário não o apaga, não o renomeia e não grava por cima. Equipamento que envia sempre com o mesmo nome de arquivo precisa do perfil Completo, ou de um nome com data.
 - **Só envio não vê os backups.** A conta entra em uma área de entrada só dela, fora da pasta dos backups, e o servidor leva cada arquivo para a pasta do usuário assim que ele termina de chegar. Quem tem a senha desse equipamento envia, e mais nada: não lista, não baixa, não apaga e não troca o nome de nenhum arquivo já recebido.
 - **Leitura não grava nada:** nem arquivo, nem pasta, em nenhum nível da pasta dele.
@@ -353,6 +354,7 @@ A aba Arquivos mostra as pastas de `DATA_DIR/dados`, entrega pelo navegador qual
 6. Para prender um usuário a uma pasta, entre nela e clique em **Novo usuário nesta pasta**: o cadastro abre com o campo **Pasta** preenchido.
 7. Para trocar o nome de um arquivo ou de uma pasta, clique em **Renomear** na linha dele, escreva o nome novo, digite a sua senha atual e clique em **Trocar nome**. O item continua na mesma pasta.
 8. Para apagar um arquivo ou uma pasta, clique em **Apagar** na linha dele, marque a caixa de confirmação, digite a sua senha atual e clique em **Apagar de vez**.
+9. Para mandar um arquivo ao bot do Telegram ou ao S3 na hora, clique em **Telegram** ou em **S3** na linha dele. Os botões aparecem depois que o destino é gravado: veja [Destinos](#destinos).
 
 **Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Log ganha a linha `Arquivo baixado`, com o administrador, o caminho e o tamanho. A pasta criada aparece na lista com o aviso `Pasta criada.`, vazia, já com o dono e a permissão que o FTP usa, e fica na aba Log como `Pasta criada`. O arquivo enviado aparece na lista com o aviso `Arquivo enviado.`, com o dono e a permissão dos arquivos que chegam por FTP, e fica na aba Log como `Arquivo enviado pelo painel`. O item renomeado aparece com o nome novo e o aviso `Nome trocado.`, com o mesmo conteúdo, dono e permissão; o apagado some da lista com o aviso `Apagado.`. Os dois ficam na aba Log, como `Arquivo ou pasta renomeado` e `Arquivo ou pasta apagado`.
 
@@ -361,7 +363,7 @@ A aba Arquivos mostra as pastas de `DATA_DIR/dados`, entrega pelo navegador qual
 | Na lista | O que aparece | O que dá para fazer |
 |---|---|---|
 | Pasta | Nome e data da última alteração; dentro dela, a linha `Pasta do usuário do FTP` diz de quem é | Entrar, pelo nome ou pelo botão **Abrir**, renomear e apagar |
-| Arquivo | Nome, tamanho e data da última alteração | Baixar, renomear e apagar |
+| Arquivo | Nome, tamanho e data da última alteração | Baixar, renomear e apagar; com um destino gravado, enviar ao bot do Telegram ou ao S3 |
 | Item marcado `link simbólico` ou `arquivo especial` | Nome e data | Renomear e apagar; o painel não abre nem baixa, e mostra **não abre aqui** no lugar do botão. Apagar um link simbólico apaga só o link, nunca aquilo para onde ele aponta |
 
 Limites:
@@ -496,6 +498,118 @@ PAINEL_ACESSO_USUARIOS_FTP=nao
 
 ---
 
+<a name="destinos"></a>
+
+## ☁️ Destinos: S3 e bot do Telegram
+
+Na aba **Destinos**, o administrador liga uma pasta dos dados a dois lugares fora do servidor, e o painel passa a enviar sozinho o que chega nela: um **armazenamento S3**, para ter a segunda cópia ou para guardar os arquivos fora e liberar o disco, e um **bot do Telegram**, que entrega cada arquivo novo a uma pessoa, a um grupo ou a um canal. Cada destino tem uma ligação só, um não depende do outro, e os dois vêm sem configuração: enquanto o administrador não gravar um, nada sai do servidor. Só administrador abre a aba.
+
+| Destino | O que envia | Quando | O que fica no servidor |
+|---|---|---|---|
+| Armazenamento S3 | Todos os arquivos da pasta escolhida e das pastas de dentro dela, inclusive os que já estavam lá quando o destino foi ligado | A cada intervalo gravado, de 5 a 1440 minutos | Em **Copiar**, tudo; em **Guardar no S3**, o arquivo sai depois que o destino confirma a gravação |
+| Bot do Telegram | Só os arquivos que chegarem depois de o destino ser ligado, um por mensagem, com o caminho, o tamanho e a data | Em poucos segundos, quando o arquivo chega inteiro por FTP ou pelo painel; o que aparece na pasta de outro jeito, a cada intervalo gravado, de 5 a 1440 minutos | Tudo: o bot nunca apaga |
+
+**Armazenamento S3.** Serve qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna. Antes de começar, crie o bucket no serviço e uma chave que só possa gravar nele.
+
+1. Na aba Destinos, clique em **Configurar** no cartão **Armazenamento S3**.
+2. Preencha o **Endereço do serviço** (`https://nome` ou `https://nome:porta`, sem o bucket), a **Região**, o **Bucket** e, se quiser, o **Prefixo**, que é a pasta dentro do bucket.
+3. Em **Endereço do bucket**, escolha **No caminho** (`https://nome/bucket/arquivo`) ou **No nome** (`https://bucket.nome/arquivo`), como o serviço pede.
+4. Digite a **Chave de acesso** e a **Chave secreta**.
+5. Preencha a **Pasta enviada** (em branco é a pasta dos dados inteira) e o **Intervalo entre as passadas**.
+6. Em **Depois do envio**, escolha **Copiar** ou **Guardar no S3**.
+7. Digite a sua senha e clique em **Gravar**.
+8. De volta à aba, clique em **Testar**.
+
+**Resultado esperado:** a aba volta com o aviso **Destino gravado**, e o cartão mostra a marca **ligado**, o endereço, o bucket, a pasta e que as chaves estão gravadas, sem mostrá-las. O **Testar** grava um objeto pequeno, `allsafe-ftp-stack-teste.txt`, no prefixo escolhido e responde **Teste concluído: o destino recebeu**. A primeira passada começa em até um minuto e envia tudo o que já está na pasta; a linha **Última passada** diz quantos arquivos saíram.
+
+> ⚠️ **Guardar no S3 deixa uma cópia só:** o arquivo sai do servidor depois de gravado no destino, e o painel não tem lixeira nem baixa de volta. A primeira passada envia tudo o que já está na pasta e, com Guardar no S3, tudo isso sai do servidor. Comece em **Copiar**, confira os objetos no bucket e só então troque: a troca vale para o que for enviado dali em diante.
+
+> ⚠️ **Trocar o endereço, o bucket, o prefixo, a forma do endereço ou a pasta recomeça do zero:** tudo o que está na pasta é enviado de novo, para o lugar novo.
+
+**Bot do Telegram.** Antes de começar, crie o bot no criador de bots do Telegram e guarde o token que ele entrega. Ponha o bot no grupo ou no canal que vai receber; para uma pessoa, ela precisa ter iniciado a conversa com o bot.
+
+1. Na aba Destinos, clique em **Configurar** no cartão **Bot do Telegram**.
+2. Digite o **Token do bot** e a **Conversa que recebe**: o número da pessoa ou do grupo (o de grupo começa com `-`) ou o `@nome` do canal.
+3. Preencha a **Pasta enviada** e o **Intervalo entre as passadas**, e escolha o **Idioma das mensagens**.
+4. Digite a sua senha e clique em **Gravar**.
+5. De volta à aba, clique em **Testar**.
+
+**Resultado esperado:** a conversa recebe a mensagem de teste do painel, e a aba responde **Teste concluído: o destino recebeu**. Dali em diante, cada arquivo que chegar na pasta por FTP ou pelo painel vai para a conversa em poucos segundos, como documento, com o caminho, o tamanho e a data na legenda.
+
+O bot **só envia**. O painel usa o envio de arquivo e o envio de mensagem da API de bot, e nada mais: não lê a conversa, não registra endereço de retorno e não aceita comando.
+
+O maior arquivo que o bot envia de uma vez é o de [`PAINEL_TELEGRAM_MAX_MB`](configuracao.md#painel), 50 MB no padrão, que é o teto da API pública. Arquivo maior não é enviado: a conversa recebe um aviso com o caminho, o tamanho e a data, e o arquivo continua no servidor. Arquivo vazio não é enviado, porque a API não aceita.
+
+**Os dois na mesma pasta.** Em cada passada, o bot entrega primeiro. Com o S3 em **Guardar no S3**, o arquivo só sai do servidor depois de gravado no S3 e entregue pelo bot; enquanto o bot não entrega, o cartão do S3 mostra a linha **À espera do bot**.
+
+**Os botões de cada cartão:**
+
+| Botão | O que faz | Pede a senha |
+|---|---|---|
+| Testar | Grava o objeto de teste no S3 ou envia a mensagem de teste pelo bot, com o que está gravado. Funciona com o destino desligado | Não |
+| Enviar agora | Pede uma passada fora de hora. O painel começa em instantes, e a tela não espera por ela: atualize para acompanhar | Não |
+| Alterar | Abre o formulário com o que está gravado. Campo de segredo em branco mantém o gravado | Sim, para gravar |
+| Remover | Apaga a configuração, o andamento e os segredos do destino. O que já foi enviado continua lá, e nenhum arquivo do servidor é apagado | Sim |
+
+**Enviar um arquivo na hora.** Depois que um destino é gravado, cada arquivo da aba [Arquivos](#arquivos) ganha um botão com o nome dele, **Telegram** ou **S3**, ao lado do **Baixar**. O botão envia aquele arquivo ao destino naquele momento, com o que está gravado.
+
+1. Abra a aba **Arquivos** e entre na pasta do arquivo.
+2. Na linha do arquivo, clique em **Telegram** ou em **S3**.
+
+**Resultado esperado:** a tela volta para a mesma pasta com o aviso **Bot do Telegram: arquivo enviado** ou **Armazenamento S3: arquivo enviado**. Quando o envio passa de 20 segundos, o aviso diz que ele continua em segundo plano, e o resultado aparece na aba Log. Quando não dá certo, o aviso traz o motivo em uma frase.
+
+- O botão serve para qualquer arquivo dos dados, dentro ou fora da pasta do destino, e funciona com o destino desligado.
+- O arquivo nunca é apagado por esse envio, nem com o S3 em **Guardar no S3**, e o que as passadas enviam não muda: um arquivo que ainda não saiu continua na vez dele.
+- Pelo bot, o arquivo vazio e o que passa do limite não saem, e o aviso diz o motivo. Enviar de novo um arquivo que já foi entrega outra mensagem na conversa; no S3, grava o mesmo objeto por cima.
+- Um envio pedido pelo botão por vez: enquanto um não termina, o seguinte é recusado com o aviso de tentar de novo.
+- Só o administrador tem o botão, e ele só aparece para o destino que está gravado com os segredos.
+
+**O que entra em uma passada:**
+
+- Só arquivo comum. Link simbólico e tudo o que tem o nome começado por ponto, arquivo ou pasta, ficam de fora.
+- O arquivo entra depois de dois minutos sem mudar, para o que ainda está chegando não sair pela metade. O botão **Enviar agora** respeita essa espera, e o cartão mostra na linha **Ainda chegando** quantos arquivos ficaram para uma próxima passada.
+- O bot não espera os dois minutos do arquivo que o servidor FTP avisou que terminou de chegar, nem do que foi enviado pelo painel: esse sai em poucos segundos. O S3 espera sempre.
+- O arquivo que troca de nome ou de pasta pelo FTP, e o que é copiado direto no servidor, não tem aviso de chegada: espera os dois minutos e, enquanto espera, segura os que chegaram depois dele, para a ordem não se perder.
+- A ordem é a da chegada ao servidor. Uma falha do destino encerra a passada, e a seguinte recomeça do mesmo arquivo: nada é pulado nem enviado duas vezes.
+- No S3, o nome do objeto é o prefixo mais o caminho do arquivo dentro dos dados: `backups/roteador/config.rsc`, com o prefixo `copias`, vira `copias/backups/roteador/config.rsc`.
+- Arquivo que troca de nome é enviado de novo, com o nome novo. Pasta que troca de nome não reenvia os arquivos de dentro.
+
+Quando a última passada para antes do fim, o cartão mostra o motivo em uma frase. O que cada motivo quer dizer e o que fazer está em [Solução de problemas](solucao-de-problemas.md#destinos).
+
+**Onde ficam os segredos.** As chaves do S3, o token do bot e a conversa ficam no servidor, um por arquivo, na pasta `destinos` de `SECRETS_DIR`, e nunca voltam para a tela, para o Log nem para a auditoria. Como os outros segredos da instalação, não entram na [cópia de segurança](backup.md): depois de restaurar uma cópia, o cartão mostra a marca **faltam os segredos** e nada é enviado até eles serem gravados de novo, em **Alterar**.
+
+**S3 na rede interna com autoridade própria.** O painel só fala HTTPS e confere o certificado do serviço. Se o certificado do seu S3 foi emitido por uma autoridade da própria rede, entregue o certificado dela ao painel, em PEM:
+
+```bash
+docker compose exec -T painel sh -c 'cat > /painel/destinos/ca.pem' < autoridade-da-rede.pem
+```
+
+**Resultado esperado:** o comando volta sem mensagem, e o **Testar** seguinte já aceita o certificado, sem reiniciar nada.
+
+**Desligar tudo.** Com [`PAINEL_DESTINOS=nao`](configuracao.md#painel) no `.env` e um `./deploy.sh`, a aba sai do menu, nenhuma passada acontece e o painel não abre nenhuma conexão para fora. O que estava gravado fica guardado e volta a valer com `sim`.
+
+<details>
+<summary>Detalhe técnico — os destinos de fora</summary>
+
+- **Rotas:** `GET /destinos` mostra os dois cartões; `GET` e `POST /destinos/s3` e `/destinos/telegram` mostram e gravam o formulário; `POST /destinos/testar` e `POST /destinos/agora` levam o campo `destino` (`s3` ou `telegram`); `POST /destinos/arquivo` leva `destino` e `arquivo`, o caminho dentro dos dados; `GET` e `POST /destinos/remover` confirmam e removem. Todo `POST` leva o token CSRF da sessão. Gravar e remover pedem também `senha_atual`, a senha de quem está na sessão: errada ou em branco recebe `403`, grava `admin_senha_atual_recusada` e conta como erro de entrada. Só administrador tem essas rotas: para o usuário do FTP, respondem `404`.
+- **Formulário:** campo fora da regra responde `400`, com a tela de volta e o que foi digitado, menos os segredos, que nunca são devolvidos. A pasta precisa existir dentro dos dados. Destino diferente de `s3` e `telegram` responde `404`.
+- **Quem guarda:** a configuração fica em `DATA_DIR/painel/destinos/<destino>.conf` e o andamento, em `<destino>.estado`; os dois entram na cópia de segurança. Os segredos ficam em `SECRETS_DIR/destinos`, com o modo `0600`: `s3-chave-de-acesso.txt`, `s3-chave-secreta.txt`, `telegram-token.txt` e `telegram-conversa.txt`. É a única pasta de segredos em que o painel escreve. Apagar um desses arquivos no servidor desliga o envio daquele destino na passada seguinte.
+- **Quem aplica:** o [`destinos.py`](../../painel/destinos.py), em uma linha de execução do próprio painel, que colhe os avisos de chegada a cada 2 s e confere a cada minuto qual destino está na hora. Uma passada por vez: a do bot vem antes da do S3.
+- **Chegada anunciada:** o [vigia](scripts.md#vigia) do servidor FTP grava um aviso em `/auth/chegadas`, pasta `0700` do root, para cada envio que o Pure-FTPd registra como concluído, e o envio pelo painel avisa direto. O [`chegadas.py`](../../painel/chegadas.py) colhe e apaga os avisos, e 3 s depois de um aviso novo o painel faz uma passada do bot. O aviso não escolhe o que é enviado: só dispensa a espera de um arquivo que a passada encontraria de qualquer jeito, dentro da pasta do destino. Vale por 4 minutos no painel, e o vigia apaga o que ninguém colheu em 5. Com o cadastro do FTP em uso naquele instante, ou com 2000 avisos à espera, o vigia não grava o aviso, e o arquivo sai pela espera de dois minutos. Quando a passada do bot deixa arquivo à espera, o painel volta sozinho cerca de dois minutos depois. A passada pedida pelo terminal não usa os avisos.
+- **Um arquivo só:** o `POST /destinos/arquivo` abre o arquivo com as mesmas conferências da aba Arquivos (`400`, `403` ou `404` para caminho fora da regra, link simbólico, pasta ou arquivo que não existe) e envia em uma linha de execução própria. A tela espera até 20 s; depois disso, o envio segue sozinho. Não lê nem grava o andamento das passadas. Arquivo que muda durante o envio responde com o motivo, para ser repetido.
+- **Saída do painel:** o [`saida.py`](../../painel/saida.py) é a única porta por onde o painel fala com alguém de fora da stack. Só HTTPS, com TLS 1.2 ou mais novo e o certificado conferido contra as autoridades da imagem e contra a de `ca.pem`, quando existe. O nome é resolvido uma vez, e a conexão vai para o endereço que foi conferido. O painel não sai para o próprio container, para endereço de enlace, de grupo ou reservado, e não segue redirecionamento. Cada operação de rede tem 30 s de prazo.
+- **S3:** o [`s3.py`](../../painel/s3.py) assina cada pedido com a assinatura versão 4, com o SHA-256 do corpo dentro dela. Arquivo de até 32 MiB vai em um pedido; acima disso, em partes de 16 MiB ou mais, e o envio em partes é abandonado no destino quando falha. O painel só grava: não lê, não lista e não apaga nada no bucket, e a chave só precisa de `s3:PutObject` e `s3:AbortMultipartUpload`. Arquivo maior que 5 TiB conta como ignorado.
+- **Guardar no S3:** o arquivo só é apagado depois de o destino confirmar a gravação, e só se não mudou desde o envio. Com o bot parado, os arquivos já gravados no S3 esperam por ele em uma fila de até 20.000; cheia, o S3 para de enviar até o bot voltar.
+- **Telegram:** o [`telegram.py`](../../painel/telegram.py) só chama `sendDocument` e `sendMessage`, sempre por `POST`, no endereço de `PAINEL_TELEGRAM_API`. Entre um envio e o seguinte há uma pausa de 3 s. Quando a API pede para ir mais devagar, o painel espera o tempo pedido, até 30 s, e repete o envio uma vez. Arquivo que a API recusa pelo tamanho, mesmo abaixo de `PAINEL_TELEGRAM_MAX_MB`, vira aviso.
+- **Arquivo que o destino recusa:** resposta `4xx` que não é de permissão, de prazo (`408`) nem de pressa (`429`), na terceira passada seguida com o mesmo arquivo, deixa esse arquivo para trás, para os seguintes saírem, e grava `destino_pulado`.
+- **Série:** trocar o endereço, o bucket, o prefixo, a forma do endereço ou a pasta do S3, ou a pasta do bot, começa uma série nova, e o andamento anterior é esquecido. O mesmo acontece com o bot desligado e ligado de novo, que passa a enviar só o que chegar dali em diante. Trocar o intervalo, o modo, o idioma ou os segredos mantém o andamento.
+- **Pelo terminal:** `docker compose exec painel python3 /opt/painel/servidor.py --destinos` mostra a situação de cada destino e a última passada, sem segredo; `--destinos enviar <s3|telegram>` faz a passada na hora e sai com `1` quando ela para antes do fim; com `--sem-espera`, não aguarda os dois minutos de um arquivo sem mudar.
+- **Auditoria:** `destino_gravado`, com o administrador, o destino, a situação, a pasta, o intervalo, o modo do S3 e se os segredos foram trocados ou mantidos; `destino_teste`, com o resultado; `destino_pedido`; `destino_removido`; `destino_arquivo`, com o administrador, o destino, o arquivo, os bytes e o resultado do envio pedido pelo botão; `destino_enviado`, a cada passada que enviou, apagou, avisou do limite ou teve arquivo recusado, com os arquivos, os bytes, os apagados, os que passaram do limite do bot, os ignorados e os recusados; `destino_falhou`, com o motivo, quando ele muda; `destino_pulado`, com o arquivo e o motivo. As três últimas não têm endereço: quem fez foi o painel. Nenhuma leva segredo nem texto vindo do serviço de fora.
+
+</details>
+
+---
+
 <a name="servidor"></a>
 
 ## 📈 Servidor: containers e recursos
@@ -575,7 +689,7 @@ Regras:
 
 - **Arquivo:** `DATA_DIR/painel/administradores` (`/painel/administradores` no container), `0600`, do `root`, uma linha `nome:hash` por administrador. Só o hash `scrypt` é gravado; a senha em texto não fica em lugar nenhum.
 - **Primeira subida:** sem nenhum administrador no arquivo, o painel cria o de `PAINEL_ADMIN_USER` com o hash do segredo `painel_admin_inicial_senha_hash` e registra `admin_inicial_criado`. Depois disso, quem manda é o arquivo.
-- **Instalação anterior à `0.13.0`:** na primeira subida depois da atualização, o painel cria o administrador `admin` (ou o nome de `PAINEL_ADMIN_USER`) com a mesma senha que já valia.
+- **Instalação anterior à `0.22.0`:** na primeira subida depois da atualização, o painel cria o administrador `admin` (ou o nome de `PAINEL_ADMIN_USER`) com a mesma senha que já valia.
 - **Gravação:** o painel escreve um arquivo ao lado e troca de uma vez, uma alteração por vez: uma queda no meio não deixa o painel sem administrador.
 - **Senha atual recusada:** responde `403`, registra `admin_senha_atual_recusada` e conta no mesmo limite da tela de entrada: cinco recusas em 15 minutos bloqueiam o endereço (`429`).
 - **Sessões:** a troca de senha, a troca de nome e a remoção encerram as sessões do administrador alterado. Quando a alteração é na própria conta, a sessão em uso continua e as outras caem.
@@ -884,6 +998,10 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `arquivo_baixado` · `arquivo_interrompido` | Download pela aba Arquivos ou pela tela Meus arquivos, completo · cortado antes do fim; com quem baixou, o caminho e os bytes entregues |
 | `arquivo_enviado` · `envio_interrompido` | Arquivo enviado pelo painel, pela aba Arquivos ou pela tela do usuário do FTP · envio que parou antes do fim, sem nada gravado; com quem enviou, o caminho e os bytes |
 | `recusa_envio` | Usuário do FTP que pediu o envio pelo painel sem ter a permissão, com o usuário e o perfil |
+| `destino_gravado` · `destino_removido` | Um administrador gravou a configuração de um [destino](#destinos), S3 ou bot do Telegram · removeu o destino; com o administrador e o destino, e, na gravação, a situação, a pasta, o intervalo, o modo do S3 e se os segredos foram trocados ou mantidos |
+| `destino_teste` · `destino_pedido` | Um administrador clicou em **Testar**, com o resultado · em **Enviar agora**; com o administrador e o destino |
+| `destino_arquivo` | Um administrador mandou um arquivo ao destino pelo botão da aba Arquivos, com o administrador, o destino, o arquivo, os bytes e o resultado |
+| `destino_enviado` · `destino_falhou` · `destino_pulado` | Uma passada enviou, apagou, avisou do limite ou teve arquivo recusado, com o destino e as contagens · parou antes do fim, com o motivo, quando ele muda · deixou para trás um arquivo que o destino recusa, com o arquivo e o motivo. Sem endereço: quem fez foi o painel |
 | `admin_inicial_criado` | Primeira subida: o painel criou o administrador de `PAINEL_ADMIN_USER` |
 | `admin_criado` · `admin_senha_trocada` · `admin_renomeado` · `admin_removido` | Alteração de administrador pelo painel, com quem fez e quem foi alterado |
 | `admin_senha_atual_recusada` | Alteração de administrador ou apagamento recusado: a senha atual de quem pediu não conferiu; com o administrador e o caminho pedido |
@@ -919,6 +1037,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 | Pastas dos usuários | Cada usuário do FTP fica preso (`chroot`) na pasta do cadastro; a pasta escolhida não sai de `DATA_DIR/dados` nem passa por link simbólico; pasta alcançada por mais de um usuário aparece marcada como **dividida** |
 | Formulários | Token CSRF por sessão e conferência de `Origin`: o envio tem de partir do próprio painel; corpo limitado a 8 KiB, menos no envio de arquivo, que tem as duas rotas dele e o teto de `PAINEL_ENVIO_MAX_MB` |
 | Idioma | A troca é um formulário como os outros, com token e `Origin`; o cookie do idioma só leva `pt` ou `en` e não vale como sessão; a volta depois da troca só leva a tela do próprio painel |
+| Destinos de fora | Só o administrador configura, com a senha atual, e só ele manda um arquivo pelo botão da aba Arquivos; o painel sai só por HTTPS, com o certificado conferido, e não vai para o próprio container nem para endereço reservado; as chaves do S3, o token do bot e a conversa ficam em arquivos `0600` e nunca voltam para a tela nem para a auditoria; o bot só envia: o painel não lê a conversa nem aceita comando; `PAINEL_DESTINOS=nao` desliga tudo |
 | Navegador | `Content-Security-Policy` sem script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS e `no-store`; a página não carrega nada de fora |
 | Containers | Raiz somente leitura, `cap_drop: ALL`, `no-new-privileges`, sem socket do Docker, limites de CPU, memória e processos; o nginx roda sem root e sem nenhuma capability |
 
@@ -939,7 +1058,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 - **Arquivos:** a aba Arquivos lê a mesma pasta `DATA_DIR/dados`, sempre com abertura só para leitura; as gravações são a pasta vazia de `POST /arquivos/pasta`, a troca de nome e o apagamento, as três em relação à pasta aberta e nenhuma com conteúdo vindo do navegador. Detalhe em [Arquivos e download](#arquivos).
 - **Usuário do FTP no painel:** a senha é conferida por um login no serviço `ftp`, pela rede do Compose, e a sessão dele só tem as rotas de `/meus-arquivos` e a saída. Detalhe em [Usuário do FTP no painel](#usuario-ftp).
 - **Capabilities devolvidas:** `CHOWN`, `DAC_OVERRIDE` e `FOWNER`, para criar as pastas com o dono `ftpdata` e gravar em `/auth`. Nenhuma de rede.
-- **Saúde:** `python3 /opt/painel/servidor.py --saude` pede `/saude` pelo soquete Unix. O healthcheck do nginx faz o mesmo pedido por TLS, em `127.0.0.1:8443`, e confere o caminho inteiro.
+- **Saúde:** `python3 -I -S /opt/painel/saude.py` pede `/saude` pelo soquete Unix, sem carregar os módulos do painel, para caber na cota de processador do container; `servidor.py --saude` faz o mesmo pedido. O healthcheck do nginx faz o mesmo pedido por TLS, em `127.0.0.1:8443`, e confere o caminho inteiro.
 - **Limites:** `PAINEL_MEMORY_LIMIT`, `PAINEL_CPU_LIMIT` e `PAINEL_PIDS_LIMIT`, em [Configuração](configuracao.md#painel).
 
 </details>
@@ -953,7 +1072,8 @@ O código fica em [`painel/`](../../painel/), um assunto por arquivo, e vai inte
 
 | Módulo | O que tem |
 |---|---|
-| [`servidor.py`](../../painel/servidor.py) | Ponto de entrada: sobe o servidor, cria o primeiro administrador e atende os modos `--hash`, `--saude` e `--administrador` |
+| [`servidor.py`](../../painel/servidor.py) | Ponto de entrada: sobe o servidor, cria o primeiro administrador e atende os modos `--hash`, `--saude`, `--administrador`, `--retencao` e `--destinos` |
+| [`saude.py`](../../painel/saude.py) | Verificação de saúde do container: o pedido de `/saude` pelo soquete Unix, só com a biblioteca de soquete |
 | [`config.py`](../../painel/config.py) | Caminhos, limites e a leitura das variáveis do container, com as recusas de rede e de sessão |
 | [`senha.py`](../../painel/senha.py) | Hash `scrypt` das senhas dos administradores e a conferência em tempo constante |
 | [`administradores.py`](../../painel/administradores.py) | Leitura e gravação do arquivo de administradores, uma alteração por vez |
@@ -976,9 +1096,15 @@ O código fica em [`painel/`](../../painel/), um assunto por arquivo, e vai inte
 | [`retencao.py`](../../painel/retencao.py) | Limpeza automática: a regra de cada usuário do FTP, lida da `limites.lista`, a conferência do formulário e o resumo da lista |
 | [`limpeza.py`](../../painel/limpeza.py) | Limpeza automática: a passada que aplica a regra de cada usuário na pasta dele, pela linha de execução do painel ou pelo terminal (`servidor.py --retencao`) |
 | [`aba_usuarios.py`](../../painel/aba_usuarios.py) | Aba Usuários: lista única de administradores e usuários do FTP, criação com o perfil e a pasta escolhidos, edição (perfil, pasta, limites e bloqueios), troca de senha, remoção e a dispensa do TLS por usuário |
-| [`aba_arquivos.py`](../../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, envio de arquivo, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta |
+| [`aba_arquivos.py`](../../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, envio de arquivo, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta, e os botões de enviar um arquivo a um destino gravado |
 | [`envio.py`](../../painel/envio.py) | Envio de arquivo pelo navegador: leitura do corpo `multipart/form-data` em fluxo, do soquete para o disco, sem guardar o arquivo na memória |
 | [`aba_meus_arquivos.py`](../../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação, download e as ações do perfil dentro da pasta dele; para o perfil Só envio, a tela Envio de arquivos |
+| [`destinos.py`](../../painel/destinos.py) | Destinos de fora: a configuração, os segredos e o andamento de cada um, a passada que envia o que chegou, pela linha de execução do painel ou pelo terminal (`servidor.py --destinos`), o teste e o envio de um arquivo só |
+| [`chegadas.py`](../../painel/chegadas.py) | Avisos de chegada: os arquivos que o servidor FTP e o envio pelo painel dão como inteiros, para o bot do Telegram enviar sem esperar |
+| [`saida.py`](../../painel/saida.py) | Saída do painel para fora da stack: HTTPS com o certificado conferido, a recusa dos endereços que o painel não alcança e os motivos de falha |
+| [`s3.py`](../../painel/s3.py) | Armazenamento S3: a assinatura versão 4 dos pedidos, o envio em um pedido ou em partes e a conferência dos campos do formulário |
+| [`telegram.py`](../../painel/telegram.py) | Bot do Telegram: o envio de documento e de mensagem, e a conferência do token e da conversa |
+| [`aba_destinos.py`](../../painel/aba_destinos.py) | Aba Destinos: os dois cartões, os formulários, o teste, o pedido de passada, a remoção e o envio de um arquivo pelo botão da aba Arquivos |
 | [`recursos.py`](../../painel/recursos.py) | Recursos do servidor e de cada container da stack: leitura do processador, da memória e da rede do FTP, do grupo de controle do painel e do que o ftp e o nginx publicam, e o histórico dos últimos 10 minutos, guardado na memória |
 | [`aba_servidor.py`](../../painel/aba_servidor.py) | Aba Servidor: os containers da stack, com o uso contra o alocado, os cartões de processador, memória, disco e rede do servidor, e a faixa de resumo da Visão geral |
 | [`aba_administradores.py`](../../painel/aba_administradores.py) | Administradores do painel: criação pelo formulário de Novo usuário, troca de senha, troca de nome e remoção; a lista é a da aba Usuários |

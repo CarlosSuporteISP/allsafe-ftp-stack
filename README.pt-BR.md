@@ -11,8 +11,8 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.31.1-blue)
-![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.1.0-blue)
+![Status](https://img.shields.io/badge/status-est%C3%A1vel_LTS-brightgreen)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -25,7 +25,7 @@ Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsaf
 
 <a href="doc/pt-BR/imagens/painel-principal.png"><img src="doc/pt-BR/imagens/painel-principal.png" alt="Aba Visão geral com o menu à esquerda, em dois grupos, a faixa Servidor FTP, que diz No ar e TLS obrigatório no login, as quatro medidas Usuários, Espaço usado, Último envio e Certificado do FTP, cada uma com o atalho para o detalhe, o cartão Servidor e containers, com o processador e a memória do servidor e dos containers, os gráficos Arquivos recebidos por dia, Último envio por usuário e Espaço por pasta, o cartão Atividade recente, com os seis últimos registros, e o cartão Dados para configurar o equipamento" width="100%"></a>
 
-<sub><b>v0.31.1</b> · painel web, aba Visão geral · captura de 2026-10-10</sub>
+<sub><b>v1.1.0</b> · painel web, aba Visão geral · captura de 2026-10-11</sub>
 
 <!-- diagrama: doc/pt-BR/diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -42,7 +42,7 @@ flowchart LR
 
 <sub>Nível 1 · Diagrama · [fonte](doc/pt-BR/diagramas/)</sub>
 
-<sub><b>v0.29.0</b> · visão geral da stack · 2026-10-09</sub>
+<sub><b>v0.48.0</b> · visão geral da stack · 2026-10-09</sub>
 
 </div>
 
@@ -102,6 +102,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão que encerra com 4 horas sem uso, bloqueio depois de cinco senhas erradas e registro de cada ação |
 | **Arquivos pelo navegador** | O administrador navega, envia, baixa, renomeia e apaga; o dono dos arquivos entra com o usuário e a senha do FTP, vê só a própria pasta e faz o que o perfil dele deixa. Enviar pelo painel depende de permissão dada a cada usuário |
 | **Limpeza automática** | Por conta, o administrador manda guardar só os últimos arquivos de cada pasta ou só os dos últimos dias; o painel apaga o resto sozinho, de tempos em tempos. Desligada por padrão |
+| **Envio para S3 e bot do Telegram** | Na aba Destinos, o administrador liga uma pasta a um armazenamento S3, para a segunda cópia ou para guardar fora e liberar o disco, e a um bot do Telegram, que entrega em instantes cada arquivo que chega a uma pessoa, um grupo ou um canal, até o tamanho que o bot aceita. O bot só envia. Na aba Arquivos, um botão manda um arquivo na hora. Sem configuração por padrão |
 | **Saúde do servidor no painel** | A aba Servidor mostra os três containers da stack, cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, e o processador, a memória, o disco e a rede do FTP do servidor, com o histórico dos últimos minutos |
 | **nginx na frente do painel** | Só o nginx publica a porta do painel: TLS 1.2 e 1.3, HTTP/2, lista de redes permitidas, limite de pedidos e de conexões por endereço; o painel fica sem porta de rede |
 | **Containers endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs; o nginx roda sem `root` e sem nenhuma `capability` |
@@ -122,14 +123,16 @@ O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página,
 |---|---|
 | <a href="doc/pt-BR/imagens/aba-usuarios.png"><img src="doc/pt-BR/imagens/aba-usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista das contas: primeiro o administrador admin, com a etiqueta você, depois os usuários do FTP, cada um com o perfil embaixo do nome e as etiquetas inicial, limites, limpeza e bloqueado, a pasta, com a etiqueta dividida em duas, uso, arquivos, último envio, a coluna TLS, com obrigatório em todas as linhas, as ações Editar, Dispensar TLS, Trocar senha e Remover e, abaixo da lista, o recolhido Como funcionam os perfis e as etiquetas" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-arquivos.png"><img src="doc/pt-BR/imagens/aba-arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma, os botões Renomear e Apagar em cada linha e os cartões Nova pasta e Enviar arquivo" width="100%"></a> |
 | **Usuários** — cria cada conta, escolhe o perfil, troca a senha, a pasta e os limites, desbloqueia e remove | **Arquivos** — navega nas pastas dos usuários, envia e baixa arquivo, cria pasta, renomeia e apaga |
-| <a href="doc/pt-BR/imagens/aba-servidor.png"><img src="doc/pt-BR/imagens/aba-servidor.png" alt="Aba Servidor com o botão Atualizar sozinha, o cartão Containers da stack, com um quadro para o Servidor FTP, um para o Painel e um para a Frente web, cada um com processador, memória e processos em uso e alocados e o gráfico do último minuto, e o cartão Recursos do servidor, com processador, memória, disco e rede do FTP" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-seguranca.png"><img src="doc/pt-BR/imagens/aba-seguranca.png" alt="Aba Segurança com o resumo da conferência no alto, que diz quantos itens estão em ordem, e uma linha por item: endereço público, painel por proxy ou túnel, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, bloqueio por endereço, com a quantidade de endereços bloqueados, custo das senhas, contato de segurança, container e firewall" width="100%"></a> |
-| **Servidor** — o uso e o limite de processador, memória e processos de cada container, e os recursos do servidor | **Segurança** — confere rede, TLS, certificados, bloqueios, senhas e contato de segurança |
-| <a href="doc/pt-BR/imagens/aba-bloqueios.png"><img src="doc/pt-BR/imagens/aba-bloqueios.png" alt="Aba Bloqueios com a regra em uso abaixo do título, o botão Bloquear endereço, quatro endereços bloqueados, em IPv4 e em IPv6, por erros no FTP, por erros no painel e por um administrador, cada um com desde quando, até quando e os botões Mudar prazo e Desbloquear, e o cartão Usuários bloqueados no FTP, com o usuário switch-core" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-atividade.png"><img src="doc/pt-BR/imagens/aba-atividade.png" alt="Aba Log com os registros do painel em quatro colunas: quando, de onde, com o endereço inteiro em uma linha só ou no servidor, o que aconteceu, com um ícone por evento, e o detalhe, como arquivo baixado, pasta criada, administrador criado, endereço desbloqueado e tela fora do papel ou do perfil pedida por usuário do FTP" width="100%"></a> |
-| **Bloqueios** — os endereços e os prefixos bloqueados, por erro de usuário e senha ou pelo administrador, com bloqueio novo, desbloqueio e troca do prazo | **Log** — quem entrou, de onde, o que baixou, o que enviou e o que foi alterado |
-| <a href="doc/pt-BR/imagens/aba-administradores.png"><img src="doc/pt-BR/imagens/aba-administradores.png" alt="Aba Usuários com três administradores no começo da lista, admin, com a etiqueta você, noc-plantao e suporte, cada um com o perfil Administrador, as sessões abertas e as ações Trocar senha, Trocar nome e Remover, e, abaixo deles, os usuários do FTP" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-meus-arquivos.png"><img src="doc/pt-BR/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, de perfil Completo, com as pastas 2026-09 e 2026-10 e um arquivo de configuração, o aviso da limpeza automática acima da lista, os botões Abrir ou Baixar, Renomear e Apagar em cada linha, os cartões Nova pasta e Enviar arquivo e, no menu, só a aba Meus arquivos, os botões PT e EN, o nome do usuário e o botão Sair" width="100%"></a> |
-| **Administradores** — ficam na aba Usuários, cada pessoa com o próprio nome e a própria senha | **Meus arquivos** — o usuário do FTP vê a própria pasta e faz nela o que o perfil dele deixa |
+| <a href="doc/pt-BR/imagens/aba-destinos.png"><img src="doc/pt-BR/imagens/aba-destinos.png" alt="Aba Destinos com o cartão Armazenamento S3 ligado, com o endereço, o bucket, a pasta enviada, as passadas, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, o maior arquivo que o bot envia, a última passada e o total enviado, e os botões Testar, Enviar agora, Alterar e Remover em cada um" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-servidor.png"><img src="doc/pt-BR/imagens/aba-servidor.png" alt="Aba Servidor com o botão Atualizar sozinha, o cartão Containers da stack, com um quadro para o Servidor FTP, um para o Painel e um para a Frente web, cada um com processador, memória e processos em uso e alocados e o gráfico do último minuto, e o cartão Recursos do servidor, com processador, memória, disco e rede do FTP" width="100%"></a> |
+| **Destinos** — envia sozinho os arquivos de uma pasta para um armazenamento S3 e por um bot do Telegram, com teste e envio na hora | **Servidor** — o uso e o limite de processador, memória e processos de cada container, e os recursos do servidor |
+| <a href="doc/pt-BR/imagens/aba-seguranca.png"><img src="doc/pt-BR/imagens/aba-seguranca.png" alt="Aba Segurança com o resumo da conferência no alto, que diz quantos itens estão em ordem, e uma linha por item: endereço público, painel por proxy ou túnel, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, bloqueio por endereço, com a quantidade de endereços bloqueados, custo das senhas, contato de segurança, container e firewall" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-bloqueios.png"><img src="doc/pt-BR/imagens/aba-bloqueios.png" alt="Aba Bloqueios com a regra em uso abaixo do título, o botão Bloquear endereço, quatro endereços bloqueados, em IPv4 e em IPv6, por erros no FTP, por erros no painel e por um administrador, cada um com desde quando, até quando e os botões Mudar prazo e Desbloquear, e o cartão Usuários bloqueados no FTP, com o usuário switch-core" width="100%"></a> |
+| **Segurança** — confere rede, TLS, certificados, bloqueios, senhas e contato de segurança | **Bloqueios** — os endereços e os prefixos bloqueados, por erro de usuário e senha ou pelo administrador, com bloqueio novo, desbloqueio e troca do prazo |
+| <a href="doc/pt-BR/imagens/aba-atividade.png"><img src="doc/pt-BR/imagens/aba-atividade.png" alt="Aba Log com os registros do painel em quatro colunas: quando, de onde, com o endereço inteiro em uma linha só ou no servidor, o que aconteceu, com um ícone por evento, e o detalhe, como arquivos enviados para o destino, arquivo baixado, pasta criada, administrador criado, endereço desbloqueado e tela fora do papel ou do perfil pedida por usuário do FTP" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-administradores.png"><img src="doc/pt-BR/imagens/aba-administradores.png" alt="Aba Usuários com três administradores no começo da lista, admin, com a etiqueta você, noc-plantao e suporte, cada um com o perfil Administrador, as sessões abertas e as ações Trocar senha, Trocar nome e Remover, e, abaixo deles, os usuários do FTP" width="100%"></a> |
+| **Log** — quem entrou, de onde, o que baixou, o que enviou e o que foi alterado | **Administradores** — ficam na aba Usuários, cada pessoa com o próprio nome e a própria senha |
+| <a href="doc/pt-BR/imagens/aba-meus-arquivos.png"><img src="doc/pt-BR/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, de perfil Completo, com as pastas 2026-09 e 2026-10 e um arquivo de configuração, o aviso da limpeza automática acima da lista, os botões Abrir ou Baixar, Renomear e Apagar em cada linha, os cartões Nova pasta e Enviar arquivo e, no menu, só a aba Meus arquivos, os botões PT e EN, o nome do usuário e o botão Sair" width="100%"></a> | |
+| **Meus arquivos** — o usuário do FTP vê a própria pasta e faz nela o que o perfil dele deixa | |
 
-<sub><b>v0.31.1</b> · painel web, uma foto por aba · capturas de 2026-10-10</sub>
+<sub><b>v1.1.0</b> · painel web, uma foto por aba · capturas de 2026-10-11</sub>
 
 Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplicação](doc/pt-BR/aplicacao/README.md).
 
@@ -181,6 +184,7 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | Deixar o dono dos arquivos baixar os dele | ele abre o painel com o usuário e a senha do FTP e vê só a própria pasta; para o painel aceitar só administradores, `PAINEL_ACESSO_USUARIOS_FTP=nao` no `.env` e `./deploy.sh` |
 | Deixar um usuário enviar arquivo pelo navegador | pelo painel, aba Usuários, **Editar**, caixa **Permitir que este usuário envie arquivo pelo painel**, ou `./manage-user.sh limites backup-olt enviar=1`: veja [Enviar arquivo pelo painel](doc/pt-BR/painel.md#enviar-arquivo) |
 | Guardar só os arquivos mais novos de uma conta | pelo painel, aba Usuários, **Editar**, cartão **Limpeza automática**, ou `./manage-user.sh retencao backup-olt ultimos=30`: veja [Limpeza automática](doc/pt-BR/painel.md#limpeza) |
+| Mandar os arquivos de uma pasta para um S3 ou para o Telegram | pelo painel, aba Destinos, **Configurar** no cartão do destino; para um arquivo só, aba Arquivos, botão **Telegram** ou **S3** na linha dele: veja [Destinos](doc/pt-BR/painel.md#destinos) |
 | Bloquear um endereço ou um prefixo | pelo painel, aba Bloqueios, **Bloquear endereço**, ou `./manage-user.sh endereco-bloquear 203.0.113.7 30`: veja [bloqueio por endereço](doc/pt-BR/seguranca.md#bloqueio-por-endereco) |
 | Criar uma pasta e prender um usuário a ela | pelo painel, aba Arquivos, **Nova pasta** e **Novo usuário nesta pasta**, ou `./manage-user.sh add olt01 clientes/olt-01` |
 | Guardar uma cópia de segurança | `./scripts/backup.sh`, que a grava cifrada; para voltar a ela, `./scripts/restaurar.sh <cópia>`. Guarde `.secrets/backup-chave-privada.txt` fora do servidor |
@@ -539,7 +543,7 @@ Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python e Bash, com a vers�
 <details>
 <summary>Peso das linguagens e dos serviços, medido — clique para expandir</summary>
 
-Medido em 2026-10-05, na versão `0.20.1`, com os três containers em repouso, no porte `small`:
+Medido em 2026-10-05, na versão `0.32.0`, com os três containers em repouso, no porte `small`:
 
 | Serviço | Linguagem ou programa | Memória em uso | Limite do porte | Imagem |
 |---|---|---|---|---|
@@ -549,13 +553,13 @@ Medido em 2026-10-05, na versão `0.20.1`, com os três containers em repouso, n
 
 - **Total em repouso:** cerca de 19 MiB de memória e processador perto de zero.
 - **Resposta do painel:** a tela de entrada, com uma conexão HTTPS nova a cada pedido, respondeu em 2,8 ms na mediana de 30 pedidos (de 2,4 ms a 3,8 ms).
-- **Frente web, medida em 2026-10-07, na versão `0.26.1`:** a tela de entrada inteira (página, estilo e três imagens) chegou em 8,8 ms por uma conexão só, em HTTP/2; antes eram 11,0 ms em cinco conexões. O estilo passou de 6957 para 2175 bytes na rede. O clique feito depois de 20 e de 45 segundos parado levou 0,8 ms, pela mesma conexão; antes, 2,0 ms, com conexão nova. A memória do nginx ficou em 3,5 MiB.
+- **Frente web, medida em 2026-10-07, na versão `0.42.0`:** a tela de entrada inteira (página, estilo e três imagens) chegou em 8,8 ms por uma conexão só, em HTTP/2; antes eram 11,0 ms em cinco conexões. O estilo passou de 6957 para 2175 bytes na rede. O clique feito depois de 20 e de 45 segundos parado levou 0,8 ms, pela mesma conexão; antes, 2,0 ms, com conexão nova. A memória do nginx ficou em 3,5 MiB.
 - **Sem dependência de terceiros:** o painel não instala pacote do PyPI e não tem JavaScript; o que há para atualizar é a imagem base e os pacotes do Debian.
-- **Tamanho do código, na versão `0.30.0`:** 7302 linhas de Python em 30 módulos, das quais 1750 são o catálogo dos textos em inglês, 1073 de CSS, 7710 de Bash e 708 de Perl, contando a bateria de testes.
+- **Tamanho do código, na versão `0.51.0`:** 7302 linhas de Python em 30 módulos, das quais 1750 são o catálogo dos textos em inglês, 1073 de CSS, 7710 de Bash e 708 de Perl, contando a bateria de testes.
 - **De onde vem o peso das imagens:** da base `debian:13-slim`, com 119 MB, comum às três.
-- **Imagem do FTP, medida em 2026-10-09, na versão `0.29.0`:** passou de 208 MB para 218 MB com o `age`, que cifra a cópia de segurança. As outras duas não mudaram, e nada novo é instalado no host.
-- **Painel com centenas de usuários, medido em 2026-10-09, na versão `0.29.2`:** com 501 usuários no cadastro, a aba Usuários (297 KB de página) responde em 8,5 ms e a Visão geral em 5,1 ms, na mediana de 30 pedidos; antes eram 33,2 ms e 17,0 ms, porque a pasta de cada usuário era comparada com a de todos os outros. A leitura do cadastro leva 1,2 ms e continua sendo feita a cada pedido.
-- **Painel redesenhado, medido em 2026-10-10, na versão `0.30.0`:** com 10 usuários, as sete telas do administrador respondem de 2,3 ms a 3,7 ms na mediana de 30 pedidos. Com 501 usuários, a aba Usuários (491 KB de página) responde em 10,8 ms, a aba Arquivos (355 KB) em 7,8 ms e a Visão geral em 6,2 ms; em inglês, a diferença fica em até 0,4 ms. Em repouso, os três serviços somam cerca de 27 MiB de memória, e as imagens continuam com 218 MB, 258 MB e 145 MB.
+- **Imagem do FTP, medida em 2026-10-09, na versão `0.48.0`:** passou de 208 MB para 218 MB com o `age`, que cifra a cópia de segurança. As outras duas não mudaram, e nada novo é instalado no host.
+- **Painel com centenas de usuários, medido em 2026-10-09, na versão `0.50.0`:** com 501 usuários no cadastro, a aba Usuários (297 KB de página) responde em 8,5 ms e a Visão geral em 5,1 ms, na mediana de 30 pedidos; antes eram 33,2 ms e 17,0 ms, porque a pasta de cada usuário era comparada com a de todos os outros. A leitura do cadastro leva 1,2 ms e continua sendo feita a cada pedido.
+- **Painel redesenhado, medido em 2026-10-10, na versão `0.51.0`:** com 10 usuários, as sete telas do administrador respondem de 2,3 ms a 3,7 ms na mediana de 30 pedidos. Com 501 usuários, a aba Usuários (491 KB de página) responde em 10,8 ms, a aba Arquivos (355 KB) em 7,8 ms e a Visão geral em 6,2 ms; em inglês, a diferença fica em até 0,4 ms. Em repouso, os três serviços somam cerca de 27 MiB de memória, e as imagens continuam com 218 MB, 258 MB e 145 MB.
 
 </details>
 
@@ -645,7 +649,7 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 73 casos funcionais, 124 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 83 casos funcionais, 130 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
 
 ---
 
@@ -692,6 +696,7 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`.env.example`](.env.example) | Modelo de configuração, copiado para `.env` |
 | `.secrets/` | Um arquivo por segredo, com o nome do que guarda, e o `LEIAME.txt` que explica cada um (ignorados pelo Git) |
 | [`VERSION`](VERSION) | Versão atual, em um lugar só |
+| [`.github/repo.meta`](.github/repo.meta) | Descrição e tópicos do repositório e as linhas de longo prazo, aplicados a cada publicação |
 | [`CHANGELOG.md`](CHANGELOG.md) | Histórico de mudanças por versão |
 | [`LICENSE`](LICENSE) | Licença Apache 2.0: vale para o código, a configuração, os roteiros, os testes e a documentação |
 | [`NOTICE`](NOTICE) | Aviso de autoria, que acompanha toda cópia e toda versão derivada |
@@ -739,9 +744,9 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.31.1**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
+**1.1.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
 
-A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
+A versão avança a cada publicação, sempre no número do meio (`1.1.0`, `1.2.0`) ou no primeiro: o número de correção fica em zero. `0.x` foi a fase de construção; **a `1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo (LTS) `1.x`. As versões foram renumeradas em 2026-10-11: o [`CHANGELOG.md`](CHANGELOG.md) traz o que mudou em cada uma e a tabela com os números de antes.
 
 ---
 

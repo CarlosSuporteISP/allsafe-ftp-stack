@@ -46,7 +46,7 @@ flowchart LR
 | `dados/` | Arquivos enviados pelos equipamentos, uma pasta por usuário, e `.entrada/`, a área de entrada das contas de perfil Só envio, vazia fora do instante de cada envio | Sim |
 | `auth/` | Usuários do FTP, com o hash de cada senha, os limites próprios de cada um, a lista de quem está dispensado do TLS e os bloqueios em vigor, por tentativa e por endereço | Sim |
 | `certs/` | Certificado e chave privada do FTP | Sim |
-| `painel/` | Certificado e chave privada do painel, os administradores (nome e hash da senha), o `auditoria.log` e o idioma das telas escolhido por cada conta | Sim |
+| `painel/` | Certificado e chave privada do painel, os administradores (nome e hash da senha), o `auditoria.log`, o idioma das telas escolhido por cada conta e a configuração e o andamento dos [destinos](painel.md#destinos), sem os segredos deles | Sim |
 | `nginx/` | Soquete do painel e cópia do certificado, refeitos a cada subida | Não |
 
 Ficam fora, e precisam ser guardados à parte: o `.env` e a pasta `.secrets/`, onde está a chave que abre a cópia. Veja [A chave da cópia](#chave) e [Guardar o `.env` e os segredos](#segredos).
@@ -72,11 +72,11 @@ O que fazer em cada situação:
 
 | Situação | O que fazer |
 |---|---|
-| Instalação nova, ou atualização de versão anterior à `0.29.0` | Rode `./deploy.sh`: ele cria o par e avisa `Gerada a chave da cópia de segurança`. Guarde a privada no cofre |
+| Instalação nova, ou atualização de versão anterior à `0.48.0` | Rode `./deploy.sh`: ele cria o par e avisa `Gerada a chave da cópia de segurança`. Guarde a privada no cofre |
 | Servidor que faz cópia e não pode abri-la | Com a privada já no cofre, apague-a do servidor. O `scripts/backup.sh` continua funcionando com a pública. Para restaurar, traga a privada de volta para `.secrets/backup-chave-privada.txt`, com modo `0600` |
 | Trocar o par | Apague os dois arquivos e rode `./deploy.sh`, que cria um par novo. As cópias feitas antes só abrem com a privada antiga: mantenha-a no cofre enquanto essas cópias existirem |
 | A chave pública sumiu ou foi alterada | Rode `./deploy.sh`: com a privada presente, ele refaz a pública a partir dela |
-| Cópia feita antes da `0.29.0`, sem cifra | Continua restaurando, com o aviso `esta cópia não é cifrada`, e o `--listar` a marca com `(sem cifra: feita antes da 0.29.0)`. Faça uma cópia nova e apague a antiga |
+| Cópia feita antes da `0.48.0`, sem cifra | Continua restaurando, com o aviso `esta cópia não é cifrada`, e o `--listar` a marca com `(sem cifra: feita antes da 0.48.0)`. Faça uma cópia nova e apague a antiga |
 
 O `./deploy.sh` nunca regrava a chave privada que já existe. Não há opção para desligar a cifra.
 
@@ -103,7 +103,7 @@ Só a chave privada abre a cópia (backup-chave-privada.txt, de ./.secrets): gua
 Restaurar: ./scripts/restaurar.sh allsafe-ftp-stack-AAAAMMDD-HHMMSS.tar.gz.age
 ```
 
-Ao lado de cada cópia fica um arquivo `.sha256`, com a soma que a restauração confere antes de usar a cópia. O `--listar` mostra `Cópias em <BACKUP_DIR>:` e uma linha por arquivo, com o tamanho, e a marca `(sem cifra: feita antes da 0.29.0)` nas cópias antigas; sem cópia nenhuma, `Nenhuma cópia em <BACKUP_DIR>.`
+Ao lado de cada cópia fica um arquivo `.sha256`, com a soma que a restauração confere antes de usar a cópia. O `--listar` mostra `Cópias em <BACKUP_DIR>:` e uma linha por arquivo, com o tamanho, e a marca `(sem cifra: feita antes da 0.48.0)` nas cópias antigas; sem cópia nenhuma, `Nenhuma cópia em <BACKUP_DIR>.`
 
 O rótulo aceita letras minúsculas, números e hífen, até 40 caracteres. A cópia ocupa perto do tamanho de `DATA_DIR/dados` depois de comprimido: confira o espaço livre em `BACKUP_DIR` antes da primeira.
 
@@ -160,8 +160,8 @@ O que muda depois de restaurar:
 
 - Usuários criados depois da cópia deixam de existir; os removidos depois dela voltam.
 - Cada usuário volta com a senha e a pasta que tinha na cópia. O usuário inicial (`FTP_USER`) fica com a senha de `.secrets/ftp-usuario-inicial-senha.txt`; se na cópia a senha dele estava trocada pelo painel e o arquivo não mudou desde então, vale a da cópia. Se na cópia ele já tinha sido removido, continua removido.
-- As senhas voltam com o custo com que foram gravadas. Cópia feita antes da `0.19.1`, ou em um porte menor, traz senhas com o custo anterior: a aba Segurança do painel lista de quem, e o custo atual passa a valer quando a senha é trocada.
-- Os administradores do painel voltam os da cópia, cada um com a senha que tinha: quem foi criado depois dela deixa de existir e todos entram de novo. Cópia feita antes da `0.13.0` não tem administradores: o painel cria o de `PAINEL_ADMIN_USER` com o hash de `.secrets/painel-admin-inicial-senha-hash.txt`.
+- As senhas voltam com o custo com que foram gravadas. Cópia feita antes da `0.29.0`, ou em um porte menor, traz senhas com o custo anterior: a aba Segurança do painel lista de quem, e o custo atual passa a valer quando a senha é trocada.
+- Os administradores do painel voltam os da cópia, cada um com a senha que tinha: quem foi criado depois dela deixa de existir e todos entram de novo. Cópia feita antes da `0.22.0` não tem administradores: o painel cria o de `PAINEL_ADMIN_USER` com o hash de `.secrets/painel-admin-inicial-senha-hash.txt`.
 - Se a stack estava parada, continua parada: `Restaurado. A stack estava parada e continua parada: suba com ./deploy.sh`.
 
 > ⚠️ A cópia é conferida antes de qualquer alteração. Se a soma não confere, se o arquivo não abre com a chave ou se ele não é uma cópia desta stack, o comando para com `ERRO: ... Nada foi tocado.` e a stack segue como estava.
@@ -171,7 +171,7 @@ O que muda depois de restaurar:
 
 Ordem do que o script faz:
 
-1. Confere a cópia: a soma do `.sha256` (se o arquivo existir ao lado; sem ele, avisa `soma não conferida` e segue), a abertura da cópia inteira com a chave privada de `SECRETS_DIR/backup-chave-privada.txt` (cópia sem cifra, feita antes da `0.29.0`, é lida direto e ganha um aviso), a presença de `auth/pureftpd.passwd` e a ausência de qualquer item fora de `dados/`, `auth/`, `certs/` e `painel/`.
+1. Confere a cópia: a soma do `.sha256` (se o arquivo existir ao lado; sem ele, avisa `soma não conferida` e segue), a abertura da cópia inteira com a chave privada de `SECRETS_DIR/backup-chave-privada.txt` (cópia sem cifra, feita antes da `0.48.0`, é lida direto e ganha um aviso), a presença de `auth/pureftpd.passwd` e a ausência de qualquer item fora de `dados/`, `auth/`, `certs/` e `painel/`.
 2. Pede a confirmação: digitar `restaurar`, ou `--sim`. Sem terminal, só roda com `--sim`.
 3. Para os containers, se estavam no ar (`docker compose stop`).
 4. Guarda o estado atual, também cifrado, com `scripts/backup.sh --rotulo antes-da-restauracao`. Se essa cópia falhar, nada é alterado e a stack sobe de novo.
@@ -229,8 +229,9 @@ A cópia não leva o `.env` nem a pasta `.secrets/`, para que um arquivo de back
 | `.env` | Endereços, portas, perfil e limites da instalação |
 | `.secrets/ftp-usuario-inicial-senha.txt` | Senha do usuário inicial do FTP |
 | `.secrets/painel-admin-inicial-senha-hash.txt` | Hash da senha inicial do primeiro administrador do painel |
+| `.secrets/destinos/` | Chaves do S3, token do bot do Telegram e conversa que recebe, gravados pelo painel na aba Destinos |
 
-A chave privada é a única sem volta: sem ela a cópia não abre. Sem os outros três, a stack volta do mesmo jeito: o `./deploy.sh` cria um `.env` novo e senhas novas. Nesse caso, o usuário inicial passa a ter a senha nova, que precisa ser configurada no equipamento que o usa. Os demais usuários e os administradores do painel não são afetados: o hash da senha deles está na cópia. Detalhes de cada arquivo em [Segredos](segredos.md).
+A chave privada é a única sem volta: sem ela a cópia não abre. Sem os outros, a stack volta do mesmo jeito: o `./deploy.sh` cria um `.env` novo e senhas novas, e os segredos dos destinos são digitados de novo na aba Destinos, em **Alterar**; até lá, o cartão mostra a marca **faltam os segredos** e nada é enviado. Nesse caso, o usuário inicial passa a ter a senha nova, que precisa ser configurada no equipamento que o usa. Os demais usuários e os administradores do painel não são afetados: o hash da senha deles está na cópia. Detalhes de cada arquivo em [Segredos](segredos.md).
 
 ---
 

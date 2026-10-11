@@ -45,10 +45,11 @@ flowchart LR
 |---|---|---|---|
 | `ftp-usuario-inicial-senha.txt` | [`deploy.sh`](../../deploy.sh), na primeira execução, se o arquivo não existir ou estiver vazio | Só se quiser uma senha própria | Senha do usuário inicial (`FTP_USER`) |
 | `painel-admin-inicial-senha.txt` | [`deploy.sh`](../../deploy.sh), na primeira execução | Não | Senha **inicial** do primeiro administrador do painel (`PAINEL_ADMIN_USER`), em texto. Fica só no host e vale até ser trocada na aba Usuários; trocou, apague o arquivo |
-| `painel-admin-inicial-senha-hash.txt` | [`deploy.sh`](../../deploy.sh) e [`scripts/painel-senha.sh`](../../scripts/painel-senha.sh) | Não | Hash `scrypt` dessa senha inicial. É o único arquivo da pasta que o painel enxerga, e só é usado para criar o primeiro administrador |
+| `painel-admin-inicial-senha-hash.txt` | [`deploy.sh`](../../deploy.sh) e [`scripts/painel-senha.sh`](../../scripts/painel-senha.sh) | Não | Hash `scrypt` dessa senha inicial. Dos arquivos soltos da pasta, é o único que o painel enxerga, e só é usado para criar o primeiro administrador |
 | `backup-chave-privada.txt` | [`deploy.sh`](../../deploy.sh), se nenhuma das duas chaves existir | Não | Chave que **abre** a cópia de segurança. Guarde uma cópia fora do servidor: sem ela nenhuma cópia restaura. Veja [Backup e restauração](backup.md#chave) |
 | `backup-chave-publica.txt` | [`deploy.sh`](../../deploy.sh), a cada execução, a partir da privada | Não | Chave que **cifra** a cópia de segurança. Não abre nada e pode ficar no servidor |
 | `LEIAME.txt` | [`deploy.sh`](../../deploy.sh), a cada execução | Não | Diz para que serve cada arquivo da pasta. Não guarda segredo nenhum |
+| `destinos/` | [`deploy.sh`](../../deploy.sh) cria a pasta, vazia; o painel grava os arquivos | Não: pela aba Destinos | Segredos do S3 e do bot do Telegram, um por arquivo: `s3-chave-de-acesso.txt`, `s3-chave-secreta.txt`, `telegram-token.txt` e `telegram-conversa.txt`. O painel grava e lê, e nenhum volta para a tela. Trocar ou remover: pela aba [Destinos](painel.md#destinos) |
 | `.gitkeep` | já vem no repositório | Não | Mantém a pasta no clone |
 
 O nome de cada arquivo segue a mesma ordem: **de quem é** o segredo (`ftp-usuario-inicial`, `painel-admin-inicial`, `backup`) e **o que** está gravado (`senha` em texto, `senha-hash`, `chave-privada` ou `chave-publica`).
@@ -130,9 +131,9 @@ chmod 600 .secrets/ftp-usuario-inicial-senha.txt
 
 ## 🔀 Instalação com os nomes antigos
 
-Até a versão `0.10.0` os arquivos tinham outros nomes. O `./deploy.sh` reconhece os antigos e **só troca o nome**, sem ler, copiar nem alterar o conteúdo: as senhas continuam as mesmas.
+Até a versão `0.17.0` os arquivos tinham outros nomes. O `./deploy.sh` reconhece os antigos e **só troca o nome**, sem ler, copiar nem alterar o conteúdo: as senhas continuam as mesmas.
 
-| Nome até a `0.10.0` | Nome a partir da `0.11.0` |
+| Nome até a `0.17.0` | Nome a partir da `0.18.0` |
 |---|---|
 | `ftp_password.txt` | `ftp-usuario-inicial-senha.txt` |
 | `painel_password.txt` | `painel-admin-inicial-senha.txt` |
@@ -142,7 +143,7 @@ Até a versão `0.10.0` os arquivos tinham outros nomes. O `./deploy.sh` reconhe
 ./deploy.sh
 ```
 
-**Resultado esperado:** uma linha `Convertido: <nome antigo> virou <nome novo>.` para cada arquivo que existia, e os três containers `healthy` no fim. Vindo da `0.10.0`, os containers do FTP e do painel são recriados uma vez, porque o nome do segredo dentro deles também mudou, e o do nginx continua o mesmo; vindo de versão anterior, os três são recriados, porque as imagens mudam. Dados, usuários e senhas ficam como estavam.
+**Resultado esperado:** uma linha `Convertido: <nome antigo> virou <nome novo>.` para cada arquivo que existia, e os três containers `healthy` no fim. Vindo da `0.17.0`, os containers do FTP e do painel são recriados uma vez, porque o nome do segredo dentro deles também mudou, e o do nginx continua o mesmo; vindo de versão anterior, os três são recriados, porque as imagens mudam. Dados, usuários e senhas ficam como estavam.
 
 Com `./deploy.sh --check-only` nada é alterado: sai só o aviso `AVISO: esta instalação usa nomes antigos`. Se o arquivo antigo e o novo existirem ao mesmo tempo, vale o novo e o script avisa para conferir e apagar o antigo.
 
@@ -170,7 +171,7 @@ Com `./deploy.sh --check-only` nada é alterado: sai só o aviso `AVISO: esta in
 - **Sem senha em variável:** o `.env` guarda só o que se ajusta. O `deploy.sh` recusa `FTP_PASSWORD`, `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH` no `.env` e os containers recusam essas variáveis.
 - **Leitura:** o [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh) lê o arquivo sem as quebras de linha, valida o mínimo de 12 caracteres e entrega a senha ao `pure-pw` pelo `stdin`. Na primeira subida ele cria o usuário (`pure-pw useradd`); nas seguintes, regrava a senha (`pure-pw passwd`), porque o `pure-pw usermod` não altera senha. Nos dois casos passa `-C FTP_MAX_CLIENTS`, que define o custo do hash `argon2id`: [Segurança](seguranca.md#custo-das-senhas).
 - **Troca pelo painel:** a cada vez que aplica o segredo, o entrypoint grava em `/auth/senha-inicial.aplicada` uma impressão dele (`sha512-crypt` com sal próprio, `0600`), nunca a senha. A troca pelo painel ou pelo `manage-user.sh passwd` grava `/auth/senha-inicial.trocada`, só com o nome do usuário. Na subida, com a marca presente e a impressão igual à do segredo, a senha do cadastro é mantida e o log diz `mantida a senha trocada pelo painel`; com o segredo diferente, ele é aplicado e a marca sai. Os dois arquivos entram no backup, com o cadastro.
-- **Criado uma vez:** ao criar o usuário inicial, o entrypoint grava `/auth/usuario-inicial.criado` (`0600`), só com o nome dele. Com a marca presente e o usuário fora do cadastro, ele não é recriado, e o log diz `removido pelo administrador; não é recriado`. Instalação anterior à `0.27.0` ganha a marca na primeira subida, com o usuário que já existe. A marca entra no backup, com o cadastro.
+- **Criado uma vez:** ao criar o usuário inicial, o entrypoint grava `/auth/usuario-inicial.criado` (`0600`), só com o nome dele. Com a marca presente e o usuário fora do cadastro, ele não é recriado, e o log diz `removido pelo administrador; não é recriado`. Instalação anterior à `0.44.0` ganha a marca na primeira subida, com o usuário que já existe. A marca entra no backup, com o cadastro.
 - **Descarte:** antes do `exec` do `pure-ftpd`, o entrypoint faz `unset` da variável interna da senha.
 - **Painel:** o hash é `scrypt` (N=2^15, r=8, p=1, sal aleatório de 16 bytes), calculado dentro da imagem do painel, em um container descartável sem rede. O segredo `painel_admin_inicial_senha_hash` chega **só** ao serviço `painel`, em `/run/secrets/painel_admin_inicial_senha_hash`, somente leitura, e só é lido na subida em que ainda não existe nenhum administrador. A senha atual de cada administrador fica como hash em `DATA_DIR/painel/administradores` (`0600`, do `root`), fora de `.secrets/`. O `painel-admin-inicial-senha.txt` nunca é montado em container.
 - **Chave da cópia de segurança:** par `age` (X25519), gerado por `age-keygen` dentro da imagem do FTP, em um container descartável sem rede; nada é instalado no host. O `deploy.sh` só cria o par quando **nenhum** dos dois arquivos existe, nunca regrava a privada e, a cada execução, refaz a pública a partir dela. Só com a pública, o servidor faz cópia e não restaura. Nenhuma das duas é montada nos serviços: a pública vai ao container da cópia, e a privada, só ao da restauração, somente leitura.
