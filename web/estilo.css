@@ -648,6 +648,7 @@ form:not(:has(#perfil-administrador:checked)) .so-admin { display: none; }
 button, .botao {
   display: inline-flex;
   align-items: center;
+  vertical-align: middle;   /* com e sem ícone na mesma linha: sem isto, cada um assenta na própria linha de base */
   justify-content: center;
   gap: 8px;
   margin: 12px 0 0;
