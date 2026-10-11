@@ -1,5 +1,7 @@
 # 🖥️ Painel web — allsafe-ftp-stack
 
+🌐 [English](../en/panel.md) · **Português (Brasil)**
+
 ↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
@@ -175,7 +177,7 @@ Perfil de cada conta, escolhido em **Novo usuário** e trocado em **Editar**, ca
 | Administrador | Não é conta do FTP | Todas as abas: veja [Administradores do painel](#administradores) |
 | Completo | Lista, baixa, envia, cria pasta, renomeia, apaga e grava por cima | Tela Meus arquivos: navega, baixa, cria pasta, troca o nome e apaga |
 | Envio | Lista, baixa, envia e cria pasta. Não apaga, não renomeia e não grava por cima do que já chegou | Tela Meus arquivos: navega, baixa e cria pasta |
-| Só envio | Envia e cria pasta. Não lista e não baixa nada, nem o que ele mesmo enviou | Tela Envio de arquivos: só os dados para enviar por FTP |
+| Só envio | Envia e cria pasta. Não lista e não baixa nada, nem o que ele mesmo enviou | Tela Envio de arquivos: os dados para enviar por FTP e, com a permissão do administrador, o envio pelo painel |
 | Leitura | Só lista e baixa | Tela Meus arquivos: navega e baixa |
 
 - Usuário criado antes da `0.30.0`, ou sem perfil informado, é **Completo**: nada muda para quem já usa a stack.
@@ -183,7 +185,7 @@ Perfil de cada conta, escolhido em **Novo usuário** e trocado em **Editar**, ca
 - **Só envio não vê os backups.** A conta entra em uma área de entrada só dela, fora da pasta dos backups, e o servidor leva cada arquivo para a pasta do usuário assim que ele termina de chegar. Quem tem a senha desse equipamento envia, e mais nada: não lista, não baixa, não apaga e não troca o nome de nenhum arquivo já recebido.
 - **Leitura não grava nada:** nem arquivo, nem pasta, em nenhum nível da pasta dele.
 - **Pasta dividida:** quem tem a mesma pasta, ou uma dentro da outra, alcança os arquivos do outro até onde o próprio perfil deixa. Um Leitura baixa o que o Envio mandou; um Envio não apaga o que o Completo gravou.
-- **No painel, o perfil decide o que existe:** a tela mostra só os botões do perfil, e a ação que ele não tem responde `404` mesmo pedida direto pelo endereço. Enviar arquivo é sempre por FTP: o painel não recebe arquivo de ninguém.
+- **No painel, o perfil decide o que existe:** a tela mostra só os botões do perfil, e a ação que ele não tem responde `404` mesmo pedida direto pelo endereço. Enviar arquivo pelo painel depende de uma permissão própria, dada pelo administrador: veja [Enviar arquivo pelo painel](#enviar-arquivo).
 - **Troca de perfil:** vale na entrada seguinte do usuário no FTP e encerra a sessão dele no painel. A sessão de FTP que já está aberta segue com o perfil anterior até sair.
 - **Administrador e usuário do FTP são cadastros separados**, com a senha guardada em lugares diferentes: não há troca de um para o outro. Remova a conta e crie a outra.
 
@@ -443,7 +445,7 @@ O dono dos arquivos pega os próprios backups pelo navegador, sem depender de qu
 7. Com o perfil Completo, cada linha tem **Renomear** e **Apagar**. Os dois pedem a senha do FTP da própria conta; apagar pede também a caixa de confirmação, e não tem lixeira.
 8. Clique em **Sair** ao terminar.
 
-**Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Log, que só o administrador vê, ganha as linhas `Entrada aceita` e `Arquivo baixado`, com o nome do usuário do FTP, o caminho e o tamanho. Pasta criada, arquivo enviado, nome trocado e item apagado ganham a linha deles, com o mesmo usuário.
+**Resultado esperado:** o arquivo salvo é idêntico ao que o equipamento enviou, e a aba Log, que só o administrador vê, ganha as linhas `Entrada` e `Arquivo baixado`, com o nome do usuário do FTP, o caminho e o tamanho. Pasta criada, arquivo enviado, nome trocado e item apagado ganham a linha deles, com o mesmo usuário.
 
 | O usuário do FTP | No painel |
 |---|---|
