@@ -1,5 +1,7 @@
 # 🔑 Segredos — allsafe-ftp-stack
 
+🌐 [English](../en/secrets.md) · **Português (Brasil)**
+
 ↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras

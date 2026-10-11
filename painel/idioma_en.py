@@ -1815,8 +1815,8 @@ EN = {
         'public address accepted: check the firewall',
     'painel publicado por proxy ou túnel':
         'panel published through a proxy or tunnel',
-    'O painel navega, baixa, envia arquivo, cria pasta, troca o nome e apaga; arquivo enviado não substitui outro. Apagar pede a sua senha atual e não tem lixeira. Todo download e toda alteração ficam registrados na aba Log.':
-        'The panel browses, downloads, uploads files, creates folders, renames and deletes; an uploaded file never replaces another. Deleting asks for your current password and there is no recycle bin. Every download and every change is recorded on the Log tab.',
+    'O painel navega, baixa, envia arquivo, cria pasta, troca o nome e apaga; arquivo enviado não substitui outro. Trocar o nome e apagar pedem a sua senha atual, e apagar não tem lixeira. Todo download e toda alteração ficam registrados na aba Log.':
+        'The panel browses, downloads, uploads files, creates folders, renames and deletes; an uploaded file never replaces another. Renaming and deleting ask for your current password, and deleting has no recycle bin. Every download and every change is recorded on the Log tab.',
     'Arquivo enviado.':
         'File uploaded.',
     'Arquivo enviado. Já havia um com este nome: o novo foi guardado com a data e a hora no nome.':

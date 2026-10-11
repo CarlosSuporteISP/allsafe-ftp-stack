@@ -236,7 +236,16 @@ class Painel(http.server.BaseHTTPRequestHandler):
         do arquivo, em self.corpo, para a rota gravar. Devolve os campos, ou None depois de já ter respondido com
         o erro. A origem, a sessão e o token do formulário são conferidos antes de o arquivo ser lido."""
         comprimento = self.headers.get('Content-Length', '')
-        if not (comprimento.isascii() and comprimento.isdigit() and len(comprimento) <= 15):
+        declarado = comprimento.isascii() and comprimento.isdigit() and len(comprimento) <= 15
+        # Sem sessão, a resposta é a de qualquer rota sem sessão, antes de olhar o tamanho e o formato do que veio:
+        # quem não entrou não fica sabendo o que o envio aceita. O corpo fica só para ser escoado.
+        token = self.token_do_cookie()
+        if not (token and buscar_sessao(token, self.ip, renovar=False)):
+            if declarado:
+                self.corpo = envio.Corpo(self.rfile, int(comprimento), '-', self.connection)
+            self.redirecionar('/entrar')
+            return None
+        if not declarado:
             self.recusar(411, t('Envio sem tamanho declarado.'))
             return None
         if int(comprimento) > CFG['envio_max'] + ENVIO_FOLGA:

@@ -1,0 +1,37 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Source"]
+        origem@{ shape: hex, label: "Source address<br>device or browser" }
+    end
+    subgraph ENTRADA["Entry"]
+        servico@{ shape: rect, label: "FTP or panel<br>allsafe-ftp, allsafe-ftp-painel" }
+        preso@{ shape: diam, label: "address<br>blocked?" }
+        enderecos@{ shape: docs, label: "enderecos and prefixos<br>/auth, one file per block" }
+    end
+    subgraph AUTH["Authentication"]
+        login@{ shape: diam, label: "user and password<br>match?" }
+        passou@{ shape: diam, label: "adds up the address errors<br>over the limit?" }
+        bloqueia@{ shape: rect, label: "watcher or panel<br>blocks the address" }
+    end
+    subgraph GESTAO["Management"]
+        admin@{ shape: person, label: "User<br>administrator" }
+        aba@{ shape: rect, label: "Blocks tab<br>or manage-user.sh" }
+    end
+    subgraph RESULTADO["Result"]
+        entra@{ shape: stadium, label: "signed in<br>session open" }
+        recusa@{ shape: stadium, label: "refused<br>530 on the FTP, 403 on the panel" }
+    end
+
+    origem -- "1 · sends user and password" --> servico
+    servico -- "2 · before checking the password" --> preso
+    preso -- "3a · yes: refuses with any account" --> recusa
+    preso -- "3b · no: goes on" --> login
+    login -- "4a · yes: signs in and resets the count" --> entra
+    login -- "4b · no: adds one error to the address" --> passou
+    passou -- "5a · yes: blocks" --> bloqueia
+    passou -- "5b · no: only refuses" --> recusa
+    bloqueia -- "6 · refuses" --> recusa
+    admin -- "7 · follows, blocks, unblocks or changes the period" --> aba
+    preso -. "reads" .-> enderecos
+    bloqueia -. "writes the block" .-> enderecos
+    aba -. "reads, writes, deletes or rewrites" .-> enderecos

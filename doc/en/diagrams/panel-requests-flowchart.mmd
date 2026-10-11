@@ -1,0 +1,33 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph SESSAO["Session"]
+        painel@{ shape: rect, label: "Web panel<br>session open, CSRF token" }
+        pedido@{ shape: diam, label: "origin and token<br>match?" }
+        auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
+    end
+    subgraph USUARIOS["FTP users"]
+        cmd@{ shape: rect, label: "allsafe-ftp-user<br>pure-pw" }
+        puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
+    end
+    subgraph ARQUIVOS["Files"]
+        caminho@{ shape: diam, label: "path inside<br>the data folder?" }
+        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>user folders" }
+    end
+    subgraph RESULTADO["Result"]
+        fim@{ shape: stadium, label: "user ready on the FTP" }
+        barrado@{ shape: stadium, label: "403<br>submission refused" }
+        feito@{ shape: stadium, label: "file downloaded, uploaded<br>or change made" }
+        recusa@{ shape: stadium, label: "request refused" }
+    end
+
+    painel -- "1 · submits a form, for a user or for files" --> pedido
+    pedido -- "2a · yes, user: runs" --> cmd
+    pedido -- "2b · yes, files: checks the path" --> caminho
+    pedido -- "2c · no: from outside the panel or without a token" --> barrado
+    cmd -- "3 · writes the user and creates the folder, if missing" --> puredb
+    puredb -- "4 · valid at the next login, without restarting the FTP" --> fim
+    painel -- "5 · in Files or in My files, opens a folder or downloads a file" --> caminho
+    caminho -- "6a · yes: opens part by part, without following symbolic links" --> dados
+    caminho -- "6b · no: 400, 403, 404 or 409" --> recusa
+    dados -- "7 · delivers the file, writes the uploaded one, creates the folder, renames or deletes" --> feito
+    painel -. "records every action" .-> auditoria

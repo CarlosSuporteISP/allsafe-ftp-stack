@@ -1,0 +1,9 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    equip@{ shape: hex, label: "Network device<br>sends the backup" }
+    ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, FTPS" }
+    puredb@{ shape: cyl, label: "PureDB<br>virtual users" }
+    dados@{ shape: lin-cyl, label: "/data<br>one folder per user" }
+    fim@{ shape: stadium, label: "backup stored" }
+
+    equip --> ftp --> puredb --> dados --> fim

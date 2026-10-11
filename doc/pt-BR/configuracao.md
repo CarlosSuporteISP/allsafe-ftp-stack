@@ -1,5 +1,7 @@
 # ⚙️ Configuração — allsafe-ftp-stack
 
+🌐 [English](../en/configuration.md) · **Português (Brasil)**
+
 ↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras
@@ -145,6 +147,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
 | `FTP_USER` | Nome do usuário inicial, criado uma vez, na primeira subida. Removido pelo painel, não é recriado | Regra `^[a-z_][a-z0-9_-]{0,31}$` | `transfer` |
+
 A **senha** do usuário inicial não é variável: fica em `SECRETS_DIR/ftp-usuario-inicial-senha.txt`, criada pelo `deploy.sh`, e chega ao container como o segredo `/run/secrets/ftp_usuario_inicial_senha`. Um `.env` com `FTP_PASSWORD` preenchido é recusado. Veja [Segredos](segredos.md).
 
 Só o usuário inicial vem do `.env`. Os demais são criados pelo [painel](painel.md#usuarios) ou com [`manage-user.sh`](../../manage-user.sh): veja [Operação](operacao.md#usuarios). A senha e a pasta do usuário inicial também são trocadas por eles, e ele é removido como os outros. Trocar o `FTP_USER` depois da instalação cria o usuário do nome novo na subida seguinte, também uma vez; o do nome antigo continua no cadastro até ser removido.
@@ -282,7 +285,7 @@ Com a variável vazia, o mesmo endereço responde `404` com `contato de seguran�
 - **Validação em três pontos:** o [`deploy.sh`](../../deploy.sh), o container do painel e o próprio painel recusam o valor que não é um endereço só: sem `@`, domínio sem ponto, dois endereços, espaço, `mailto:`, URL, `<`, `>`, `%`, quebra de linha, parte antes do `@` com mais de 64 caracteres ou endereço com mais de 254. A mensagem é `SEGURANCA_CONTATO_EMAIL inválido`.
 - **Só o contato:** o arquivo não traz versão, nome da stack nem caminho. Não há linha `Canonical`, porque o endereço do painel muda de uma instalação para outra e o arquivo não é assinado.
 - **Só esse endereço:** `/security.txt` na raiz, a lista de `/.well-known/` e qualquer outro nome dentro dela não existem; sem sessão, levam à tela de entrada.
-- **De quem é o contato:** de quem opera esta instalação, não de quem desenvolveu a stack. A [política de segurança](../../SECURITY.md) do projeto não traz endereço fixo: manda quem achou a falha para o contato publicado aqui.
+- **De quem é o contato:** de quem opera esta instalação, não de quem desenvolveu a stack. A [política de segurança](../../SECURITY.pt-BR.md) do projeto não traz endereço fixo: manda quem achou a falha para o contato publicado aqui.
 
 O que mais fica aberto sem senha, e por quê: [Segurança](seguranca.md#contato-de-seguranca).
 

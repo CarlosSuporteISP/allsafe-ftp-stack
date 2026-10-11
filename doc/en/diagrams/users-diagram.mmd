@@ -1,0 +1,10 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    usuario@{ shape: person, label: "User" }
+    manage@{ shape: console, label: "manage-user.sh<br>add, passwd, pasta, del, list" }
+    interno@{ shape: console, label: "allsafe-ftp-user<br>inside the container" }
+    puredb@{ shape: cyl, label: "PureDB<br>virtual accounts" }
+    pasta@{ shape: lin-cyl, label: "/data<br>user folder" }
+    fim@{ shape: stadium, label: "account ready" }
+
+    usuario --> manage --> interno --> puredb --> pasta --> fim

@@ -6,7 +6,7 @@ Em 2026-10-10 as versões foram renumeradas: cada versão passou a levar no máx
 
 ↩ [README do projeto](README.pt-BR.md)
 
-## [Não lançado]
+## [0.31.0] - 2026-10-10
 
 O painel passa a receber arquivo, o bloqueio por endereço vale para IPv4 e IPv6 e ganha o bloqueio feito pelo administrador, de endereço e de prefixo, e cada conta pode ter a limpeza automática dos arquivos antigos. A tela de entrada mostra que a stack guarda arquivos de equipamentos de rede, câmeras, empresas e pessoas.
 
@@ -20,6 +20,8 @@ O painel passa a receber arquivo, o bloqueio por endereço vale para IPv4 e IPv6
 - **Limpeza automática por usuário**: em Usuários ➜ Editar, cartão **Limpeza automática**, o administrador manda guardar só os últimos arquivos de cada pasta, só os dos últimos dias, ou as duas regras juntas, com a senha dele; pelo terminal, `./manage-user.sh retencao <usuario> [ultimos=N] [dias=N]`. O painel aplica a regra de tempos em tempos (`PAINEL_RETENCAO_MINUTOS`, `60` por padrão; `0` desliga), sem sair da pasta do usuário, sem seguir link simbólico e sem tocar em arquivo oculto. Nasce desligada, e trocar a pasta do usuário desliga a regra. Veja [Limpeza automática](doc/pt-BR/painel.md#limpeza).
 - **Bandeiras no botão de idioma**: a do Brasil ao lado de **PT** e a dos Estados Unidos ao lado de **EN**, desenhadas na própria página, sem arquivo de imagem.
 - **Tela de entrada para uso geral**: a chamada passa a ser `Backups e arquivos, guardados em um lugar só`, e a cena mostra, além de OLT, rádio, roteador e switch, a câmera, a empresa e a pessoa enviando para o mesmo servidor.
+- **Documentação em dois idiomas**: o `README.md` da raiz passa a ser em inglês, com o botão para o `README.pt-BR.md`; os guias ficam em `doc/en/` e em `doc/pt-BR/`, com as mesmas seções e as mesmas âncoras, e cada um abre com o botão de troca de idioma. Os diagramas têm o fonte em cada idioma (`doc/en/diagrams/` e `doc/pt-BR/diagramas/`).
+- **`SECURITY.md` em inglês**, com o par `SECURITY.pt-BR.md`, e **`TRADEMARK.md`**, o par em inglês do `MARCA.md`.
 - **Casos de teste** funcionais 66 a 73 e de segurança 115 a 124: o bloqueio de endereço e de prefixo, IPv4 e IPv6, pela aba e pelo terminal, com estender, encurtar e desbloquear; a entrada certa zerando a contagem no FTP e no painel; o bloqueio novo recusado para o próprio endereço, a stack e o servidor; o envio pelo painel do administrador e do usuário do FTP, só com a permissão e dentro do perfil; o envio forjado, com nome fora da regra, malformado, para fora da pasta, acima do tamanho e além do limite de envios ao mesmo tempo; e a limpeza automática, definida só pelo administrador, mantendo os mais recentes, apagando o que passou do prazo, rodando sozinha e sem sair da pasta do usuário.
 
 ### Alterado
@@ -30,6 +32,13 @@ O painel passa a receber arquivo, o bloqueio por endereço vale para IPv4 e IPv6
 - **Trocar o nome de arquivo ou pasta pede a senha** de quem está na sessão, como apagar já pedia, na aba Arquivos e na tela Meus arquivos.
 - **Porteiro do FTP em Perl** (`ftp/porteiro.pl` no lugar de `ftp/porteiro.sh`), para ler o endereço de origem com a mesma rotina do vigia.
 - **`BLOQUEIO_ENDERECO_DIAS`** é também o prazo do bloqueio feito pelo administrador quando ele não informa outro.
+- **`scripts/validate.sh`** confere o `SECURITY.md` e o `SECURITY.pt-BR.md`, a presença do `TRADEMARK.md` e cada variável do `.env.example` nos guias de configuração dos dois idiomas.
+
+### Corrigido
+
+- **Rotas de envio sem sessão**: `POST /arquivos/enviar` e `POST /meus-arquivos/enviar` respondiam `415` a quem não tinha entrado, quando o corpo não era de formulário de arquivo, e com isso contavam o que o envio aceita. Agora respondem como qualquer outra rota sem sessão, com `303` para `/entrar` e corpo vazio, antes de olhar o tamanho e o formato do que chegou.
+- **Texto da aba Arquivos**: o aviso dizia que só apagar pedia a senha; trocar o nome também pede, e o aviso passa a dizer isso, nos dois idiomas.
+- **Contagem dos casos de teste** no guia dos scripts: 73 funcionais e 124 de segurança.
 
 ## [0.30.0] - 2026-10-10
 

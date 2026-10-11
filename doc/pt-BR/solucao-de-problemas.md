@@ -1,5 +1,7 @@
 # 🚨 Solução de problemas — allsafe-ftp-stack
 
+🌐 [English](../en/troubleshooting.md) · **Português (Brasil)**
+
 ↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras

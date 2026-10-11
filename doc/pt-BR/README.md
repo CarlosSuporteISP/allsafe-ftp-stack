@@ -1,5 +1,7 @@
 # 📚 Documentação — allsafe-ftp-stack
 
+🌐 [English](../en/README.md) · **Português (Brasil)**
+
 ↩ [README do projeto](../../README.pt-BR.md)
 
 ## 💡 Em poucas palavras
@@ -72,7 +74,7 @@ flowchart LR
 | Antes de produção | [Rede privada e firewall](seguranca.md#rede-privada) ➜ [Boas práticas antes de produção](seguranca.md#boas-praticas) ➜ [Operação](operacao.md#certificado-real-de-producao) ➜ [Backup e restauração](backup.md#automatica) |
 | Equipamento antigo que não fala TLS | [Equipamento sem TLS](seguranca.md#ftp-sem-tls) ➜ [Configuração](configuracao.md#tls) ➜ [Solução de problemas](solucao-de-problemas.md#ftp-sem-tls) |
 | Trocar a logo, entregar em contrato ou vender | [Marca do painel](painel.md#marca) ➜ [Marca ALL-SAFE](../../MARCA.md) |
-| Avisar de uma falha de segurança | [Política de segurança](../../SECURITY.md) ➜ [Contato de segurança](configuracao.md#contato-de-seguranca) |
+| Avisar de uma falha de segurança | [Política de segurança](../../SECURITY.pt-BR.md) ➜ [Contato de segurança](configuracao.md#contato-de-seguranca) |
 | Guardar ou recuperar os dados | [Backup e restauração](backup.md) |
 | Algo quebrou | [Solução de problemas](solucao-de-problemas.md) |
 
@@ -115,6 +117,7 @@ Todo diagrama aparece nos guias direto do fonte `.mmd`, com fundo escuro e com o
 | [seguranca-diagrama.mmd](diagramas/seguranca-diagrama.mmd) | 1 | [Segurança](seguranca.md) |
 | [tls-por-usuario-fluxograma.mmd](diagramas/tls-por-usuario-fluxograma.mmd) | 2 | [Segurança](seguranca.md#tls-por-usuario) |
 | [bloqueio-por-tentativa-fluxograma.mmd](diagramas/bloqueio-por-tentativa-fluxograma.mmd) | 2 | [Segurança](seguranca.md#bloqueio-por-tentativa) |
+| [bloqueio-por-endereco-fluxograma.mmd](diagramas/bloqueio-por-endereco-fluxograma.mmd) | 2 | [Segurança](seguranca.md#bloqueio-por-endereco) |
 | [boas-praticas-fluxograma.mmd](diagramas/boas-praticas-fluxograma.mmd) | 2 | [Segurança](seguranca.md#boas-praticas) |
 | [segredos-diagrama.mmd](diagramas/segredos-diagrama.mmd) | 1 | [Segredos](segredos.md) |
 | [scripts-diagrama.mmd](diagramas/scripts-diagrama.mmd) | 1 | [Scripts](scripts.md) |

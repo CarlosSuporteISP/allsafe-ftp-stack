@@ -1,0 +1,10 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    usuario@{ shape: person, label: "User<br>browser on the internal network" }
+    nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
+    painel@{ shape: rect, label: "Web panel<br>allsafe-ftp-painel" }
+    cmd@{ shape: rect, label: "allsafe-ftp-user<br>creates, changes the password, removes" }
+    puredb@{ shape: cyl, label: "PureDB<br>virtual users" }
+    fim@{ shape: stadium, label: "user ready on the FTP" }
+
+    usuario --> nginx --> painel --> cmd --> puredb --> fim

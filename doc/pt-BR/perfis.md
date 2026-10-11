@@ -1,5 +1,7 @@
 # 🎚️ Perfis de capacidade — allsafe-ftp-stack
 
+🌐 [English](../en/profiles.md) · **Português (Brasil)**
+
 ↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
 ## 💡 Em poucas palavras

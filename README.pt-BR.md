@@ -6,9 +6,12 @@
 
 **Servidor FTP dedicado (Pure-FTPd) com FTPS obrigatório por padrão, usuários virtuais, chroot e painel web seguro atrás do nginx, para guardar em um lugar só os backups e arquivos de equipamentos de rede, câmeras, empresas e pessoas, em rede privada.**
 
+[![English](https://img.shields.io/badge/English-6e7781?style=for-the-badge)](README.md)
+[![Português (Brasil)](https://img.shields.io/badge/Portugu%C3%AAs_(Brasil)-0969da?style=for-the-badge)](README.pt-BR.md)
+
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-0.30.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-0.31.0-blue)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
@@ -693,8 +696,9 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`LICENSE`](LICENSE) | Licença Apache 2.0: vale para o código, a configuração, os roteiros, os testes e a documentação |
 | [`NOTICE`](NOTICE) | Aviso de autoria, que acompanha toda cópia e toda versão derivada |
 | [`MARCA.md`](MARCA.md) | Pedido sobre a logo e o ícone da ALL-SAFE: ficam no uso próprio, saem em contrato ou venda para terceiros |
-| [`SECURITY.md`](SECURITY.md) | Política de segurança: para quem avisar de uma falha, o que mandar e quais versões recebem correção |
+| [`SECURITY.pt-BR.md`](SECURITY.pt-BR.md) | Política de segurança: para quem avisar de uma falha, o que mandar e quais versões recebem correção |
 | [`doc/pt-BR/`](doc/pt-BR/README.md) | Documentação, diagramas e fotos da aplicação, em português |
+| `doc/en/` | A mesma documentação, em inglês |
 
 </details>
 
@@ -735,7 +739,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**0.30.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
+**0.31.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
 
 A versão avança a cada publicação: `0.x` é a fase de construção, uma versão por fase do plano; **`1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo `1.x`. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 
