@@ -1,7 +1,7 @@
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     subgraph QUEM["Who uses it"]
-        usuario@{ shape: person, label: "User<br>browser on the internal network" }
+        usuario@{ shape: person, label: "User<br>browser, internal network" }
     end
     subgraph FRENTE["Web front end"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
@@ -12,6 +12,9 @@ flowchart LR
         senha@{ shape: diam, label: "user and password<br>match?" }
         hash@{ shape: doc, label: "administradores<br>name and password hash" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, internal network" }
+        fator@{ shape: diam, label: "second factor<br>on for the account?" }
+        codigo@{ shape: diam, label: "code from the app<br>matches?" }
+        chave@{ shape: doc, label: "segundo-fator<br>key of each administrator" }
     end
     subgraph SESSAO["Session"]
         sessao@{ shape: rect, label: "4 h session<br>cookie and CSRF token" }
@@ -27,10 +30,15 @@ flowchart LR
     rede -- "3a · yes: forwards through the Unix socket" --> painel
     rede -- "3b · no: 403 or 429" --> recusa
     painel -- "4 · asks for user and password and checks" --> senha
-    senha -- "5a · yes: opens the session of the administrator or of the FTP user" --> sessao
+    senha -- "5a · yes: checks whether the account has a second factor" --> fator
     senha -- "5b · no: 5 errors block the address" --> recusa
-    sessao -- "6 · every request goes through the checks" --> pedidos
-    pedidos -- "7a · accepted" --> atendido
-    pedidos -- "7b · refused" --> recusa
+    fator -- "6a · no, or FTP user: opens the session" --> sessao
+    fator -- "6b · yes: asks for the six-digit code" --> codigo
+    codigo -- "7a · yes: opens the session of the administrator" --> sessao
+    codigo -- "7b · no: 5 errors end the wait" --> recusa
+    sessao -- "8 · every request goes through the checks" --> pedidos
+    pedidos -- "9a · accepted" --> atendido
+    pedidos -- "9b · refused" --> recusa
     painel -. "administrator: compares with the hash" .-> hash
     painel -. "any other name: the FTP server checks the password" .-> ftp
+    painel -. "second factor: computes the code with the key" .-> chave

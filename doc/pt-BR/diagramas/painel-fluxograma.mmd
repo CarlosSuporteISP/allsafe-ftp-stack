@@ -12,6 +12,9 @@ flowchart LR
         senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
         hash@{ shape: doc, label: "administradores<br>nome e hash da senha" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna" }
+        fator@{ shape: diam, label: "segundo fator<br>ligado na conta?" }
+        codigo@{ shape: diam, label: "código do aplicativo<br>confere?" }
+        chave@{ shape: doc, label: "segundo-fator<br>chave de cada administrador" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 4 h<br>cookie e token CSRF" }
@@ -27,10 +30,15 @@ flowchart LR
     rede -- "3a · sim: repassa pelo soquete Unix" --> painel
     rede -- "3b · não: 403 ou 429" --> recusa
     painel -- "4 · pede usuário e senha e confere" --> senha
-    senha -- "5a · sim: abre a sessão do administrador ou do usuário do FTP" --> sessao
+    senha -- "5a · sim: vê se a conta tem segundo fator" --> fator
     senha -- "5b · não: 5 erros bloqueiam o endereço" --> recusa
-    sessao -- "6 · cada pedido passa pelas conferências" --> pedidos
-    pedidos -- "7a · aceito" --> atendido
-    pedidos -- "7b · recusado" --> recusa
+    fator -- "6a · não, ou usuário do FTP: abre a sessão" --> sessao
+    fator -- "6b · sim: pede o código de seis dígitos" --> codigo
+    codigo -- "7a · sim: abre a sessão do administrador" --> sessao
+    codigo -- "7b · não: 5 erros encerram a espera" --> recusa
+    sessao -- "8 · cada pedido passa pelas conferências" --> pedidos
+    pedidos -- "9a · aceito" --> atendido
+    pedidos -- "9b · recusado" --> recusa
     painel -. "administrador: compara com o hash" .-> hash
     painel -. "outro nome: o servidor FTP confere a senha" .-> ftp
+    painel -. "segundo fator: calcula o código com a chave" .-> chave

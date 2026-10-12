@@ -229,8 +229,15 @@ The copy does not take the `.env` or the `.secrets/` folder, so that a backup fi
 | `.secrets/ftp-usuario-inicial-senha.txt` | Password of the initial user of the FTP |
 | `.secrets/painel-admin-inicial-senha-hash.txt` | Hash of the initial password of the first administrator of the panel |
 | `.secrets/destinos/` | S3 keys, access of the rclone remote, Telegram bot token and receiving chat, written by the panel in the Destinations tab |
+| `.secrets/segundo-fator/` | Key of the second factor of each administrator who turned on their own, written by the panel in the Users tab |
 
 The private key is the only one with no way back: without it the copy does not open. Without the others, the stack comes back all the same: `./deploy.sh` creates a new `.env` and new passwords, and the secrets of the destinations are typed again in the Destinations tab, in **Change**; until then, the card shows the **secrets missing** tag and nothing is sent. In that case, the initial user gets the new password, which needs to be set on the device that uses it. The other users and the administrators of the panel are not affected: the hash of their password is in the copy. Details of each file in [Secrets](secrets.md).
+
+The copy takes the list of who has the [second factor](panel.md#segundo-fator) on, but not the key of each one. If the `.secrets/segundo-fator/` folder does not come back along, the account with the factor on does not sign in (`503`): turn its factor off from the terminal, sign in with the password only and turn it on again in the panel, with a new key:
+
+```bash
+docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NAME
+```
 
 ---
 

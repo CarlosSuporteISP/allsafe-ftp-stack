@@ -37,7 +37,7 @@ O painel tem uma tela de entrada, oito abas para quem administra (Visão geral, 
 |---|---|
 | **Usuário** | Recebe o nome do administrador ou o nome do usuário do FTP. Na primeira instalação, o administrador é o de `PAINEL_ADMIN_USER` (`admin`, se não foi trocado) |
 | **Senha** | Recebe a senha da conta. A do primeiro administrador está em `.secrets/painel-admin-inicial-senha.txt`; a do usuário do FTP é a mesma que o equipamento usa |
-| **Entrar** | Confere a conta: o administrador vai para a aba Visão geral e o usuário do FTP, para a tela Meus arquivos |
+| **Entrar** | Confere a conta: o administrador vai para a aba Visão geral e o usuário do FTP, para a tela Meus arquivos. O administrador com o segundo fator ligado passa antes pela tela [Código de verificação](#entrar) |
 | Texto abaixo do título | Diz quem entra por esta tela. Com `PAINEL_ACESSO_USUARIOS_FTP=nao`, passa a ser `Painel de administração da stack.` |
 | Nota abaixo do botão | Lembra que o uso é restrito a quem foi autorizado e que as tentativas de entrada ficam registradas. A tela de entrada não diz como a instalação está publicada: isso só o administrador lê, depois de entrar |
 | **PT** · **EN** | Trocam o idioma da tela antes da entrada; a escolha fica guardada no navegador: veja [Idioma](#idioma) |
@@ -63,10 +63,40 @@ O painel tem uma tela de entrada, oito abas para quem administra (Visão geral, 
 </details>
 
 <details>
+<summary>Entrar ➜ Código de verificação — clique para expandir</summary>
+
+### Entrar ➜ Código de verificação
+
+<a href="imagens/entrar-codigo.png"><img src="imagens/entrar-codigo.png" alt="Tela Código de verificação, no lugar do formulário de entrada: o aviso de que a senha conferiu, o campo Código, o botão Confirmar, a nota para quem está sem o aparelho e o atalho Voltar para usuário e senha" width="100%"></a>
+
+<sub><b>v1.7.0</b> · tela de entrada, código do segundo fator · captura de 2026-10-12</sub>
+
+Só aparece para o administrador que ligou o [segundo fator](#segundo-fator): a senha certa não abre o painel, leva a esta tela. O usuário do FTP e o administrador sem segundo fator não passam por ela.
+
+| Item da tela | O que faz |
+|---|---|
+| **Código** | Recebe os seis dígitos que o aplicativo autenticador mostra para esta conta agora |
+| **Confirmar** | Confere o código e abre o painel na aba Visão geral |
+| Nota abaixo do botão | Diz a saída de quem está sem o aparelho: outro administrador desliga o segundo fator da conta, na aba Usuários, ou quem tem acesso ao servidor desliga pelo terminal |
+| **Voltar para usuário e senha** | Volta para a tela de entrada sem abrir o painel |
+
+| Mensagem | Quando aparece | O que fazer |
+|---|---|---|
+| O código não confere. Espere o aplicativo mostrar o próximo e tente de novo. | O código está errado, já venceu ou já foi usado uma vez | Esperar o próximo código. Se continuar, conferir a hora do celular |
+| Não foi possível entrar. | Cinco códigos errados seguidos: a espera pelo código acaba e a tela de entrada volta. Depois de cinco minutos sem o código, a tela de entrada também volta, sem mensagem | Entrar de novo com usuário e senha, passado o bloqueio do endereço |
+| Muitas tentativas. Aguarde alguns minutos e tente de novo. | Cinco entradas erradas do mesmo endereço em 15 minutos, somando senhas e códigos, ou dez códigos recusados para a mesma conta em 15 minutos, de qualquer endereço | Esperar, ou pedir a outro administrador que desligue o segundo fator da conta |
+| O segundo fator desta conta está ligado, mas o segredo dele não está no servidor. Outro administrador ou quem tem acesso ao servidor precisa desligá-lo. | A chave da conta não está em `.secrets/segundo-fator/`: é o caso do servidor restaurado de uma cópia de segurança | Desligar o segundo fator da conta e ligar de novo: veja [Painel web](../painel.md#segundo-fator) |
+
+Código errado conta como erro de usuário e senha do endereço, igual à senha errada.
+
+</details>
+
+<details>
 <summary>Detalhe técnico — entrada e sessão</summary>
 
 - Rota `GET /entrar` mostra o formulário; `POST /entrar` confere primeiro a conta de administrador, pelo hash `scrypt` de `DATA_DIR/painel/administradores`, e depois, se a entrada dos usuários do FTP estiver ligada, a conta do FTP, por um login no próprio servidor FTP.
 - Resposta `401` para usuário ou senha errados, `429` para endereço bloqueado e `400` para formulário expirado. Cada caso grava `entrada_falha` ou `entrada_bloqueada` na [auditoria](../painel.md#auditoria), sem o nome digitado.
+- Com o segundo fator ligado, o `POST /entrar` com a senha certa não cria sessão: grava `entrada_senha_ok` e leva a `GET /entrar/codigo`, com o cookie `__Host-etapa` (`Secure`, `HttpOnly`, `SameSite=Strict`), que vale 5 minutos e só do mesmo endereço. O `POST /entrar/codigo` responde `401` para o código errado (`entrada_codigo_recusado`), `429` para a conta em pausa e `503` para a conta ligada sem a chave no servidor (`entrada_fator_sem_segredo`); a sessão só nasce com o código aceito.
 - O endereço da lista de bloqueios recebe `403` em texto puro em toda rota, mesmo com sessão aberta, com o evento `recusa_endereco`: veja [Bloqueio por endereço](../seguranca.md#bloqueio-por-endereco).
 - A entrada com a conta do FTP leva alguns segundos: é o tempo que o servidor FTP gasta para conferir a senha. Veja [Usuário do FTP no painel](../painel.md#usuario-ftp).
 - A sessão fica no cookie `__Host-sessao` (`Secure`, `HttpOnly`, `SameSite=Strict`) e encerra com 4 horas sem uso ou em 12 horas, o que vier antes.
@@ -142,9 +172,9 @@ O mesmo alerta abre a aba Segurança. As condições para dispensar um usuário 
 
 ## 👥 Usuários
 
-<a href="imagens/usuarios.png"><img src="imagens/usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista das contas: primeiro o administrador admin, com a etiqueta você, depois os usuários do FTP, cada um com o perfil embaixo do nome e as etiquetas inicial, limites, limpeza e bloqueado, a pasta, com a etiqueta dividida em duas, uso, arquivos, último envio, a coluna TLS, com obrigatório em todas as linhas, as ações Editar, Dispensar TLS, Trocar senha e Remover e, abaixo da lista, o recolhido Como funcionam os perfis e as etiquetas" width="100%"></a>
+<a href="imagens/usuarios.png"><img src="imagens/usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista das contas: primeiro o administrador admin, com a etiqueta você, a situação sem segundo fator e o botão Segundo fator, depois os usuários do FTP, cada um com o perfil embaixo do nome e as etiquetas inicial, limites, limpeza e bloqueado, a pasta, com a etiqueta dividida em duas, uso, arquivos, último envio, a coluna TLS, com obrigatório em todas as linhas, as ações Editar, Dispensar TLS, Trocar senha e Remover e, abaixo da lista, o recolhido Como funcionam os perfis e as etiquetas" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Usuários · captura de 2026-10-11</sub>
+<sub><b>v1.7.0</b> · menu Usuários · captura de 2026-10-12</sub>
 
 **Para que serve:** criar a conta de cada equipamento ou pessoa, escolher o perfil dela, escolher e trocar a pasta em que ela fica presa, trocar a senha, dar limites próprios, permitir o envio de arquivo pelo painel, ligar a limpeza automática dos arquivos antigos, tirar o bloqueio por senha errada e remover a conta, com ou sem a pasta, sem linha de comando. É também onde ficam os administradores do painel.
 
@@ -293,7 +323,7 @@ Administrador não está entre as opções: administrador e usuário do FTP são
 
 <a href="imagens/usuarios-limites-gravados.png"><img src="imagens/usuarios-limites-gravados.png" alt="Aba Usuários com a mensagem Limites gravados, valem na próxima entrada do usuário no FTP, e a etiqueta limites ao lado do nome roteador-borda" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Usuários, limites gravados · captura de 2026-10-11</sub>
+<sub><b>v1.7.0</b> · menu Usuários, limites gravados · captura de 2026-10-12</sub>
 
 O cartão **Limites** da tela **Editar** vale só para aquele usuário, seja a conta de um equipamento, que só envia, seja a de uma pessoa, que entra, envia e baixa. Campo em branco quer dizer sem limite próprio: vale o da stack.
 
@@ -339,7 +369,7 @@ Campo em branco desliga aquela regra, e os dois em branco desligam a limpeza. Co
 
 <a href="imagens/usuarios-limpeza-gravada.png"><img src="imagens/usuarios-limpeza-gravada.png" alt="Aba Usuários com a mensagem Limpeza automática gravada, vale na próxima passada do painel, e a etiqueta limpeza ao lado do nome olt-centro" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Usuários, limpeza automática gravada · captura de 2026-10-11</sub>
+<sub><b>v1.7.0</b> · menu Usuários, limpeza automática gravada · captura de 2026-10-12</sub>
 
 **Resultado esperado:** depois de **Gravar limpeza**, a lista volta com a mensagem `Limpeza automática gravada. Vale na próxima passada do painel.` e a etiqueta `limpeza` ao lado do nome; passando o mouse sobre ela, aparece a regra. Gravada com os dois campos em branco, a mensagem é `Limpeza automática desligada. Nenhum arquivo deste usuário é apagado sozinho.`
 
@@ -381,7 +411,7 @@ O endereço que erra a senha de um usuário no FTP vezes demais fica bloqueado p
 
 <a href="imagens/usuarios-desbloqueado.png"><img src="imagens/usuarios-desbloqueado.png" alt="Aba Usuários com a mensagem Bloqueio removido, o usuário volta a poder entrar no FTP, e o nome switch-core sem a etiqueta bloqueado" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Usuários, depois do desbloqueio · captura de 2026-10-11</sub>
+<sub><b>v1.7.0</b> · menu Usuários, depois do desbloqueio · captura de 2026-10-12</sub>
 
 **Resultado esperado:** a lista volta com a mensagem `Bloqueio removido. O usuário volta a poder entrar no FTP.`, sem a etiqueta `bloqueado`, e a entrada seguinte do equipamento passa.
 
@@ -428,7 +458,7 @@ Este é o bloqueio curto, de um usuário para um endereço. O endereço que erra
 
 <a href="imagens/usuarios-removido.png"><img src="imagens/usuarios-removido.png" alt="Aba Usuários depois da remoção, com a mensagem Usuário removido e pasta apagada" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Usuários, depois da remoção · captura de 2026-10-11</sub>
+<sub><b>v1.7.0</b> · menu Usuários, depois da remoção · captura de 2026-10-12</sub>
 
 **Resultado esperado:** com a caixa marcada e a senha certa, como na foto, a lista volta com a mensagem `Usuário removido e pasta apagada.` e a pasta some. Sem a caixa, a mensagem é `Usuário removido. Os arquivos continuam na pasta.`: a pasta fica em `DATA_DIR/dados` e continua visível na aba Arquivos, onde pode ser apagada depois.
 
@@ -447,7 +477,7 @@ O usuário inicial, o `FTP_USER` da instalação (`transfer`, no exemplo), é re
 
 <a href="imagens/usuarios-tls.png"><img src="imagens/usuarios-tls.png" alt="Aba Usuários com o aviso de que o usuário foi dispensado do TLS e a senha e os arquivos dele passam em texto puro, a coluna TLS, que mostra obrigatório ou sem TLS em cada linha, e os botões Dispensar TLS e Exigir TLS ao lado de Editar, Trocar senha e Remover" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Usuários, coluna TLS · captura de 2026-10-11</sub>
+<sub><b>v1.7.0</b> · menu Usuários, coluna TLS · captura de 2026-10-12</sub>
 
 A coluna e os dois botões servem para o equipamento antigo que não fala TLS: ele é dispensado sozinho, e os demais continuam obrigados. O mesmo se faz na criação, com a caixa **Equipamento sem suporte a TLS** do **Novo usuário**, e no cartão **TLS** da tela **Editar**.
 
@@ -503,9 +533,9 @@ Na tela **Editar**, o cartão **TLS** diz como o usuário entra e traz o botão 
 
 ## 🛡️ Administradores
 
-<a href="imagens/administradores.png"><img src="imagens/administradores.png" alt="Aba Usuários com três administradores no começo da lista, admin, com a etiqueta você, noc-plantao e suporte, cada um com o perfil Administrador, as sessões abertas e as ações Trocar senha, Trocar nome e Remover, e, abaixo deles, os usuários do FTP" width="100%"></a>
+<a href="imagens/administradores.png"><img src="imagens/administradores.png" alt="Aba Usuários com três administradores no começo da lista, admin, com a etiqueta você, noc-plantao e suporte, cada um com o perfil Administrador, as sessões abertas e a situação do segundo fator e as ações Trocar senha, Trocar nome, Segundo fator e Remover, e, abaixo deles, os usuários do FTP" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Usuários, administradores na lista · captura de 2026-10-11</sub>
+<sub><b>v1.7.0</b> · menu Usuários, administradores na lista · captura de 2026-10-12</sub>
 
 **Para que serve:** dar a cada pessoa que administra o painel o próprio usuário e a própria senha, e trocar o usuário e a senha do primeiro administrador depois da instalação.
 
@@ -515,9 +545,10 @@ Na tela **Editar**, o cartão **TLS** diz como o usuário entra e traz o botão 
 |---|---|
 | **Novo usuário** | Abre o cadastro; com o perfil **Administrador** marcado, a conta criada é de administrador |
 | Usuário e perfil | Nome da conta, com `Administrador` embaixo. A etiqueta `você` marca a conta de quem está usando o painel |
-| Pasta | No lugar da pasta, `Painel inteiro` e quantos navegadores estão com aquela conta dentro do painel agora |
+| Pasta | No lugar da pasta, `Painel inteiro`, quantos navegadores estão com aquela conta dentro do painel agora e a situação do segundo fator: `segundo fator ligado` ou `sem segundo fator` |
 | **Trocar senha** | Abre a troca de senha, a própria ou a de outro |
 | **Trocar nome** | Abre a troca do nome de entrada, o próprio ou o de outro |
+| **Segundo fator** | Na própria conta, abre a tela de ligar ou de desligar o código do aplicativo autenticador; na de outro administrador, só aparece quando ele está ligado, para desligar |
 | **Remover** | Abre a confirmação de remoção. Não aparece na própria conta: assim sempre sobra um administrador |
 
 Todos têm o mesmo acesso, e o que cada um faz fica na aba Log com o nome de quem fez. O painel aceita até 20 administradores. Administrador e usuário do FTP são cadastros separados: não há troca de um para o outro, só remover a conta e criar a outra.
@@ -605,6 +636,50 @@ Trocar o nome do primeiro administrador pelo painel não mexe no `.env`: o `PAIN
 
 </details>
 
+<a name="segundo-fator"></a>
+
+<details>
+<summary>Administradores ➜ Segundo fator — clique para expandir</summary>
+
+### Administradores ➜ Segundo fator
+
+<a href="imagens/administradores-segundo-fator.png"><img src="imagens/administradores-segundo-fator.png" alt="Tela Ligar o segundo fator: a explicação de que o painel passa a pedir o código de seis dígitos de um aplicativo autenticador, os três passos com o código QR e a chave em grupos de quatro caracteres, o aviso de que a chave não será mostrada de novo, os campos Código do aplicativo e Sua senha atual e os botões Ligar o segundo fator e Cancelar" width="100%"></a>
+
+<sub><b>v1.7.0</b> · menu Usuários, tela Ligar o segundo fator, com uma chave de exemplo que não foi gravada · captura de 2026-10-12</sub>
+
+Clique em **Segundo fator** na linha da própria conta. Cada administrador liga o dele, com qualquer aplicativo autenticador de código por tempo (TOTP).
+
+| Item da tela | O que faz |
+|---|---|
+| Código QR | É a chave, para o aplicativo ler pela câmera. A conta aparece nele como `AllSafe FTP:<administrador>@<endereço do painel>` |
+| Chave em grupos | A mesma chave, para digitar no aplicativo quando não há câmera, escolhendo o tipo baseado em tempo |
+| **Código do aplicativo** | Recebe os seis dígitos que o aplicativo passou a mostrar: é a prova de que ele leu a chave |
+| Sua senha atual | Confirma que quem liga é o dono da sessão |
+| **Ligar o segundo fator** | Grava a chave e encerra as outras sessões da conta |
+| **Cancelar** | Volta para a lista sem ligar nada |
+
+**Resultado esperado:** a lista volta com a mensagem `Segundo fator ligado. A próxima entrada desta conta pede o código do aplicativo; as outras sessões dela foram encerradas.` e a linha da conta passa a dizer `segundo fator ligado`.
+
+> ⚠️ **A chave aparece só nesta tela, até ser confirmada.** Quem a tiver gera os códigos da conta: não a guarde em foto nem em mensagem. Enquanto o primeiro código não chega, a tela aberta de novo mostra a mesma chave, por até 10 minutos; depois disso, uma nova.
+
+### Administradores ➜ Desligar o segundo fator
+
+<a href="imagens/administradores-segundo-fator-desligar.png"><img src="imagens/administradores-segundo-fator-desligar.png" alt="Tela Desligar o segundo fator, da própria conta: o aviso de que a conta volta a entrar só com usuário e senha e de que a chave guardada é apagada, o campo Sua senha atual e os botões Sim, desligar o segundo fator e Cancelar" width="100%"></a>
+
+<sub><b>v1.7.0</b> · menu Usuários, tela Desligar o segundo fator · captura de 2026-10-12</sub>
+
+Com o segundo fator ligado, o mesmo botão **Segundo fator** abre esta tela, na própria linha ou na de outro administrador: é o caminho de quem perdeu o aparelho.
+
+| Item da tela | O que faz |
+|---|---|
+| Sua senha atual | Confirma que quem desliga é o dono da sessão; não é a senha da conta alterada |
+| **Sim, desligar o segundo fator** | Apaga a chave guardada: os códigos do aplicativo deixam de valer e a conta volta a entrar só com usuário e senha |
+| **Cancelar** | Volta para a lista sem alterar nada |
+
+**Resultado esperado:** a lista volta com a mensagem `Segundo fator desligado. A conta volta a entrar só com usuário e senha.` Para ligar de novo, o dono da conta repete o passo acima, com uma chave nova.
+
+</details>
+
 <details>
 <summary>Detalhe técnico — mensagens de recusa, rotas e arquivo</summary>
 
@@ -614,9 +689,13 @@ Trocar o nome do primeiro administrador pelo painel não mexe no `.env`: o `PAIN
 | Já existe um administrador com este nome. | O nome já está em uso |
 | O nome novo é igual ao atual. | A troca de nome não mudou nada |
 | Limite de 20 administradores atingido: remova um antes de criar outro. | O painel já tem 20 administradores |
+| O código não confere com a chave desta tela. Confira a hora do celular, espere o próximo código e tente de novo. | O código digitado na tela Ligar o segundo fator não é o da chave mostrada |
+| A chave mostrada venceu. Leia a nova no aplicativo e tente de novo. | A tela Ligar o segundo fator ficou mais de 10 minutos sem o primeiro código; a tela volta com outra chave |
+| O segundo fator de (nome) está desligado. Só o próprio administrador liga o dele, porque a chave fica no aparelho de quem entra. | O endereço da tela foi aberto para a conta de outro administrador que está sem segundo fator |
 
 - O cadastro é o `POST /usuarios/novo`, com o perfil `administrador`. Os endereços antigos continuam valendo: `GET /administradores` leva à aba Usuários e `GET /administradores/novo`, ao formulário com o perfil Administrador marcado.
 - Rotas das outras telas: `GET /administradores/senha?admin=<nome>`, `/administradores/nome?admin=<nome>` e `/administradores/remover?admin=<nome>`; o envio de cada formulário é um `POST` na mesma rota, com o token CSRF da sessão.
+- Segundo fator: `GET /administradores/fator?admin=<nome>` mostra a tela de ligar ou a de desligar; o envio é um `POST` em `/administradores/fator/ligar` ou `/administradores/fator/desligar`. Grava `admin_fator_ligado` ou `admin_fator_desligado`. A lista de quem ligou fica em `DATA_DIR/painel/segundo-fator` e a chave de cada um, em `.secrets/segundo-fator/<nome>.txt`. Usuário do FTP recebe `404` nessas rotas.
 - Os administradores ficam em `DATA_DIR/painel/administradores` (`0600`, do `root`), uma linha `nome:hash` por conta. Só o hash `scrypt` é gravado.
 - Cada alteração grava `admin_criado`, `admin_senha_trocada`, `admin_renomeado` ou `admin_removido` na [auditoria](../painel.md#auditoria), com quem fez e quem foi alterado; a senha atual errada grava `admin_senha_atual_recusada`.
 - As regras completas estão em [Administradores do painel](../painel.md#administradores).
@@ -1386,9 +1465,9 @@ Nada é alterado por esta aba, e só o administrador a vê. Os limites de cada c
 
 ## 🔐 Segurança
 
-<a href="imagens/seguranca.png"><img src="imagens/seguranca.png" alt="Aba Segurança com o resumo da conferência no alto, que diz quantos itens estão em ordem, e uma linha por item: endereço público, painel por proxy ou túnel, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, bloqueio por endereço, com a quantidade de endereços bloqueados, custo das senhas, contato de segurança, container e firewall" width="100%"></a>
+<a href="imagens/seguranca.png"><img src="imagens/seguranca.png" alt="Aba Segurança com o resumo da conferência no alto, que diz quantos itens estão em ordem, e uma linha por item: endereço público, painel por proxy ou túnel, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, segundo fator dos administradores, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, bloqueio por endereço, com a quantidade de endereços bloqueados, custo das senhas, contato de segurança, container e firewall" width="100%"></a>
 
-<sub><b>v1.6.0</b> · menu Segurança · captura de 2026-10-12</sub>
+<sub><b>v1.7.0</b> · menu Segurança · captura de 2026-10-12</sub>
 
 **Para que serve:** conferir, em uma tela, se a instalação está dentro do que a stack exige: rede privada, TLS, certificados válidos, painel isolado e contato de segurança publicado.
 
@@ -1405,6 +1484,7 @@ Nada é alterado por esta aba, e só o administrador a vê. Os limites de cada c
 | Endereço do painel · Frente web | Onde o nginx publica o painel e como ele repassa os pedidos |
 | Quem pode abrir o painel | As redes de `PAINEL_REDES_PERMITIDAS`; rede pública na lista aparece destacada |
 | Sessão | Tempo sem uso, tempo máximo e bloqueio por entrada errada |
+| Segundo fator dos administradores | Se todos os administradores entram com a senha e o código do aplicativo, ou quem entra só com a senha. Pede atenção quando o painel é alcançado de fora da rede privada e alguém está sem, e quando uma conta está ligada sem a chave no servidor |
 | Entrada dos usuários do FTP | Se os usuários do FTP entram no painel (`PAINEL_ACESSO_USUARIOS_FTP`) e como a senha deles é conferida |
 | Bloqueio por tentativa no FTP | Quantas senhas erradas do mesmo endereço bloqueiam um usuário e por quanto tempo (`FTP_BLOQUEIO_TENTATIVAS` e `FTP_BLOQUEIO_MINUTOS`), e quem está bloqueado agora |
 | Bloqueio por endereço | Quantos erros de usuário e senha, em quantas horas, bloqueiam um endereço no FTP e no painel, por quantos dias (`BLOQUEIO_ENDERECO_ERROS`, `BLOQUEIO_ENDERECO_HORAS` e `BLOQUEIO_ENDERECO_DIAS`), e quantos estão bloqueados agora, com o atalho para a aba Bloqueios |
@@ -1422,7 +1502,7 @@ Nada é alterado por esta aba. As regras de firewall de exemplo estão em [Segur
 
 <a href="imagens/seguranca-tls-por-usuario.png"><img src="imagens/seguranca-tls-por-usuario.png" alt="Aba Segurança com o alerta no topo de que dois usuários, central-pabx e radio-antigo, entram no FTP sem TLS, e a linha TLS do FTP com a marca de atenção e os nomes dos usuários dispensados" width="100%"></a>
 
-<sub><b>v1.6.0</b> · menu Segurança, alerta de usuário sem TLS · captura de 2026-10-12</sub>
+<sub><b>v1.7.0</b> · menu Segurança, alerta de usuário sem TLS · captura de 2026-10-12</sub>
 
 Com pelo menos um usuário dispensado do TLS, a aba abre com o alerta e a linha **TLS do FTP** troca a marca de conferido pela de atenção, com a quantidade e os nomes de quem entra sem TLS.
 
@@ -1580,6 +1660,7 @@ O administrador que ficou com o próprio endereço bloqueado não abre o painel:
 |---|---|
 | Painel iniciado · Administrador inicial criado | O serviço do painel subiu, com a versão, e a conta do primeiro administrador foi criada na instalação |
 | Entrada · Entrada recusada · Entrada bloqueada pelo limite de tentativas · Saída | Alguém entrou, errou o usuário ou a senha, teve o endereço bloqueado ou saiu |
+| Senha aceita, à espera do código do segundo fator · Código do segundo fator recusado · Entrada recusada: segundo fator ligado sem o segredo no servidor | Entrada de administrador com o segundo fator ligado: a senha conferiu, o código do aplicativo foi recusado, ou a chave da conta não está no servidor |
 | Usuário criado · Senha trocada · Pasta do usuário trocada · Perfil do usuário trocado · Usuário removido | Alteração de usuário do FTP, com o administrador que fez |
 | Limites do usuário alterados · Bloqueio do usuário no FTP removido | Limites gravados, com o valor de cada um, e bloqueio por senha errada tirado em **Editar** |
 | Limpeza automática do usuário alterada · Limpeza automática: arquivos antigos apagados · Limpeza automática não concluída | A regra gravada ou desligada em **Editar**, com o administrador que fez; cada passada que apagou algo, com o usuário e a quantidade; e a passada que não terminou |
@@ -1591,6 +1672,7 @@ O administrador que ficou com o próprio endereço bloqueado não abre o painel:
 | Arquivos enviados para o destino · Arquivo enviado para o destino a pedido · Envio para o destino não concluído · Arquivo recusado pelo destino deixado para trás | Cada passada que enviou algo, com a quantidade e o tamanho; o envio pedido pelo botão de um arquivo; a passada que parou antes do fim, com o motivo; e o arquivo que o destino recusou três vezes |
 | Pasta criada · Arquivo ou pasta renomeado · Arquivo ou pasta apagado | Alteração pela aba Arquivos ou pela tela Meus arquivos, com o caminho; o apagado aparece também quando a pasta sai junto com o usuário |
 | Administrador criado · Senha de administrador trocada · Administrador renomeado · Administrador removido | Alteração de administrador, com quem fez e quem foi alterado |
+| Segundo fator ligado · Segundo fator desligado · Segundo fator desligado pelo terminal | O administrador ligou o dele; um administrador desligou o próprio ou o de outro, com quem fez e de quem era; e o desligamento feito no servidor |
 | Senha atual recusada | Alteração de administrador recusada pela senha de confirmação |
 | Senha do FTP recusada na confirmação | Usuário do FTP errou a própria senha ao confirmar uma troca de nome ou um apagamento na tela Meus arquivos |
 | Tela fora do papel ou do perfil pedida por usuário do FTP | Um usuário do FTP pediu uma aba de administração, ou uma ação que o perfil dele não tem, e recebeu `404` |
@@ -1638,7 +1720,7 @@ A aba mostra os últimos 300 registros, e o recolhido **O que fica registrado**,
 
 <a href="imagens/usuarios-ingles.png"><img src="imagens/usuarios-ingles.png" alt="Aba Usuários em inglês: o título Users, os perfis Full, Upload, Upload only e Read only, as etiquetas you, limits, shared e initial, a coluna TLS com required e no TLS e os botões Edit, Exempt from TLS, Require TLS, Change password, Change name e Remove" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Usuários, em inglês · captura de 2026-10-11</sub>
+<sub><b>v1.7.0</b> · menu Usuários, em inglês · captura de 2026-10-12</sub>
 
 <details>
 <summary>Detalhe técnico — onde a escolha fica</summary>

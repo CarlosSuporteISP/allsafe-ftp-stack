@@ -6,6 +6,26 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.7.0] - 2026-10-12
+
+A entrada do painel ganha o segundo fator: depois da senha, o código de um aplicativo autenticador.
+
+### Adicionado
+
+- **Segundo fator na entrada do painel**: cada administrador liga o dele na aba Usuários, botão **Segundo fator** da própria linha. Com ele ligado, usuário e senha certos não abrem sessão: o painel pede o código de seis dígitos do aplicativo autenticador (TOTP, RFC 6238), e só então entra. É opcional, por conta, e vale só para o painel: o FTP não muda.
+- **Chave por código QR**: a tela de ligar mostra a chave em código QR, desenhado pelo próprio painel, e em texto, para digitar. O fator só liga depois de um código certo e da senha da conta, o que prova que o aplicativo ficou com a chave.
+- **Código de uso único**: o mesmo código não entra duas vezes. O código vale 30 segundos, com um passo de folga para cada lado.
+- **Erros contados**: código errado conta no bloqueio do endereço, como a senha errada. Cinco códigos errados encerram a espera e a entrada recomeça pela senha; dez códigos recusados para a mesma conta em 15 minutos pausam a entrada dela.
+- **Desligar**: o próprio administrador ou outro desliga na aba Usuários, com a senha de quem está na sessão. Para quem perdeu o aparelho e não tem outro administrador, `servidor.py --segundo-fator desligar <nome>`, pelo terminal; `--segundo-fator` mostra a situação de cada conta.
+- **Chave guardada como segredo**: um arquivo `0600` por administrador, em `SECRETS_DIR/segundo-fator`, fora da cópia de segurança. Depois de ligado, a chave não volta para a tela, e nunca vai para a aba Log.
+- **Aba Segurança e aba Log**: a aba Segurança diz quais administradores entram só com a senha; a aba Log registra a senha aceita à espera do código, o código recusado e o fator ligado e desligado.
+- **Bateria**: cinco casos funcionais e quatro de segurança para o segundo fator. São 99 casos funcionais, 144 de segurança e 14 de rede.
+
+### Alterado
+
+- **Fluxograma da entrada do painel**: ganha a conferência do segundo fator, com a sequência escrita.
+- **Guia de segurança**: o tempo da bateria passa a dizer cerca de 1 hora e 40 minutos, que é o que ela leva.
+
 ## [1.6.0] - 2026-10-12
 
 Dois ajustes de tela pedidos pelo uso: a aba Destinos fica mais curta e a aba Segurança perde uma frase.
