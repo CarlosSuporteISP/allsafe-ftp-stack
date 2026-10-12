@@ -11,8 +11,9 @@
 
 Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Version](https://img.shields.io/badge/version-1.3.0-blue)
-![Status](https://img.shields.io/badge/status-stable_LTS-brightgreen)
+![Version](https://img.shields.io/badge/version-1.4.0-blue)
+![Status](https://img.shields.io/badge/status-stable-brightgreen)
+![Support](https://img.shields.io/badge/support-LTS-blue)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -101,7 +102,7 @@ There are **three containers**: the FTP server, the panel and **nginx**, the onl
 | **Secure web panel** | Creates users, changes passwords and removes users in the browser: HTTPS only, a session that ends after 4 hours without use, blocking after five wrong passwords and a record of every action |
 | **Files in the browser** | The administrator browses, uploads, downloads, renames and deletes; the owner of the files signs in with the FTP user and password, sees only their own folder and does what their profile allows. Uploading through the panel depends on a permission given to each user |
 | **Automatic cleanup** | Per account, the administrator tells the panel to keep only the last files of each folder or only those of the last days; the panel deletes the rest by itself, from time to time. Off by default |
-| **Sending to S3 and Telegram bot** | In the Destinations tab, the administrator connects a folder to an S3 storage, for the second copy or to keep the files elsewhere and free the disk, and to a Telegram bot, which delivers within moments each file that arrives to a person, a group or a channel, up to the size the bot accepts. Each type accepts up to 20 destinations, and a new destination can use the access of another one, for another folder, another bucket or another group. The bot only sends. In the Files tab, a button sends one file right away. No settings by default |
+| **Sending to S3 and Telegram bot** | In the Destinations tab, the administrator connects a folder to an S3 storage, for the second copy or to keep the files elsewhere and free the disk, and to a Telegram bot, which delivers within moments each file that arrives to a person, a group or a channel, up to the size the bot accepts. Each type accepts up to 20 destinations, and a new destination can use the access of another one, for another folder, another bucket or another group. The bot only sends. In the Files tab, a button sends one file right away. The copy of the whole system, encrypted, goes to an S3 by the button or by schedule. Nothing is deleted in the destination. No settings by default |
 | **Server health in the panel** | The Server tab shows the three containers of the stack, each with what it uses of processor, memory and processes against what was allocated to it, and the processor, the memory, the disk and the FTP network of the server, with the history of the last minutes |
 | **nginx in front of the panel** | Only nginx publishes the panel port: TLS 1.2 and 1.3, HTTP/2, list of allowed networks, limit of requests and of connections per address; the panel has no network port |
 | **Hardened containers** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, CPU, memory and PID limits; nginx runs without `root` and without any `capability` |
@@ -122,7 +123,7 @@ The web panel, tab by tab. The Overview tab is the image at the top of this page
 |---|---|
 | <a href="doc/en/images/aba-usuarios.png"><img src="doc/en/images/aba-usuarios.png" alt="Users tab with the New user button and the list of accounts: first the administrator admin, with the tag you, then the FTP users, each with the profile below the name and the tags initial, limits, cleanup and blocked, the folder, with the tag shared on two of them, usage, files, last upload, the TLS column, with required on every row, the actions Edit, Exempt from TLS, Change password and Remove and, below the list, the collapsed section How profiles and tags work" width="100%"></a> | <a href="doc/en/images/aba-arquivos.png"><img src="doc/en/images/aba-arquivos.png" alt="Files tab at the first level, with the list of the users' folders, the date of each one, the Rename and Delete buttons on each row and the New folder and Upload file cards" width="100%"></a> |
 | **Users** — creates each account, chooses the profile, changes the password, the folder and the limits, unblocks and removes | **Files** — browses the user folders, uploads and downloads files, creates folders, renames and deletes |
-| <a href="doc/en/images/aba-destinos.png"><img src="doc/en/images/aba-destinos.png" alt="Destinations tab with the S3 storage card turned on, with the address, the bucket, the folder sent, the runs, the last run and the total sent, the Telegram bot card turned on, with the folder, the largest file the bot sends, the last run and the total sent, and the Test, Send now, Change, New with the same access and Remove buttons on each one, and, at the top of the screen, the New S3 and New bot buttons and the How the panel sends explanation, collapsed" width="100%"></a> | <a href="doc/en/images/aba-servidor.png"><img src="doc/en/images/aba-servidor.png" alt="Server tab with the Auto-refresh button, the Stack containers card, with one box for the FTP server, one for the Panel and one for the Web front end, each with CPU, memory and processes in use and allocated, the chart of the last minutes and the share of the time in which the CPU limit was reached, and the Server resources card, with CPU, memory, disk and FTP network" width="100%"></a> |
+| <a href="doc/en/images/aba-destinos.png"><img src="doc/en/images/aba-destinos.png" alt="Destinations tab with the System copy card at the top, the S3 storage card turned on, with the address, the bucket, the folder sent, the runs, the last run and the total sent, the Telegram bot card turned on, with the folder, the largest file the bot sends, the last run and the total sent, and the Test, Send now, Change, New with the same access and Remove buttons on each one, and, at the top of the screen, the New S3 and New bot buttons and the How the panel sends explanation, collapsed" width="100%"></a> | <a href="doc/en/images/aba-servidor.png"><img src="doc/en/images/aba-servidor.png" alt="Server tab with the Auto-refresh button, the Stack containers card, with one box for the FTP server, one for the Panel and one for the Web front end, each with CPU, memory and processes in use and allocated, the chart of the last minutes and the share of the time in which the CPU limit was reached, and the Server resources card, with CPU, memory, disk and FTP network" width="100%"></a> |
 | **Destinations** — sends by itself the files of a folder to an S3 storage and through a Telegram bot, with test and send right away | **Server** — the usage and the limit of processor, memory and processes of each container, and the resources of the server |
 | <a href="doc/en/images/aba-seguranca.png"><img src="doc/en/images/aba-seguranca.png" alt="Security tab with the summary of the check at the top, which says how many items are in order, and one line per item: public address, panel behind a proxy or tunnel, addresses of the FTP and of the panel, TLS mode, the two certificates, allowed networks, session, sign-in of FTP users, blocking by attempts on FTP, with the name of the blocked user, blocking by address, with the number of blocked addresses, cost of the passwords, security contact, container and firewall" width="100%"></a> | <a href="doc/en/images/aba-bloqueios.png"><img src="doc/en/images/aba-bloqueios.png" alt="Blocks tab with the rule in use below the title, the Block address button, four blocked addresses, in IPv4 and in IPv6, for errors on FTP, for errors on the panel and by an administrator, each with since when, until when and the Change period and Unblock buttons, and the Users blocked on FTP card, with the user switch-core" width="100%"></a> |
 | **Security** — checks network, TLS, certificates, blocks, passwords and security contact | **Blocks** — the blocked addresses and prefixes, by user and password errors or by the administrator, with new block, unblock and change of period |
@@ -131,7 +132,7 @@ The web panel, tab by tab. The Overview tab is the image at the top of this page
 | <a href="doc/en/images/aba-meus-arquivos.png"><img src="doc/en/images/aba-meus-arquivos.png" alt="My files screen of the user olt-centro, with the Full profile, with the folders 2026-09 and 2026-10 and a configuration file, the automatic cleanup warning above the list, the Open or Download, Rename and Delete buttons on each row, the New folder and Upload file cards and, in the menu, only the My files tab, the PT and EN buttons, the name of the user and the Sign out button" width="100%"></a> | |
 | **My files** — the FTP user sees their own folder and does in it what their profile allows | |
 
-<sub><b>v1.3.0</b> · web panel, one screenshot per tab · captured on 2026-10-11</sub>
+<sub><b>v1.4.0</b> · web panel, one screenshot per tab · captured on 2026-10-11</sub>
 
 Every screen, menu by menu, with the explanation of each one: [application screenshots](doc/en/application/README.md).
 
@@ -184,6 +185,7 @@ To serve the internal network, adjust the `.env` (template in [`.env.example`](.
 | Let a user upload files in the browser | in the panel, Users tab, **Edit**, checkbox **Allow this user to upload files through the panel**, or `./manage-user.sh limites backup-olt enviar=1`: see [Uploading files through the panel](doc/en/panel.md#enviar-arquivo) |
 | Keep only the newest files of an account | in the panel, Users tab, **Edit**, **Automatic cleanup** card, or `./manage-user.sh retencao backup-olt ultimos=30`: see [Automatic cleanup](doc/en/panel.md#limpeza) |
 | Send the files of a folder to an S3 or to Telegram | in the panel, Destinations tab, **Configure** on the card of the destination; for a single file, Files tab, **Telegram** or **S3** button on its line: see [Destinations](doc/en/panel.md#destinos) |
+| Send the copy of the whole system to an S3 | in the panel, Destinations tab, **System copy** card, **Configure** and **Copy and send now**: see [System copy to S3](doc/en/panel.md#copia-do-sistema) |
 | Block an address or a prefix | in the panel, Blocks tab, **Block address**, or `./manage-user.sh endereco-bloquear 203.0.113.7 30`: see [blocking by address](doc/en/security.md#bloqueio-por-endereco) |
 | Create a folder and lock a user to it | in the panel, Files tab, **New folder** and **New user in this folder**, or `./manage-user.sh add olt01 clientes/olt-01` |
 | Keep a backup copy | `./scripts/backup.sh`, which writes it encrypted; to go back to it, `./scripts/restaurar.sh <copy>`. Keep `.secrets/backup-chave-privada.txt` off the server |
@@ -446,6 +448,7 @@ flowchart LR
     painel -. "checks the FTP password" ..-> ftp
     ftp -. "looks up" .-> vauth
     ftp -. "reads the certificate" .-> vcerts
+    painel -. "reads for the system copy" .-> vcerts
 ```
 <sub>Level 2 · Map · [source](doc/en/diagrams/)</sub>
 
@@ -471,6 +474,7 @@ flowchart LR
 | Web panel | Pure-FTPd | checks the password of the FTP user who signs in to the panel, over the internal network of the stack |
 | Pure-FTPd | `DATA_DIR/auth` (PureDB) | looks up the users |
 | Pure-FTPd | `DATA_DIR/certs` | reads the certificate |
+| Web panel | `DATA_DIR/certs` | reads it, read-only, for the [system copy](doc/en/panel.md#copia-do-sistema) sent to the S3 |
 
 **Configuration, secrets and log**
 
@@ -493,11 +497,12 @@ The map shows the parts and the volumes. The configuration, the secrets and the 
 | Container `allsafe-ftp-nginx` (service `nginx`) | Web front end of the panel: HTTPS, allowed networks, request limit and static files | `8443/tcp` ➜ `8443/tcp` | — |
 | Folder `DATA_DIR/auth` | PureDB database of the virtual users, shared by the FTP and the panel | — | `/auth` |
 | Folder `DATA_DIR/dados` | Uploaded files, one folder per user | — | `/data` |
-| Folder `DATA_DIR/certs` | TLS key and certificate of the FTP (`pure-ftpd.pem`) | — | `/etc/ssl/private` |
+| Folder `DATA_DIR/certs` | TLS key and certificate of the FTP (`pure-ftpd.pem`); the panel only reads the folder, for the system copy | — | `/etc/ssl/private` in the FTP; `/certs` in the panel, read-only |
 | Folder `DATA_DIR/painel` | Panel certificate, administrators (name and password hash), `auditoria.log` and the language chosen by each account (`idiomas`) | — | `/painel` |
 | Folder `DATA_DIR/nginx` | Panel socket and copy of the certificate, remade at every start; nginx only reads | — | `/nginx` |
 | Secret `ftp_usuario_inicial_senha` | Password of the initial user (`.secrets/ftp-usuario-inicial-senha.txt`), read-only | — | `/run/secrets/ftp_usuario_inicial_senha` |
 | Secret `painel_admin_inicial_senha_hash` | Hash of the initial password of the first panel administrator (`.secrets/painel-admin-inicial-senha-hash.txt`), read-only | — | `/run/secrets/painel_admin_inicial_senha_hash` |
+| Secret `backup_chave_publica` | Public key that encrypts the system copy sent to the S3 (`.secrets/backup-chave-publica.txt`), read-only, in the panel | — | `/run/secrets/backup_chave_publica` |
 | Network `allsafe-ftp-network` | Dedicated bridge, subnet `172.29.1.0/29` | — | — |
 
 - **Images:** [`Dockerfile`](Dockerfile) with three targets on the same `debian:trixie-slim` (Debian 13), pinned by digest: `ftp` (`pure-ftpd` and the user `ftpdata`, uid and gid **10000**), `painel` (the same, with `python3`) and `nginx` (only `nginx` and `openssl`, with the user `frente`, uid and gid **10001**). All three carry the project `LICENSE` and `NOTICE` in `/usr/share/doc/allsafe-ftp-stack/`.
@@ -644,7 +649,7 @@ The safest path for each decision of whoever installs, as a flowchart, is in [be
 | Check the running installation | `./scripts/validate.sh --runtime` | the same, plus `servico ftp: running, healthy`, likewise for `painel` and `nginx`, and the initial user in PureDB or removed by the administrator |
 | Run the full suite: functional, security and network | `./tests/testar.sh` | one line per case and, at the end, `Bateria aprovada: nenhum desvio.` |
 
-The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 86 functional cases, 132 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
+The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 90 functional cases, 133 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
 
 ---
 

@@ -507,6 +507,13 @@ if ! compose up -d --wait --wait-timeout $(( 180 + portas_passivas / 4 )); then
   compose ps || true
   die "os containers não ficaram healthy. Veja o motivo com: docker compose logs --tail 50 ftp painel nginx"
 fi
+# O painel recebe a chave pública da cópia como arquivo montado: trocada no host, o container em pé continua com a
+# antiga até ser recriado, e a cópia do sistema que ele envia para o S3 sairia cifrada para a chave errada.
+if [[ "$(compose exec -T painel cat /run/secrets/backup_chave_publica 2>/dev/null)" != "$(< "$chave_publica")" ]]; then
+  echo "A chave pública da cópia mudou: recriando o painel para ele usar a atual."
+  compose up -d --wait --wait-timeout 180 --force-recreate --no-deps painel \
+    || die "o painel não voltou depois da troca da chave pública. Veja o motivo com: docker compose logs --tail 50 painel"
+fi
 compose ps
 
 ftp_ip="$(env_valor FTP_BIND_IP 127.0.0.1)"

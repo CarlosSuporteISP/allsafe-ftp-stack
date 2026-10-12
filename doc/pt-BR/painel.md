@@ -593,6 +593,40 @@ O maior arquivo que o bot envia de uma vez é o de [`PAINEL_TELEGRAM_MAX_MB`](co
 
 Quando a última passada para antes do fim, o cartão mostra o motivo em uma frase. O que cada motivo quer dizer e o que fazer está em [Solução de problemas](solucao-de-problemas.md#destinos).
 
+<a name="copia-do-sistema"></a>
+
+**Cópia do sistema para o S3.** No alto da aba, o cartão **Cópia do sistema** manda o sistema inteiro a um dos armazenamentos S3 gravados: o painel junta as pastas `auth`, `dados`, `certs` e `painel` em um arquivo só, cifrado com a chave pública da cópia. É a mesma cópia que o [`scripts/backup.sh`](backup.md#fazer) grava em `BACKUP_DIR`, e o `scripts/restaurar.sh` a abre com a chave privada: veja [Cópia no S3, pelo painel](backup.md#no-s3). O cartão oferece o **Configurar** depois que existe um S3 com os segredos gravados.
+
+1. No cartão **Cópia do sistema**, clique em **Configurar**.
+2. Escolha o **Armazenamento S3 que recebe**.
+3. Preencha a **Pasta no bucket**, que é só das cópias do sistema: `copia-do-sistema` no padrão; em branco é a raiz do bucket.
+4. Em **Rotina**, digite de quantos em quantos dias a cópia é feita, de 1 a 30, e a **Hora da rotina**, na hora do servidor. Com `0`, a cópia só sai pelo botão ou pelo terminal.
+5. Digite a sua senha e clique em **Gravar**.
+6. De volta à aba, clique em **Copiar e enviar agora**.
+
+**Resultado esperado:** a aba volta com o aviso **Cópia do sistema gravada. A rotina vale a partir de agora.**, e o cartão mostra o destino, o bucket e a pasta, a rotina e a marca **rotina ligada** ou **só pelo botão**. Depois do botão, o aviso é **Cópia do sistema pedida: ela é feita em segundo plano. Atualize a tela para acompanhar.** Enquanto a cópia roda, o cartão tem a marca **em andamento** e a linha **Agora**, com o tamanho e as partes já enviadas; no fim, a linha **Última cópia** traz a data, o tamanho, a quantidade de arquivos e o nome do objeto.
+
+- Cada cópia são dois objetos na pasta escolhida: `<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age` e o `.sha256` dele, com a soma que a restauração confere.
+- O painel só envia. Nenhuma cópia antiga é apagada: elas se acumulam no bucket, e o prazo de cada uma é o da regra de expiração do próprio bucket.
+- A cópia usa o endereço, o bucket e as chaves do S3 escolhido, e funciona com esse destino desligado. A pasta dela é a do formulário da cópia, e não o prefixo do destino.
+- O `.env` e os segredos da instalação não entram, nem os dos destinos: guarde-os à parte, com a chave privada da cópia, como em [Guardar o `.env` e os segredos](backup.md#segredos).
+- Uma cópia por vez: com uma em andamento, o botão some do cartão, e outro pedido é recusado com o motivo.
+- A cópia é feita em segundo plano, com a prioridade mais baixa, dentro do limite de processador do painel. O tempo cresce com o tamanho dos dados: marque a rotina para a hora de menos uso.
+- O arquivo que muda enquanto é lido entra como foi lido, e o cartão diz quantos mudaram: é o de um envio em andamento, que pode estar incompleto na cópia.
+- Quando a cópia para antes do fim, nenhum objeto fica no destino, e o cartão mostra **A última cópia, de (data), não foi concluída**, com o motivo em uma frase. A rotina tenta de novo no dia seguinte, na mesma hora.
+- A cópia feita pelo botão ou pelo terminal conta para a rotina: a seguinte sai quando a última que deu certo completa os dias gravados.
+- Remover o S3 que recebe a cópia deixa a cópia sem destino, e a rotina dela para: a tela de remoção avisa antes, e o cartão volta para **não configurada**.
+- Só o administrador tem o cartão, o formulário e o botão.
+
+Pelo terminal, a situação da cópia e uma cópia na hora, que só volta quando termina:
+
+```bash
+docker compose exec painel python3 /opt/painel/servidor.py --copia
+docker compose exec painel python3 /opt/painel/servidor.py --copia enviar
+```
+
+**Resultado esperado:** o primeiro mostra `cópia do sistema: s3 (<bucket>/<pasta>); a cada 1 dia(s), às 03:00` e a linha `última cópia:`, ou `nenhuma cópia ainda`. O segundo termina com `cópia do sistema: s3:<bucket>/<pasta>/<objeto>; <n> bytes em <n> parte(s); <n> arquivo(s), 0 mudaram durante a leitura, 0 de fora (soquete, fila ou dispositivo); sha256 <soma>` e sai com `0`. Quando a cópia não é concluída, a linha é `cópia do sistema: falhou: <motivo>; nenhum objeto ficou no destino`, e a saída é `1`.
+
 **Onde ficam os segredos.** As chaves de cada S3 e o token e a conversa de cada bot ficam no servidor, um por arquivo, na pasta `destinos` de `SECRETS_DIR`, e nunca voltam para a tela, para o Log nem para a auditoria. Como os outros segredos da instalação, não entram na [cópia de segurança](backup.md): depois de restaurar uma cópia, o cartão mostra a marca **faltam os segredos** e nada é enviado até eles serem gravados de novo, em **Alterar**.
 
 **S3 na rede interna com autoridade própria.** O painel só fala HTTPS e confere o certificado do serviço. Se o certificado do seu S3 foi emitido por uma autoridade da própria rede, entregue o certificado dela ao painel, em PEM:
@@ -621,6 +655,8 @@ docker compose exec -T painel sh -c 'cat > /painel/destinos/ca.pem' < autoridade
 - **Telegram:** o [`telegram.py`](../../painel/telegram.py) só chama `sendDocument` e `sendMessage`, sempre por `POST`, no endereço de `PAINEL_TELEGRAM_API`; qualquer outra operação da API de bot, como a de apagar mensagem, é recusada antes de sair do painel. Entre um envio e o seguinte há uma pausa de 3 s. Quando a API pede para ir mais devagar, o painel espera o tempo pedido, até 30 s, e repete o envio uma vez. Arquivo que a API recusa pelo tamanho, mesmo abaixo de `PAINEL_TELEGRAM_MAX_MB`, vira aviso.
 - **Arquivo que o destino recusa:** resposta `4xx` que não é de permissão, de prazo (`408`) nem de pressa (`429`), na terceira passada seguida com o mesmo arquivo, deixa esse arquivo para trás, para os seguintes saírem, e grava `destino_pulado`.
 - **Série:** trocar o endereço, o bucket, o prefixo, a forma do endereço ou a pasta do S3, ou a pasta do bot, começa uma série nova, e o andamento anterior é esquecido. O mesmo acontece com o bot desligado e ligado de novo, que passa a enviar só o que chegar dali em diante. Trocar o intervalo, o modo, o idioma ou os segredos mantém o andamento.
+- **Cópia do sistema:** `GET` e `POST /destinos/copia` mostram e gravam o formulário, com a senha atual, e `POST /destinos/copia/agora` é o botão. Quem faz a cópia é o [`copia.py`](../../painel/copia.py), em um processo à parte (`servidor.py --copia enviar`) e com a prioridade mais baixa: a tela, a rotina e o terminal disparam o mesmo comando, e uma trava em arquivo garante uma cópia por vez. O arquivo `tar` das quatro pastas passa pelo `gzip` e pelo `age` em fluxo e sai em um envio em partes: nada sem cifra chega ao disco, e cada parte, já cifrada, é montada em `DATA_DIR/painel/destinos` antes de sair. A parte tem 16 MiB ou mais e cresce com o disco em uso, para a cópia caber no número de partes do protocolo; sem o tamanho de uma parte mais 64 MiB livres, a cópia não começa. O painel recebe só a chave pública da cópia, como segredo montado, e a pasta `certs` só para leitura: a chave privada não chega ao container. A lista de usuários é lida com a trava de quem altera usuário, com espera de até 30 segundos. Link simbólico entra como link; soquete, fila e dispositivo ficam de fora e são contados. O objeto é `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age`, e o `.sha256` é gravado depois dele: só então a cópia conta como feita. Na falha, o envio em partes é desfeito no destino. A chave do bucket precisa das mesmas duas permissões dos destinos, `s3:PutObject` e `s3:AbortMultipartUpload`. A configuração fica em `DATA_DIR/painel/destinos/copia.conf` e o andamento, em `copia.estado`, que não entra na cópia enviada. A rotina confere a cada minuto e faz uma tentativa por dia, na hora marcada. No terminal, o motivo da falha sai em código: `sem_destino`, `segredo`, `chave`, `cifra`, `cadastro`, `espaco`, `profundo`, `disco`, `interno`, `soma` ou o do pedido ao serviço, como `http_500`.
+- **Auditoria da cópia do sistema:** `copia_gravada`, com o administrador, o destino, a pasta no bucket, os dias e a hora; `copia_pedida`, com o administrador e o resultado do botão; `copia_enviada`, com a origem (`tela`, `rotina` ou `terminal`), o destino, o objeto, os bytes, as partes, os arquivos, os que mudaram e os de fora; `copia_falhou`, com a origem, o motivo e as partes enviadas até ali; `copia_sem_destino`, quando o S3 da cópia é removido. `copia_enviada` e `copia_falhou` não têm endereço: quem fez foi o painel.
 - **Pelo terminal:** `docker compose exec painel python3 /opt/painel/servidor.py --destinos` mostra a situação de cada destino e a última passada, sem segredo; `--destinos enviar <destino>`, com o nome que a lista mostra, faz a passada na hora e sai com `1` quando ela para antes do fim; com `--sem-espera`, não aguarda os dois minutos de um arquivo sem mudar.
 - **Auditoria:** `destino_gravado`, com o administrador, o destino, a situação, a pasta, o intervalo, o modo do S3 e se os segredos foram trocados, mantidos ou copiados, com o destino de origem; `destino_teste`, com o resultado; `destino_pedido`; `destino_removido`; `destino_arquivo`, com o administrador, o destino, o arquivo, os bytes e o resultado do envio pedido pelo botão; `destino_enviado`, a cada passada que enviou, apagou, avisou do limite ou teve arquivo recusado, com os arquivos, os bytes, os apagados, os que passaram do limite do bot, os ignorados e os recusados; `destino_falhou`, com o motivo, quando ele muda; `destino_pulado`, com o arquivo e o motivo. As três últimas não têm endereço: quem fez foi o painel. Nenhuma leva segredo nem texto vindo do serviço de fora.
 
@@ -1020,6 +1056,8 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `destino_teste` · `destino_pedido` | Um administrador clicou em **Testar**, com o resultado · em **Enviar agora**; com o administrador e o destino |
 | `destino_arquivo` | Um administrador mandou um arquivo ao destino pelo botão da aba Arquivos, com o administrador, o destino, o arquivo, os bytes e o resultado |
 | `destino_enviado` · `destino_falhou` · `destino_pulado` | Uma passada enviou, apagou, avisou do limite ou teve arquivo recusado, com o destino e as contagens · parou antes do fim, com o motivo, quando ele muda · deixou para trás um arquivo que o destino recusa, com o arquivo e o motivo. Sem endereço: quem fez foi o painel |
+| `copia_gravada` · `copia_pedida` · `copia_sem_destino` | Um administrador gravou a [cópia do sistema para o S3](#copia-do-sistema), com o destino, a pasta no bucket, os dias e a hora · clicou em **Copiar e enviar agora**, com o resultado · removeu o S3 que recebia a cópia |
+| `copia_enviada` · `copia_falhou` | A cópia do sistema chegou ao S3, com a origem (`tela`, `rotina` ou `terminal`), o destino, o objeto, os bytes, as partes e os arquivos · parou antes do fim, com a origem e o motivo. Sem endereço: quem fez foi o painel |
 | `admin_inicial_criado` | Primeira subida: o painel criou o administrador de `PAINEL_ADMIN_USER` |
 | `admin_criado` · `admin_senha_trocada` · `admin_renomeado` · `admin_removido` | Alteração de administrador pelo painel, com quem fez e quem foi alterado |
 | `admin_senha_atual_recusada` | Alteração de administrador ou apagamento recusado: a senha atual de quem pediu não conferiu; com o administrador e o caminho pedido |
@@ -1055,7 +1093,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 | Pastas dos usuários | Cada usuário do FTP fica preso (`chroot`) na pasta do cadastro; a pasta escolhida não sai de `DATA_DIR/dados` nem passa por link simbólico; pasta alcançada por mais de um usuário aparece marcada como **dividida** |
 | Formulários | Token CSRF por sessão e conferência de `Origin`: o envio tem de partir do próprio painel; corpo limitado a 8 KiB, menos no envio de arquivo, que tem as duas rotas dele e o teto de `PAINEL_ENVIO_MAX_MB` |
 | Idioma | A troca é um formulário como os outros, com token e `Origin`; o cookie do idioma só leva `pt` ou `en` e não vale como sessão; a volta depois da troca só leva a tela do próprio painel |
-| Destinos de fora | Só o administrador configura, com a senha atual, e só ele manda um arquivo pelo botão da aba Arquivos; o painel sai só por HTTPS, com o certificado conferido, e não vai para o próprio container nem para endereço reservado; as chaves do S3, o token do bot e a conversa ficam em arquivos `0600` e nunca voltam para a tela nem para a auditoria; o bot só envia: o painel não lê a conversa nem aceita comando; `PAINEL_DESTINOS=nao` desliga tudo |
+| Destinos de fora | Só o administrador configura, com a senha atual, e só ele manda um arquivo pelo botão da aba Arquivos; o painel sai só por HTTPS, com o certificado conferido, e não vai para o próprio container nem para endereço reservado; as chaves do S3, o token do bot e a conversa ficam em arquivos `0600` e nunca voltam para a tela nem para a auditoria; o bot só envia: o painel não lê a conversa nem aceita comando; a cópia do sistema para o S3 sai cifrada com a chave pública, e a chave que a abre não chega ao painel; `PAINEL_DESTINOS=nao` desliga tudo |
 | Navegador | `Content-Security-Policy` sem script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS e `no-store`; a página não carrega nada de fora |
 | Containers | Raiz somente leitura, `cap_drop: ALL`, `no-new-privileges`, sem socket do Docker, limites de CPU, memória e processos; o nginx roda sem root e sem nenhuma capability |
 
@@ -1090,7 +1128,7 @@ O código fica em [`painel/`](../../painel/), um assunto por arquivo, e vai inte
 
 | Módulo | O que tem |
 |---|---|
-| [`servidor.py`](../../painel/servidor.py) | Ponto de entrada: sobe o servidor, cria o primeiro administrador e atende os modos `--hash`, `--saude`, `--administrador`, `--retencao` e `--destinos` |
+| [`servidor.py`](../../painel/servidor.py) | Ponto de entrada: sobe o servidor, cria o primeiro administrador e atende os modos `--hash`, `--saude`, `--administrador`, `--retencao`, `--destinos` e `--copia` |
 | [`saude.py`](../../painel/saude.py) | Verificação de saúde do container: o pedido de `/saude` pelo soquete Unix, só com a biblioteca de soquete |
 | [`config.py`](../../painel/config.py) | Caminhos, limites e a leitura das variáveis do container, com as recusas de rede e de sessão |
 | [`senha.py`](../../painel/senha.py) | Hash `scrypt` das senhas dos administradores e a conferência em tempo constante |
@@ -1117,6 +1155,7 @@ O código fica em [`painel/`](../../painel/), um assunto por arquivo, e vai inte
 | [`aba_arquivos.py`](../../painel/aba_arquivos.py) | Aba Arquivos: navegação pelas pastas dos usuários, download, envio de arquivo, criação de pasta vazia, troca de nome e apagamento de arquivo e de pasta, e os botões de enviar um arquivo a um destino gravado |
 | [`envio.py`](../../painel/envio.py) | Envio de arquivo pelo navegador: leitura do corpo `multipart/form-data` em fluxo, do soquete para o disco, sem guardar o arquivo na memória |
 | [`aba_meus_arquivos.py`](../../painel/aba_meus_arquivos.py) | Tela Meus arquivos, do usuário do FTP: navegação, download e as ações do perfil dentro da pasta dele; para o perfil Só envio, a tela Envio de arquivos |
+| [`copia.py`](../../painel/copia.py) | Cópia do sistema para o S3: a configuração e o andamento, o arquivo das quatro pastas cifrado em fluxo e enviado em partes, a rotina e o disparo pela tela ou pelo terminal (`servidor.py --copia`) |
 | [`destinos.py`](../../painel/destinos.py) | Destinos de fora: a configuração, os segredos e o andamento de cada um, a passada que envia o que chegou, pela linha de execução do painel ou pelo terminal (`servidor.py --destinos`), o teste e o envio de um arquivo só |
 | [`chegadas.py`](../../painel/chegadas.py) | Avisos de chegada: os arquivos que o servidor FTP e o envio pelo painel dão como inteiros, para o bot do Telegram enviar sem esperar |
 | [`saida.py`](../../painel/saida.py) | Saída do painel para fora da stack: HTTPS com o certificado conferido, a recusa dos endereços que o painel não alcança e os motivos de falha |

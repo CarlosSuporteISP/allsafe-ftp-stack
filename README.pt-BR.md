@@ -11,8 +11,9 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.3.0-blue)
-![Status](https://img.shields.io/badge/status-est%C3%A1vel_LTS-brightgreen)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.4.0-blue)
+![Status](https://img.shields.io/badge/status-est%C3%A1vel-brightgreen)
+![Suporte](https://img.shields.io/badge/suporte-LTS-blue)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
 ![Docker Engine](https://img.shields.io/badge/Docker_Engine-29.8-2496ed?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-5.5-2496ed?logo=docker&logoColor=white)
@@ -102,7 +103,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão que encerra com 4 horas sem uso, bloqueio depois de cinco senhas erradas e registro de cada ação |
 | **Arquivos pelo navegador** | O administrador navega, envia, baixa, renomeia e apaga; o dono dos arquivos entra com o usuário e a senha do FTP, vê só a própria pasta e faz o que o perfil dele deixa. Enviar pelo painel depende de permissão dada a cada usuário |
 | **Limpeza automática** | Por conta, o administrador manda guardar só os últimos arquivos de cada pasta ou só os dos últimos dias; o painel apaga o resto sozinho, de tempos em tempos. Desligada por padrão |
-| **Envio para S3 e bot do Telegram** | Na aba Destinos, o administrador liga uma pasta a um armazenamento S3, para a segunda cópia ou para guardar fora e liberar o disco, e a um bot do Telegram, que entrega em instantes cada arquivo que chega a uma pessoa, um grupo ou um canal, até o tamanho que o bot aceita. Cada tipo aceita até 20 destinos, e um destino novo pode usar o acesso de outro, para outra pasta, outro bucket ou outro grupo. O bot só envia. Na aba Arquivos, um botão manda um arquivo na hora. Sem configuração por padrão |
+| **Envio para S3 e bot do Telegram** | Na aba Destinos, o administrador liga uma pasta a um armazenamento S3, para a segunda cópia ou para guardar fora e liberar o disco, e a um bot do Telegram, que entrega em instantes cada arquivo que chega a uma pessoa, um grupo ou um canal, até o tamanho que o bot aceita. Cada tipo aceita até 20 destinos, e um destino novo pode usar o acesso de outro, para outra pasta, outro bucket ou outro grupo. O bot só envia. Na aba Arquivos, um botão manda um arquivo na hora. A cópia do sistema inteiro, cifrada, vai para um S3 pelo botão ou por rotina. Nada é apagado no destino. Sem configuração por padrão |
 | **Saúde do servidor no painel** | A aba Servidor mostra os três containers da stack, cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, e o processador, a memória, o disco e a rede do FTP do servidor, com o histórico dos últimos minutos |
 | **nginx na frente do painel** | Só o nginx publica a porta do painel: TLS 1.2 e 1.3, HTTP/2, lista de redes permitidas, limite de pedidos e de conexões por endereço; o painel fica sem porta de rede |
 | **Containers endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs; o nginx roda sem `root` e sem nenhuma `capability` |
@@ -123,7 +124,7 @@ O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página,
 |---|---|
 | <a href="doc/pt-BR/imagens/aba-usuarios.png"><img src="doc/pt-BR/imagens/aba-usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista das contas: primeiro o administrador admin, com a etiqueta você, depois os usuários do FTP, cada um com o perfil embaixo do nome e as etiquetas inicial, limites, limpeza e bloqueado, a pasta, com a etiqueta dividida em duas, uso, arquivos, último envio, a coluna TLS, com obrigatório em todas as linhas, as ações Editar, Dispensar TLS, Trocar senha e Remover e, abaixo da lista, o recolhido Como funcionam os perfis e as etiquetas" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-arquivos.png"><img src="doc/pt-BR/imagens/aba-arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma, os botões Renomear e Apagar em cada linha e os cartões Nova pasta e Enviar arquivo" width="100%"></a> |
 | **Usuários** — cria cada conta, escolhe o perfil, troca a senha, a pasta e os limites, desbloqueia e remove | **Arquivos** — navega nas pastas dos usuários, envia e baixa arquivo, cria pasta, renomeia e apaga |
-| <a href="doc/pt-BR/imagens/aba-destinos.png"><img src="doc/pt-BR/imagens/aba-destinos.png" alt="Aba Destinos com o cartão Armazenamento S3 ligado, com o endereço, o bucket, a pasta enviada, as passadas, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, o maior arquivo que o bot envia, a última passada e o total enviado, e os botões Testar, Enviar agora, Alterar, Novo com o mesmo acesso e Remover em cada um, e, no alto da tela, os botões Novo S3 e Novo bot e a explicação Como o painel envia, recolhida" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-servidor.png"><img src="doc/pt-BR/imagens/aba-servidor.png" alt="Aba Servidor com o botão Atualizar sozinha, o cartão Containers da stack, com um quadro para o Servidor FTP, um para o Painel e um para a Frente web, cada um com processador, memória e processos em uso e alocados, o gráfico dos últimos minutos e a parte do tempo em que o limite de processador foi atingido, e o cartão Recursos do servidor, com processador, memória, disco e rede do FTP" width="100%"></a> |
+| <a href="doc/pt-BR/imagens/aba-destinos.png"><img src="doc/pt-BR/imagens/aba-destinos.png" alt="Aba Destinos com o cartão Cópia do sistema no alto, o cartão Armazenamento S3 ligado, com o endereço, o bucket, a pasta enviada, as passadas, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, o maior arquivo que o bot envia, a última passada e o total enviado, e os botões Testar, Enviar agora, Alterar, Novo com o mesmo acesso e Remover em cada um, e, no alto da tela, os botões Novo S3 e Novo bot e a explicação Como o painel envia, recolhida" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-servidor.png"><img src="doc/pt-BR/imagens/aba-servidor.png" alt="Aba Servidor com o botão Atualizar sozinha, o cartão Containers da stack, com um quadro para o Servidor FTP, um para o Painel e um para a Frente web, cada um com processador, memória e processos em uso e alocados, o gráfico dos últimos minutos e a parte do tempo em que o limite de processador foi atingido, e o cartão Recursos do servidor, com processador, memória, disco e rede do FTP" width="100%"></a> |
 | **Destinos** — envia sozinho os arquivos de uma pasta para um armazenamento S3 e por um bot do Telegram, com teste e envio na hora | **Servidor** — o uso e o limite de processador, memória e processos de cada container, e os recursos do servidor |
 | <a href="doc/pt-BR/imagens/aba-seguranca.png"><img src="doc/pt-BR/imagens/aba-seguranca.png" alt="Aba Segurança com o resumo da conferência no alto, que diz quantos itens estão em ordem, e uma linha por item: endereço público, painel por proxy ou túnel, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, bloqueio por endereço, com a quantidade de endereços bloqueados, custo das senhas, contato de segurança, container e firewall" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-bloqueios.png"><img src="doc/pt-BR/imagens/aba-bloqueios.png" alt="Aba Bloqueios com a regra em uso abaixo do título, o botão Bloquear endereço, quatro endereços bloqueados, em IPv4 e em IPv6, por erros no FTP, por erros no painel e por um administrador, cada um com desde quando, até quando e os botões Mudar prazo e Desbloquear, e o cartão Usuários bloqueados no FTP, com o usuário switch-core" width="100%"></a> |
 | **Segurança** — confere rede, TLS, certificados, bloqueios, senhas e contato de segurança | **Bloqueios** — os endereços e os prefixos bloqueados, por erro de usuário e senha ou pelo administrador, com bloqueio novo, desbloqueio e troca do prazo |
@@ -132,7 +133,7 @@ O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página,
 | <a href="doc/pt-BR/imagens/aba-meus-arquivos.png"><img src="doc/pt-BR/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, de perfil Completo, com as pastas 2026-09 e 2026-10 e um arquivo de configuração, o aviso da limpeza automática acima da lista, os botões Abrir ou Baixar, Renomear e Apagar em cada linha, os cartões Nova pasta e Enviar arquivo e, no menu, só a aba Meus arquivos, os botões PT e EN, o nome do usuário e o botão Sair" width="100%"></a> | |
 | **Meus arquivos** — o usuário do FTP vê a própria pasta e faz nela o que o perfil dele deixa | |
 
-<sub><b>v1.3.0</b> · painel web, uma foto por aba · capturas de 2026-10-11</sub>
+<sub><b>v1.4.0</b> · painel web, uma foto por aba · capturas de 2026-10-11</sub>
 
 Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplicação](doc/pt-BR/aplicacao/README.md).
 
@@ -185,6 +186,7 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | Deixar um usuário enviar arquivo pelo navegador | pelo painel, aba Usuários, **Editar**, caixa **Permitir que este usuário envie arquivo pelo painel**, ou `./manage-user.sh limites backup-olt enviar=1`: veja [Enviar arquivo pelo painel](doc/pt-BR/painel.md#enviar-arquivo) |
 | Guardar só os arquivos mais novos de uma conta | pelo painel, aba Usuários, **Editar**, cartão **Limpeza automática**, ou `./manage-user.sh retencao backup-olt ultimos=30`: veja [Limpeza automática](doc/pt-BR/painel.md#limpeza) |
 | Mandar os arquivos de uma pasta para um S3 ou para o Telegram | pelo painel, aba Destinos, **Configurar** no cartão do destino; para um arquivo só, aba Arquivos, botão **Telegram** ou **S3** na linha dele: veja [Destinos](doc/pt-BR/painel.md#destinos) |
+| Mandar a cópia do sistema inteiro para um S3 | pelo painel, aba Destinos, cartão **Cópia do sistema**, **Configurar** e **Copiar e enviar agora**: veja [Cópia do sistema para o S3](doc/pt-BR/painel.md#copia-do-sistema) |
 | Bloquear um endereço ou um prefixo | pelo painel, aba Bloqueios, **Bloquear endereço**, ou `./manage-user.sh endereco-bloquear 203.0.113.7 30`: veja [bloqueio por endereço](doc/pt-BR/seguranca.md#bloqueio-por-endereco) |
 | Criar uma pasta e prender um usuário a ela | pelo painel, aba Arquivos, **Nova pasta** e **Novo usuário nesta pasta**, ou `./manage-user.sh add olt01 clientes/olt-01` |
 | Guardar uma cópia de segurança | `./scripts/backup.sh`, que a grava cifrada; para voltar a ela, `./scripts/restaurar.sh <cópia>`. Guarde `.secrets/backup-chave-privada.txt` fora do servidor |
@@ -450,6 +452,7 @@ flowchart LR
     painel -. "confere a senha do FTP" ..-> ftp
     ftp -. "consulta" .-> vauth
     ftp -. "lê o certificado" .-> vcerts
+    painel -. "lê para a cópia do sistema" .-> vcerts
 ```
 
 <sub>Nível 2 · Mapa · [fonte](doc/pt-BR/diagramas/)</sub>
@@ -476,6 +479,7 @@ flowchart LR
 | Painel web | Pure-FTPd | confere a senha do usuário do FTP que entra no painel, pela rede interna da stack |
 | Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
 | Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
+| Painel web | `DATA_DIR/certs` | lê, somente leitura, para a [cópia do sistema](doc/pt-BR/painel.md#copia-do-sistema) enviada ao S3 |
 
 **Configuração, segredos e registro**
 
@@ -498,11 +502,12 @@ O mapa mostra as peças e os volumes. A configuração, os segredos e o registro
 | Container `allsafe-ftp-nginx` (serviço `nginx`) | Frente web do painel: HTTPS, redes permitidas, limite de pedidos e arquivos estáticos | `8443/tcp` ➜ `8443/tcp` | — |
 | Pasta `DATA_DIR/auth` | Banco PureDB dos usuários virtuais, dividido pelo FTP e pelo painel | — | `/auth` |
 | Pasta `DATA_DIR/dados` | Arquivos enviados, uma pasta por usuário | — | `/data` |
-| Pasta `DATA_DIR/certs` | Chave e certificado TLS do FTP (`pure-ftpd.pem`) | — | `/etc/ssl/private` |
+| Pasta `DATA_DIR/certs` | Chave e certificado TLS do FTP (`pure-ftpd.pem`); o painel só lê a pasta, para a cópia do sistema | — | `/etc/ssl/private` no FTP; `/certs` no painel, somente leitura |
 | Pasta `DATA_DIR/painel` | Certificado do painel, administradores (nome e hash da senha), `auditoria.log` e o idioma escolhido por cada conta (`idiomas`) | — | `/painel` |
 | Pasta `DATA_DIR/nginx` | Soquete do painel e cópia do certificado, refeitos a cada subida; o nginx só lê | — | `/nginx` |
 | Segredo `ftp_usuario_inicial_senha` | Senha do usuário inicial (`.secrets/ftp-usuario-inicial-senha.txt`), somente leitura | — | `/run/secrets/ftp_usuario_inicial_senha` |
 | Segredo `painel_admin_inicial_senha_hash` | Hash da senha inicial do primeiro administrador do painel (`.secrets/painel-admin-inicial-senha-hash.txt`), somente leitura | — | `/run/secrets/painel_admin_inicial_senha_hash` |
+| Segredo `backup_chave_publica` | Chave pública que cifra a cópia do sistema enviada ao S3 (`.secrets/backup-chave-publica.txt`), somente leitura, no painel | — | `/run/secrets/backup_chave_publica` |
 | Rede `allsafe-ftp-network` | Bridge dedicada, sub-rede `172.29.1.0/29` | — | — |
 
 - **Imagens:** [`Dockerfile`](Dockerfile) com três alvos sobre o mesmo `debian:trixie-slim` (Debian 13), fixado por digest: `ftp` (`pure-ftpd` e o usuário `ftpdata`, uid e gid **10000**), `painel` (o mesmo, com `python3`) e `nginx` (só `nginx` e `openssl`, com o usuário `frente`, uid e gid **10001**). As três levam o `LICENSE` e o `NOTICE` do projeto em `/usr/share/doc/allsafe-ftp-stack/`.
@@ -649,7 +654,7 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 86 casos funcionais, 132 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 90 casos funcionais, 133 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
 
 ---
 

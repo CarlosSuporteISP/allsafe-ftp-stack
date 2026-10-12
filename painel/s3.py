@@ -2,7 +2,7 @@
 """Envio de arquivo para um armazenamento S3, só com a biblioteca padrão.
 
 O painel só grava: PutObject para arquivo de até 32 MiB e envio em partes acima disso (criar, enviar cada parte,
-concluir; abandonar quando falha). Nada é lido, listado nem apagado no destino: a chave só precisa das permissões
+concluir; abandonar quando falha). A cópia do sistema (copia.py) usa o mesmo envio em partes, com cada parte tirada de um fluxo. Nada é lido, listado nem apagado no destino: a chave só precisa das permissões
 s3:PutObject e s3:AbortMultipartUpload, e Destino.pedir recusa, antes de sair, o pedido que não está em FORMAS. Cada pedido é assinado com a assinatura versão 4 (AWS4-HMAC-SHA256), com o
 SHA-256 do corpo dentro da assinatura: o arquivo é lido duas vezes, uma para a soma e outra para o envio, e o destino
 recusa o que chegar diferente do que foi assinado. Serve para qualquer serviço que fale o protocolo do S3, com o
@@ -126,6 +126,12 @@ class Destino:
             self.pedir('PUT', chave, corpo=corpo, soma=soma, tamanho=tamanho)
             return
         parte = max(PARTE_MIN, -(-tamanho // PARTES_MAX))
+        self.em_partes(chave, ((descritor, inicio, min(parte, tamanho - inicio)) for inicio in range(0, tamanho, parte)))
+
+    def em_partes(self, chave, trechos):
+        """Envio em partes: `trechos` entrega (descritor, início, quanto) de cada parte, e a seguinte só é pedida
+        depois de a anterior estar gravada. Qualquer falha, também a de quem entrega os trechos, desfaz o envio:
+        o objeto só existe depois de concluído. Devolve o número de partes."""
         _, dados = self.pedir('POST', chave, [('uploads', '')])
         casa = ENVIO.search(dados)
         if not casa:
@@ -133,8 +139,9 @@ class Destino:
         envio = casa.group(1).decode('ascii', 'replace')
         try:
             marcas = []
-            for numero, inicio in enumerate(range(0, tamanho, parte), 1):
-                quanto = min(parte, tamanho - inicio)
+            for numero, (descritor, inicio, quanto) in enumerate(trechos, 1):
+                if numero > 10000:
+                    raise saida.Falha('limite')
                 soma, corpo = self.trecho(descritor, inicio, quanto)
                 recebidos, _ = self.pedir('PUT', chave, [('partNumber', str(numero)), ('uploadId', envio)],
                                           corpo=corpo, soma=soma, tamanho=quanto)
@@ -149,6 +156,7 @@ class Destino:
             # O protocolo pode responder 200 e trazer o erro no corpo: só vale quando vem o resultado.
             if b'<Error>' in dados or b'CompleteMultipartUploadResult' not in dados:
                 raise saida.Falha('resposta')
+            return len(marcas)
         except BaseException:
             try:
                 self.pedir('DELETE', chave, [('uploadId', envio)])

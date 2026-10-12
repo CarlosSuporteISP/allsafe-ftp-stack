@@ -79,7 +79,8 @@ caso $? seguranca 12 "Nenhuma senha em variável de ambiente" "$(grep -c . "$W/v
 
 s_ftp="$(docker exec "$FTP" ls /run/secrets 2>/dev/null | tr '\n' ' ')"; s_painel="$(docker exec "$PAINEL" ls /run/secrets 2>/dev/null | tr '\n' ' ')"
 s_nginx="$(docker exec "$NGINX" ls /run/secrets 2>/dev/null | tr '\n' ' ')"
-[[ "$s_ftp" == "ftp_usuario_inicial_senha " && "$s_painel" == "painel_admin_inicial_senha_hash " && -z "$s_nginx" ]]
+# O painel recebe também a chave pública da cópia do sistema: com ela só se cifra, e a que abre não entra em container nenhum.
+[[ "$s_ftp" == "ftp_usuario_inicial_senha " && "$s_painel" == "backup_chave_publica painel_admin_inicial_senha_hash " && -z "$s_nginx" ]]
 caso $? seguranca 13 "Cada serviço vê só o próprio segredo" "ftp: ${s_ftp:-nenhum }· painel: ${s_painel:-nenhum }· nginx: ${s_nginx:-nenhum}"
 
 ev=""; ok=0

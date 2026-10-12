@@ -2265,6 +2265,118 @@ EN = {
         'Destination that receives',
     'Enviar':
         'Send',
+    'Cópia do sistema gravada. A rotina vale a partir de agora.':
+        'System copy saved. The schedule applies from now on.',
+    'Cópia do sistema pedida: ela é feita em segundo plano. Atualize a tela para acompanhar.':
+        'System copy requested: it runs in the background. Refresh the screen to follow it.',
+    'a cópia do sistema não tem um S3 escolhido com os segredos gravados':
+        'the system copy has no S3 chosen with its secrets saved',
+    'falta a chave pública da cópia nesta instalação':
+        'the public key of the copy is missing in this installation',
+    'a cifra da cópia falhou':
+        'the encryption of the copy failed',
+    'os usuários estavam sendo alterados e a lista deles não pôde ser lida a tempo':
+        'users were being changed and their list could not be read in time',
+    'falta espaço em disco no servidor para montar uma parte da cópia':
+        'there is not enough disk space on the server to assemble one part of the copy',
+    'há pastas demais, uma dentro da outra, para o painel abrir':
+        'there are too many folders, one inside the other, for the panel to open',
+    'erro de disco no servidor':
+        'disk error on the server',
+    'erro interno do painel':
+        'internal panel error',
+    'outra cópia do sistema está em andamento':
+        'another system copy is in progress',
+    'a cópia foi gravada no destino, mas o arquivo com a soma dela não: faça outra cópia':
+        'the copy was written to the destination, but the file with its checksum was not: make another copy',
+    'Escolha um armazenamento S3 com os segredos gravados.':
+        'Choose an S3 storage with its secrets saved.',
+    'Rotina inválida: de 0 a 30 dias.':
+        'Invalid schedule: from 0 to 30 days.',
+    'Hora inválida: use HH:MM, de 00:00 a 23:59.':
+        'Invalid time: use HH:MM, from 00:00 to 23:59.',
+    'Cópia do sistema: não começou. Motivo: {motivo}.':
+        'System copy: it did not start. Reason: {motivo}.',
+    'Este é o destino da cópia do sistema: sem ele, a cópia fica sem destino e a rotina dela para.':
+        'This is the destination of the system copy: without it, the copy has no destination and its schedule stops.',
+    'só pelo botão ou pelo terminal':
+        'only by the button or the terminal',
+    'todo dia, às {hora} (hora do servidor)':
+        'every day, at {hora} (server time)',
+    'a cada {n} dia, às {hora} (hora do servidor)':
+        'every {n} day, at {hora} (server time)',
+    'a cada {n} dias, às {hora} (hora do servidor)':
+        'every {n} days, at {hora} (server time)',
+    'em andamento':
+        'in progress',
+    'não configurada':
+        'not configured',
+    'rotina ligada':
+        'schedule on',
+    'só pelo botão':
+        'button only',
+    'Cópia do sistema':
+        'System copy',
+    'O sistema inteiro em um arquivo só, cifrado, em um armazenamento S3: os usuários do FTP, os arquivos, os certificados e os dados do painel. É a mesma cópia que o <code>scripts/backup.sh</code> grava no servidor, e o <code>scripts/restaurar.sh</code> a abre com a chave privada da cópia. O painel só envia: as cópias se acumulam no bucket, e o prazo delas é da regra do bucket.':
+        'The whole system in a single encrypted file, in an S3 storage: the FTP users, the files, the certificates and the panel data. It is the same copy that <code>scripts/backup.sh</code> writes on the server, and <code>scripts/restaurar.sh</code> opens it with the private key of the copy. The panel only sends: the copies pile up in the bucket, and how long they stay is up to the bucket rule.',
+    'Falta a chave pública da cópia nesta instalação: rode <code>./deploy.sh</code>, que a cria, e volte aqui.':
+        'The public key of the copy is missing in this installation: run <code>./deploy.sh</code>, which creates it, and come back here.',
+    'Grave primeiro um armazenamento S3, com os segredos: a cópia do sistema vai para um deles.':
+        'Save an S3 storage first, with its secrets: the system copy goes to one of them.',
+    'A cópia anterior foi interrompida pelo reinício do painel: faça outra.':
+        'The previous copy was interrupted by the panel restart: make another one.',
+    'A última cópia, de {quando}, não foi concluída: {motivo}.':
+        'The last copy, from {quando}, was not completed: {motivo}.',
+    '{n} arquivo mudou durante a leitura':
+        '{n} file changed while being read',
+    '{n} arquivos mudaram durante a leitura':
+        '{n} files changed while being read',
+    'cópia em andamento':
+        'copy in progress',
+    '{n} parte enviada':
+        '{n} part sent',
+    '{n} partes enviadas':
+        '{n} parts sent',
+    'Copiar e enviar agora':
+        'Copy and send now',
+    'Destino':
+        'Destination',
+    'Bucket e pasta':
+        'Bucket and folder',
+    'Rotina':
+        'Schedule',
+    'Última cópia':
+        'Last copy',
+    'A cópia leva as pastas <code>auth</code>, <code>dados</code>, <code>certs</code> e <code>painel</code>, cifradas com a chave pública da cópia. O arquivo <code>.env</code> e os segredos da instalação não entram: guarde-os à parte, junto com a chave privada da cópia.':
+        'The copy takes the folders <code>auth</code>, <code>dados</code>, <code>certs</code> and <code>painel</code>, encrypted with the public key of the copy. The <code>.env</code> file and the secrets of the installation are left out: keep them apart, together with the private key of the copy.',
+    'Armazenamento S3 que recebe':
+        'S3 storage that receives it',
+    'Pasta no bucket':
+        'Folder in the bucket',
+    'só para as cópias do sistema; em branco é a raiz do bucket':
+        'only for the system copies; blank is the root of the bucket',
+    'de quantos em quantos dias, de 1 a 30; 0 é só pelo botão':
+        'every how many days, from 1 to 30; 0 is button only',
+    'Hora da rotina':
+        'Time of the schedule',
+    'hora do servidor':
+        'server time',
+    'A cópia é feita em segundo plano, com a prioridade mais baixa. Marque a rotina para a hora de menos uso: o tempo dela cresce com o tamanho dos dados.':
+        'The copy runs in the background, at the lowest priority. Schedule it for the quietest hour: it takes longer as the data grows.',
+    'para gravar a cópia do sistema':
+        'to save the system copy',
+    'Não foi possível gravar a cópia do sistema:':
+        'The system copy could not be saved:',
+    'Cópia do sistema para o S3 gravada':
+        'System copy to S3 saved',
+    'Cópia do sistema pedida pela tela':
+        'System copy requested on screen',
+    'Cópia do sistema enviada para o S3':
+        'System copy sent to S3',
+    'Cópia do sistema não concluída':
+        'System copy not completed',
+    'Cópia do sistema ficou sem destino':
+        'System copy left without a destination',
 }
 
 # Mensagem de erro do allsafe-ftp-user (ftp/usuario.sh), que fala português sem acento: a expressão que a

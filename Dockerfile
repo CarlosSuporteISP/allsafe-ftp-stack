@@ -86,9 +86,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 # ca-certificates: as autoridades que o painel aceita ao falar HTTPS com os destinos de fora (S3 e bot do Telegram).
+# age: cifra a cópia do sistema que o painel envia para o S3, com a chave pública da cópia (a mesma do scripts/backup.sh).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 ca-certificates \
-    && mkdir -p /painel /nginx /segredos /opt/painel \
+    && apt-get install -y --no-install-recommends python3 ca-certificates age \
+    && mkdir -p /painel /nginx /segredos /certs /opt/painel \
     && rm -rf /var/lib/apt/lists/*
 
 # Os módulos do painel ficam lado a lado: o servidor.py é o ponto de entrada e importa os demais.

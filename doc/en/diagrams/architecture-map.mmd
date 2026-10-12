@@ -38,3 +38,4 @@ flowchart LR
     painel -. "checks the FTP password" ..-> ftp
     ftp -. "looks up" .-> vauth
     ftp -. "reads the certificate" .-> vcerts
+    painel -. "reads for the system copy" .-> vcerts

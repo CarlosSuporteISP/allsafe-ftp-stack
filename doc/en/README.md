@@ -51,7 +51,7 @@ flowchart LR
 | 6 | [Secrets](secrets.md) | What stays in `.secrets/`, who generates each file and how to change the FTP and panel passwords |
 | 7 | [Scripts](scripts.md) | What each script does, parameters and expected output |
 | 8 | [Operation](operation.md) | Users, real certificate, logs and image update |
-| 9 | [Backup and restore](backup.md) | Backup copy in one command, checked and reversible restore, what to keep apart, another server and scheduled copy |
+| 9 | [Backup and restore](backup.md) | Backup copy in one command, checked and reversible restore, what to keep apart, another server, scheduled copy and copy in S3, by the panel |
 | 10 | [Web panel](panel.md) | Opening the panel, what there is in each tab, users in the browser, download of the files, password, certificate, audit log and protections |
 | 11 | [Application screenshots](application/README.md) | Every screen of the panel, menu by menu: the screenshot, what it is for, how to get there and what there is in each one |
 | 12 | [Troubleshooting](troubleshooting.md) | Symptom, cause, how to check and fix |
@@ -87,11 +87,12 @@ flowchart LR
 |---|---|---|
 | Files uploaded by the devices | `DATA_DIR/dados` | `/data` |
 | Virtual users (PureDB) | `DATA_DIR/auth` | `/auth` |
-| TLS key and certificate of the FTP | `DATA_DIR/certs` | `/etc/ssl/private` |
+| TLS key and certificate of the FTP | `DATA_DIR/certs` | `/etc/ssl/private` in the FTP; `/certs` in the panel, read-only |
 | Certificate, administrators and audit log of the panel | `DATA_DIR/painel` | `/painel` |
 | Panel socket and copy of the certificate, for nginx (remade at every start) | `DATA_DIR/nginx` | `/nginx` |
 | Password of the initial user | `.secrets/ftp-usuario-inicial-senha.txt`, in the project folder | `/run/secrets/ftp_usuario_inicial_senha` (read-only) |
 | Initial password of the panel, only the hash | `.secrets/painel-admin-inicial-senha-hash.txt`, in the project folder | `/run/secrets/painel_admin_inicial_senha_hash` (read-only) |
+| Public key of the system copy | `.secrets/backup-chave-publica.txt`, in the project folder | `/run/secrets/backup_chave_publica` (read-only), in the panel |
 | Configuration | `.env`, in the project folder | environment variables |
 | Logs | `local` driver of Docker, 10 MB × 3 | `stdout` |
 
@@ -122,6 +123,7 @@ Every diagram appears in the guides straight from the `.mmd` source, with a dark
 | [scripts-diagram.mmd](diagrams/scripts-diagram.mmd) | 1 | [Scripts](scripts.md) |
 | [users-diagram.mmd](diagrams/users-diagram.mmd) | 1 | [Operation](operation.md) |
 | [backup-diagram.mmd](diagrams/backup-diagram.mmd) | 1 | [Backup and restore](backup.md) |
+| [backup-s3-diagram.mmd](diagrams/backup-s3-diagram.mmd) | 1 | [Copy in S3, by the panel](backup.md#no-s3) |
 | [panel-diagram.mmd](diagrams/panel-diagram.mmd) | 1 | [Web panel](panel.md) |
 | [panel-flowchart.mmd](diagrams/panel-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](panel.md#como-decide) |
 | [panel-requests-flowchart.mmd](diagrams/panel-requests-flowchart.mmd) | 2 | [Project README](../../README.md#como-funciona) and [Web panel](panel.md#como-decide) |
