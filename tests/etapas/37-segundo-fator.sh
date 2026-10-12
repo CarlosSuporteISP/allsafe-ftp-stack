@@ -5,6 +5,8 @@
 # A etapa faz o papel do aplicativo: lê a chave da tela e calcula o código do passo de 30 segundos com a função do
 # próprio painel, que o caso dos vetores da RFC 6238 confere à parte. A chave vai ao container pela entrada, nunca
 # pela linha de comando, e nem ela nem os códigos entram em evidência.
+# No fim, a etapa liga a obrigação (PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim) e prova o cadastro feito na entrada, pelo
+# administrador e pelo usuário do FTP, e devolve a instância com o fator opcional, como o resto da bateria espera.
 # Trecho da bateria: carregado pelo tests/testar.sh, na ordem do nome do arquivo; não roda sozinho.
 
 # O reinício do painel encerra as sessões e zera a contagem de falhas de entrada do endereço.
@@ -42,12 +44,12 @@ if sys.argv[1] == "errado":
 else:
     sys.stdout.write(fator.codigo_de(chave, agora + int(sys.argv[1])))' "$2" < "$1" > "$3"
 }
-# <pote> <arquivo do código> [opções do curl...] → "código destino" do formulário do código; corpo em $W/corpo, cabeçalhos em $W/f37.cab
+# <pote> <arquivo do código> [opções do curl...] → "código destino" do formulário do código (ou do caminho em CAMINHO37); corpo em $W/corpo, cabeçalhos em $W/f37.cab
 passo37() {
   local pote="$1" codigo="$2" ficha; shift 2
-  ficha="$(c -b "$pote" "$B/entrar/codigo" | sed -n 's/.*name="token" value="\([^"]*\)".*/\1/p' | head -1)"
+  ficha="$(c -b "$pote" "$B${CAMINHO37:-/entrar/codigo}" | sed -n 's/.*name="token" value="\([^"]*\)".*/\1/p' | head -1)"
   c -o "$W/corpo" -D "$W/f37.cab" -w '%{http_code} %{redirect_url}' -b "$pote" -c "$pote" -H "Origin: $B" \
-    --data-urlencode "token=$ficha" --data-urlencode "codigo@$codigo" "$@" "$B/entrar/codigo" | sed "s|$B||"
+    --data-urlencode "token=$ficha" --data-urlencode "codigo@$codigo" "$@" "$B${CAMINHO37:-/entrar/codigo}" | sed "s|$B||"
 }
 # <pote> <token> <arquivo do código> <arquivo da senha> [campos...] → "código destino" do formulário de ligar
 liga37() { local pote="$1" token="$2" codigo="$3" senha="$4"; shift 4; POTE="$pote" envio /administradores/fator/ligar --data-urlencode "csrf=$token" --data-urlencode "codigo@$codigo" --data-urlencode "senha_atual@$senha" "$@"; }
@@ -274,7 +276,177 @@ igual37 "$r_rem" '303 /usuarios?m=admin_removido'; igual37 "$x_rem" "|ausente|0|
 caso "$F37" testes 99 "Segundo fator: sai junto com o administrador removido" \
   "remoção de fat37b, com o fator ligado: $r_rem; lista, segredo dele, arquivos na pasta dos segredos do fator e administradores que ficaram: $x_rem"
 
-mu del f37
+# ------------------------------------------------------------------ fator obrigatório: o cadastro na entrada
+# Com PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim, a senha certa de quem não tem o fator abre uma espera de dez minutos que só
+# serve à tela do cadastro: a chave fica na espera, é gravada com o primeiro código certo e a sessão abre na hora. Vale
+# para o administrador e para o usuário do FTP que entra no painel; no FTP nada muda. A bateria roda com nao: este
+# trecho liga a obrigação, prova o cadastro e devolve a instância como estava. Nenhum código errado vai à tela do
+# código aqui: no cadastro, o código errado não é erro de entrada e não conta para o bloqueio do endereço.
+gravar_env "$ENVA" PAINEL_SEGUNDO_FATOR_OBRIGATORIO sim; dep; r_sim37=$?; painel_de_pe
+B37="$W/b37.jar"
+lista37o() { lista37 | tr ' ' '\n' | grep . | sort | tr '\n' ' '; }                               # a lista do fator, em ordem
+cadastra37() { CAMINHO37=/entrar/cadastro passo37 "$@"; }                                         # <pote> <arquivo do código> → "código destino" do formulário do cadastro
+chaves_em37() { tr -d ' ' < "$W/corpo" | grep -c -F -f <(cat "$@" | fold -w 32) || true; }        # <arquivos de chave...>: linhas de $W/corpo com alguma delas
+arquivo37() { [[ "$(tr -d '\n' 2> /dev/null < "$P37/$1.txt")" == "$(cat "$2")" ]] && echo sim || echo nao; }  # <conta> <arquivo da chave>: o segredo guardado é essa chave?
+auditoria; a_cad0="$(eventos fator_cadastrado_na_entrada)"; a_rec2="$(eventos entrada_codigo_recusado)"; a_fal2="$(eventos entrada_falha)"
+a_zer0="$(eventos usuario_fator_desligado)"; a_host2="$(eventos admin_fator_desligado_no_host)"
+
+# Duas entradas do administrador com a senha certa: cada uma recebe a espera dela, com uma chave própria.
+rm -f "$N37" "$A37" "$B37"
+e_10="$(entrar "$N37" "$W/painel.senha")"; d_10="$(destino37)"; b_10="$(biscoitos37)"; proibir "$(etapa37 "$N37")"; s_10="$(biscoito_de "$N37" | wc -c)"
+k_10="$(grep -i -c '^set-cookie: __Host-etapa=[A-Za-z0-9_-]\{40,\}; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=600' "$W/entrada.cab")"
+t_cad="$(aba -b "$N37" "$B/entrar/cadastro")"; q_cad="$(tem37 '<svg class="qr"') $(tem37 'action="/entrar/cadastro"') $(tem37 'name="senha')"
+chave37 "$W/c37.chave4"; n_chave4="$(wc -c < "$W/c37.chave4")"
+t_cad2="$(aba -b "$N37" "$B/entrar/cadastro")"; chave37 "$W/c37.outra"; cmp -s "$W/c37.chave4" "$W/c37.outra" && mesma4=sim || mesma4=nao
+e_11="$(entrar "$A37" "$W/painel.senha")"; d_11="$(destino37)"; proibir "$(etapa37 "$A37")"
+t_cad3="$(aba -b "$A37" "$B/entrar/cadastro")"; chave37 "$W/c37.chave5"; cmp -s "$W/c37.chave4" "$W/c37.chave5" && outra5=nao || outra5=sim
+# A espera do cadastro não é sessão, a tela do cadastro não existe sem ela, e levada à tela do código ela cai.
+t_f1="$(aba -b "$N37" "$B/usuarios")"; t_f2="$(aba -b "$N37" "$B/meus-arquivos")"
+sed 's/__Host-etapa/__Host-sessao/' "$N37" > "$X37"; t_f3="$(aba -b "$X37" "$B/usuarios")"; rm -f "$X37"
+t_f4="$(aba "$B/entrar/cadastro")"
+e_b="$(entrar "$B37" "$W/painel.senha")"; proibir "$(etapa37 "$B37")"; t_b1="$(aba -b "$B37" "$B/entrar/codigo")"; t_b2="$(aba -b "$B37" "$B/entrar/cadastro")"
+# Recusas do formulário: sem o token, de outra origem e com um código que não é o da chave da tela.
+calma37; codigo37 "$W/c37.chave4" errado "$W/c37.errado"; codigo37 "$W/c37.chave4" -1 "$W/c37.cod8"
+r_st="$(c -o /dev/null -w '%{http_code}' -b "$N37" -H "Origin: $B" --data-urlencode "codigo@$W/c37.cod8" "$B/entrar/cadastro")"
+r_or="$(c -o /dev/null -w '%{http_code}' -b "$N37" -H 'Origin: https://outro.example' --data-urlencode "codigo@$W/c37.cod8" "$B/entrar/cadastro")"
+r_ce="$(cadastra37 "$N37" "$W/c37.errado")"; q_ce="$(tem37 'O código não confere com a chave desta tela')"
+chave37 "$W/c37.outra"; cmp -s "$W/c37.chave4" "$W/c37.outra" && mesma_ce=sim || mesma_ce=nao
+x_ce="$(lista37)|$(guardado37 "$ADMIN")"
+# O primeiro código certo grava a chave e abre a sessão.
+r_cad="$(cadastra37 "$N37" "$W/c37.cod8")"; b_cad="$(biscoitos37 "$W/f37.cab")"; proibir "$(biscoito_de "$N37")"
+x_cad="$(lista37)|$(guardado37 "$ADMIN")|$(arquivo37 "$ADMIN" "$W/c37.chave4")"; t_ab="$(aba -b "$N37" "$B/usuarios")"
+auditoria; n_cad1="$(( $(eventos fator_cadastrado_na_entrada) - a_cad0 ))"; n_rec2="$(( $(eventos entrada_codigo_recusado) - a_rec2 ))"; n_fal2="$(( $(eventos entrada_falha) - a_fal2 ))"
+# A outra espera do mesmo administrador caiu com o cadastro, e a chave dela não substitui a gravada.
+codigo37 "$W/c37.chave5" 0 "$W/c37.cod9"; r_2a="$(cadastra37 "$A37" "$W/c37.cod9")"; x_2a="$(guardado37 "$ADMIN")|$(arquivo37 "$ADMIN" "$W/c37.chave4")"
+# A mesma recusa, na função: conta que já tem fator não é regravada pelo cadastro da entrada.
+u_novo="$(docker exec "$PAINEL" python3 -B -c '
+import sys
+sys.path.insert(0, "/opt/painel")
+import fator
+antes = fator.segredo_de(sys.argv[1])
+print(fator.ligar(sys.argv[1], fator.novo_segredo(), 1, so_novo=True), bool(antes) and fator.segredo_de(sys.argv[1]) == antes)' "$ADMIN" 2>&1)"
+# Entrada seguinte: a senha leva ao código, e a espera do código não serve ao cadastro (cai, em outro pote).
+e_12="$(entrar "$J" "$W/painel.senha")"; d_12="$(destino37)"; proibir "$(etapa37 "$J")"
+rm -f "$A37"; e_13="$(entrar "$A37" "$W/painel.senha")"; d_13="$(destino37)"; proibir "$(etapa37 "$A37")"
+t_c1="$(aba -b "$A37" "$B/entrar/cadastro")"; t_c2="$(aba -b "$A37" "$B/entrar/codigo")"
+codigo37 "$W/c37.chave4" 0 "$W/c37.cod10"; r_12="$(passo37 "$J" "$W/c37.cod10")"
+[[ "$r_12" == '303 /' ]] || { codigo37 "$W/c37.chave4" 1 "$W/c37.cod10"; r_12="$(passo37 "$J" "$W/c37.cod10")"; }
+proibir "$(biscoito_de "$J")"; K="$(csrf)"; proibir "$K"
+t_seg3="$(aba -b "$J" "$B/seguranca")"; q_seg3="$(tem37 'PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim')"
+auditoria; docker logs "$PAINEL" > "$W/c37.logs" 2>&1; v_aud2="$(segredos_em "$W/auditoria")"; v_log2="$(segredos_em "$W/c37.logs")"
+F37=0
+igual37 "$r_sim37" 0; igual37 "$e_10 $d_10|$b_10|$k_10|$s_10" '303 /entrar/cadastro|__Host-etapa __Host-idioma |1|0'
+igual37 "$t_cad $q_cad $n_chave4 $mesma4" '200  1 1 0 32 sim'; igual37 "${t_cad2%% *}" 200
+igual37 "$r_cad|$b_cad" '303 /|__Host-etapa(vazio) __Host-sessao '; igual37 "$x_cad" "$ADMIN |600 32|sim"; igual37 "$t_ab" '200 '
+igual37 "$e_12 $d_12 $r_12" '303 /entrar/codigo 303 /'; igual37 "${t_seg3%% *}" 200; [[ "$q_seg3" -ge 1 ]] || F37=1; igual37 "$n_cad1" 1
+caso "$F37" testes 101 "Fator obrigatório: administrador sem fator cadastra na entrada e passa a entrar com o código" \
+  "deploy com PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim: saída $r_sim37; entrada de $ADMIN, sem fator, com a senha certa: $e_10 $d_10, cookies gravados: $b_10, cookie de sessão: $s_10 bytes; tela do cadastro: $t_cad, código QR, formulário e campo de senha: $q_cad, chave de $n_chave4 caracteres, a mesma ao reabrir a tela: $mesma4; primeiro código certo: $r_cad, cookies: $b_cad; lista, segredo no host (modo e tamanho) e igual à chave da tela: $x_cad; aba Usuários com a sessão aberta: $t_ab; entrada seguinte: $e_12 $d_12, com o código: $r_12; aba Segurança diz que o fator é obrigatório: $q_seg3; eventos fator_cadastrado_na_entrada a mais: $n_cad1"
+
+F37=0
+igual37 "$k_10 $s_10" '1 0'; igual37 "$t_f1|$t_f2|$t_f3|$t_f4" '303 /entrar|303 /entrar|303 /entrar|303 /entrar'
+igual37 "$e_b $t_b1|$t_b2" '303 303 /entrar|303 /entrar'; igual37 "$r_st $r_or" '400 403'; igual37 "$v_aud2 $v_log2" '0 0'
+caso "$F37" seguranca 145 "Fator obrigatório: a espera do cadastro não abre o painel, e a chave não vai para a auditoria" \
+  "cookie da espera com Path=/, Secure, HttpOnly, SameSite=Strict e Max-Age=600: $k_10; cookie de sessão depois da senha certa: $s_10 bytes; aba Usuários e Meus arquivos com o cookie da espera: $t_f1 e $t_f2; cookie da espera apresentado como sessão: $t_f3; tela do cadastro sem espera aberta: $t_f4; outra espera de cadastro levada à tela do código: $t_b1, e de volta ao cadastro: $t_b2; cadastro sem o token do formulário: $r_st; de outra origem: $r_or; linhas com chave, código de espera, cookie ou token desta etapa na auditoria e no registro do painel: $v_aud2 e $v_log2"
+
+F37=0
+igual37 "$r_ce $q_ce $mesma_ce" '400  1 sim'; igual37 "$x_ce" '|ausente'; igual37 "$n_rec2 $n_fal2" '0 0'
+igual37 "$e_11 $d_11 $outra5" '303 /entrar/cadastro sim'; igual37 "$r_2a" '303 /entrar'; igual37 "$x_2a" '600 32|sim'; igual37 "$u_novo" 'False True'
+igual37 "$e_13 $d_13|$t_c1|$t_c2" '303 /entrar/codigo|303 /entrar|303 /entrar'
+caso "$F37" seguranca 146 "Fator obrigatório: código errado não cadastra, e conta que já tem fator não recebe outra chave" \
+  "código errado no cadastro: $r_ce, aviso na tela: $q_ce, a mesma chave na tela: $mesma_ce; lista e segredo depois: $x_ce; eventos entrada_codigo_recusado e entrada_falha a mais: $n_rec2 e $n_fal2; segunda entrada de $ADMIN antes do cadastro: $e_11 $d_11, com outra chave: $outra5; código certo da segunda chave depois do cadastro da primeira: $r_2a; segredo guardado (modo e tamanho) e igual à primeira chave: $x_2a; fator.ligar com so_novo em conta que já tem fator, e segredo intacto: $u_novo; espera do código levada ao cadastro: $t_c1, e de volta ao código: $t_c2"
+
+# ------------------------------------------------------------------ fator obrigatório: usuário do FTP
+# O usuário do FTP cadastra na entrada do painel e cai em Meus arquivos; no FTP, continua entrando só com a senha. A
+# conta do fator dele é ftp.<nome>. Ele não alcança as telas de fator da administração, e o administrador zera o fator
+# dele sem ver chave nenhuma.
+rm -f "$U37" "$A37"
+e_u1="$(COMO=f37 entrar "$U37" "$W/f37.senha")"; d_u1="$(destino37)"; proibir "$(etapa37 "$U37")"
+t_u1="$(aba -b "$U37" "$B/entrar/cadastro")"; q_u1="$(tem37 '<svg class="qr"') $(tem37 'action="/entrar/cadastro"')"; chave37 "$W/c37.chave6"
+t_u2="$(aba -b "$U37" "$B/meus-arquivos")"
+calma37; codigo37 "$W/c37.chave6" -1 "$W/c37.cod11"; r_u1="$(cadastra37 "$U37" "$W/c37.cod11")"; b_u1="$(biscoitos37 "$W/f37.cab")"; proibir "$(biscoito_de "$U37")"
+x_u1="$(lista37o)|$(guardado37 ftp.f37)|$(arquivo37 ftp.f37 "$W/c37.chave6")"; t_u3="$(aba -b "$U37" "$B/meus-arquivos")"
+r_ftp="$(ftp_curl tls f37 "$W/f37.senha" "$F/")"; q_ftp="$(resposta 230 | cut -c1-3)"
+e_u2="$(COMO=f37 entrar "$A37" "$W/f37.senha")"; d_u2="$(destino37)"; proibir "$(etapa37 "$A37")"
+codigo37 "$W/c37.chave6" 0 "$W/c37.cod12"; r_u2="$(passo37 "$A37" "$W/c37.cod12")"
+[[ "$r_u2" == '303 /meus-arquivos' ]] || { codigo37 "$W/c37.chave6" 1 "$W/c37.cod12"; r_u2="$(passo37 "$A37" "$W/c37.cod12")"; }
+proibir "$(biscoito_de "$A37")"
+DUAS37="$(printf '%s\n' "$ADMIN" ftp.f37 | sort | tr '\n' ' ')"
+F37=0
+igual37 "$e_u1 $d_u1" '303 /entrar/cadastro'; igual37 "$t_u1 $q_u1" '200  1 1'; igual37 "$t_u2" '303 /entrar'
+igual37 "$r_u1|$b_u1" '303 /meus-arquivos|__Host-etapa(vazio) __Host-sessao '; igual37 "$x_u1" "$DUAS37|600 32|sim"; igual37 "$t_u3" '200 '
+igual37 "$r_ftp $q_ftp" '0 230'; igual37 "$e_u2 $d_u2 $r_u2" '303 /entrar/codigo 303 /meus-arquivos'
+caso "$F37" testes 102 "Fator obrigatório: usuário do FTP cadastra na entrada do painel, e no FTP entra só com a senha" \
+  "entrada de f37 no painel, sem fator, com a senha certa: $e_u1 $d_u1; tela do cadastro: $t_u1, código QR e formulário: $q_u1; Meus arquivos com o cookie da espera: $t_u2; primeiro código certo: $r_u1, cookies: $b_u1; lista, segredo de ftp.f37 no host (modo e tamanho) e igual à chave da tela: $x_u1; Meus arquivos com a sessão aberta: $t_u3; FTPS de f37 só com a senha: saída $r_ftp do curl, resposta $q_ftp; entrada seguinte no painel: $e_u2 $d_u2, com o código: $r_u2"
+
+# Com a sessão dele: as telas e os formulários de fator da administração não existem, e o cadastro não reabre.
+KU="$(token37 "$U37")"; proibir "$KU"; ev_u2=""
+for caminho in "/administradores/fator?admin=$ADMIN" '/usuarios/fator?usuario=f37' /usuarios/fator; do ev_u2+="$(aba -b "$U37" "$B$caminho")"; done
+p_u3="$(POTE="$U37" envio /usuarios/fator/desligar --data-urlencode "csrf=$KU" --data-urlencode 'usuario=f37' --data-urlencode "senha_atual@$W/f37.senha")"
+p_u4="$(desliga37 "$U37" "$KU" "$ADMIN" "$W/f37.senha")"; t_u4="$(aba -b "$U37" "$B/entrar/cadastro")"
+x_u2="$(lista37o)|$(arquivo37 "$ADMIN" "$W/c37.chave4")|$(arquivo37 ftp.f37 "$W/c37.chave6")"; cmp -s "$W/c37.chave4" "$W/c37.chave6" && distintas=nao || distintas=sim
+# A tela em que o administrador zera o fator do usuário, e a lista de usuários, não trazem chave nem código QR.
+t_z="$(aba -b "$J" "$B/usuarios/fator?usuario=f37")"; q_z="$(tem37 'class="segredo"') $(tem37 '<svg class="qr"') $(tem37 'action="/usuarios/fator/desligar"')"; v_z="$(chaves_em37 "$W/c37.chave4" "$W/c37.chave6")"
+t_l="$(aba -b "$J" "$B/usuarios")"; q_l="$(tem37 'href="/usuarios/fator?usuario=f37"')"; v_l="$(chaves_em37 "$W/c37.chave4" "$W/c37.chave6")"
+F37=0
+igual37 "$ev_u2" '404 404 404 '; igual37 "${p_u3%% *} ${p_u4%% *}" '404 404'; igual37 "$t_u4" '303 /entrar'; igual37 "$x_u2|$distintas" "$DUAS37|sim|sim|sim"
+igual37 "$t_z $q_z $v_z" '200  0 0 1 0'; igual37 "${t_l%% *} $v_l" '200 0'; [[ "$q_l" -ge 1 ]] || F37=1
+caso "$F37" seguranca 147 "Fator obrigatório: usuário do FTP não alcança o fator de ninguém, e o administrador não vê chave" \
+  "telas de fator da administração com a sessão de f37: $ev_u2; formulário de zerar o próprio fator: $p_u3; formulário de desligar o de $ADMIN: $p_u4; tela do cadastro com a sessão dele, sem espera: $t_u4; lista, segredo de $ADMIN e de ftp.f37 intactos: $x_u2, chaves diferentes: $distintas; tela de zerar o fator de f37 aberta por $ADMIN: $t_z, chave, código QR e formulário: $q_z, linhas com alguma das duas chaves: $v_z; lista de usuários com o botão do fator de f37: $q_l, linhas com alguma das duas chaves: $v_l"
+
+# O administrador zera, o terminal desliga e a remoção do usuário leva o fator junto; cada cadastro novo traz outra chave.
+r_z="$(envio /usuarios/fator/desligar --data-urlencode "csrf=$K" --data-urlencode 'usuario=f37' --data-urlencode "senha_atual@$W/painel.senha")"
+x_z="$(lista37o)|$(guardado37 ftp.f37)"; t_l2="$(aba -b "$J" "$B/usuarios")"; q_l2="$(tem37 'href="/usuarios/fator?usuario=f37"')"
+rm -f "$U37"; e_u3="$(COMO=f37 entrar "$U37" "$W/f37.senha")"; d_u3="$(destino37)"; proibir "$(etapa37 "$U37")"
+t_u5="$(aba -b "$U37" "$B/entrar/cadastro")"; chave37 "$W/c37.chave7"; cmp -s "$W/c37.chave6" "$W/c37.chave7" && nova7=nao || nova7=sim
+calma37; codigo37 "$W/c37.chave7" -1 "$W/c37.cod13"; r_u3="$(cadastra37 "$U37" "$W/c37.cod13")"; proibir "$(biscoito_de "$U37")"
+x_t1="$(terminal37 | grep -m1 '^ftp\.f37: ')"; x_t2="$(terminal37 desligar ftp.f37 | tail -1)"; x_t3="$(lista37o)|$(guardado37 ftp.f37)"
+rm -f "$U37"; e_u4="$(COMO=f37 entrar "$U37" "$W/f37.senha")"; d_u4="$(destino37)"; proibir "$(etapa37 "$U37")"
+t_u6="$(aba -b "$U37" "$B/entrar/cadastro")"; chave37 "$W/c37.chave8"; cmp -s "$W/c37.chave7" "$W/c37.chave8" && nova8=nao || nova8=sim
+calma37; codigo37 "$W/c37.chave8" -1 "$W/c37.cod14"; r_u4="$(cadastra37 "$U37" "$W/c37.cod14")"; proibir "$(biscoito_de "$U37")"
+x_u4="$(lista37o)|$(guardado37 ftp.f37)|$(stat -c %a "$P37")"
+# Linhas fora da regra de conta, postas à mão na lista: o painel e o terminal não as leem como conta.
+docker exec "$PAINEL" sh -c 'printf "%s\n" ../fora ftp.ftp.x Maiuscula ftp. "a b" >> /painel/segundo-fator'
+n_bruta="$(docker exec "$PAINEL" sh -c 'grep -c . /painel/segundo-fator')"
+n_term="$(terminal37 | grep -c .)"; n_fora="$(terminal37 | grep -c -e fora -e 'ftp\.ftp' -e Maiuscula -e 'ftp\.:' -e 'a b' || true)"
+t_l3="$(aba -b "$J" "$B/usuarios")"; t_s3="$(aba -b "$J" "$B/seguranca")"
+# A remoção do usuário pelo painel apaga o fator dele, e a lista regravada fica só com as contas válidas.
+r_rm="$(envio /usuarios/remover --data-urlencode 'usuario=f37' --data-urlencode "csrf=$K" --data-urlencode 'confirmar=sim')"
+x_rm="$(lista37)|$(guardado37 ftp.f37)|$(terminal37 | grep -c '^ftp\.' || true)"
+auditoria; docker logs "$PAINEL" > "$W/c37.logs" 2>&1; v_aud3="$(segredos_em "$W/auditoria")"; v_log3="$(segredos_em "$W/c37.logs")"
+v_dados3="$(cat "$W/c37.chave4" "$W/c37.chave5" "$W/c37.chave6" "$W/c37.chave7" "$W/c37.chave8" | fold -w 32 | docker exec -i "$PAINEL" sh -c 'grep -r -l -F -f /dev/stdin /painel 2> /dev/null | wc -l')"
+n_cad2="$(( $(eventos fator_cadastrado_na_entrada) - a_cad0 ))"; n_zer="$(( $(eventos usuario_fator_desligado) - a_zer0 ))"; n_host2="$(( $(eventos admin_fator_desligado_no_host) - a_host2 ))"
+F37=0
+igual37 "$r_z" '303 /usuarios?m=fator_zerado'; igual37 "$x_z|$q_l2" "$ADMIN |ausente|0"; igual37 "$e_u3 $d_u3 $nova7 $r_u3" '303 /entrar/cadastro sim 303 /meus-arquivos'
+igual37 "$x_t1" 'ftp.f37: ligado'; igual37 "$x_t2" 'ftp.f37: segundo fator desligado'; igual37 "$x_t3" "$ADMIN |ausente"
+igual37 "$e_u4 $d_u4 $nova8 $r_u4" '303 /entrar/cadastro sim 303 /meus-arquivos'; igual37 "${x_u4%|*}" "$DUAS37|600 32"
+igual37 "$r_rm" '303 /usuarios?m=removido'; igual37 "$x_rm" "$ADMIN |ausente|0"; igual37 "$n_cad2 $n_zer $n_host2" '4 1 1'
+caso "$F37" testes 103 "Fator obrigatório: o administrador zera o do usuário do FTP, o terminal desliga e a remoção leva junto" \
+  "$ADMIN zera o fator de f37, com a senha: $r_z; lista, segredo e botão do fator na lista de usuários depois: $x_z e $q_l2; entrada seguinte de f37: $e_u3 $d_u3, chave nova: $nova7, cadastro: $r_u3; terminal: \"$x_t1\", desligar: \"$x_t2\", lista e segredo depois: $x_t3; terceira entrada: $e_u4 $d_u4, chave nova: $nova8, cadastro: $r_u4; remoção de f37 pelo painel, com o fator ligado: $r_rm; lista, segredo e contas ftp. no terminal depois: $x_rm; eventos fator_cadastrado_na_entrada, usuario_fator_desligado e admin_fator_desligado_no_host a mais: $n_cad2, $n_zer e $n_host2"
+
+F37=0
+igual37 "$x_u4" "$DUAS37|600 32|700"; igual37 "$n_bruta" 7; igual37 "$n_term $n_fora" "$(( $(printf '%s' "$ADM37" | wc -w) + 1 )) 0"
+igual37 "${t_l3%% *} ${t_s3%% *}" '200 200'; igual37 "${x_rm%%|*}" "$ADMIN "; igual37 "$v_aud3 $v_log3 $v_dados3" '0 0 0'
+caso "$F37" seguranca 148 "Fator obrigatório: segredo do usuário do FTP em arquivo 0600, e linha fora da regra não vira conta" \
+  "lista, segredo de ftp.f37 no host (modo e tamanho) e modo da pasta dos segredos do fator: $x_u4; lista com cinco linhas fora da regra postas à mão: $n_bruta linhas; contas que o terminal mostra e, entre elas, as de fora da regra: $n_term e $n_fora; abas Usuários e Segurança com a lista assim: ${t_l3%% *} e ${t_s3%% *}; lista regravada pela remoção do usuário: \"${x_rm%%|*}\"; linhas com chave, código de espera, cookie ou token desta etapa na auditoria e no registro do painel, e arquivos dos dados do painel com alguma chave: $v_aud3, $v_log3 e $v_dados3"
+
+# ------------------------------------------------------------------ de volta ao fator opcional
+# Com nao, a entrada é a de antes: quem tem o fator continua entrando com o código, quem não tem entra só com a senha,
+# e a tela do cadastro não existe. Valor fora de sim e nao é recusado pelo deploy.sh e pelo container.
+gravar_env "$ENVA" PAINEL_SEGUNDO_FATOR_OBRIGATORIO nao; dep; r_nao37=$?; painel_de_pe
+e_n1="$(entrar "$J" "$W/painel.senha")"; d_n1="$(destino37)"; proibir "$(etapa37 "$J")"
+calma37; codigo37 "$W/c37.chave4" 0 "$W/c37.cod15"; r_n1="$(passo37 "$J" "$W/c37.cod15")"; proibir "$(biscoito_de "$J")"; K="$(csrf)"; proibir "$K"
+r_n2="$(desliga37 "$J" "$K" "$ADMIN" "$W/painel.senha")"; x_n2="$(lista37)|$(ls "$P37" 2> /dev/null | wc -l)|$(admins)"
+rm -f "$N37"; e_n3="$(entrar "$N37" "$W/painel.senha")"; d_n3="$(destino37)"; b_n3="$(biscoitos37)"; proibir "$(biscoito_de "$N37")"
+t_n4="$(aba "$B/entrar/cadastro")"; t_n5="$(aba -b "$J" "$B/seguranca")"; q_n5="$(tem37 'PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim')"
+r_inv37="$(recusa_deploy PAINEL_SEGUNDO_FATOR_OBRIGATORIO=talvez)"; r_cont37="$(recusa_container painel PAINEL_SEGUNDO_FATOR_OBRIGATORIO=talvez)"
+F37=0
+igual37 "$r_nao37" 0; igual37 "$e_n1 $d_n1 $r_n1" '303 /entrar/codigo 303 /'; igual37 "$r_n2" "$DESLIGADO37"; igual37 "$x_n2" "|0|$ADM37"
+igual37 "$e_n3 $d_n3" '303 /'; [[ "$b_n3" == *'__Host-sessao '* && "$b_n3" != *'__Host-etapa '* ]] || F37=1; igual37 "$t_n4" '303 /entrar'; igual37 "${t_n5%% *} $q_n5" '200 0'
+recusou "$r_inv37" "PAINEL_SEGUNDO_FATOR_OBRIGATORIO deve ser 'sim' ou 'nao'" || F37=1; recusou "$r_cont37" "PAINEL_SEGUNDO_FATOR_OBRIGATORIO deve ser 'sim' ou 'nao'" || F37=1
+caso "$F37" testes 104 "Fator opcional: com nao a entrada volta a ser a de antes, e valor fora de sim e nao é recusado" \
+  "deploy com PAINEL_SEGUNDO_FATOR_OBRIGATORIO=nao: saída $r_nao37; entrada de $ADMIN, com o fator cadastrado: $e_n1 $d_n1, com o código: $r_n1; ele desliga o próprio fator: $r_n2; lista, arquivos na pasta dos segredos do fator e administradores: $x_n2; entrada seguinte, só com a senha: $e_n3 $d_n3, cookies gravados: $b_n3; tela do cadastro: $t_n4; aba Segurança diz que o fator é obrigatório: $q_n5; valor talvez no deploy.sh: $r_inv37; no container do painel: $r_cont37"
+
+mu del f37    # o usuário já saiu pelo painel; fica para o caso de a remoção acima ter falhado
 docker exec "$FTP" rm -rf /data/fat37 > /dev/null 2>&1
-rm -f "$N37" "$A37" "$U37" "$W"/c37.* "$W/a37.senha" "$W/f37.senha" "$W/errada37.senha"
+rm -f "$N37" "$A37" "$U37" "$B37" "$W"/c37.* "$W/a37.senha" "$W/f37.senha" "$W/errada37.senha"
 painel_de_pe

@@ -19,6 +19,7 @@ Quem atualiza de uma versão anterior: na primeira entrada depois da atualizaç�
 - **Segundo fator do usuário do FTP**: quem entra no painel com a conta do FTP também cadastra o aplicativo. Vale só para o painel: no FTP, a conta continua entrando com a senha. A chave fica em `.secrets/segundo-fator/ftp.<nome>.txt`, `0600`.
 - **Zerar o segundo fator de um usuário do FTP**: botão **Segundo fator** na linha do usuário, na aba Usuários, para quem já cadastrou, com a senha do administrador; pelo terminal, `--segundo-fator desligar ftp.NOME`. O administrador nunca vê a chave. Remover o usuário pelo painel apaga a chave dele.
 - **Auditoria**: `fator_cadastrado_na_entrada` e `usuario_fator_desligado`, com a descrição nos três idiomas na aba Log.
+- **Bateria**: quatro casos funcionais e quatro de segurança para o cadastro na entrada, com o administrador e o usuário do FTP. São 104 casos funcionais, 148 de segurança e 14 de rede.
 
 ### Alterado
 
