@@ -947,7 +947,9 @@ def rotina_da(conf):
 
 
 def cartao_da_copia(sessao):
-    """O cartão da cópia do sistema, no alto da tela: para onde ela vai, a rotina, a última e a que está em curso."""
+    """O cartão da cópia do sistema, no alto da tela: para onde ela vai, a rotina, a última e a que está em curso.
+    Fica recolhido, com o título e a situação à mostra, e já vem aberto quando há o que ver: cópia em andamento,
+    cópia que não foi concluída ou segredos faltando."""
     visto = copia.situacao()
     conf, dele, ultima, andamento = visto['conf'], visto['destino'], visto['ultima'], visto['andamento']
     pronta = bool(conf and dele)
@@ -955,26 +957,28 @@ def cartao_da_copia(sessao):
              f'<span class="etiqueta">{t("não configurada")}</span>' if not pronta else
              f'<span class="etiqueta atencao">{t("faltam os segredos")}</span>' if not visto['segredos'] else
              f'<span class="etiqueta">{t("rotina ligada") if conf["dias"] else t("só pelo botão")}</span>')
-    inicio = (f'<section class="cartao"><h2>{icone("servidor")}{t("Cópia do sistema")} {marca}</h2>\n<p>'
+    falha = ''
+    if pronta and visto['interrompida']:
+        falha = '<p class="aviso">' + t('A cópia anterior foi interrompida pelo reinício do painel: faça outra.') + '</p>'
+    elif pronta and ultima.get('motivo'):
+        falha = ('<p class="aviso">' + t('A última cópia, de {quando}, não foi concluída: {motivo}.',
+                                         quando=e(quando(inteiro(ultima, 'quando'))), motivo=e(explicar(str(ultima['motivo']))))
+                 + '</p>')
+    aberto = ' open' if andamento or falha or (pronta and not visto['segredos']) else ''
+    inicio = (f'<section class="cartao dobra"><details class="como"{aberto}><summary><h2>{icone("servidor")}'
+              f'{t("Cópia do sistema")} {marca}</h2></summary>\n<p>'
               + t('O sistema inteiro em um arquivo só, cifrado, em um armazenamento S3: os usuários do FTP, os arquivos, os '
                   'certificados e os dados do painel. É a mesma cópia que o <code>scripts/backup.sh</code> grava no servidor, '
                   'e o <code>scripts/restaurar.sh</code> a abre com a chave privada da cópia. O painel só envia: as cópias se '
                   'acumulam no bucket, e o prazo delas é da regra do bucket.') + '</p>')
     if not visto['chave']:
         return (inicio + '\n<p class="aviso">' + t('Falta a chave pública da cópia nesta instalação: rode '
-                                                   '<code>./deploy.sh</code>, que a cria, e volte aqui.') + '</p></section>')
+                                                   '<code>./deploy.sh</code>, que a cria, e volte aqui.') + '</p></details></section>')
     if not pronta:
         if not prontos_do('s3'):
             return (inicio + '\n<p class="suave">' + t('Grave primeiro um armazenamento S3, com os segredos: a cópia do sistema '
-                                                       'vai para um deles.') + '</p></section>')
-        return (inicio + f'\n<p><a class="botao principal" href="{ABA}/copia">{icone("mais")}{t("Configurar")}</a></p></section>')
-    falha = ''
-    if visto['interrompida']:
-        falha = '<p class="aviso">' + t('A cópia anterior foi interrompida pelo reinício do painel: faça outra.') + '</p>'
-    elif ultima.get('motivo'):
-        falha = ('<p class="aviso">' + t('A última cópia, de {quando}, não foi concluída: {motivo}.',
-                                         quando=e(quando(inteiro(ultima, 'quando'))), motivo=e(explicar(str(ultima['motivo']))))
-                 + '</p>')
+                                                       'vai para um deles.') + '</p></details></section>')
+        return (inicio + f'\n<p><a class="botao principal" href="{ABA}/copia">{icone("mais")}{t("Configurar")}</a></p></details></section>')
     lugar = f'<code>{e(dele["bucket"])}</code>' + (f' / <code>{e(conf["prefixo"])}</code>' if conf['prefixo'] else '')
     if inteiro(ultima, 'quando') and not ultima.get('motivo'):
         feita = (f'{e(quando(inteiro(ultima, "fim")))} · {e(tamanho(inteiro(ultima, "bytes")))} · '
@@ -997,7 +1001,7 @@ def cartao_da_copia(sessao):
 <form method="post" action="{ABA}/copia/agora" autocomplete="off">
 <input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
 {botao}<a class="botao" href="{ABA}/copia">{icone('lapis')}{t('Alterar')}</a>
-</form></section>'''
+</form></details></section>'''
 
 
 @ligada

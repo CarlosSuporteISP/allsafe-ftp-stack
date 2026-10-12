@@ -150,6 +150,5 @@ def seguranca(pedido, sessao, consulta, formulario, token):
         ('ruim', estados.count('ruim'), t('com problema')),
         ('neutro', estados.count('neutro') + estados.count('manual'), t('que o painel não confere ou não se aplicam'))))}
 </section>
-<section class="cartao lista"><div class="rolagem"><table class="conferencia"><tbody>{''.join(itens)}</tbody></table></div></section>
-<p class="suave">{t('Confira a impressão digital com a que o navegador e o cliente FTP mostram antes de aceitar o certificado.')}</p>""",
+<section class="cartao lista"><div class="rolagem"><table class="conferencia"><tbody>{''.join(itens)}</tbody></table></div></section>""",
                               sessao, '/seguranca'))

@@ -706,14 +706,14 @@ When the last run stops before the end, the card shows the reason in one sentenc
 
 <a name="copia-do-sistema"></a>
 
-**System copy to S3.** At the top of the tab, the **System copy** card sends the whole system to one of the saved S3 storages: the panel puts the folders `auth`, `dados`, `certs` and `painel` into a single file, encrypted with the public key of the copy. It is the same copy that [`scripts/backup.sh`](backup.md#fazer) writes to `BACKUP_DIR`, and `scripts/restaurar.sh` opens it with the private key: see [Copy in S3, by the panel](backup.md#no-s3). The card offers **Configure** once there is an S3 with its secrets saved.
+**System copy to S3.** At the top of the tab, the **System copy** card sends the whole system to one of the saved S3 storages: the panel puts the folders `auth`, `dados`, `certs` and `painel` into a single file, encrypted with the public key of the copy. It is the same copy that [`scripts/backup.sh`](backup.md#fazer) writes to `BACKUP_DIR`, and `scripts/restaurar.sh` opens it with the private key: see [Copy in S3, by the panel](backup.md#no-s3). The card stays collapsed, with the title and the tag visible, and opens with a click on the title; it already comes open when there is a copy in progress, a copy that was not finished or secrets missing. Open, it offers **Configure** once there is an S3 with its secrets saved.
 
-1. On the **System copy** card, click **Configure**.
+1. Click the title of the **System copy** card, to open it, and click **Configure**.
 2. Choose the **S3 storage that receives it**.
 3. Fill in the **Folder in the bucket**, which is only for the system copies: `copia-do-sistema` by default; blank is the root of the bucket.
 4. In **Schedule**, type every how many days the copy is made, from 1 to 30, and the **Time of the schedule**, in server time. With `0`, the copy only goes by the button or by the terminal.
 5. Type your password and click **Save**.
-6. Back on the tab, click **Copy and send now**.
+6. Back on the tab, open the card again and click **Copy and send now**.
 
 **Expected result:** the tab comes back with the notice **System copy saved. The schedule applies from now on.**, and the card shows the destination, the bucket and the folder, the schedule and the tag **schedule on** or **button only**. After the button, the notice is **System copy requested: it runs in the background. Refresh the screen to follow it.** While the copy runs, the card has the tag **in progress** and the **Now** line, with the size and the parts already sent; at the end, the **Last copy** line brings the date, the size, the number of files and the name of the object.
 

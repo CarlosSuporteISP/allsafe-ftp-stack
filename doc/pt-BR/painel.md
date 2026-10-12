@@ -706,14 +706,14 @@ Quando a última passada para antes do fim, o cartão mostra o motivo em uma fra
 
 <a name="copia-do-sistema"></a>
 
-**Cópia do sistema para o S3.** No alto da aba, o cartão **Cópia do sistema** manda o sistema inteiro a um dos armazenamentos S3 gravados: o painel junta as pastas `auth`, `dados`, `certs` e `painel` em um arquivo só, cifrado com a chave pública da cópia. É a mesma cópia que o [`scripts/backup.sh`](backup.md#fazer) grava em `BACKUP_DIR`, e o `scripts/restaurar.sh` a abre com a chave privada: veja [Cópia no S3, pelo painel](backup.md#no-s3). O cartão oferece o **Configurar** depois que existe um S3 com os segredos gravados.
+**Cópia do sistema para o S3.** No alto da aba, o cartão **Cópia do sistema** manda o sistema inteiro a um dos armazenamentos S3 gravados: o painel junta as pastas `auth`, `dados`, `certs` e `painel` em um arquivo só, cifrado com a chave pública da cópia. É a mesma cópia que o [`scripts/backup.sh`](backup.md#fazer) grava em `BACKUP_DIR`, e o `scripts/restaurar.sh` a abre com a chave privada: veja [Cópia no S3, pelo painel](backup.md#no-s3). O cartão fica recolhido, com o título e a marca à mostra, e abre com um clique no título; ele já vem aberto quando há cópia em andamento, cópia que não foi concluída ou segredos faltando. Aberto, oferece o **Configurar** depois que existe um S3 com os segredos gravados.
 
-1. No cartão **Cópia do sistema**, clique em **Configurar**.
+1. Clique no título do cartão **Cópia do sistema**, para abri-lo, e clique em **Configurar**.
 2. Escolha o **Armazenamento S3 que recebe**.
 3. Preencha a **Pasta no bucket**, que é só das cópias do sistema: `copia-do-sistema` no padrão; em branco é a raiz do bucket.
 4. Em **Rotina**, digite de quantos em quantos dias a cópia é feita, de 1 a 30, e a **Hora da rotina**, na hora do servidor. Com `0`, a cópia só sai pelo botão ou pelo terminal.
 5. Digite a sua senha e clique em **Gravar**.
-6. De volta à aba, clique em **Copiar e enviar agora**.
+6. De volta à aba, abra o cartão de novo e clique em **Copiar e enviar agora**.
 
 **Resultado esperado:** a aba volta com o aviso **Cópia do sistema gravada. A rotina vale a partir de agora.**, e o cartão mostra o destino, o bucket e a pasta, a rotina e a marca **rotina ligada** ou **só pelo botão**. Depois do botão, o aviso é **Cópia do sistema pedida: ela é feita em segundo plano. Atualize a tela para acompanhar.** Enquanto a cópia roda, o cartão tem a marca **em andamento** e a linha **Agora**, com o tamanho e as partes já enviadas; no fim, a linha **Última cópia** traz a data, o tamanho, a quantidade de arquivos e o nome do objeto.
 

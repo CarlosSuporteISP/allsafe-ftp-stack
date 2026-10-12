@@ -1011,9 +1011,9 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 
 ## ☁️ Destinations
 
-<a href="images/destinos.png"><img src="images/destinos.png" alt="Destinations tab with the System copy card at the top, marked as not configured and with the Configure button, the S3 storage card turned on, with the address, the bucket and the prefix, the region, the folder sent, the runs every 60 minutes, Copy after sending, the keys saved without being shown on screen, the last run and the total sent, the rclone remote: File server card turned on, with the type SFTP, the folder on the remote, the folder sent, the runs every 60 minutes, Copy after sending, the access saved without being shown on screen, the server key with its fingerprint, the last run and the total sent, the Telegram bot card turned on, with the folder, the runs every 5 minutes, the largest file the bot sends, the message language, the last run and the total sent, the Test, Send now, Change, New with the same access and Remove buttons on each card and, at the top of the screen, the New S3, New remote and New bot buttons and the How the panel sends explanation, collapsed" width="100%"></a>
+<a href="images/destinos.png"><img src="images/destinos.png" alt="Destinations tab with the System copy card at the top, collapsed and marked as not configured, the S3 storage card turned on, with the address, the bucket and the prefix, the region, the folder sent, the runs every 60 minutes, Copy after sending, the keys saved without being shown on screen, the last run and the total sent, the rclone remote: File server card turned on, with the type SFTP, the folder on the remote, the folder sent, the runs every 60 minutes, Copy after sending, the access saved without being shown on screen, the server key with its fingerprint, the last run and the total sent, the Telegram bot card turned on, with the folder, the runs every 5 minutes, the largest file the bot sends, the message language, the last run and the total sent, the Test, Send now, Change, New with the same access and Remove buttons on each card and, at the top of the screen, the New S3, New remote and New bot buttons and the How the panel sends explanation, collapsed" width="100%"></a>
 
-<sub><b>v1.5.0</b> · Destinations menu · captured on 2026-10-12</sub>
+<sub><b>v1.6.0</b> · Destinations menu · captured on 2026-10-12</sub>
 
 **What it is for:** sending by itself, out of the server, the files that arrive in a folder. There are three types of destination, with up to 20 of each: the S3 storage, which holds the second copy or keeps the files and frees the disk, the rclone remote, which takes the folder to an SFTP or WebDAV server or to a file cloud, and the Telegram bot, which delivers each new file to a person, a group or a channel.
 
@@ -1032,7 +1032,7 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 | Server key | On the SFTP remote, after **Test**: the type and the fingerprint of the key the panel stored, to compare with the one on the server |
 | Last run | When it was and how many files went, with the total size; when it stops before the end, the reason in one sentence |
 | Sent since it was turned on | The total of files and of size the destination has already received |
-| **System copy** card | At the top of the tab: the tag `not configured`, `schedule on`, `button only`, `in progress` or `secrets missing`; the destination, the bucket and the folder, the schedule and the last copy, with the date, the size, the files and the name of the object |
+| **System copy** card | At the top of the tab, collapsed: the title and the tag stay visible, and a click on the title opens the card. It already comes open when there is a copy in progress, a copy that was not finished or secrets missing. The tag is `not configured`, `schedule on`, `button only`, `in progress` or `secrets missing`; the destination, the bucket and the folder, the schedule and the last copy, with the date, the size, the files and the name of the object |
 | Copy and send now · Change | Requests the system copy right away, in the background · opens the form of the copy: the S3 that receives it, the folder in the bucket, the days and the time of the schedule |
 | Still arriving | Files that changed less than two minutes ago: they go in a later run |
 | Waiting for another destination | In S3 with **Keep in S3**, files already stored there that only leave the server when the other destinations of the folder deliver them |
@@ -1051,9 +1051,9 @@ Each destination has its own folder, interval and secrets, and one does not depe
 
 ### Destinations ➜ Before configuring
 
-<a href="images/destinos-sem-destino.png"><img src="images/destinos-sem-destino.png" alt="Destinations tab of a new installation, with the System copy card marked as not configured, with the sentence that tells to save an S3 storage first, and the S3 storage, rclone remote and Telegram bot cards marked as not configured, each with the explanation of what it sends and the Configure button, and, at the top of the screen, the How the panel sends explanation, collapsed" width="100%"></a>
+<a href="images/destinos-sem-destino.png"><img src="images/destinos-sem-destino.png" alt="Destinations tab of a new installation, with the System copy card collapsed and marked as not configured, and the S3 storage, rclone remote and Telegram bot cards marked as not configured, each with the explanation of what it sends and the Configure button, and, at the top of the screen, the How the panel sends explanation, collapsed" width="100%"></a>
 
-<sub><b>v1.5.0</b> · Destinations menu, no destination saved · captured on 2026-10-12</sub>
+<sub><b>v1.6.0</b> · Destinations menu, no destination saved · captured on 2026-10-12</sub>
 
 The installation is born with no destination: until the administrator saves one, nothing leaves the server and the panel opens no connection to the outside. Each card says what the destination does and leads to its form, through the **Configure** button.
 
@@ -1091,9 +1091,9 @@ Any service that speaks the S3 protocol works, in the cloud or on the internal n
 | After sending | Yes | **Copy**: the file stays on the server. **Keep in S3**: the file leaves the server after the destination confirms it was stored |
 | Your current password | Yes | The password of whoever is in the session, to save the destination |
 
-<a href="images/destinos-gravado.png"><img src="images/destinos-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, the System copy card, not configured, with the Configure button, the S3 storage and Telegram bot cards turned on, each with what was saved, the secrets saved without being shown on screen and the last run as none yet, and the rclone remote card still not configured" width="100%"></a>
+<a href="images/destinos-gravado.png"><img src="images/destinos-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, the System copy card collapsed, not configured, the S3 storage and Telegram bot cards turned on, each with what was saved, the secrets saved without being shown on screen and the last run as none yet, and the rclone remote card still not configured" width="100%"></a>
 
-<sub><b>v1.5.0</b> · Destinations menu, after saving · captured on 2026-10-12</sub>
+<sub><b>v1.6.0</b> · Destinations menu, after saving · captured on 2026-10-12</sub>
 
 **Expected result:** the tab comes back with the notice `Destination saved. It takes effect on the next run.`, and the card shows the `on` tag, the address, the bucket, the folder and that the keys are saved, without showing them. The first run starts within a minute and sends everything already in the folder.
 
@@ -1151,13 +1151,13 @@ The access fields change with the type. Those of WebDAV and of the clouds are in
 
 <a href="images/destinos-rclone-gravado.png"><img src="images/destinos-rclone-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, the New S3, New remote and New bot buttons at the top and the rclone remote: File server card with the test pending tag, the notice that the panel has not stored the key of this server yet and that nothing is sent until Test, the type SFTP, the folder on the remote copias, the folder sent olt-centro, the runs every 60 minutes, Copy after sending, the access saved without being shown on screen and the last run as none yet, next to the S3 storage and Telegram bot cards" width="100%"></a>
 
-<sub><b>v1.5.0</b> · Destinations menu, remote saved and not tested yet · captured on 2026-10-12</sub>
+<sub><b>v1.6.0</b> · Destinations menu, remote saved and not tested yet · captured on 2026-10-12</sub>
 
 6. Back in the tab, click **Test** on the card of the remote.
 
 <a href="images/destinos-rclone-testado.png"><img src="images/destinos-rclone-testado.png" alt="Destinations tab with the notice Test finished: the destination received it, and the rclone remote: File server card with the on tag and the Server key line, with the type of the key and its fingerprint, next to the S3 storage and Telegram bot cards" width="100%"></a>
 
-<sub><b>v1.5.0</b> · Destinations menu, remote after the test · captured on 2026-10-12</sub>
+<sub><b>v1.6.0</b> · Destinations menu, remote after the test · captured on 2026-10-12</sub>
 
 **Expected result:** on saving, the tab comes back with the notice `Destination saved. It takes effect on the next run.` and the card of the remote, with the type, the folder on the remote, the folder sent and the access saved, without showing it. In SFTP, the card keeps the `test pending` tag. The test writes the file `allsafe-ftp-stack-teste.txt` to the folder of the remote and answers `Test finished: the destination received it.`; the card turns to `on` and gets the **Server key** line, with the fingerprint to compare with the one on the server. The first run starts within a minute and sends everything already in the folder.
 
@@ -1234,9 +1234,9 @@ Each type accepts up to 20 destinations. A new destination can use the access of
 2. Give the destination a **Name** and change the **Folder sent** or the place: the prefix or the bucket, in S3; the folder on the remote, in rclone; the chat, in the bot.
 3. Leave the secrets blank, type your password and click **Save**. In rclone, the access is a single one: left blank, the whole access of the source destination applies.
 
-<a href="images/destinos-varios.png"><img src="images/destinos-varios.png" alt="Destinations tab with the notice Destination saved, the New S3, New remote and New bot buttons at the top, the System copy card and four cards turned on: S3 storage, with the prefix copias and the folder roteador-borda; S3 storage: Customers, with the same address and the same bucket, the prefix clientes, the folder clientes and no run yet; rclone remote: File server, with the folder olt-centro; and Telegram bot, with the folder clientes" width="100%"></a>
+<a href="images/destinos-varios.png"><img src="images/destinos-varios.png" alt="Destinations tab with the notice Destination saved, the New S3, New remote and New bot buttons at the top, the System copy card collapsed and four cards turned on: S3 storage, with the prefix copias and the folder roteador-borda; S3 storage: Customers, with the same address and the same bucket, the prefix clientes, the folder clientes and no run yet; rclone remote: File server, with the folder olt-centro; and Telegram bot, with the folder clientes" width="100%"></a>
 
-<sub><b>v1.5.0</b> · Destinations menu, with two S3 destinations · captured on 2026-10-12</sub>
+<sub><b>v1.6.0</b> · Destinations menu, with two S3 destinations · captured on 2026-10-12</sub>
 
 **Expected result:** the tab comes back with the notice `Destination saved. It takes effect on the next run.` and one more card, with the type and the given name. The secret left blank was copied from the other destination inside the server, without going through the browser.
 
@@ -1255,9 +1255,9 @@ Each type accepts up to 20 destinations. A new destination can use the access of
 
 ### Destinations ➜ Test and Send now
 
-<a href="images/destinos-teste.png"><img src="images/destinos-teste.png" alt="Destinations tab with the notice Test finished, the destination received it, above the System copy card and the S3 storage, rclone remote and Telegram bot cards, each of these with the date of the last run" width="100%"></a>
+<a href="images/destinos-teste.png"><img src="images/destinos-teste.png" alt="Destinations tab with the notice Test finished, the destination received it, above the System copy card, collapsed, and the S3 storage, rclone remote and Telegram bot cards, each of these with the date of the last run" width="100%"></a>
 
-<sub><b>v1.5.0</b> · Destinations menu, after the test · captured on 2026-10-12</sub>
+<sub><b>v1.6.0</b> · Destinations menu, after the test · captured on 2026-10-12</sub>
 
 1. On the card of the destination, click **Test**.
 2. To skip the wait for the interval, click **Send now** and refresh the page afterwards.
@@ -1284,17 +1284,17 @@ What each reason means and what to do is in [Troubleshooting](../troubleshooting
 
 <sub><b>v1.4.0</b> · Destinations menu, system copy form · captured on 2026-10-11</sub>
 
-The **System copy** card, at the top of the tab, sends the whole system, encrypted, to one of the saved S3 storages. It offers **Configure** once there is an S3 with its secrets.
+The **System copy** card, at the top of the tab, sends the whole system, encrypted, to one of the saved S3 storages. It stays collapsed: a click on the title opens it. Open, it offers **Configure** once there is an S3 with its secrets.
 
-1. On the **System copy** card, click **Configure**.
+1. Click the title of the **System copy** card, to open it, and click **Configure**.
 2. Choose the **S3 storage that receives it** and the **Folder in the bucket**.
 3. In **Schedule**, type every how many days the copy is made, and the **Time of the schedule**; with `0`, only by the button.
 4. Type your password and click **Save**.
-5. Back on the tab, click **Copy and send now** and refresh the screen right after.
+5. Back on the tab, open the card again, click **Copy and send now** and refresh the screen right after.
 
-<a href="images/destinos-copia-feita.png"><img src="images/destinos-copia-feita.png" alt="Destinations tab with the System copy card at the top, with the tag schedule on, the destination S3 storage, the bucket backups-da-rede and the folder copia-do-sistema, the schedule of every day at 03:00, the Last copy line with the date, the size, the number of files and the name of the object, and the Copy and send now and Change buttons, above the cards of the two S3 storages, of the rclone remote and of the Telegram bot" width="100%"></a>
+<a href="images/destinos-copia-feita.png"><img src="images/destinos-copia-feita.png" alt="Destinations tab with the System copy card at the top, open, with the tag schedule on, the destination S3 storage, the bucket backups-da-rede and the folder copia-do-sistema, the schedule of every day at 03:00, the Last copy line with the date, the size, the number of files and the name of the object, and the Copy and send now and Change buttons, above the cards of the two S3 storages, of the rclone remote and of the Telegram bot" width="100%"></a>
 
-<sub><b>v1.5.0</b> · Destinations menu, after the system copy · captured on 2026-10-12</sub>
+<sub><b>v1.6.0</b> · Destinations menu, after the system copy · captured on 2026-10-12</sub>
 
 **Expected result:** on saving, the notice is `System copy saved. The schedule applies from now on.`; after the button, `System copy requested: it runs in the background. Refresh the screen to follow it.` At the end, the **Last copy** line brings the date, the size, the number of files and the name of the object written to the bucket.
 
@@ -1388,7 +1388,7 @@ Nothing is changed through this tab, and only the administrator sees it. The lim
 
 <a href="images/seguranca.png"><img src="images/seguranca.png" alt="Security tab with the summary of the check at the top, which says how many items are in order, and one line per item: public address, panel behind a proxy or tunnel, addresses of the FTP and of the panel, TLS mode, the two certificates, allowed networks, session, sign-in of FTP users, blocking by attempts on FTP, with the name of the blocked user, blocking by address, with the number of blocked addresses, cost of the passwords, security contact, container and firewall" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Security menu · captured on 2026-10-11</sub>
+<sub><b>v1.6.0</b> · Security menu · captured on 2026-10-12</sub>
 
 **What it is for:** checking, on one screen, whether the installation is within what the stack requires: private network, TLS, valid certificates, isolated panel and published security contact.
 
@@ -1422,7 +1422,7 @@ Nothing is changed through this tab. The example firewall rules are in [Security
 
 <a href="images/seguranca-tls-por-usuario.png"><img src="images/seguranca-tls-por-usuario.png" alt="Security tab with the alert at the top that two users, central-pabx and radio-antigo, sign in to FTP without TLS, and the FTP TLS line with the attention mark and the names of the exempt users" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Security menu, alert of user without TLS · captured on 2026-10-11</sub>
+<sub><b>v1.6.0</b> · Security menu, alert of user without TLS · captured on 2026-10-12</sub>
 
 With at least one user exempt from TLS, the tab opens with the alert and the **FTP TLS** line swaps the checked mark for the attention one, with the number and the names of those who sign in without TLS.
 
