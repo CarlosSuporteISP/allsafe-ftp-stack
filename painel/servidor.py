@@ -13,7 +13,7 @@ Modos: sem argumento, sobe o servidor; --hash lê uma senha da entrada padrão e
 --administrador <nome> lê um hash da entrada padrão e cria o administrador ou troca a senha dele;
 --saude confere /saude pelo soquete e sai com 0 ou 1 (o healthcheck do container roda o saude.py direto, sem subir o painel);
 --retencao aplica agora a limpeza automática de cada usuário que tem uma, e com --simular só conta o que sairia;
---destinos mostra a situação de cada destino (S3 e bot do Telegram), e --destinos enviar <destino> faz agora a passada dele
+--destinos mostra a situação de cada destino (S3, remoto do rclone e bot do Telegram), e --destinos enviar <destino> faz agora a passada dele
 (com --sem-espera, sem aguardar os dois minutos de um arquivo sem mudar);
 --copia mostra a situação da cópia do sistema para o S3, e --copia enviar faz a cópia agora e só volta quando ela termina.
 """
@@ -98,7 +98,7 @@ def modo_destinos(argumentos):
         return
     if len(argumentos) < 2 or argumentos[0] != 'enviar' or not destinos.valido(argumentos[1]) \
             or set(argumentos[2:]) - {'--sem-espera'}:
-        falha('uso: --destinos [enviar <destino> [--sem-espera]]; o destino é o nome que a lista mostra: s3, telegram, s3-2, telegram-2 ...')
+        falha('uso: --destinos [enviar <destino> [--sem-espera]]; o destino é o nome que a lista mostra: s3, rclone, telegram, s3-2, rclone-2 ...')
     feitas = destinos.executar({argumentos[1]}, '--sem-espera' in argumentos)
     if feitas is None:
         falha('outra passada está em andamento: tente de novo em instantes')

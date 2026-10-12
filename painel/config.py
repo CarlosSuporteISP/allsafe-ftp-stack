@@ -49,6 +49,7 @@ DONO_DADOS = 'ftpdata'      # usuário do sistema dono das pastas e dos arquivos
 PRIVADAS = [ipaddress.ip_network(r) for r in ('127.0.0.0/8', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16')]
 
 CORPO_MAX = 8192            # bytes de um envio de formulário
+CORPO_REMOTO_MAX = 32768    # bytes do formulário do remoto do rclone, que leva chave privada e token
 TEMPO_CONEXAO = 15          # segundos por conexão
 CONEXOES_MAX = 32
 DOWNLOADS_MAX = 8           # arquivos entregues ao mesmo tempo; o resto das conexões fica para as telas

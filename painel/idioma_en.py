@@ -2031,8 +2031,6 @@ EN = {
         'every {n} minute',
     'a cada {n} minutos':
         'every {n} minutes',
-    'Cópia automática dos arquivos para fora do servidor: armazenamentos S3 e bots do Telegram.':
-        'Automatic copy of the files out of the server: S3 storages and Telegram bots.',
     'Remover destino':
         'Remove destination',
     'o serviço respondeu com o código {codigo}':
@@ -2167,8 +2165,6 @@ EN = {
         'The last run stopped before the end: {motivo}. The next one resumes from the same file.',
     'Como o painel envia':
         'How the panel sends',
-    'O painel só sai do servidor para os destinos gravados aqui, sempre por HTTPS com o certificado conferido. Sai arquivo comum: link simbólico e nome começado por ponto ficam de fora. O bot do Telegram envia em instantes o arquivo que chega inteiro por FTP ou pelo painel; nos outros casos, e sempre no S3, o arquivo só entra na passada depois de dois minutos sem mudar, para o que ainda está chegando não sair pela metade. A ordem é a da chegada ao servidor; uma falha do destino encerra a passada e a seguinte recomeça do mesmo arquivo. Pasta que troca de nome não reenvia os arquivos de dentro.':
-        'The panel only leaves the server for the destinations saved here, always over HTTPS with the certificate checked. Regular files go: symbolic links and names starting with a dot stay out. The Telegram bot sends in a moment the file that arrives whole by FTP or through the panel; in the other cases, and always in S3, a file only enters the run after two minutes without changing, so that what is still arriving does not leave half done. The order is the order of arrival at the server; a destination failure ends the run and the next one resumes from the same file. A folder that changes its name does not resend the files inside it.',
     'Os segredos ficam no servidor, na pasta <code>destinos</code> dos segredos da instalação, um por arquivo, e não entram na cópia de segurança: depois de restaurar uma cópia, grave-os de novo.':
         'The secrets stay on the server, in the <code>destinos</code> folder of the installation secrets, one per file, and are not part of the backup: after restoring a backup, save them again.',
     'Gravar':
@@ -2377,6 +2373,194 @@ EN = {
         'System copy not completed',
     'Cópia do sistema ficou sem destino':
         'System copy left without a destination',
+    'O remoto <strong>só recebe</strong>: o painel pede ao rclone que grave cada arquivo, e nada mais. Não lista, não baixa, não sincroniza e não apaga nada no remoto.':
+        'The remote <strong>only receives</strong>: the panel asks rclone to write each file, and nothing else. It does not list, download, sync or delete anything on the remote.',
+    'O token é obtido fora do painel, em um computador com navegador e com o rclone: o comando <code>rclone authorize {tipo}</code> abre a página da conta e imprime o token. O painel não abre essa página.':
+        'The token is obtained outside the panel, on a computer with a browser and rclone: the command <code>rclone authorize {tipo}</code> opens the account page and prints the token. The panel does not open that page.',
+    'Remoto do rclone':
+        'rclone remote',
+    'Novo remoto':
+        'New remote',
+    'Depois de gravar, use <strong>Testar</strong> na lista dos destinos: o teste guarda a chave que o servidor apresentar e a ficha passa a mostrar a impressão digital dela, para conferir com a do servidor. Sem a chave guardada nada é enviado, e se ela mudar depois o envio para.':
+        'After saving, use <strong>Test</strong> in the list of destinations: the test stores the key the server presents and the card then shows its fingerprint, to compare with the one on the server. Without the stored key nothing is sent, and if it changes later the sending stops.',
+    'O certificado do servidor é conferido. Informe o usuário com a senha, ou o token de acesso.':
+        'The server certificate is checked. Enter the user with the password, or the access token.',
+    'Informe o token da conta ou a credencial de uma conta de serviço.':
+        'Enter the account token or the credential of a service account.',
+    'A identificação e o tipo do drive são os que o rclone mostra ao configurar o remoto no mesmo computador em que o token foi obtido.':
+        'The drive ID and type are the ones rclone shows when configuring the remote on the same computer where the token was obtained.',
+    'o painel ainda não guardou a chave deste servidor: use Testar':
+        'the panel has not stored the key of this server yet: use Test',
+    'a chave do servidor não é a que o painel guardou: confira o servidor e, se a troca for dele, grave o acesso de novo e teste':
+        'the server key is not the one the panel stored: check the server and, if the change is its own, save the access again and test',
+    'a chave privada não abriu: confira a chave e a frase dela':
+        'the private key did not open: check the key and its passphrase',
+    'o remoto está sem espaço ou acima da cota':
+        'the remote is out of space or over quota',
+    'o rclone parou com um erro que o painel não reconhece':
+        'rclone stopped with an error the panel does not recognize',
+    'o rclone está ocupado com outro envio: tente de novo em instantes':
+        'rclone is busy with another upload: try again in a moment',
+    'Escolha o tipo do remoto.':
+        'Choose the remote type.',
+    'Pasta no remoto inválida: até 16 níveis separados por barra, com letras, números, espaço, _, - e ponto.':
+        'Invalid folder on the remote: up to 16 levels separated by slashes, with letters, numbers, spaces, _, - and dots.',
+    'Cópia automática dos arquivos para fora do servidor: armazenamentos S3, remotos do rclone e bots do Telegram.':
+        'Automatic copy of the files out of the server: S3 storages, rclone remotes and Telegram bots.',
+    'Enviar este arquivo para o remoto do rclone':
+        'Send this file to the rclone remote',
+    'Acesso do remoto':
+        'Remote access',
+    'gravado; não aparece na tela':
+        'saved; it is not shown on screen',
+    'servidor com acesso por SSH, com senha ou chave privada':
+        'server with SSH access, with password or private key',
+    'servidor de arquivos por HTTPS, com usuário e senha ou com token':
+        'file server over HTTPS, with user and password or with a token',
+    'com o token da conta ou a credencial de uma conta de serviço':
+        'with the account token or the credential of a service account',
+    'com o token da conta e a identificação do drive':
+        'with the account token and the drive ID',
+    'com o token da conta':
+        'with the account token',
+    'nome ou endereço IP, sem a porta':
+        'name or IP address, without the port',
+    'Porta':
+        'Port',
+    'em branco é a 22':
+        'blank means 22',
+    'Chave privada':
+        'Private key',
+    'o arquivo inteiro, da linha BEGIN à linha END; no lugar da senha':
+        'the whole file, from the BEGIN line to the END line; in place of the password',
+    'Frase da chave privada':
+        'Private key passphrase',
+    'só quando a chave é cifrada':
+        'only when the key is encrypted',
+    'Chave pública do servidor':
+        'Server public key',
+    'uma por linha, como no arquivo de servidores conhecidos do SSH; em branco, o Testar guarda a que o servidor apresentar':
+        'one per line, as in the SSH known hosts file; when blank, Test stores the one the server presents',
+    'só HTTPS, com o caminho que o servidor pede: <code>https://nome/caminho</code>':
+        'HTTPS only, with the path the server requires: <code>https://name/path</code>',
+    'Programa do servidor':
+        'Server software',
+    'Token de acesso':
+        'Access token',
+    'no lugar do usuário e da senha':
+        'in place of the user and password',
+    'Identificação do aplicativo':
+        'Application ID',
+    'em branco usa a do rclone':
+        'blank uses the rclone one',
+    'Segredo do aplicativo':
+        'Application secret',
+    'só com a identificação do aplicativo':
+        'only with the application ID',
+    'Alcance':
+        'Scope',
+    'Token da conta':
+        'Account token',
+    'o texto entre chaves que o comando <code>rclone authorize</code> imprime':
+        'the text between braces that the <code>rclone authorize</code> command prints',
+    'Credencial da conta de serviço':
+        'Service account credential',
+    'o conteúdo do arquivo da conta; no lugar do token':
+        'the contents of the account file; in place of the token',
+    'Pasta de partida':
+        'Starting folder',
+    'a identificação da pasta; em branco é a raiz da conta':
+        'the folder ID; blank is the root of the account',
+    'Drive compartilhado':
+        'Shared drive',
+    'a identificação do drive':
+        'the drive ID',
+    'Identificação do drive':
+        'Drive ID',
+    'Tipo do drive':
+        'Drive type',
+    'Organização':
+        'Organization',
+    'o domínio ou a identificação dela':
+        'its domain or ID',
+    'Região da conta':
+        'Account region',
+    'a pasta em que o remoto entra':
+        'the folder the remote opens in',
+    'Deixe os campos do acesso em branco para usar o do destino de origem; para usar outro, preencha o acesso inteiro.':
+        'Leave the access fields blank to use the one from the source destination; to use another, fill in the whole access.',
+    'Outro':
+        'Other',
+    'qualquer servidor WebDAV':
+        'any WebDAV server',
+    'com entrada por NTLM':
+        'with NTLM sign-in',
+    'Toda a conta':
+        'The whole account',
+    'Só os arquivos que o rclone criou':
+        'Only the files rclone created',
+    'Pessoal':
+        'Personal',
+    'Empresarial':
+        'Business',
+    'Biblioteca de documentos':
+        'Document library',
+    'Global':
+        'Global',
+    'Governo dos Estados Unidos':
+        'United States Government',
+    'Alemanha':
+        'Germany',
+    'China':
+        'China',
+    'Estados Unidos':
+        'United States',
+    'Europa':
+        'Europe',
+    'Tipo do remoto':
+        'Remote type',
+    'Pasta no remoto':
+        'Folder on the remote',
+    'Envia os arquivos de uma pasta, pelo rclone, para o que o S3 não alcança: um servidor SFTP ou WebDAV, ou uma nuvem de arquivos. O remoto só recebe: o painel não lista, não baixa e não apaga nada nele.':
+        'Sends the files of a folder, through rclone, to what S3 does not reach: an SFTP or WebDAV server, or a file cloud. The remote only receives: the panel does not list, download or delete anything on it.',
+    'O acesso gravado não aparece aqui. Deixe os campos abaixo em branco para mantê-lo; para trocar qualquer parte dele, preencha o acesso inteiro de novo.':
+        'The saved access is not shown here. Leave the fields below blank to keep it; to change any part of it, fill in the whole access again.',
+    'Depois de gravado, o acesso não volta para a tela.':
+        'Once saved, the access does not come back to the screen.',
+    'Preencha o acesso do remoto: não há nenhum gravado para manter.':
+        'Fill in the remote access: there is none saved to keep.',
+    'falta testar':
+        'test pending',
+    'Chave do servidor':
+        'Server key',
+    'O arquivo vai para a pasta do remoto com o mesmo caminho que tem dentro dos dados, e grava por cima do que tiver o mesmo nome. O arquivo continua no servidor. Trocar a pasta no remoto, a pasta enviada ou o lugar do acesso recomeça do zero: tudo o que está na pasta é enviado de novo.':
+        'The file goes to the remote folder with the same path it has inside the data, and overwrites whatever has the same name. The file stays on the server. Changing the folder on the remote, the folder sent or the place of the access starts from scratch: everything in the folder is sent again.',
+    '{campo}: em branco ou fora do formato.':
+        '{campo}: blank or in the wrong format.',
+    'O rclone não cifrou a senha: {motivo}.':
+        'rclone did not encrypt the password: {motivo}.',
+    'O painel ainda não guardou a chave deste servidor. Use <strong>Testar</strong>: o teste guarda a chave que o servidor apresentar e a ficha passa a mostrar a impressão digital dela, para conferir com a do servidor. Até lá, nada é enviado.':
+        'The panel has not stored the key of this server yet. Use <strong>Test</strong>: the test stores the key the server presents and the card then shows its fingerprint, to compare with the one on the server. Until then, nothing is sent.',
+    'Não informar':
+        'Do not set',
+    'vale o padrão do rclone':
+        'the rclone default applies',
+    'O tipo fica fixo depois de gravado: para outro tipo, crie outro destino.':
+        'The type is fixed once saved: for another type, create another destination.',
+    'Continuar':
+        'Continue',
+    'onde os arquivos são gravados; em branco é a pasta em que o remoto entra':
+        'where the files are written; blank is the folder the remote opens in',
+    'Acesso incompleto: informe a senha, a chave privada, o token ou a credencial com que o remoto é aberto. O acesso inteiro cabe em 16 KiB.':
+        'Incomplete access: enter the password, the private key, the token or the credential that opens the remote. The whole access fits in 16 KiB.',
+    'A frase vale só para chave privada cifrada: a chave cifrada pede a frase, e a chave sem cifra não leva frase.':
+        'The passphrase is only for an encrypted private key: an encrypted key requires the passphrase, and an unencrypted key takes none.',
+    'Não trocar':
+        'Do not change',
+    'com os outros campos em branco, mantém o acesso gravado':
+        'with the other fields blank, keeps the saved access',
+    'O painel só sai do servidor para os destinos gravados aqui, por HTTPS com o certificado conferido ou, no remoto SFTP do rclone, por SSH com a chave do servidor conferida. Sai arquivo comum: link simbólico e nome começado por ponto ficam de fora. O bot do Telegram envia em instantes o arquivo que chega inteiro por FTP ou pelo painel; nos outros casos, e sempre no S3 e no rclone, o arquivo só entra na passada depois de dois minutos sem mudar, para o que ainda está chegando não sair pela metade. A ordem é a da chegada ao servidor; uma falha do destino encerra a passada e a seguinte recomeça do mesmo arquivo. Pasta que troca de nome não reenvia os arquivos de dentro.':
+        'The panel only leaves the server for the destinations saved here, over HTTPS with the certificate checked or, for the rclone SFTP remote, over SSH with the server key checked. Regular files go: symbolic links and names starting with a dot stay out. The Telegram bot sends in a moment the file that arrives whole by FTP or through the panel; in the other cases, and always in S3 and rclone, a file only enters the run after two minutes without changing, so that what is still arriving does not leave half done. The order is the order of arrival at the server; a destination failure ends the run and the next one resumes from the same file. A folder that changes its name does not resend the files inside it.',
 }
 
 # Mensagem de erro do allsafe-ftp-user (ftp/usuario.sh), que fala português sem acento: a expressão que a

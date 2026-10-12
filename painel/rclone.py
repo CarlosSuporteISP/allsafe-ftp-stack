@@ -424,13 +424,13 @@ def cifrar(senha):
 @contextlib.contextmanager
 def vez(esperar):
     """Um rclone por vez, entre as passadas, o envio de um arquivo, o teste e o terminal. O envio espera a vez; o
-    teste, que tem a tela esperando, levanta saida.Falha('ocupado')."""
+    teste, que tem a tela esperando, levanta saida.Falha('em_uso')."""
     descritor = os.open(ARQ_TRAVA, os.O_RDWR | os.O_CREAT | os.O_CLOEXEC, 0o600)
     try:
         try:
             fcntl.flock(descritor, fcntl.LOCK_EX | (0 if esperar else fcntl.LOCK_NB))
         except OSError:
-            raise saida.Falha('ocupado') from None
+            raise saida.Falha('em_uso') from None
         yield
     finally:
         os.close(descritor)

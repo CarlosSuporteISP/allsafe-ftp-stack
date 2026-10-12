@@ -187,6 +187,14 @@ http {
             proxy_send_timeout 15s;
             proxy_read_timeout 30s;
 
+            # Remoto do rclone: o formulário leva chave privada e token, que não cabem no limite comum. O painel
+            # aceita até 32 KiB nesta rota; a folga daqui é para o cabeçalho do envio. O corpo fica na memória.
+            location = /destinos/rclone {
+                proxy_pass http://unix:/nginx/painel.sock;
+                client_max_body_size 40k;
+                client_body_buffer_size 40k;
+            }
+
             # Envio de arquivo pelo painel: só nestas duas rotas o corpo pode ser grande (PAINEL_ENVIO_MAX_MB, mais
             # 1 MB para os campos do formulário). O corpo segue para o painel enquanto chega, sem arquivo temporário
             # (o /tmp/nginx é pequeno e fica na memória): o painel confere a sessão e a permissão antes de receber

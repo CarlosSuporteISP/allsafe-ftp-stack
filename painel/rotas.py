@@ -49,6 +49,8 @@ ROTAS = {
     ('POST', '/destinos/s3'): aba_destinos.gravar_s3,
     ('GET', '/destinos/telegram'): aba_destinos.tela_telegram,
     ('POST', '/destinos/telegram'): aba_destinos.gravar_telegram,
+    ('GET', '/destinos/rclone'): aba_destinos.tela_rclone,
+    ('POST', '/destinos/rclone'): aba_destinos.gravar_rclone,
     ('POST', '/destinos/testar'): aba_destinos.testar,
     ('POST', '/destinos/agora'): aba_destinos.agora,
     ('GET', '/destinos/arquivo'): aba_destinos.tela_escolher,
@@ -105,3 +107,6 @@ ROTAS_COMPLETO = {
 ROTAS_USUARIO = {'soenvio': ROTAS_SOENVIO, 'leitura': ROTAS_LEITURA, 'envio': ROTAS_ENVIO, 'completo': ROTAS_COMPLETO}
 # Rotas que recebem arquivo: o corpo delas é lido em fluxo (envio.py), e são as únicas em que o nginx aceita corpo grande.
 ROTAS_DE_ENVIO = ('/arquivos/enviar', '/meus-arquivos/enviar')
+# Rotas de formulário longo: o acesso do remoto do rclone leva chave privada e token, que não cabem no limite comum
+# (CORPO_REMOTO_MAX no lugar de CORPO_MAX). O nginx abre a mesma folga só nelas.
+ROTAS_LONGAS = ('/destinos/rclone',)
