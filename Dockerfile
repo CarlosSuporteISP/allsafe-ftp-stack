@@ -2,6 +2,8 @@
 # Três imagens sobre o mesmo Debian 13 fixado por digest: `nginx` (frente web do painel), `painel`
 # (administração web) e `ftp` (servidor). O alvo padrão é o `ftp`.
 ARG DEBIAN=debian:trixie-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee5b77cc54cd1b20a
+# rclone da imagem do painel: a versão fica aqui e a soma de cada arquitetura, nos dois estágios `rclone-*`.
+ARG RCLONE=1.75.2
 
 
 # Frente web: só nginx e openssl, sem nada do FTP. Roda sem root (uid e gid 10001).
@@ -75,6 +77,22 @@ COPY --chmod=0644 ftp/endereco.pl /usr/local/lib/allsafe/endereco.pl
 COPY --chmod=0644 LICENSE NOTICE /usr/share/doc/allsafe-ftp-stack/
 
 
+# rclone: o destino da aba Destinos para o que o S3 não cobre (SFTP, WebDAV e nuvens de arquivos). Binário oficial do
+# projeto, com a versão no endereço e a soma SHA-256 fixa, um estágio por arquitetura: se o arquivo publicado mudar,
+# a construção falha. Trocar de versão é trocar o `ARG RCLONE` e as duas somas, com nova conferência.
+FROM scratch AS rclone-amd64
+ARG RCLONE
+ADD --checksum=sha256:349ac8fba6ff65d6247043f1750cdcb518ec5d500ef91463a10d37c0ccdf3702 \
+    https://github.com/rclone/rclone/releases/download/v${RCLONE}/rclone-v${RCLONE}-linux-amd64.zip /rclone.zip
+
+FROM scratch AS rclone-arm64
+ARG RCLONE
+ADD --checksum=sha256:7e1e8d69654941b7b7df84ee74c5f7fb09cce7d5496947fb7bf16b55ff427d10 \
+    https://github.com/rclone/rclone/releases/download/v${RCLONE}/rclone-v${RCLONE}-linux-arm64.zip /rclone.zip
+
+FROM rclone-${TARGETARCH} AS rclone-zip
+
+
 FROM base AS painel
 
 LABEL org.opencontainers.image.title="AllSafe FTP - painel" \
@@ -91,6 +109,26 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 ca-certificates age \
     && mkdir -p /painel /nginx /segredos /certs /opt/painel \
     && rm -rf /var/lib/apt/lists/*
+
+# Do pacote do rclone entram só o binário e o texto da licença dele (MIT). O pacote é aberto pelo Python da imagem, e
+# a construção para se o binário não responder com a versão pedida. Nada é baixado nem atualizado em execução.
+ARG RCLONE
+RUN --mount=type=bind,from=rclone-zip,source=/rclone.zip,target=/tmp/rclone.zip python3 -I - "${RCLONE}" <<'EOF'
+import os, shutil, subprocess, sys, zipfile
+pacote = zipfile.ZipFile('/tmp/rclone.zip')
+binario, = [nome for nome in pacote.namelist() if nome.endswith('/rclone')]
+leia, = [nome for nome in pacote.namelist() if nome.endswith('/README.txt')]
+with pacote.open(binario) as origem, open('/usr/local/bin/rclone', 'wb') as destino:
+    shutil.copyfileobj(origem, destino)
+os.chmod('/usr/local/bin/rclone', 0o755)
+texto = pacote.read(leia).decode('utf-8')
+inicio = texto.rindex('\nLicense\n')
+os.makedirs('/usr/share/doc/rclone', mode=0o755)
+with open('/usr/share/doc/rclone/copyright', 'w', encoding='utf-8') as destino:
+    destino.write(texto[inicio:texto.index('\nAuthors and contributors\n', inicio)].strip() + '\n')
+versao = subprocess.run(['/usr/local/bin/rclone', 'version'], capture_output=True, text=True, check=True).stdout
+assert versao.splitlines()[0] == 'rclone v' + sys.argv[1], versao
+EOF
 
 # Os módulos do painel ficam lado a lado: o servidor.py é o ponto de entrada e importa os demais.
 COPY --chmod=0644 painel/*.py VERSION /opt/painel/
