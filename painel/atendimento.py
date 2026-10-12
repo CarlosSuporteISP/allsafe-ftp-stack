@@ -18,13 +18,13 @@ import entrada
 import envio
 import idioma
 from auditoria import auditar, limpo
-from config import (BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, ENVIO_FOLGA, ESCOAR_MAX, ESCOAR_PRAZO, GID_NGINX, TEMPO_CONEXAO,
+from config import (BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, CORPO_REMOTO_MAX, ENVIO_FOLGA, ESCOAR_MAX, ESCOAR_PRAZO, GID_NGINX, TEMPO_CONEXAO,
                     VALIDADE_CONTATO, privado)
 from enderecos import bloqueado as endereco_bloqueado, endereco_de
 from estado import usuarios
 from idioma import t
 from pagina import e, pagina, tamanho
-from rotas import ROTAS, ROTAS_DE_ENVIO, ROTAS_USUARIO
+from rotas import ROTAS, ROTAS_DE_ENVIO, ROTAS_LONGAS, ROTAS_USUARIO
 from sessao import buscar_sessao, encerrar_sessao, trocar_idioma
 
 CABECALHOS = (
@@ -211,13 +211,13 @@ class Painel(http.server.BaseHTTPRequestHandler):
                 return valor
         return None
 
-    def ler_formulario(self):
+    def ler_formulario(self, maximo=CORPO_MAX, campos_max=16):
         """Devolve o formulário como dicionário, ou None depois de já ter respondido com o erro."""
         comprimento = self.headers.get('Content-Length', '')
         if not comprimento.isdigit():
             self.recusar(411, t('Envio sem tamanho declarado.'))
             return None
-        if int(comprimento) > CORPO_MAX:
+        if int(comprimento) > maximo:
             self.recusar(413, t('Envio grande demais.'))
             return None
         if self.headers.get('Content-Type', '').split(';')[0].strip().lower() != 'application/x-www-form-urlencoded':
@@ -225,7 +225,7 @@ class Painel(http.server.BaseHTTPRequestHandler):
             return None
         try:
             campos = urllib.parse.parse_qs(self.rfile.read(int(comprimento)).decode('utf-8'),
-                                           keep_blank_values=True, max_num_fields=16, strict_parsing=False)
+                                           keep_blank_values=True, max_num_fields=campos_max, strict_parsing=False)
         except (ValueError, UnicodeDecodeError):
             self.recusar(400, t('Envio malformado.'))
             return None
@@ -357,7 +357,8 @@ class Painel(http.server.BaseHTTPRequestHandler):
         formulario = {}
         self.corpo = None
         if metodo == 'POST':
-            formulario = self.ler_envio() if self.caminho in ROTAS_DE_ENVIO else self.ler_formulario()
+            formulario = (self.ler_envio() if self.caminho in ROTAS_DE_ENVIO else
+                          self.ler_formulario(CORPO_REMOTO_MAX, 24) if self.caminho in ROTAS_LONGAS else self.ler_formulario())
             if formulario is None:
                 return None
             if not self.origem_valida():

@@ -33,7 +33,7 @@ flowchart LR
 <details>
 <summary>Contents — click to expand</summary>
 
-[Open the panel](#abrir) · [What is in each tab](#abas) · [Language of the screens](#idioma) · [Users through the panel](#usuarios) · [Profiles](#perfis) · [Files and download](#arquivos) · [FTP user in the panel](#usuario-ftp) · [Destinations: S3 and Telegram bot](#destinos) · [Server: containers and resources](#servidor) · [Panel administrators](#administradores) · [Recover access](#senha) · [Panel certificate](#certificado) · [Open to the internal network](#rede-interna) · [Panel brand](#marca) · [How the panel decides](#como-decide) · [Audit log](#auditoria) · [What protects the panel](#protecoes)
+[Open the panel](#abrir) · [What is in each tab](#abas) · [Language of the screens](#idioma) · [Users through the panel](#usuarios) · [Profiles](#perfis) · [Files and download](#arquivos) · [FTP user in the panel](#usuario-ftp) · [Destinations: S3, rclone and Telegram bot](#destinos) · [Server: containers and resources](#servidor) · [Panel administrators](#administradores) · [Recover access](#senha) · [Panel certificate](#certificado) · [Open to the internal network](#rede-interna) · [Panel brand](#marca) · [How the panel decides](#como-decide) · [Audit log](#auditoria) · [What protects the panel](#protecoes)
 
 </details>
 
@@ -78,7 +78,7 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 | Overview | FTP up or down, number of users, space used and free, last upload, validity of the FTP certificate, the TLS mode of the FTP, the **Server and containers** band (processor and memory of the server and of the stack containers, each with the use against what exists or what was allocated), the files received per day in the last 14 days, the last upload of each user, the space of each folder, the data to configure the device (server, control port, passive ports, protocol) and the latest activity records | View only; each card ends with the shortcut to the tab with the detail |
 | Users | All the accounts in one list, each with the **profile** under the name. First the panel administrators, with the **you** mark on the account of whoever is using the panel and how many sessions each one has open; then the FTP users, one per row: folder, with the **shared** mark when another user also reaches it, and the name, with the **blocked** mark when the FTP is refusing it because of too many wrong passwords, space used, number of files and last upload; the **TLS** column says whether the user is required to use TLS | Create, choosing the profile (Administrator, Full, Upload, Upload only or Read only), the folder and, for a device without TLS support, already exempt from TLS; edit, to change the profile, the folder and the limits and to lift a block; change the password; remove, with their folder or without it; open the user's folder in the Files tab; exempt a user from TLS and require it again; change the password and the name of an administrator and remove them |
 | Files | The folders of the FTP users and what is in each one: name, size and date of each file | Enter the folders, by the name or by the **Open** button, download a file through the browser, upload a file to the open folder, create a folder, change the name of and delete files and folders, send a file right away to a saved [destination](#destinos), and open the user form already with the open folder |
-| Destinations | The outside places to which the panel sends by itself the files of the folders, S3 storages and Telegram bots: whether each one is on, the folder, the interval, the last run and the total sent, without showing the secrets | **Configure**, **Test**, **Send now**, **Change** and **Remove** each destination; with the destination saved, the Files tab gets the button to send a file right away: see [Destinations](#destinos) |
+| Destinations | The outside places to which the panel sends by itself the files of the folders, S3 storages, rclone remotes and Telegram bots: whether each one is on, the folder, the interval, the last run and the total sent, without showing the secrets | **Configure**, **Test**, **Send now**, **Change** and **Remove** each destination; with the destination saved, the Files tab gets the button to send a file right away: see [Destinations](#destinos) |
 | Server | The three containers of the stack (FTP server, panel and web front end), each with what it uses of processor, memory and processes against what was allocated to it, and, separately, the resources of the server the stack runs on: processor, memory, disk and FTP network, with the state, the current measurement and the history of the last minutes | View only; **Auto-refresh** redoes the reading every 10 s, without counting as use of the session: see [Server](#servidor) |
 | Security | Check of the installation, with the summary of how many items are in order, need attention or are checked on the server: whether a public address is accepted, whether the panel is published through a proxy or tunnel, addresses of the FTP and of the panel, TLS mode, with the per-user exception and who is exempt, the sign-in of the FTP users, the web front end (nginx), validity and fingerprint of the two certificates, networks that can open the panel, session rules, the cost of the FTP passwords, with the users that still have the previous cost, the security contact published at `/.well-known/security.txt`, container isolation and the firewall reminder | View only |
 | Blocks | The addresses and the prefixes, IPv4 and IPv6, with [blocking by address](security.md#bloqueio-por-endereco): the rule in force, the total and, per block, who blocked it (the FTP, the panel or the administrator), with how many errors, since when and until when. Below, when there are any, the users with blocking by attempts on the FTP | **Block address**, to block an address or a prefix by hand, search for an address, **Change period**, to block for longer or shorten it, and **Unblock**; open the user that has blocking by attempts |
@@ -354,7 +354,7 @@ The Files tab shows the folders of `DATA_DIR/dados`, delivers through the browse
 6. To tie a user to a folder, enter it and click **New user in this folder**: the form opens with the **Folder** field filled in.
 7. To change the name of a file or a folder, click **Rename** on its row, write the new name, type your current password and click **Change name**. The item stays in the same folder.
 8. To delete a file or a folder, click **Delete** on its row, tick the confirmation box, type your current password and click **Delete for good**.
-9. To send a file to the Telegram bot or to S3 right away, click **Telegram** or **S3** on its row. The buttons appear after the destination is saved: see [Destinations](#destinos).
+9. To send a file to the Telegram bot, to the rclone remote or to S3 right away, click **Telegram**, **rclone** or **S3** on its row. The buttons appear after the destination is saved: see [Destinations](#destinos).
 
 **Expected result:** the saved file is identical to the one the device uploaded, and the Log tab gets the line `File downloaded`, with the administrator, the path and the size. The folder created appears in the list with the notice `Folder created.`, empty, already with the owner and the permission the FTP uses, and stays in the Log tab as `Folder created`. The uploaded file appears in the list with the notice `File uploaded.`, with the owner and the permission of the files that arrive by FTP, and stays in the Log tab as `File uploaded through the panel`. The renamed item appears with the new name and the notice `Name changed.`, with the same content, owner and permission; the deleted one disappears from the list with the notice `Deleted.`. Both stay in the Log tab, as `File or folder renamed` and `File or folder deleted`.
 
@@ -363,7 +363,7 @@ The Files tab shows the folders of `DATA_DIR/dados`, delivers through the browse
 | In the list | What appears | What can be done |
 |---|---|---|
 | Folder | Name and date of the last change; inside it, the line `Folder of the FTP user` says whose it is | Enter, by the name or by the **Open** button, rename and delete |
-| File | Name, size and date of the last change | Download, rename and delete; with a saved destination, send to the Telegram bot or to S3 |
+| File | Name, size and date of the last change | Download, rename and delete; with a saved destination, send to the Telegram bot, to the rclone remote or to S3 |
 | Item marked `symbolic link` or `special file` | Name and date | Rename and delete; the panel neither opens nor downloads it, and shows **does not open here** in place of the button. Deleting a symbolic link deletes only the link, never what it points to |
 
 Limits:
@@ -500,14 +500,94 @@ PAINEL_ACESSO_USUARIOS_FTP=nao
 
 <a name="destinos"></a>
 
-## ☁️ Destinations: S3 and Telegram bot
+## ☁️ Destinations: S3, rclone and Telegram bot
 
-In the **Destinations** tab, the administrator connects folders of the data to places outside the server, and the panel starts sending by itself whatever arrives in them. There are two types of destination: the **S3 storage**, to hold the second copy or to keep the files elsewhere and free the disk, and the **Telegram bot**, which delivers each new file to a person, a group or a channel. Each type accepts up to 20 destinations, each one with its own folder, interval and secrets, and one does not depend on the other. The tab comes with none: until the administrator saves one, nothing leaves the server. Only an administrator opens the tab.
+In the **Destinations** tab, the administrator connects folders of the data to places outside the server, and the panel starts sending by itself whatever arrives in them. There are three types of destination: the **S3 storage**, to hold the second copy or to keep the files elsewhere and free the disk, the **rclone remote**, for what S3 does not reach (an SFTP or WebDAV server, or a file cloud), and the **Telegram bot**, which delivers each new file to a person, a group or a channel. Each type accepts up to 20 destinations, each one with its own folder, interval and secrets, and one does not depend on the other. The tab comes with none: until the administrator saves one, nothing leaves the server. Only an administrator opens the tab.
 
 | Destination | What it sends | When | What stays on the server |
 |---|---|---|---|
 | S3 storage | Every file in the chosen folder and in the folders inside it, including the ones already there when the destination was turned on | At each saved interval, 5 to 1440 minutes | With **Copy**, everything; with **Keep in S3**, the file leaves after the destination confirms it was stored |
+| rclone remote | Every file in the chosen folder and in the folders inside it, including the ones already there when the destination was turned on | At each saved interval, 5 to 1440 minutes | Everything: the remote only receives |
 | Telegram bot | Only the files that arrive after the destination is turned on, one per message, with the path, the size and the date | Within a few seconds, when the file arrives whole by FTP or through the panel; what shows up in the folder any other way, at each saved interval, 5 to 1440 minutes | Everything: the bot never deletes |
+
+<details>
+<summary>Flowchart of the sending to the destinations, with the written sequence — click to expand</summary>
+
+<!-- diagrama: diagrams/destinations-flowchart.mmd -->
+```mermaid
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origin"]
+        equip@{ shape: hex, label: "Network device<br>FTP client" }
+    end
+    subgraph SERVIDOR["Server · painel container"]
+        pasta@{ shape: lin-cyl, label: "folder sent<br>DATA_DIR/data" }
+        passada@{ shape: rect, label: "run of the destination<br>painel/destinos.py" }
+        inteiro@{ shape: diam, label: "file<br>arrived whole?" }
+        https@{ shape: rect, label: "way out by HTTPS<br>painel/saida.py" }
+        rclone@{ shape: rect, label: "rclone<br>painel/rclone.py" }
+        andamento@{ shape: cyl, label: "progress of the destination<br>DATA_DIR/painel/destinos" }
+        segredos@{ shape: docs, label: "secrets of the destination<br>SECRETS_DIR/destinos, 0600" }
+    end
+    subgraph FORA["Outside the server"]
+        bot@{ shape: cloud, label: "Telegram bot<br>receiving chat" }
+        s3@{ shape: bucket, label: "S3 bucket<br>Copy or Keep in S3" }
+        remoto@{ shape: cloud, label: "rclone remote<br>SFTP, WebDAV or cloud" }
+    end
+    subgraph RESULTADO["Result"]
+        confirmou@{ shape: diam, label: "the destination<br>confirmed?" }
+        enviado@{ shape: stadium, label: "file sent<br>only once" }
+        parou@{ shape: stadium, label: "run ended<br>reason on the card" }
+        depois@{ shape: stadium, label: "still arriving<br>left for the next run" }
+    end
+
+    equip -- "1 · sends the file, FTP" --> pasta
+    pasta -- "2 · read at every interval" --> passada
+    passada -- "3 · checks each new file" --> inteiro
+    inteiro -- "4a · no" -----> depois
+    inteiro -- "4b · yes: bot and S3" --> https
+    inteiro -- "4c · yes: rclone remote" --> rclone
+    https -- "5a · sends the message, HTTPS" ---> bot
+    https -- "5b · writes the object, HTTPS" ---> s3
+    rclone -- "5c · writes the file, HTTPS or SSH" ---> remoto
+    bot -- "6a · answers" --> confirmou
+    s3 -- "6b · answers" --> confirmou
+    remoto -- "6c · answers" --> confirmou
+    confirmou -- "7a · yes: records and goes on" --> enviado
+    confirmou -- "7b · no: stops" --> parou
+    passada -. "reads the settings and writes the progress" .-> andamento
+    https -. "reads the keys and the token" .-> segredos
+    rclone -. "reads the access of the remote" .-> segredos
+```
+
+<sub>Level 2 · Map · [source](diagrams/)</sub>
+
+| No. | From ➜ To | What happens |
+|---|---|---|
+| 1 | Network device ➜ folder sent | The file arrives over FTP, or through the upload of the panel, in the folder the destination sends |
+| 2 | folder sent ➜ run of the destination | At every saved interval, or with the **Send now** button, the panel reads the folder and the folders inside it |
+| 3 | run of the destination ➜ file arrived whole? | The panel checks, in the order of arrival, each file the destination has not received yet |
+| 4a | file arrived whole? ➜ still arriving | No: the file changed less than two minutes ago and is left for a next run |
+| 4b | file arrived whole? ➜ way out by HTTPS | Yes, with a bot or S3: the request goes out by HTTPS, with the certificate and the address checked. The bot does not wait the two minutes for the file the FTP or the panel announced as finished |
+| 4c | file arrived whole? ➜ rclone | Yes, with an rclone remote: the panel calls rclone, one file at a time, only to write |
+| 5a | way out by HTTPS ➜ Telegram bot | The bot delivers the file to the chat, in one message; above the bot limit only the notice goes |
+| 5b | way out by HTTPS ➜ S3 bucket | The panel writes the object in the bucket, in parts when it is large |
+| 5c | rclone ➜ rclone remote | rclone writes the file in the folder of the remote, by HTTPS or, for SFTP, by SSH with the server key checked |
+| 6a | Telegram bot ➜ the destination confirmed? | The bot service answers the request |
+| 6b | S3 bucket ➜ the destination confirmed? | The S3 service answers the request |
+| 6c | rclone remote ➜ the destination confirmed? | rclone finishes and says whether it wrote |
+| 7a | the destination confirmed? ➜ file sent | Yes: the panel records the file as sent and goes on to the next one; with **Keep in S3**, the file leaves the server after being delivered by every destination that takes it |
+| 7b | the destination confirmed? ➜ run ended | No: the run stops, the card shows the reason and the next one resumes from the same file |
+
+**Support**
+
+| Who | Uses | How |
+|---|---|---|
+| run of the destination | progress of the destination (`DATA_DIR/painel/destinos`) | reads the settings and writes how far the sending went |
+| way out by HTTPS | secrets of the destination (`SECRETS_DIR/destinos`) | reads the S3 keys, the bot token and the chat |
+| rclone | secrets of the destination (`SECRETS_DIR/destinos`) | reads the access of the remote and works on a copy of it |
+
+</details>
 
 **S3 storage.** Any service that speaks the S3 protocol works, in the cloud or on the internal network. Before you start, create the bucket at the service and a key that can only write to it.
 
@@ -526,6 +606,36 @@ In the **Destinations** tab, the administrator connects folders of the data to p
 
 > ⚠️ **Changing the address, the bucket, the prefix, the form of the address or the folder starts from scratch:** everything in the folder is sent again, to the new place.
 
+**rclone remote.** rclone is the file sending program that comes inside the panel image, in a fixed version. Through it, the folder goes to an **SFTP** or **WebDAV** server, or to a **Google Drive**, **OneDrive**, **Dropbox** or **pCloud** account. Everything is filled in on the screen: the panel asks for nothing on the server terminal.
+
+1. In the Destinations tab, click **Configure** on the **rclone remote** card.
+2. Choose the **Remote type** and click **Continue**.
+3. Fill in the **Folder on the remote**, which is where the files are written (blank is the folder the remote opens in), the **Folder sent** and the **Interval between runs**.
+4. Under **Remote access**, fill in the fields of the chosen type, as in the table below.
+5. Type your password and click **Save**.
+6. Back in the tab, click **Test**.
+
+| Remote type | What the access asks for | Optional |
+|---|---|---|
+| SFTP | **Server**, **User** and the **Password** or the **Private key**, with the **Private key passphrase** when the key is encrypted | **Port** (blank means 22) and **Server public key** (when blank, Test stores the one the server presents) |
+| WebDAV | **Address**, HTTPS only, and the **User** with the **Password**, or the **Access token** | **Server software** |
+| Google Drive | **Account token**, or **Service account credential** | **Scope**, **Starting folder**, **Shared drive**, **Application ID** and **Application secret** |
+| OneDrive | **Account token**, **Drive ID** and **Drive type** | **Region**, **Organization**, **Application ID** and **Application secret** |
+| Dropbox | **Account token** | **Application ID** and **Application secret** |
+| pCloud | **Account token** | **Account region**, **Application ID** and **Application secret** |
+
+**Expected result:** the tab comes back with the notice **Destination saved**, and the card shows the **on** tag, the remote type, the folder on the remote, the folder sent and that the access is saved, without showing it. **Test** writes a small file, `allsafe-ftp-stack-teste.txt`, to the remote folder and answers **Test finished: the destination received it**. The first run starts within a minute and sends everything already in the folder; the **Last run** line says how many files went out.
+
+- **The remote only receives.** The panel asks rclone to write each file, and nothing else: it does not list, download, sync or delete anything on the remote. The file stays on the server.
+- **SFTP needs Test before the first send.** The card keeps the **test pending** tag until the test stores the key the server presents. After it, the **Server key** line shows the fingerprint of that key: compare it with the one on the server. Without the stored key nothing is sent, and, if it changes later, the sending stops with the reason on the screen.
+- **The token of the clouds is obtained outside the panel**, on a computer with a browser and rclone: the `rclone authorize` command followed by the type (`drive`, `onedrive`, `dropbox` or `pcloud`) opens the account page and prints the token, which is pasted into the **Account token** field. The panel does not open that page. Once saved, the panel keeps by itself the token the service renews.
+- **The type is fixed once saved.** For another type, create another destination.
+- **The access does not come back to the screen.** In **Change**, the access fields left blank keep the saved one; to change any part of it, fill in the whole access again. In SFTP, an access saved again without the **Server public key** asks for another **Test**.
+- **The path on the remote is the same as in the data.** `backups/router/config.rsc`, with the folder on the remote `copies`, becomes `copies/backups/router/config.rsc`, and writes over whatever has the same name. The test file stays on the remote.
+- **Certificate checked.** In WebDAV and in the clouds, the panel only speaks HTTPS with the certificate checked. A WebDAV server with an authority of the network itself uses the same `ca.pem` as S3, described further below.
+
+> ⚠️ **Changing the folder on the remote, the folder sent or the place of the access starts from scratch:** everything in the folder is sent again, to the new place. The place of the access is the server, the port and the user, in SFTP; the address and the user, in WebDAV; and, in the clouds, the starting folder, the drive or the account region.
+
 **Telegram bot.** Before you start, create the bot with the Telegram bot creator and keep the token it hands over. Add the bot to the group or the channel that will receive; for a person, they must have started the chat with the bot.
 
 1. In the Destinations tab, click **Configure** on the **Telegram bot** card.
@@ -540,55 +650,56 @@ The bot **only sends**. The panel uses the file sending and the message sending 
 
 The largest file the bot sends at once is the one in [`PAINEL_TELEGRAM_MAX_MB`](configuration.md#painel), 50 MB by default, which is the ceiling of the public API. A larger file is not sent: the chat receives a notice with the path, the size and the date, and the file stays on the server. An empty file is not sent, because the API does not accept it.
 
-**Several destinations of the same type.** After the first destination of a type, the tab gets the **New S3** or **New bot** button at the top, and each card gets **New with the same access**. It is the way to send another folder to the same bucket, the same folder to another bucket or another folder to another group through the same bot.
+**Several destinations of the same type.** After the first destination of a type, the tab gets the **New S3**, **New remote** or **New bot** button at the top, and each card gets **New with the same access**. It is the way to send another folder to the same bucket, the same folder to another bucket, another folder to the same server through rclone or another folder to another group through the same bot.
 
 1. On the card of the destination that already works, click **New with the same access**.
 2. Give the destination a **Name**, to recognise it on the screen.
-3. Change the **Folder sent** or the place: the prefix or the bucket, in S3; the chat, in the bot.
-4. Leave blank the secrets that are the same, type your password and click **Save**.
+3. Change the **Folder sent** or the place: the prefix or the bucket, in S3; the folder on the remote, in rclone; the chat, in the bot.
+4. Leave blank the secrets that are the same, type your password and click **Save**. In rclone, the access is a single one: left blank, the whole access of the source destination applies and, to use another, it is filled in whole.
 
-**Expected result:** the tab comes back with the notice **Destination saved** and one more card, with the type and the given name, such as **S3 storage: Customers**. A secret left blank is copied from the source destination inside the server, without going through the browser, and **Test** on the new card confirms it works.
+**Expected result:** the tab comes back with the notice **Destination saved** and one more card, with the type and the given name, such as **S3 storage: Customers**. A secret left blank is copied from the source destination inside the server, without going through the browser, and **Test** on the new card confirms it works. An SFTP remote created this way takes along the server key already stored, and does not ask for another test.
 
-- **New S3** and **New bot** open the blank form, for a destination with other keys or with another bot.
-- Two destinations do not take the same folder, or a folder inside it, to the same place: the panel refuses with **This destination already exists**. The same place is the same address, bucket and prefix, in S3, and the same bot with the same chat, in Telegram.
+- **New S3**, **New remote** and **New bot** open the blank form, for a destination with other keys, with another remote or with another bot.
+- Two destinations do not take the same folder, or a folder inside it, to the same place: the panel refuses with **This destination already exists**. The same place is the same address, bucket and prefix, in S3; the same remote type, server, user and folder on the remote, in rclone; and the same bot with the same chat, in Telegram.
 - Each type accepts up to 20 destinations. With the 20 saved, the buttons for a new destination disappear until one is removed.
 - Each destination has its own progress: changing, testing or removing one does not touch the others.
-- A new bot sends only what arrives after it is saved; a new S3 sends everything already in the folder.
+- A new bot sends only what arrives after it is saved; a new S3 and a new rclone remote send everything already in the folder.
 
-**Several destinations on the same folder.** In each run, the bots deliver first, then the S3 destinations that copy and, last, the ones that keep. With an S3 in **Keep in S3**, the file only leaves the server after it is stored there and delivered by all the other destinations turned on that take that file, bots and other S3 ones; while one of them has not delivered, the card of that S3 shows the **Waiting for another destination** line.
+**Several destinations on the same folder.** In each run, the bots deliver first, then the rclone remotes, the S3 destinations that copy and, last, the ones that keep. With an S3 in **Keep in S3**, the file only leaves the server after it is stored there and delivered by all the other destinations turned on that take that file, bots, rclone remotes and other S3 ones; while one of them has not delivered, the card of that S3 shows the **Waiting for another destination** line.
 
 **The buttons on each card:**
 
 | Button | What it does | Asks for the password |
 |---|---|---|
-| Test | Writes the test object to S3 or sends the test message through the bot, with what is saved. It works with the destination turned off | No |
+| Test | Writes the test object to S3 or the test file to the rclone remote, or sends the test message through the bot, with what is saved. On an SFTP remote, it also stores the server key. It works with the destination turned off | No |
 | Send now | Requests a run out of schedule. The panel starts in a moment, and the page does not wait for it: refresh to follow | No |
 | Change | Opens the form with what is saved. A blank secret field keeps the saved one | Yes, to save |
 | New with the same access | Opens the form of a new destination of the same type. A blank secret field copies the one of this destination, on the server | Yes, to save |
 | Remove | Deletes the settings, the progress and the secrets of this destination, and only of it. What was already sent stays there, and no file on the server is deleted | Yes |
 
-**Send one file right away.** Once a destination is saved, each file in the [Files](#arquivos) tab gets a button with its name, **Telegram** or **S3**, next to **Download**. The button sends that file to the destination at that moment, with what is saved.
+**Send one file right away.** Once a destination is saved, each file in the [Files](#arquivos) tab gets a button with its name, **Telegram**, **rclone** or **S3**, next to **Download**. The button sends that file to the destination at that moment, with what is saved.
 
 1. Open the **Files** tab and enter the folder of the file.
-2. On the line of the file, click **Telegram** or **S3**.
+2. On the line of the file, click **Telegram**, **rclone** or **S3**.
 3. With more than one destination of that type ready, choose the **Destination that receives** on the next page and click **Send**.
 
-**Expected result:** the page comes back to the same folder with the notice **Telegram bot: file sent** or **S3 storage: file sent**, with the name of the destination when it has one. When the send takes more than 20 seconds, the notice says it continues in the background, and the result appears in the Log tab. When it does not work, the notice gives the reason in one sentence.
+**Expected result:** the page comes back to the same folder with the notice **Telegram bot: file sent**, **rclone remote: file sent** or **S3 storage: file sent**, with the name of the destination when it has one. When the send takes more than 20 seconds, the notice says it continues in the background, and the result appears in the Log tab. When it does not work, the notice gives the reason in one sentence.
 
 - The button works for any file of the data, inside or outside the folder of the destination, and works with the destination turned off.
 - The file is never deleted by this send, not even with S3 in **Keep in S3**, and what the runs send does not change: a file that has not gone yet keeps its turn.
-- Through the bot, an empty file and one above the limit do not go, and the notice says why. Sending again a file that already went delivers another message to the chat; in S3, it writes over the same object.
+- Through the bot, an empty file and one above the limit do not go, and the notice says why. Sending again a file that already went delivers another message to the chat; in S3 and in rclone, it writes over the same name.
 - One send requested by the button at a time: while one has not finished, the next is refused with the notice to try again.
+- Through rclone, the file goes to the folder on the remote with the same path it has inside the data. For an SFTP remote that has not been through **Test** yet, the button answers that the server key is missing.
 - Only the administrator has the button, and it only appears for the type that has a destination saved with its secrets.
 
 **What enters a run:**
 
 - Regular files only. Symbolic links and everything whose name starts with a dot, file or folder, stay out.
 - A file enters after two minutes without changing, so that what is still arriving does not leave half done. The **Send now** button respects this wait, and the card shows in the **Still arriving** line how many files were left for a later run.
-- The bot does not wait the two minutes for a file the FTP server announced as finished, nor for one sent through the panel: that one goes within a few seconds. S3 always waits.
+- The bot does not wait the two minutes for a file the FTP server announced as finished, nor for one sent through the panel: that one goes within a few seconds. S3 and the rclone remote always wait.
 - A file renamed or moved by FTP, and one copied straight onto the server, has no arrival notice: it waits the two minutes and, while it waits, holds the ones that arrived after it, so the order is not lost.
 - The order is the order of arrival at the server. A failure at the destination ends the run, and the next one resumes from the same file: nothing is skipped or sent twice.
-- In S3, the object name is the prefix plus the path of the file inside the data: `backups/router/config.rsc`, with the prefix `copies`, becomes `copies/backups/router/config.rsc`.
+- In S3, the object name is the prefix plus the path of the file inside the data: `backups/router/config.rsc`, with the prefix `copies`, becomes `copies/backups/router/config.rsc`. In rclone, the rule is the same, with the folder on the remote in place of the prefix.
 - A file that is renamed is sent again, under the new name. A folder that is renamed does not resend the files inside it.
 
 When the last run stops before the end, the card shows the reason in one sentence. What each reason means and what to do is in [Troubleshooting](troubleshooting.md#destinos).
@@ -627,9 +738,9 @@ docker compose exec painel python3 /opt/painel/servidor.py --copia enviar
 
 **Expected result:** the first shows `cópia do sistema: s3 (<bucket>/<pasta>); a cada 1 dia(s), às 03:00` and the line `última cópia:`, or `nenhuma cópia ainda` (no copy yet). The second ends with `cópia do sistema: s3:<bucket>/<pasta>/<objeto>; <n> bytes em <n> parte(s); <n> arquivo(s), 0 mudaram durante a leitura, 0 de fora (soquete, fila ou dispositivo); sha256 <soma>` and exits with `0`. When the copy is not completed, the line is `cópia do sistema: falhou: <motivo>; nenhum objeto ficou no destino` (it failed; no object stayed in the destination), and the exit is `1`.
 
-**Where the secrets are kept.** The keys of each S3 and the token and the chat of each bot stay on the server, one per file, in the `destinos` folder of `SECRETS_DIR`, and never go back to the screen, to the Log or to the audit log. Like the other secrets of the installation, they are not part of the [backup](backup.md): after restoring a backup, the card shows the **secrets missing** tag and nothing is sent until they are saved again, in **Change**.
+**Where the secrets are kept.** The keys of each S3, the access of each rclone remote and the token and the chat of each bot stay on the server, one per file, in the `destinos` folder of `SECRETS_DIR`, and never go back to the screen, to the Log or to the audit log. Like the other secrets of the installation, they are not part of the [backup](backup.md): after restoring a backup, the card shows the **secrets missing** tag and nothing is sent until they are saved again, in **Change**.
 
-**S3 on the internal network with its own authority.** The panel only speaks HTTPS and checks the certificate of the service. If the certificate of your S3 was issued by an authority of the network itself, hand its certificate to the panel, in PEM:
+**S3 or WebDAV on the internal network with its own authority.** The panel only speaks HTTPS and checks the certificate of the service. If the certificate of your S3 or of your WebDAV server was issued by an authority of the network itself, hand its certificate to the panel, in PEM:
 
 ```bash
 docker compose exec -T painel sh -c 'cat > /painel/destinos/ca.pem' < network-authority.pem
@@ -642,23 +753,24 @@ docker compose exec -T painel sh -c 'cat > /painel/destinos/ca.pem' < network-au
 <details>
 <summary>Technical detail — the outside destinations</summary>
 
-- **Routes:** `GET /destinos` shows one card per destination; `GET` and `POST /destinos/s3` and `/destinos/telegram` show and save the form of the type, and the `id` field says which destination: blank, the first of the type; `novo`, a new destination; or the name of an existing one. With `id=novo`, the `copiar` field takes the name of the destination the secrets left blank come from; `POST /destinos/testar` and `POST /destinos/agora` take the `destino` field, with the name of the destination; `GET /destinos/arquivo` takes `tipo` and `arquivo` and shows the choice of the destination, when the type has more than one ready; `POST /destinos/arquivo` takes `destino` and `arquivo`, the path inside the data; `GET` and `POST /destinos/remover` confirm and remove. Every `POST` carries the CSRF token of the session. Saving and removing also ask for `senha_atual`, the password of whoever is in the session: wrong or blank gets `403`, writes `admin_senha_atual_recusada` and counts as a sign-in error. Only an administrator has these routes: for the FTP user, they answer `404`.
-- **Form:** a field outside the rule answers `400`, with the page back and what was typed, except the secrets, which are never returned. The folder must exist inside the data. A destination name outside the rule, of another type or with no settings answers `404`; a repeated destination answers `400`, and a new destination in a type that already has the 20 goes back to the list (`303`) with the notice, saving nothing.
-- **Names:** the first destination of each type is called `s3` or `telegram`; the next ones, `s3-2` to `s3-20` and `telegram-2` to `telegram-20`. A new destination gets the lowest free name of the type, and the name of a removed destination becomes free again. The **Name** field of the form is only what the screen shows, with up to 40 characters: the files, the audit log and the terminal use the fixed name.
-- **Who stores it:** the settings are in `DATA_DIR/painel/destinos/<destino>.conf` and the progress, in `<destino>.estado`; both are part of the backup. The secrets are in `SECRETS_DIR/destinos`, with mode `0600` and the name of the destination in front: `<destino>-chave-de-acesso.txt` and `<destino>-chave-secreta.txt`, in S3, and `<destino>-token.txt` and `<destino>-conversa.txt`, in the bot. The copy of access between two destinations happens in this folder, from file to file. It is the only secrets folder the panel writes to. Deleting one of these files on the server turns off the sending to that destination on the next run.
-- **Who applies it:** [`destinos.py`](../../painel/destinos.py), in a thread of the panel itself, which collects the arrival notices every 2 s and checks every minute which destination is due. One run at a time, in this order: the bots, the S3 destinations that copy and, last, the ones that keep.
+- **Routes:** `GET /destinos` shows one card per destination; `GET` and `POST /destinos/s3`, `/destinos/rclone` and `/destinos/telegram` show and save the form of the type, and the `id` field says which destination: blank, the first of the type; `novo`, a new destination; or the name of an existing one. With `id=novo`, the `copiar` field takes the name of the destination the secrets left blank come from; `POST /destinos/testar` and `POST /destinos/agora` take the `destino` field, with the name of the destination; `GET /destinos/arquivo` takes `tipo` and `arquivo` and shows the choice of the destination, when the type has more than one ready; `POST /destinos/arquivo` takes `destino` and `arquivo`, the path inside the data; `GET` and `POST /destinos/remover` confirm and remove. Every `POST` carries the CSRF token of the session. Saving and removing also ask for `senha_atual`, the password of whoever is in the session: wrong or blank gets `403`, writes `admin_senha_atual_recusada` and counts as a sign-in error. Only an administrator has these routes: for the FTP user, they answer `404`.
+- **Form:** a field outside the rule answers `400`, with the page back and what was typed, except the secrets, which are never returned. The folder must exist inside the data. The rclone form carries the `remoto` field, with the type, which only applies to a new destination, and the access fields, with `r_` in front of the name; because of the private key and the credential, it is the only route that accepts a body of up to 32 KiB, and the others stay at 8 KiB. A destination name outside the rule, of another type or with no settings answers `404`; a repeated destination answers `400`, and a new destination in a type that already has the 20 goes back to the list (`303`) with the notice, saving nothing.
+- **Names:** the first destination of each type is called `s3`, `rclone` or `telegram`; the next ones, `s3-2` to `s3-20`, `rclone-2` to `rclone-20` and `telegram-2` to `telegram-20`. A new destination gets the lowest free name of the type, and the name of a removed destination becomes free again. The **Name** field of the form is only what the screen shows, with up to 40 characters: the files, the audit log and the terminal use the fixed name.
+- **Who stores it:** the settings are in `DATA_DIR/painel/destinos/<destino>.conf` and the progress, in `<destino>.estado`; both are part of the backup. The secrets are in `SECRETS_DIR/destinos`, with mode `0600` and the name of the destination in front: `<destino>-chave-de-acesso.txt` and `<destino>-chave-secreta.txt`, in S3; `<destino>-remoto.txt`, in rclone; and `<destino>-token.txt` and `<destino>-conversa.txt`, in the bot. The copy of access between two destinations happens in this folder, from file to file. It is the only secrets folder the panel writes to. Deleting one of these files on the server turns off the sending to that destination on the next run.
+- **Who applies it:** [`destinos.py`](../../painel/destinos.py), in a thread of the panel itself, which collects the arrival notices every 2 s and checks every minute which destination is due. One run at a time, in this order: the bots, the rclone remotes, the S3 destinations that copy and, last, the ones that keep.
 - **Announced arrival:** the [watcher](scripts.md#vigia) of the FTP server writes a notice in `/auth/chegadas`, a `0700` folder owned by root, for each upload Pure-FTPd logs as finished, and an upload through the panel announces directly. [`chegadas.py`](../../painel/chegadas.py) collects and deletes the notices, and 3 s after a new one the panel does a run of the bot. The notice does not choose what is sent: it only waives the wait of a file the run would find anyway, inside the folder of the destination. It is valid for 4 minutes in the panel, and the watcher deletes what nobody collected in 5. With the FTP user file in use at that instant, or with 2000 notices waiting, the watcher writes no notice, and the file goes after the two-minute wait. When the run of the bot leaves a file waiting, the panel comes back by itself about two minutes later. A run requested from the terminal does not use the notices.
 - **One file only:** `POST /destinos/arquivo` opens the file with the same checks as the Files tab (`400`, `403` or `404` for a path outside the rule, a symbolic link, a folder or a file that does not exist) and sends it in a thread of its own. The page waits up to 20 s; after that, the send goes on by itself. It neither reads nor writes the progress of the runs. A file that changes during the send answers with the reason, to be repeated.
 - **Panel way out:** [`saida.py`](../../painel/saida.py) is the only door through which the panel talks to anyone outside the stack. HTTPS only, with TLS 1.2 or newer and the certificate checked against the authorities of the image and against the one in `ca.pem`, when it exists. The name is resolved once, and the connection goes to the address that was checked. The panel does not go out to its own container, to a link-local, multicast or reserved address, and does not follow redirects. Each network operation has a 30 s deadline.
 - **S3:** [`s3.py`](../../painel/s3.py) signs each request with signature version 4, with the SHA-256 of the body inside it. A file of up to 32 MiB goes in one request; above that, in parts of 16 MiB or more, and the multipart upload is aborted at the destination when it fails. The panel only writes: it does not read, list or delete anything in the bucket, and the key only needs `s3:PutObject` and `s3:AbortMultipartUpload`. The list of what may go out is in `s3.py` itself: writing one object, starting, sending and completing a multipart upload, and aborting a multipart upload that did not finish. Any other request is refused before it leaves the panel, whether it comes from the screen, from the routine or from the terminal. Writing again to the same key replaces the object: to keep what was there before, turn on versioning in the bucket. A file larger than 5 TiB counts as skipped.
-- **Keep in S3:** the file is only deleted after the destination confirms it was stored, and only if it has not changed since it was sent. When another destination turned on takes the same file, bot or S3, the deletion waits for it. With that other one stopped, the files already stored wait in a queue of up to 20,000; once full, the S3 that keeps stops sending until the other one is back.
+- **rclone:** [`rclone.py`](../../painel/rclone.py) calls the `/usr/local/bin/rclone` binary of the image, with the version and the SHA-256 sum fixed in the `Dockerfile`; nothing is downloaded or updated at run time. Two rclone subcommands are used, and no other: `rcat`, which writes to the remote what it receives on standard input, and `obscure`, which encrypts the password for the remote file. Listing, downloading, moving, syncing and deleting are not in the list and are refused before a process exists, whether the request comes from the screen, from the schedule or from the terminal. The remote file is built from a closed list of types, of fields and of the form of each value: what rclone has that is dangerous for whoever writes the configuration (a command to run, a file to read, a proxy, a certificate without checking, a remote that wraps another, a local folder) is not in the list. The file is checked again at each read, by the same list: changed from outside, the destination is left without access and rclone is not called. rclone works on a copy of the file, in `/tmp/rclone`, with mode `0600`, deleted after each run; from it the panel only keeps the renewed token of the clouds and, in the SFTP test, the server key. The password goes in through the standard input of `obscure`, never on the command line, and the process list shows only the path of the copy and that of the file on the remote. One rclone at a time, with `GOMAXPROCS=2` and `GOMEMLIMIT=64MiB`, inside the limits of the panel container. The name is resolved first, and the panel does not call rclone for its own container nor for a link-local, multicast or reserved address. Each network operation has a 30 s deadline, the whole test has 20 s, and an operation that fails is repeated up to three times within the same send. The rclone error text only serves to choose the reason, in one word: it may carry the server, the user and the path, and does not go to the screen, to the Log or to the audit log. In SFTP, rclone does not open a shell on the server nor ask it for the sum of the file.
+- **Keep in S3:** the file is only deleted after the destination confirms it was stored, and only if it has not changed since it was sent. When another destination turned on takes the same file, bot, rclone remote or S3, the deletion waits for it. With that other one stopped, the files already stored wait in a queue of up to 20,000; once full, the S3 that keeps stops sending until the other one is back.
 - **Telegram:** [`telegram.py`](../../painel/telegram.py) only calls `sendDocument` and `sendMessage`, always by `POST`, at the address in `PAINEL_TELEGRAM_API`; any other operation of the bot API, such as deleting a message, is refused before it leaves the panel. Between one send and the next there is a 3 s pause. When the API asks to slow down, the panel waits the requested time, up to 30 s, and repeats the send once. A file the API refuses for its size, even below `PAINEL_TELEGRAM_MAX_MB`, becomes a notice.
 - **File the destination refuses:** a `4xx` answer that is not about permission, timeout (`408`) or rate (`429`), on the third consecutive run with the same file, leaves that file behind, so the following ones can go, and writes `destino_pulado`.
-- **Series:** changing the address, the bucket, the prefix, the form of the address or the folder of S3, or the folder of the bot, starts a new series, and the previous progress is forgotten. The same happens when the bot is turned off and on again: it then sends only what arrives from that point on. Changing the interval, the mode, the language or the secrets keeps the progress.
+- **Series:** changing the address, the bucket, the prefix, the form of the address or the folder of S3, the folder of the bot, or the folder on the remote, the folder sent or the place of the access of the rclone remote, starts a new series, and the previous progress is forgotten. The same happens when the bot is turned off and on again: it then sends only what arrives from that point on. Changing the interval, the mode, the language or the secrets keeps the progress.
 - **System copy:** `GET` and `POST /destinos/copia` show and save the form, with the current password, and `POST /destinos/copia/agora` is the button. The copy is made by [`copia.py`](../../painel/copia.py), in a separate process (`servidor.py --copia enviar`) and with the lowest priority: the screen, the schedule and the terminal start the same command, and a lock file ensures one copy at a time. The `tar` file of the four folders goes through `gzip` and `age` as a stream and leaves in a multipart upload: nothing unencrypted reaches the disk, and each part, already encrypted, is assembled in `DATA_DIR/painel/destinos` before leaving. The part has 16 MiB or more and grows with the disk in use, so that the copy fits in the number of parts of the protocol; without the size of one part plus 64 MiB free, the copy does not start. The panel receives only the public key of the copy, as a mounted secret, and the `certs` folder read-only: the private key does not reach the container. The list of users is read with the lock of whoever changes a user, waiting up to 30 seconds. A symbolic link goes in as a link; socket, queue and device stay out and are counted. The object is `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age`, and the `.sha256` is written after it: only then the copy counts as made. On failure, the multipart upload is undone in the destination. The bucket key needs the same two permissions of the destinations, `s3:PutObject` and `s3:AbortMultipartUpload`. The settings stay in `DATA_DIR/painel/destinos/copia.conf` and the progress, in `copia.estado`, which does not go into the copy that is sent. The schedule checks every minute and makes one attempt per day, at the set time. On the terminal, the reason of the failure comes as a code: `sem_destino`, `segredo`, `chave`, `cifra`, `cadastro`, `espaco`, `profundo`, `disco`, `interno`, `soma` or the one of the request to the service, such as `http_500`.
 - **Audit log of the system copy:** `copia_gravada`, with the administrator, the destination, the folder in the bucket, the days and the time; `copia_pedida`, with the administrator and the result of the button; `copia_enviada`, with the origin (`tela`, `rotina` or `terminal`), the destination, the object, the bytes, the parts, the files, those that changed and those left out; `copia_falhou`, with the origin, the reason and the parts sent until then; `copia_sem_destino`, when the S3 of the copy is removed. `copia_enviada` and `copia_falhou` have no address: the panel did it.
 - **From the terminal:** `docker compose exec painel python3 /opt/painel/servidor.py --destinos` shows the state of each destination and the last run, with no secret; `--destinos enviar <destino>`, with the name the list shows, does the run right away and exits with `1` when it stops before the end; with `--sem-espera`, it does not wait for the two minutes of a file without changes. The output of these commands is in Portuguese.
-- **Audit log:** `destino_gravado`, with the administrator, the destination, the state, the folder, the interval, the S3 mode and whether the secrets were replaced, kept or copied, with the source destination; `destino_teste`, with the result; `destino_pedido`; `destino_removido`; `destino_arquivo`, with the administrator, the destination, the file, the bytes and the result of the send requested by the button; `destino_enviado`, at each run that sent, deleted, warned about the limit or had a file refused, with the files, the bytes, the deleted ones, the ones above the bot limit, the skipped ones and the refused ones; `destino_falhou`, with the reason, when it changes; `destino_pulado`, with the file and the reason. The last three have no address: the panel did it. None carries a secret or text coming from the outside service.
+- **Audit log:** `destino_gravado`, with the administrator, the destination, the state, the folder, the interval, the S3 mode or the type of the rclone remote (`remoto=`, and nothing else of the remote: no server, no user, no folder) and whether the secrets were replaced, kept or copied, with the source destination; `destino_teste`, with the result; `destino_pedido`; `destino_removido`; `destino_arquivo`, with the administrator, the destination, the file, the bytes and the result of the send requested by the button; `destino_enviado`, at each run that sent, deleted, warned about the limit or had a file refused, with the files, the bytes, the deleted ones, the ones above the bot limit, the skipped ones and the refused ones; `destino_falhou`, with the reason, when it changes; `destino_pulado`, with the file and the reason. The last three have no address: the panel did it. None carries a secret or text coming from the outside service.
 
 </details>
 
@@ -1052,7 +1164,7 @@ Everything the panel does stays in `DATA_DIR/painel/auditoria.log` (`0600`, owne
 | `arquivo_baixado` · `arquivo_interrompido` | Download through the Files tab or the My files screen, complete · cut before the end; with who downloaded, the path and the bytes delivered |
 | `arquivo_enviado` · `envio_interrompido` | File uploaded through the panel, through the Files tab or the screen of the FTP user · upload that stopped before the end, with nothing written; with who uploaded, the path and the bytes |
 | `recusa_envio` | FTP user who asked for the upload through the panel without having the permission, with the user and the profile |
-| `destino_gravado` · `destino_removido` | An administrator saved the settings of a [destination](#destinos), S3 or Telegram bot · removed the destination; with the administrator and the destination, and, when saving, the state, the folder, the interval, the S3 mode and whether the secrets were replaced or kept |
+| `destino_gravado` · `destino_removido` | An administrator saved the settings of a [destination](#destinos), S3, rclone remote or Telegram bot · removed the destination; with the administrator and the destination, and, when saving, the state, the folder, the interval, the S3 mode or the remote type and whether the secrets were replaced or kept |
 | `destino_teste` · `destino_pedido` | An administrator clicked **Test**, with the result · **Send now**; with the administrator and the destination |
 | `destino_arquivo` | An administrator sent a file to the destination with the button of the Files tab, with the administrator, the destination, the file, the bytes and the result |
 | `destino_enviado` · `destino_falhou` · `destino_pulado` | A run sent, deleted, warned about the limit or had a file refused, with the destination and the counts · stopped before the end, with the reason, when it changes · left behind a file the destination refuses, with the file and the reason. No address: the panel did it |
@@ -1093,7 +1205,7 @@ Password, token and cookie are **never** written. Neither is the name typed in a
 | User folders | Each FTP user is confined (`chroot`) to the folder of the record; the folder chosen does not leave `DATA_DIR/dados` nor go through a symbolic link; a folder reached by more than one user appears marked as **shared** |
 | Forms | CSRF token per session and check of `Origin`: the submission has to start from the panel itself; body limited to 8 KiB, except in the file upload, which has its own two routes and the ceiling of `PAINEL_ENVIO_MAX_MB` |
 | Language | The change is a form like the others, with token and `Origin`; the language cookie only carries `pt` or `en` and is not valid as a session; the return after the change only leads to a screen of the panel itself |
-| Outside destinations | Only the administrator configures them, with the current password, and only the administrator sends a file with the button of the Files tab; the panel goes out by HTTPS only, with the certificate checked, and does not go to its own container nor to a reserved address; the S3 keys, the bot token and the chat stay in `0600` files and never go back to the screen or to the audit log; the bot only sends: the panel does not read the chat nor accept a command; the system copy to S3 leaves encrypted with the public key, and the key that opens it does not reach the panel; `PAINEL_DESTINOS=nao` turns everything off |
+| Outside destinations | Only the administrator configures them, with the current password, and only the administrator sends a file with the button of the Files tab; the panel goes out by HTTPS only, with the certificate checked, or, in the rclone SFTP remote, by SSH with the server key checked, and does not go to its own container nor to a reserved address; rclone only writes: listing, downloading, moving, syncing and deleting are refused before a process exists; the S3 keys, the access of the rclone remote, the bot token and the chat stay in `0600` files and never go back to the screen or to the audit log; the bot only sends: the panel does not read the chat nor accept a command; the system copy to S3 leaves encrypted with the public key, and the key that opens it does not reach the panel; `PAINEL_DESTINOS=nao` turns everything off |
 | Browser | `Content-Security-Policy` without script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS and `no-store`; the page loads nothing from outside |
 | Containers | Read-only root, `cap_drop: ALL`, `no-new-privileges`, no Docker socket, limits of CPU, memory and processes; nginx runs without root and without any capability |
 
@@ -1161,7 +1273,8 @@ The code is in [`painel/`](../../painel/), one subject per file, and goes whole 
 | [`saida.py`](../../painel/saida.py) | Way out of the panel to outside the stack: HTTPS with the certificate checked, the refusal of the addresses the panel does not reach and the failure reasons |
 | [`s3.py`](../../painel/s3.py) | S3 storage: the version 4 signature of the requests, the upload in one request or in parts and the check of the form fields |
 | [`telegram.py`](../../painel/telegram.py) | Telegram bot: the sending of a document and of a message, and the check of the token and of the chat |
-| [`aba_destinos.py`](../../painel/aba_destinos.py) | Destinations tab: one card per destination, the forms, the choice of the destination, the test, the request of a run, the removal and the send of a file with the button of the Files tab |
+| [`rclone.py`](../../painel/rclone.py) | rclone remote: the closed list of types and of fields, the remote file and its check at each read, the call of the binary only to write a file and to encrypt the password, the key of the SFTP server and the reason of the failure in one word |
+| [`aba_destinos.py`](../../painel/aba_destinos.py) | Destinations tab: one card per destination, the forms, the choice of the type of the rclone remote, the choice of the destination, the test, the request of a run, the removal and the send of a file with the button of the Files tab |
 | [`recursos.py`](../../painel/recursos.py) | Resources of the server and of each container of the stack: reading of the processor, of the memory and of the FTP network, of the control group of the panel and of what the ftp and the nginx publish, and the history of the last 10 minutes, kept in memory |
 | [`aba_servidor.py`](../../painel/aba_servidor.py) | Server tab: the containers of the stack, with the use against the allocated, the cards of CPU, memory, disk and network of the server, and the summary band of the Overview |
 | [`aba_administradores.py`](../../painel/aba_administradores.py) | Panel administrators: creation through the New user form, change of password, change of name and removal; the list is that of the Users tab |

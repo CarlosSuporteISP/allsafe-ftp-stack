@@ -28,3 +28,7 @@ As imagens Docker construídas por este projeto incluem software de terceiros
 (Debian, Pure-FTPd, nginx, Python e OpenSSL, entre outros pacotes do Debian).
 Cada um mantém a própria licença, que acompanha o pacote dentro da imagem, em
 /usr/share/doc/<pacote>/copyright.
+
+A imagem do painel inclui também o rclone, no binário publicado pelo projeto
+dele, sob a licença MIT. O texto da licença acompanha o binário dentro da
+imagem, em /usr/share/doc/rclone/copyright.

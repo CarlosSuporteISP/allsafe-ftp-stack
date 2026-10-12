@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Destinos: o administrador liga pastas dos dados a armazenamentos S3 e a bots do Telegram.
+"""Aba Destinos: o administrador liga pastas dos dados a armazenamentos S3, a remotos do rclone e a bots do Telegram.
 
 A tela grava a configuração e os segredos de cada destino, pede um teste e pede uma passada fora de hora; quem envia
 é destinos.py. Cada tipo aceita vários destinos (destinos.POR_TIPO): a tela de um tipo é uma só, e o campo `id` diz
@@ -10,6 +10,11 @@ Nenhum segredo volta para a tela: a chave de acesso, a chave secreta, o token do
 são campos só de escrita, e o que a tela diz deles é se estão gravados. Campo de segredo em branco mantém o gravado;
 no destino novo criado com o acesso de outro (`copiar`), o segredo em branco é copiado dele em destinos.py, sem passar
 pelo navegador. Da resposta do serviço de fora a tela mostra só o motivo, em uma frase do próprio painel.
+
+O remoto do rclone tem um segredo só, que é o acesso inteiro (rclone.py): servidor, usuário, senha, chave ou token.
+A tela dele tem dois passos, sem script: primeiro o tipo do remoto, depois os campos daquele tipo. Do que está gravado
+a tela mostra o tipo, a pasta no remoto e a impressão digital da chave do servidor SFTP; com os campos do acesso em
+branco o gravado fica, e com algum preenchido o acesso é montado inteiro do que veio.
 
 Com PAINEL_DESTINOS=nao a aba não existe: sai do menu e toda rota dela responde como caminho desconhecido.
 """
@@ -22,6 +27,8 @@ import aba_arquivos
 import copia
 import destinos
 import idioma
+import rclone
+import saida
 from auditoria import auditar, limpo
 from config import CFG
 from confirmacao import campo_senha_atual, confirmacao_recusada
@@ -30,11 +37,11 @@ from idioma import N, t, tn
 from pagina import cabeca, como, e, pagina, quando, tamanho
 
 ABA = '/destinos'
-TITULOS = {'s3': N('Armazenamento S3'), 'telegram': N('Bot do Telegram')}
-NOVOS = {'s3': N('Novo S3'), 'telegram': N('Novo bot')}
+TITULOS = {'s3': N('Armazenamento S3'), 'rclone': N('Remoto do rclone'), 'telegram': N('Bot do Telegram')}
+NOVOS = {'s3': N('Novo S3'), 'rclone': N('Novo remoto'), 'telegram': N('Novo bot')}
 CHEIO = N('Este tipo já tem os {n} destinos que o painel aceita: remova um antes de criar outro.')
 TRAVA = threading.Lock()   # um destino gravado por vez: dois pedidos juntos não ficam com o mesmo nome
-DESENHOS = {'s3': 'nuvem', 'telegram': 'aviao'}
+DESENHOS = {'s3': 'nuvem', 'rclone': 'remoto', 'telegram': 'aviao'}
 MENSAGENS = {'gravado': N('Destino gravado. Vale a partir da próxima passada.'),
              'removido': N('Destino removido: a configuração e os segredos dele foram apagados.'),
              'teste': N('Teste concluído: o destino recebeu.'),
@@ -43,7 +50,78 @@ MENSAGENS = {'gravado': N('Destino gravado. Vale a partir da próxima passada.')
              'copia_pedida': N('Cópia do sistema pedida: ela é feita em segundo plano. Atualize a tela para acompanhar.')}
 # O botão de cada destino na linha de um arquivo da aba Arquivos: o nome curto e a dica.
 NA_LINHA = {'telegram': ('Telegram', N('Enviar este arquivo pelo bot do Telegram')),
+            'rclone': ('rclone', N('Enviar este arquivo para o remoto do rclone')),
             's3': ('S3', N('Enviar este arquivo para o armazenamento S3'))}
+# Como a ficha chama os segredos de cada tipo, e o que diz deles quando estão no lugar.
+ACESSOS = {'s3': (N('Chave de acesso e chave secreta'), N('gravados; não aparecem na tela')),
+           'rclone': (N('Acesso do remoto'), N('gravado; não aparece na tela')),
+           'telegram': (N('Token do bot e conversa'), N('gravados; não aparecem na tela'))}
+# Os tipos de remoto do rclone (rclone.CAMPOS): o nome, que é o do protocolo ou do serviço, e o que o acesso pede.
+REMOTOS = {
+    'sftp': ('SFTP', N('servidor com acesso por SSH, com senha ou chave privada')),
+    'webdav': ('WebDAV', N('servidor de arquivos por HTTPS, com usuário e senha ou com token')),
+    'drive': ('Google Drive', N('com o token da conta ou a credencial de uma conta de serviço')),
+    'onedrive': ('OneDrive', N('com o token da conta e a identificação do drive')),
+    'dropbox': ('Dropbox', N('com o token da conta')),
+    'pcloud': ('pCloud', N('com o token da conta')),
+}
+# Cada campo do acesso de um remoto: o rótulo e a nota. Nenhum deles volta para a tela.
+CAMPOS_DO_REMOTO = {
+    'host': (N('Servidor'), N('nome ou endereço IP, sem a porta')),
+    'port': (N('Porta'), N('em branco é a 22')),
+    'user': (N('Usuário'), ''),
+    'pass': (N('Senha'), ''),
+    'key_pem': (N('Chave privada'), N('o arquivo inteiro, da linha BEGIN à linha END; no lugar da senha')),
+    'key_file_pass': (N('Frase da chave privada'), N('só quando a chave é cifrada')),
+    'host_keys': (N('Chave pública do servidor'), N('uma por linha, como no arquivo de servidores conhecidos do SSH; em branco, '
+                                                    'o Testar guarda a que o servidor apresentar')),
+    'url': (N('Endereço'), N('só HTTPS, com o caminho que o servidor pede: <code>https://nome/caminho</code>')),
+    'vendor': (N('Programa do servidor'), ''),
+    'bearer_token': (N('Token de acesso'), N('no lugar do usuário e da senha')),
+    'client_id': (N('Identificação do aplicativo'), N('em branco usa a do rclone')),
+    'client_secret': (N('Segredo do aplicativo'), N('só com a identificação do aplicativo')),
+    'scope': (N('Alcance'), ''),
+    'token': (N('Token da conta'), N('o texto entre chaves que o comando <code>rclone authorize</code> imprime')),
+    'service_account_credentials': (N('Credencial da conta de serviço'), N('o conteúdo do arquivo da conta; no lugar do token')),
+    'root_folder_id': (N('Pasta de partida'), N('a identificação da pasta; em branco é a raiz da conta')),
+    'team_drive': (N('Drive compartilhado'), N('a identificação do drive')),
+    'drive_id': (N('Identificação do drive'), ''),
+    'drive_type': (N('Tipo do drive'), ''),
+    'region': (N('Região'), ''),
+    'tenant': (N('Organização'), N('o domínio ou a identificação dela')),
+    'hostname': (N('Região da conta'), ''),
+}
+# O rótulo e a nota de cada opção dos campos de escolha. Nome de programa e de serviço não é traduzido.
+OPCOES = {
+    'vendor': {'other': (N('Outro'), N('qualquer servidor WebDAV')), 'nextcloud': ('Nextcloud', ''), 'owncloud': ('ownCloud', ''),
+               'infinitescale': ('Infinite Scale', ''), 'sharepoint': ('SharePoint Online', ''),
+               'sharepoint-ntlm': ('SharePoint', N('com entrada por NTLM')), 'fastmail': ('Fastmail Files', ''),
+               'rclone': ('rclone', '')},
+    'scope': {'drive': (N('Toda a conta'), ''), 'drive.file': (N('Só os arquivos que o rclone criou'), '')},
+    'drive_type': {'personal': (N('Pessoal'), ''), 'business': (N('Empresarial'), ''),
+                   'documentLibrary': (N('Biblioteca de documentos'), '')},
+    'region': {'global': (N('Global'), ''), 'us': (N('Governo dos Estados Unidos'), ''), 'de': (N('Alemanha'), ''),
+               'cn': (N('China'), '')},
+    'hostname': {'api.pcloud.com': (N('Estados Unidos'), ''), 'eapi.pcloud.com': (N('Europa'), '')},
+}
+LONGOS = {'pem': rclone.PEM_MAX, 'json': rclone.JSON_MAX, 'chaves': 8000}    # caracteres de cada campo de várias linhas
+MAIORES = {'url': 2000, 'bearer_token': 4096}       # campos de uma linha que passam dos 256 caracteres
+OCULTOS = ('bearer_token', 'client_secret')         # campos de texto que a tela mostra como senha
+NUVENS = ('drive', 'onedrive', 'dropbox', 'pcloud')     # remotos abertos com o token que o rclone obtém fora do painel
+SO_RECEBE = N('O remoto <strong>só recebe</strong>: o painel pede ao rclone que grave cada arquivo, e nada mais. Não lista, '
+              'não baixa, não sincroniza e não apaga nada no remoto.')
+# O que a tela explica do acesso de cada tipo de remoto.
+AJUDAS = {
+    'sftp': N('Depois de gravar, use <strong>Testar</strong> na lista dos destinos: o teste guarda a chave que o servidor '
+              'apresentar e a ficha passa a mostrar a impressão digital dela, para conferir com a do servidor. Sem a chave '
+              'guardada nada é enviado, e se ela mudar depois o envio para.'),
+    'webdav': N('O certificado do servidor é conferido. Informe o usuário com a senha, ou o token de acesso.'),
+    'drive': N('Informe o token da conta ou a credencial de uma conta de serviço.'),
+    'onedrive': N('A identificação e o tipo do drive são os que o rclone mostra ao configurar o remoto no mesmo computador em '
+                  'que o token foi obtido.'),
+}
+DO_TOKEN = N('O token é obtido fora do painel, em um computador com navegador e com o rclone: o comando '
+             '<code>rclone authorize {tipo}</code> abre a página da conta e imprime o token. O painel não abre essa página.')
 # Motivo de uma falha, como destinos.py e saida.py registram ➜ a frase que a tela mostra.
 MOTIVOS = {
     'dns': N('o nome do endereço não foi encontrado'),
@@ -66,6 +144,14 @@ MOTIVOS = {
     'enviando': N('outro envio pedido pela tela está em andamento: tente de novo em instantes'),
     'desligado': N('o destino está desligado ou sem os segredos'),
     'proibido': N('o painel não faz esse pedido a um destino: ele só grava e só envia, e não apaga nada lá'),
+    # Os do remoto do rclone (rclone.py).
+    'sem_chave': N('o painel ainda não guardou a chave deste servidor: use Testar'),
+    'chave_trocada': N('a chave do servidor não é a que o painel guardou: confira o servidor e, se a troca for dele, grave o '
+                       'acesso de novo e teste'),
+    'frase': N('a chave privada não abriu: confira a chave e a frase dela'),
+    'cheio': N('o remoto está sem espaço ou acima da cota'),
+    'rclone': N('o rclone parou com um erro que o painel não reconhece'),
+    'em_uso': N('o rclone está ocupado com outro envio: tente de novo em instantes'),
     # Os da cópia do sistema (copia.py).
     'sem_destino': N('a cópia do sistema não tem um S3 escolhido com os segredos gravados'),
     'chave': N('falta a chave pública da cópia nesta instalação'),
@@ -91,6 +177,8 @@ ERROS = {
     'pasta': N('Pasta inválida: até 4 níveis separados por barra, com letras, números, _, - e ponto.'),
     'intervalo': N('Intervalo inválido: de 5 a 1440 minutos.'),
     'idioma': N('Idioma não aceito.'),
+    'remoto': N('Escolha o tipo do remoto.'),
+    'caminho': N('Pasta no remoto inválida: até 16 níveis separados por barra, com letras, números, espaço, _, - e ponto.'),
     # Os da cópia do sistema (copia.defeito).
     'destino': N('Escolha um armazenamento S3 com os segredos gravados.'),
     'dias': N('Rotina inválida: de 0 a 30 dias.'),
@@ -153,6 +241,8 @@ def etiqueta(visto):
         return f'<span class="etiqueta">{t("não configurado")}</span>'
     if not visto['segredos']:
         return f'<span class="etiqueta atencao">{t("faltam os segredos")}</span>'
+    if visto.get('chaves') == []:
+        return f'<span class="etiqueta atencao">{t("falta testar")}</span>'
     return f'<span class="etiqueta">{t("ligado") if conf["ligado"] else t("desligado")}</span>'
 
 
@@ -218,10 +308,24 @@ def dados_do_telegram(conf):
             f'<div><dt>{t("Idioma das mensagens")}</dt><dd>{e(idioma.NOMES[conf["idioma"]][1])}</dd></div>')
 
 
+def dados_do_rclone(conf):
+    onde = f'<code>{e(conf["caminho"])}</code>' if conf['caminho'] else t('a pasta em que o remoto entra')
+    return (f'<div><dt>{t("Tipo do remoto")}</dt><dd>{REMOTOS[conf["remoto"]][0]}</dd></div>'
+            f'<div><dt>{t("Pasta no remoto")}</dt><dd>{onde}</dd></div>'
+            f'<div><dt>{t("Pasta enviada")}</dt><dd>{pasta_enviada(conf)}</dd></div>'
+            f'<div><dt>{t("Passadas")}</dt><dd>{a_cada(conf)}</dd></div>'
+            f'<div class="larga"><dt>{t("Depois do envio")}</dt><dd>{t("Copiar: o arquivo continua no servidor")}</dd></div>')
+
+
+DADOS = {'s3': dados_do_s3, 'rclone': dados_do_rclone, 'telegram': dados_do_telegram}
+
+
 def cartao_vazio(qual):
     """O tipo que ainda não tem destino: o que ele faz e o botão que abre o primeiro."""
     oque = (t('Envia os arquivos de uma pasta para um bucket de qualquer serviço que fale o protocolo do S3, na nuvem ou '
               'na rede interna. Pode só copiar, ou guardar lá e liberar o disco do servidor.') if qual == 's3' else
+            t('Envia os arquivos de uma pasta, pelo rclone, para o que o S3 não alcança: um servidor SFTP ou WebDAV, ou uma '
+              'nuvem de arquivos. O remoto só recebe: o painel não lista, não baixa e não apaga nada nele.') if qual == 'rclone' else
             t('Envia cada arquivo que chega em uma pasta para uma pessoa, um grupo ou um canal, por um bot do Telegram. '
               'O bot só envia: o painel não lê mensagem nem aceita comando pela conversa.'))
     return (f'<section class="cartao"><h2>{icone(DESENHOS[qual])}{t(TITULOS[qual])} {etiqueta({"conf": None})}</h2><p>{oque}</p>'
@@ -237,13 +341,18 @@ def cartao(sessao, destino, cheio):
         falha = ('<p class="aviso">' + t('A configuração está gravada, mas faltam os segredos deste destino (eles não entram na '
                                          'cópia de segurança). Abra <strong>Alterar</strong> e grave-os de novo; até lá, nada é '
                                          'enviado.') + '</p>')
+    elif visto['chaves'] == []:
+        falha = ('<p class="aviso">' + t('O painel ainda não guardou a chave deste servidor. Use <strong>Testar</strong>: o teste '
+                                         'guarda a chave que o servidor apresentar e a ficha passa a mostrar a impressão digital '
+                                         'dela, para conferir com a do servidor. Até lá, nada é enviado.') + '</p>')
     elif visto['ultima'].get('motivo'):
         falha = ('<p class="aviso">' + t('A última passada parou antes do fim: {motivo}. A seguinte recomeça do mesmo arquivo.',
                                          motivo=e(explicar(str(visto['ultima']['motivo'])))) + '</p>')
-    guardados = (t('gravados; não aparecem na tela') if visto['segredos'] else t('faltando'))
-    segredos = (f'<div><dt>{t("Chave de acesso e chave secreta") if qual == "s3" else t("Token do bot e conversa")}</dt>'
-                f'<dd>{guardados}</dd></div>')
-    dados = (dados_do_s3 if qual == 's3' else dados_do_telegram)(conf)
+    segredos = f'<div><dt>{t(ACESSOS[qual][0])}</dt><dd>{t(ACESSOS[qual][1]) if visto["segredos"] else t("faltando")}</dd></div>'
+    if visto['chaves']:
+        digitais = '<br>'.join(f'<code>{e(algoritmo)} {e(digital)}</code>' for algoritmo, digital in visto['chaves'])
+        segredos += f'<div class="larga"><dt>{t("Chave do servidor")}</dt><dd>{digitais}</dd></div>'
+    dados = DADOS[qual](conf)
     outro = (f'\n<a class="botao" href="{ABA}/{qual}?id=novo&amp;copiar={destino}">{icone("mais")}{t("Novo com o mesmo acesso")}</a>'
              if visto['segredos'] and not cheio else '')
     return f'''<section class="cartao">{titulo}{falha}
@@ -270,19 +379,20 @@ def lista(pedido, sessao, consulta, formulario, token):
     elif consulta.get('m') in MENSAGENS:
         aviso = t(MENSAGENS[consulta['m']])
     fichas, novos = [], ''
-    for qual in ('s3', 'telegram'):
+    for qual in ('s3', 'rclone', 'telegram'):
         do_tipo, cheio = destinos.todos(qual), not destinos.livre(qual)
         fichas += [cartao(sessao, destino, cheio) for destino in do_tipo] or [cartao_vazio(qual)]
         if do_tipo and not cheio:
             novos += f'<a class="botao" href="{ABA}/{qual}?id=novo">{icone("mais")}{t(NOVOS[qual])}</a>'
     fichas = '\n'.join(fichas)
-    resumo = t('Cópia automática dos arquivos para fora do servidor: armazenamentos S3 e bots do Telegram.')
+    resumo = t('Cópia automática dos arquivos para fora do servidor: armazenamentos S3, remotos do rclone e bots do Telegram.')
     pedido.enviar(200, pagina(t('Destinos'), f'''{cabeca('Destinos', resumo, novos)}
 {f'<p class="ok" role="status">{e(aviso)}</p>' if aviso else ''}{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
-<section class="cartao dobra">{como(t('Como o painel envia'), '<p class="suave">' + t('O painel só sai do servidor para os destinos gravados aqui, sempre por HTTPS com o certificado '
-                    'conferido. Sai arquivo comum: link simbólico e nome começado por ponto ficam de fora. O bot do '
+<section class="cartao dobra">{como(t('Como o painel envia'), '<p class="suave">' + t('O painel só sai do servidor para os destinos gravados aqui, por HTTPS com o certificado '
+                    'conferido ou, no remoto SFTP do rclone, por SSH com a chave do servidor conferida. '
+                    'Sai arquivo comum: link simbólico e nome começado por ponto ficam de fora. O bot do '
                     'Telegram envia em instantes o arquivo que chega inteiro por FTP ou pelo painel; nos outros casos, e sempre '
-                    'no S3, o arquivo só entra na passada depois de dois minutos sem mudar, para o que ainda está chegando não '
+                    'no S3 e no rclone, o arquivo só entra na passada depois de dois minutos sem mudar, para o que ainda está chegando não '
                     'sair pela metade. A ordem é a da chegada ao servidor; uma falha do destino encerra a passada e a seguinte recomeça do mesmo '
                     'arquivo. Pasta que troca de nome não reenvia os arquivos de dentro.') + '</p>\n<p class="suave">'
       + t('Os segredos ficam no servidor, na pasta <code>destinos</code> dos segredos da instalação, um por arquivo, e '
@@ -377,6 +487,7 @@ def abrir_tela(qual, pedido, sessao, consulta, dele, alvo):
         return None
     padrao = ({'ligado': True, 'nome': '', 'endpoint': '', 'regiao': 'us-east-1', 'bucket': '', 'prefixo': '', 'estilo': 'caminho',
                'pasta': '', 'modo': 'copiar', 'intervalo': 60} if qual == 's3' else
+              {'ligado': True, 'nome': '', 'remoto': '', 'caminho': '', 'pasta': '', 'intervalo': 60} if qual == 'rclone' else
               {'ligado': True, 'nome': '', 'pasta': '', 'intervalo': 5, 'idioma': idioma.atual()})
     gravado = destinos.ler(origem) if origem else destinos.ler(destino) if destino != 'novo' else None
     return destino, origem, dele or (dict(gravado, nome='') if origem else gravado) or padrao
@@ -438,6 +549,123 @@ def tela_telegram(pedido, sessao, consulta, formulario=None, token=None, erro=''
     return None
 
 
+def campo_do_remoto(nome, forma, regra, marcas, tem):
+    """Um campo do acesso do remoto. Sai sempre em branco: o gravado não volta para a tela, nem o que foi digitado em
+    um envio recusado. `tem` diz que há acesso gravado para manter, e então nenhum campo é exigido pelo navegador."""
+    titulo, nota = CAMPOS_DO_REMOTO[nome]
+    exigido = 'o' in marcas
+    if forma == 'escolha':
+        opcoes = [(valor, t(OPCOES[nome][valor][0]), t(OPCOES[nome][valor][1]) if OPCOES[nome][valor][1] else '')
+                  for valor in regra]
+        if not exigido:
+            opcoes.insert(0, ('', t('Não informar'), t('vale o padrão do rclone')))
+        elif tem:
+            opcoes.insert(0, ('', t('Não trocar'), t('com os outros campos em branco, mantém o acesso gravado')))
+        return escolha('r_' + nome, t(titulo), opcoes, opcoes[0][0])
+    notas = ([t('obrigatório')] if exigido else []) + ([t(nota)] if nota else [])
+    sufixo = f' <span class="suave">({"; ".join(notas)})</span>' if notas else ''
+    etiqueta_do = f'<label for="r_{nome}">{t(titulo)}{sufixo}</label>\n'
+    fixos = (f'id="r_{nome}" name="r_{nome}" autocomplete="off" autocapitalize="none" spellcheck="false"'
+             + (' required' if exigido and not tem else ''))
+    if forma in LONGOS:
+        return f'{etiqueta_do}<textarea {fixos} rows="4" maxlength="{LONGOS[forma]}"></textarea>'
+    if forma == 'porta':
+        return f'{etiqueta_do}<input {fixos} type="number" min="1" max="65535" step="1" inputmode="numeric">'
+    oculto = ' type="password"' if forma == 'senha' or nome in OCULTOS else ''
+    return f'{etiqueta_do}<input {fixos}{oculto} maxlength="{MAIORES.get(nome, 256)}">'
+
+
+def remoto_gravado(destino, origem):
+    """(tipo, campos) do acesso que fica valendo quando os campos vêm em branco: o do destino de origem ou o do próprio
+    destino. None quando não há um, ou quando o arquivo dele não serve."""
+    de_onde = origem or (destino if destino != 'novo' else '')
+    return destinos.remoto_de(destinos.guardados_de(de_onde)[0]) if de_onde else None
+
+
+def escolher_remoto(pedido, sessao, destino, erro, codigo):
+    """Primeiro passo do remoto novo: o tipo, que decide os campos do acesso. A página não tem script, então a escolha
+    é um formulário de leitura que abre a mesma tela já com o tipo."""
+    titulo = f'{t(TITULOS["rclone"])}: {t("novo destino")}'
+    opcoes = [(tipo, nome, t(nota)) for tipo, (nome, nota) in REMOTOS.items()]
+    pedido.enviar(codigo, pagina(titulo, f'''<h1>{e(titulo)}</h1>
+<section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
+<p>{t(SO_RECEBE)}</p>
+<form method="get" action="{ABA}/rclone" autocomplete="off">
+<input type="hidden" name="id" value="{destino}">
+{escolha('remoto', t('Tipo do remoto'), opcoes, 'sftp')}
+<p class="suave">{t('O tipo fica fixo depois de gravado: para outro tipo, crie outro destino.')}</p>
+<button type="submit">{t('Continuar')}</button> <a class="botao" href="{ABA}">{t('Cancelar')}</a>
+</form></section>''', sessao, ABA))
+    return None
+
+
+@ligada
+def tela_rclone(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, dele=None, alvo=None):
+    aberta = abrir_tela('rclone', pedido, sessao, consulta, dele, alvo)
+    if not aberta:
+        return None
+    destino, origem, dele = aberta
+    tipo = dele['remoto'] if dele['remoto'] in rclone.CAMPOS else consulta.get('remoto', '')
+    if tipo not in rclone.CAMPOS:
+        return escolher_remoto(pedido, sessao, destino, erro, codigo)
+    atual = remoto_gravado(destino, origem)
+    tem = bool(atual) and atual[0] == tipo
+    do_acesso = (t('Deixe os campos do acesso em branco para usar o do destino de origem; para usar outro, preencha o '
+                   'acesso inteiro.') if origem else
+                 t('O acesso gravado não aparece aqui. Deixe os campos abaixo em branco para mantê-lo; para trocar '
+                   'qualquer parte dele, preencha o acesso inteiro de novo.') if tem else
+                 t('Depois de gravado, o acesso não volta para a tela.'))
+    ajudas = ([t(AJUDAS[tipo])] if tipo in AJUDAS else []) + ([t(DO_TOKEN, tipo=tipo)] if tipo in NUVENS else [])
+    moldura(sessao, 'rclone', destino, origem, erro, codigo, f'''<p>{t(SO_RECEBE)}</p>
+<input type="hidden" name="remoto" value="{tipo}">
+<dl class="dados"><div class="larga"><dt>{t('Tipo do remoto')}</dt><dd>{REMOTOS[tipo][0]}: {t(REMOTOS[tipo][1])}</dd></div></dl>
+{texto('caminho', t('Pasta no remoto'), t('onde os arquivos são gravados; em branco é a pasta em que o remoto entra'),
+       dele['caminho'], ' maxlength="255"')}
+{comuns(dele)}
+<h2>{t('Acesso do remoto')}</h2>
+<p>{do_acesso}</p>
+{''.join(f'<p class="suave">{ajuda}</p>' for ajuda in ajudas)}
+{chr(10).join(campo_do_remoto(*campo, tem) for campo in rclone.CAMPOS[tipo])}
+<p class="suave">{t('O arquivo vai para a pasta do remoto com o mesmo caminho que tem dentro dos dados, e grava por cima do '
+                    'que tiver o mesmo nome. O arquivo continua no servidor. Trocar a pasta no remoto, a pasta enviada ou o '
+                    'lugar do acesso recomeça do zero: tudo o que está na pasta é enviado de novo.')}</p>''', pedido)
+    return None
+
+
+def formulario_do_rclone(destino, origem, conf, formulario):
+    """A parte do rclone em do_formulario. O acesso é um segredo só: com todos os campos em branco vale o gravado (ou
+    o do destino de origem); com algum preenchido, o acesso é montado inteiro com o que veio. O tipo do remoto já
+    gravado não muda pelo formulário."""
+    antes = destinos.ler(origem or destino) if origem or destino != 'novo' else None
+    caminho = formulario.get('caminho', '').strip()
+    conf.update({'remoto': antes['remoto'] if antes else formulario.get('remoto', ''), 'caminho': caminho.rstrip('/') or caminho})
+    campo = destinos.defeito('rclone', conf)
+    if campo:
+        return conf, ('',), t(ERROS[campo])
+    if conf['pasta'] and not destinos.pasta_existe(conf['pasta']):
+        return conf, ('',), t('A pasta não existe dentro dos dados. Crie em Arquivos ou confira o nome.')
+    tipo = conf['remoto']
+    valores = {nome: formulario.get('r_' + nome, '') for nome, *_ in rclone.CAMPOS[tipo]}
+    if not any(valor.strip() for valor in valores.values()):
+        atual = remoto_gravado(destino, origem)
+        if atual and atual[0] == tipo:
+            return conf, ('',), ''
+        return conf, ('',), t('Preencha o acesso do remoto: não há nenhum gravado para manter.')
+    try:
+        campos = rclone.do_formulario(tipo, valores)
+    except rclone.Invalido as falha:
+        if falha.campo == 'acesso':
+            return conf, ('',), t('Acesso incompleto: informe a senha, a chave privada, o token ou a credencial com que o '
+                                  'remoto é aberto. O acesso inteiro cabe em 16 KiB.')
+        if falha.campo == 'key_file_pass':
+            return conf, ('',), t('A frase vale só para chave privada cifrada: a chave cifrada pede a frase, e a chave sem '
+                                  'cifra não leva frase.')
+        return conf, ('',), t('{campo}: em branco ou fora do formato.', campo=t(CAMPOS_DO_REMOTO[falha.campo][0]))
+    except saida.Falha as falha:
+        return conf, ('',), t('O rclone não cifrou a senha: {motivo}.', motivo=explicar(falha.motivo))
+    return conf, (rclone.montar(tipo, campos).rstrip('\n'),), ''
+
+
 def do_formulario(qual, destino, origem, formulario):
     """O formulário ➜ (configuração, segredos novos, erro). O segredo em branco mantém o gravado ou, no destino novo
     criado com o acesso de outro, fica para a cópia que destinos.gravar faz."""
@@ -445,6 +673,8 @@ def do_formulario(qual, destino, origem, formulario):
     conf = {'ligado': formulario.get('ligado') == 'sim', 'nome': formulario.get('nome', '').strip(),
             'pasta': formulario.get('pasta', '').strip().strip('/'),
             'intervalo': int(intervalo) if re.fullmatch(r'[0-9]{1,4}', intervalo) else 0}
+    if qual == 'rclone':
+        return formulario_do_rclone(destino, origem, conf, formulario)
     if qual == 's3':
         conf.update({'endpoint': formulario.get('endpoint', '').strip().lower().rstrip('/'),
                      'regiao': formulario.get('regiao', '').strip().lower(), 'bucket': formulario.get('bucket', '').strip(),
@@ -501,7 +731,7 @@ def gravar(pedido, sessao, formulario, qual, tela):
     auditar(pedido.ip, 'destino_gravado',
             f'admin={sessao["admin"]} destino={final} situacao={"ligado" if conf["ligado"] else "desligado"} '
             f'pasta={limpo(conf["pasta"], 200) or "-"} intervalo={conf["intervalo"]}'
-            + (f' modo={conf["modo"]}' if qual == 's3' else '')
+            + (f' modo={conf["modo"]}' if qual == 's3' else f' remoto={conf["remoto"]}' if qual == 'rclone' else '')
             + f' segredos={segredos}' + (f' origem={origem}' if origem else ''))
     return pedido.redirecionar(ABA + '?m=gravado')
 
@@ -514,6 +744,11 @@ def gravar_s3(pedido, sessao, consulta, formulario, token):
 @ligada
 def gravar_telegram(pedido, sessao, consulta, formulario, token):
     return gravar(pedido, sessao, formulario, 'telegram', tela_telegram)
+
+
+@ligada
+def gravar_rclone(pedido, sessao, consulta, formulario, token):
+    return gravar(pedido, sessao, formulario, 'rclone', tela_rclone)
 
 
 # ------------------------------------------------------------ teste, passada pedida e remoção
@@ -529,7 +764,8 @@ def destino_do(pedido, sessao, dados):
 
 @ligada
 def testar(pedido, sessao, consulta, formulario, token):
-    """Grava um objeto pequeno no S3 ou envia uma mensagem pelo bot, com o que está gravado."""
+    """Grava um objeto pequeno no S3, um arquivo pequeno no remoto do rclone ou envia uma mensagem pelo bot, com o que
+    está gravado. No remoto SFTP sem chave do servidor, o teste é o que guarda a chave que o servidor apresentar."""
     destino = destino_do(pedido, sessao, formulario)
     if not destino:
         return None
@@ -617,7 +853,9 @@ def tela_escolher(pedido, sessao, consulta, formulario=None, token=None):
     for destino in prontos:
         conf = destinos.ler(destino)
         lugar = (f'<code>{e(conf["bucket"])}</code>' + (f' / <code>{e(conf["prefixo"])}</code>' if conf['prefixo'] else '')
-                 if qual == 's3' else t('pasta enviada: {pasta}', pasta=pasta_enviada(conf)))
+                 if qual == 's3' else
+                 REMOTOS[conf['remoto']][0] + (f' / <code>{e(conf["caminho"])}</code>' if conf['caminho'] else '')
+                 if qual == 'rclone' else t('pasta enviada: {pasta}', pasta=pasta_enviada(conf)))
         opcoes.append((destino, e(rotulo(destino, conf)), lugar))
     titulo = t(NA_LINHA[qual][1])
     volta = aba_arquivos.endereco('/arquivos', 'pasta', caminho.rpartition('/')[0])

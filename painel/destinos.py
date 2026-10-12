@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Destinos de fora: o painel envia sozinho os arquivos de uma pasta para armazenamentos S3 e para bots do Telegram.
+"""Destinos de fora: o painel envia sozinho os arquivos de uma pasta para armazenamentos S3, para remotos do rclone e
+para bots do Telegram.
 
 O administrador grava na aba Destinos quantos destinos quiser de cada tipo, até POR_TIPO: cada um leva uma pasta a um
-lugar. O primeiro de cada tipo se chama `s3` ou `telegram` e os seguintes, `s3-2`, `telegram-2` e assim por diante. A
+lugar. O primeiro de cada tipo se chama `s3`, `rclone` ou `telegram` e os seguintes, `s3-2`, `telegram-2` e assim por diante. A
 configuração fica em /painel/destinos/<destino>.conf e os segredos, um por arquivo, em /segredos (SECRETS_DIR/destinos,
 no host), com o nome do destino na frente. Dois destinos podem usar o mesmo acesso: o destino novo criado a partir de
 outro recebe uma cópia dos segredos dele, feita aqui no servidor. Uma linha de execução do próprio painel confere a
@@ -28,6 +29,9 @@ No S3, o modo `copiar` deixa o arquivo no servidor e o `mover` apaga o arquivo d
 gravação, e só se ele não mudou desde o envio. O Telegram só envia o que chegar depois de ligado. Com mais de um
 destino na mesma pasta, os bots e os S3 em `copiar` passam primeiro, e o `mover` só apaga o arquivo depois que todos
 os outros destinos operantes que o cobrem passaram por ele.
+
+O remoto do rclone (rclone.py) só recebe: envia o que já estava na pasta e o que chegar, como o S3 em `copiar`, não tem
+o modo `mover` e o arquivo continua no servidor. O segredo dele é um só, o arquivo de configuração do remoto.
 """
 import contextlib
 import fcntl
@@ -42,6 +46,7 @@ import time
 
 import chegadas
 import idioma
+import rclone
 import s3
 import saida
 import telegram
@@ -52,11 +57,11 @@ from estado import limpar_cache
 from idioma import t
 from pagina import quando, tamanho as com_unidade
 
-TIPOS = ('telegram', 's3')    # a ordem da passada: os bots entregam antes de um S3 poder apagar
+TIPOS = ('telegram', 'rclone', 's3')   # a ordem da passada: os outros entregam antes de um S3 poder apagar
 POR_TIPO = 20                 # destinos de cada tipo
-IDENTIFICADOR = re.compile(r'(telegram|s3)(-([2-9]|1[0-9]|20))?')
+IDENTIFICADOR = re.compile(r'(telegram|rclone|s3)(-([2-9]|1[0-9]|20))?')
 NOME = re.compile(r'[^\x00-\x1f\x7f-\x9f]{0,40}')   # o nome que o administrador dá ao destino, para a tela
-SEGREDOS = {'s3': ('chave-de-acesso', 'chave-secreta'), 'telegram': ('token', 'conversa')}
+SEGREDOS = {'s3': ('chave-de-acesso', 'chave-secreta'), 'telegram': ('token', 'conversa'), 'rclone': ('remoto',)}
 FORMATO = {'s3': (r'[\x21-\x7e]{3,128}', r'[\x21-\x7e]{8,256}'),
            'telegram': (telegram.TOKEN.pattern, telegram.CONVERSA.pattern)}
 ARQ_TRAVA = os.path.join(PASTA_DESTINOS, '.trava')
@@ -91,7 +96,7 @@ def arquivo(destino, parte):
 # ------------------------------------------------------------ os destinos e os nomes deles
 
 def tipo(destino):
-    """'s3' ou 'telegram': o primeiro destino do tipo tem o nome dele, e os seguintes, <tipo>-2 a <tipo>-20."""
+    """'s3', 'rclone' ou 'telegram': o primeiro destino do tipo tem o nome dele, e os seguintes, <tipo>-2 a <tipo>-20."""
     return destino.partition('-')[0]
 
 
@@ -105,7 +110,7 @@ def do_tipo(qual):
 
 
 def todos(qual=None):
-    """Os destinos gravados, de um tipo ou de todos: os bots e depois os S3, cada tipo na ordem dos nomes."""
+    """Os destinos gravados, de um tipo ou de todos: os bots, os remotos do rclone e os S3, cada tipo na ordem dos nomes."""
     return [destino for cada in ((qual,) if qual else TIPOS) for destino in do_tipo(cada) if ler(destino)]
 
 
@@ -125,24 +130,48 @@ def cruzam(uma, outra):
 
 # ------------------------------------------------------------ segredos
 
-def ler_segredo(nome):
+def ler_segredo(nome, limite=SEGREDO_MAX):
     """O conteúdo de um arquivo de segredo, ou '' quando não existe, está vazio ou não é um arquivo comum."""
     try:
         descritor = os.open(os.path.join(PASTA_SEGREDOS, nome), os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK)
     except OSError:
         return ''
     try:
-        return os.read(descritor, SEGREDO_MAX + 1).decode('ascii', 'replace').strip()
+        return os.read(descritor, limite + 1).decode('ascii', 'replace').strip()
     except OSError:
         return ''
     finally:
         os.close(descritor)
 
 
+def guardados_de(destino):
+    """O que está nos arquivos de segredo do destino, sem conferir o formato."""
+    limite = rclone.SEGREDO_MAX if tipo(destino) == 'rclone' else SEGREDO_MAX
+    return tuple(ler_segredo(nome, limite) for nome in nomes_dos_segredos(destino))
+
+
+def remoto_de(texto):
+    """(tipo, campos) do arquivo de remoto do rclone, ou None quando ele não é o que o painel gravaria."""
+    try:
+        return rclone.analisar(texto)
+    except saida.Falha:
+        return None
+
+
 def segredos_de(destino):
-    """Os dois segredos do destino, ou None quando falta algum ou algum não tem o formato dele."""
-    valores = tuple(ler_segredo(nome) for nome in nomes_dos_segredos(destino))
+    """Os segredos do destino, ou None quando falta algum ou algum não tem o formato dele: dois no S3 e no bot; no
+    rclone, o arquivo do remoto."""
+    valores = guardados_de(destino)
+    if tipo(destino) == 'rclone':
+        return valores if remoto_de(valores[0]) else None
     return valores if all(re.fullmatch(regra, valor) for regra, valor in zip(FORMATO[tipo(destino)], valores)) else None
+
+
+def chaves_do_servidor(destino):
+    """As impressões digitais das chaves que o remoto SFTP tem fixadas, que é o que a tela mostra do remoto. None
+    quando o destino não é um remoto SFTP com o segredo no lugar."""
+    remoto = remoto_de(guardados_de(destino)[0]) if tipo(destino) == 'rclone' else None
+    return rclone.impressoes(remoto[1]) if remoto and remoto[0] == 'sftp' else None
 
 
 def gravar_texto(caminho, texto, dono=None):
@@ -193,6 +222,11 @@ def defeito(destino, conf):
             return 'intervalo'
         if tipo(destino) == 'telegram':
             return '' if conf['idioma'] in idioma.IDIOMAS else 'idioma'
+        if tipo(destino) == 'rclone':
+            if conf['remoto'] not in rclone.CAMPOS:
+                return 'remoto'
+            caminho = conf['caminho']
+            return '' if not caminho or (len(caminho) <= rclone.CAMINHO_MAX and rclone.CAMINHO.fullmatch(caminho)) else 'caminho'
         if not ENDERECO_HTTPS.fullmatch(conf['endpoint']):
             return 'endpoint'
         saida.analisar(conf['endpoint'])
@@ -235,16 +269,18 @@ def operante(destino, conf=None):
 def segredos_finais(destino, novos_segredos, origem=None):
     """Os segredos com que o destino fica depois de gravado: o que veio; onde veio vazio, o do destino de origem (em
     destino novo, criado com o acesso de outro) ou o que já está gravado nele."""
-    guardados = (segredos_de(origem) if origem else None) or tuple(ler_segredo(nome) for nome in nomes_dos_segredos(destino))
+    guardados = (segredos_de(origem) if origem else None) or guardados_de(destino)
     return tuple(valor or guardado for valor, guardado in zip(novos_segredos, guardados))
 
 
 def repetido(destino, conf, novos_segredos, origem=None):
     """O outro destino que já leva a mesma pasta, ou uma que a contém ou está dentro dela, ao mesmo lugar: no S3, o
-    mesmo endereço, bucket e prefixo; no bot, o mesmo token e a mesma conversa. '' quando não há. Os segredos são
-    comparados aqui, no servidor."""
+    mesmo endereço, bucket e prefixo; no bot, o mesmo token e a mesma conversa; no rclone, o mesmo tipo de remoto,
+    servidor, usuário e caminho. '' quando não há. Os segredos são comparados aqui, no servidor."""
     qual = tipo(destino)
-    meus = segredos_finais(destino, novos_segredos, origem) if qual == 'telegram' else None
+    meus = segredos_finais(destino, novos_segredos, origem) if qual != 's3' else None
+    remoto = remoto_de(meus[0]) if qual == 'rclone' else None
+    onde = rclone.lugar(*remoto, conf['caminho']) if remoto else None
     for outro in todos(qual):
         dele = ler(outro)
         if outro == destino or not dele or not cruzam(dele['pasta'], conf['pasta']):
@@ -253,6 +289,9 @@ def repetido(destino, conf, novos_segredos, origem=None):
             return outro
         if qual == 'telegram' and all(meus) and segredos_de(outro) == meus:
             return outro
+        remoto = remoto_de(guardados_de(outro)[0]) if onde else None
+        if remoto and rclone.lugar(*remoto, dele['caminho']) == onde:
+            return outro
     return ''
 
 
@@ -260,18 +299,24 @@ def gravar(destino, novo, novos_segredos, origem=None):
     """Grava a configuração e os segredos que vieram. O segredo vazio mantém o gravado; em destino novo criado com o
     acesso de outro (`origem`), o vazio é copiado do destino de origem, aqui no servidor. O andamento continua quando
     o lugar é o mesmo; destino ou pasta diferente recomeça. O Telegram recomeça também quando volta a ficar operante:
-    o que chegou enquanto ele estava parado não é enviado."""
+    o que chegou enquanto ele estava parado não é enviado. No rclone, `novos_segredos` traz o arquivo do remoto."""
     antes = ler(destino)
     seguia = operante(destino, antes)
-    bot = tipo(destino) == 'telegram'
-    fixos = ('pasta',) if bot else ('endpoint', 'bucket', 'prefixo', 'estilo', 'pasta')
+    qual = tipo(destino)
+    bot = qual == 'telegram'
+    fixos = {'telegram': ('pasta',), 'rclone': ('remoto', 'caminho', 'pasta'),
+             's3': ('endpoint', 'bucket', 'prefixo', 'estilo', 'pasta')}[qual]
     mesmo = bool(antes) and all(antes[chave] == novo[chave] for chave in fixos)
     if bot:
         mesmo = mesmo and seguia
+    if mesmo and qual == 'rclone':
+        # O servidor e o usuário do remoto estão no segredo: o andamento continua só se o remoto regravado é o mesmo.
+        velho, vindo = remoto_de(guardados_de(destino)[0]), remoto_de(segredos_finais(destino, novos_segredos, origem)[0])
+        mesmo = bool(velho and vindo) and rclone.lugar(*velho, '') == rclone.lugar(*vindo, '')
     novo = dict(novo)
     novo['serie'] = antes['serie'] if mesmo else secrets.token_hex(8)
     novo['desde'] = antes['desde'] if mesmo else (time.time_ns() if bot else 0)
-    copiados = (segredos_de(origem) if origem else None) or ('', '')
+    copiados = (segredos_de(origem) if origem else None) or ('',) * len(SEGREDOS[qual])
     for nome, valor, copiado in zip(nomes_dos_segredos(destino), novos_segredos, copiados):
         if valor or copiado:
             gravar_segredo(nome, valor or copiado)
@@ -315,7 +360,8 @@ def situacao(destino):
     conf = ler(destino)
     estado = ler_estado(destino, conf) if conf else {}
     return {'conf': conf, 'segredos': segredos_de(destino) is not None, 'ultima': estado.get('ultima', {}),
-            'total': estado.get('total', {}), 'adiados': len(estado.get('adiados', ())), 'andamento': ANDAMENTO.get(destino)}
+            'total': estado.get('total', {}), 'adiados': len(estado.get('adiados', ())), 'andamento': ANDAMENTO.get(destino),
+            'chaves': chaves_do_servidor(destino)}
 
 
 # ------------------------------------------------------------ a pasta
@@ -427,7 +473,7 @@ def falta(outros, caminho, chegada, tamanho):
 
 
 def outros_agora(destino):
-    """(tipo, pasta, marca) de cada outro destino operante, bot ou S3: é por eles que o `mover` espera antes de apagar."""
+    """(tipo, pasta, marca) de cada outro destino operante, de qualquer tipo: é por eles que o `mover` espera antes de apagar."""
     lista = []
     for outro in todos():
         conf = ler(outro)
@@ -467,6 +513,30 @@ def entregar_s3(conf, canal, estado, item, resumo, outros):
         estado['adiados'][caminho] = [inode, tamanho, chegada]
     elif apagar_local(caminho, inode, tamanho, chegada):
         resumo['apagados'] += 1
+
+
+def entregar_rclone(conf, canal, estado, item, resumo, outros):
+    chegada, caminho, tamanho, _ = item
+    alvo = rclone.alvo_de(conf['caminho'], caminho)
+    if alvo is None:
+        resumo['ignorados'] += 1
+        return
+    descritor = abrir_igual(item)
+    if descritor is None:
+        return
+    try:
+        try:
+            canal.enviar(alvo, descritor, tamanho)
+        except saida.Falha:
+            if mudou(descritor, item):
+                return   # mudou no meio do envio: a versão nova entra em uma passada seguinte e grava por cima
+            raise
+        if mudou(descritor, item):
+            return
+    finally:
+        os.close(descritor)
+    resumo['arquivos'] += 1
+    resumo['bytes'] += tamanho
 
 
 def apagar_adiados(estado, resumo, outros):
@@ -533,6 +603,11 @@ def canal_de(destino, conf, prazo=saida.PRAZO):
         raise saida.Falha('segredo')
     if tipo(destino) == 's3':
         return s3.Destino(conf, *valores, prazo=prazo)
+    if tipo(destino) == 'rclone':
+        if remoto_de(valores[0])[0] != conf['remoto']:
+            raise saida.Falha('segredo')
+        nome = nomes_dos_segredos(destino)[0]
+        return rclone.Remoto(destino, valores[0], conf['caminho'], prazo, lambda texto: gravar_segredo(nome, texto.rstrip('\n')))
     return telegram.Bot(CFG['telegram_api'], *valores, prazo=prazo)
 
 
@@ -545,7 +620,7 @@ def passada(destino, conf, recentes=False, anunciados=None):
               'esperando': 0, 'motivo': ''}
     corte = time.time_ns() - (0 if recentes else ASSENTAR * 10**9)
     qual = tipo(destino)
-    entregar = entregar_s3 if qual == 's3' else entregar_telegram
+    entregar = {'s3': entregar_s3, 'rclone': entregar_rclone, 'telegram': entregar_telegram}[qual]
     outros = outros_agora(destino) if qual == 's3' else ()
     canal, gravado = None, time.monotonic()
     ANDAMENTO[destino] = resumo
@@ -632,7 +707,7 @@ def executar(pedidos=None, recentes=False):
         vez.update(outro for outro in operantes if cruzam(confs[outro]['pasta'], confs[destino]['pasta']))
     if not vez:
         return {}
-    # Os bots, depois os S3 que copiam e, por último, os que guardam: quem apaga encontra os outros já passados.
+    # Os bots, os remotos do rclone, os S3 que copiam e, por último, os que guardam: quem apaga encontra os outros já passados.
     ordem = sorted(vez, key=lambda destino: (TIPOS.index(tipo(destino)), confs[destino].get('modo') == 'mover',
                                              operantes.index(destino)))
     with uma_por_vez() as vaga:
@@ -702,8 +777,8 @@ def iniciar():
 # ------------------------------------------------------------ teste pedido pela tela ou pelo terminal
 
 def testar(destino):
-    """Grava um objeto de teste no S3 ou envia uma mensagem de teste pelo bot. Devolve '' quando deu certo, o motivo
-    da falha ou 'ocupado' quando outro teste está em curso."""
+    """Grava um objeto de teste no S3, um arquivo de teste no remoto do rclone ou envia uma mensagem de teste pelo
+    bot. Devolve '' quando deu certo, o motivo da falha ou 'ocupado' quando outro teste está em curso."""
     conf = ler(destino)
     if not conf or not segredos_de(destino):
         return 'segredo'
@@ -719,6 +794,8 @@ def testar(destino):
             if tipo(destino) == 's3':
                 chave = s3.chave_do_objeto(conf['prefixo'], 'allsafe-ftp-stack-teste.txt')
                 canal.pedir('PUT', chave, corpo=f'Teste de gravação da allsafe-ftp-stack, em {time.strftime("%Y-%m-%d %H:%M:%S")}.\n'.encode())
+            elif tipo(destino) == 'rclone':
+                canal.testar()
             else:
                 canal.avisar(t('Teste do painel da allsafe-ftp-stack: o bot consegue enviar para esta conversa.'))
             resultado.append('')
@@ -752,6 +829,9 @@ def enviar_arquivo(destino, caminho, ao_terminar):
         motivo = 'segredo'
     elif qual == 'telegram':
         motivo = 'vazio' if not item[2] else 'limite' if item[2] > CFG['telegram_max'] else ''
+    elif qual == 'rclone':
+        chave = rclone.alvo_de(conf['caminho'], caminho)
+        motivo = '' if chave is not None else 'nome'
     else:
         chave = s3.chave_do_objeto(conf['prefixo'], caminho)
         motivo = 'nome' if chave is None else 'limite' if item[2] > s3.OBJETO_MAX else ''
@@ -769,7 +849,7 @@ def enviar_arquivo(destino, caminho, ao_terminar):
             if qual == 'telegram':
                 idioma.usar(conf['idioma'])
             canal = canal_de(destino, conf)
-            if qual == 's3':
+            if qual != 'telegram':
                 canal.enviar(chave, descritor, item[2])
             else:
                 canal.enviar(descritor, item[2], caminho.rsplit('/', 1)[-1], texto_do_arquivo(caminho, item[2], item[0]))

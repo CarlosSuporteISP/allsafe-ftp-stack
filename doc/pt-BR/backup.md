@@ -229,7 +229,7 @@ A cópia não leva o `.env` nem a pasta `.secrets/`, para que um arquivo de back
 | `.env` | Endereços, portas, perfil e limites da instalação |
 | `.secrets/ftp-usuario-inicial-senha.txt` | Senha do usuário inicial do FTP |
 | `.secrets/painel-admin-inicial-senha-hash.txt` | Hash da senha inicial do primeiro administrador do painel |
-| `.secrets/destinos/` | Chaves do S3, token do bot do Telegram e conversa que recebe, gravados pelo painel na aba Destinos |
+| `.secrets/destinos/` | Chaves do S3, acesso do remoto do rclone, token do bot do Telegram e conversa que recebe, gravados pelo painel na aba Destinos |
 
 A chave privada é a única sem volta: sem ela a cópia não abre. Sem os outros, a stack volta do mesmo jeito: o `./deploy.sh` cria um `.env` novo e senhas novas, e os segredos dos destinos são digitados de novo na aba Destinos, em **Alterar**; até lá, o cartão mostra a marca **faltam os segredos** e nada é enviado. Nesse caso, o usuário inicial passa a ter a senha nova, que precisa ser configurada no equipamento que o usa. Os demais usuários e os administradores do painel não são afetados: o hash da senha deles está na cópia. Detalhes de cada arquivo em [Segredos](segredos.md).
 

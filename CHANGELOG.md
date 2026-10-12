@@ -6,6 +6,30 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.5.0] - 2026-10-12
+
+A aba Destinos ganha um terceiro tipo de destino: o remoto do rclone, para o que o S3 não alcança.
+
+### Adicionado
+
+- **Remoto do rclone**: o cartão **Remoto do rclone**, na aba Destinos, envia os arquivos de uma pasta a um servidor SFTP ou WebDAV, ou a uma nuvem de arquivos (Google Drive, OneDrive, Dropbox e pCloud). O administrador escolhe o tipo, preenche o acesso e a pasta no remoto, tudo pela web, e cada tipo aceita até 20 destinos, como o S3 e o bot.
+- **Só envia**: o painel pede ao rclone que grave cada arquivo, e nada mais. Não lista, não baixa, não sincroniza e não apaga nada no remoto, pela tela, pela rotina ou pelo terminal, e o arquivo continua no servidor.
+- **Acesso guardado como segredo**: senha, chave privada, frase e token ficam em um arquivo `0600` por destino, em `SECRETS_DIR/destinos`, e não voltam para a tela nem para a aba Log, que registra só o tipo do remoto. Para manter o acesso gravado, os campos ficam em branco; **Novo com o mesmo acesso** o copia dentro do servidor.
+- **Chave do servidor conferida no SFTP**: o **Testar** guarda a chave que o servidor apresenta e o cartão mostra a impressão digital dela, para conferir com a do servidor. Sem a chave guardada nada é enviado, e se ela mudar o envio para. No WebDAV e nas nuvens, o certificado do servidor é conferido.
+- **Um arquivo só**: na aba Arquivos, o botão **rclone** da linha envia aquele arquivo ao remoto na hora, com a tela de escolha quando há mais de um.
+- **Pelo terminal**: `servidor.py --destinos` mostra os remotos junto com os outros destinos, e `--destinos enviar <destino>` faz a passada de um deles.
+- **Motivo da falha em uma frase**: o cartão diz por que a passada parou (chave do servidor trocada, acesso recusado, nome não encontrado, sem espaço e os demais), sem o texto do rclone, que pode trazer servidor, usuário e caminho.
+- **Fluxograma do envio aos destinos**, com a sequência escrita, no guia do painel.
+- **Bateria**: quatro casos funcionais e sete de segurança para o remoto do rclone, contra um servidor SFTP e WebDAV de teste. São 94 casos funcionais, 140 de segurança e 14 de rede.
+
+### Alterado
+
+- **Imagem do painel**: passa a ter o binário do rclone `1.75.2`, com a soma conferida na construção, que falha se o arquivo baixado for outro. A imagem cresce de 273 MB para 388 MB. A versão só muda com a troca do número e das somas no `Dockerfile`: o rclone não se atualiza sozinho.
+- **Ordem da passada**: primeiro os bots, depois os remotos do rclone, depois os S3 que copiam e, por último, os que guardam.
+- **Rota do formulário do remoto**: `/destinos/rclone` aceita até 32 KiB, para caber a chave privada ou a credencial; o teto vale só nela, no painel e no nginx.
+- **Bateria**: passa a pedir `ssh-keygen` e `setsid` no computador que a roda.
+- **Fotos da aba Destinos**, nos dois idiomas, com as telas desta versão.
+
 ## [1.4.0] - 2026-10-11
 
 O painel passa a mandar a cópia do sistema inteiro para um armazenamento S3, pelo botão ou por rotina.

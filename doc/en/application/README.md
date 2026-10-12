@@ -643,7 +643,7 @@ Changing the name of the first administrator through the panel does not touch th
 | Name of a folder | Enters the folder |
 | Size · Modified | Size of the file and date of the last change |
 | **Download** | Hands the file to the browser, with the original name |
-| **Telegram** · **S3** | With the destination saved in the Destinations tab, sends that file to the destination right away |
+| **Telegram** · **rclone** · **S3** | With the destination saved in the Destinations tab, sends that file to the destination right away |
 | **Rename** | Opens the screen that changes the name of the file or of the folder, inside the same folder, and asks for your current password; a name that already exists is refused |
 | **Delete** | Opens the confirmation screen: it shows what is going away, asks for the ticked box and your current password and deletes for good, with no recycle bin |
 | **New folder** | Creates an empty folder inside the one that is open |
@@ -706,7 +706,7 @@ The panel browses, downloads, uploads, creates folders, renames and deletes. The
 
 <a href="images/arquivos-enviado.png"><img src="images/arquivos-enviado.png" alt="Files tab inside the folder clientes, with the message File uploaded, the file planilha-de-clientes.csv in the list and the Upload file card, with the Save as and File fields and the Upload file button" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Files menu, after the upload · captured on 2026-10-11</sub>
+<sub><b>v1.5.0</b> · Files menu, after the upload · captured on 2026-10-12</sub>
 
 1. Enter the folder where the file should stay.
 2. In the **Upload file** card, choose the file.
@@ -741,21 +741,21 @@ The panel browses, downloads, uploads, creates folders, renames and deletes. The
 
 ### Files ➜ Send to a destination
 
-<a href="images/arquivos-enviado-ao-destino.png"><img src="images/arquivos-enviado-ao-destino.png" alt="Files tab inside the folder clientes, with the message S3 storage: file sent and, on the line of the file planilha-de-clientes.csv, the Download, Telegram, S3, Rename and Delete buttons" width="100%"></a>
+<a href="images/arquivos-enviado-ao-destino.png"><img src="images/arquivos-enviado-ao-destino.png" alt="Files tab inside the folder clientes, with the message S3 storage: file sent and, on the line of the file planilha-de-clientes.csv, the Download, Telegram, rclone, S3, Rename and Delete buttons" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Files menu, after the send to a destination · captured on 2026-10-11</sub>
+<sub><b>v1.5.0</b> · Files menu, after the send to a destination · captured on 2026-10-12</sub>
 
-Once a destination is saved in the [Destinations](#destinos) tab, each file gets a button with its name, **Telegram** or **S3**, next to **Download**. The button sends that file to the destination right away, without waiting for the run.
+Once a destination is saved in the [Destinations](#destinos) tab, each file gets a button with its name, **Telegram**, **rclone** or **S3**, next to **Download**. The button sends that file to the destination right away, without waiting for the run.
 
 1. Enter the folder of the file.
-2. On the line of the file, click **Telegram** or **S3**.
+2. On the line of the file, click **Telegram**, **rclone** or **S3**.
 3. With more than one destination of that type ready, choose the **Destination that receives** and click **Send**.
 
 <a href="images/arquivos-escolher-destino.png"><img src="images/arquivos-escolher-destino.png" alt="Send this file to the S3 storage screen, with the path of the file, the sentence saying that it stays on the server and that the progress of the runs does not change, the choice Destination that receives with S3 storage and S3 storage: Customers, each with the bucket and the prefix, and the Send and Cancel buttons" width="100%"></a>
 
 <sub><b>v1.3.0</b> · Files menu, choice of the destination · captured on 2026-10-11</sub>
 
-**Expected result:** the page comes back to the same folder with the message `S3 storage: file sent.` or `Telegram bot: file sent.`, with the name of the destination when it has one, and the Log tab gets the line `File sent to the destination on request`, with the administrator, the destination and the file.
+**Expected result:** the page comes back to the same folder with the message `S3 storage: file sent.`, `rclone remote: file sent.` or `Telegram bot: file sent.`, with the name of the destination when it has one, and the Log tab gets the line `File sent to the destination on request`, with the administrator, the destination and the file.
 
 | Item | How it works |
 |---|---|
@@ -763,7 +763,9 @@ Once a destination is saved in the [Destinations](#destinos) tab, each file gets
 | Who has the buttons | Only the administrator: the My files screen, of the FTP user, does not show them |
 | File of another folder | The button works for any file of the data, inside or outside the folder of the destination, and works with the destination turned off |
 | The file on the server | It is never deleted by this send, not even with S3 in **Keep in S3** |
-| Sending again | Through the bot, the chat receives another message; in S3, the same object is written over |
+| Sending again | Through the bot, the chat receives another message; in S3 and in rclone, the same name is written over |
+| Path on the rclone remote | The same the file has inside the data, starting at the folder on the remote |
+| SFTP remote that has not gone through **Test** yet | The send does not go, and the message says the panel has not stored the key of the server yet |
 | Send that takes long | Past 20 seconds, the message says the send continues in the background, and the result appears in the Log tab |
 | Send that does not work | The message gives the reason in one sentence, such as an empty file or one larger than the bot limit |
 
@@ -785,7 +787,7 @@ Once a destination is saved in the [Destinations](#destinos) tab, each file gets
 
 <a href="images/arquivos-renomeado.png"><img src="images/arquivos-renomeado.png" alt="Files tab inside the folder switch-core, with the message Name changed and the file with the new name in the list" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Files menu, after the name change · captured on 2026-10-11</sub>
+<sub><b>v1.5.0</b> · Files menu, after the name change · captured on 2026-10-12</sub>
 
 **Expected result:** the folder comes back with the message `Name changed.` and the item with the new name, in the same place. The panel does not move from one folder to another, and the device that writes with the old name creates another file on the next upload.
 
@@ -817,7 +819,7 @@ Once a destination is saved in the [Destinations](#destinos) tab, each file gets
 
 <a href="images/arquivos-apagado.png"><img src="images/arquivos-apagado.png" alt="Files tab inside the folder switch-core, with the message Deleted and the list without the file teste-de-envio.txt" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Files menu, after deleting · captured on 2026-10-11</sub>
+<sub><b>v1.5.0</b> · Files menu, after deleting · captured on 2026-10-12</sub>
 
 **Expected result:** the folder comes back with the message `Deleted.` and without the item, and the Log tab gains the line `File or folder deleted`.
 
@@ -1009,47 +1011,49 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 
 ## ☁️ Destinations
 
-<a href="images/destinos.png"><img src="images/destinos.png" alt="Destinations tab with the System copy card at the top, marked as not configured and with the Configure button, the S3 storage card turned on, with the address, the bucket and the prefix, the region, the folder sent, the runs every 60 minutes, Copy after sending, the keys saved without being shown on screen, the last run and the total sent, the Telegram bot card turned on, with the folder, the runs every 5 minutes, the largest file the bot sends, the message language, the last run and the total sent, the Test, Send now, Change, New with the same access and Remove buttons on each card and, at the top of the screen, the New S3 and New bot buttons and the How the panel sends explanation, collapsed" width="100%"></a>
+<a href="images/destinos.png"><img src="images/destinos.png" alt="Destinations tab with the System copy card at the top, marked as not configured and with the Configure button, the S3 storage card turned on, with the address, the bucket and the prefix, the region, the folder sent, the runs every 60 minutes, Copy after sending, the keys saved without being shown on screen, the last run and the total sent, the rclone remote: File server card turned on, with the type SFTP, the folder on the remote, the folder sent, the runs every 60 minutes, Copy after sending, the access saved without being shown on screen, the server key with its fingerprint, the last run and the total sent, the Telegram bot card turned on, with the folder, the runs every 5 minutes, the largest file the bot sends, the message language, the last run and the total sent, the Test, Send now, Change, New with the same access and Remove buttons on each card and, at the top of the screen, the New S3, New remote and New bot buttons and the How the panel sends explanation, collapsed" width="100%"></a>
 
-<sub><b>v1.4.0</b> · Destinations menu · captured on 2026-10-11</sub>
+<sub><b>v1.5.0</b> · Destinations menu · captured on 2026-10-12</sub>
 
-**What it is for:** sending by itself, out of the server, the files that arrive in a folder. There are two types of destination, with up to 20 of each: the S3 storage, which holds the second copy or keeps the files and frees the disk, and the Telegram bot, which delivers each new file to a person, a group or a channel.
+**What it is for:** sending by itself, out of the server, the files that arrive in a folder. There are three types of destination, with up to 20 of each: the S3 storage, which holds the second copy or keeps the files and frees the disk, the rclone remote, which takes the folder to an SFTP or WebDAV server or to a file cloud, and the Telegram bot, which delivers each new file to a person, a group or a channel.
 
 **How to get there:** menu ➜ **Destinations**. Only the administrator has the tab.
 
 | Item on the screen | What it shows or does |
 |---|---|
-| Tag next to the name | `not configured`, `on`, `off` or `secrets missing` |
+| Tag next to the name | `not configured`, `on`, `off` or `secrets missing`; on the rclone SFTP remote that has not gone through **Test** yet, `test pending` |
 | Address · Bucket and prefix · Region | Where S3 sends to, as it was saved |
+| Remote type · Folder on the remote | In rclone, the chosen type and the folder of the remote where the files are written |
 | Folder sent | The folder of the data the destination follows, with the folders inside it |
 | Runs | How often the panel checks the folder |
-| After sending | In S3, **Copy** or **Keep in S3** |
+| After sending | In S3, **Copy** or **Keep in S3**; in rclone, always **Copy** |
 | Largest file the bot sends · Message language | The limit of each send through the bot and the language of the caption and of the notices |
-| Access key and secret key · Bot token and chat | They only say the secrets are saved: the value is not shown on screen |
+| Access key and secret key · Remote access · Bot token and chat | They only say the secrets are saved: the value is not shown on screen |
+| Server key | On the SFTP remote, after **Test**: the type and the fingerprint of the key the panel stored, to compare with the one on the server |
 | Last run | When it was and how many files went, with the total size; when it stops before the end, the reason in one sentence |
 | Sent since it was turned on | The total of files and of size the destination has already received |
 | **System copy** card | At the top of the tab: the tag `not configured`, `schedule on`, `button only`, `in progress` or `secrets missing`; the destination, the bucket and the folder, the schedule and the last copy, with the date, the size, the files and the name of the object |
 | Copy and send now · Change | Requests the system copy right away, in the background · opens the form of the copy: the S3 that receives it, the folder in the bucket, the days and the time of the schedule |
 | Still arriving | Files that changed less than two minutes ago: they go in a later run |
 | Waiting for another destination | In S3 with **Keep in S3**, files already stored there that only leave the server when the other destinations of the folder deliver them |
-| **Test** | Writes a small object to S3 or sends the test message through the bot, with what is saved |
+| **Test** | Writes a small object to S3 or a small file to the rclone remote, or sends the test message through the bot, with what is saved |
 | **Send now** | Requests a run out of schedule; refresh the page to follow it |
 | **Change** | Opens the form with what is saved; a blank secret keeps the saved one |
 | **New with the same access** | Opens the form of a new destination of the same type, with the secrets of this one |
 | **Remove** | Opens the confirmation that deletes the settings, the progress and the secrets of that destination, and only of it |
-| **New S3** · **New bot** | At the top of the screen, after the first destination of the type: they open the blank form of one more |
-| **How the panel sends** | At the top of the screen, collapsed: one click opens the summary of the rules, HTTPS only, regular files only and where the secrets are kept |
+| **New S3** · **New remote** · **New bot** | At the top of the screen, after the first destination of the type: they open the blank form of one more |
+| **How the panel sends** | At the top of the screen, collapsed: one click opens the summary of the rules: how the panel leaves the server, regular files only and where the secrets are kept |
 
-Each destination has its own folder, interval and secrets, and one does not depend on the other. S3 sends everything in the folder, including what was already there when it was turned on, at each interval. The bot sends only what arrives after it is turned on: within a few seconds when the file arrives whole by FTP or through the panel, and at each interval what showed up in the folder another way. The complete rules are in [Web panel](../panel.md#destinos).
+Each destination has its own folder, interval and secrets, and one does not depend on the other. S3 and the rclone remote send everything in the folder, including what was already there when they were turned on, at each interval. The bot sends only what arrives after it is turned on: within a few seconds when the file arrives whole by FTP or through the panel, and at each interval what showed up in the folder another way. The complete rules are in [Web panel](../panel.md#destinos).
 
 <details>
 <summary>Destinations ➜ Before configuring — click to expand</summary>
 
 ### Destinations ➜ Before configuring
 
-<a href="images/destinos-sem-destino.png"><img src="images/destinos-sem-destino.png" alt="Destinations tab of a new installation, with the System copy card marked as not configured, with the sentence that tells to save an S3 storage first, and the S3 storage and Telegram bot cards marked as not configured, each with the explanation of what it sends and the Configure button, and, at the top of the screen, the How the panel sends explanation, collapsed" width="100%"></a>
+<a href="images/destinos-sem-destino.png"><img src="images/destinos-sem-destino.png" alt="Destinations tab of a new installation, with the System copy card marked as not configured, with the sentence that tells to save an S3 storage first, and the S3 storage, rclone remote and Telegram bot cards marked as not configured, each with the explanation of what it sends and the Configure button, and, at the top of the screen, the How the panel sends explanation, collapsed" width="100%"></a>
 
-<sub><b>v1.4.0</b> · Destinations menu, no destination saved · captured on 2026-10-11</sub>
+<sub><b>v1.5.0</b> · Destinations menu, no destination saved · captured on 2026-10-12</sub>
 
 The installation is born with no destination: until the administrator saves one, nothing leaves the server and the panel opens no connection to the outside. Each card says what the destination does and leads to its form, through the **Configure** button.
 
@@ -1087,9 +1091,9 @@ Any service that speaks the S3 protocol works, in the cloud or on the internal n
 | After sending | Yes | **Copy**: the file stays on the server. **Keep in S3**: the file leaves the server after the destination confirms it was stored |
 | Your current password | Yes | The password of whoever is in the session, to save the destination |
 
-<a href="images/destinos-gravado.png"><img src="images/destinos-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, the System copy card, not configured, with the Configure button, and the S3 storage and Telegram bot cards turned on, each with what was saved, the secrets saved without being shown on screen and the last run as none yet" width="100%"></a>
+<a href="images/destinos-gravado.png"><img src="images/destinos-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, the System copy card, not configured, with the Configure button, the S3 storage and Telegram bot cards turned on, each with what was saved, the secrets saved without being shown on screen and the last run as none yet, and the rclone remote card still not configured" width="100%"></a>
 
-<sub><b>v1.4.0</b> · Destinations menu, after saving · captured on 2026-10-11</sub>
+<sub><b>v1.5.0</b> · Destinations menu, after saving · captured on 2026-10-12</sub>
 
 **Expected result:** the tab comes back with the notice `Destination saved. It takes effect on the next run.`, and the card shows the `on` tag, the address, the bucket, the folder and that the keys are saved, without showing them. The first run starts within a minute and sends everything already in the folder.
 
@@ -1102,6 +1106,78 @@ Any service that speaks the S3 protocol works, in the cloud or on the internal n
 | The folder does not exist inside the data. Create it in Files or check the name. | The folder sent was not found |
 | Fill in both secrets of the destination: neither is saved yet. | On the first save, one of the keys was left blank |
 | Invalid interval: 5 to 1440 minutes. | The interval is out of range |
+
+</details>
+
+<details>
+<summary>Destinations ➜ rclone remote — click to expand</summary>
+
+### Destinations ➜ rclone remote
+
+<a href="images/destinos-rclone-tipo.png"><img src="images/destinos-rclone-tipo.png" alt="rclone remote: new destination screen, with the sentence that says the remote only receives, the Remote type choice with SFTP, WebDAV, Google Drive, OneDrive, Dropbox and pCloud, each with what the access asks for, the notice that the type is fixed once saved and the Continue and Cancel buttons" width="100%"></a>
+
+<sub><b>v1.5.0</b> · Destinations menu, choice of the remote type · captured on 2026-10-12</sub>
+
+rclone is the file sending program that comes inside the panel image. Through it, the folder goes to what S3 does not reach: an SFTP or WebDAV server, or a Google Drive, OneDrive, Dropbox or pCloud account. The remote only receives: the panel does not list, download, sync or delete anything on it.
+
+1. In the Destinations tab, click **Configure** on the **rclone remote** card.
+2. Choose the **Remote type** and click **Continue**.
+
+<a href="images/destinos-rclone.png"><img src="images/destinos-rclone.png" alt="rclone remote form of the SFTP type, filled in with an example server: the folder on the remote copias, the name File server, the On box, the folder sent olt-centro, the 60-minute interval and, in the remote access, the server, the port left blank, the user, the masked password and the Private key, Private key passphrase and Server public key fields left blank, the explanation of the path of the file on the remote, the Your current password field and the Save and Cancel buttons" width="100%"></a>
+
+<sub><b>v1.5.0</b> · Destinations menu, SFTP remote form · captured on 2026-10-12</sub>
+
+3. Fill in the **Folder on the remote**, the **Folder sent** and the **Interval between runs**.
+4. Under **Remote access**, fill in the fields of the chosen type.
+5. Type your password and click **Save**.
+
+| Field | Required | What to fill in |
+|---|---|---|
+| Folder on the remote | No | Where the files are written, with up to 16 levels separated by slashes; blank is the folder the remote opens in |
+| Name | No | Up to 40 characters, to recognise the destination on the screen when there is more than one of the type |
+| On | No | Checked, the panel sends by itself; unchecked, the settings are kept and nothing leaves |
+| Folder sent | No | The folder inside the data, which must exist; blank is the whole data folder |
+| Interval between runs | Yes | Minutes, 5 to 1440 |
+| Server | Yes | In SFTP, the name or the IP address, without the port |
+| Port | No | Blank means 22 |
+| User | Yes | The account of the server that receives the files |
+| Password | One of the two | The password of the account, when the access is not by key |
+| Private key | One of the two | The whole file, from the BEGIN line to the END line, in place of the password |
+| Private key passphrase | No | Only when the key is encrypted |
+| Server public key | No | One per line, as in the SSH known hosts file; when blank, **Test** stores the one the server presents |
+| Your current password | Yes | The password of whoever is in the session, to save the destination |
+
+The access fields change with the type. Those of WebDAV and of the clouds are in [Web panel](../panel.md#destinos).
+
+<a href="images/destinos-rclone-gravado.png"><img src="images/destinos-rclone-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, the New S3, New remote and New bot buttons at the top and the rclone remote: File server card with the test pending tag, the notice that the panel has not stored the key of this server yet and that nothing is sent until Test, the type SFTP, the folder on the remote copias, the folder sent olt-centro, the runs every 60 minutes, Copy after sending, the access saved without being shown on screen and the last run as none yet, next to the S3 storage and Telegram bot cards" width="100%"></a>
+
+<sub><b>v1.5.0</b> · Destinations menu, remote saved and not tested yet · captured on 2026-10-12</sub>
+
+6. Back in the tab, click **Test** on the card of the remote.
+
+<a href="images/destinos-rclone-testado.png"><img src="images/destinos-rclone-testado.png" alt="Destinations tab with the notice Test finished: the destination received it, and the rclone remote: File server card with the on tag and the Server key line, with the type of the key and its fingerprint, next to the S3 storage and Telegram bot cards" width="100%"></a>
+
+<sub><b>v1.5.0</b> · Destinations menu, remote after the test · captured on 2026-10-12</sub>
+
+**Expected result:** on saving, the tab comes back with the notice `Destination saved. It takes effect on the next run.` and the card of the remote, with the type, the folder on the remote, the folder sent and the access saved, without showing it. In SFTP, the card keeps the `test pending` tag. The test writes the file `allsafe-ftp-stack-teste.txt` to the folder of the remote and answers `Test finished: the destination received it.`; the card turns to `on` and gets the **Server key** line, with the fingerprint to compare with the one on the server. The first run starts within a minute and sends everything already in the folder.
+
+| Situation | What happens |
+|---|---|
+| SFTP remote without **Test** | Nothing is sent: the panel has not stored the key of the server yet |
+| Server key different from the stored one | The sending stops, and the card tells the reason; if the change was made by the server itself, save the access again and test |
+| Google Drive, OneDrive, Dropbox and pCloud | The account token is obtained outside the panel, with the `rclone authorize` command on a computer with a browser, and pasted into the **Account token** field |
+| **Change** | The saved access does not come back to the screen: left blank, the saved one stays; to change any part of it, fill in the whole access again |
+| Remote type | It is fixed once saved: for another type, create another destination |
+| Path on the remote | The same the file has inside the data, starting at the folder on the remote; it writes over whatever has the same name |
+| The file on the server | It stays there: the remote receives a copy, and the panel deletes nothing on the remote |
+
+| Message | Reason |
+|---|---|
+| Choose the remote type. | **Continue** was clicked with no type selected |
+| Invalid folder on the remote: up to 16 levels separated by slashes, with letters, numbers, spaces, _, - and dots. | The folder on the remote is outside the rule |
+| Incomplete access: enter the password, the private key, the token or the credential that opens the remote. The whole access fits in 16 KiB. | The secret of the access is missing, or it is over the size |
+| The passphrase is only for an encrypted private key: an encrypted key requires the passphrase, and an unencrypted key takes none. | The passphrase was filled in without an encrypted key, or the encrypted key came without the passphrase |
+| Fill in the remote access: there is none saved to keep. | On the first save, the access fields were left blank |
 
 </details>
 
@@ -1152,25 +1228,25 @@ Before you start, create the bot with the Telegram bot creator and keep the toke
 
 <sub><b>v1.3.0</b> · Destinations menu, new destination with the access of another one · captured on 2026-10-11</sub>
 
-Each type accepts up to 20 destinations. A new destination can use the access of one that already works: it is the way to send another folder to the same bucket, the same folder to another bucket or another folder to another group through the same bot.
+Each type accepts up to 20 destinations. A new destination can use the access of one that already works: it is the way to send another folder to the same bucket, the same folder to another bucket, another folder to the same server through rclone or another folder to another group through the same bot.
 
 1. On the card of the destination that already works, click **New with the same access**.
-2. Give the destination a **Name** and change the **Folder sent** or the place: the prefix or the bucket, in S3; the chat, in the bot.
-3. Leave the secrets blank, type your password and click **Save**.
+2. Give the destination a **Name** and change the **Folder sent** or the place: the prefix or the bucket, in S3; the folder on the remote, in rclone; the chat, in the bot.
+3. Leave the secrets blank, type your password and click **Save**. In rclone, the access is a single one: left blank, the whole access of the source destination applies.
 
-<a href="images/destinos-varios.png"><img src="images/destinos-varios.png" alt="Destinations tab with the notice Destination saved, the New S3 and New bot buttons at the top, the System copy card and three cards turned on: S3 storage, with the prefix copias and the folder roteador-borda; S3 storage: Customers, with the same address and the same bucket, the prefix clientes, the folder clientes and no run yet; and Telegram bot, with the folder clientes" width="100%"></a>
+<a href="images/destinos-varios.png"><img src="images/destinos-varios.png" alt="Destinations tab with the notice Destination saved, the New S3, New remote and New bot buttons at the top, the System copy card and four cards turned on: S3 storage, with the prefix copias and the folder roteador-borda; S3 storage: Customers, with the same address and the same bucket, the prefix clientes, the folder clientes and no run yet; rclone remote: File server, with the folder olt-centro; and Telegram bot, with the folder clientes" width="100%"></a>
 
-<sub><b>v1.4.0</b> · Destinations menu, with two S3 destinations · captured on 2026-10-11</sub>
+<sub><b>v1.5.0</b> · Destinations menu, with two S3 destinations · captured on 2026-10-12</sub>
 
 **Expected result:** the tab comes back with the notice `Destination saved. It takes effect on the next run.` and one more card, with the type and the given name. The secret left blank was copied from the other destination inside the server, without going through the browser.
 
 | Item | How it works |
 |---|---|
-| **New S3** · **New bot** | They open the blank form, for a destination with other keys or with another bot |
+| **New S3** · **New remote** · **New bot** | They open the blank form, for a destination with other keys, with another access or with another bot |
 | Same folder to the same place | Refused, with `This destination already exists`: change the folder or the place |
 | Limit | 20 destinations per type; with the 20 saved, the buttons for a new destination disappear until one is removed |
 | Progress | Each destination has its own: changing, testing or removing one does not touch the others |
-| Several destinations on the same folder | The bots deliver first, then the S3 destinations that copy and, last, the ones that keep; the one that keeps only deletes from the server after all the others have delivered |
+| Several destinations on the same folder | The bots deliver first, then the rclone remotes, the S3 destinations that copy and, last, the ones that keep; the one that keeps only deletes from the server after all the others have delivered |
 
 </details>
 
@@ -1179,20 +1255,20 @@ Each type accepts up to 20 destinations. A new destination can use the access of
 
 ### Destinations ➜ Test and Send now
 
-<a href="images/destinos-teste.png"><img src="images/destinos-teste.png" alt="Destinations tab with the notice Test finished, the destination received it, above the System copy card and the S3 storage and Telegram bot cards, each of these with the date of the last run" width="100%"></a>
+<a href="images/destinos-teste.png"><img src="images/destinos-teste.png" alt="Destinations tab with the notice Test finished, the destination received it, above the System copy card and the S3 storage, rclone remote and Telegram bot cards, each of these with the date of the last run" width="100%"></a>
 
-<sub><b>v1.4.0</b> · Destinations menu, after the test · captured on 2026-10-11</sub>
+<sub><b>v1.5.0</b> · Destinations menu, after the test · captured on 2026-10-12</sub>
 
 1. On the card of the destination, click **Test**.
 2. To skip the wait for the interval, click **Send now** and refresh the page afterwards.
 
-**Expected result:** the test answers `Test finished: the destination received it.`: in S3, the object `allsafe-ftp-stack-teste.txt` was written under the chosen prefix; through the bot, the chat received the test message from the panel. **Send now** answers `Run requested: the panel starts in a moment. Refresh the page to follow it.`, and the **Last run** line starts showing how many files went.
+**Expected result:** the test answers `Test finished: the destination received it.`: in S3, the object `allsafe-ftp-stack-teste.txt` was written under the chosen prefix; on the rclone remote, the file with the same name in the folder of the remote, and, in SFTP, the panel stored the key of the server; through the bot, the chat received the test message from the panel. **Send now** answers `Run requested: the panel starts in a moment. Refresh the page to follow it.`, and the **Last run** line starts showing how many files went.
 
 | Item | How it works |
 |---|---|
 | **Test** with the destination turned off | It works: the test uses what is saved and sends no file |
 | Test that does not work | The notice gives the name of the destination and the reason in one sentence, such as `the service refused the credential or the permission` |
-| **Send now** in S3 | Respects the two-minute wait for a file without changes; what is still arriving stays on the **Still arriving** line |
+| **Send now** in S3 and in rclone | Respects the two-minute wait for a file without changes; what is still arriving stays on the **Still arriving** line |
 | Password | Neither button asks for the password: they do not change the settings |
 
 What each reason means and what to do is in [Troubleshooting](../troubleshooting.md#destinos).
@@ -1216,9 +1292,9 @@ The **System copy** card, at the top of the tab, sends the whole system, encrypt
 4. Type your password and click **Save**.
 5. Back on the tab, click **Copy and send now** and refresh the screen right after.
 
-<a href="images/destinos-copia-feita.png"><img src="images/destinos-copia-feita.png" alt="Destinations tab with the System copy card at the top, with the tag schedule on, the destination S3 storage, the bucket backups-da-rede and the folder copia-do-sistema, the schedule of every day at 03:00, the Last copy line with the date, the size, the number of files and the name of the object, and the Copy and send now and Change buttons, above the cards of the two S3 storages and of the Telegram bot" width="100%"></a>
+<a href="images/destinos-copia-feita.png"><img src="images/destinos-copia-feita.png" alt="Destinations tab with the System copy card at the top, with the tag schedule on, the destination S3 storage, the bucket backups-da-rede and the folder copia-do-sistema, the schedule of every day at 03:00, the Last copy line with the date, the size, the number of files and the name of the object, and the Copy and send now and Change buttons, above the cards of the two S3 storages, of the rclone remote and of the Telegram bot" width="100%"></a>
 
-<sub><b>v1.4.0</b> · Destinations menu, after the system copy · captured on 2026-10-11</sub>
+<sub><b>v1.5.0</b> · Destinations menu, after the system copy · captured on 2026-10-12</sub>
 
 **Expected result:** on saving, the notice is `System copy saved. The schedule applies from now on.`; after the button, `System copy requested: it runs in the background. Refresh the screen to follow it.` At the end, the **Last copy** line brings the date, the size, the number of files and the name of the object written to the bucket.
 
@@ -1254,12 +1330,12 @@ The complete operation is in [System copy to S3](../panel.md#copia-do-sistema).
 <details>
 <summary>Technical detail — routes, secrets and events</summary>
 
-- Routes `GET /destinos`, `GET` and `POST /destinos/s3` and `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `GET` and `POST /destinos/arquivo`, `GET` and `POST /destinos/remover`, `GET` and `POST /destinos/copia` and `POST /destinos/copia/agora`. Every `POST` carries the token of the session; saving and removing also ask for the current password. For the FTP user, all of them answer `404`.
+- Routes `GET /destinos`, `GET` and `POST /destinos/s3`, `/destinos/rclone` and `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `GET` and `POST /destinos/arquivo`, `GET` and `POST /destinos/remover`, `GET` and `POST /destinos/copia` and `POST /destinos/copia/agora`. Every `POST` carries the token of the session; saving and removing also ask for the current password. For the FTP user, all of them answer `404`.
 - The settings are in `DATA_DIR/painel/destinos/<destino>.conf` and the progress, in `<destino>.estado`. The secrets are in `SECRETS_DIR/destinos`, one per file, with mode `0600`, and never go back to the screen, to the Log tab or to the audit log.
-- The panel only leaves the server over HTTPS, with the certificate checked, and does not follow redirects.
+- The panel only leaves the server over HTTPS, with the certificate checked, and does not follow redirects. On the rclone SFTP remote, it leaves over SSH, with the server key checked.
 - The events `destino_gravado`, `destino_teste`, `destino_pedido`, `destino_arquivo`, `destino_enviado`, `destino_falhou`, `destino_pulado` and `destino_removido`, and those of the system copy, `copia_gravada`, `copia_pedida`, `copia_enviada`, `copia_falhou` and `copia_sem_destino`, stay in the [audit log](../panel.md#auditoria).
 - With `PAINEL_DESTINOS=nao` in the `.env`, the tab leaves the menu and no run happens: see [Configuration](../configuration.md#painel).
-- The complete operation is in [Destinations: S3 and Telegram bot](../panel.md#destinos), and the one of the system copy, in [System copy to S3](../panel.md#copia-do-sistema).
+- The complete operation is in [Destinations: S3, rclone and Telegram bot](../panel.md#destinos), and the one of the system copy, in [System copy to S3](../panel.md#copia-do-sistema).
 
 </details>
 
@@ -1583,7 +1659,7 @@ The tab shows the last 300 records, and the collapsed **What is recorded**, belo
 
 Real captures of the running panel, made with Playwright on Google Chrome, at 1440×900, in dark theme and in English; three screens were repeated in Portuguese, for the [Language](#idioma) section. The guide in Portuguese has the same screens, photographed with the panel in Portuguese. The photographed stack was a demonstration installation, separate from the installation in use: it came up on `127.0.0.4`, with its own container names, network, data folder and secrets, and received example users and files over FTPS; the uploads through the panel used example files, created for the screenshot. Where the panel states the folder of the server, as in the caption of the Users tab and on the **Edit** screen, the demonstration shows the default folder of `.env.example`, in place of the temporary folder it actually came up in.
 
-The destinations in the screenshots are an example service, which came up together with the demonstration and only exists on its internal network: the names end in `.example`, the access key is an example identifier, and no file left the machine. The example bot only receives what the panel sends.
+The destinations in the screenshots are example services, which came up together with the demonstration and only exist on its internal network: the names end in `.example`, the access key is an example identifier, and no file left the machine. The example bot only receives what the panel sends, and the example SFTP server of the rclone remote is a container of the demonstration itself.
 
 No password appears in the images: the password, secret key and token fields are masked by the browser and the generated password was replaced by `<REDACTED>` before the capture. The fingerprints are those of the self-signed certificates of the photographed installation; each installation generates its own. The e-mail of the security contact is an example address.
 
