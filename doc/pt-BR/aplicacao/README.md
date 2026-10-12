@@ -1148,7 +1148,7 @@ Quem precisa conferir ou baixar o que foi enviado pede a um administrador ou usa
 
 <sub><b>v1.9.0</b> · menu Destinos · captura de 2026-10-12</sub>
 
-**Para que serve:** mandar sozinho, para fora do servidor, os arquivos que chegam em uma pasta. São três tipos de destino, com até 20 de cada um: o armazenamento S3, que guarda a segunda cópia ou fica com os arquivos e libera o disco, o remoto do rclone, que leva a pasta a um servidor SFTP ou WebDAV ou a uma nuvem de arquivos, e o bot do Telegram, que entrega cada arquivo novo a uma pessoa, a um grupo ou a um canal.
+**Para que serve:** mandar sozinho, para fora do servidor, os arquivos que chegam em uma pasta. São três tipos de destino, com até 20 de cada um: o armazenamento S3, que guarda a segunda cópia ou fica com os arquivos e libera o disco, o remoto do rclone, que leva a pasta a um servidor de arquivos, a uma nuvem de arquivos, ao armazenamento de um provedor de nuvem ou a um serviço de transferência de arquivos, em 41 tipos, e o bot do Telegram, que entrega cada arquivo novo a uma pessoa, a um grupo ou a um canal.
 
 **Como chegar:** menu ➜ **Destinos**. Só o administrador tem a aba.
 
@@ -1247,14 +1247,14 @@ Serve qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna.
 
 ### Destinos ➜ Remoto do rclone
 
-<a href="imagens/destinos-rclone-tipo.png"><img src="imagens/destinos-rclone-tipo.png" alt="Tela Remoto do rclone: novo destino, com a frase que diz que o remoto só recebe, a escolha Tipo do remoto com SFTP, WebDAV, Google Drive, OneDrive, Dropbox e pCloud, cada um com o que o acesso pede, o aviso de que o tipo fica fixo depois de gravado e os botões Continuar e Cancelar" width="100%"></a>
+<a href="imagens/destinos-rclone-tipo.png"><img src="imagens/destinos-rclone-tipo.png" alt="Tela Remoto do rclone: novo destino, com a frase que diz que o remoto só recebe, a lista de seleção Tipo do remoto ainda em Escolha na lista, o aviso de que o tipo fica fixo depois de gravado, o aviso de que serviço compatível com S3 usa o destino S3 e os botões Continuar e Cancelar" width="100%"></a>
 
-<sub><b>v1.9.0</b> · menu Destinos, escolha do tipo do remoto · captura de 2026-10-12</sub>
+<sub><b>v1.10.0</b> · menu Destinos, escolha do tipo do remoto · captura de 2026-10-12</sub>
 
-O rclone é o programa de envio de arquivos que vem dentro da imagem do painel. Por ele, a pasta vai para o que o S3 não alcança: um servidor SFTP ou WebDAV, ou uma conta do Google Drive, do OneDrive, do Dropbox ou do pCloud. O remoto só recebe: o painel não lista, não baixa, não sincroniza e não apaga nada nele.
+O rclone é o programa de envio de arquivos que vem dentro da imagem do painel. Por ele, a pasta vai para o que o S3 não alcança, em 41 tipos de remoto: servidores de arquivos (SFTP, WebDAV, FTP com TLS e Seafile), nuvens de arquivos (Google Drive, OneDrive, Dropbox, pCloud, Box, Mega e outras), armazenamento de provedores de nuvem e serviços de transferência de arquivos para empresas. O remoto só recebe: o painel não lista, não baixa, não sincroniza e não apaga nada nele.
 
 1. Na aba Destinos, clique em **Configurar** no cartão **Remoto do rclone**.
-2. Escolha o **Tipo do remoto** e clique em **Continuar**.
+2. Escolha o **Tipo do remoto** na lista, separada em quatro grupos, e clique em **Continuar**.
 
 <a href="imagens/destinos-rclone.png"><img src="imagens/destinos-rclone.png" alt="Formulário Remoto do rclone do tipo SFTP, preenchido com um servidor de exemplo: a pasta no remoto copias, o nome Servidor de arquivos, a caixa Ligado, a pasta enviada olt-centro, o intervalo de 60 minutos e, no acesso do remoto, o servidor, a porta em branco, o usuário, a senha mascarada e os campos Chave privada, Frase da chave privada e Chave pública do servidor em branco, a explicação do caminho do arquivo no remoto, o campo Sua senha atual e os botões Gravar e Cancelar" width="100%"></a>
 
@@ -1280,7 +1280,11 @@ O rclone é o programa de envio de arquivos que vem dentro da imagem do painel. 
 | Chave pública do servidor | Não | Uma por linha, como no arquivo de servidores conhecidos do SSH; em branco, o **Testar** guarda a que o servidor apresentar |
 | Sua senha atual | Sim | A senha de quem está na sessão, para gravar o destino |
 
-Os campos do acesso mudam com o tipo. Os do WebDAV e os das nuvens estão em [Painel web](../painel.md#destinos).
+Os campos do acesso mudam com o tipo. Os dos outros 40 tipos estão em [Painel web](../painel.md#destinos). O formulário de cada tipo traz só os campos dele e, quando a conta tem alguma condição, o aviso dela. O do Mega, por exemplo, pede o usuário e a senha:
+
+<a href="imagens/destinos-rclone-mega.png"><img src="imagens/destinos-rclone-mega.png" alt="Formulário do remoto do rclone do tipo Mega, preenchido com uma conta de exemplo: a pasta no remoto copias, o nome Nuvem de arquivos, a caixa Ligado, a pasta enviada olt-centro, o intervalo de 60 minutos e, no acesso do remoto, o aviso de que conta com verificação em duas etapas não serve de destino, o usuário e a senha mascarada, a explicação do caminho do arquivo no remoto, o campo Sua senha atual e os botões Gravar e Cancelar" width="100%"></a>
+
+<sub><b>v1.10.0</b> · menu Destinos, formulário do remoto Mega, com uma conta de exemplo que não foi gravada · captura de 2026-10-12</sub>
 
 <a href="imagens/destinos-rclone-gravado.png"><img src="imagens/destinos-rclone-gravado.png" alt="Aba Destinos com o aviso Destino gravado, vale a partir da próxima passada, os botões Novo S3, Novo remoto e Novo bot no alto e o cartão Remoto do rclone: Servidor de arquivos com a etiqueta falta testar, o aviso de que o painel ainda não guardou a chave deste servidor e que até o Testar nada é enviado, o tipo SFTP, a pasta no remoto copias, a pasta enviada olt-centro, as passadas a cada 60 minutos, Copiar depois do envio, o acesso gravado sem aparecer na tela e a última passada como nenhuma ainda, ao lado dos cartões Armazenamento S3 e Bot do Telegram" width="100%"></a>
 
@@ -1298,7 +1302,10 @@ Os campos do acesso mudam com o tipo. Os do WebDAV e os das nuvens estão em [Pa
 |---|---|
 | Remoto SFTP sem o **Testar** | Nada é enviado: o painel ainda não guardou a chave do servidor |
 | Chave do servidor diferente da guardada | O envio para, e o cartão diz o motivo; se a troca foi do próprio servidor, grave o acesso de novo e teste |
-| Google Drive, OneDrive, Dropbox e pCloud | O token da conta é obtido fora do painel, com o comando `rclone authorize` em um computador com navegador, e colado no campo **Token da conta** |
+| Tipo que pede o **Token da conta**, como Google Drive, OneDrive, Dropbox, pCloud e Box | O token é obtido fora do painel, com o comando `rclone authorize` que a tela mostra, em um computador com navegador, e colado no campo **Token da conta** |
+| Remoto FTP | Só envia com TLS, explícito ou implícito, e com o certificado do servidor conferido |
+| Mega e Proton Drive com verificação em duas etapas | A conta não serve de destino: o painel não tem como informar o código a cada envio |
+| Tipo de bucket, como Backblaze B2 e Azure Blob Storage | A **Pasta no remoto** é obrigatória e começa pelo nome do bucket ou do contêiner, que já precisa existir |
 | **Alterar** | O acesso gravado não volta para a tela: em branco, continua o gravado; para trocar qualquer parte dele, preencha o acesso inteiro de novo |
 | Tipo do remoto | Fica fixo depois de gravado: para outro tipo, crie outro destino |
 | Caminho no remoto | O mesmo que o arquivo tem dentro dos dados, a partir da pasta no remoto; grava por cima do que tiver o mesmo nome |
@@ -1465,7 +1472,7 @@ O funcionamento completo está em [Cópia do sistema para o S3](../painel.md#cop
 
 - Rotas `GET /destinos`, `GET` e `POST /destinos/s3`, `/destinos/rclone` e `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `GET` e `POST /destinos/arquivo`, `GET` e `POST /destinos/remover`, `GET` e `POST /destinos/copia` e `POST /destinos/copia/agora`. Todo `POST` leva o token da sessão; gravar e remover pedem também a senha atual. Para o usuário do FTP, todas respondem `404`.
 - A configuração fica em `DATA_DIR/painel/destinos/<destino>.conf` e o andamento, em `<destino>.estado`. Os segredos ficam em `SECRETS_DIR/destinos`, um por arquivo, com modo `0600`, e não voltam para a tela, para a aba Log nem para a auditoria.
-- O painel só sai do servidor por HTTPS, com o certificado conferido, e não segue redirecionamento. No remoto SFTP do rclone, sai por SSH, com a chave do servidor conferida.
+- O painel só sai do servidor por HTTPS, com o certificado conferido, e não segue redirecionamento. Pelo remoto do rclone, sai também por FTP com TLS, com o certificado conferido, e, no SFTP, por SSH, com a chave do servidor conferida.
 - Os eventos `destino_gravado`, `destino_teste`, `destino_pedido`, `destino_arquivo`, `destino_enviado`, `destino_falhou`, `destino_pulado` e `destino_removido`, e os da cópia do sistema, `copia_gravada`, `copia_pedida`, `copia_enviada`, `copia_falhou` e `copia_sem_destino`, ficam na [auditoria](../painel.md#auditoria).
 - Com `PAINEL_DESTINOS=nao` no `.env`, a aba sai do menu e nenhuma passada acontece: veja [Configuração](../configuracao.md#painel).
 - O funcionamento completo está em [Destinos: S3, rclone e bot do Telegram](../painel.md#destinos), e o da cópia do sistema, em [Cópia do sistema para o S3](../painel.md#copia-do-sistema).

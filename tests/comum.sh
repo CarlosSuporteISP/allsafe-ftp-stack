@@ -7,8 +7,8 @@
 # ------------------------------------------------------------------ remoção da instância de teste
 derrubar() {
   local arquivo nome
-  # O serviço de exemplo dos destinos e o servidor de teste do rclone ficam na rede da instância: saem antes dela.
-  docker rm -f "$NOME-simulador" "$NOME-remoto" > /dev/null 2>&1
+  # O serviço de exemplo dos destinos e os servidores de teste do rclone ficam na rede da instância: saem antes dela.
+  docker rm -f "$NOME-simulador" "$NOME-remoto" "$NOME-ftp36" > /dev/null 2>&1
   for arquivo in "$ENVB" "$ENVA"; do
     [[ -f "$arquivo" ]] && ENV_FILE="$arquivo" ./deploy.sh --remover --apagar-dados --sim < /dev/null > /dev/null 2>&1
   done
@@ -215,8 +215,8 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
   printf '%-9s %s → %s\n' "$tipo" "$resultado" "$arquivo"
 }
 declare -A ESPERADOS=(
-  [testes]="$(seq -s ' ' 1 104)"
-  [seguranca]="$(seq -s ' ' 1 148)"
+  [testes]="$(seq -s ' ' 1 106)"
+  [seguranca]="$(seq -s ' ' 1 151)"
   [rede]="$(seq -s ' ' 1 14)"
 )
 ARQUIVOS=()

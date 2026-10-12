@@ -11,7 +11,7 @@
 
 Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Version](https://img.shields.io/badge/version-1.9.0-blue)
+![Version](https://img.shields.io/badge/version-1.10.0-blue)
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
 ![Support](https://img.shields.io/badge/support-LTS-blue)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -103,7 +103,7 @@ There are **three containers**: the FTP server, the panel and **nginx**, the onl
 | **Second factor at the panel sign-in** | Required by default for every account of the panel, administrator and FTP user: after the password, the panel asks for the six-digit code of an authenticator app (TOTP). Whoever has not set it up yet does it at the sign-in itself, from a QR code. Panel only: the FTP does not change |
 | **Files in the browser** | The administrator browses, uploads, downloads, renames and deletes; the owner of the files signs in with the FTP user and password, sees only their own folder and does what their profile allows. Uploading through the panel depends on a permission given to each user |
 | **Automatic cleanup** | Per account, the administrator tells the panel to keep only the last files of each folder or only those of the last days; the panel deletes the rest by itself, from time to time. Off by default |
-| **Sending to S3, rclone and Telegram bot** | In the Destinations tab, the administrator connects a folder to an S3 storage, for the second copy or to keep the files elsewhere and free the disk, to an rclone remote, for what S3 does not reach (an SFTP or WebDAV server, or a file cloud), and to a Telegram bot, which delivers within moments each file that arrives to a person, a group or a channel, up to the size the bot accepts. Each type accepts up to 20 destinations, and a new destination can use the access of another one, for another folder, another bucket or another group. The bot only sends and the rclone remote only receives. In the Files tab, a button sends one file right away. The copy of the whole system, encrypted, goes to an S3 by the button or by schedule. Nothing is deleted in the destination. No settings by default |
+| **Sending to S3, rclone and Telegram bot** | In the Destinations tab, the administrator connects a folder to an S3 storage, for the second copy or to keep the files elsewhere and free the disk, to an rclone remote, for what S3 does not reach (a file server, a file cloud, the storage of a cloud provider or a file transfer service, in 41 types), and to a Telegram bot, which delivers within moments each file that arrives to a person, a group or a channel, up to the size the bot accepts. Each type accepts up to 20 destinations, and a new destination can use the access of another one, for another folder, another bucket or another group. The bot only sends and the rclone remote only receives. In the Files tab, a button sends one file right away. The copy of the whole system, encrypted, goes to an S3 by the button or by schedule. Nothing is deleted in the destination. No settings by default |
 | **Server health in the panel** | The Server tab shows the three containers of the stack, each with what it uses of processor, memory and processes against what was allocated to it, and the processor, the memory, the disk and the FTP network of the server, with the history of the last minutes |
 | **nginx in front of the panel** | Only nginx publishes the panel port: TLS 1.2 and 1.3, HTTP/2, list of allowed networks, limit of requests and of connections per address; the panel has no network port |
 | **Hardened containers** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, CPU, memory and PID limits; nginx runs without `root` and without any `capability` |
@@ -670,7 +670,7 @@ The safest path for each decision of whoever installs, as a flowchart, is in [be
 | Check the running installation | `./scripts/validate.sh --runtime` | the same, plus `servico ftp: running, healthy`, likewise for `painel` and `nginx`, and the initial user in PureDB or removed by the administrator |
 | Run the full suite: functional, security and network | `./tests/testar.sh` | one line per case and, at the end, `Bateria aprovada: nenhum desvio.` |
 
-The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 104 functional cases, 148 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
+The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 106 functional cases, 151 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
 
 ---
 

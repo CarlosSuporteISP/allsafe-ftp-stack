@@ -502,7 +502,7 @@ PAINEL_ACESSO_USUARIOS_FTP=nao
 
 ## ☁️ Destinos: S3, rclone e bot do Telegram
 
-Na aba **Destinos**, o administrador liga pastas dos dados a lugares fora do servidor, e o painel passa a enviar sozinho o que chega nelas. São três tipos de destino: o **armazenamento S3**, para ter a segunda cópia ou para guardar os arquivos fora e liberar o disco, o **remoto do rclone**, para o que o S3 não alcança (um servidor SFTP ou WebDAV, ou uma nuvem de arquivos), e o **bot do Telegram**, que entrega cada arquivo novo a uma pessoa, a um grupo ou a um canal. Cada tipo aceita até 20 destinos, cada um com a pasta, o intervalo e os segredos dele, e um não depende do outro. A aba vem sem nenhum: enquanto o administrador não gravar um, nada sai do servidor. Só administrador abre a aba.
+Na aba **Destinos**, o administrador liga pastas dos dados a lugares fora do servidor, e o painel passa a enviar sozinho o que chega nelas. São três tipos de destino: o **armazenamento S3**, para ter a segunda cópia ou para guardar os arquivos fora e liberar o disco, o **remoto do rclone**, para o que o S3 não alcança (um servidor de arquivos, uma nuvem de arquivos, o armazenamento de um provedor de nuvem ou um serviço de transferência de arquivos, em 41 tipos), e o **bot do Telegram**, que entrega cada arquivo novo a uma pessoa, a um grupo ou a um canal. Cada tipo aceita até 20 destinos, cada um com a pasta, o intervalo e os segredos dele, e um não depende do outro. A aba vem sem nenhum: enquanto o administrador não gravar um, nada sai do servidor. Só administrador abre a aba.
 
 | Destino | O que envia | Quando | O que fica no servidor |
 |---|---|---|---|
@@ -532,7 +532,7 @@ flowchart LR
     subgraph FORA["Fora do servidor"]
         bot@{ shape: cloud, label: "bot do Telegram<br>conversa que recebe" }
         s3@{ shape: bucket, label: "bucket S3<br>Copiar ou Guardar no S3" }
-        remoto@{ shape: cloud, label: "remoto do rclone<br>SFTP, WebDAV ou nuvem" }
+        remoto@{ shape: cloud, label: "remoto do rclone<br>servidor, nuvem ou serviço de arquivos" }
     end
     subgraph RESULTADO["Resultado"]
         confirmou@{ shape: diam, label: "o destino<br>confirmou?" }
@@ -549,7 +549,7 @@ flowchart LR
     inteiro -- "4c · sim: remoto do rclone" --> rclone
     https -- "5a · envia a mensagem, HTTPS" ---> bot
     https -- "5b · grava o objeto, HTTPS" ---> s3
-    rclone -- "5c · grava o arquivo, HTTPS ou SSH" ---> remoto
+    rclone -- "5c · grava o arquivo, HTTPS, SSH ou FTP com TLS" ---> remoto
     bot -- "6a · responde" --> confirmou
     s3 -- "6b · responde" --> confirmou
     remoto -- "6c · responde" --> confirmou
@@ -572,7 +572,7 @@ flowchart LR
 | 4c | arquivo chegou inteiro? ➜ rclone | Sim, com remoto do rclone: o painel chama o rclone, um arquivo por vez, só para gravar |
 | 5a | saída por HTTPS ➜ bot do Telegram | O bot entrega o arquivo à conversa, em uma mensagem; acima do limite do bot vai só o aviso |
 | 5b | saída por HTTPS ➜ bucket S3 | O painel grava o objeto no bucket, em partes quando é grande |
-| 5c | rclone ➜ remoto do rclone | O rclone grava o arquivo na pasta do remoto, por HTTPS ou, no SFTP, por SSH com a chave do servidor conferida |
+| 5c | rclone ➜ remoto do rclone | O rclone grava o arquivo na pasta do remoto: por HTTPS ou por FTP com TLS, com o certificado conferido, ou, no SFTP, por SSH com a chave do servidor conferida |
 | 6a | bot do Telegram ➜ o destino confirmou? | O serviço do bot responde ao pedido |
 | 6b | bucket S3 ➜ o destino confirmou? | O serviço do S3 responde ao pedido |
 | 6c | remoto do rclone ➜ o destino confirmou? | O rclone termina e diz se gravou |
@@ -606,12 +606,12 @@ flowchart LR
 
 > ⚠️ **Trocar o endereço, o bucket, o prefixo, a forma do endereço ou a pasta recomeça do zero:** tudo o que está na pasta é enviado de novo, para o lugar novo.
 
-**Remoto do rclone.** O rclone é o programa de envio de arquivos que vem dentro da imagem do painel, em versão fixa. Por ele, a pasta vai para um servidor **SFTP** ou **WebDAV**, ou para uma conta do **Google Drive**, do **OneDrive**, do **Dropbox** ou do **pCloud**. Tudo é preenchido na tela: o painel não pede nada no terminal do servidor.
+**Remoto do rclone.** O rclone é o programa de envio de arquivos que vem dentro da imagem do painel, em versão fixa. Por ele, a pasta vai para um de **41 tipos de remoto**, em quatro grupos: **servidores de arquivos** (SFTP, WebDAV, FTP com TLS e Seafile), **nuvens de arquivos** (Google Drive, OneDrive, Dropbox, pCloud, Box, Mega e outras), **armazenamento de provedores de nuvem** (Azure, Backblaze B2, Google Cloud Storage e outros) e **transferência de arquivos para empresas**. Tudo é preenchido na tela: o painel não pede nada no terminal do servidor.
 
 1. Na aba Destinos, clique em **Configurar** no cartão **Remoto do rclone**.
-2. Escolha o **Tipo do remoto** e clique em **Continuar**.
+2. Escolha o **Tipo do remoto** na lista, que vem separada nos quatro grupos, e clique em **Continuar**.
 3. Preencha a **Pasta no remoto**, que é onde os arquivos são gravados (em branco é a pasta em que o remoto entra), a **Pasta enviada** e o **Intervalo entre as passadas**.
-4. Em **Acesso do remoto**, preencha os campos do tipo escolhido, como na tabela abaixo.
+4. Em **Acesso do remoto**, preencha os campos do tipo escolhido, como nas tabelas abaixo.
 5. Digite a sua senha e clique em **Gravar**.
 6. De volta à aba, clique em **Testar**.
 
@@ -624,17 +624,68 @@ flowchart LR
 | Dropbox | **Token da conta** | **Identificação do aplicativo** e **Segredo do aplicativo** |
 | pCloud | **Token da conta** | **Região da conta**, **Identificação do aplicativo** e **Segredo do aplicativo** |
 
+<details>
+<summary>Os outros 35 tipos de remoto — clique para expandir</summary>
+
+O nome é o que aparece na lista da tela, e o grupo é o da lista.
+
+| Tipo do remoto | Grupo | O que o acesso pede | Opcional |
+|---|---|---|---|
+| FTP | Servidores de arquivos | **Servidor**, **Usuário**, **Senha** e **Tipo de TLS** | **Porta** |
+| Seafile | Servidores de arquivos | **Endereço**, **Usuário** e **Biblioteca**; **Senha**, ou **Token de acesso**: uma forma só | **Senha da biblioteca** |
+| Box | Nuvens de arquivos | **Token da conta** | **Identificação do aplicativo**, **Segredo do aplicativo** e **Tipo da conta** |
+| Mega | Nuvens de arquivos | **Usuário** e **Senha** | — |
+| Proton Drive | Nuvens de arquivos | **Usuário** e **Senha** | **Senha da caixa de correio** |
+| Koofr | Nuvens de arquivos | **Serviço**, **Usuário** e **Senha** | **Endereço do serviço** |
+| Yandex Disk | Nuvens de arquivos | **Token da conta** | **Identificação do aplicativo** e **Segredo do aplicativo** |
+| Mail.ru Cloud | Nuvens de arquivos | **Usuário** e **Senha** | — |
+| HiDrive | Nuvens de arquivos | **Token da conta** | **Identificação do aplicativo** e **Segredo do aplicativo** |
+| Huawei Drive | Nuvens de arquivos | **Token da conta** | **Identificação do aplicativo** e **Segredo do aplicativo** |
+| Zoho WorkDrive | Nuvens de arquivos | **Token da conta** e **Região da conta** | **Identificação do aplicativo** e **Segredo do aplicativo** |
+| put.io | Nuvens de arquivos | **Token da conta** | **Identificação do aplicativo** e **Segredo do aplicativo** |
+| premiumize.me | Nuvens de arquivos | **Chave da API** | — |
+| OpenDrive | Nuvens de arquivos | **Usuário** e **Senha** | — |
+| Filen | Nuvens de arquivos | **E-mail da conta**, **Senha** e **Chave da API** | — |
+| 1Fichier | Nuvens de arquivos | **Chave da API** | — |
+| FileLu | Nuvens de arquivos | **Chave do rclone** | — |
+| Gofile | Nuvens de arquivos | **Token de acesso** | — |
+| Pixeldrain | Nuvens de arquivos | **Chave da API** | **Pasta de partida** |
+| Drime | Nuvens de arquivos | **Token de acesso** | — |
+| Linkbox | Nuvens de arquivos | **Token de acesso**, **E-mail da conta** e **Senha** | — |
+| Uloz.to | Nuvens de arquivos | **Token do aplicativo**, **Usuário** e **Senha** | — |
+| Shade FS | Nuvens de arquivos | **Identificação do drive** e **Chave da API** | — |
+| Azure Blob Storage | Armazenamento de provedores de nuvem | **Conta** e **Chave**, ou **Endereço com assinatura (SAS)**: uma forma só | — |
+| Azure Files | Armazenamento de provedores de nuvem | **Compartilhamento**; **Conta** e **Chave**, ou **Endereço com assinatura (SAS)**: uma forma só | — |
+| Backblaze B2 | Armazenamento de provedores de nuvem | **Identificação da conta ou da chave** e **Chave de aplicação** | — |
+| Google Cloud Storage | Armazenamento de provedores de nuvem | **Token da conta**, ou **Credencial da conta de serviço**: uma forma só | **Identificação do aplicativo**, **Segredo do aplicativo** e **Bucket com acesso uniforme** |
+| OpenStack Swift | Armazenamento de provedores de nuvem | **Endereço de autenticação**, **Usuário** e **Senha ou chave** | **Versão da autenticação**, **Domínio do usuário**, **Projeto**, **Domínio do projeto** e **Região** |
+| QingStor | Armazenamento de provedores de nuvem | **Chave de acesso** e **Chave secreta** | **Zona** e **Endereço do serviço** |
+| Storj | Armazenamento de provedores de nuvem | **Concessão de acesso** | — |
+| Akamai NetStorage | Armazenamento de provedores de nuvem | **Servidor**, **Conta** e **Chave** | — |
+| Files.com | Transferência de arquivos para empresas | **Site**; **Chave da API**, ou **Usuário** e **Senha**: uma forma só | — |
+| Quatrix | Transferência de arquivos para empresas | **Servidor** e **Chave da API** | — |
+| Citrix ShareFile | Transferência de arquivos para empresas | **Token da conta** e **Endereço do serviço** | **Identificação do aplicativo**, **Segredo do aplicativo** e **Pasta de partida** |
+| Enterprise File Fabric | Transferência de arquivos para empresas | **Endereço** e **Token permanente** | **Pasta de partida** |
+
+</details>
+
 **Resultado esperado:** a aba volta com o aviso **Destino gravado**, e o cartão mostra a marca **ligado**, o tipo do remoto, a pasta no remoto, a pasta enviada e que o acesso está gravado, sem mostrá-lo. O **Testar** grava um arquivo pequeno, `allsafe-ftp-stack-teste.txt`, na pasta do remoto e responde **Teste concluído: o destino recebeu**. A primeira passada começa em até um minuto e envia tudo o que já está na pasta; a linha **Última passada** diz quantos arquivos saíram.
 
 - **O remoto só recebe.** O painel pede ao rclone que grave cada arquivo, e nada mais: não lista, não baixa, não sincroniza e não apaga nada no remoto. O arquivo continua no servidor.
 - **SFTP pede o Testar antes do primeiro envio.** O cartão fica com a marca **falta testar** até o teste guardar a chave que o servidor apresentar. Depois dele, a linha **Chave do servidor** mostra a impressão digital dessa chave: confira com a do servidor. Sem a chave guardada nada é enviado, e, se ela mudar depois, o envio para com o motivo na tela.
-- **O token das nuvens é obtido fora do painel**, em um computador com navegador e com o rclone: o comando `rclone authorize` seguido do tipo (`drive`, `onedrive`, `dropbox` ou `pcloud`) abre a página da conta e imprime o token, que é colado no campo **Token da conta**. O painel não abre essa página. Depois de gravado, o painel guarda sozinho o token que o serviço renova.
+- **O token das nuvens é obtido fora do painel**, em um computador com navegador e com o rclone: o comando `rclone authorize` seguido do tipo abre a página da conta e imprime o token, que é colado no campo **Token da conta**. Vale para os doze tipos que pedem esse campo (`drive`, `onedrive`, `dropbox`, `pcloud`, `box`, `yandex`, `hidrive`, `huaweidrive`, `zoho`, `putio`, `gcs` e `sharefile`), e a tela de cada um mostra o comando pronto. O painel não abre essa página. Depois de gravado, o painel guarda sozinho o token que o serviço renova.
 - **O tipo fica fixo depois de gravado.** Para outro tipo, crie outro destino.
 - **O acesso não volta para a tela.** Em **Alterar**, os campos do acesso em branco mantêm o gravado; para trocar qualquer parte dele, preencha o acesso inteiro de novo. No SFTP, o acesso gravado de novo sem a **Chave pública do servidor** pede outro **Testar**.
 - **O caminho no remoto é o mesmo dos dados.** `backups/roteador/config.rsc`, com a pasta no remoto `copias`, vira `copias/backups/roteador/config.rsc`, e grava por cima do que tiver o mesmo nome. O arquivo de teste fica no remoto.
-- **Certificado conferido.** No WebDAV e nas nuvens, o painel só fala HTTPS com o certificado conferido. Servidor WebDAV com autoridade da própria rede usa o mesmo `ca.pem` do S3, descrito mais abaixo.
+- **Certificado conferido.** No WebDAV, no Seafile e nos serviços de nuvem, o painel só fala HTTPS com o certificado conferido; no Mega, em que o padrão do rclone é transferir por HTTP, o painel fixa o HTTPS. Servidor com autoridade da própria rede usa o mesmo `ca.pem` do S3, descrito mais abaixo.
+- **FTP só com TLS.** O remoto FTP só envia com TLS, **explícito** (o comum, na porta 21) ou **implícito** (em geral na porta 990), e com o certificado do servidor conferido. Servidor FTP sem TLS não serve de destino.
+- **Tipos de bucket: a pasta no remoto começa pelo bucket.** No Azure Blob Storage, no Backblaze B2, no Google Cloud Storage, no OpenStack Swift, no QingStor e no Storj, a **Pasta no remoto** é obrigatória e começa pelo nome do bucket ou do contêiner, que já precisa existir: `bucket/pasta`. O painel não cria bucket. No Seafile, a **Biblioteca** também já precisa existir.
+- **Conta com verificação em duas etapas.** No Mega e no Proton Drive, a conta que pede um código a cada entrada não serve de destino: o painel não tem como informar o código a cada envio. No Seafile, ela entra só com o **Token de acesso**. No Koofr e no Mail.ru Cloud, a senha é uma senha de aplicativo, criada na conta para este uso.
+- **Usuário e senha: uma entrada por arquivo.** Nos tipos que entram com usuário e senha, cada arquivo enviado é uma entrada nova na conta. Pasta com muitos arquivos pequenos pode esbarrar no limite de entradas do serviço.
+- **Storj: protocolo e endereço do próprio serviço.** O Storj não fala HTTPS: usa o protocolo cifrado dele, e o endereço do serviço vem dentro da **Chave de acesso**, sem passar pela conferência de endereço do painel.
+- **O que não entra.** O rclone desta versão tem 69 tipos, e 28 ficam de fora: os que embrulham outro remoto ou gravam no próprio servidor, os que só leem, o que só guarda foto e vídeo, os que publicam o que recebem, os que só abrem a conta com entrada interativa ou com arquivo no servidor, e o SMB, o HDFS e o Sia, que não têm como conferir o servidor ou cifrar a conexão do jeito que o painel exige. Armazenamento compatível com S3 usa o destino **Armazenamento S3**.
 
-> ⚠️ **Trocar a pasta no remoto, a pasta enviada ou o lugar do acesso recomeça do zero:** tudo o que está na pasta é enviado de novo, para o lugar novo. O lugar do acesso é o servidor, a porta e o usuário, no SFTP; o endereço e o usuário, no WebDAV; e, nas nuvens, a pasta de partida, o drive ou a região da conta.
+> ⚠️ **Trocar a pasta no remoto, a pasta enviada ou o lugar do acesso recomeça do zero:** tudo o que está na pasta é enviado de novo, para o lugar novo. O lugar do acesso é o servidor, a porta e o usuário, no SFTP e no FTP; o endereço e o usuário, no WebDAV; e, nos outros tipos, o que diz qual é a conta e onde ela guarda: o usuário, o endereço, a biblioteca, a pasta de partida, o drive ou a região da conta.
 
 **Bot do Telegram.** Antes de começar, crie o bot no criador de bots do Telegram e guarde o token que ele entrega. Ponha o bot no grupo ou no canal que vai receber; para uma pessoa, ela precisa ter iniciado a conversa com o bot.
 
@@ -660,7 +711,7 @@ O maior arquivo que o bot envia de uma vez é o de [`PAINEL_TELEGRAM_MAX_MB`](co
 **Resultado esperado:** a aba volta com o aviso **Destino gravado** e um cartão a mais, com o tipo e o nome dado, como **Armazenamento S3: Clientes**. O segredo deixado em branco é copiado do destino de origem dentro do servidor, sem passar pelo navegador, e o **Testar** do cartão novo confirma que ele vale. O remoto SFTP criado assim leva junto a chave do servidor já guardada, e não pede outro teste.
 
 - **Novo S3**, **Novo remoto** e **Novo bot** abrem o formulário em branco, para um destino com outras chaves, com outro remoto ou com outro bot.
-- Dois destinos não levam a mesma pasta, ou uma pasta de dentro dela, ao mesmo lugar: o painel recusa com **Este destino já existe**. O mesmo lugar é o mesmo endereço, bucket e prefixo, no S3; o mesmo tipo de remoto, servidor, usuário e pasta no remoto, no rclone; e o mesmo bot com a mesma conversa, no Telegram.
+- Dois destinos não levam a mesma pasta, ou uma pasta de dentro dela, ao mesmo lugar: o painel recusa com **Este destino já existe**. O mesmo lugar é o mesmo endereço, bucket e prefixo, no S3; o mesmo tipo de remoto, com o mesmo lugar do acesso e a mesma pasta no remoto, no rclone (no tipo que entra só com chave ou token, o tipo e a pasta no remoto); e o mesmo bot com a mesma conversa, no Telegram.
 - Cada tipo aceita até 20 destinos. Com os 20 gravados, os botões de destino novo somem até um ser removido.
 - Cada destino tem o andamento dele: alterar, testar ou remover um não mexe nos outros.
 - O bot novo envia só o que chegar depois de gravado; o S3 novo e o remoto do rclone novo enviam tudo o que já está na pasta.
@@ -762,7 +813,7 @@ docker compose exec -T painel sh -c 'cat > /painel/destinos/ca.pem' < autoridade
 - **Um arquivo só:** o `POST /destinos/arquivo` abre o arquivo com as mesmas conferências da aba Arquivos (`400`, `403` ou `404` para caminho fora da regra, link simbólico, pasta ou arquivo que não existe) e envia em uma linha de execução própria. A tela espera até 20 s; depois disso, o envio segue sozinho. Não lê nem grava o andamento das passadas. Arquivo que muda durante o envio responde com o motivo, para ser repetido.
 - **Saída do painel:** o [`saida.py`](../../painel/saida.py) é a única porta por onde o painel fala com alguém de fora da stack. Só HTTPS, com TLS 1.2 ou mais novo e o certificado conferido contra as autoridades da imagem e contra a de `ca.pem`, quando existe. O nome é resolvido uma vez, e a conexão vai para o endereço que foi conferido. O painel não sai para o próprio container, para endereço de enlace, de grupo ou reservado, e não segue redirecionamento. Cada operação de rede tem 30 s de prazo.
 - **S3:** o [`s3.py`](../../painel/s3.py) assina cada pedido com a assinatura versão 4, com o SHA-256 do corpo dentro dela. Arquivo de até 32 MiB vai em um pedido; acima disso, em partes de 16 MiB ou mais, e o envio em partes é abandonado no destino quando falha. O painel só grava: não lê, não lista e não apaga nada no bucket, e a chave só precisa de `s3:PutObject` e `s3:AbortMultipartUpload`. A lista do que pode sair está no próprio `s3.py`: gravar um objeto, abrir, enviar e concluir um envio em partes, e desfazer um envio em partes que não terminou. Qualquer outro pedido é recusado antes de sair do painel, venha da tela, da rotina ou do terminal. Gravar de novo na mesma chave substitui o objeto: para guardar o que havia antes, ligue as versões no bucket. Arquivo maior que 5 TiB conta como ignorado.
-- **rclone:** o [`rclone.py`](../../painel/rclone.py) chama o binário `/usr/local/bin/rclone` da imagem, com versão e soma SHA-256 fixas no `Dockerfile`; nada é baixado nem atualizado em execução. Do rclone saem dois subcomandos, e nenhum outro: `rcat`, que grava no remoto o que recebe pela entrada padrão, e `obscure`, que cifra a senha para o arquivo do remoto. Listar, baixar, mover, sincronizar e apagar não estão na lista e são recusados antes de existir um processo, venha o pedido da tela, da rotina ou do terminal. O arquivo do remoto é montado a partir de uma lista fechada de tipos, de campos e da forma de cada valor: o que o rclone tem de perigoso para quem escreve a configuração (comando a executar, arquivo a ler, proxy, certificado sem conferência, remoto que embrulha outro, pasta local) não está na lista. O arquivo é conferido de novo a cada leitura, pela mesma lista: alterado por fora, o destino fica sem acesso e o rclone não é chamado. O rclone trabalha em uma cópia do arquivo, em `/tmp/rclone`, com o modo `0600`, apagada depois de cada execução; dela o painel só guarda o token renovado das nuvens e, no teste do SFTP, a chave do servidor. A senha entra pela entrada padrão do `obscure`, nunca pela linha de comando, e a lista de processos mostra só o caminho da cópia e o do arquivo no remoto. Um rclone por vez, com `GOMAXPROCS=2` e `GOMEMLIMIT=64MiB`, dentro dos limites do container do painel. O nome é resolvido antes, e o painel não chama o rclone para o próprio container nem para endereço de enlace, de grupo ou reservado. Cada operação de rede tem o prazo de 30 s, o teste inteiro tem 20 s, e uma operação que falha é repetida até três vezes dentro do mesmo envio. O texto de erro do rclone serve só para escolher o motivo, em uma palavra: ele pode trazer servidor, usuário e caminho, e não vai para a tela, para o Log nem para a auditoria. No SFTP, o rclone não abre terminal no servidor nem pede a ele a soma do arquivo.
+- **rclone:** o [`rclone.py`](../../painel/rclone.py) chama o binário `/usr/local/bin/rclone` da imagem, com versão e soma SHA-256 fixas no `Dockerfile`; nada é baixado nem atualizado em execução. Do rclone saem dois subcomandos, e nenhum outro: `rcat`, que grava no remoto o que recebe pela entrada padrão, e `obscure`, que cifra a senha para o arquivo do remoto. Listar, baixar, mover, sincronizar e apagar não estão na lista e são recusados antes de existir um processo, venha o pedido da tela, da rotina ou do terminal. O arquivo do remoto é montado a partir de uma lista fechada de 41 tipos, dos campos de cada um e da forma de cada valor: o que o rclone tem de perigoso para quem escreve a configuração (comando a executar, arquivo a ler, proxy, certificado sem conferência, remoto que embrulha outro, pasta local) não está na lista. Em alguns tipos o painel escreve por conta própria o que o administrador não escolhe: o TLS, no FTP; o HTTPS nas transferências, no Mega; o tamanho e o número de pedaços do envio, onde ele é feito em pedaços, para caber na memória do painel; e, no Azure Blob Storage e no Google Cloud Storage, que o rclone não confere nem cria o contêiner ou o bucket. O arquivo é conferido de novo a cada leitura, pela mesma lista e com esses valores: alterado por fora, o destino fica sem acesso e o rclone não é chamado. O rclone trabalha em uma cópia do arquivo, em `/tmp/rclone`, com o modo `0600`, apagada depois de cada execução; dela o painel só guarda o token renovado das nuvens e, no teste do SFTP, a chave do servidor. A senha entra pela entrada padrão do `obscure`, nunca pela linha de comando, e a lista de processos mostra só o caminho da cópia e o do arquivo no remoto. Um rclone por vez, com `GOMAXPROCS=2` e `GOMEMLIMIT=64MiB`, dentro dos limites do container do painel. Nos 14 tipos em que o administrador escolhe o servidor, o nome é resolvido antes, e o painel não chama o rclone para o próprio container nem para endereço de enlace, de grupo ou reservado; nos outros, o endereço é o do próprio serviço, e, no Storj, vem dentro da chave de acesso. Cada operação de rede tem o prazo de 30 s, o teste inteiro tem 20 s, e uma operação que falha é repetida até três vezes dentro do mesmo envio. O texto de erro do rclone serve só para escolher o motivo, em uma palavra: ele pode trazer servidor, usuário e caminho, e não vai para a tela, para o Log nem para a auditoria. No SFTP, o rclone não abre terminal no servidor nem pede a ele a soma do arquivo.
 - **Guardar no S3:** o arquivo só é apagado depois de o destino confirmar a gravação, e só se não mudou desde o envio. Quando outro destino ligado leva o mesmo arquivo, bot, remoto do rclone ou S3, o apagamento espera por ele. Com esse outro parado, os arquivos já gravados esperam em uma fila de até 20.000; cheia, o S3 que guarda para de enviar até o outro voltar.
 - **Telegram:** o [`telegram.py`](../../painel/telegram.py) só chama `sendDocument` e `sendMessage`, sempre por `POST`, no endereço de `PAINEL_TELEGRAM_API`; qualquer outra operação da API de bot, como a de apagar mensagem, é recusada antes de sair do painel. Entre um envio e o seguinte há uma pausa de 3 s. Quando a API pede para ir mais devagar, o painel espera o tempo pedido, até 30 s, e repete o envio uma vez. Arquivo que a API recusa pelo tamanho, mesmo abaixo de `PAINEL_TELEGRAM_MAX_MB`, vira aviso.
 - **Arquivo que o destino recusa:** resposta `4xx` que não é de permissão, de prazo (`408`) nem de pressa (`429`), na terceira passada seguida com o mesmo arquivo, deixa esse arquivo para trás, para os seguintes saírem, e grava `destino_pulado`.
@@ -1316,7 +1367,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 | Pastas dos usuários | Cada usuário do FTP fica preso (`chroot`) na pasta do cadastro; a pasta escolhida não sai de `DATA_DIR/dados` nem passa por link simbólico; pasta alcançada por mais de um usuário aparece marcada como **dividida** |
 | Formulários | Token CSRF por sessão e conferência de `Origin`: o envio tem de partir do próprio painel; corpo limitado a 8 KiB, menos no envio de arquivo, que tem as duas rotas dele e o teto de `PAINEL_ENVIO_MAX_MB` |
 | Idioma | A troca é um formulário como os outros, com token e `Origin`; o cookie do idioma só leva `pt`, `en` ou `es` e não vale como sessão; a volta depois da troca só leva a tela do próprio painel |
-| Destinos de fora | Só o administrador configura, com a senha atual, e só ele manda um arquivo pelo botão da aba Arquivos; o painel sai só por HTTPS, com o certificado conferido, ou, no remoto SFTP do rclone, por SSH com a chave do servidor conferida, e não vai para o próprio container nem para endereço reservado; o rclone só grava: listar, baixar, mover, sincronizar e apagar são recusados antes de existir um processo; as chaves do S3, o acesso do remoto do rclone, o token do bot e a conversa ficam em arquivos `0600` e nunca voltam para a tela nem para a auditoria; o bot só envia: o painel não lê a conversa nem aceita comando; a cópia do sistema para o S3 sai cifrada com a chave pública, e a chave que a abre não chega ao painel; `PAINEL_DESTINOS=nao` desliga tudo |
+| Destinos de fora | Só o administrador configura, com a senha atual, e só ele manda um arquivo pelo botão da aba Arquivos; o painel sai só por HTTPS, com o certificado conferido, ou, pelo remoto do rclone, por FTP com TLS, também com o certificado conferido, por SSH com a chave do servidor conferida, no SFTP, e pelo protocolo cifrado do próprio serviço, no Storj, e não vai para o próprio container nem para endereço reservado; o rclone só grava: listar, baixar, mover, sincronizar e apagar são recusados antes de existir um processo; as chaves do S3, o acesso do remoto do rclone, o token do bot e a conversa ficam em arquivos `0600` e nunca voltam para a tela nem para a auditoria; o bot só envia: o painel não lê a conversa nem aceita comando; a cópia do sistema para o S3 sai cifrada com a chave pública, e a chave que a abre não chega ao painel; `PAINEL_DESTINOS=nao` desliga tudo |
 | Navegador | `Content-Security-Policy` sem script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS e `no-store`; a página não carrega nada de fora |
 | Containers | Raiz somente leitura, `cap_drop: ALL`, `no-new-privileges`, sem socket do Docker, limites de CPU, memória e processos; o nginx roda sem root e sem nenhuma capability |
 

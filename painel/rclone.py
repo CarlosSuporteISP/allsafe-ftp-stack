@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Envio de arquivo pelo rclone, para o que o S3 não cobre: SFTP, WebDAV e nuvens de arquivos.
+"""Envio de arquivo pelo rclone, para o que o S3 não cobre: servidores de arquivos (SFTP, WebDAV, FTP com TLS), nuvens
+de arquivos, armazenamento de objetos que não fala S3 e serviços de transferência para empresas.
 
 O painel só envia. Do rclone saem dois subcomandos, e nenhum outro: `rcat`, que grava no remoto o que recebe pela
 entrada padrão, e `obscure`, que cifra a senha para o arquivo de configuração. Copiar de volta, listar, mover,
@@ -9,8 +10,8 @@ terminal. O binário é o da imagem, com versão e soma fixas na construção; n
 A configuração do remoto é um segredo do destino, no formato do próprio rclone, e é montada aqui a partir de uma lista
 fechada: os tipos de CAMPOS, os campos de cada um e a forma de cada valor. O que o rclone tem de perigoso para quem
 escreve a configuração (comando a executar, arquivo a ler, proxy, certificado sem conferência, remoto que embrulha
-outro, pasta local) não está na lista e não entra. O arquivo é conferido de novo a cada leitura, pela mesma lista: o
-que não é exatamente o que o painel gravaria é recusado.
+outro, pasta local, endereço sem TLS) não está na lista e não entra. O arquivo é conferido de novo a cada leitura,
+pela mesma lista: o que não é exatamente o que o painel gravaria é recusado.
 
 O rclone nunca mexe no segredo: trabalha em uma cópia, em /tmp/rclone, apagada depois de cada execução. Da cópia o
 painel só aproveita o que o rclone tem motivo para mudar: o token renovado das nuvens e, no teste do SFTP, a chave do
@@ -46,6 +47,7 @@ ERRO_MAX = 65536                     # bytes guardados da saída de erro, para e
 ALVO_MAX = 1024                      # bytes do caminho de um arquivo no remoto
 PEM_MAX = 8000                       # caracteres de uma chave privada
 JSON_MAX = 6000                      # caracteres de um token ou de uma credencial de conta de serviço
+URIS_DO_TOKEN = ('https://oauth2.googleapis.com/token', 'https://accounts.google.com/o/oauth2/token')
 ARQ_TESTE = 'allsafe-ftp-stack-teste.txt'
 TESTE_TOTAL = 20                     # segundos do teste inteiro: depois disso o rclone é encerrado
 TENTATIVAS = 3                       # vezes que o rclone repete uma operação de rede dentro de um envio
@@ -55,10 +57,17 @@ AMBIENTE = {'PATH': '/usr/local/bin:/usr/bin:/bin', 'HOME': PASTA_TRABALHO, 'TMP
 
 NOME_DE_REDE = r'[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?'
 HOST = re.compile(NOME_DE_REDE + r'|[0-9A-Fa-f:]{3,39}')
+NOME = re.compile(NOME_DE_REDE)
+# O servidor e a pasta de partida, sem `..`.
+NOME_E_PASTA = re.compile(NOME_DE_REDE + r'(?:/[A-Za-z0-9][A-Za-z0-9._-]{0,63}){0,8}')
 USUARIO = re.compile(r'[A-Za-z0-9_][A-Za-z0-9._@+-]{0,127}')
 URL = re.compile(r'https://(' + NOME_DE_REDE + r')(?::([0-9]{1,5}))?'
                  r'((?:/(?:[A-Za-z0-9._~@+-]|%[0-9A-Fa-f]{2}){1,128}){0,12}/?)')
+# O endereço com assinatura: o mesmo começo de URL, e a assinatura depois da interrogação.
+URL_SAS = re.compile(r'https://(' + NOME_DE_REDE + r')(?::([0-9]{1,5}))?(?:/[A-Za-z0-9._~-]{1,128}){0,4}/?'
+                     r'\?[A-Za-z0-9%&=._~:+/-]{8,2048}')
 PORTADOR = re.compile(r'[A-Za-z0-9._~+/=-]{8,4096}')
+CHAVE = re.compile(r'[\x21-\x7e]{1,256}')            # senha ou chave que o serviço guarda em texto, sem espaço
 CLIENTE = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,127}')
 SEGREDO_DO_CLIENTE = re.compile(r'[A-Za-z0-9._~-]{1,128}')
 IDENTIFICACAO = re.compile(r'[A-Za-z0-9][A-Za-z0-9!_-]{0,127}')
@@ -76,17 +85,21 @@ PEM = re.compile(r'-----BEGIN ((?:[A-Z0-9]{1,12} ){0,2})PRIVATE KEY-----\n'
 # em que o usuário entra.
 PARTE = r'[A-Za-z0-9_](?:[A-Za-z0-9._ -]{0,62}[A-Za-z0-9._-])?'
 CAMINHO = re.compile(r'/?' + PARTE + r'(?:/' + PARTE + r'){0,15}')
+ROTULO = re.compile(PARTE)           # nome que o serviço deixa ter espaço: biblioteca, projeto, domínio
 CAMINHO_MAX = 255
 VALOR = re.compile(r'[\x21-\x7e](?:[\x20-\x7e]*[\x21-\x7e])?')   # qualquer valor gravado: uma linha de ASCII visível
 DESTINO = re.compile(r'[a-z0-9-]{1,32}')
 
 # Os tipos de remoto e os campos de cada um, na ordem em que são gravados: (nome, forma, regra, marcas). Formas:
 # texto (expressão), porta, escolha (lista), senha (cifrada pelo `obscure`), pem (chave privada, em uma linha), json
-# ('token' ou 'conta') e chaves (as do servidor SFTP). Marcas: `o` obrigatório, `l` faz parte do lugar para onde o
-# destino envia. Nenhum valor volta para a tela.
+# ('token' ou 'conta') e chaves (as do servidor SFTP). Marcas: `o` obrigatório; `l` faz parte do lugar para onde o
+# destino envia; `r` nomeia um servidor, conferido antes de cada conexão (conferir_rede); `s` é segredo em texto, que
+# a tela mostra como senha. Nenhum valor volta para a tela.
+APLICATIVO = (('client_id', 'texto', CLIENTE, ''), ('client_secret', 'texto', SEGREDO_DO_CLIENTE, 's'))
+COM_TOKEN = APLICATIVO + (('token', 'json', 'token', 'o'),)
 CAMPOS = {
     'sftp': (
-        ('host', 'texto', HOST, 'ol'),
+        ('host', 'texto', HOST, 'olr'),
         ('port', 'porta', None, 'l'),
         ('user', 'texto', USUARIO, 'ol'),
         ('pass', 'senha', None, ''),
@@ -95,48 +108,209 @@ CAMPOS = {
         ('host_keys', 'chaves', None, ''),
     ),
     'webdav': (
-        ('url', 'texto', URL, 'ol'),
+        ('url', 'texto', URL, 'olr'),
         ('vendor', 'escolha', ('other', 'nextcloud', 'owncloud', 'infinitescale', 'sharepoint', 'sharepoint-ntlm',
                                'fastmail', 'rclone'), ''),
         ('user', 'texto', USUARIO, 'l'),
         ('pass', 'senha', None, ''),
-        ('bearer_token', 'texto', PORTADOR, ''),
+        ('bearer_token', 'texto', PORTADOR, 's'),
     ),
-    'drive': (
-        ('client_id', 'texto', CLIENTE, ''),
-        ('client_secret', 'texto', SEGREDO_DO_CLIENTE, ''),
+    'ftp': (
+        ('host', 'texto', HOST, 'olr'),
+        ('port', 'porta', None, 'l'),
+        ('user', 'texto', USUARIO, 'ol'),
+        ('pass', 'senha', None, 'o'),
+        ('explicit_tls', 'escolha', ('true', 'false'), 'o'),
+    ),
+    'seafile': (
+        ('url', 'texto', URL, 'olr'),
+        ('user', 'texto', USUARIO, 'ol'),
+        ('pass', 'senha', None, ''),
+        ('auth_token', 'texto', PORTADOR, 's'),
+        ('library', 'texto', ROTULO, 'ol'),
+        ('library_key', 'senha', None, ''),
+    ),
+    'drive': APLICATIVO + (
         ('scope', 'escolha', ('drive', 'drive.file'), ''),
         ('token', 'json', 'token', ''),
         ('service_account_credentials', 'json', 'conta', ''),
         ('root_folder_id', 'texto', IDENTIFICACAO, 'l'),
         ('team_drive', 'texto', IDENTIFICACAO, 'l'),
     ),
-    'onedrive': (
-        ('client_id', 'texto', CLIENTE, ''),
-        ('client_secret', 'texto', SEGREDO_DO_CLIENTE, ''),
-        ('token', 'json', 'token', 'o'),
+    'onedrive': COM_TOKEN + (
         ('drive_id', 'texto', IDENTIFICACAO, 'ol'),
         ('drive_type', 'escolha', ('personal', 'business', 'documentLibrary'), 'o'),
         ('region', 'escolha', ('global', 'us', 'de', 'cn'), ''),
         ('tenant', 'texto', INQUILINO, ''),
     ),
-    'dropbox': (
-        ('client_id', 'texto', CLIENTE, ''),
-        ('client_secret', 'texto', SEGREDO_DO_CLIENTE, ''),
-        ('token', 'json', 'token', 'o'),
-    ),
-    'pcloud': (
-        ('client_id', 'texto', CLIENTE, ''),
-        ('client_secret', 'texto', SEGREDO_DO_CLIENTE, ''),
-        ('token', 'json', 'token', 'o'),
+    'dropbox': COM_TOKEN,
+    'pcloud': COM_TOKEN + (
         ('hostname', 'escolha', ('api.pcloud.com', 'eapi.pcloud.com'), 'l'),
     ),
+    'box': COM_TOKEN + (
+        ('box_sub_type', 'escolha', ('user', 'enterprise'), ''),
+    ),
+    'mega': (
+        ('user', 'texto', USUARIO, 'ol'),
+        ('pass', 'senha', None, 'o'),
+    ),
+    'protondrive': (
+        ('username', 'texto', USUARIO, 'ol'),
+        ('password', 'senha', None, 'o'),
+        ('mailbox_password', 'senha', None, ''),
+    ),
+    'koofr': (
+        ('provider', 'escolha', ('koofr', 'digistorage', 'other'), 'ol'),
+        ('endpoint', 'texto', URL, 'lr'),
+        ('user', 'texto', USUARIO, 'ol'),
+        ('password', 'senha', None, 'o'),
+    ),
+    'yandex': COM_TOKEN,
+    'mailru': (
+        ('user', 'texto', USUARIO, 'ol'),
+        ('pass', 'senha', None, 'o'),
+    ),
+    'hidrive': COM_TOKEN,
+    'huaweidrive': COM_TOKEN,
+    'zoho': COM_TOKEN + (
+        ('region', 'escolha', ('com', 'eu', 'in', 'jp', 'com.cn', 'com.au'), 'ol'),
+    ),
+    'putio': COM_TOKEN,
+    'premiumizeme': (
+        ('api_key', 'texto', PORTADOR, 'os'),
+    ),
+    'opendrive': (
+        ('username', 'texto', USUARIO, 'ol'),
+        ('password', 'senha', None, 'o'),
+    ),
+    'filen': (
+        ('email', 'texto', USUARIO, 'ol'),
+        ('password', 'senha', None, 'o'),
+        ('api_key', 'senha', None, 'o'),
+    ),
+    'fichier': (
+        ('api_key', 'texto', PORTADOR, 'os'),
+    ),
+    'filelu': (
+        ('key', 'texto', PORTADOR, 'os'),
+    ),
+    'gofile': (
+        ('access_token', 'texto', PORTADOR, 'os'),
+    ),
+    'pixeldrain': (
+        ('api_key', 'texto', PORTADOR, 'os'),
+        ('root_folder_id', 'texto', IDENTIFICACAO, 'l'),
+    ),
+    'drime': (
+        ('access_token', 'texto', PORTADOR, 'os'),
+    ),
+    'linkbox': (
+        ('token', 'texto', PORTADOR, 'os'),
+        ('email', 'texto', USUARIO, 'ol'),
+        ('password', 'senha', None, 'o'),
+    ),
+    'ulozto': (
+        ('app_token', 'texto', PORTADOR, 'os'),
+        ('username', 'texto', USUARIO, 'ol'),
+        ('password', 'senha', None, 'o'),
+    ),
+    'shade': (
+        ('drive_id', 'texto', IDENTIFICACAO, 'ol'),
+        ('api_key', 'texto', PORTADOR, 'os'),
+    ),
+    'azureblob': (
+        ('account', 'texto', CLIENTE, 'l'),
+        ('key', 'texto', PORTADOR, 's'),
+        ('sas_url', 'texto', URL_SAS, 'lrs'),
+    ),
+    'azurefiles': (
+        ('account', 'texto', CLIENTE, 'l'),
+        ('share_name', 'texto', CLIENTE, 'ol'),
+        ('key', 'texto', PORTADOR, 's'),
+        ('sas_url', 'texto', URL_SAS, 'lrs'),
+    ),
+    'b2': (
+        ('account', 'texto', CLIENTE, 'ol'),
+        ('key', 'texto', PORTADOR, 'os'),
+    ),
+    'gcs': APLICATIVO + (
+        ('token', 'json', 'token', ''),
+        ('service_account_credentials', 'json', 'conta', ''),
+        ('bucket_policy_only', 'escolha', ('true', 'false'), ''),
+    ),
+    'swift': (
+        ('auth', 'texto', URL, 'olr'),
+        ('auth_version', 'escolha', ('1', '2', '3'), ''),
+        ('user', 'texto', USUARIO, 'ol'),
+        ('key', 'texto', CHAVE, 'os'),
+        ('domain', 'texto', ROTULO, ''),
+        ('tenant', 'texto', ROTULO, 'l'),
+        ('tenant_domain', 'texto', ROTULO, ''),
+        ('region', 'texto', ROTULO, 'l'),
+    ),
+    'qingstor': (
+        ('access_key_id', 'texto', CLIENTE, 'ol'),
+        ('secret_access_key', 'texto', PORTADOR, 'os'),
+        ('zone', 'texto', CLIENTE, 'l'),
+        ('endpoint', 'texto', URL, 'lr'),
+    ),
+    'storj': (
+        ('access_grant', 'texto', PORTADOR, 'os'),
+    ),
+    'netstorage': (
+        ('host', 'texto', NOME_E_PASTA, 'olr'),
+        ('account', 'texto', USUARIO, 'ol'),
+        ('secret', 'senha', None, 'o'),
+    ),
+    'filescom': (
+        ('site', 'texto', NOME, 'olr'),
+        ('api_key', 'texto', PORTADOR, 's'),
+        ('username', 'texto', USUARIO, 'l'),
+        ('password', 'senha', None, ''),
+    ),
+    'quatrix': (
+        ('host', 'texto', NOME, 'olr'),
+        ('api_key', 'texto', PORTADOR, 'os'),
+    ),
+    'sharefile': COM_TOKEN + (
+        ('endpoint', 'texto', URL, 'olr'),
+        ('root_folder_id', 'escolha', ('favorites', 'allshared', 'connectors', 'top'), 'l'),
+    ),
+    'filefabric': (
+        ('url', 'texto', URL, 'olr'),
+        ('permanent_token', 'texto', PORTADOR, 'os'),
+        ('root_folder_id', 'texto', IDENTIFICACAO, 'l'),
+    ),
 }
+# Os tipos que abrem de duas formas: os campos de uma e os da outra. Vale uma só, e inteira.
+FORMAS = {
+    'seafile': (('pass',), ('auth_token',)),
+    'azureblob': (('account', 'key'), ('sas_url',)),
+    'azurefiles': (('account', 'key'), ('sas_url',)),
+    'gcs': (('token',), ('service_account_credentials',)),
+    'filescom': (('api_key',), ('username', 'password')),
+}
+# Os tipos em que a primeira pasta do caminho é o bucket (ou o contêiner): a pasta no remoto é obrigatória, para o
+# nome de uma pasta dos dados nunca virar nome de bucket.
+BALDES = ('azureblob', 'b2', 'gcs', 'swift', 'qingstor', 'storj')
 # O que o painel escreve por conta própria em cada tipo. No SFTP o rclone não abre terminal no servidor nem pede a
-# ele a soma do arquivo; no Dropbox, o pedaço enviado por vez cabe na memória do painel.
+# ele a soma do arquivo. Onde o envio é em pedaços, o tamanho e o número de pedaços ao mesmo tempo cabem na memória do
+# painel. No Azure Blob e no Google Cloud Storage o rclone não confere nem cria o contêiner ou o bucket: só grava.
+# No Mega, o padrão do rclone é transferir por HTTP sem TLS: o painel fixa o HTTPS.
+EM_PEDACOS = (('chunk_size', '16Mi'), ('upload_concurrency', '1'))
 FIXOS = {
     'sftp': (('shell_type', 'none'), ('disable_hashcheck', 'true')),
     'dropbox': (('chunk_size', '8Mi'),),
+    'mega': (('use_https', 'true'),),
+    'mailru': (('speedup_enable', 'false'),),
+    'hidrive': EM_PEDACOS,
+    'filelu': EM_PEDACOS[:1],
+    'shade': EM_PEDACOS,
+    'azureblob': (('upload_concurrency', '2'), ('no_check_container', 'true')),
+    'azurefiles': (('upload_concurrency', '2'),),
+    'b2': EM_PEDACOS,
+    'gcs': (('no_check_bucket', 'true'),),
+    'sharefile': EM_PEDACOS[:1],
 }
 # O texto de erro do rclone ➜ o motivo, em uma palavra. A primeira regra que casa vale.
 MOTIVOS = (
@@ -144,8 +318,8 @@ MOTIVOS = (
     ('frase', re.compile(r'passphrase|private key|decryption password')),
     ('mudou', re.compile(r'corrupted on transfer|sizes differ')),
     ('tls', re.compile(r'x509|tls:|certificate')),
-    ('recusado', re.compile(r'unable to authenticate|\b401\b|\b403\b|permission denied|invalid_grant|unauthorized'
-                            r'|forbidden|access denied')),
+    ('recusado', re.compile(r'unable to authenticate|\b401\b|\b403\b|\b530\b|permission denied|invalid_grant'
+                            r'|unauthorized|forbidden|access denied')),
     ('dns', re.compile(r'no such host|server misbehaving|lookup ')),
     ('tempo', re.compile(r'i/o timeout|deadline exceeded|timed out')),
     ('conexao', re.compile(r'connection refused|no route to host|network is unreachable|connection reset|broken pipe')),
@@ -154,8 +328,8 @@ MOTIVOS = (
 
 
 class Invalido(Exception):
-    """O que o administrador preencheu não serve. `campo` é o nome do campo, ou `acesso` quando falta a senha, a
-    chave ou o token com que o remoto é aberto."""
+    """O que o administrador preencheu não serve. `campo` é o nome do campo, `acesso` quando falta a senha, a chave
+    ou o token com que o remoto é aberto, ou `demais` quando vieram duas formas de acesso onde cabe uma."""
 
     def __init__(self, campo):
         super().__init__(campo)
@@ -187,7 +361,8 @@ def json_em_linha(texto, especie):
         exigidos = ('access_token',)
     else:
         exigidos = ('private_key', 'client_email')
-        if dados.get('type') != 'service_account':
+        # O endereço em que a conta de serviço troca a chave por um token é o do serviço, e não outro.
+        if dados.get('type') != 'service_account' or dados.get('token_uri', URIS_DO_TOKEN[0]) not in URIS_DO_TOKEN:
             raise ValueError
     if not all(isinstance(dados.get(nome), str) and dados[nome] for nome in exigidos):
         raise ValueError
@@ -254,26 +429,38 @@ def guardado(forma, regra, valor):
 
 def falta(tipo, campos):
     """O nome do campo que falta ou não combina com os outros, ou '' quando o remoto está inteiro."""
-    for nome, _, _, marcas in CAMPOS[tipo]:
+    for nome, _, regra, marcas in CAMPOS[tipo]:
         if 'o' in marcas and nome not in campos:
             return nome
-    if tipo == 'sftp':
-        if ':' in campos['host']:
+        if nome not in campos:
+            continue
+        if regra in (URL, URL_SAS) and not 1 <= int(regra.fullmatch(campos[nome]).group(2) or 443) <= 65535:
+            return nome
+        if regra is HOST and ':' in campos[nome]:
             try:
-                ipaddress.IPv6Address(campos['host'])
+                ipaddress.IPv6Address(campos[nome])
             except ValueError:
-                return 'host'
+                return nome
+    if tipo in FORMAS:
+        vindos = [[nome for nome in forma if nome in campos] for forma in FORMAS[tipo]]
+        if all(vindos):
+            return 'demais'
+        if not any(vindos):
+            return 'acesso'
+        forma = FORMAS[tipo][0 if vindos[0] else 1]
+        return next((nome for nome in forma if nome not in campos), '')
+    if tipo == 'sftp':
         if ('key_file_pass' in campos) != ('key_pem' in campos and pem_cifrada(campos['key_pem'])):
             return 'key_file_pass'
         return '' if 'pass' in campos or 'key_pem' in campos else 'acesso'
     if tipo == 'webdav':
-        if not 1 <= int(URL.fullmatch(campos['url']).group(2) or 443) <= 65535:
-            return 'url'
         if ('user' in campos) != ('pass' in campos):
             return 'pass' if 'user' in campos else 'user'
         return '' if 'pass' in campos or 'bearer_token' in campos else 'acesso'
     if tipo == 'drive':
         return '' if 'token' in campos or 'service_account_credentials' in campos else 'acesso'
+    if tipo == 'koofr' and ('endpoint' in campos) != (campos['provider'] == 'other'):
+        return 'endpoint'
     return ''
 
 
@@ -309,11 +496,19 @@ def do_formulario(tipo, valores):
     return campos
 
 
+def fixos_de(tipo, campos):
+    """O que o painel fixa no remoto. O FTP sai sempre com TLS: o explícito é a escolha do administrador, e quem não
+    o escolheu leva o implícito."""
+    if tipo == 'ftp':
+        return () if campos.get('explicit_tls') == 'true' else (('tls', 'true'),)
+    return FIXOS.get(tipo, ())
+
+
 def montar(tipo, campos):
     """O arquivo de configuração do remoto: o tipo, os campos na ordem da lista e o que o painel fixa."""
     linhas = [f'[{SECAO}]', f'type = {tipo}']
     linhas += [f'{nome} = {campos[nome]}' for nome, _, _, _ in CAMPOS[tipo] if nome in campos]
-    linhas += [f'{nome} = {valor}' for nome, valor in FIXOS.get(tipo, ())]
+    linhas += [f'{nome} = {valor}' for nome, valor in fixos_de(tipo, campos)]
     return '\n'.join(linhas) + '\n'
 
 
@@ -325,15 +520,15 @@ def analisar(texto):
         pares = [linha.split(' = ', 1) for linha in linhas[1:]]
         if linhas[0] != f'[{SECAO}]' or pares[0][0] != 'type' or pares[0][1] not in CAMPOS:
             raise ValueError
-        tipo, campos = pares[0][1], {}
+        tipo, campos, fixos = pares[0][1], {}, []
         formas = {nome: (forma, regra) for nome, forma, regra, _ in CAMPOS[tipo]}
-        fixos = dict(FIXOS.get(tipo, ()))
         for nome, valor in pares[1:]:
             if nome in formas and nome not in campos:
                 campos[nome] = guardado(*formas[nome], valor)
-            elif fixos.get(nome) != valor:
-                raise ValueError
-        if falta(tipo, campos) or montar(tipo, campos) != texto.strip('\n') + '\n':
+            else:
+                fixos.append((nome, valor))
+        if (tuple(fixos) != fixos_de(tipo, campos) or falta(tipo, campos)
+                or montar(tipo, campos) != texto.strip('\n') + '\n'):
             raise ValueError
     except (ValueError, IndexError, KeyError, AttributeError):
         raise saida.Falha('segredo') from None
@@ -342,8 +537,9 @@ def analisar(texto):
 
 def lugar(tipo, campos, caminho):
     """Para onde o remoto envia, sem os segredos: é o que diz se dois destinos gravam no mesmo lugar e se um destino
-    regravado continua de onde estava."""
-    return [tipo] + [campos.get(nome, '') for nome, _, _, marcas in CAMPOS[tipo] if 'l' in marcas] + [caminho]
+    regravado continua de onde estava. Do endereço com assinatura entra só o que vem antes dela."""
+    return ([tipo] + [campos.get(nome, '').split('?')[0] for nome, _, _, marcas in CAMPOS[tipo] if 'l' in marcas]
+            + [caminho])
 
 
 def impressoes(campos):
@@ -370,28 +566,34 @@ def alvo_de(caminho, relativo):
 
 # ------------------------------------------------------------ a rede
 
-def nome_de_rede(tipo, campos):
-    """O servidor que o administrador escolheu. As nuvens têm endereço próprio, que a configuração não muda."""
-    if tipo == 'sftp':
-        return campos['host']
-    if tipo == 'webdav':
-        return URL.fullmatch(campos['url']).group(1)
-    return None
+def nomes_de_rede(tipo, campos):
+    """Os servidores que o administrador escolheu: os campos de marca `r`. O que não tem um desses fala com o endereço
+    do próprio serviço, que a configuração não muda."""
+    nomes = []
+    for nome, _, regra, marcas in CAMPOS[tipo]:
+        if 'r' not in marcas or nome not in campos:
+            continue
+        if regra in (URL, URL_SAS):
+            nomes.append(regra.fullmatch(campos[nome]).group(1))
+        elif tipo == 'filescom' and '.' not in campos[nome]:
+            nomes.append(campos[nome] + '.files.com')
+        else:
+            nomes.append(campos[nome].split('/')[0])
+    return nomes
 
 
 def conferir_rede(tipo, campos):
-    """O servidor do remoto pode receber uma conexão do painel? Vale a mesma regra do S3 (saida.aceito), e para todos
-    os endereços do nome: quem escolhe entre eles é o rclone. Entre esta conferência e a conexão o nome pode mudar
-    de endereço; quem segura o que vier daí é o certificado, no WebDAV, e a chave fixada do servidor, no SFTP."""
-    nome = nome_de_rede(tipo, campos)
-    if nome is None:
-        return
-    try:
-        achados = socket.getaddrinfo(nome, None, type=socket.SOCK_STREAM)
-    except (socket.gaierror, UnicodeError):
-        raise saida.Falha('dns') from None
-    if not achados or not all(saida.aceito(achado[4][0]) for achado in achados):
-        raise saida.Falha('endereco')
+    """Os servidores do remoto podem receber uma conexão do painel? Vale a mesma regra do S3 (saida.aceito), e para
+    todos os endereços de cada nome: quem escolhe entre eles é o rclone. Entre esta conferência e a conexão o nome
+    pode mudar de endereço; quem segura o que vier daí é o certificado, onde há TLS, e a chave fixada do servidor,
+    no SFTP. O que o serviço indicar depois de aberto (outro servidor para o envio) não passa por aqui."""
+    for nome in nomes_de_rede(tipo, campos):
+        try:
+            achados = socket.getaddrinfo(nome, None, type=socket.SOCK_STREAM)
+        except (socket.gaierror, UnicodeError):
+            raise saida.Falha('dns') from None
+        if not achados or not all(saida.aceito(achado[4][0]) for achado in achados):
+            raise saida.Falha('endereco')
 
 
 # ------------------------------------------------------------ o rclone
@@ -552,8 +754,9 @@ class Remoto:
         if estourou:
             raise saida.Falha('tempo')
         if codigo:
-            ocultar = [alvo, alvo.rsplit('/', 1)[-1], self.caminho] + [self.campos.get(nome, '') for nome in ('host', 'url', 'user')]
-            raise saida.Falha(motivo_de(erro, ocultar))
+            textos = [self.campos[nome] for nome, forma, _, _ in CAMPOS[self.tipo]
+                      if forma == 'texto' and nome in self.campos]
+            raise saida.Falha(motivo_de(erro, [alvo, alvo.rsplit('/', 1)[-1], self.caminho] + textos))
         if fixar and self.sem_chave():
             raise saida.Falha('sem_chave')
 

@@ -1148,7 +1148,7 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 
 <sub><b>v1.9.0</b> · Destinations menu · captured on 2026-10-12</sub>
 
-**What it is for:** sending by itself, out of the server, the files that arrive in a folder. There are three types of destination, with up to 20 of each: the S3 storage, which holds the second copy or keeps the files and frees the disk, the rclone remote, which takes the folder to an SFTP or WebDAV server or to a file cloud, and the Telegram bot, which delivers each new file to a person, a group or a channel.
+**What it is for:** sending by itself, out of the server, the files that arrive in a folder. There are three types of destination, with up to 20 of each: the S3 storage, which holds the second copy or keeps the files and frees the disk, the rclone remote, which takes the folder to a file server, to a file cloud, to the storage of a cloud provider or to a file transfer service, in 41 types, and the Telegram bot, which delivers each new file to a person, a group or a channel.
 
 **How to get there:** menu ➜ **Destinations**. Only the administrator has the tab.
 
@@ -1247,14 +1247,14 @@ Any service that speaks the S3 protocol works, in the cloud or on the internal n
 
 ### Destinations ➜ rclone remote
 
-<a href="images/destinos-rclone-tipo.png"><img src="images/destinos-rclone-tipo.png" alt="rclone remote: new destination screen, with the sentence that says the remote only receives, the Remote type choice with SFTP, WebDAV, Google Drive, OneDrive, Dropbox and pCloud, each with what the access asks for, the notice that the type is fixed once saved and the Continue and Cancel buttons" width="100%"></a>
+<a href="images/destinos-rclone-tipo.png"><img src="images/destinos-rclone-tipo.png" alt="rclone remote: new destination screen, with the sentence that says the remote only receives, the Remote type list still on Choose from the list, the notice that the type is fixed once saved, the notice that S3-compatible services use the S3 destination and the Continue and Cancel buttons" width="100%"></a>
 
-<sub><b>v1.9.0</b> · Destinations menu, choice of the remote type · captured on 2026-10-12</sub>
+<sub><b>v1.10.0</b> · Destinations menu, choice of the remote type · captured on 2026-10-12</sub>
 
-rclone is the file sending program that comes inside the panel image. Through it, the folder goes to what S3 does not reach: an SFTP or WebDAV server, or a Google Drive, OneDrive, Dropbox or pCloud account. The remote only receives: the panel does not list, download, sync or delete anything on it.
+rclone is the file sending program that comes inside the panel image. Through it, the folder goes to what S3 does not reach, in 41 remote types: file servers (SFTP, WebDAV, FTP with TLS and Seafile), file clouds (Google Drive, OneDrive, Dropbox, pCloud, Box, Mega and others), cloud provider storage and file transfer services for businesses. The remote only receives: the panel does not list, download, sync or delete anything on it.
 
 1. In the Destinations tab, click **Configure** on the **rclone remote** card.
-2. Choose the **Remote type** and click **Continue**.
+2. Choose the **Remote type** in the list, split into four groups, and click **Continue**.
 
 <a href="images/destinos-rclone.png"><img src="images/destinos-rclone.png" alt="rclone remote form of the SFTP type, filled in with an example server: the folder on the remote copias, the name File server, the On box, the folder sent olt-centro, the 60-minute interval and, in the remote access, the server, the port left blank, the user, the masked password and the Private key, Private key passphrase and Server public key fields left blank, the explanation of the path of the file on the remote, the Your current password field and the Save and Cancel buttons" width="100%"></a>
 
@@ -1280,7 +1280,11 @@ rclone is the file sending program that comes inside the panel image. Through it
 | Server public key | No | One per line, as in the SSH known hosts file; when blank, **Test** stores the one the server presents |
 | Your current password | Yes | The password of whoever is in the session, to save the destination |
 
-The access fields change with the type. Those of WebDAV and of the clouds are in [Web panel](../panel.md#destinos).
+The access fields change with the type. Those of the other 40 types are in [Web panel](../panel.md#destinos). The form of each type brings only its own fields and, when the account has some condition, the notice about it. The one of Mega, for example, asks for the user and the password:
+
+<a href="images/destinos-rclone-mega.png"><img src="images/destinos-rclone-mega.png" alt="rclone remote form of the Mega type, filled in with an example account: the folder on the remote copias, the name File cloud, the On box, the folder sent olt-centro, the 60-minute interval and, in the remote access, the notice that an account with two-step verification cannot be a destination, the user and the masked password, the explanation of the path of the file on the remote, the Your current password field and the Save and Cancel buttons" width="100%"></a>
+
+<sub><b>v1.10.0</b> · Destinations menu, Mega remote form, with an example account that was not saved · captured on 2026-10-12</sub>
 
 <a href="images/destinos-rclone-gravado.png"><img src="images/destinos-rclone-gravado.png" alt="Destinations tab with the notice Destination saved, it takes effect on the next run, the New S3, New remote and New bot buttons at the top and the rclone remote: File server card with the test pending tag, the notice that the panel has not stored the key of this server yet and that nothing is sent until Test, the type SFTP, the folder on the remote copias, the folder sent olt-centro, the runs every 60 minutes, Copy after sending, the access saved without being shown on screen and the last run as none yet, next to the S3 storage and Telegram bot cards" width="100%"></a>
 
@@ -1298,7 +1302,10 @@ The access fields change with the type. Those of WebDAV and of the clouds are in
 |---|---|
 | SFTP remote without **Test** | Nothing is sent: the panel has not stored the key of the server yet |
 | Server key different from the stored one | The sending stops, and the card tells the reason; if the change was made by the server itself, save the access again and test |
-| Google Drive, OneDrive, Dropbox and pCloud | The account token is obtained outside the panel, with the `rclone authorize` command on a computer with a browser, and pasted into the **Account token** field |
+| Type that asks for the **Account token**, such as Google Drive, OneDrive, Dropbox, pCloud and Box | The token is obtained outside the panel, with the `rclone authorize` command the screen shows, on a computer with a browser, and pasted into the **Account token** field |
+| FTP remote | It only sends with TLS, explicit or implicit, and with the certificate of the server checked |
+| Mega and Proton Drive with two-step verification | The account does not work as a destination: the panel has no way to give the code at each send |
+| Bucket type, such as Backblaze B2 and Azure Blob Storage | The **Folder on the remote** is required and starts with the name of the bucket or of the container, which must already exist |
 | **Change** | The saved access does not come back to the screen: left blank, the saved one stays; to change any part of it, fill in the whole access again |
 | Remote type | It is fixed once saved: for another type, create another destination |
 | Path on the remote | The same the file has inside the data, starting at the folder on the remote; it writes over whatever has the same name |
@@ -1465,7 +1472,7 @@ The complete operation is in [System copy to S3](../panel.md#copia-do-sistema).
 
 - Routes `GET /destinos`, `GET` and `POST /destinos/s3`, `/destinos/rclone` and `/destinos/telegram`, `POST /destinos/testar`, `POST /destinos/agora`, `GET` and `POST /destinos/arquivo`, `GET` and `POST /destinos/remover`, `GET` and `POST /destinos/copia` and `POST /destinos/copia/agora`. Every `POST` carries the token of the session; saving and removing also ask for the current password. For the FTP user, all of them answer `404`.
 - The settings are in `DATA_DIR/painel/destinos/<destino>.conf` and the progress, in `<destino>.estado`. The secrets are in `SECRETS_DIR/destinos`, one per file, with mode `0600`, and never go back to the screen, to the Log tab or to the audit log.
-- The panel only leaves the server over HTTPS, with the certificate checked, and does not follow redirects. On the rclone SFTP remote, it leaves over SSH, with the server key checked.
+- The panel only leaves the server over HTTPS, with the certificate checked, and does not follow redirects. Through the rclone remote, it also leaves over FTP with TLS, with the certificate checked, and, on SFTP, over SSH, with the server key checked.
 - The events `destino_gravado`, `destino_teste`, `destino_pedido`, `destino_arquivo`, `destino_enviado`, `destino_falhou`, `destino_pulado` and `destino_removido`, and those of the system copy, `copia_gravada`, `copia_pedida`, `copia_enviada`, `copia_falhou` and `copia_sem_destino`, stay in the [audit log](../panel.md#auditoria).
 - With `PAINEL_DESTINOS=nao` in the `.env`, the tab leaves the menu and no run happens: see [Configuration](../configuration.md#painel).
 - The complete operation is in [Destinations: S3, rclone and Telegram bot](../panel.md#destinos), and the one of the system copy, in [System copy to S3](../panel.md#copia-do-sistema).

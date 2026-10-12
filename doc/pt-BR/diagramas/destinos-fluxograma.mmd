@@ -15,7 +15,7 @@ flowchart LR
     subgraph FORA["Fora do servidor"]
         bot@{ shape: cloud, label: "bot do Telegram<br>conversa que recebe" }
         s3@{ shape: bucket, label: "bucket S3<br>Copiar ou Guardar no S3" }
-        remoto@{ shape: cloud, label: "remoto do rclone<br>SFTP, WebDAV ou nuvem" }
+        remoto@{ shape: cloud, label: "remoto do rclone<br>servidor, nuvem ou serviço de arquivos" }
     end
     subgraph RESULTADO["Resultado"]
         confirmou@{ shape: diam, label: "o destino<br>confirmou?" }
@@ -32,7 +32,7 @@ flowchart LR
     inteiro -- "4c · sim: remoto do rclone" --> rclone
     https -- "5a · envia a mensagem, HTTPS" ---> bot
     https -- "5b · grava o objeto, HTTPS" ---> s3
-    rclone -- "5c · grava o arquivo, HTTPS ou SSH" ---> remoto
+    rclone -- "5c · grava o arquivo, HTTPS, SSH ou FTP com TLS" ---> remoto
     bot -- "6a · responde" --> confirmou
     s3 -- "6b · responde" --> confirmou
     remoto -- "6c · responde" --> confirmou

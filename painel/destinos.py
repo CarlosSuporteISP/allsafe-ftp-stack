@@ -226,7 +226,9 @@ def defeito(destino, conf):
             if conf['remoto'] not in rclone.CAMPOS:
                 return 'remoto'
             caminho = conf['caminho']
-            return '' if not caminho or (len(caminho) <= rclone.CAMINHO_MAX and rclone.CAMINHO.fullmatch(caminho)) else 'caminho'
+            if not caminho:
+                return 'balde' if conf['remoto'] in rclone.BALDES else ''
+            return '' if len(caminho) <= rclone.CAMINHO_MAX and rclone.CAMINHO.fullmatch(caminho) else 'caminho'
         if not ENDERECO_HTTPS.fullmatch(conf['endpoint']):
             return 'endpoint'
         saida.analisar(conf['endpoint'])

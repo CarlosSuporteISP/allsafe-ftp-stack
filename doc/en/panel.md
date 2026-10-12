@@ -502,7 +502,7 @@ PAINEL_ACESSO_USUARIOS_FTP=nao
 
 ## ☁️ Destinations: S3, rclone and Telegram bot
 
-In the **Destinations** tab, the administrator connects folders of the data to places outside the server, and the panel starts sending by itself whatever arrives in them. There are three types of destination: the **S3 storage**, to hold the second copy or to keep the files elsewhere and free the disk, the **rclone remote**, for what S3 does not reach (an SFTP or WebDAV server, or a file cloud), and the **Telegram bot**, which delivers each new file to a person, a group or a channel. Each type accepts up to 20 destinations, each one with its own folder, interval and secrets, and one does not depend on the other. The tab comes with none: until the administrator saves one, nothing leaves the server. Only an administrator opens the tab.
+In the **Destinations** tab, the administrator connects folders of the data to places outside the server, and the panel starts sending by itself whatever arrives in them. There are three types of destination: the **S3 storage**, to hold the second copy or to keep the files elsewhere and free the disk, the **rclone remote**, for what S3 does not reach (a file server, a file cloud, the storage of a cloud provider or a file transfer service, in 41 types), and the **Telegram bot**, which delivers each new file to a person, a group or a channel. Each type accepts up to 20 destinations, each one with its own folder, interval and secrets, and one does not depend on the other. The tab comes with none: until the administrator saves one, nothing leaves the server. Only an administrator opens the tab.
 
 | Destination | What it sends | When | What stays on the server |
 |---|---|---|---|
@@ -532,7 +532,7 @@ flowchart LR
     subgraph FORA["Outside the server"]
         bot@{ shape: cloud, label: "Telegram bot<br>receiving chat" }
         s3@{ shape: bucket, label: "S3 bucket<br>Copy or Keep in S3" }
-        remoto@{ shape: cloud, label: "rclone remote<br>SFTP, WebDAV or cloud" }
+        remoto@{ shape: cloud, label: "rclone remote<br>file server, cloud or service" }
     end
     subgraph RESULTADO["Result"]
         confirmou@{ shape: diam, label: "the destination<br>confirmed?" }
@@ -549,7 +549,7 @@ flowchart LR
     inteiro -- "4c · yes: rclone remote" --> rclone
     https -- "5a · sends the message, HTTPS" ---> bot
     https -- "5b · writes the object, HTTPS" ---> s3
-    rclone -- "5c · writes the file, HTTPS or SSH" ---> remoto
+    rclone -- "5c · writes the file, HTTPS, SSH or FTP with TLS" ---> remoto
     bot -- "6a · answers" --> confirmou
     s3 -- "6b · answers" --> confirmou
     remoto -- "6c · answers" --> confirmou
@@ -557,7 +557,7 @@ flowchart LR
     confirmou -- "7b · no: stops" --> parou
     passada -. "reads the settings and writes the progress" .-> andamento
     https -. "reads the keys and the token" .-> segredos
-    rclone -. "reads the access of the remote" .-> segredos
+    rclone -. "reads the remote access" .-> segredos
 ```
 
 <sub>Level 2 · Map · [source](diagrams/)</sub>
@@ -572,7 +572,7 @@ flowchart LR
 | 4c | file arrived whole? ➜ rclone | Yes, with an rclone remote: the panel calls rclone, one file at a time, only to write |
 | 5a | way out by HTTPS ➜ Telegram bot | The bot delivers the file to the chat, in one message; above the bot limit only the notice goes |
 | 5b | way out by HTTPS ➜ S3 bucket | The panel writes the object in the bucket, in parts when it is large |
-| 5c | rclone ➜ rclone remote | rclone writes the file in the folder of the remote, by HTTPS or, for SFTP, by SSH with the server key checked |
+| 5c | rclone ➜ rclone remote | rclone writes the file in the folder of the remote: by HTTPS or by FTP with TLS, with the certificate checked, or, for SFTP, by SSH with the server key checked |
 | 6a | Telegram bot ➜ the destination confirmed? | The bot service answers the request |
 | 6b | S3 bucket ➜ the destination confirmed? | The S3 service answers the request |
 | 6c | rclone remote ➜ the destination confirmed? | rclone finishes and says whether it wrote |
@@ -585,7 +585,7 @@ flowchart LR
 |---|---|---|
 | run of the destination | progress of the destination (`DATA_DIR/painel/destinos`) | reads the settings and writes how far the sending went |
 | way out by HTTPS | secrets of the destination (`SECRETS_DIR/destinos`) | reads the S3 keys, the bot token and the chat |
-| rclone | secrets of the destination (`SECRETS_DIR/destinos`) | reads the access of the remote and works on a copy of it |
+| rclone | secrets of the destination (`SECRETS_DIR/destinos`) | reads the remote access and works on a copy of it |
 
 </details>
 
@@ -606,12 +606,12 @@ flowchart LR
 
 > ⚠️ **Changing the address, the bucket, the prefix, the form of the address or the folder starts from scratch:** everything in the folder is sent again, to the new place.
 
-**rclone remote.** rclone is the file sending program that comes inside the panel image, in a fixed version. Through it, the folder goes to an **SFTP** or **WebDAV** server, or to a **Google Drive**, **OneDrive**, **Dropbox** or **pCloud** account. Everything is filled in on the screen: the panel asks for nothing on the server terminal.
+**rclone remote.** rclone is the file sending program that comes inside the panel image, in a fixed version. Through it, the folder goes to one of **41 remote types**, in four groups: **file servers** (SFTP, WebDAV, FTP with TLS and Seafile), **file clouds** (Google Drive, OneDrive, Dropbox, pCloud, Box, Mega and others), **cloud provider storage** (Azure, Backblaze B2, Google Cloud Storage and others) and **file transfer for businesses**. Everything is filled in on the screen: the panel asks for nothing on the server terminal.
 
 1. In the Destinations tab, click **Configure** on the **rclone remote** card.
-2. Choose the **Remote type** and click **Continue**.
+2. Choose the **Remote type** in the list, which comes split into the four groups, and click **Continue**.
 3. Fill in the **Folder on the remote**, which is where the files are written (blank is the folder the remote opens in), the **Folder sent** and the **Interval between runs**.
-4. Under **Remote access**, fill in the fields of the chosen type, as in the table below.
+4. Under **Remote access**, fill in the fields of the chosen type, as in the tables below.
 5. Type your password and click **Save**.
 6. Back in the tab, click **Test**.
 
@@ -624,17 +624,68 @@ flowchart LR
 | Dropbox | **Account token** | **Application ID** and **Application secret** |
 | pCloud | **Account token** | **Account region**, **Application ID** and **Application secret** |
 
+<details>
+<summary>The other 35 remote types — click to expand</summary>
+
+The name is the one that shows in the list of the screen, and the group is the one of the list.
+
+| Remote type | Group | What the access asks for | Optional |
+|---|---|---|---|
+| FTP | File servers | **Server**, **User**, **Password** and **TLS type** | **Port** |
+| Seafile | File servers | **Address**, **User** and **Library**; **Password**, or **Access token**: one way only | **Library password** |
+| Box | File clouds | **Account token** | **Application ID**, **Application secret** and **Account type** |
+| Mega | File clouds | **User** and **Password** | — |
+| Proton Drive | File clouds | **User** and **Password** | **Mailbox password** |
+| Koofr | File clouds | **Service**, **User** and **Password** | **Service address** |
+| Yandex Disk | File clouds | **Account token** | **Application ID** and **Application secret** |
+| Mail.ru Cloud | File clouds | **User** and **Password** | — |
+| HiDrive | File clouds | **Account token** | **Application ID** and **Application secret** |
+| Huawei Drive | File clouds | **Account token** | **Application ID** and **Application secret** |
+| Zoho WorkDrive | File clouds | **Account token** and **Account region** | **Application ID** and **Application secret** |
+| put.io | File clouds | **Account token** | **Application ID** and **Application secret** |
+| premiumize.me | File clouds | **API key** | — |
+| OpenDrive | File clouds | **User** and **Password** | — |
+| Filen | File clouds | **Account e-mail**, **Password** and **API key** | — |
+| 1Fichier | File clouds | **API key** | — |
+| FileLu | File clouds | **rclone key** | — |
+| Gofile | File clouds | **Access token** | — |
+| Pixeldrain | File clouds | **API key** | **Starting folder** |
+| Drime | File clouds | **Access token** | — |
+| Linkbox | File clouds | **Access token**, **Account e-mail** and **Password** | — |
+| Uloz.to | File clouds | **Application token**, **User** and **Password** | — |
+| Shade FS | File clouds | **Drive ID** and **API key** | — |
+| Azure Blob Storage | Cloud provider storage | **Account** and **Key**, or **Signed address (SAS)**: one way only | — |
+| Azure Files | Cloud provider storage | **Share**; **Account** and **Key**, or **Signed address (SAS)**: one way only | — |
+| Backblaze B2 | Cloud provider storage | **Account ID or key ID** and **Application key** | — |
+| Google Cloud Storage | Cloud provider storage | **Account token**, or **Service account credential**: one way only | **Application ID**, **Application secret** and **Bucket with uniform access** |
+| OpenStack Swift | Cloud provider storage | **Authentication address**, **User** and **Password or key** | **Authentication version**, **User domain**, **Project**, **Project domain** and **Region** |
+| QingStor | Cloud provider storage | **Access key** and **Secret key** | **Zone** and **Service address** |
+| Storj | Cloud provider storage | **Access grant** | — |
+| Akamai NetStorage | Cloud provider storage | **Server**, **Account** and **Key** | — |
+| Files.com | File transfer for businesses | **Site**; **API key**, or **User** and **Password**: one way only | — |
+| Quatrix | File transfer for businesses | **Server** and **API key** | — |
+| Citrix ShareFile | File transfer for businesses | **Account token** and **Service address** | **Application ID**, **Application secret** and **Starting folder** |
+| Enterprise File Fabric | File transfer for businesses | **Address** and **Permanent token** | **Starting folder** |
+
+</details>
+
 **Expected result:** the tab comes back with the notice **Destination saved**, and the card shows the **on** tag, the remote type, the folder on the remote, the folder sent and that the access is saved, without showing it. **Test** writes a small file, `allsafe-ftp-stack-teste.txt`, to the remote folder and answers **Test finished: the destination received it**. The first run starts within a minute and sends everything already in the folder; the **Last run** line says how many files went out.
 
 - **The remote only receives.** The panel asks rclone to write each file, and nothing else: it does not list, download, sync or delete anything on the remote. The file stays on the server.
 - **SFTP needs Test before the first send.** The card keeps the **test pending** tag until the test stores the key the server presents. After it, the **Server key** line shows the fingerprint of that key: compare it with the one on the server. Without the stored key nothing is sent, and, if it changes later, the sending stops with the reason on the screen.
-- **The token of the clouds is obtained outside the panel**, on a computer with a browser and rclone: the `rclone authorize` command followed by the type (`drive`, `onedrive`, `dropbox` or `pcloud`) opens the account page and prints the token, which is pasted into the **Account token** field. The panel does not open that page. Once saved, the panel keeps by itself the token the service renews.
+- **The token of the clouds is obtained outside the panel**, on a computer with a browser and rclone: the `rclone authorize` command followed by the type opens the account page and prints the token, which is pasted into the **Account token** field. It applies to the twelve types that ask for that field (`drive`, `onedrive`, `dropbox`, `pcloud`, `box`, `yandex`, `hidrive`, `huaweidrive`, `zoho`, `putio`, `gcs` and `sharefile`), and the screen of each one shows the command ready. The panel does not open that page. Once saved, the panel keeps by itself the token the service renews.
 - **The type is fixed once saved.** For another type, create another destination.
 - **The access does not come back to the screen.** In **Change**, the access fields left blank keep the saved one; to change any part of it, fill in the whole access again. In SFTP, an access saved again without the **Server public key** asks for another **Test**.
 - **The path on the remote is the same as in the data.** `backups/router/config.rsc`, with the folder on the remote `copies`, becomes `copies/backups/router/config.rsc`, and writes over whatever has the same name. The test file stays on the remote.
-- **Certificate checked.** In WebDAV and in the clouds, the panel only speaks HTTPS with the certificate checked. A WebDAV server with an authority of the network itself uses the same `ca.pem` as S3, described further below.
+- **Certificate checked.** In WebDAV, in Seafile and in the cloud services, the panel only speaks HTTPS with the certificate checked; in Mega, where the rclone default is to transfer by HTTP, the panel fixes HTTPS. A server with an authority of the network itself uses the same `ca.pem` as S3, described further below.
+- **FTP only with TLS.** The FTP remote only sends with TLS, **explicit** (the common one, on port 21) or **implicit** (usually on port 990), and with the certificate of the server checked. An FTP server without TLS does not work as a destination.
+- **Bucket types: the folder on the remote starts with the bucket.** In Azure Blob Storage, Backblaze B2, Google Cloud Storage, OpenStack Swift, QingStor and Storj, the **Folder on the remote** is required and starts with the name of the bucket or of the container, which must already exist: `bucket/folder`. The panel does not create a bucket. In Seafile, the **Library** must also already exist.
+- **Account with two-step verification.** In Mega and in Proton Drive, the account that asks for a code at each sign-in does not work as a destination: the panel has no way to give the code at each send. In Seafile, it only gets in with the **Access token**. In Koofr and in Mail.ru Cloud, the password is an application password, created in the account for this use.
+- **User and password: one sign-in per file.** In the types that get in with user and password, each file sent is a new sign-in to the account. A folder with many small files may hit the sign-in limit of the service.
+- **Storj: protocol and address of the service itself.** Storj does not speak HTTPS: it uses its own encrypted protocol, and the address of the service comes inside the **Access grant**, without going through the address check of the panel.
+- **What does not get in.** The rclone of this version has 69 types, and 28 stay out: those that wrap another remote or write on the server itself, those that only read, the one that only stores photos and videos, those that publish what they receive, those that only open the account with an interactive sign-in or with a file on the server, and SMB, HDFS and Sia, which have no way to check the server or to encrypt the connection the way the panel requires. S3-compatible storage uses the **S3 storage** destination.
 
-> ⚠️ **Changing the folder on the remote, the folder sent or the place of the access starts from scratch:** everything in the folder is sent again, to the new place. The place of the access is the server, the port and the user, in SFTP; the address and the user, in WebDAV; and, in the clouds, the starting folder, the drive or the account region.
+> ⚠️ **Changing the folder on the remote, the folder sent or the place of the access starts from scratch:** everything in the folder is sent again, to the new place. The place of the access is the server, the port and the user, in SFTP and in FTP; the address and the user, in WebDAV; and, in the other types, what tells which account it is and where it stores: the user, the address, the library, the starting folder, the drive or the account region.
 
 **Telegram bot.** Before you start, create the bot with the Telegram bot creator and keep the token it hands over. Add the bot to the group or the channel that will receive; for a person, they must have started the chat with the bot.
 
@@ -660,7 +711,7 @@ The largest file the bot sends at once is the one in [`PAINEL_TELEGRAM_MAX_MB`](
 **Expected result:** the tab comes back with the notice **Destination saved** and one more card, with the type and the given name, such as **S3 storage: Customers**. A secret left blank is copied from the source destination inside the server, without going through the browser, and **Test** on the new card confirms it works. An SFTP remote created this way takes along the server key already stored, and does not ask for another test.
 
 - **New S3**, **New remote** and **New bot** open the blank form, for a destination with other keys, with another remote or with another bot.
-- Two destinations do not take the same folder, or a folder inside it, to the same place: the panel refuses with **This destination already exists**. The same place is the same address, bucket and prefix, in S3; the same remote type, server, user and folder on the remote, in rclone; and the same bot with the same chat, in Telegram.
+- Two destinations do not take the same folder, or a folder inside it, to the same place: the panel refuses with **This destination already exists**. The same place is the same address, bucket and prefix, in S3; the same remote type, with the same place of the access and the same folder on the remote, in rclone (in the type that gets in with a key or a token only, the type and the folder on the remote); and the same bot with the same chat, in Telegram.
 - Each type accepts up to 20 destinations. With the 20 saved, the buttons for a new destination disappear until one is removed.
 - Each destination has its own progress: changing, testing or removing one does not touch the others.
 - A new bot sends only what arrives after it is saved; a new S3 and a new rclone remote send everything already in the folder.
@@ -762,7 +813,7 @@ docker compose exec -T painel sh -c 'cat > /painel/destinos/ca.pem' < network-au
 - **One file only:** `POST /destinos/arquivo` opens the file with the same checks as the Files tab (`400`, `403` or `404` for a path outside the rule, a symbolic link, a folder or a file that does not exist) and sends it in a thread of its own. The page waits up to 20 s; after that, the send goes on by itself. It neither reads nor writes the progress of the runs. A file that changes during the send answers with the reason, to be repeated.
 - **Panel way out:** [`saida.py`](../../painel/saida.py) is the only door through which the panel talks to anyone outside the stack. HTTPS only, with TLS 1.2 or newer and the certificate checked against the authorities of the image and against the one in `ca.pem`, when it exists. The name is resolved once, and the connection goes to the address that was checked. The panel does not go out to its own container, to a link-local, multicast or reserved address, and does not follow redirects. Each network operation has a 30 s deadline.
 - **S3:** [`s3.py`](../../painel/s3.py) signs each request with signature version 4, with the SHA-256 of the body inside it. A file of up to 32 MiB goes in one request; above that, in parts of 16 MiB or more, and the multipart upload is aborted at the destination when it fails. The panel only writes: it does not read, list or delete anything in the bucket, and the key only needs `s3:PutObject` and `s3:AbortMultipartUpload`. The list of what may go out is in `s3.py` itself: writing one object, starting, sending and completing a multipart upload, and aborting a multipart upload that did not finish. Any other request is refused before it leaves the panel, whether it comes from the screen, from the routine or from the terminal. Writing again to the same key replaces the object: to keep what was there before, turn on versioning in the bucket. A file larger than 5 TiB counts as skipped.
-- **rclone:** [`rclone.py`](../../painel/rclone.py) calls the `/usr/local/bin/rclone` binary of the image, with the version and the SHA-256 sum fixed in the `Dockerfile`; nothing is downloaded or updated at run time. Two rclone subcommands are used, and no other: `rcat`, which writes to the remote what it receives on standard input, and `obscure`, which encrypts the password for the remote file. Listing, downloading, moving, syncing and deleting are not in the list and are refused before a process exists, whether the request comes from the screen, from the schedule or from the terminal. The remote file is built from a closed list of types, of fields and of the form of each value: what rclone has that is dangerous for whoever writes the configuration (a command to run, a file to read, a proxy, a certificate without checking, a remote that wraps another, a local folder) is not in the list. The file is checked again at each read, by the same list: changed from outside, the destination is left without access and rclone is not called. rclone works on a copy of the file, in `/tmp/rclone`, with mode `0600`, deleted after each run; from it the panel only keeps the renewed token of the clouds and, in the SFTP test, the server key. The password goes in through the standard input of `obscure`, never on the command line, and the process list shows only the path of the copy and that of the file on the remote. One rclone at a time, with `GOMAXPROCS=2` and `GOMEMLIMIT=64MiB`, inside the limits of the panel container. The name is resolved first, and the panel does not call rclone for its own container nor for a link-local, multicast or reserved address. Each network operation has a 30 s deadline, the whole test has 20 s, and an operation that fails is repeated up to three times within the same send. The rclone error text only serves to choose the reason, in one word: it may carry the server, the user and the path, and does not go to the screen, to the Log or to the audit log. In SFTP, rclone does not open a shell on the server nor ask it for the sum of the file.
+- **rclone:** [`rclone.py`](../../painel/rclone.py) calls the `/usr/local/bin/rclone` binary of the image, with the version and the SHA-256 sum fixed in the `Dockerfile`; nothing is downloaded or updated at run time. Two rclone subcommands are used, and no other: `rcat`, which writes to the remote what it receives on standard input, and `obscure`, which encrypts the password for the remote file. Listing, downloading, moving, syncing and deleting are not in the list and are refused before a process exists, whether the request comes from the screen, from the schedule or from the terminal. The remote file is built from a closed list of 41 types, of the fields of each one and of the form of each value: what rclone has that is dangerous for whoever writes the configuration (a command to run, a file to read, a proxy, a certificate without checking, a remote that wraps another, a local folder) is not in the list. In some types the panel writes by itself what the administrator does not choose: TLS, in FTP; HTTPS in the transfers, in Mega; the size and the number of parts of the upload, where it is done in parts, to fit in the memory of the panel; and, in Azure Blob Storage and in Google Cloud Storage, that rclone neither checks nor creates the container or the bucket. The file is checked again at each read, by the same list and with those values: changed from outside, the destination is left without access and rclone is not called. rclone works on a copy of the file, in `/tmp/rclone`, with mode `0600`, deleted after each run; from it the panel only keeps the renewed token of the clouds and, in the SFTP test, the server key. The password goes in through the standard input of `obscure`, never on the command line, and the process list shows only the path of the copy and that of the file on the remote. One rclone at a time, with `GOMAXPROCS=2` and `GOMEMLIMIT=64MiB`, inside the limits of the panel container. In the 14 types in which the administrator chooses the server, the name is resolved first, and the panel does not call rclone for its own container nor for a link-local, multicast or reserved address; in the others, the address is that of the service itself, and, in Storj, it comes inside the access grant. Each network operation has a 30 s deadline, the whole test has 20 s, and an operation that fails is repeated up to three times within the same send. The rclone error text only serves to choose the reason, in one word: it may carry the server, the user and the path, and does not go to the screen, to the Log or to the audit log. In SFTP, rclone does not open a shell on the server nor ask it for the sum of the file.
 - **Keep in S3:** the file is only deleted after the destination confirms it was stored, and only if it has not changed since it was sent. When another destination turned on takes the same file, bot, rclone remote or S3, the deletion waits for it. With that other one stopped, the files already stored wait in a queue of up to 20,000; once full, the S3 that keeps stops sending until the other one is back.
 - **Telegram:** [`telegram.py`](../../painel/telegram.py) only calls `sendDocument` and `sendMessage`, always by `POST`, at the address in `PAINEL_TELEGRAM_API`; any other operation of the bot API, such as deleting a message, is refused before it leaves the panel. Between one send and the next there is a 3 s pause. When the API asks to slow down, the panel waits the requested time, up to 30 s, and repeats the send once. A file the API refuses for its size, even below `PAINEL_TELEGRAM_MAX_MB`, becomes a notice.
 - **File the destination refuses:** a `4xx` answer that is not about permission, timeout (`408`) or rate (`429`), on the third consecutive run with the same file, leaves that file behind, so the following ones can go, and writes `destino_pulado`.
@@ -1316,7 +1367,7 @@ Password, token and cookie are **never** written. Neither is the name typed in a
 | User folders | Each FTP user is confined (`chroot`) to the folder of the record; the folder chosen does not leave `DATA_DIR/dados` nor go through a symbolic link; a folder reached by more than one user appears marked as **shared** |
 | Forms | CSRF token per session and check of `Origin`: the submission has to start from the panel itself; body limited to 8 KiB, except in the file upload, which has its own two routes and the ceiling of `PAINEL_ENVIO_MAX_MB` |
 | Language | The change is a form like the others, with token and `Origin`; the language cookie only carries `pt`, `en` or `es` and is not valid as a session; the return after the change only leads to a screen of the panel itself |
-| Outside destinations | Only the administrator configures them, with the current password, and only the administrator sends a file with the button of the Files tab; the panel goes out by HTTPS only, with the certificate checked, or, in the rclone SFTP remote, by SSH with the server key checked, and does not go to its own container nor to a reserved address; rclone only writes: listing, downloading, moving, syncing and deleting are refused before a process exists; the S3 keys, the access of the rclone remote, the bot token and the chat stay in `0600` files and never go back to the screen or to the audit log; the bot only sends: the panel does not read the chat nor accept a command; the system copy to S3 leaves encrypted with the public key, and the key that opens it does not reach the panel; `PAINEL_DESTINOS=nao` turns everything off |
+| Outside destinations | Only the administrator configures them, with the current password, and only the administrator sends a file with the button of the Files tab; the panel goes out by HTTPS only, with the certificate checked, or, through the rclone remote, by FTP with TLS, also with the certificate checked, by SSH with the server key checked, in SFTP, and by the encrypted protocol of the service itself, in Storj, and does not go to its own container nor to a reserved address; rclone only writes: listing, downloading, moving, syncing and deleting are refused before a process exists; the S3 keys, the access of the rclone remote, the bot token and the chat stay in `0600` files and never go back to the screen or to the audit log; the bot only sends: the panel does not read the chat nor accept a command; the system copy to S3 leaves encrypted with the public key, and the key that opens it does not reach the panel; `PAINEL_DESTINOS=nao` turns everything off |
 | Browser | `Content-Security-Policy` without script, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, HSTS and `no-store`; the page loads nothing from outside |
 | Containers | Read-only root, `cap_drop: ALL`, `no-new-privileges`, no Docker socket, limits of CPU, memory and processes; nginx runs without root and without any capability |
 

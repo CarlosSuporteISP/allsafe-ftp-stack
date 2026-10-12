@@ -60,12 +60,59 @@ ACESSOS = {'s3': (N('Chave de acesso e chave secreta'), N('gravados; não aparec
 REMOTOS = {
     'sftp': ('SFTP', N('servidor com acesso por SSH, com senha ou chave privada')),
     'webdav': ('WebDAV', N('servidor de arquivos por HTTPS, com usuário e senha ou com token')),
+    'ftp': ('FTP', N('servidor FTP com TLS, com usuário e senha')),
+    'seafile': ('Seafile', N('servidor de arquivos por HTTPS, com usuário e senha ou com token')),
     'drive': ('Google Drive', N('com o token da conta ou a credencial de uma conta de serviço')),
     'onedrive': ('OneDrive', N('com o token da conta e a identificação do drive')),
     'dropbox': ('Dropbox', N('com o token da conta')),
     'pcloud': ('pCloud', N('com o token da conta')),
+    'box': ('Box', N('com o token da conta')),
+    'mega': ('Mega', N('com usuário e senha')),
+    'protondrive': ('Proton Drive', N('com usuário e senha')),
+    'koofr': ('Koofr', N('com o usuário e uma senha de aplicativo')),
+    'yandex': ('Yandex Disk', N('com o token da conta')),
+    'mailru': ('Mail.ru Cloud', N('com o usuário e uma senha de aplicativo')),
+    'hidrive': ('HiDrive', N('com o token da conta')),
+    'huaweidrive': ('Huawei Drive', N('com o token da conta')),
+    'zoho': ('Zoho WorkDrive', N('com o token da conta')),
+    'putio': ('put.io', N('com o token da conta')),
+    'premiumizeme': ('premiumize.me', N('com a chave da API')),
+    'opendrive': ('OpenDrive', N('com usuário e senha')),
+    'filen': ('Filen', N('com usuário, senha e chave da API')),
+    'fichier': ('1Fichier', N('com a chave da API')),
+    'filelu': ('FileLu', N('com a chave que o serviço dá ao rclone')),
+    'gofile': ('Gofile', N('com o token de acesso')),
+    'pixeldrain': ('Pixeldrain', N('com a chave da API')),
+    'drime': ('Drime', N('com o token de acesso')),
+    'linkbox': ('Linkbox', N('com usuário, senha e token')),
+    'ulozto': ('Uloz.to', N('com usuário, senha e token')),
+    'shade': ('Shade FS', N('com a chave da API')),
+    'azureblob': ('Azure Blob Storage', N('com a conta e a chave, ou com o endereço com assinatura')),
+    'azurefiles': ('Azure Files', N('com a conta e a chave, ou com o endereço com assinatura')),
+    'b2': ('Backblaze B2', N('com a conta e a chave')),
+    'gcs': ('Google Cloud Storage', N('com o token da conta ou a credencial de uma conta de serviço')),
+    'swift': ('OpenStack Swift', N('com o endereço de autenticação, o usuário e a chave')),
+    'qingstor': ('QingStor', N('com a chave de acesso e a chave secreta')),
+    'storj': ('Storj', N('com a concessão de acesso')),
+    'netstorage': ('Akamai NetStorage', N('com a conta e a chave')),
+    'filescom': ('Files.com', N('com a chave da API, ou com usuário e senha')),
+    'quatrix': ('Quatrix', N('com a chave da API')),
+    'sharefile': ('Citrix ShareFile', N('com o token da conta')),
+    'filefabric': ('Enterprise File Fabric', N('com o token permanente')),
 }
-# Cada campo do acesso de um remoto: o rótulo e a nota. Nenhum deles volta para a tela.
+# A tela de escolha: os tipos em grupos, na ordem em que aparecem. O que fala S3 não está aqui: é o destino S3.
+GRUPOS = (
+    (N('Servidores de arquivos'), ('sftp', 'webdav', 'ftp', 'seafile')),
+    (N('Nuvens de arquivos'), ('drive', 'onedrive', 'dropbox', 'pcloud', 'box', 'mega', 'protondrive', 'koofr',
+                              'yandex', 'mailru', 'hidrive', 'huaweidrive', 'zoho', 'putio', 'premiumizeme',
+                              'opendrive', 'filen', 'fichier', 'filelu', 'gofile', 'pixeldrain', 'drime', 'linkbox',
+                              'ulozto', 'shade')),
+    (N('Armazenamento de provedores de nuvem'), ('azureblob', 'azurefiles', 'b2', 'gcs', 'swift', 'qingstor', 'storj',
+                                                'netstorage')),
+    (N('Transferência de arquivos para empresas'), ('filescom', 'quatrix', 'sharefile', 'filefabric')),
+)
+# Cada campo do acesso de um remoto: o rótulo e a nota. A chave é o nome do campo, que vale para todos os tipos, ou
+# `tipo.campo`, quando o campo tem outro sentido naquele tipo (do_tipo). Nenhum valor volta para a tela.
 CAMPOS_DO_REMOTO = {
     'host': (N('Servidor'), N('nome ou endereço IP, sem a porta')),
     'port': (N('Porta'), N('em branco é a 22')),
@@ -90,8 +137,57 @@ CAMPOS_DO_REMOTO = {
     'region': (N('Região'), ''),
     'tenant': (N('Organização'), N('o domínio ou a identificação dela')),
     'hostname': (N('Região da conta'), ''),
+    'ftp.port': (N('Porta'), N('em branco é a 21')),
+    'explicit_tls': (N('Tipo de TLS'), ''),
+    'seafile.url': (N('Endereço'), N('só HTTPS: <code>https://nome</code>')),
+    'auth_token': (N('Token de acesso'), N('no lugar da senha')),
+    'library': (N('Biblioteca'), N('o nome dela, já criada no servidor')),
+    'library_key': (N('Senha da biblioteca'), N('só quando a biblioteca é cifrada')),
+    'box_sub_type': (N('Tipo da conta'), ''),
+    'username': (N('Usuário'), ''),
+    'password': (N('Senha'), ''),
+    'email': (N('E-mail da conta'), ''),
+    'mailbox_password': (N('Senha da caixa de correio'), N('só na conta que tem duas senhas')),
+    'provider': (N('Serviço'), ''),
+    'endpoint': (N('Endereço do serviço'), N('só HTTPS: <code>https://nome</code>')),
+    'koofr.endpoint': (N('Endereço do serviço'), N('só com o serviço Outro, e só HTTPS: <code>https://nome</code>')),
+    'qingstor.endpoint': (N('Endereço do serviço'), N('só HTTPS; em branco é o do próprio serviço')),
+    'sharefile.endpoint': (N('Endereço do serviço'), N('o da conta, só HTTPS: <code>https://nome.sf-api.com</code>')),
+    'zoho.region': (N('Região da conta'), ''),
+    'api_key': (N('Chave da API'), ''),
+    'filescom.api_key': (N('Chave da API'), N('no lugar do usuário e da senha')),
+    'key': (N('Chave'), ''),
+    'filelu.key': (N('Chave do rclone'), N('a que o serviço mostra na conta')),
+    'access_token': (N('Token de acesso'), ''),
+    'linkbox.token': (N('Token de acesso'), ''),
+    'app_token': (N('Token do aplicativo'), ''),
+    'account': (N('Conta'), ''),
+    'sas_url': (N('Endereço com assinatura (SAS)'), N('no lugar da conta e da chave')),
+    'share_name': (N('Compartilhamento'), N('o nome dele, já criado na conta')),
+    'b2.account': (N('Identificação da conta ou da chave'), ''),
+    'b2.key': (N('Chave de aplicação'), ''),
+    'bucket_policy_only': (N('Bucket com acesso uniforme'), ''),
+    'auth': (N('Endereço de autenticação'), N('só HTTPS: <code>https://nome:porta/v3</code>')),
+    'auth_version': (N('Versão da autenticação'), ''),
+    'swift.key': (N('Senha ou chave'), ''),
+    'domain': (N('Domínio do usuário'), N('só na versão 3')),
+    'swift.tenant': (N('Projeto'), ''),
+    'tenant_domain': (N('Domínio do projeto'), N('só na versão 3')),
+    'swift.region': (N('Região'), N('só quando o serviço tem mais de uma')),
+    'access_key_id': (N('Chave de acesso'), ''),
+    'secret_access_key': (N('Chave secreta'), ''),
+    'zone': (N('Zona'), N('a do bucket; em branco é a do próprio serviço')),
+    'access_grant': (N('Concessão de acesso'), ''),
+    'netstorage.host': (N('Servidor'), N('o nome e a pasta de partida: <code>nome/pasta</code>')),
+    'secret': (N('Chave'), ''),
+    'site': (N('Site'), N('o nome da conta no serviço ou o domínio próprio, sem <code>https://</code>')),
+    'quatrix.host': (N('Servidor'), N('o nome da conta no serviço, sem <code>https://</code>')),
+    'sharefile.root_folder_id': (N('Pasta de partida'), ''),
+    'filefabric.url': (N('Endereço'), N('só HTTPS: <code>https://nome</code>')),
+    'permanent_token': (N('Token permanente'), ''),
 }
-# O rótulo e a nota de cada opção dos campos de escolha. Nome de programa e de serviço não é traduzido.
+# O rótulo e a nota de cada opção dos campos de escolha, com a chave de CAMPOS_DO_REMOTO. Nome de programa e de
+# serviço não é traduzido.
 OPCOES = {
     'vendor': {'other': (N('Outro'), N('qualquer servidor WebDAV')), 'nextcloud': ('Nextcloud', ''), 'owncloud': ('ownCloud', ''),
                'infinitescale': ('Infinite Scale', ''), 'sharepoint': ('SharePoint Online', ''),
@@ -103,11 +199,24 @@ OPCOES = {
     'region': {'global': (N('Global'), ''), 'us': (N('Governo dos Estados Unidos'), ''), 'de': (N('Alemanha'), ''),
                'cn': (N('China'), '')},
     'hostname': {'api.pcloud.com': (N('Estados Unidos'), ''), 'eapi.pcloud.com': (N('Europa'), '')},
+    'explicit_tls': {'true': (N('Explícito'), N('o comum, na porta 21')),
+                     'false': (N('Implícito'), N('em geral na porta 990'))},
+    'box_sub_type': {'user': (N('Pessoal'), ''), 'enterprise': (N('Empresarial'), '')},
+    'provider': {'koofr': ('Koofr', ''), 'digistorage': ('Digi Storage', ''),
+                 'other': (N('Outro'), N('com o endereço do serviço'))},
+    'zoho.region': {'com': (N('Estados Unidos'), ''), 'eu': (N('Europa'), ''), 'in': (N('Índia'), ''),
+                    'jp': (N('Japão'), ''), 'com.cn': (N('China'), ''), 'com.au': (N('Austrália'), '')},
+    'bucket_policy_only': {'true': (N('Sim'), ''), 'false': (N('Não'), '')},
+    'auth_version': {'1': ('1', ''), '2': ('2', ''), '3': ('3', '')},
+    'sharefile.root_folder_id': {'favorites': (N('Favoritos'), ''), 'allshared': (N('Compartilhadas comigo'), ''),
+                                 'connectors': (N('Conectores'), ''), 'top': (N('Todas as pastas'), '')},
 }
 LONGOS = {'pem': rclone.PEM_MAX, 'json': rclone.JSON_MAX, 'chaves': 8000}    # caracteres de cada campo de várias linhas
-MAIORES = {'url': 2000, 'bearer_token': 4096}       # campos de uma linha que passam dos 256 caracteres
-OCULTOS = ('bearer_token', 'client_secret')         # campos de texto que a tela mostra como senha
-NUVENS = ('drive', 'onedrive', 'dropbox', 'pcloud')     # remotos abertos com o token que o rclone obtém fora do painel
+# Campos de uma linha que passam dos 256 caracteres, pela regra do valor.
+MAIORES = {rclone.URL: 2000, rclone.URL_SAS: 2400, rclone.PORTADOR: 4096}
+# Remotos abertos com o token que o rclone obtém fora do painel.
+NUVENS = ('drive', 'onedrive', 'dropbox', 'pcloud', 'box', 'yandex', 'hidrive', 'huaweidrive', 'zoho', 'putio', 'gcs',
+          'sharefile')
 SO_RECEBE = N('O remoto <strong>só recebe</strong>: o painel pede ao rclone que grave cada arquivo, e nada mais. Não lista, '
               'não baixa, não sincroniza e não apaga nada no remoto.')
 # O que a tela explica do acesso de cada tipo de remoto.
@@ -116,10 +225,23 @@ AJUDAS = {
               'apresentar e a ficha passa a mostrar a impressão digital dela, para conferir com a do servidor. Sem a chave '
               'guardada nada é enviado, e se ela mudar depois o envio para.'),
     'webdav': N('O certificado do servidor é conferido. Informe o usuário com a senha, ou o token de acesso.'),
+    'ftp': N('O envio só sai com TLS, e o certificado do servidor é conferido: servidor FTP sem TLS não serve de '
+             'destino.'),
+    'seafile': N('O certificado do servidor é conferido. Conta com verificação em duas etapas só entra com o token de '
+                 'acesso.'),
     'drive': N('Informe o token da conta ou a credencial de uma conta de serviço.'),
+    'gcs': N('Informe o token da conta ou a credencial de uma conta de serviço.'),
+    'mega': N('Conta com verificação em duas etapas não serve de destino: o painel não tem como informar o código a '
+              'cada envio.'),
+    'protondrive': N('Conta com verificação em duas etapas não serve de destino: o painel não tem como informar o '
+                     'código a cada envio.'),
+    'koofr': N('A senha é uma senha de aplicativo, criada na conta para este uso, e não a senha de entrada.'),
+    'mailru': N('A senha é uma senha de aplicativo, criada na conta para este uso, e não a senha de entrada.'),
     'onedrive': N('A identificação e o tipo do drive são os que o rclone mostra ao configurar o remoto no mesmo computador em '
                   'que o token foi obtido.'),
 }
+DO_BUCKET = N('A pasta no remoto começa pelo nome do bucket ou do contêiner, que já precisa existir: '
+              '<code>bucket/pasta</code>.')
 DO_TOKEN = N('O token é obtido fora do painel, em um computador com navegador e com o rclone: o comando '
              '<code>rclone authorize {tipo}</code> abre a página da conta e imprime o token. O painel não abre essa página.')
 # Motivo de uma falha, como destinos.py e saida.py registram ➜ a frase que a tela mostra.
@@ -178,6 +300,8 @@ ERROS = {
     'intervalo': N('Intervalo inválido: de 5 a 1440 minutos.'),
     'idioma': N('Idioma não aceito.'),
     'remoto': N('Escolha o tipo do remoto.'),
+    'balde': N('Informe a pasta no remoto: neste tipo ela é obrigatória e começa pelo nome do bucket ou do '
+               'contêiner.'),
     'caminho': N('Pasta no remoto inválida: até 16 níveis separados por barra, com letras, números, espaço, _, - e ponto.'),
     # Os da cópia do sistema (copia.defeito).
     'destino': N('Escolha um armazenamento S3 com os segredos gravados.'),
@@ -549,14 +673,19 @@ def tela_telegram(pedido, sessao, consulta, formulario=None, token=None, erro=''
     return None
 
 
-def campo_do_remoto(nome, forma, regra, marcas, tem):
+def do_tipo(tabela, tipo, nome):
+    """O que a tabela diz de um campo: o que é só daquele tipo de remoto, quando há, ou o que vale para o nome."""
+    return tabela.get(f'{tipo}.{nome}') or tabela[nome]
+
+
+def campo_do_remoto(tipo, nome, forma, regra, marcas, tem):
     """Um campo do acesso do remoto. Sai sempre em branco: o gravado não volta para a tela, nem o que foi digitado em
     um envio recusado. `tem` diz que há acesso gravado para manter, e então nenhum campo é exigido pelo navegador."""
-    titulo, nota = CAMPOS_DO_REMOTO[nome]
+    titulo, nota = do_tipo(CAMPOS_DO_REMOTO, tipo, nome)
     exigido = 'o' in marcas
     if forma == 'escolha':
-        opcoes = [(valor, t(OPCOES[nome][valor][0]), t(OPCOES[nome][valor][1]) if OPCOES[nome][valor][1] else '')
-                  for valor in regra]
+        rotulos = do_tipo(OPCOES, tipo, nome)
+        opcoes = [(valor, t(rotulos[valor][0]), t(rotulos[valor][1]) if rotulos[valor][1] else '') for valor in regra]
         if not exigido:
             opcoes.insert(0, ('', t('Não informar'), t('vale o padrão do rclone')))
         elif tem:
@@ -571,8 +700,8 @@ def campo_do_remoto(nome, forma, regra, marcas, tem):
         return f'{etiqueta_do}<textarea {fixos} rows="4" maxlength="{LONGOS[forma]}"></textarea>'
     if forma == 'porta':
         return f'{etiqueta_do}<input {fixos} type="number" min="1" max="65535" step="1" inputmode="numeric">'
-    oculto = ' type="password"' if forma == 'senha' or nome in OCULTOS else ''
-    return f'{etiqueta_do}<input {fixos}{oculto} maxlength="{MAIORES.get(nome, 256)}">'
+    oculto = ' type="password"' if forma == 'senha' or 's' in marcas else ''
+    return f'{etiqueta_do}<input {fixos}{oculto} maxlength="{MAIORES.get(regra, 256)}">'
 
 
 def remoto_gravado(destino, origem):
@@ -584,16 +713,21 @@ def remoto_gravado(destino, origem):
 
 def escolher_remoto(pedido, sessao, destino, erro, codigo):
     """Primeiro passo do remoto novo: o tipo, que decide os campos do acesso. A página não tem script, então a escolha
-    é um formulário de leitura que abre a mesma tela já com o tipo."""
+    é um formulário de leitura que abre a mesma tela já com o tipo. São muitos tipos: a lista é a do navegador, em
+    grupos, e o que cada um pede aparece no passo seguinte."""
     titulo = f'{t(TITULOS["rclone"])}: {t("novo destino")}'
-    opcoes = [(tipo, nome, t(nota)) for tipo, (nome, nota) in REMOTOS.items()]
+    grupos = ''.join(f'<optgroup label="{t(grupo)}">'
+                     + ''.join(f'<option value="{tipo}">{REMOTOS[tipo][0]}</option>' for tipo in tipos) + '</optgroup>'
+                     for grupo, tipos in GRUPOS)
     pedido.enviar(codigo, pagina(titulo, f'''<h1>{e(titulo)}</h1>
 <section class="cartao estreito">{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>{t(SO_RECEBE)}</p>
 <form method="get" action="{ABA}/rclone" autocomplete="off">
 <input type="hidden" name="id" value="{destino}">
-{escolha('remoto', t('Tipo do remoto'), opcoes, 'sftp')}
+<label for="remoto">{t('Tipo do remoto')}</label>
+<select id="remoto" name="remoto" required><option value="">{t('Escolha na lista')}</option>{grupos}</select>
 <p class="suave">{t('O tipo fica fixo depois de gravado: para outro tipo, crie outro destino.')}</p>
+<p class="suave">{t('Serviço compatível com S3 não está nesta lista: para ele, use o destino S3.')}</p>
 <button type="submit">{t('Continuar')}</button> <a class="botao" href="{ABA}">{t('Cancelar')}</a>
 </form></section>''', sessao, ABA))
     return None
@@ -615,17 +749,20 @@ def tela_rclone(pedido, sessao, consulta, formulario=None, token=None, erro='', 
                  t('O acesso gravado não aparece aqui. Deixe os campos abaixo em branco para mantê-lo; para trocar '
                    'qualquer parte dele, preencha o acesso inteiro de novo.') if tem else
                  t('Depois de gravado, o acesso não volta para a tela.'))
-    ajudas = ([t(AJUDAS[tipo])] if tipo in AJUDAS else []) + ([t(DO_TOKEN, tipo=tipo)] if tipo in NUVENS else [])
+    balde = tipo in rclone.BALDES
+    ajudas = (([t(AJUDAS[tipo])] if tipo in AJUDAS else []) + ([t(DO_BUCKET)] if balde else [])
+              + ([t(DO_TOKEN, tipo=tipo)] if tipo in NUVENS else []))
+    do_caminho = (t('obrigatória; começa pelo nome do bucket ou do contêiner') if balde else
+                  t('onde os arquivos são gravados; em branco é a pasta em que o remoto entra'))
     moldura(sessao, 'rclone', destino, origem, erro, codigo, f'''<p>{t(SO_RECEBE)}</p>
 <input type="hidden" name="remoto" value="{tipo}">
 <dl class="dados"><div class="larga"><dt>{t('Tipo do remoto')}</dt><dd>{REMOTOS[tipo][0]}: {t(REMOTOS[tipo][1])}</dd></div></dl>
-{texto('caminho', t('Pasta no remoto'), t('onde os arquivos são gravados; em branco é a pasta em que o remoto entra'),
-       dele['caminho'], ' maxlength="255"')}
+{texto('caminho', t('Pasta no remoto'), do_caminho, dele['caminho'], f' maxlength="255"{" required" if balde else ""}')}
 {comuns(dele)}
 <h2>{t('Acesso do remoto')}</h2>
 <p>{do_acesso}</p>
 {''.join(f'<p class="suave">{ajuda}</p>' for ajuda in ajudas)}
-{chr(10).join(campo_do_remoto(*campo, tem) for campo in rclone.CAMPOS[tipo])}
+{chr(10).join(campo_do_remoto(tipo, *campo, tem) for campo in rclone.CAMPOS[tipo])}
 <p class="suave">{t('O arquivo vai para a pasta do remoto com o mesmo caminho que tem dentro dos dados, e grava por cima do '
                     'que tiver o mesmo nome. O arquivo continua no servidor. Trocar a pasta no remoto, a pasta enviada ou o '
                     'lugar do acesso recomeça do zero: tudo o que está na pasta é enviado de novo.')}</p>''', pedido)
@@ -657,10 +794,14 @@ def formulario_do_rclone(destino, origem, conf, formulario):
         if falha.campo == 'acesso':
             return conf, ('',), t('Acesso incompleto: informe a senha, a chave privada, o token ou a credencial com que o '
                                   'remoto é aberto. O acesso inteiro cabe em 16 KiB.')
+        if falha.campo == 'demais':
+            return conf, ('',), t('Acesso com campos a mais: informe uma forma de acesso só, e deixe em branco os '
+                                  'campos da outra.')
         if falha.campo == 'key_file_pass':
             return conf, ('',), t('A frase vale só para chave privada cifrada: a chave cifrada pede a frase, e a chave sem '
                                   'cifra não leva frase.')
-        return conf, ('',), t('{campo}: em branco ou fora do formato.', campo=t(CAMPOS_DO_REMOTO[falha.campo][0]))
+        rotulo = do_tipo(CAMPOS_DO_REMOTO, tipo, falha.campo)[0]
+        return conf, ('',), t('{campo}: em branco ou fora do formato.', campo=t(rotulo))
     except saida.Falha as falha:
         return conf, ('',), t('O rclone não cifrou a senha: {motivo}.', motivo=explicar(falha.motivo))
     return conf, (rclone.montar(tipo, campos).rstrip('\n'),), ''
