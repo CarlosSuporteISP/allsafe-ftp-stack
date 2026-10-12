@@ -6,6 +6,23 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.8.0] - 2026-10-12
+
+O painel passa a ter espanhol, ao lado do português e do inglês.
+
+### Adicionado
+
+- **Painel em espanhol**: botão **ES**, com a bandeira, ao lado de **PT** e **EN**, embaixo do menu de todas as telas e na tela de entrada. Mudam todas as telas, os avisos, os erros dos formulários e a descrição de cada registro da aba Log; a data e os números ficam como em português.
+- **Catálogo do espanhol**: `painel/idioma_es.py`, com os mesmos textos do catálogo do inglês e as mesmas mensagens do comando de usuários. O tratamento é formal.
+- **Bot do Telegram em espanhol**: o campo **Idioma das mensagens** do destino passa a oferecer Español, para a legenda de cada arquivo e os avisos.
+- **Conferência dos dois catálogos**: `./scripts/validate.sh` exige a tradução de cada texto das telas em inglês e em espanhol, com os mesmos nomes entre chaves e as mesmas marcas de HTML do texto em português.
+- **Bateria**: um caso funcional percorre todas as telas em espanhol, com o administrador e os quatro perfis de usuário do FTP. São 100 casos funcionais, 144 de segurança e 14 de rede.
+
+### Alterado
+
+- **Escolha do idioma**: o cookie da tela de entrada e a escolha gravada de cada conta passam a aceitar `es`, além de `pt` e `en`.
+- **Fotos da aplicação**: refeitas com os três botões de idioma, mais a tela de entrada e a Visão geral em espanhol.
+
 ## [1.7.0] - 2026-10-12
 
 A entrada do painel ganha o segundo fator: depois da senha, o código de um aplicativo autenticador.

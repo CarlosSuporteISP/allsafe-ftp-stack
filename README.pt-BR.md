@@ -11,7 +11,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.7.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.8.0-blue)
 ![Status](https://img.shields.io/badge/status-est%C3%A1vel-brightgreen)
 ![Suporte](https://img.shields.io/badge/suporte-LTS-blue)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
@@ -26,7 +26,7 @@ Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsaf
 
 <a href="doc/pt-BR/imagens/painel-principal.png"><img src="doc/pt-BR/imagens/painel-principal.png" alt="Aba Visão geral com o menu à esquerda, em dois grupos, a faixa Servidor FTP, que diz No ar e TLS obrigatório no login, as quatro medidas Usuários, Espaço usado, Último envio e Certificado do FTP, cada uma com o atalho para o detalhe, o cartão Servidor e containers, com o processador e a memória do servidor e dos containers, os gráficos Arquivos recebidos por dia, Último envio por usuário e Espaço por pasta, o cartão Atividade recente, com os seis últimos registros, e o cartão Dados para configurar o equipamento" width="100%"></a>
 
-<sub><b>v1.1.0</b> · painel web, aba Visão geral · captura de 2026-10-11</sub>
+<sub><b>v1.8.0</b> · painel web, aba Visão geral · captura de 2026-10-12</sub>
 
 <!-- diagrama: doc/pt-BR/diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -131,10 +131,10 @@ O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página,
 | **Segurança** — confere rede, TLS, certificados, bloqueios, senhas e contato de segurança | **Bloqueios** — os endereços e os prefixos bloqueados, por erro de usuário e senha ou pelo administrador, com bloqueio novo, desbloqueio e troca do prazo |
 | <a href="doc/pt-BR/imagens/aba-atividade.png"><img src="doc/pt-BR/imagens/aba-atividade.png" alt="Aba Log com os registros do painel em quatro colunas: quando, de onde, com o endereço inteiro em uma linha só ou no servidor, o que aconteceu, com um ícone por evento, e o detalhe, como arquivos enviados para o destino, arquivo baixado, pasta criada, administrador criado, endereço desbloqueado e tela fora do papel ou do perfil pedida por usuário do FTP" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-administradores.png"><img src="doc/pt-BR/imagens/aba-administradores.png" alt="Aba Usuários com três administradores no começo da lista, admin, com a etiqueta você, noc-plantao e suporte, cada um com o perfil Administrador, as sessões abertas e as ações Trocar senha, Trocar nome e Remover, e, abaixo deles, os usuários do FTP" width="100%"></a> |
 | **Log** — quem entrou, de onde, o que baixou, o que enviou e o que foi alterado | **Administradores** — ficam na aba Usuários, cada pessoa com o próprio nome e a própria senha |
-| <a href="doc/pt-BR/imagens/aba-meus-arquivos.png"><img src="doc/pt-BR/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, de perfil Completo, com as pastas 2026-09 e 2026-10 e um arquivo de configuração, o aviso da limpeza automática acima da lista, os botões Abrir ou Baixar, Renomear e Apagar em cada linha, os cartões Nova pasta e Enviar arquivo e, no menu, só a aba Meus arquivos, os botões PT e EN, o nome do usuário e o botão Sair" width="100%"></a> | |
+| <a href="doc/pt-BR/imagens/aba-meus-arquivos.png"><img src="doc/pt-BR/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, de perfil Completo, com as pastas 2026-09 e 2026-10 e um arquivo de configuração, o aviso da limpeza automática acima da lista, os botões Abrir ou Baixar, Renomear e Apagar em cada linha, os cartões Nova pasta e Enviar arquivo e, no menu, só a aba Meus arquivos, os botões PT, EN e ES, o nome do usuário e o botão Sair" width="100%"></a> | |
 | **Meus arquivos** — o usuário do FTP vê a própria pasta e faz nela o que o perfil dele deixa | |
 
-<sub><b>v1.4.0</b> · painel web, uma foto por aba · capturas de 2026-10-11; a da aba Destinos é da <b>v1.6.0</b> e as das abas Usuários e Segurança são da <b>v1.7.0</b>, de 2026-10-12</sub>
+<sub><b>v1.8.0</b> · painel web, uma foto por aba · capturas de 2026-10-12</sub>
 
 Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplicação](doc/pt-BR/aplicacao/README.md).
 
@@ -666,11 +666,11 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 
 | Quero | Comando | Resultado esperado |
 |---|---|---|
-| Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `painel OK: <n> módulos Python`, `idioma OK: <n> textos do painel com tradução em inglês, <n> mensagens do comando de usuários`, `marca OK: 6 arquivos em web/marca/`, `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` para os cinco perfis e `Validacao FTP concluida.` |
+| Conferir sintaxe e Compose, sem subir nada | `./scripts/validate.sh` | `painel OK: <n> módulos Python`, `idioma OK: <n> textos do painel com tradução em inglês e em espanhol, <n> mensagens do comando de usuários`, `marca OK: 6 arquivos em web/marca/`, `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` para os cinco perfis e `Validacao FTP concluida.` |
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 99 casos funcionais, 144 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 100 casos funcionais, 144 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
 
 ---
 
