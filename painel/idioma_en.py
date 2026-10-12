@@ -2524,6 +2524,189 @@ EN = {
         'rclone stopped with an error the panel does not recognize',
     'o rclone está ocupado com outro envio: tente de novo em instantes':
         'rclone is busy with another upload: try again in a moment',
+    'A pasta no remoto começa pelo nome do bucket ou do contêiner, que já precisa existir: <code>bucket/pasta</code>.':
+        'The folder on the remote starts with the name of the bucket or container, which must already exist: '
+        '<code>bucket/folder</code>.',
+    'O envio só sai com TLS, e o certificado do servidor é conferido: servidor FTP sem TLS não serve de destino.':
+        'Uploads only go out over TLS, and the server certificate is checked: an FTP server without TLS cannot be a '
+        'destination.',
+    'O certificado do servidor é conferido. Conta com verificação em duas etapas só entra com o token de acesso.':
+        'The server certificate is checked. An account with two-step verification only signs in with the access '
+        'token.',
+    'Conta com verificação em duas etapas não serve de destino: o painel não tem como informar o código a cada envio.':
+        'An account with two-step verification cannot be a destination: the panel has no way to provide the code on '
+        'each upload.',
+    'A senha é uma senha de aplicativo, criada na conta para este uso, e não a senha de entrada.':
+        'The password is an app password, created in the account for this use, and not the sign-in password.',
+    'Informe a pasta no remoto: neste tipo ela é obrigatória e começa pelo nome do bucket ou do contêiner.':
+        'Enter the folder on the remote: for this type it is required and starts with the name of the bucket or '
+        'container.',
+    'servidor FTP com TLS, com usuário e senha':
+        'FTP server with TLS, with user and password',
+    'com usuário e senha':
+        'with user and password',
+    'com o usuário e uma senha de aplicativo':
+        'with the user and an app password',
+    'com a chave da API':
+        'with the API key',
+    'com usuário, senha e chave da API':
+        'with user, password and API key',
+    'com a chave que o serviço dá ao rclone':
+        'with the key the service gives to rclone',
+    'com o token de acesso':
+        'with the access token',
+    'com usuário, senha e token':
+        'with user, password and token',
+    'com a conta e a chave, ou com o endereço com assinatura':
+        'with the account and the key, or with the signed address',
+    'com a conta e a chave':
+        'with the account and the key',
+    'com o endereço de autenticação, o usuário e a chave':
+        'with the authentication address, the user and the key',
+    'com a chave de acesso e a chave secreta':
+        'with the access key and the secret key',
+    'com a concessão de acesso':
+        'with the access grant',
+    'com a chave da API, ou com usuário e senha':
+        'with the API key, or with user and password',
+    'com o token permanente':
+        'with the permanent token',
+    'Servidores de arquivos':
+        'File servers',
+    'Nuvens de arquivos':
+        'File clouds',
+    'Armazenamento de provedores de nuvem':
+        'Cloud provider storage',
+    'Transferência de arquivos para empresas':
+        'File transfer for businesses',
+    'em branco é a 21':
+        'blank means 21',
+    'Tipo de TLS':
+        'TLS type',
+    'só HTTPS: <code>https://nome</code>':
+        'HTTPS only: <code>https://name</code>',
+    'no lugar da senha':
+        'in place of the password',
+    'Biblioteca':
+        'Library',
+    'o nome dela, já criada no servidor':
+        'its name, already created on the server',
+    'Senha da biblioteca':
+        'Library password',
+    'só quando a biblioteca é cifrada':
+        'only when the library is encrypted',
+    'Tipo da conta':
+        'Account type',
+    'E-mail da conta':
+        'Account e-mail',
+    'Senha da caixa de correio':
+        'Mailbox password',
+    'só na conta que tem duas senhas':
+        'only for an account that has two passwords',
+    'Serviço':
+        'Service',
+    'só com o serviço Outro, e só HTTPS: <code>https://nome</code>':
+        'only with the service Other, and HTTPS only: <code>https://name</code>',
+    'só HTTPS; em branco é o do próprio serviço':
+        'HTTPS only; blank is the one of the service itself',
+    'o da conta, só HTTPS: <code>https://nome.sf-api.com</code>':
+        'the one of the account, HTTPS only: <code>https://name.sf-api.com</code>',
+    'Chave da API':
+        'API key',
+    'Chave':
+        'Key',
+    'Chave do rclone':
+        'rclone key',
+    'a que o serviço mostra na conta':
+        'the one the service shows in the account',
+    'Token do aplicativo':
+        'Application token',
+    'Conta':
+        'Account',
+    'Endereço com assinatura (SAS)':
+        'Signed address (SAS)',
+    'no lugar da conta e da chave':
+        'in place of the account and the key',
+    'Compartilhamento':
+        'Share',
+    'o nome dele, já criado na conta':
+        'its name, already created in the account',
+    'Identificação da conta ou da chave':
+        'Account ID or key ID',
+    'Chave de aplicação':
+        'Application key',
+    'Bucket com acesso uniforme':
+        'Bucket with uniform access',
+    'Endereço de autenticação':
+        'Authentication address',
+    'só HTTPS: <code>https://nome:porta/v3</code>':
+        'HTTPS only: <code>https://name:port/v3</code>',
+    'Versão da autenticação':
+        'Authentication version',
+    'Senha ou chave':
+        'Password or key',
+    'Domínio do usuário':
+        'User domain',
+    'só na versão 3':
+        'only in version 3',
+    'Projeto':
+        'Project',
+    'Domínio do projeto':
+        'Project domain',
+    'só quando o serviço tem mais de uma':
+        'only when the service has more than one',
+    'Zona':
+        'Zone',
+    'a do bucket; em branco é a do próprio serviço':
+        'the one of the bucket; blank is the one of the service itself',
+    'Concessão de acesso':
+        'Access grant',
+    'o nome e a pasta de partida: <code>nome/pasta</code>':
+        'the name and the starting folder: <code>name/folder</code>',
+    'Site':
+        'Site',
+    'o nome da conta no serviço ou o domínio próprio, sem <code>https://</code>':
+        'the account name in the service or your own domain, without <code>https://</code>',
+    'o nome da conta no serviço, sem <code>https://</code>':
+        'the account name in the service, without <code>https://</code>',
+    'Token permanente':
+        'Permanent token',
+    'obrigatória; começa pelo nome do bucket ou do contêiner':
+        'required; starts with the name of the bucket or container',
+    'Explícito':
+        'Explicit',
+    'o comum, na porta 21':
+        'the usual one, on port 21',
+    'Implícito':
+        'Implicit',
+    'em geral na porta 990':
+        'usually on port 990',
+    'com o endereço do serviço':
+        'with the service address',
+    'Índia':
+        'India',
+    'Japão':
+        'Japan',
+    'Austrália':
+        'Australia',
+    'Sim':
+        'Yes',
+    'Não':
+        'No',
+    'Favoritos':
+        'Favorites',
+    'Compartilhadas comigo':
+        'Shared with me',
+    'Conectores':
+        'Connectors',
+    'Todas as pastas':
+        'All folders',
+    'Escolha na lista':
+        'Choose from the list',
+    'Serviço compatível com S3 não está nesta lista: para ele, use o destino S3.':
+        'S3-compatible services are not in this list: for them, use the S3 destination.',
+    'Acesso com campos a mais: informe uma forma de acesso só, e deixe em branco os campos da outra.':
+        'Access with extra fields: enter a single form of access, and leave the fields of the other blank.',
     'Escolha o tipo do remoto.':
         'Choose the remote type.',
     'Pasta no remoto inválida: até 16 níveis separados por barra, com letras, números, espaço, _, - e ponto.':

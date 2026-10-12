@@ -2494,6 +2494,190 @@ ES = {
         'el rclone se detuvo con un error que el panel no reconoce',
     'o rclone está ocupado com outro envio: tente de novo em instantes':
         'el rclone está ocupado con otro envío: inténtelo de nuevo en unos instantes',
+    'A pasta no remoto começa pelo nome do bucket ou do contêiner, que já precisa existir: <code>bucket/pasta</code>.':
+        'La carpeta en el remoto empieza por el nombre del bucket o del contenedor, que ya tiene que existir: '
+        '<code>bucket/carpeta</code>.',
+    'O envio só sai com TLS, e o certificado do servidor é conferido: servidor FTP sem TLS não serve de destino.':
+        'El envío solo sale con TLS, y el certificado del servidor se verifica: un servidor FTP sin TLS no sirve de '
+        'destino.',
+    'O certificado do servidor é conferido. Conta com verificação em duas etapas só entra com o token de acesso.':
+        'El certificado del servidor se verifica. Una cuenta con verificación en dos pasos solo entra con el token '
+        'de acceso.',
+    'Conta com verificação em duas etapas não serve de destino: o painel não tem como informar o código a cada envio.':
+        'Una cuenta con verificación en dos pasos no sirve de destino: el panel no tiene cómo indicar el código en '
+        'cada envío.',
+    'A senha é uma senha de aplicativo, criada na conta para este uso, e não a senha de entrada.':
+        'La contraseña es una contraseña de aplicación, creada en la cuenta para este uso, y no la contraseña de '
+        'entrada.',
+    'Informe a pasta no remoto: neste tipo ela é obrigatória e começa pelo nome do bucket ou do contêiner.':
+        'Indique la carpeta en el remoto: en este tipo es obligatoria y empieza por el nombre del bucket o del '
+        'contenedor.',
+    'servidor FTP com TLS, com usuário e senha':
+        'servidor FTP con TLS, con usuario y contraseña',
+    'com usuário e senha':
+        'con usuario y contraseña',
+    'com o usuário e uma senha de aplicativo':
+        'con el usuario y una contraseña de aplicación',
+    'com a chave da API':
+        'con la clave de la API',
+    'com usuário, senha e chave da API':
+        'con usuario, contraseña y clave de la API',
+    'com a chave que o serviço dá ao rclone':
+        'con la clave que el servicio da a rclone',
+    'com o token de acesso':
+        'con el token de acceso',
+    'com usuário, senha e token':
+        'con usuario, contraseña y token',
+    'com a conta e a chave, ou com o endereço com assinatura':
+        'con la cuenta y la clave, o con la dirección con firma',
+    'com a conta e a chave':
+        'con la cuenta y la clave',
+    'com o endereço de autenticação, o usuário e a chave':
+        'con la dirección de autenticación, el usuario y la clave',
+    'com a chave de acesso e a chave secreta':
+        'con la clave de acceso y la clave secreta',
+    'com a concessão de acesso':
+        'con la concesión de acceso',
+    'com a chave da API, ou com usuário e senha':
+        'con la clave de la API, o con usuario y contraseña',
+    'com o token permanente':
+        'con el token permanente',
+    'Servidores de arquivos':
+        'Servidores de archivos',
+    'Nuvens de arquivos':
+        'Nubes de archivos',
+    'Armazenamento de provedores de nuvem':
+        'Almacenamiento de proveedores de nube',
+    'Transferência de arquivos para empresas':
+        'Transferencia de archivos para empresas',
+    'em branco é a 21':
+        'en blanco es el 21',
+    'Tipo de TLS':
+        'Tipo de TLS',
+    'só HTTPS: <code>https://nome</code>':
+        'solo HTTPS: <code>https://nombre</code>',
+    'no lugar da senha':
+        'en lugar de la contraseña',
+    'Biblioteca':
+        'Biblioteca',
+    'o nome dela, já criada no servidor':
+        'su nombre, ya creada en el servidor',
+    'Senha da biblioteca':
+        'Contraseña de la biblioteca',
+    'só quando a biblioteca é cifrada':
+        'solo cuando la biblioteca está cifrada',
+    'Tipo da conta':
+        'Tipo de la cuenta',
+    'E-mail da conta':
+        'Correo de la cuenta',
+    'Senha da caixa de correio':
+        'Contraseña del buzón',
+    'só na conta que tem duas senhas':
+        'solo en la cuenta que tiene dos contraseñas',
+    'Serviço':
+        'Servicio',
+    'só com o serviço Outro, e só HTTPS: <code>https://nome</code>':
+        'solo con el servicio Otro, y solo HTTPS: <code>https://nombre</code>',
+    'só HTTPS; em branco é o do próprio serviço':
+        'solo HTTPS; en blanco es la del propio servicio',
+    'o da conta, só HTTPS: <code>https://nome.sf-api.com</code>':
+        'la de la cuenta, solo HTTPS: <code>https://nombre.sf-api.com</code>',
+    'Chave da API':
+        'Clave de la API',
+    'Chave':
+        'Clave',
+    'Chave do rclone':
+        'Clave de rclone',
+    'a que o serviço mostra na conta':
+        'la que el servicio muestra en la cuenta',
+    'Token do aplicativo':
+        'Token de la aplicación',
+    'Conta':
+        'Cuenta',
+    'Endereço com assinatura (SAS)':
+        'Dirección con firma (SAS)',
+    'no lugar da conta e da chave':
+        'en lugar de la cuenta y de la clave',
+    'Compartilhamento':
+        'Recurso compartido',
+    'o nome dele, já criado na conta':
+        'su nombre, ya creado en la cuenta',
+    'Identificação da conta ou da chave':
+        'Identificación de la cuenta o de la clave',
+    'Chave de aplicação':
+        'Clave de aplicación',
+    'Bucket com acesso uniforme':
+        'Bucket con acceso uniforme',
+    'Endereço de autenticação':
+        'Dirección de autenticación',
+    'só HTTPS: <code>https://nome:porta/v3</code>':
+        'solo HTTPS: <code>https://nombre:puerto/v3</code>',
+    'Versão da autenticação':
+        'Versión de la autenticación',
+    'Senha ou chave':
+        'Contraseña o clave',
+    'Domínio do usuário':
+        'Dominio del usuario',
+    'só na versão 3':
+        'solo en la versión 3',
+    'Projeto':
+        'Proyecto',
+    'Domínio do projeto':
+        'Dominio del proyecto',
+    'só quando o serviço tem mais de uma':
+        'solo cuando el servicio tiene más de una',
+    'Zona':
+        'Zona',
+    'a do bucket; em branco é a do próprio serviço':
+        'la del bucket; en blanco es la del propio servicio',
+    'Concessão de acesso':
+        'Concesión de acceso',
+    'o nome e a pasta de partida: <code>nome/pasta</code>':
+        'el nombre y la carpeta de partida: <code>nombre/carpeta</code>',
+    'Site':
+        'Sitio',
+    'o nome da conta no serviço ou o domínio próprio, sem <code>https://</code>':
+        'el nombre de la cuenta en el servicio o el dominio propio, sin <code>https://</code>',
+    'o nome da conta no serviço, sem <code>https://</code>':
+        'el nombre de la cuenta en el servicio, sin <code>https://</code>',
+    'Token permanente':
+        'Token permanente',
+    'obrigatória; começa pelo nome do bucket ou do contêiner':
+        'obligatoria; empieza por el nombre del bucket o del contenedor',
+    'Explícito':
+        'Explícito',
+    'o comum, na porta 21':
+        'el habitual, en el puerto 21',
+    'Implícito':
+        'Implícito',
+    'em geral na porta 990':
+        'en general en el puerto 990',
+    'com o endereço do serviço':
+        'con la dirección del servicio',
+    'Índia':
+        'India',
+    'Japão':
+        'Japón',
+    'Austrália':
+        'Australia',
+    'Sim':
+        'Sí',
+    'Não':
+        'No',
+    'Favoritos':
+        'Favoritos',
+    'Compartilhadas comigo':
+        'Compartidas conmigo',
+    'Conectores':
+        'Conectores',
+    'Todas as pastas':
+        'Todas las carpetas',
+    'Escolha na lista':
+        'Elija en la lista',
+    'Serviço compatível com S3 não está nesta lista: para ele, use o destino S3.':
+        'Un servicio compatible con S3 no está en esta lista: para él, use el destino S3.',
+    'Acesso com campos a mais: informe uma forma de acesso só, e deixe em branco os campos da outra.':
+        'Acceso con campos de más: indique una sola forma de acceso, y deje en blanco los campos de la otra.',
     'Escolha o tipo do remoto.':
         'Elija el tipo del remoto.',
     'Pasta no remoto inválida: até 16 níveis separados por barra, com letras, números, espaço, _, - e ponto.':

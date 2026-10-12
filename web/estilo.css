@@ -629,7 +629,7 @@ form > h2 { margin: 24px 0 8px; padding-top: 16px; border-top: 1px solid var(--b
 .busca button, .busca .botao { margin: 0; }
 label .suave { font-weight: 400; }
 
-input:not([type="hidden"]), textarea {
+input:not([type="hidden"]), textarea, select {
   width: 100%;
   min-height: 44px;
   padding: 8px 12px;
@@ -640,7 +640,7 @@ input:not([type="hidden"]), textarea {
   font: inherit;
   transition: border-color var(--passo) var(--curva);
 }
-input:focus-visible, textarea:focus-visible { border-color: var(--foco); }
+input:focus-visible, textarea:focus-visible, select:focus-visible { border-color: var(--foco); }
 /* Campo de várias linhas (chave e token do remoto): letra de largura fixa, para conferir o que foi colado. */
 textarea {
   display: block;
@@ -701,7 +701,7 @@ p > .botao { margin-top: 0; }
   a:hover { text-decoration: underline; }
   nav a:hover { background: var(--marca-toque); color: var(--marca-texto); text-decoration: none; }
   tbody tr:hover { background: color-mix(in oklab, var(--superficie-2) 45%, transparent); }
-  input:not([type="hidden"]):hover, textarea:hover { border-color: var(--suave); }
+  input:not([type="hidden"]):hover, textarea:hover, select:hover { border-color: var(--suave); }
   button:hover, .botao:hover { border-color: var(--borda-campo); text-decoration: none; }
   td .botao:hover { background: var(--superficie-2); }
   form button[type="submit"]:hover, .botao.principal:hover { border-color: transparent; background: var(--acao-realce); }
