@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-for programa in docker curl openssl ss sha256sum tar; do
+for programa in docker curl openssl ss sha256sum tar ssh-keygen setsid; do
   command -v "$programa" >/dev/null 2>&1 || die "$programa não encontrado no host."
 done
 docker compose version >/dev/null 2>&1 || die "plugin Docker Compose não encontrado."
