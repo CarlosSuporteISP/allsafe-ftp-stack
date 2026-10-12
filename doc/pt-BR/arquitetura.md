@@ -87,6 +87,7 @@ flowchart LR
     painel -. "confere a senha do FTP" ..-> ftp
     ftp -. "consulta" .-> vauth
     ftp -. "lê o certificado" .-> vcerts
+    painel -. "lê para a cópia do sistema" .-> vcerts
 ```
 
 <sub>Nível 2 · Mapa · [fonte](diagramas/)</sub>
@@ -114,6 +115,7 @@ flowchart LR
 | Painel web | Pure-FTPd | confere a senha do usuário do FTP que entra no painel, pela rede interna da stack |
 | Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
 | Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
+| Painel web | `DATA_DIR/certs` | lê, somente leitura, para a [cópia do sistema](painel.md#copia-do-sistema) enviada ao S3 |
 
 **Configuração, segredos e registro**
 
@@ -164,14 +166,15 @@ O que cada script faz, com parâmetros e saída: [Scripts](scripts.md). Uso e pr
 |---|---|---|---|
 | `DATA_DIR/dados` | `/data` | `ftp` e `painel` | Arquivos dos usuários: cada usuário preso (`chroot`) na pasta do cadastro, `/data/<usuario>` ou a pasta escolhida na criação. O usuário de perfil Só envio fica preso em `/data/.entrada/<usuario>`, de onde o vigia leva cada arquivo para a pasta dele. O `ftp` grava; o `painel` cria a pasta de cada usuário e, na aba Arquivos, lê, cria pasta vazia, renomeia e apaga |
 | `DATA_DIR/auth` | `/auth` | `ftp` e `painel` | Base **PureDB**: `pureftpd.passwd` (texto, com o hash das senhas) e `pureftpd.pdb` (compilada), ambos `0600`; `ftp-cert.pem`, cópia do certificado do FTP **sem a chave**; `sem-tls.lista` (`0600`), os usuários dispensados do TLS, quando houver; `limites.lista` (`0600`), os limites próprios de cada usuário que não ficam no cadastro, quando houver; `bloqueios/` (`0700`), um arquivo por bloqueio por tentativa em vigor; `enderecos/` (`0700`), um arquivo por endereço bloqueado no FTP e no painel; `prefixos/` (`0700`), um arquivo por prefixo bloqueado pelo administrador; `chegadas/` (`0700`), os avisos de arquivo recém-chegado pelo FTP, que o painel lê e apaga em segundos; `rede.estado` e `recursos.estado` (`0600`), os contadores de rede e os recursos do container do serviço ftp, para a aba Servidor do painel; `.lock`, a trava das alterações |
-| `DATA_DIR/certs` | `/etc/ssl/private` | só `ftp` | `pure-ftpd.pem`: chave e certificado concatenados, `0600` |
+| `DATA_DIR/certs` | `/etc/ssl/private` no `ftp`; `/certs` no `painel`, somente leitura | `ftp` e `painel` | `pure-ftpd.pem`: chave e certificado concatenados, `0600`. O `painel` só lê a pasta, para levá-la na cópia do sistema |
 | `DATA_DIR/painel` | `/painel` | só `painel` | `tls/painel-cert.pem`, `tls/painel-key.pem` (`0600`), `administradores` (`0600`, o nome e o hash `scrypt` da senha de cada administrador), `auditoria.log` (`0600`), `idiomas` (`0600`, o idioma das telas que cada conta escolheu) e `destinos/` (`0700`), com a configuração e o andamento do S3 e do bot do Telegram, sem os segredos deles; pasta `0700` |
 | `DATA_DIR/nginx` | `/nginx` | `painel` (grava) e `nginx` (somente leitura) | `painel.sock`, o soquete Unix do painel, e `tls/`, a cópia do certificado e da chave (`0640`) para o nginx; pasta `0750`, do grupo `10001`. Refeita a cada subida. Dentro dela, `estado/` (`0700`, do usuário do nginx), montada à parte no nginx como `/estado`, com gravação: é onde ele publica `recursos.estado`, os recursos do container dele |
 | segredo `ftp_usuario_inicial_senha` (`SECRETS_DIR/ftp-usuario-inicial-senha.txt`) | `/run/secrets/ftp_usuario_inicial_senha` (somente leitura) | só `ftp` | Senha do usuário inicial |
 | segredo `painel_admin_inicial_senha_hash` (`SECRETS_DIR/painel-admin-inicial-senha-hash.txt`) | `/run/secrets/painel_admin_inicial_senha_hash` (somente leitura) | só `painel` | Hash `scrypt` da senha inicial do primeiro administrador do painel, usado só enquanto não existe nenhum |
+| segredo `backup_chave_publica` (`SECRETS_DIR/backup-chave-publica.txt`) | `/run/secrets/backup_chave_publica` (somente leitura) | só `painel` | Chave pública que cifra a cópia do sistema enviada ao S3. Ela não abre nada: a chave privada não é montada em nenhum container |
 | `SECRETS_DIR/destinos` | `/segredos` | só `painel` | Chaves de cada S3, token de cada bot do Telegram e conversa que recebe, um arquivo `0600` por segredo, com o nome do destino na frente, gravados pelo painel na aba [Destinos](painel.md#destinos); pasta `0700`, vazia até o administrador gravar um destino. É a única pasta de segredos em que um container grava |
 
-Dos arquivos de `.secrets/`, cada serviço vê um só, e o `nginx` não vê nenhum; o `painel` vê ainda a pasta `destinos`, com os segredos que ele mesmo grava. Além disso, o `ftp` e o `painel` têm dois `tmpfs`, `/run` (8 MiB) e `/tmp` (16 MiB), e o `nginx` tem `/run/nginx` (1 MiB) e `/tmp/nginx` (16 MiB), do usuário `10001`. Todos `noexec,nosuid,nodev`.
+Dos arquivos de `.secrets/`, o `ftp` vê um, o `painel` vê dois, o hash da senha inicial e a chave pública da cópia, e o `nginx` não vê nenhum; o `painel` vê ainda a pasta `destinos`, com os segredos que ele mesmo grava. Além disso, o `ftp` e o `painel` têm dois `tmpfs`, `/run` (8 MiB) e `/tmp` (16 MiB), e o `nginx` tem `/run/nginx` (1 MiB) e `/tmp/nginx` (16 MiB), do usuário `10001`. Todos `noexec,nosuid,nodev`.
 
 ---
 

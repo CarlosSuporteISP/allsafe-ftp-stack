@@ -452,6 +452,7 @@ flowchart LR
     painel -. "confere a senha do FTP" ..-> ftp
     ftp -. "consulta" .-> vauth
     ftp -. "lê o certificado" .-> vcerts
+    painel -. "lê para a cópia do sistema" .-> vcerts
 ```
 
 <sub>Nível 2 · Mapa · [fonte](doc/pt-BR/diagramas/)</sub>
@@ -478,6 +479,7 @@ flowchart LR
 | Painel web | Pure-FTPd | confere a senha do usuário do FTP que entra no painel, pela rede interna da stack |
 | Pure-FTPd | `DATA_DIR/auth` (PureDB) | consulta os usuários |
 | Pure-FTPd | `DATA_DIR/certs` | lê o certificado |
+| Painel web | `DATA_DIR/certs` | lê, somente leitura, para a [cópia do sistema](doc/pt-BR/painel.md#copia-do-sistema) enviada ao S3 |
 
 **Configuração, segredos e registro**
 
@@ -500,11 +502,12 @@ O mapa mostra as peças e os volumes. A configuração, os segredos e o registro
 | Container `allsafe-ftp-nginx` (serviço `nginx`) | Frente web do painel: HTTPS, redes permitidas, limite de pedidos e arquivos estáticos | `8443/tcp` ➜ `8443/tcp` | — |
 | Pasta `DATA_DIR/auth` | Banco PureDB dos usuários virtuais, dividido pelo FTP e pelo painel | — | `/auth` |
 | Pasta `DATA_DIR/dados` | Arquivos enviados, uma pasta por usuário | — | `/data` |
-| Pasta `DATA_DIR/certs` | Chave e certificado TLS do FTP (`pure-ftpd.pem`) | — | `/etc/ssl/private` |
+| Pasta `DATA_DIR/certs` | Chave e certificado TLS do FTP (`pure-ftpd.pem`); o painel só lê a pasta, para a cópia do sistema | — | `/etc/ssl/private` no FTP; `/certs` no painel, somente leitura |
 | Pasta `DATA_DIR/painel` | Certificado do painel, administradores (nome e hash da senha), `auditoria.log` e o idioma escolhido por cada conta (`idiomas`) | — | `/painel` |
 | Pasta `DATA_DIR/nginx` | Soquete do painel e cópia do certificado, refeitos a cada subida; o nginx só lê | — | `/nginx` |
 | Segredo `ftp_usuario_inicial_senha` | Senha do usuário inicial (`.secrets/ftp-usuario-inicial-senha.txt`), somente leitura | — | `/run/secrets/ftp_usuario_inicial_senha` |
 | Segredo `painel_admin_inicial_senha_hash` | Hash da senha inicial do primeiro administrador do painel (`.secrets/painel-admin-inicial-senha-hash.txt`), somente leitura | — | `/run/secrets/painel_admin_inicial_senha_hash` |
+| Segredo `backup_chave_publica` | Chave pública que cifra a cópia do sistema enviada ao S3 (`.secrets/backup-chave-publica.txt`), somente leitura, no painel | — | `/run/secrets/backup_chave_publica` |
 | Rede `allsafe-ftp-network` | Bridge dedicada, sub-rede `172.29.1.0/29` | — | — |
 
 - **Imagens:** [`Dockerfile`](Dockerfile) com três alvos sobre o mesmo `debian:trixie-slim` (Debian 13), fixado por digest: `ftp` (`pure-ftpd` e o usuário `ftpdata`, uid e gid **10000**), `painel` (o mesmo, com `python3`) e `nginx` (só `nginx` e `openssl`, com o usuário `frente`, uid e gid **10001**). As três levam o `LICENSE` e o `NOTICE` do projeto em `/usr/share/doc/allsafe-ftp-stack/`.

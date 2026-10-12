@@ -87,11 +87,12 @@ flowchart LR
 |---|---|---|
 | Files uploaded by the devices | `DATA_DIR/dados` | `/data` |
 | Virtual users (PureDB) | `DATA_DIR/auth` | `/auth` |
-| TLS key and certificate of the FTP | `DATA_DIR/certs` | `/etc/ssl/private` |
+| TLS key and certificate of the FTP | `DATA_DIR/certs` | `/etc/ssl/private` in the FTP; `/certs` in the panel, read-only |
 | Certificate, administrators and audit log of the panel | `DATA_DIR/painel` | `/painel` |
 | Panel socket and copy of the certificate, for nginx (remade at every start) | `DATA_DIR/nginx` | `/nginx` |
 | Password of the initial user | `.secrets/ftp-usuario-inicial-senha.txt`, in the project folder | `/run/secrets/ftp_usuario_inicial_senha` (read-only) |
 | Initial password of the panel, only the hash | `.secrets/painel-admin-inicial-senha-hash.txt`, in the project folder | `/run/secrets/painel_admin_inicial_senha_hash` (read-only) |
+| Public key of the system copy | `.secrets/backup-chave-publica.txt`, in the project folder | `/run/secrets/backup_chave_publica` (read-only), in the panel |
 | Configuration | `.env`, in the project folder | environment variables |
 | Logs | `local` driver of Docker, 10 MB × 3 | `stdout` |
 

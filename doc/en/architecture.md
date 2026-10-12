@@ -86,6 +86,7 @@ flowchart LR
     painel -. "checks the FTP password" ..-> ftp
     ftp -. "looks up" .-> vauth
     ftp -. "reads the certificate" .-> vcerts
+    painel -. "reads for the system copy" .-> vcerts
 ```
 <sub>Level 2 · Map · [source](diagrams/)</sub>
 
@@ -112,6 +113,7 @@ flowchart LR
 | Web panel | Pure-FTPd | checks the password of the FTP user who signs in to the panel, over the internal network of the stack |
 | Pure-FTPd | `DATA_DIR/auth` (PureDB) | looks up the users |
 | Pure-FTPd | `DATA_DIR/certs` | reads the certificate |
+| Web panel | `DATA_DIR/certs` | reads it, read-only, for the [system copy](panel.md#copia-do-sistema) sent to the S3 |
 
 **Configuration, secrets and log**
 
@@ -162,14 +164,15 @@ What each script does, with parameters and output: [Scripts](scripts.md). Use an
 |---|---|---|---|
 | `DATA_DIR/dados` | `/data` | `ftp` and `painel` | User files: each user locked (`chroot`) in the folder of the user database, `/data/<user>` or the folder chosen at creation. The user with the Upload only profile is locked in `/data/.entrada/<user>`, from where the watcher moves each file to the user folder. `ftp` writes; `painel` creates the folder of each user and, in the Files tab, reads, creates an empty folder, renames and deletes |
 | `DATA_DIR/auth` | `/auth` | `ftp` and `painel` | **PureDB** database: `pureftpd.passwd` (text, with the hash of the passwords) and `pureftpd.pdb` (compiled), both `0600`; `ftp-cert.pem`, copy of the FTP certificate **without the key**; `sem-tls.lista` (`0600`), the users exempt from TLS, when there are any; `limites.lista` (`0600`), the limits of each user that are not kept in the user database, when there are any; `bloqueios/` (`0700`), one file per block by attempts in effect; `enderecos/` (`0700`), one file per address blocked on the FTP and on the panel; `prefixos/` (`0700`), one file per prefix blocked by the administrator; `chegadas/` (`0700`), the notices of a file that has just arrived through FTP, which the panel reads and deletes within seconds; `rede.estado` and `recursos.estado` (`0600`), the network counters and the resources of the container of the ftp service, for the Server tab of the panel; `.lock`, the lock for changes |
-| `DATA_DIR/certs` | `/etc/ssl/private` | only `ftp` | `pure-ftpd.pem`: key and certificate concatenated, `0600` |
+| `DATA_DIR/certs` | `/etc/ssl/private` in `ftp`; `/certs` in `painel`, read-only | `ftp` and `painel` | `pure-ftpd.pem`: key and certificate concatenated, `0600`. `painel` only reads the folder, to take it in the system copy |
 | `DATA_DIR/painel` | `/painel` | only `painel` | `tls/painel-cert.pem`, `tls/painel-key.pem` (`0600`), `administradores` (`0600`, the name and the `scrypt` hash of the password of each administrator), `auditoria.log` (`0600`) and `idiomas` (`0600`, the screen language each account chose) and `destinos/` (`0700`), with the settings and the progress of S3 and of the Telegram bot, without their secrets; folder `0700` |
 | `DATA_DIR/nginx` | `/nginx` | `painel` (writes) and `nginx` (read-only) | `painel.sock`, the Unix socket of the panel, and `tls/`, the copy of the certificate and of the key (`0640`) for nginx; folder `0750`, of group `10001`. Rebuilt at every start. Inside it, `estado/` (`0700`, owned by the nginx user), mounted separately in nginx as `/estado`, with write access: it is where nginx publishes `recursos.estado`, the resources of its container |
 | secret `ftp_usuario_inicial_senha` (`SECRETS_DIR/ftp-usuario-inicial-senha.txt`) | `/run/secrets/ftp_usuario_inicial_senha` (read-only) | only `ftp` | Password of the initial user |
 | secret `painel_admin_inicial_senha_hash` (`SECRETS_DIR/painel-admin-inicial-senha-hash.txt`) | `/run/secrets/painel_admin_inicial_senha_hash` (read-only) | only `painel` | `scrypt` hash of the initial password of the first administrator of the panel, used only while there is none |
+| secret `backup_chave_publica` (`SECRETS_DIR/backup-chave-publica.txt`) | `/run/secrets/backup_chave_publica` (read-only) | only `painel` | Public key that encrypts the system copy sent to the S3. It opens nothing: the private key is not mounted in any container |
 | `SECRETS_DIR/destinos` | `/segredos` | only `painel` | Keys of each S3, token of each Telegram bot and receiving chat, one `0600` file per secret, with the name of the destination in front, written by the panel in the [Destinations](panel.md#destinos) tab; folder `0700`, empty until the administrator saves a destination. It is the only secrets folder a container writes to |
 
-Of the files of `.secrets/`, each service sees a single one, and `nginx` sees none; `painel` also sees the `destinos` folder, with the secrets it writes itself. In addition, `ftp` and `painel` have two `tmpfs`, `/run` (8 MiB) and `/tmp` (16 MiB), and `nginx` has `/run/nginx` (1 MiB) and `/tmp/nginx` (16 MiB), owned by user `10001`. All `noexec,nosuid,nodev`.
+Of the files of `.secrets/`, `ftp` sees one, `painel` sees two, the hash of the initial password and the public key of the copy, and `nginx` sees none; `painel` also sees the `destinos` folder, with the secrets it writes itself. In addition, `ftp` and `painel` have two `tmpfs`, `/run` (8 MiB) and `/tmp` (16 MiB), and `nginx` has `/run/nginx` (1 MiB) and `/tmp/nginx` (16 MiB), owned by user `10001`. All `noexec,nosuid,nodev`.
 
 ---
 
