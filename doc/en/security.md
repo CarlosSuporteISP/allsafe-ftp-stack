@@ -272,7 +272,7 @@ The stack does not let the mode go unnoticed. While it is on, the alert appears 
 | End of `./deploy.sh` and of `./deploy.sh --check-only` | The three-line `AVISO` above |
 | Summary of `./deploy.sh` | `SEM TLS (texto puro)` or `TLS explícito opcional (aceita texto puro)` on the FTP line |
 | Container log (`docker compose logs ftp`) | At each startup: `AVISO: FTP_TLS_MODE=0, FTP sem TLS: senhas e arquivos trafegam em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada.` |
-| Panel, Overview and Security screens | Alert band at the beginning of the screen and the item `FTP TLS` marked with |
+| Panel, Overview and Security screens | Alert band at the beginning of the screen and the item `FTP TLS` marked with the attention sign |
 
 The warning informs, it does not block: the decision belongs to whoever operates the server. The web panel is **not** affected by this variable and stays on HTTPS only.
 
@@ -989,7 +989,7 @@ Everything else stays internal to the containers. The panel does not publish a p
 
 What each protection means in practice and the flowchart of the decision: [Web panel](panel.md#protecoes).
 
-> Everything above was checked at the validation gates of versions `0.5.0` (panel), `0.7.0` (nginx in front), `0.22.0` (administrators), `0.23.0` (Files tab), `0.24.0` (folders), `0.25.0` (sign-in of the FTP user), `0.26.0` (per-user TLS), `0.27.0` (logo and icon delivered by nginx), `0.28.0` (`robots.txt` and `security.txt`), `0.29.0` (no password, random password, exhaustion and direct access to the user database), `0.38.0` (user editing), `0.39.0` (renaming and deleting through the panel), `0.40.0` (limits per user), `0.41.0` (blocking by attempts on FTP), `0.42.0` (HTTP/2 and compression of the stylesheet), `0.45.0` (per-user TLS through the panel), `0.51.0` (profiles, blocking by address and language of the screens), `0.52.0` (upload through the panel, blocking of IPv6 and of prefix and automatic cleanup) `1.1.0` (outside destinations: S3 and Telegram bot), `1.5.0` (rclone remote) and `1.7.0` (second factor), in a test instance. The host firewall is still up to whoever operates the server.
+> Everything above was checked at the validation gates of versions `0.5.0` (panel), `0.7.0` (nginx in front), `0.22.0` (administrators), `0.23.0` (Files tab), `0.24.0` (folders), `0.25.0` (sign-in of the FTP user), `0.26.0` (per-user TLS), `0.27.0` (logo and icon delivered by nginx), `0.28.0` (`robots.txt` and `security.txt`), `0.29.0` (no password, random password, exhaustion and direct access to the user database), `0.38.0` (user editing), `0.39.0` (renaming and deleting through the panel), `0.40.0` (limits per user), `0.41.0` (blocking by attempts on FTP), `0.42.0` (HTTP/2 and compression of the stylesheet), `0.45.0` (per-user TLS through the panel), `0.51.0` (profiles, blocking by address and language of the screens), `0.52.0` (upload through the panel, blocking of IPv6 and of prefix and automatic cleanup), `1.1.0` (outside destinations: S3 and Telegram bot), `1.5.0` (rclone remote) and `1.7.0` (second factor), in a test instance. The host firewall is still up to whoever operates the server.
 
 ---
 
@@ -1001,8 +1001,8 @@ No version is published without the whole suite approved. It runs on a clean clo
 
 | Suite | Cases | What it answers |
 |---|---|---|
-| Functional | 73 | The installation does what it promises: install in one command, upload and download, users from the terminal and from the panel, restart without loss, copy and restore |
-| Security | 124 | What should be refused is refused: each case tries something that cannot happen and checks the refusal |
+| Functional | 106 | The installation does what it promises: install in one command, upload and download, users from the terminal and from the panel, restart without loss, copy and restore |
+| Security | 151 | What should be refused is refused: each case tries something that cannot happen and checks the refusal |
 | Network | 14 | Only what was configured stays open: ports, listening address, passive mode, subnet and networks accepted by the panel |
 
 **What the security suite tries**, by target. The number is that of the case, the same that appears in the output of `./tests/testar.sh`:
@@ -1281,7 +1281,7 @@ nginx logs only what it refuses itself, in the format `ip método caminho códig
 - Key of the backup copy: `.secrets/backup-chave-privada.txt` opens and `.secrets/backup-chave-publica.txt` encrypts, both `0600`. They are not mounted in the services: only the disposable containers of the copy and of the restore use them. Whoever reads the private one on the server opens the copies made with it: to take that off the server, keep it in the vault and delete it from the server. See [Backup and restore](backup.md#chave).
 - Key of the certificate of the panel: generated in `DATA_DIR/painel/tls` and copied at each startup to `DATA_DIR/nginx/tls`, which nginx mounts read-only (key `0640`, group `10001`; folder `0750`). See [Secrets](secrets.md).
 - [`.gitignore`](../../.gitignore): `.env` and `.secrets/*.txt` (keeps only `.secrets/.gitkeep`, for the folder to exist in the clone).
-- [`.dockerignore`](../../.dockerignore): `.env`, `.env.example`, `.git`, `.gitignore`, `.secrets`, `doc`, `profiles`, `README.md`, `README.pt-BR.md`, `deploy.sh` and `manage-user.sh`. `*.pdf` also stays out. What reaches the build is the `Dockerfile`, the `compose.yaml`, the `CHANGELOG.md`, the `VERSION` and the folders `scripts/`, `painel/` and `nginx/`, and the `Dockerfile` copies only the scripts, the panel, the configuration of nginx and the `VERSION`; no secret gets into the image.
+- [`.dockerignore`](../../.dockerignore): `.env`, `.env.example`, `.git`, `.gitignore`, `.secrets`, `doc`, `profiles`, `README.md`, `README.pt-BR.md`, `README.es.md`, `deploy.sh` and `manage-user.sh`. `*.pdf` also stays out. What reaches the build is the `Dockerfile`, the `compose.yaml`, the `CHANGELOG.md`, the `VERSION` and the folders `scripts/`, `painel/` and `nginx/`, and the `Dockerfile` copies only the scripts, the panel, the configuration of nginx and the `VERSION`; no secret gets into the image.
 - [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh) refuses a password in an environment variable and does `unset` of the internal variable of the password before the `exec`. [`painel/entrypoint.sh`](../../painel/entrypoint.sh) refuses `PAINEL_PASSWORD` and `PAINEL_PASSWORD_HASH`.
 
 ---
