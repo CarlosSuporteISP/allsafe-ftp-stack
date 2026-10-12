@@ -12,7 +12,7 @@
 
 Desarrollado por [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versión](https://img.shields.io/badge/versi%C3%B3n-1.10.0-blue)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-1.11.0-blue)
 ![Estado](https://img.shields.io/badge/estado-estable-brightgreen)
 ![Soporte](https://img.shields.io/badge/soporte-LTS-blue)
 [![Licencia](https://img.shields.io/badge/licencia-Apache--2.0-blue)](LICENSE)

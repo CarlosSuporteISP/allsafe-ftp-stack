@@ -119,7 +119,7 @@ Todo diagrama aparece en las guías directo de la fuente `.mmd`, con fondo oscur
 | [configuracion-diagrama.mmd](diagramas/configuracion-diagrama.mmd) | 1 | [Configuración](configuracion.md) y [Perfiles](perfiles.md) |
 | [seguridad-diagrama.mmd](diagramas/seguridad-diagrama.mmd) | 1 | [Seguridad](seguridad.md) |
 | [tls-por-usuario-flujograma.mmd](diagramas/tls-por-usuario-flujograma.mmd) | 2 | [Seguridad](seguridad.md#tls-por-usuario) |
-| [bloqueo-por-intentos-flujograma.mmd](diagramas/bloqueo-por-intentos-flujograma.mmd) | 2 | [Seguridad](seguridad.md#bloqueio-por-tentativa) |
+| [bloqueo-por-intento-flujograma.mmd](diagramas/bloqueo-por-intento-flujograma.mmd) | 2 | [Seguridad](seguridad.md#bloqueio-por-tentativa) |
 | [bloqueo-por-direccion-flujograma.mmd](diagramas/bloqueo-por-direccion-flujograma.mmd) | 2 | [Seguridad](seguridad.md#bloqueio-por-endereco) |
 | [buenas-practicas-flujograma.mmd](diagramas/buenas-practicas-flujograma.mmd) | 2 | [Seguridad](seguridad.md#boas-praticas) |
 | [secretos-diagrama.mmd](diagramas/secretos-diagrama.mmd) | 1 | [Secretos](secretos.md) |

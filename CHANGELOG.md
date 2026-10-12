@@ -6,6 +6,28 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.11.0] - 2026-10-12
+
+A documentação passa a existir também em espanhol, completa, ao lado do inglês e do português.
+
+### Adicionado
+
+- **Documentação em espanhol**: `README.es.md`, `SECURITY.es.md` e `MARCA.es.md` na raiz, e a pasta `doc/es/` com os treze guias: índice, instalação, configuração, arquitetura, segurança, segredos, scripts, operação, cópia de segurança, perfis, painel, solução de problemas e o guia das telas. As seções e as âncoras são as mesmas dos outros dois idiomas. Comando, variável, nome de arquivo, valor do `.env` e saída de programa ficam como são; o texto de tela é citado como aparece no painel em espanhol.
+- **Diagramas em espanhol**: os 21 diagramas, com a fonte em `doc/es/diagramas/` e o visualizador da pasta.
+- **Três selos de idioma no topo de toda página**, em inglês, português e espanhol, com o da página em destaque, no lugar da linha de troca entre dois idiomas.
+- **`scripts/validate.sh` confere os três idiomas**: toda variável do `.env.example` tem de estar também no guia de configuração em espanhol, o `SECURITY.es.md` passa pela mesma conferência dos outros dois e o `MARCA.es.md` tem de existir.
+
+### Alterado
+
+- **`.dockerignore`**: `README.es.md`, `SECURITY.es.md` e `MARCA.es.md` ficam fora do contexto da imagem, como os pares em inglês e em português.
+- **Tabela de arquivos dos README** e seção de como as fotos foram feitas, no guia das telas: citam os três idiomas.
+
+### Corrigido
+
+- **Seção Versão dos README em inglês e em português**: dizia `1.1.0`; passa a dizer a versão publicada.
+- **Guia de solução de problemas**: o limite da sessão do painel é de `1` a `720` minutos; o texto dizia `120`.
+- **Guia de segurança**: uma frase cortada na parte do FTP sem TLS, uma vírgula que faltava na lista de versões e a contagem de casos da tabela de testes, que agora diz 106 funcionais e 151 de segurança; a lista do `.dockerignore` cita o `README.es.md`.
+
 ## [1.10.0] - 2026-10-12
 
 O remoto do rclone passa de seis para 41 tipos, com o Mega, o FTP com TLS e os armazenamentos dos provedores de nuvem.

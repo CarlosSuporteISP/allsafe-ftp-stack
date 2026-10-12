@@ -237,7 +237,7 @@ Verifica la copia antes de modificar cualquier cosa, abriéndola con la clave de
 ./scripts/validate.sh --runtime  # también exige los tres servicios running y healthy y el usuario en el PureDB
 ```
 
-**Resultado esperado:** `painel OK: <n> módulos Python`, `idioma OK: <n> textos do painel com tradução em inglês e em espanhol, <n> mensagens do comando de usuários`, `.env.example OK: <n> variáveis, todas comentadas e no guia de configuração, nos dois idiomas`, `caminhos OK: nenhum arquivo do repositório cita pasta pessoal`, `marca OK: 6 arquivos em web/marca/`, `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` para cada perfil y, al final, `Validacao FTP concluida.` Con `--runtime`, también `servico ftp: running, healthy`, lo mismo para `painel` y `nginx`, y `usuario inicial '<usuário>' presente no PureDB`. Cualquier falla termina con código distinto de cero.
+**Resultado esperado:** `painel OK: <n> módulos Python`, `idioma OK: <n> textos do painel com tradução em inglês e em espanhol, <n> mensagens do comando de usuários`, `.env.example OK: <n> variáveis, todas comentadas e no guia de configuração, nos três idiomas`, `caminhos OK: nenhum arquivo do repositório cita pasta pessoal`, `marca OK: 6 arquivos em web/marca/`, `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` para cada perfil y, al final, `Validacao FTP concluida.` Con `--runtime`, también `servico ftp: running, healthy`, lo mismo para `painel` y `nginx`, y `usuario inicial '<usuário>' presente no PureDB`. Cualquier falla termina con código distinto de cero.
 
 <details>
 <summary>Detalle técnico — qué verifica cada modo</summary>
@@ -251,9 +251,9 @@ El modo `--runtime` verifica la instalación del `.env` de esta carpeta. Para ve
 
 Rechazo de las rutas: `ERRO: pasta pessoal em arquivo do repositório; use o padrão do .env.example ou leia o valor do .env:`, seguida del archivo y de la línea.
 
-Rechazo de la política de seguridad: `ERRO: <arquivo> falta, não cita SEGURANCA_CONTATO_EMAIL ou traz um endereço de e-mail fixo.`, para el `SECURITY.md` y para el `SECURITY.pt-BR.md`
+Rechazo de la política de seguridad: `ERRO: <arquivo> falta, não cita SEGURANCA_CONTATO_EMAIL ou traz um endereço de e-mail fixo.`, para el `SECURITY.md`, el `SECURITY.pt-BR.md` y el `SECURITY.es.md`
 
-Rechazos de la licencia: `ERRO: LICENSE falta ou não é o texto oficial da Apache-2.0.`, `ERRO: NOTICE falta ou está sem a linha de autoria e o endereço do GitHub.`, `ERRO: MARCA.md falta.`, `ERRO: TRADEMARK.md falta.` y `ERRO: <arquivo> sem a linha SPDX-License-Identifier: Apache-2.0 no começo.` La línea de la licencia va en la primera línea del archivo de código o, cuando empieza con `#!`, en la segunda.
+Rechazos de la licencia: `ERRO: LICENSE falta ou não é o texto oficial da Apache-2.0.`, `ERRO: NOTICE falta ou está sem a linha de autoria e o endereço do GitHub.`, `ERRO: MARCA.md falta.`, `ERRO: MARCA.es.md falta.`, `ERRO: TRADEMARK.md falta.` y `ERRO: <arquivo> sem a linha SPDX-License-Identifier: Apache-2.0 no começo.` La línea de la licencia va en la primera línea del archivo de código o, cuando empieza con `#!`, en la segunda.
 
 </details>
 

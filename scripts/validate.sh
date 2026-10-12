@@ -133,8 +133,8 @@ print(f'idioma OK: {len(do_codigo)} textos do painel com tradução em inglês e
       f'{len(set(mensagens))} mensagens do comando de usuários')
 PY
 fi
-# Toda variável do .env.example tem comentário na linha de cima e está explicada no guia de configuração, nos dois idiomas.
-awk -v guias='doc/pt-BR/configuracao.md doc/en/configuration.md' '
+# Toda variável do .env.example tem comentário na linha de cima e está explicada no guia de configuração, nos três idiomas.
+awk -v guias='doc/pt-BR/configuracao.md doc/en/configuration.md doc/es/configuracion.md' '
   BEGIN { n = split(guias, guia, " "); for (i = 1; i <= n; i++) while ((getline linha < guia[i]) > 0) texto[i] = texto[i] linha "\n" }
   /^[A-Z_]+=/ {
     nome = $0; sub(/=.*/, "", nome); total++
@@ -142,7 +142,7 @@ awk -v guias='doc/pt-BR/configuracao.md doc/en/configuration.md' '
     for (i = 1; i <= n; i++) if (index(texto[i], "`" nome "`") == 0) { print "ERRO: " nome " não está em " guia[i] > "/dev/stderr"; falha = 1 }
   }
   { anterior = $0 }
-  END { if (falha) exit 1; print ".env.example OK: " total " variáveis, todas comentadas e no guia de configuração, nos dois idiomas" }
+  END { if (falha) exit 1; print ".env.example OK: " total " variáveis, todas comentadas e no guia de configuração, nos três idiomas" }
 ' .env.example
 # Caminho que só existe em um computador não é publicado: nenhum arquivo do repositório cita pasta pessoal.
 # Vale para o que o Git acompanha e para o que ainda não foi adicionado; o .env local fica fora, pelo .gitignore.
@@ -165,17 +165,19 @@ for arquivo in favicon.ico icone-32.png icone-192.png apple-touch-icon.png simbo
   esac
 done
 echo "marca OK: 6 arquivos em web/marca/"
-# Licença: o LICENSE é o texto oficial da Apache-2.0, o NOTICE traz a autoria, o MARCA.md e o par dele em inglês
-# (TRADEMARK.md) existem e todo arquivo de código diz a licença dele em uma das duas primeiras linhas.
+# Licença: o LICENSE é o texto oficial da Apache-2.0, o NOTICE traz a autoria, o MARCA.md e os pares dele em espanhol
+# (MARCA.es.md) e em inglês (TRADEMARK.md) existem e todo arquivo de código diz a licença dele em uma das duas
+# primeiras linhas.
 [[ "$(sha256sum LICENSE 2>/dev/null | cut -c1-64)" == cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30 ]] \
   || { echo "ERRO: LICENSE falta ou não é o texto oficial da Apache-2.0." >&2; exit 1; }
 { grep -q -F 'Desenvolvido pela allsafe.inf.br' NOTICE && grep -q -F 'https://github.com/allsafe-inf' NOTICE; } 2>/dev/null \
   || { echo "ERRO: NOTICE falta ou está sem a linha de autoria e o endereço do GitHub." >&2; exit 1; }
 [[ -s MARCA.md ]] || { echo "ERRO: MARCA.md falta." >&2; exit 1; }
+[[ -s MARCA.es.md ]] || { echo "ERRO: MARCA.es.md falta." >&2; exit 1; }
 [[ -s TRADEMARK.md ]] || { echo "ERRO: TRADEMARK.md falta." >&2; exit 1; }
-# Política de segurança: o SECURITY.md, em inglês, e o SECURITY.pt-BR.md existem, apontam para a variável do contato
-# e não trazem endereço fixo.
-for arquivo in SECURITY.md SECURITY.pt-BR.md; do
+# Política de segurança: o SECURITY.md, em inglês, o SECURITY.pt-BR.md e o SECURITY.es.md existem, apontam para a
+# variável do contato e não trazem endereço fixo.
+for arquivo in SECURITY.md SECURITY.pt-BR.md SECURITY.es.md; do
   { grep -q -F 'SEGURANCA_CONTATO_EMAIL' "$arquivo" && ! grep -q -E '[A-Za-z0-9._+-]+@[A-Za-z0-9-]+\.[A-Za-z]' "$arquivo"; } 2>/dev/null \
     || { echo "ERRO: $arquivo falta, não cita SEGURANCA_CONTATO_EMAIL ou traz um endereço de e-mail fixo." >&2; exit 1; }
 done
