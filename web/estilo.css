@@ -564,6 +564,9 @@ tbody tr.vazio:hover { background: none; }
 /* Cartão que é só a explicação recolhida, no alto da tela: fechado, tem a altura da linha do título. */
 .cartao.dobra { padding: 4px 20px; }
 .cartao.dobra > .como[open] { padding-bottom: 16px; }
+/* Cartão inteiro recolhido (Cópia do sistema): o título do cartão é a linha que abre, com a situação ao lado. */
+.como summary h2 { margin: 0; color: var(--texto); }
+.como > summary:has(h2) { width: auto; flex-wrap: wrap; }
 
 /* Caminho em passos, lado a lado: o desenho, o que acontece e uma linha de detalhe; a seta leva ao próximo. */
 .passos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 12px; margin: 0; padding: 0; list-style: none; }

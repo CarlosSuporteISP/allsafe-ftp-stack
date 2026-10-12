@@ -6,6 +6,19 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.6.0] - 2026-10-12
+
+Dois ajustes de tela pedidos pelo uso: a aba Destinos fica mais curta e a aba Segurança perde uma frase.
+
+### Alterado
+
+- **Cartão Cópia do sistema recolhido**: na aba Destinos, o cartão mostra só o título e a marca da situação, e abre com um clique no título. Ele já vem aberto quando há cópia em andamento, cópia que não foi concluída ou segredos faltando. O que o cartão mostra e faz depois de aberto não mudou.
+- **Fotos**: as da aba Destinos e a da aba Segurança foram refeitas, nos dois idiomas.
+
+### Removido
+
+- **Frase ao pé da aba Segurança**: sai a frase que mandava conferir a impressão digital antes de aceitar o certificado. A validade e a impressão digital dos dois certificados continuam na lista da aba.
+
 ## [1.5.0] - 2026-10-12
 
 A aba Destinos ganha um terceiro tipo de destino: o remoto do rclone, para o que o S3 não alcança.

@@ -1011,9 +1011,9 @@ Quem precisa conferir ou baixar o que foi enviado pede a um administrador ou usa
 
 ## ☁️ Destinos
 
-<a href="imagens/destinos.png"><img src="imagens/destinos.png" alt="Aba Destinos com o cartão Cópia do sistema no alto, marcado como não configurada e com o botão Configurar, o cartão Armazenamento S3 ligado, com o endereço, o bucket e o prefixo, a região, a pasta enviada, as passadas a cada 60 minutos, Copiar depois do envio, as chaves gravadas sem aparecer na tela, a última passada e o total enviado, o cartão Remoto do rclone: Servidor de arquivos ligado, com o tipo SFTP, a pasta no remoto, a pasta enviada, as passadas a cada 60 minutos, Copiar depois do envio, o acesso gravado sem aparecer na tela, a chave do servidor com a impressão digital, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, as passadas a cada 5 minutos, o maior arquivo que o bot envia, o idioma das mensagens, a última passada e o total enviado, os botões Testar, Enviar agora, Alterar, Novo com o mesmo acesso e Remover em cada cartão e, no alto da tela, os botões Novo S3, Novo remoto e Novo bot e a explicação Como o painel envia, recolhida" width="100%"></a>
+<a href="imagens/destinos.png"><img src="imagens/destinos.png" alt="Aba Destinos com o cartão Cópia do sistema no alto, recolhido e marcado como não configurada, o cartão Armazenamento S3 ligado, com o endereço, o bucket e o prefixo, a região, a pasta enviada, as passadas a cada 60 minutos, Copiar depois do envio, as chaves gravadas sem aparecer na tela, a última passada e o total enviado, o cartão Remoto do rclone: Servidor de arquivos ligado, com o tipo SFTP, a pasta no remoto, a pasta enviada, as passadas a cada 60 minutos, Copiar depois do envio, o acesso gravado sem aparecer na tela, a chave do servidor com a impressão digital, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, as passadas a cada 5 minutos, o maior arquivo que o bot envia, o idioma das mensagens, a última passada e o total enviado, os botões Testar, Enviar agora, Alterar, Novo com o mesmo acesso e Remover em cada cartão e, no alto da tela, os botões Novo S3, Novo remoto e Novo bot e a explicação Como o painel envia, recolhida" width="100%"></a>
 
-<sub><b>v1.5.0</b> · menu Destinos · captura de 2026-10-12</sub>
+<sub><b>v1.6.0</b> · menu Destinos · captura de 2026-10-12</sub>
 
 **Para que serve:** mandar sozinho, para fora do servidor, os arquivos que chegam em uma pasta. São três tipos de destino, com até 20 de cada um: o armazenamento S3, que guarda a segunda cópia ou fica com os arquivos e libera o disco, o remoto do rclone, que leva a pasta a um servidor SFTP ou WebDAV ou a uma nuvem de arquivos, e o bot do Telegram, que entrega cada arquivo novo a uma pessoa, a um grupo ou a um canal.
 
@@ -1032,7 +1032,7 @@ Quem precisa conferir ou baixar o que foi enviado pede a um administrador ou usa
 | Chave do servidor | No remoto SFTP, depois do **Testar**: o tipo e a impressão digital da chave que o painel guardou, para conferir com a do servidor |
 | Última passada | Quando foi e quantos arquivos saíram, com o tamanho somado; quando ela para antes do fim, o motivo em uma frase |
 | Enviado desde que foi ligado | O total de arquivos e de tamanho que o destino já recebeu |
-| Cartão **Cópia do sistema** | No alto da aba: a marca `não configurada`, `rotina ligada`, `só pelo botão`, `em andamento` ou `faltam os segredos`; o destino, o bucket e a pasta, a rotina e a última cópia, com a data, o tamanho, os arquivos e o nome do objeto |
+| Cartão **Cópia do sistema** | No alto da aba, recolhido: o título e a marca ficam à mostra, e um clique no título abre o cartão. Ele já vem aberto quando há cópia em andamento, cópia que não foi concluída ou segredos faltando. A marca é `não configurada`, `rotina ligada`, `só pelo botão`, `em andamento` ou `faltam os segredos`; o destino, o bucket e a pasta, a rotina e a última cópia, com a data, o tamanho, os arquivos e o nome do objeto |
 | Copiar e enviar agora · Alterar | Pede a cópia do sistema na hora, em segundo plano · abre o formulário da cópia: o S3 que recebe, a pasta no bucket, os dias e a hora da rotina |
 | Ainda chegando | Arquivos que mudaram há menos de dois minutos: saem em uma próxima passada |
 | À espera de outro destino | No S3 em **Guardar no S3**, arquivos já gravados nele que só saem do servidor quando os outros destinos da pasta os entregarem |
@@ -1051,9 +1051,9 @@ Cada destino tem a pasta, o intervalo e os segredos dele, e um não depende do o
 
 ### Destinos ➜ Antes de configurar
 
-<a href="imagens/destinos-sem-destino.png"><img src="imagens/destinos-sem-destino.png" alt="Aba Destinos de uma instalação nova, com o cartão Cópia do sistema marcado como não configurada, com a frase que manda gravar primeiro um armazenamento S3, e os cartões Armazenamento S3, Remoto do rclone e Bot do Telegram marcados como não configurado, cada um com a explicação do que envia e o botão Configurar, e, no alto da tela, a explicação Como o painel envia, recolhida" width="100%"></a>
+<a href="imagens/destinos-sem-destino.png"><img src="imagens/destinos-sem-destino.png" alt="Aba Destinos de uma instalação nova, com o cartão Cópia do sistema recolhido e marcado como não configurada, e os cartões Armazenamento S3, Remoto do rclone e Bot do Telegram marcados como não configurado, cada um com a explicação do que envia e o botão Configurar, e, no alto da tela, a explicação Como o painel envia, recolhida" width="100%"></a>
 
-<sub><b>v1.5.0</b> · menu Destinos, sem destino gravado · captura de 2026-10-12</sub>
+<sub><b>v1.6.0</b> · menu Destinos, sem destino gravado · captura de 2026-10-12</sub>
 
 A instalação nasce sem destino: enquanto o administrador não gravar um, nada sai do servidor e o painel não abre conexão para fora. Cada cartão diz o que o destino faz e leva ao formulário dele, pelo botão **Configurar**.
 
@@ -1091,9 +1091,9 @@ Serve qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna.
 | Depois do envio | Sim | **Copiar**: o arquivo continua no servidor. **Guardar no S3**: o arquivo sai do servidor depois que o destino confirma a gravação |
 | Sua senha atual | Sim | A senha de quem está na sessão, para gravar o destino |
 
-<a href="imagens/destinos-gravado.png"><img src="imagens/destinos-gravado.png" alt="Aba Destinos com o aviso Destino gravado, vale a partir da próxima passada, o cartão Cópia do sistema, não configurada, com o botão Configurar, os cartões Armazenamento S3 e Bot do Telegram ligados, cada um com o que foi gravado, os segredos gravados sem aparecer na tela e a última passada como nenhuma ainda, e o cartão Remoto do rclone ainda não configurado" width="100%"></a>
+<a href="imagens/destinos-gravado.png"><img src="imagens/destinos-gravado.png" alt="Aba Destinos com o aviso Destino gravado, vale a partir da próxima passada, o cartão Cópia do sistema recolhido, não configurada, os cartões Armazenamento S3 e Bot do Telegram ligados, cada um com o que foi gravado, os segredos gravados sem aparecer na tela e a última passada como nenhuma ainda, e o cartão Remoto do rclone ainda não configurado" width="100%"></a>
 
-<sub><b>v1.5.0</b> · menu Destinos, depois de gravar · captura de 2026-10-12</sub>
+<sub><b>v1.6.0</b> · menu Destinos, depois de gravar · captura de 2026-10-12</sub>
 
 **Resultado esperado:** a aba volta com o aviso `Destino gravado. Vale a partir da próxima passada.`, e o cartão mostra a etiqueta `ligado`, o endereço, o bucket, a pasta e que as chaves estão gravadas, sem mostrá-las. A primeira passada começa em até um minuto e envia tudo o que já está na pasta.
 
@@ -1151,13 +1151,13 @@ Os campos do acesso mudam com o tipo. Os do WebDAV e os das nuvens estão em [Pa
 
 <a href="imagens/destinos-rclone-gravado.png"><img src="imagens/destinos-rclone-gravado.png" alt="Aba Destinos com o aviso Destino gravado, vale a partir da próxima passada, os botões Novo S3, Novo remoto e Novo bot no alto e o cartão Remoto do rclone: Servidor de arquivos com a etiqueta falta testar, o aviso de que o painel ainda não guardou a chave deste servidor e que até o Testar nada é enviado, o tipo SFTP, a pasta no remoto copias, a pasta enviada olt-centro, as passadas a cada 60 minutos, Copiar depois do envio, o acesso gravado sem aparecer na tela e a última passada como nenhuma ainda, ao lado dos cartões Armazenamento S3 e Bot do Telegram" width="100%"></a>
 
-<sub><b>v1.5.0</b> · menu Destinos, remoto gravado e ainda sem o teste · captura de 2026-10-12</sub>
+<sub><b>v1.6.0</b> · menu Destinos, remoto gravado e ainda sem o teste · captura de 2026-10-12</sub>
 
 6. De volta à aba, clique em **Testar** no cartão do remoto.
 
 <a href="imagens/destinos-rclone-testado.png"><img src="imagens/destinos-rclone-testado.png" alt="Aba Destinos com o aviso Teste concluído: o destino recebeu, e o cartão Remoto do rclone: Servidor de arquivos com a etiqueta ligado e a linha Chave do servidor, com o tipo da chave e a impressão digital dela, ao lado dos cartões Armazenamento S3 e Bot do Telegram" width="100%"></a>
 
-<sub><b>v1.5.0</b> · menu Destinos, remoto depois do teste · captura de 2026-10-12</sub>
+<sub><b>v1.6.0</b> · menu Destinos, remoto depois do teste · captura de 2026-10-12</sub>
 
 **Resultado esperado:** ao gravar, a aba volta com o aviso `Destino gravado. Vale a partir da próxima passada.` e o cartão do remoto, com o tipo, a pasta no remoto, a pasta enviada e o acesso gravado, sem mostrá-lo. No SFTP, o cartão fica com a etiqueta `falta testar`. O teste grava o arquivo `allsafe-ftp-stack-teste.txt` na pasta do remoto e responde `Teste concluído: o destino recebeu.`; o cartão passa a `ligado` e ganha a linha **Chave do servidor**, com a impressão digital para conferir com a do servidor. A primeira passada começa em até um minuto e envia tudo o que já está na pasta.
 
@@ -1234,9 +1234,9 @@ Cada tipo aceita até 20 destinos. O destino novo pode usar o acesso de um que j
 2. Dê um **Nome** ao destino e troque a **Pasta enviada** ou o lugar: o prefixo ou o bucket, no S3; a pasta no remoto, no rclone; a conversa, no bot.
 3. Deixe os segredos em branco, digite a sua senha e clique em **Gravar**. No rclone, o acesso é um só: em branco vale o do destino de origem inteiro.
 
-<a href="imagens/destinos-varios.png"><img src="imagens/destinos-varios.png" alt="Aba Destinos com o aviso Destino gravado, os botões Novo S3, Novo remoto e Novo bot no alto, o cartão Cópia do sistema e quatro cartões ligados: Armazenamento S3, com o prefixo copias e a pasta roteador-borda; Armazenamento S3: Clientes, com o mesmo endereço e o mesmo bucket, o prefixo clientes, a pasta clientes e nenhuma passada ainda; Remoto do rclone: Servidor de arquivos, com a pasta olt-centro; e Bot do Telegram, com a pasta clientes" width="100%"></a>
+<a href="imagens/destinos-varios.png"><img src="imagens/destinos-varios.png" alt="Aba Destinos com o aviso Destino gravado, os botões Novo S3, Novo remoto e Novo bot no alto, o cartão Cópia do sistema recolhido e quatro cartões ligados: Armazenamento S3, com o prefixo copias e a pasta roteador-borda; Armazenamento S3: Clientes, com o mesmo endereço e o mesmo bucket, o prefixo clientes, a pasta clientes e nenhuma passada ainda; Remoto do rclone: Servidor de arquivos, com a pasta olt-centro; e Bot do Telegram, com a pasta clientes" width="100%"></a>
 
-<sub><b>v1.5.0</b> · menu Destinos, com dois destinos S3 · captura de 2026-10-12</sub>
+<sub><b>v1.6.0</b> · menu Destinos, com dois destinos S3 · captura de 2026-10-12</sub>
 
 **Resultado esperado:** a aba volta com o aviso `Destino gravado. Vale a partir da próxima passada.` e um cartão a mais, com o tipo e o nome dado. O segredo deixado em branco foi copiado do outro destino dentro do servidor, sem passar pelo navegador.
 
@@ -1255,9 +1255,9 @@ Cada tipo aceita até 20 destinos. O destino novo pode usar o acesso de um que j
 
 ### Destinos ➜ Testar e Enviar agora
 
-<a href="imagens/destinos-teste.png"><img src="imagens/destinos-teste.png" alt="Aba Destinos com o aviso Teste concluído, o destino recebeu, acima do cartão Cópia do sistema e dos cartões Armazenamento S3, Remoto do rclone e Bot do Telegram, cada um destes com a data da última passada" width="100%"></a>
+<a href="imagens/destinos-teste.png"><img src="imagens/destinos-teste.png" alt="Aba Destinos com o aviso Teste concluído, o destino recebeu, acima do cartão Cópia do sistema, recolhido, e dos cartões Armazenamento S3, Remoto do rclone e Bot do Telegram, cada um destes com a data da última passada" width="100%"></a>
 
-<sub><b>v1.5.0</b> · menu Destinos, depois do teste · captura de 2026-10-12</sub>
+<sub><b>v1.6.0</b> · menu Destinos, depois do teste · captura de 2026-10-12</sub>
 
 1. No cartão do destino, clique em **Testar**.
 2. Para não esperar o intervalo, clique em **Enviar agora** e atualize a tela em seguida.
@@ -1284,17 +1284,17 @@ O que cada motivo quer dizer e o que fazer está em [Solução de problemas](../
 
 <sub><b>v1.4.0</b> · menu Destinos, formulário da cópia do sistema · captura de 2026-10-11</sub>
 
-O cartão **Cópia do sistema**, no alto da aba, manda o sistema inteiro, cifrado, para um dos armazenamentos S3 gravados. Ele oferece o **Configurar** depois que existe um S3 com os segredos.
+O cartão **Cópia do sistema**, no alto da aba, manda o sistema inteiro, cifrado, para um dos armazenamentos S3 gravados. Ele fica recolhido: um clique no título o abre. Aberto, oferece o **Configurar** depois que existe um S3 com os segredos.
 
-1. No cartão **Cópia do sistema**, clique em **Configurar**.
+1. Clique no título do cartão **Cópia do sistema**, para abri-lo, e clique em **Configurar**.
 2. Escolha o **Armazenamento S3 que recebe** e a **Pasta no bucket**.
 3. Em **Rotina**, digite de quantos em quantos dias a cópia é feita, e a **Hora da rotina**; com `0`, só pelo botão.
 4. Digite a sua senha e clique em **Gravar**.
-5. De volta à aba, clique em **Copiar e enviar agora** e atualize a tela em seguida.
+5. De volta à aba, abra o cartão de novo, clique em **Copiar e enviar agora** e atualize a tela em seguida.
 
-<a href="imagens/destinos-copia-feita.png"><img src="imagens/destinos-copia-feita.png" alt="Aba Destinos com o cartão Cópia do sistema no alto, com a marca rotina ligada, o destino Armazenamento S3, o bucket backups-da-rede e a pasta copia-do-sistema, a rotina de todo dia às 03:00, a linha Última cópia com a data, o tamanho, a quantidade de arquivos e o nome do objeto, e os botões Copiar e enviar agora e Alterar, acima dos cartões dos dois armazenamentos S3, do Remoto do rclone e do Bot do Telegram" width="100%"></a>
+<a href="imagens/destinos-copia-feita.png"><img src="imagens/destinos-copia-feita.png" alt="Aba Destinos com o cartão Cópia do sistema no alto, aberto, com a marca rotina ligada, o destino Armazenamento S3, o bucket backups-da-rede e a pasta copia-do-sistema, a rotina de todo dia às 03:00, a linha Última cópia com a data, o tamanho, a quantidade de arquivos e o nome do objeto, e os botões Copiar e enviar agora e Alterar, acima dos cartões dos dois armazenamentos S3, do Remoto do rclone e do Bot do Telegram" width="100%"></a>
 
-<sub><b>v1.5.0</b> · menu Destinos, depois da cópia do sistema · captura de 2026-10-12</sub>
+<sub><b>v1.6.0</b> · menu Destinos, depois da cópia do sistema · captura de 2026-10-12</sub>
 
 **Resultado esperado:** ao gravar, o aviso é `Cópia do sistema gravada. A rotina vale a partir de agora.`; depois do botão, `Cópia do sistema pedida: ela é feita em segundo plano. Atualize a tela para acompanhar.` No fim, a linha **Última cópia** traz a data, o tamanho, a quantidade de arquivos e o nome do objeto gravado no bucket.
 
@@ -1388,7 +1388,7 @@ Nada é alterado por esta aba, e só o administrador a vê. Os limites de cada c
 
 <a href="imagens/seguranca.png"><img src="imagens/seguranca.png" alt="Aba Segurança com o resumo da conferência no alto, que diz quantos itens estão em ordem, e uma linha por item: endereço público, painel por proxy ou túnel, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, bloqueio por endereço, com a quantidade de endereços bloqueados, custo das senhas, contato de segurança, container e firewall" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Segurança · captura de 2026-10-11</sub>
+<sub><b>v1.6.0</b> · menu Segurança · captura de 2026-10-12</sub>
 
 **Para que serve:** conferir, em uma tela, se a instalação está dentro do que a stack exige: rede privada, TLS, certificados válidos, painel isolado e contato de segurança publicado.
 
@@ -1422,7 +1422,7 @@ Nada é alterado por esta aba. As regras de firewall de exemplo estão em [Segur
 
 <a href="imagens/seguranca-tls-por-usuario.png"><img src="imagens/seguranca-tls-por-usuario.png" alt="Aba Segurança com o alerta no topo de que dois usuários, central-pabx e radio-antigo, entram no FTP sem TLS, e a linha TLS do FTP com a marca de atenção e os nomes dos usuários dispensados" width="100%"></a>
 
-<sub><b>v1.1.0</b> · menu Segurança, alerta de usuário sem TLS · captura de 2026-10-11</sub>
+<sub><b>v1.6.0</b> · menu Segurança, alerta de usuário sem TLS · captura de 2026-10-12</sub>
 
 Com pelo menos um usuário dispensado do TLS, a aba abre com o alerta e a linha **TLS do FTP** troca a marca de conferido pela de atenção, com a quantidade e os nomes de quem entra sem TLS.
 

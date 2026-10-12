@@ -797,10 +797,6 @@ EN = {
         'Check summary',
     '{quantos} itens conferidos':
         '{quantos} items checked',
-    'Confira a impressão digital com a que o navegador e o cliente FTP mostram antes de aceitar o '
-    'certificado.':
-        'Compare the fingerprint with the one the browser and the FTP client show before accepting the '
-        'certificate.',
     '<strong>Rede pública na lista: {redes}.</strong>':
         '<strong>Public network in the list: {redes}.</strong>',
     'Ligada (<code>PAINEL_ACESSO_USUARIOS_FTP=sim</code>): cada usuário do FTP entra com o nome e a '
