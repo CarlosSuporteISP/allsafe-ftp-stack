@@ -11,7 +11,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.9.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.10.0-blue)
 ![Status](https://img.shields.io/badge/status-est%C3%A1vel-brightgreen)
 ![Suporte](https://img.shields.io/badge/suporte-LTS-blue)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
@@ -104,7 +104,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **Segundo fator na entrada do painel** | Obrigatório por padrão para toda conta do painel, administrador e usuário do FTP: depois da senha, o painel pede o código de seis dígitos de um aplicativo autenticador (TOTP). Quem ainda não cadastrou cadastra na própria entrada, por código QR. Só no painel: o FTP não muda |
 | **Arquivos pelo navegador** | O administrador navega, envia, baixa, renomeia e apaga; o dono dos arquivos entra com o usuário e a senha do FTP, vê só a própria pasta e faz o que o perfil dele deixa. Enviar pelo painel depende de permissão dada a cada usuário |
 | **Limpeza automática** | Por conta, o administrador manda guardar só os últimos arquivos de cada pasta ou só os dos últimos dias; o painel apaga o resto sozinho, de tempos em tempos. Desligada por padrão |
-| **Envio para S3, rclone e bot do Telegram** | Na aba Destinos, o administrador liga uma pasta a um armazenamento S3, para a segunda cópia ou para guardar fora e liberar o disco, a um remoto do rclone, para o que o S3 não alcança (servidor SFTP ou WebDAV, ou uma nuvem de arquivos), e a um bot do Telegram, que entrega em instantes cada arquivo que chega a uma pessoa, um grupo ou um canal, até o tamanho que o bot aceita. Cada tipo aceita até 20 destinos, e um destino novo pode usar o acesso de outro, para outra pasta, outro bucket ou outro grupo. O bot só envia e o remoto do rclone só recebe. Na aba Arquivos, um botão manda um arquivo na hora. A cópia do sistema inteiro, cifrada, vai para um S3 pelo botão ou por rotina. Nada é apagado no destino. Sem configuração por padrão |
+| **Envio para S3, rclone e bot do Telegram** | Na aba Destinos, o administrador liga uma pasta a um armazenamento S3, para a segunda cópia ou para guardar fora e liberar o disco, a um remoto do rclone, para o que o S3 não alcança (servidor de arquivos, nuvem de arquivos, armazenamento de provedor de nuvem ou serviço de transferência de arquivos, em 41 tipos), e a um bot do Telegram, que entrega em instantes cada arquivo que chega a uma pessoa, um grupo ou um canal, até o tamanho que o bot aceita. Cada tipo aceita até 20 destinos, e um destino novo pode usar o acesso de outro, para outra pasta, outro bucket ou outro grupo. O bot só envia e o remoto do rclone só recebe. Na aba Arquivos, um botão manda um arquivo na hora. A cópia do sistema inteiro, cifrada, vai para um S3 pelo botão ou por rotina. Nada é apagado no destino. Sem configuração por padrão |
 | **Saúde do servidor no painel** | A aba Servidor mostra os três containers da stack, cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, e o processador, a memória, o disco e a rede do FTP do servidor, com o histórico dos últimos minutos |
 | **nginx na frente do painel** | Só o nginx publica a porta do painel: TLS 1.2 e 1.3, HTTP/2, lista de redes permitidas, limite de pedidos e de conexões por endereço; o painel fica sem porta de rede |
 | **Containers endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limites de CPU, memória e PIDs; o nginx roda sem `root` e sem nenhuma `capability` |
@@ -675,7 +675,7 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 104 casos funcionais, 148 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 106 casos funcionais, 151 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
 
 ---
 

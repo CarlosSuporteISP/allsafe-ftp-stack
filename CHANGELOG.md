@@ -6,6 +6,27 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.10.0] - 2026-10-12
+
+O remoto do rclone passa de seis para 41 tipos, com o Mega, o FTP com TLS e os armazenamentos dos provedores de nuvem.
+
+### Adicionado
+
+- **35 tipos novos no remoto do rclone**, 41 no total, em quatro grupos: servidores de arquivos (SFTP, WebDAV, FTP com TLS e Seafile), nuvens de arquivos (Google Drive, OneDrive, Dropbox, pCloud, Box, Mega, Proton Drive, Yandex Disk e outras), armazenamento de provedores de nuvem (Azure Blob Storage, Azure Files, Backblaze B2, Google Cloud Storage, OpenStack Swift, QingStor, Storj e Akamai NetStorage) e transferência de arquivos para empresas. O remoto continua só recebendo: nenhum tipo lista, baixa, move ou apaga.
+- **FTP só com TLS**: o remoto FTP envia com TLS explícito ou implícito e com o certificado do servidor conferido. Não existe combinação do formulário que grave FTP sem TLS.
+- **Mega só por HTTPS**: o padrão do rclone é transferir os arquivos do Mega por HTTP sem TLS; o painel fixa o HTTPS e recusa o arquivo do remoto em que ele falta ou está desligado.
+- **Lista fechada**: cada tipo entra com os campos que o painel conhece e a forma de cada valor. Comando a executar, arquivo local, proxy, certificado sem conferência e remoto que embrulha outro não estão nela, e o arquivo do remoto é conferido de novo antes de cada envio. Dos 69 tipos do rclone desta versão, 28 ficam de fora, com o motivo no guia do painel.
+- **Servidor em endereço interno recusado** nos 14 tipos em que o administrador escolhe o servidor, pela mesma regra do S3 e do WebDAV.
+- **Comando do token na tela**: nos doze tipos que pedem o **Token da conta**, o formulário mostra o comando `rclone authorize` pronto.
+- **Pasta no remoto obrigatória nos tipos de bucket**, começando pelo nome do bucket ou do contêiner, que já precisa existir; o painel não cria bucket.
+- **Bateria**: dois casos funcionais e três de segurança para os tipos novos, com a lista do painel conferida contra o rclone da imagem em container sem rede e o FTP com TLS provado em um servidor da própria stack. São 106 casos funcionais, 151 de segurança e 14 de rede.
+
+### Alterado
+
+- **Tela de escolha do tipo**: as seis opções dão lugar a uma lista de seleção com os quatro grupos, sem script.
+- **Fluxograma dos destinos**: o remoto do rclone passa a mostrar servidor, nuvem ou serviço de arquivos, e a gravação por HTTPS, SSH ou FTP com TLS.
+- **Guias do painel, de segurança, de telas, de scripts e de solução de problemas**: os 41 tipos, com a tabela do que cada um pede, em português e em inglês; no guia de telas, a foto da escolha do tipo refeita e a do formulário do Mega.
+
 ## [1.9.0] - 2026-10-12
 
 O segundo fator passa a ser obrigatório para toda conta do painel, e quem ainda não cadastrou cadastra na própria entrada.

@@ -15,7 +15,7 @@ flowchart LR
     subgraph FORA["Outside the server"]
         bot@{ shape: cloud, label: "Telegram bot<br>receiving chat" }
         s3@{ shape: bucket, label: "S3 bucket<br>Copy or Keep in S3" }
-        remoto@{ shape: cloud, label: "rclone remote<br>SFTP, WebDAV or cloud" }
+        remoto@{ shape: cloud, label: "rclone remote<br>file server, cloud or service" }
     end
     subgraph RESULTADO["Result"]
         confirmou@{ shape: diam, label: "the destination<br>confirmed?" }
@@ -32,7 +32,7 @@ flowchart LR
     inteiro -- "4c · yes: rclone remote" --> rclone
     https -- "5a · sends the message, HTTPS" ---> bot
     https -- "5b · writes the object, HTTPS" ---> s3
-    rclone -- "5c · writes the file, HTTPS or SSH" ---> remoto
+    rclone -- "5c · writes the file, HTTPS, SSH or FTP with TLS" ---> remoto
     bot -- "6a · answers" --> confirmou
     s3 -- "6b · answers" --> confirmou
     remoto -- "6c · answers" --> confirmou
@@ -40,4 +40,4 @@ flowchart LR
     confirmou -- "7b · no: stops" --> parou
     passada -. "reads the settings and writes the progress" .-> andamento
     https -. "reads the keys and the token" .-> segredos
-    rclone -. "reads the access of the remote" .-> segredos
+    rclone -. "reads the remote access" .-> segredos
