@@ -51,8 +51,8 @@ def nucleos(valor, unidade=True):
     texto = idioma.decimal(f'{valor:.2f}'.rstrip('0').rstrip('.'))
     if not unidade:
         return texto
-    # Em português o plural começa em 2; em inglês, só 1 fica no singular.
-    varios = valor != 1 if idioma.atual() == 'en' else valor >= 2
+    # Em português o plural começa em 2; em inglês e em espanhol, só 1 fica no singular.
+    varios = valor >= 2 if idioma.atual() == 'pt' else valor != 1
     return f'{texto}\u00a0{t("núcleos") if varios else t("núcleo")}'
 
 

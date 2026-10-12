@@ -61,6 +61,7 @@ BANDEIRAS = {
           '<rect class="b-marinho" width="9" height="8"/>'
           '<path class="b-branco" d="M1.5 1.5h1v1h-1zM4 1.5h1v1H4zM6.5 1.5h1v1h-1zM1.5 3.5h1v1h-1zM4 3.5h1v1H4zM6.5 3.5h1v1h-1z'
           'M1.5 5.5h1v1h-1zM4 5.5h1v1H4zM6.5 5.5h1v1h-1z"/>',
+    'es': '<rect class="b-rubro" width="20" height="14"/><rect class="b-amarelo" y="3.5" width="20" height="7"/>',
 }
 
 

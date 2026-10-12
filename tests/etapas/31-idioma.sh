@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
-# Etapa AE: idioma das telas. Português por padrão e inglês pelo botão, na tela de entrada (cookie do navegador)
-# e depois dela (escolha gravada por conta); todas as telas de administrador e de usuário do FTP em inglês, sem
-# sobra de português; a troca recusada sem token, de outra origem e com idioma que não existe; o cookie, que não
-# vale como sessão; e a volta, que só leva a tela do próprio painel.
+# Etapa AE: idioma das telas. Português por padrão, inglês e espanhol pelo botão, na tela de entrada (cookie do
+# navegador) e depois dela (escolha gravada por conta); todas as telas de administrador e de usuário do FTP em
+# inglês e em espanhol, sem sobra de português; a troca recusada sem token, de outra origem e com idioma que não
+# existe; o cookie, que não vale como sessão; e a volta, que só leva a tela do próprio painel.
 # Trecho da bateria: carregado pelo tests/testar.sh, na ordem do nome do arquivo; não roda sozinho.
 
 # O reinício do painel zera a contagem de falhas de entrada e das recusas e encerra as sessões.
@@ -20,9 +20,18 @@ biscoito31() { grep -i '^set-cookie:' "${1:-$W/i31.cab}" | tr -d '\r' | cut -d '
 gravado31() { docker exec "$PAINEL" sh -c 'cat /painel/idiomas 2>/dev/null' | tr '\n' ' '; }          # escolhas gravadas, uma por conta
 tem31() { grep -c -F -- "$1" "${2:-$W/corpo}"; }                                                     # <trecho> [arquivo]: linhas com ele
 tem_linha31() { [[ " $1" == *" $2 "* ]]; }                                                              # <escolhas gravadas> <linha>
-# <arquivo>: o que sobrou de português na tela, fora do botão de idioma (letra acentuada e palavras de tela)
+# <arquivo>: o que sobrou de português na tela, fora do botão de idioma. Na tela em inglês, letra acentuada e
+# palavras de tela; na tela em espanhol, que tem acento e divide palavras com o português, só as letras e as
+# palavras que o espanhol não tem.
+LINGUA31=en
 resto31() {
-  sed -e 's/<form class="idioma".*English<\/span><\/button><\/div><\/form>//' "${1:-$W/corpo}" > "$W/i31.limpo"
+  sed -e 's/<form class="idioma".*Español<\/span><\/button><\/div><\/form>//' "${1:-$W/corpo}" > "$W/i31.limpo"
+  if [[ "$LINGUA31" == es ]]; then
+    { grep -o -E '[A-Za-z]*(ã|õ|ç|ê|ô|â|à|Ã|Õ|Ç|Ê|Ô|Â|À)[A-Za-z]*' "$W/i31.limpo"
+      grep -o -w -E 'Senha|Senhas|Sair|Arquivos|Arquivo|Pasta|Pastas|Nome|Novo|Nova|Remover|Criar|Salvar|Voltar|Apagar|Renomear|Baixar|Atividade|Bloqueios|Prefixo|Envio|Limpeza|Gravar|Desligada|Desligado|Ligado|Leitura|Tamanho|Quando|Detalhe|Origem|Prazo|Hoje|Chave|Trocar|Mudar' "$W/i31.limpo"
+    } | sort -u | head -8 | tr '\n' ' '
+    return
+  fi
   { grep -o -E '[A-Za-z]*(á|à|â|ã|é|ê|í|ó|ô|õ|ú|ç|Á|À|Â|Ã|É|Ê|Í|Ó|Ô|Õ|Ú|Ç)[A-Za-z]*' "$W/i31.limpo"
     grep -o -w -E 'Senha|Entrar|Sair|Arquivos|Arquivo|Pasta|Pastas|Nome|Novo|Nova|Editar|Remover|Criar|Salvar|Cancelar|Voltar|Apagar|Renomear|Baixar|Abrir|Buscar|Atividade|Bloqueios|Bloquear|Desbloquear|Prefixo|Servidor|Perfil|Completo|Envio|Enviar|Enviado|Limpeza|Gravar|Desligada|Leitura|Tamanho|Quando|Detalhe|Origem|Prazo|Desde|Hoje' "$W/i31.limpo"
   } | sort -u | head -8 | tr '\n' ' '
@@ -40,12 +49,12 @@ troca31() {
   c -o "$W/corpo" -D "$W/i31.cab" -w '%{http_code} %{redirect_url}' -b "$pote" -c "$pote" -H "Origin: $B" \
     --data-urlencode "csrf=$ficha" --data-urlencode "idioma=$lingua" "$@" "$B/idioma" | sed "s|$B||"
 }
-# <pote> <códigos aceitos> <caminhos...>: cada tela tem de vir em inglês e sem sobra; os desvios ficam em $ev31
+# <pote> <códigos aceitos> <caminhos...>: cada tela tem de vir no idioma do passeio e sem sobra; os desvios ficam em $ev31
 ver31() {
   local pote="$1" aceitos="$2" caminho r l s; shift 2
   for caminho in "$@"; do
     r="$(aba -b "$pote" "$B$caminho")"; l="$(lingua31)"; s="$(resto31)"; telas31=$((telas31 + 1))
-    [[ "$r" =~ ^($aceitos)\ $ && "$l" == en && -z "$s" ]] || { ruins31=$((ruins31 + 1)); ev31+="$caminho: $r· lang=$l · sobras: ${s:-nenhuma}; "; }
+    [[ "$r" =~ ^($aceitos)\ $ && "$l" == "$LINGUA31" && -z "$s" ]] || { ruins31=$((ruins31 + 1)); ev31+="$caminho: $r· lang=$l · sobras: ${s:-nenhuma}; "; }
   done
 }
 
@@ -104,33 +113,40 @@ t_a="$(aba -b "$A31" "$B/usuarios")"; l_a="$(lingua31)"
 r_ta="$(troca31 "$A31" "$KA" en)"; arq_3="$(gravado31)"
 
 # ------------------------------------------------------------------ todas as telas em inglês
-telas31=0; ruins31=0; ev31=""; perfis31=""
-ver31 "$J" 200 / /usuarios /usuarios/novo "/usuarios/novo?pasta=idioma31/a" "/usuarios/editar?usuario=id31c" "/usuarios/editar?usuario=id31e" \
-  "/usuarios/editar?usuario=id31l" "/usuarios/editar?usuario=id31s" "/usuarios/senha?usuario=id31c" "/usuarios/remover?usuario=id31c" \
-  /arquivos "/arquivos?pasta=idioma31" "/arquivos?pasta=idioma31/a" "/arquivos?pasta=idioma31/a/sub" "/arquivos/renomear?item=idioma31/a/sub/backup.cfg" \
-  "/arquivos/renomear?item=idioma31/a/sub" "/arquivos/apagar?item=idioma31/a/sub/backup.cfg" "/arquivos/apagar?item=idioma31/a/sub" \
-  "/usuarios/novo?perfil=administrador" "/administradores/senha?admin=$ADMIN" "/administradores/senha?admin=idioma31" "/administradores/nome?admin=idioma31" \
-  "/administradores/remover?admin=idioma31" "/administradores/fator?admin=$ADMIN" /seguranca /servidor /bloqueios "/bloqueios?q=203.0.113" "/bloqueios?q=198.18" \
-  "/bloqueios/endereco?ip=$BLOQUEADO31" /bloqueios/novo "/bloqueios?q=2001:db8" "/bloqueios/endereco?ip=$V631" "/bloqueios/endereco?ip=$P31" /atividade
-# Telas de recusa e de aviso, que também são do painel: a de quem tenta remover a si mesmo, a do segundo fator de
-# outro administrador, a que não existe e as que dependem do modo de TLS da instância.
-ver31 "$J" '200|400|403|404|409' "/administradores/remover?admin=$ADMIN" "/administradores/fator?admin=idioma31" /nao-existe "/usuarios/editar?usuario=ninguem31" "/usuarios/tls?usuario=id31c" \
-  "/arquivos?pasta=nao-existe-31"
-# Os avisos que cada lista mostra depois de uma ação, pedidos pelo nome que vai na consulta.
-for n in criado criado_sem_tls criado_tls_falhou senha pasta pasta_sem_limpeza perfil limites limpeza limpeza_desligada desbloqueado removido removido_com_pasta tls_dispensado tls_exigido \
-  admin_criado admin_senha admin_nome admin_removido fator_ligado fator_desligado; do ver31 "$J" 200 "/usuarios?m=$n"; done
-for n in bloqueado prazo liberado ausente; do ver31 "$J" 200 "/bloqueios?m=$n"; done
-for n in criada renomeado apagado enviado enviado_com_data limite erro ocupado; do ver31 "$J" 200 "/arquivos?pasta=idioma31/a&m=$n"; done
-telas_adm=$telas31
-ver31 "$W/id31c.jar" 200 /meus-arquivos "/meus-arquivos?pasta=sub" "/meus-arquivos/renomear?item=sub/backup.cfg" "/meus-arquivos/apagar?item=sub/backup.cfg" "/meus-arquivos/apagar?item=sub" \
-  "/meus-arquivos?m=enviado" "/meus-arquivos?pasta=sub&m=enviado_com_data"
-ver31 "$W/id31c.jar" '403|404' /usuarios /nao-existe
+perfis31=""
 for n in e l s; do
   e_p="$(COMO="id31$n" entrar "$W/id31$n.jar" "$W/id31$n.senha")"; proibir "$(biscoito_de "$W/id31$n.jar")"
   r_p="$(troca31 "$W/id31$n.jar" "$(token31 "$W/id31$n.jar")" en)"; perfis31+="$e_p $r_p· "
-  ver31 "$W/id31$n.jar" 200 /meus-arquivos
-  ver31 "$W/id31$n.jar" '403|404' "/meus-arquivos/apagar?item=sub"
 done
+# <idioma>: todas as telas do administrador e dos quatro perfis de usuário do FTP, com as contas já nesse idioma
+passeio31() {
+  LINGUA31="$1"; telas31=0; ruins31=0; ev31=""
+  ver31 "$J" 200 / /usuarios /usuarios/novo "/usuarios/novo?pasta=idioma31/a" "/usuarios/editar?usuario=id31c" "/usuarios/editar?usuario=id31e" \
+    "/usuarios/editar?usuario=id31l" "/usuarios/editar?usuario=id31s" "/usuarios/senha?usuario=id31c" "/usuarios/remover?usuario=id31c" \
+    /arquivos "/arquivos?pasta=idioma31" "/arquivos?pasta=idioma31/a" "/arquivos?pasta=idioma31/a/sub" "/arquivos/renomear?item=idioma31/a/sub/backup.cfg" \
+    "/arquivos/renomear?item=idioma31/a/sub" "/arquivos/apagar?item=idioma31/a/sub/backup.cfg" "/arquivos/apagar?item=idioma31/a/sub" \
+    "/usuarios/novo?perfil=administrador" "/administradores/senha?admin=$ADMIN" "/administradores/senha?admin=idioma31" "/administradores/nome?admin=idioma31" \
+    "/administradores/remover?admin=idioma31" "/administradores/fator?admin=$ADMIN" /seguranca /servidor /bloqueios "/bloqueios?q=203.0.113" "/bloqueios?q=198.18" \
+    "/bloqueios/endereco?ip=$BLOQUEADO31" /bloqueios/novo "/bloqueios?q=2001:db8" "/bloqueios/endereco?ip=$V631" "/bloqueios/endereco?ip=$P31" /atividade
+  # Telas de recusa e de aviso, que também são do painel: a de quem tenta remover a si mesmo, a do segundo fator de
+  # outro administrador, a que não existe e as que dependem do modo de TLS da instância.
+  ver31 "$J" '200|400|403|404|409' "/administradores/remover?admin=$ADMIN" "/administradores/fator?admin=idioma31" /nao-existe "/usuarios/editar?usuario=ninguem31" "/usuarios/tls?usuario=id31c" \
+    "/arquivos?pasta=nao-existe-31"
+  # Os avisos que cada lista mostra depois de uma ação, pedidos pelo nome que vai na consulta.
+  for n in criado criado_sem_tls criado_tls_falhou senha pasta pasta_sem_limpeza perfil limites limpeza limpeza_desligada desbloqueado removido removido_com_pasta tls_dispensado tls_exigido \
+    admin_criado admin_senha admin_nome admin_removido fator_ligado fator_desligado; do ver31 "$J" 200 "/usuarios?m=$n"; done
+  for n in bloqueado prazo liberado ausente; do ver31 "$J" 200 "/bloqueios?m=$n"; done
+  for n in criada renomeado apagado enviado enviado_com_data limite erro ocupado; do ver31 "$J" 200 "/arquivos?pasta=idioma31/a&m=$n"; done
+  telas_adm=$telas31
+  ver31 "$W/id31c.jar" 200 /meus-arquivos "/meus-arquivos?pasta=sub" "/meus-arquivos/renomear?item=sub/backup.cfg" "/meus-arquivos/apagar?item=sub/backup.cfg" "/meus-arquivos/apagar?item=sub" \
+    "/meus-arquivos?m=enviado" "/meus-arquivos?pasta=sub&m=enviado_com_data"
+  ver31 "$W/id31c.jar" '403|404' /usuarios /nao-existe
+  for n in e l s; do
+    ver31 "$W/id31$n.jar" 200 /meus-arquivos
+    ver31 "$W/id31$n.jar" '403|404' "/meus-arquivos/apagar?item=sub"
+  done
+}
+passeio31 en
 # As telas novas trazem o que têm de trazer, e em inglês: o cartão da limpeza na ficha do usuário, o formulário de
 # envio e o aviso da limpeza na tela de quem está na pasta, e o formulário de bloqueio novo.
 t_lim="$(aba -b "$J" "$B/usuarios/editar?usuario=id31c")"; lim_en="$(tem31 '<h2>Automatic cleanup</h2>')"; lim_botao="$(tem31 '>Save cleanup</button>')"
@@ -160,6 +176,43 @@ t_data2="$(aba -b "$W/id31l.jar" "$B/meus-arquivos?pasta=sub")"; iso_arq="$(grep
   && "$do_comando" == "User already exists: id31c | Invalid limit: sessoes accepts empty or a whole number from 1 to 50 | Frase que o painel nao conhece#Usuario ja existe: id31c#" \
   && "$t_data" == "200 " && "$iso_en" -ge 1 && "$br_en" == 0 && "$t_data2" == "200 " && "$iso_arq" -ge 1 ]]
 caso $? testes 65 "Todas as telas em inglês: administrador e os quatro perfis de usuário do FTP, sem sobra de português" "usuários de apoio criados (completo, envio, leitura, só envio): $r_u1 $r_u2 $r_u3 $r_u4, arquivo enviado por FTP: $r_f, endereço $BLOQUEADO31 bloqueado pelo terminal: $r_b, endereço $V631: $r_b6, prefixo $P31: $r_bp, limpeza automática ligada na pasta de id31c (ultimos=5 dias=30): $r_ret, permissão de enviar pelo painel a id31c, id31e e id31s: $r_env · $telas31 telas pedidas com a conta em inglês ($telas_adm de administrador, as demais dos quatro perfis de usuário do FTP), cada uma conferida em três pontos: código esperado, <html lang=\"en\"> e nenhuma letra acentuada nem palavra de tela em português fora do botão de idioma; entram as telas de formulário, de confirmação, de recusa e os avisos de cada lista, as de bloqueio novo, de endereço IPv6 e de prefixo, as de envio e as de limpeza automática · telas com desvio: $ruins31 ${ev31:+($ev31)}· ficha de id31c: $t_lim, cartão Automatic cleanup: $lim_en, botão Save cleanup: $lim_botao · tela de id31c (completo, com permissão de enviar): $t_envc, formulário Upload file: $envc_en, aviso da limpeza em inglês: $avisoc_en · de id31l (leitura, na mesma pasta): $t_envl, formulário: $envl_en, aviso: $avisol_en · de id31s (só envio, em outra pasta): $t_envs, formulário: $envs_en, aviso: $avisos_en · formulário de bloqueio novo: $t_novo, presente: $novo_en, sobras: ${novo_resto:-nenhuma} · entrada e troca de idioma dos perfis envio, leitura e só envio: $perfis31· formulário de usuário devolvido com nome fora da regra: $r_ruim, lang=$ruim_lang, sobras: ${ruim_resto:-nenhuma} · usuário que já existe: $r_rep, mensagem em inglês: $rep_texto, sobras: ${rep_resto:-nenhuma} · mensagens do comando de usuários do FTP passadas pelo painel em inglês e, a primeira, em português: $do_comando · aba Log em inglês: $t_data, datas ano-mês-dia: $iso_en, datas dia/mês/ano: $br_en · pasta do usuário de leitura em inglês: $t_data2, datas ano-mês-dia com hora: $iso_arq"
+
+# ------------------------------------------------------------------ todas as telas em espanhol
+# As mesmas contas passam ao espanhol, as mesmas telas são pedidas de novo e, no fim, todas voltam ao inglês, que é
+# como o resto da etapa as espera.
+telas_en=$telas31; arq_e0="$(gravado31)"
+r_e1="$(troca31 "$J" "$K" es -e "$B/usuarios")"; c_e1="$(biscoito31)"; arq_e1="$(gravado31)"
+t_e1="$(aba -b "$J" "$B/usuarios")"; l_e1="$(lingua31)"; b_e1="$(apertado31)"; h_e1="$(tem31 '<h1 class="titulo-aba">Usuarios</h1>')"
+t_e2="$(aba -b "$J31" "$B/usuarios")"; l_e2="$(lingua31)"                                                # a outra sessão do administrador segue a conta
+perfis_es=""; for n in c e l s; do perfis_es+="$(troca31 "$W/id31$n.jar" "$(token31 "$W/id31$n.jar")" es)· "; done
+passeio31 es
+t_lime="$(aba -b "$J" "$B/usuarios/editar?usuario=id31c")"; lim_es="$(tem31 '<h2>Limpieza automática</h2>')"; lim_botao_es="$(tem31 '>Guardar limpieza</button>')"
+t_enve="$(aba -b "$W/id31c.jar" "$B/meus-arquivos")"; env_es="$(tem31 '<h2>Enviar archivo</h2>')"; aviso_es="$(tem31 'Limpieza automática, activada por el administrador: el servidor ')"
+r_repe="$(c -o "$W/corpo" -w '%{http_code}' -b "$J" -H "Origin: $B" --data-urlencode "csrf=$K" --data-urlencode 'usuario=id31c' --data-urlencode "senha@$W/id31c.senha" --data-urlencode "confirmacao@$W/id31c.senha" "$B/usuarios/novo")"
+repe_lang="$(lingua31)"; repe_texto="$(tem31 'Ya existe un usuario con este nombre.')"; repe_resto="$(resto31)"
+do_comando_es="$(docker exec "$PAINEL" python3 -B -c "
+import sys; sys.path.insert(0, '/opt/painel')
+import idioma
+frases = ('Usuario ja existe: id31c', 'Limite invalido: sessoes aceita vazio ou um inteiro de 1 a 50', 'Frase que o painel nao conhece')
+idioma.usar('es'); print(' | '.join(idioma.do_comando(frase) for frase in frases))" 2>&1 | tr '\n' '#')"
+# Datas: dia/mês/ano, como em português.
+t_datae="$(aba -b "$J" "$B/atividade")"; br_es="$(grep -c -E 'class="quando">[0-9]{2}/[0-9]{2}/[0-9]{4}[^0-9]' "$W/corpo")"; iso_es="$(grep -c -E 'class="quando">[0-9]{4}-[0-9]{2}-[0-9]{2}[^0-9]' "$W/corpo")"
+# Tela de entrada: o botão grava o espanhol no navegador de quem ainda não entrou.
+E31="$W/e31.jar"; rm -f "$E31"; r_e3="$(fora31 "$E31" es)"; c_e3="$(biscoito31)"
+c -b "$E31" -o "$W/corpo" "$B/entrar"; l_e3="$(lingua31)"; h_e3="$(tem31 '<h1>Entrar en el panel</h1>')"; b_e3="$(apertado31)"; s_e3="$(resto31)"
+# De volta ao inglês.
+volta_es="$(troca31 "$J" "$K" en)· "; for n in c e l s; do volta_es+="$(troca31 "$W/id31$n.jar" "$(token31 "$W/id31$n.jar")" en)· "; done
+LINGUA31=en; arq_e2="$(gravado31)"; t_e9="$(aba -b "$J" "$B/usuarios")"; l_e9="$(lingua31)"
+[[ "$r_e1" == "303 /usuarios" && "$c_e1" == "$(printf "$COOKIE31" es)|" && "$arq_e1" != "$arq_e0" && "$arq_e1" == "${arq_e0/admin:$ADMIN:en/admin:$ADMIN:es}" \
+  && "$t_e1" == "200 " && "$l_e1" == es && "$b_e1" == "es " && "$h_e1" == 1 && "$t_e2" == "200 " && "$l_e2" == es && "$perfis_es" == "303 /· 303 /· 303 /· 303 /· " \
+  && "$ruins31" == 0 && "$telas31" == "$telas_en" && "$telas31" -ge 82 \
+  && "$t_lime" == "200 " && "$lim_es" == 1 && "$lim_botao_es" == 1 && "$t_enve" == "200 " && "$env_es" == 1 && "$aviso_es" == 1 \
+  && "$r_repe" =~ ^(400|409)$ && "$repe_lang" == es && "$repe_texto" == 1 && -z "$repe_resto" \
+  && "$do_comando_es" == "El usuario ya existe: id31c | Límite no válido: sessoes acepta vacío o un entero de 1 a 50 | Frase que o painel nao conhece#" \
+  && "$t_datae" == "200 " && "$br_es" -ge 1 && "$iso_es" == 0 \
+  && "$r_e3" == "303 /entrar" && "$c_e3" == "$(printf "$COOKIE31" es)|" && "$l_e3" == es && "$h_e3" == 1 && "$b_e3" == "es " && -z "$s_e3" \
+  && "$volta_es" == "303 /· 303 /· 303 /· 303 /· 303 /· " && "$arq_e2" == "$arq_e0" && "$t_e9" == "200 " && "$l_e9" == en ]]
+caso $? testes 100 "Todas as telas em espanhol: administrador e os quatro perfis de usuário do FTP, sem sobra de português" "POST /idioma do administrador com idioma=es, vindo de /usuarios: $r_e1, Set-Cookie: $c_e1, escolha gravada trocada de en para es: $([[ "$arq_e1" == "${arq_e0/admin:$ADMIN:en/admin:$ADMIN:es}" && "$arq_e1" != "$arq_e0" ]] && echo sim || echo não) · aba Usuários depois: $t_e1, lang=$l_e1, botão marcado: $b_e1, título Usuarios: $h_e1 · na outra sessão do administrador: $t_e2, lang=$l_e2 · troca dos quatro usuários do FTP para o espanhol: $perfis_es· $telas31 telas pedidas com a conta em espanhol ($telas_adm de administrador, as demais dos quatro perfis de usuário do FTP; em inglês foram $telas_en), cada uma conferida em três pontos: código esperado, <html lang=\"es\"> e nenhuma letra nem palavra de tela que só o português tem, fora do botão de idioma · telas com desvio: $ruins31 ${ev31:+($ev31)}· ficha de id31c: $t_lime, cartão Limpieza automática: $lim_es, botão Guardar limpieza: $lim_botao_es · tela de id31c: $t_enve, formulário Enviar archivo: $env_es, aviso da limpeza em espanhol: $aviso_es · usuário que já existe: $r_repe, lang=$repe_lang, mensagem em espanhol: $repe_texto, sobras: ${repe_resto:-nenhuma} · mensagens do comando de usuários do FTP passadas pelo painel em espanhol: $do_comando_es · aba Log em espanhol: $t_datae, datas dia/mês/ano: $br_es, datas ano-mês-dia: $iso_es · tela de entrada, POST /idioma com o token do formulário e idioma=es: $r_e3, Set-Cookie: $c_e3, depois: lang=$l_e3, título em espanhol: $h_e3, botão marcado: $b_e3, sobras: ${s_e3:-nenhuma} · de volta ao inglês, administrador e os quatro usuários: $volta_es· escolhas gravadas iguais às de antes do espanhol: $([[ "$arq_e2" == "$arq_e0" ]] && echo sim || echo não) · aba Usuários: $t_e9, lang=$l_e9"
 
 # ------------------------------------------------------------------ recusas da troca
 auditoria; csrf_0="$(eventos recusa_csrf)"; origem_0="$(eventos recusa_origem)"; arq_4="$(gravado31)"
@@ -206,7 +259,7 @@ v_6="$(troca31 "$J" "$K" en)"
 v_7="$(troca31 "$W/id31c.jar" "$KC" en -e "$B/usuarios")"
 v_8="$(troca31 "$W/id31l.jar" "$(token31 "$W/id31l.jar")" en -e "$B/meus-arquivos/apagar?item=sub")"
 dono_arq="$(docker exec "$PAINEL" stat -c '%U %a' /painel/idiomas 2>&1)"; dono_painel="$(docker exec "$PAINEL" id -un 2>&1)"
-fora_da_regra="$(docker exec "$PAINEL" sh -c "grep -c -v -E '^(admin|usuario):[a-z_][a-z0-9_-]{0,31}:(pt|en)\$' /painel/idiomas")"
+fora_da_regra="$(docker exec "$PAINEL" sh -c "grep -c -v -E '^(admin|usuario):[a-z_][a-z0-9_-]{0,31}:(pt|en|es)\$' /painel/idiomas")"
 [[ "$z_1" == pt-BR && "$z_2" == pt-BR && "$z_2s" == 0 && "$z_3" == pt-BR && "$z_4" == pt-BR && "$z_5" == en && "$z_6" == "303 /entrar" && "$z_7" == "200 " && "$z_7l" == en \
   && "$v_1" == "303 /seguranca" && "$v_2" == "303 /" && "$v_3" == "303 /" && "$v_4" == "303 /arquivos?pasta=idioma31%2Fa" && "$v_5" == "303 /usuarios/novo" && "$v_6" == "303 /" \
   && "$v_7" == "303 /" && "$v_8" == "303 /" && "$dono_arq" == "$dono_painel 600" && "$fora_da_regra" == 0 ]]

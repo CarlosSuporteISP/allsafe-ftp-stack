@@ -11,7 +11,7 @@
 
 Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Version](https://img.shields.io/badge/version-1.7.0-blue)
+![Version](https://img.shields.io/badge/version-1.8.0-blue)
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
 ![Support](https://img.shields.io/badge/support-LTS-blue)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -26,7 +26,7 @@ Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf
 
 <a href="doc/en/images/painel-principal.png"><img src="doc/en/images/painel-principal.png" alt="Overview tab with the menu on the left, in two groups, the FTP server band, which says Up and TLS required on sign-in, the four measurements Users, Space used, Last upload and FTP certificate, each with the shortcut to the detail, the Server and containers card, with the CPU and the memory of the server and of the containers, the charts Files received per day, Last upload per user and Space per folder, the Recent activity card, with the last six records, and the Details to set up the device card" width="100%"></a>
 
-<sub><b>v1.1.0</b> · web panel, Overview tab · captured on 2026-10-11</sub>
+<sub><b>v1.8.0</b> · web panel, Overview tab · captured on 2026-10-12</sub>
 
 <!-- diagrama: doc/en/diagrams/overview-diagram.mmd -->
 ```mermaid
@@ -130,10 +130,10 @@ The web panel, tab by tab. The Overview tab is the image at the top of this page
 | **Security** — checks network, TLS, certificates, blocks, passwords and security contact | **Blocks** — the blocked addresses and prefixes, by user and password errors or by the administrator, with new block, unblock and change of period |
 | <a href="doc/en/images/aba-atividade.png"><img src="doc/en/images/aba-atividade.png" alt="Log tab with the records of the panel in four columns: when, from where, with the whole address on a single line or on the server, what happened, with one icon per event, and the detail, such as files sent to the destination, file downloaded, folder created, administrator created, address unblocked and screen outside the role or profile requested by an FTP user" width="100%"></a> | <a href="doc/en/images/aba-administradores.png"><img src="doc/en/images/aba-administradores.png" alt="Users tab with three administrators at the top of the list, admin, with the tag you, noc-plantao and suporte, each with the Administrator profile, the open sessions and the actions Change password, Change name and Remove, and, below them, the FTP users" width="100%"></a> |
 | **Log** — who signed in, from where, what they downloaded, what they uploaded and what was changed | **Administrators** — they are in the Users tab, each person with their own name and their own password |
-| <a href="doc/en/images/aba-meus-arquivos.png"><img src="doc/en/images/aba-meus-arquivos.png" alt="My files screen of the user olt-centro, with the Full profile, with the folders 2026-09 and 2026-10 and a configuration file, the automatic cleanup warning above the list, the Open or Download, Rename and Delete buttons on each row, the New folder and Upload file cards and, in the menu, only the My files tab, the PT and EN buttons, the name of the user and the Sign out button" width="100%"></a> | |
+| <a href="doc/en/images/aba-meus-arquivos.png"><img src="doc/en/images/aba-meus-arquivos.png" alt="My files screen of the user olt-centro, with the Full profile, with the folders 2026-09 and 2026-10 and a configuration file, the automatic cleanup warning above the list, the Open or Download, Rename and Delete buttons on each row, the New folder and Upload file cards and, in the menu, only the My files tab, the PT, EN and ES buttons, the name of the user and the Sign out button" width="100%"></a> | |
 | **My files** — the FTP user sees their own folder and does in it what their profile allows | |
 
-<sub><b>v1.4.0</b> · web panel, one screenshot per tab · captured on 2026-10-11; the Destinations tab one is from <b>v1.6.0</b> and the Users and Security tab ones are from <b>v1.7.0</b>, captured on 2026-10-12</sub>
+<sub><b>v1.8.0</b> · web panel, one screenshot per tab · captured on 2026-10-12</sub>
 
 Every screen, menu by menu, with the explanation of each one: [application screenshots](doc/en/application/README.md).
 
@@ -661,11 +661,11 @@ The safest path for each decision of whoever installs, as a flowchart, is in [be
 
 | I want to | Command | Expected result |
 |---|---|---|
-| Check syntax and Compose, without starting anything | `./scripts/validate.sh` | `painel OK: <n> módulos Python`, `idioma OK: <n> textos do painel com tradução em inglês, <n> mensagens do comando de usuários`, `marca OK: 6 arquivos em web/marca/`, `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` for the five profiles and `Validacao FTP concluida.` |
+| Check syntax and Compose, without starting anything | `./scripts/validate.sh` | `painel OK: <n> módulos Python`, `idioma OK: <n> textos do painel com tradução em inglês e em espanhol, <n> mensagens do comando de usuários`, `marca OK: 6 arquivos em web/marca/`, `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` for the five profiles and `Validacao FTP concluida.` |
 | Check the running installation | `./scripts/validate.sh --runtime` | the same, plus `servico ftp: running, healthy`, likewise for `painel` and `nginx`, and the initial user in PureDB or removed by the administrator |
 | Run the full suite: functional, security and network | `./tests/testar.sh` | one line per case and, at the end, `Bateria aprovada: nenhum desvio.` |
 
-The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 99 functional cases, 144 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
+The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 100 functional cases, 144 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
 
 ---
 

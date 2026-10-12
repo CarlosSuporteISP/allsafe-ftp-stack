@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Idioma das telas: português, que é o padrão, ou inglês. Cada conta escolhe o seu.
+"""Idioma das telas: português, que é o padrão, inglês ou espanhol. Cada conta escolhe o seu.
 
-O texto em português é a chave: `t('Entrar')` devolve o próprio texto ou, com o pedido em inglês, a tradução do
-catálogo (idioma_en.py). Texto sem tradução sai em português. O idioma vale para o pedido em atendimento: cada
-pedido tem a sua linha de execução, e é nela que ele fica guardado.
+O texto em português é a chave: `t('Entrar')` devolve o próprio texto ou, com o pedido em outro idioma, a tradução
+do catálogo dele (idioma_en.py, idioma_es.py). Texto sem tradução sai em português. O idioma vale para o pedido em
+atendimento: cada pedido tem a sua linha de execução, e é nela que ele fica guardado.
 
 A escolha de cada conta fica em /painel/idiomas, uma linha por conta (`admin:<nome>:<idioma>` ou
 `usuario:<nome>:<idioma>`). Antes da entrada não há conta: a tela de entrada segue o cookie do navegador.
@@ -14,15 +14,18 @@ import os
 import re
 import threading
 
-from idioma_en import COMANDO, EN
+import idioma_en
+import idioma_es
 
-IDIOMAS = ('pt', 'en')
+IDIOMAS = ('pt', 'en', 'es')
 PADRAO = 'pt'
 # Idioma ➜ (o que o botão mostra, o nome por extenso, na própria língua, e o valor de `lang` do nome).
-NOMES = {'pt': ('PT', 'Português', 'pt-BR'), 'en': ('EN', 'English', 'en')}
+NOMES = {'pt': ('PT', 'Português', 'pt-BR'), 'en': ('EN', 'English', 'en'), 'es': ('ES', 'Español', 'es')}
+# Idioma ➜ (catálogo dos textos, regras das mensagens do allsafe-ftp-user). O português é a chave: não tem catálogo.
+CATALOGOS = {'en': (idioma_en.EN, idioma_en.COMANDO), 'es': (idioma_es.ES, idioma_es.COMANDO)}
 ARQ_IDIOMAS = '/painel/idiomas'
-LINHA = re.compile(r'(admin|usuario):([a-z_][a-z0-9_-]{0,31}):(pt|en)')
-COOKIE = re.compile(r'__Host-idioma=(pt|en)')
+LINHA = re.compile(r'(admin|usuario):([a-z_][a-z0-9_-]{0,31}):(pt|en|es)')
+COOKIE = re.compile(r'__Host-idioma=(pt|en|es)')
 TRAVA = threading.Lock()
 DO_PEDIDO = threading.local()
 
@@ -38,8 +41,9 @@ def atual():
 
 def t(texto, /, **valores):
     """O texto no idioma do pedido. Os valores entram pelos nomes entre chaves e já vêm prontos para o HTML."""
-    if atual() == 'en':
-        texto = EN.get(texto, texto)
+    catalogo = CATALOGOS.get(atual())
+    if catalogo:
+        texto = catalogo[0].get(texto, texto)
     return texto.format(**valores) if valores else texto
 
 
@@ -54,15 +58,15 @@ def N(texto):
 
 
 def do_comando(mensagem):
-    """Mensagem de erro que veio do allsafe-ftp-user, que fala português: em inglês, a que o catálogo conhece sai
-    traduzida. As duas que o próprio painel escreve no lugar dele estão no catálogo comum."""
-    if atual() == 'en':
-        if mensagem in EN:
-            return EN[mensagem]
-        for regra, ingles in COMANDO:
-            achado = regra.fullmatch(mensagem)
-            if achado:
-                return achado.expand(ingles)
+    """Mensagem de erro que veio do allsafe-ftp-user, que fala português: em outro idioma, a que o catálogo conhece
+    sai traduzida. As duas que o próprio painel escreve no lugar dele estão no catálogo comum."""
+    textos, regras = CATALOGOS.get(atual(), ({}, ()))
+    if mensagem in textos:
+        return textos[mensagem]
+    for regra, modelo in regras:
+        achado = regra.fullmatch(mensagem)
+        if achado:
+            return achado.expand(modelo)
     return mensagem
 
 
