@@ -1,6 +1,8 @@
 # 🎚️ Perfis de capacidade — allsafe-ftp-stack
 
-🌐 [English](../en/profiles.md) · **Português (Brasil)**
+[![English](https://img.shields.io/badge/English-6e7781?style=for-the-badge)](../en/profiles.md)
+[![Português (Brasil)](https://img.shields.io/badge/Portugu%C3%AAs_(Brasil)-0969da?style=for-the-badge)](perfis.md)
+[![Español](https://img.shields.io/badge/Espa%C3%B1ol-6e7781?style=for-the-badge)](../es/perfiles.md)
 
 ↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 

@@ -1,0 +1,11 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    origem@{ shape: lin-cyl, label: "DATA_DIR<br>dados, auth, certs y painel" }
+    painel@{ shape: rect, label: "panel<br>lee, cifra y envía" }
+    bucket@{ shape: bucket, label: "bucket S3<br>copia cifrada y suma sha256" }
+    baixar@{ shape: manual, label: "descargar los dos objetos<br>a BACKUP_DIR" }
+    restaurar@{ shape: console, label: "scripts/restaurar.sh<br>verifica, abre y cambia" }
+    destino@{ shape: lin-cyl, label: "DATA_DIR<br>contenido de la copia" }
+    fim@{ shape: stadium, label: "stack de vuelta" }
+
+    origem --> painel --> bucket --> baixar --> restaurar --> destino --> fim

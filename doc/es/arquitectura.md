@@ -14,11 +14,11 @@ La stack tiene tres contenedores: el servidor FTP, el panel web que administra s
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    equip@{ shape: hex, label: "Equipamento de rede<br>envia o backup" }
+    equip@{ shape: hex, label: "Equipo de red<br>envía la copia de seguridad" }
     ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, FTPS" }
-    puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
-    dados@{ shape: lin-cyl, label: "/data<br>uma pasta por usuário" }
-    fim@{ shape: stadium, label: "backup guardado" }
+    puredb@{ shape: cyl, label: "PureDB<br>usuarios virtuales" }
+    dados@{ shape: lin-cyl, label: "/data<br>una carpeta por usuario" }
+    fim@{ shape: stadium, label: "copia de seguridad guardada" }
 
     equip --> ftp --> puredb --> dados --> fim
 ```
@@ -51,45 +51,45 @@ Los tres contenedores, las carpetas del host y quién habla con quién, en el or
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph USO["Quem usa"]
-        operador@{ shape: person, label: "Usuário<br>opera a stack" }
-        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
+    subgraph USO["Quién usa"]
+        operador@{ shape: person, label: "Usuario<br>opera la stack" }
+        equip@{ shape: hex, label: "Equipo de red<br>cliente FTP" }
     end
     subgraph HOST["Host"]
         scripts@{ shape: console, label: "deploy.sh<br>manage-user.sh" }
     end
-    subgraph CONTAINERS["Containers · rede allsafe-ftp-network"]
+    subgraph CONTAINERS["Contenedores · red allsafe-ftp-network"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
-        painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
+        painel@{ shape: rect, label: "Panel web<br>allsafe-ftp-painel, socket Unix" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
     end
-    subgraph VOLUMES["Volumes"]
-        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>soquete e cópia do certificado" }
-        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>administradores e auditoria" }
+    subgraph VOLUMES["Volúmenes"]
+        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>socket y copia del certificado" }
+        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>administradores y auditoría" }
         vauth@{ shape: cyl, label: "DATA_DIR/auth<br>PureDB" }
-        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>arquivos enviados" }
-        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>certificado do FTP" }
+        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>archivos enviados" }
+        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>certificado del FTP" }
     end
     subgraph RESULTADO["Resultado"]
-        fim@{ shape: stadium, label: "backup guardado" }
+        fim@{ shape: stadium, label: "copia de seguridad guardada" }
     end
 
     operador -- "1 · ./deploy.sh" --> scripts
-    scripts -- "2 · docker compose build e up -d --wait" --> nginx
+    scripts -- "2 · docker compose build y up -d --wait" --> nginx
     operador -- "3 · HTTPS, TCP 8443" --> nginx
-    nginx -- "4 · repassa pelo soquete Unix" --> painel
-    painel -- "5 · cria, edita ou remove o usuário" --> vauth
-    equip -- "6 · FTPS, TCP 21 para 2121" --> ftp
-    ftp -- "7 · grava o arquivo" --> vdata
-    vdata -- "8 · arquivo no volume" --> fim
-    nginx -. "lê, só leitura" .-> vnginx
-    painel -. "cria o soquete" .-> vnginx
-    painel -. "grava" .-> vpainel
-    painel -. "gerencia e lê" .-> vdata
-    painel -. "confere a senha do FTP" ..-> ftp
+    nginx -- "4 · reenvía por el socket Unix" --> painel
+    painel -- "5 · crea, edita o elimina el usuario" --> vauth
+    equip -- "6 · FTPS, TCP 21 a 2121" --> ftp
+    ftp -- "7 · guarda el archivo" --> vdata
+    vdata -- "8 · archivo en el volumen" --> fim
+    nginx -. "lee, solo lectura" .-> vnginx
+    painel -. "crea el socket" .-> vnginx
+    painel -. "escribe" .-> vpainel
+    painel -. "administra y lee" .-> vdata
+    painel -. "verifica la contraseña del FTP" ..-> ftp
     ftp -. "consulta" .-> vauth
-    ftp -. "lê o certificado" .-> vcerts
-    painel -. "lê para a cópia do sistema" .-> vcerts
+    ftp -. "lee el certificado" .-> vcerts
+    painel -. "lee para la copia del sistema" .-> vcerts
 ```
 
 <sub>Nivel 2 · Mapa · [fuente](diagramas/)</sub>
@@ -213,53 +213,53 @@ Lo que ocurre entre el `./deploy.sh` y el contenedor `healthy`.
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph OPERACAO["Operação"]
-        operador@{ shape: person, label: "Usuário" }
-        deploy@{ shape: console, label: "deploy.sh<br>instala em um comando" }
+    subgraph OPERACAO["Operación"]
+        operador@{ shape: person, label: "Usuario" }
+        deploy@{ shape: console, label: "deploy.sh<br>instala en un comando" }
     end
     subgraph HOST["Host"]
-        env@{ shape: doc, label: ".env<br>configuração e limites" }
+        env@{ shape: doc, label: ".env<br>configuración y límites" }
         segredo@{ shape: doc, label: ".secrets<br>ftp-usuario-inicial-senha.txt" }
         compose@{ shape: rect, label: "Docker Compose<br>compose.yaml" }
     end
-    subgraph CONTAINER["Container allsafe-ftp · raiz somente leitura"]
+    subgraph CONTAINER["Contenedor allsafe-ftp · raíz de solo lectura"]
         entry@{ shape: rect, label: "entrypoint<br>allsafe-ftp-entrypoint" }
-        valida@{ shape: diam, label: "variáveis<br>válidas?" }
-        pw@{ shape: rect, label: "pure-pw<br>cria ou atualiza o usuário" }
+        valida@{ shape: diam, label: "¿variables<br>válidas?" }
+        pw@{ shape: rect, label: "pure-pw<br>crea o actualiza el usuario" }
         puredb@{ shape: cyl, label: "PureDB<br>/auth/pureftpd.pdb" }
-        dados@{ shape: lin-cyl, label: "/data<br>pasta do usuário" }
-        certq@{ shape: diam, label: "certificado<br>existe?" }
-        gera@{ shape: rect, label: "openssl<br>autoassinado, 825 dias" }
+        dados@{ shape: lin-cyl, label: "/data<br>carpeta del usuario" }
+        certq@{ shape: diam, label: "¿existe el<br>certificado?" }
+        gera@{ shape: rect, label: "openssl<br>autofirmado, 825 días" }
         cert@{ shape: doc, label: "pure-ftpd.pem<br>/etc/ssl/private" }
         pure@{ shape: rect, label: "pure-ftpd<br>0.0.0.0, 2121" }
-        authd@{ shape: rect, label: "vigia e pure-authd<br>bloqueio e porteiro, listas em /auth" }
-        saude@{ shape: rect, label: "healthcheck<br>saudação na porta 2121" }
+        authd@{ shape: rect, label: "vigía y pure-authd<br>bloqueo y portero, listas en /auth" }
+        saude@{ shape: rect, label: "healthcheck<br>saludo en el puerto 2121" }
     end
     subgraph RESULTADO["Resultado"]
-        pronto@{ shape: stadium, label: "FTP pronto<br>healthy" }
-        falha@{ shape: stadium, label: "FALHA no log<br>container não sobe" }
+        pronto@{ shape: stadium, label: "FTP listo<br>healthy" }
+        falha@{ shape: stadium, label: "FALHA en el log<br>el contenedor no arranca" }
     end
 
-    operador -- "1 · executa" --> deploy
-    deploy -- "2 · docker compose build e up -d --wait" --> compose
-    compose -- "3 · inicia o container" --> entry
-    entry -- "4 · confere usuário, senha, faixa e TLS" --> valida
-    valida -- "5a · sim" --> pw
-    valida -- "5b · não" --> falha
-    pw -- "6 · banco compilado" --> certq
-    certq -- "7a · sim: reutiliza" --> cert
-    certq -- "7b · não: gera" --> gera
-    gera -- "8 · grava o certificado" --> cert
-    cert -- "9 · lido na partida" --> pure
-    pure -- "10 · conferido a cada 20 s" --> saude
-    saude -- "11 · servidor atende" ---> pronto
-    deploy -. "gera a senha se vazio, 0600" .-> segredo
-    compose -. "lê" .-> env
-    entry -. "lê, só leitura" .-> segredo
-    entry -. "cria a pasta" .-> dados
-    pw -. "grava" .-> puredb
+    operador -- "1 · ejecuta" --> deploy
+    deploy -- "2 · docker compose build y up -d --wait" --> compose
+    compose -- "3 · inicia el contenedor" --> entry
+    entry -- "4 · verifica usuario, contraseña, rango y TLS" --> valida
+    valida -- "5a · sí" --> pw
+    valida -- "5b · no" --> falha
+    pw -- "6 · base compilada" --> certq
+    certq -- "7a · sí: reutiliza" --> cert
+    certq -- "7b · no: genera" --> gera
+    gera -- "8 · guarda el certificado" --> cert
+    cert -- "9 · leído en el arranque" --> pure
+    pure -- "10 · verificado cada 20 s" --> saude
+    saude -- "11 · el servidor atiende" ---> pronto
+    deploy -. "genera la contraseña si está vacío, 0600" .-> segredo
+    compose -. "lee" .-> env
+    entry -. "lee, solo lectura" .-> segredo
+    entry -. "crea la carpeta" .-> dados
+    pw -. "escribe" .-> puredb
     pure -. "consulta" .-> puredb
-    pure -. "pergunta a cada entrada e avisa a senha errada" .-> authd
+    pure -. "pregunta en cada entrada y avisa la contraseña incorrecta" .-> authd
 ```
 
 <sub>Nivel 3 · Modelo · [fuente](diagramas/)</sub>

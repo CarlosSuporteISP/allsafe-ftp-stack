@@ -1,0 +1,9 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    equip@{ shape: hex, label: "Equipo de red<br>envía la copia de seguridad" }
+    ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, FTPS" }
+    puredb@{ shape: cyl, label: "PureDB<br>usuarios virtuales" }
+    dados@{ shape: lin-cyl, label: "/data<br>una carpeta por usuario" }
+    fim@{ shape: stadium, label: "copia de seguridad guardada" }
+
+    equip --> ftp --> puredb --> dados --> fim

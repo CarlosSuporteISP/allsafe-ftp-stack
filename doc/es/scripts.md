@@ -14,12 +14,12 @@ Los scripts de la stack son de dos tipos. Los que usted ejecuta en el host levan
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    usuario@{ shape: person, label: "Usuário" }
-    host@{ shape: console, label: "deploy.sh, manage-user.sh<br>e validate.sh, no host" }
+    usuario@{ shape: person, label: "Usuario" }
+    host@{ shape: console, label: "deploy.sh, manage-user.sh<br>y validate.sh, en el host" }
     compose@{ shape: rect, label: "Docker Compose" }
-    interno@{ shape: console, label: "entrypoints e allsafe-ftp-user<br>dentro dos containers" }
+    interno@{ shape: console, label: "entrypoints y allsafe-ftp-user<br>dentro de los contenedores" }
     ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
-    fim@{ shape: stadium, label: "serviço operando" }
+    fim@{ shape: stadium, label: "servicio operando" }
 
     usuario --> host --> compose --> interno --> ftp --> fim
 ```

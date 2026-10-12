@@ -1,0 +1,37 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origen"]
+        origem@{ shape: hex, label: "Dirección de origen<br>equipo o navegador" }
+    end
+    subgraph ENTRADA["Entrada"]
+        servico@{ shape: rect, label: "FTP o panel<br>allsafe-ftp, allsafe-ftp-painel" }
+        preso@{ shape: diam, label: "¿dirección<br>bloqueada?" }
+        enderecos@{ shape: docs, label: "enderecos y prefixos<br>/auth, un archivo por bloqueo" }
+    end
+    subgraph AUTH["Autenticación"]
+        login@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
+        passou@{ shape: diam, label: "suma los errores de la dirección<br>¿pasó del límite?" }
+        bloqueia@{ shape: rect, label: "vigía o panel<br>bloquea la dirección" }
+    end
+    subgraph GESTAO["Gestión"]
+        admin@{ shape: person, label: "Usuario<br>administrador" }
+        aba@{ shape: rect, label: "pestaña Bloqueos<br>o manage-user.sh" }
+    end
+    subgraph RESULTADO["Resultado"]
+        entra@{ shape: stadium, label: "entra<br>sesión abierta" }
+        recusa@{ shape: stadium, label: "rechazado<br>530 en el FTP, 403 en el panel" }
+    end
+
+    origem -- "1 · envía usuario y contraseña" --> servico
+    servico -- "2 · antes de verificar la contraseña" --> preso
+    preso -- "3a · sí: rechaza con cualquier cuenta" --> recusa
+    preso -- "3b · no: sigue" --> login
+    login -- "4a · sí: entra y pone en cero el conteo" --> entra
+    login -- "4b · no: suma un error de la dirección" --> passou
+    passou -- "5a · sí: bloquea" --> bloqueia
+    passou -- "5b · no: solo rechaza" --> recusa
+    bloqueia -- "6 · rechaza" --> recusa
+    admin -- "7 · sigue, bloquea, libera o cambia el plazo" --> aba
+    preso -. "lee" .-> enderecos
+    bloqueia -. "guarda el bloqueo" .-> enderecos
+    aba -. "lee, guarda, borra o vuelve a guardar" .-> enderecos

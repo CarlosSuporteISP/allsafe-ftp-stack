@@ -14,12 +14,12 @@ Un comando guarda todo lo que la stack tiene de suyo: los archivos enviados por 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    origem@{ shape: lin-cyl, label: "DATA_DIR<br>dados, auth, certs e painel" }
-    backup@{ shape: console, label: "scripts/backup.sh<br>lê e cifra, sem rede" }
-    copia@{ shape: doc, label: "BACKUP_DIR<br>cópia cifrada e soma sha256" }
-    restaurar@{ shape: console, label: "scripts/restaurar.sh<br>abre, guarda o atual e troca" }
-    destino@{ shape: lin-cyl, label: "DATA_DIR<br>conteúdo da cópia" }
-    fim@{ shape: stadium, label: "stack de volta" }
+    origem@{ shape: lin-cyl, label: "DATA_DIR<br>dados, auth, certs y painel" }
+    backup@{ shape: console, label: "scripts/backup.sh<br>lee y cifra, sin red" }
+    copia@{ shape: doc, label: "BACKUP_DIR<br>copia cifrada y suma sha256" }
+    restaurar@{ shape: console, label: "scripts/restaurar.sh<br>abre, guarda lo actual y cambia" }
+    destino@{ shape: lin-cyl, label: "DATA_DIR<br>contenido de la copia" }
+    fim@{ shape: stadium, label: "stack de vuelta" }
 
     origem --> backup --> copia --> restaurar --> destino --> fim
 ```
@@ -310,13 +310,13 @@ El panel hace la misma copia y la envía directo a un almacenamiento S3, sin pas
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    origem@{ shape: lin-cyl, label: "DATA_DIR<br>dados, auth, certs e painel" }
-    painel@{ shape: rect, label: "painel<br>lê, cifra e envia" }
-    bucket@{ shape: bucket, label: "bucket S3<br>cópia cifrada e soma sha256" }
-    baixar@{ shape: manual, label: "baixar os dois objetos<br>para BACKUP_DIR" }
-    restaurar@{ shape: console, label: "scripts/restaurar.sh<br>confere, abre e troca" }
-    destino@{ shape: lin-cyl, label: "DATA_DIR<br>conteúdo da cópia" }
-    fim@{ shape: stadium, label: "stack de volta" }
+    origem@{ shape: lin-cyl, label: "DATA_DIR<br>dados, auth, certs y painel" }
+    painel@{ shape: rect, label: "panel<br>lee, cifra y envía" }
+    bucket@{ shape: bucket, label: "bucket S3<br>copia cifrada y suma sha256" }
+    baixar@{ shape: manual, label: "descargar los dos objetos<br>a BACKUP_DIR" }
+    restaurar@{ shape: console, label: "scripts/restaurar.sh<br>verifica, abre y cambia" }
+    destino@{ shape: lin-cyl, label: "DATA_DIR<br>contenido de la copia" }
+    fim@{ shape: stadium, label: "stack de vuelta" }
 
     origem --> painel --> bucket --> baixar --> restaurar --> destino --> fim
 ```

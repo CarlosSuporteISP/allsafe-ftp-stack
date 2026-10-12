@@ -1,0 +1,41 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph USO["Quién usa"]
+        operador@{ shape: person, label: "Usuario<br>opera la stack" }
+        equip@{ shape: hex, label: "Equipo de red<br>cliente FTP" }
+    end
+    subgraph HOST["Host"]
+        scripts@{ shape: console, label: "deploy.sh<br>manage-user.sh" }
+    end
+    subgraph CONTAINERS["Contenedores · red allsafe-ftp-network"]
+        nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
+        painel@{ shape: rect, label: "Panel web<br>allsafe-ftp-painel, socket Unix" }
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
+    end
+    subgraph VOLUMES["Volúmenes"]
+        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>socket y copia del certificado" }
+        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>administradores y auditoría" }
+        vauth@{ shape: cyl, label: "DATA_DIR/auth<br>PureDB" }
+        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>archivos enviados" }
+        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>certificado del FTP" }
+    end
+    subgraph RESULTADO["Resultado"]
+        fim@{ shape: stadium, label: "copia de seguridad guardada" }
+    end
+
+    operador -- "1 · ./deploy.sh" --> scripts
+    scripts -- "2 · docker compose build y up -d --wait" --> nginx
+    operador -- "3 · HTTPS, TCP 8443" --> nginx
+    nginx -- "4 · reenvía por el socket Unix" --> painel
+    painel -- "5 · crea, edita o elimina el usuario" --> vauth
+    equip -- "6 · FTPS, TCP 21 a 2121" --> ftp
+    ftp -- "7 · guarda el archivo" --> vdata
+    vdata -- "8 · archivo en el volumen" --> fim
+    nginx -. "lee, solo lectura" .-> vnginx
+    painel -. "crea el socket" .-> vnginx
+    painel -. "escribe" .-> vpainel
+    painel -. "administra y lee" .-> vdata
+    painel -. "verifica la contraseña del FTP" ..-> ftp
+    ftp -. "consulta" .-> vauth
+    ftp -. "lee el certificado" .-> vcerts
+    painel -. "lee para la copia del sistema" .-> vcerts

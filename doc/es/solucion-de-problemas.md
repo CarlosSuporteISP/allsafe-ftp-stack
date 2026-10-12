@@ -14,12 +14,12 @@ Cuando algo falla, casi siempre el propio servidor ya dijo el motivo. El camino 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    usuario@{ shape: person, label: "Usuário<br>viu o problema" }
-    estado@{ shape: console, label: "docker compose ps<br>estado e saúde" }
-    logs@{ shape: docs, label: "docker compose logs<br>mensagem FALHA" }
-    tabela@{ shape: doc, label: "tabelas deste guia<br>causa e correção" }
-    valida@{ shape: console, label: "validate.sh --runtime<br>confere de novo" }
-    fim@{ shape: stadium, label: "serviço saudável" }
+    usuario@{ shape: person, label: "Usuario<br>vio el problema" }
+    estado@{ shape: console, label: "docker compose ps<br>estado y salud" }
+    logs@{ shape: docs, label: "docker compose logs<br>mensaje FALHA" }
+    tabela@{ shape: doc, label: "tablas de esta guía<br>causa y corrección" }
+    valida@{ shape: console, label: "validate.sh --runtime<br>verifica de nuevo" }
+    fim@{ shape: stadium, label: "servicio saludable" }
 
     usuario --> estado --> logs --> tabela --> valida --> fim
 ```

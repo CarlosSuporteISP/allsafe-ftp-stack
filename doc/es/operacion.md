@@ -14,12 +14,12 @@ Esta guía reúne las tareas del día a día: crear la cuenta de un equipo nuevo
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    usuario@{ shape: person, label: "Usuário" }
+    usuario@{ shape: person, label: "Usuario" }
     manage@{ shape: console, label: "manage-user.sh<br>add, passwd, pasta, del, list" }
-    interno@{ shape: console, label: "allsafe-ftp-user<br>dentro do container" }
-    puredb@{ shape: cyl, label: "PureDB<br>contas virtuais" }
-    pasta@{ shape: lin-cyl, label: "/data<br>pasta do usuário" }
-    fim@{ shape: stadium, label: "conta pronta" }
+    interno@{ shape: console, label: "allsafe-ftp-user<br>dentro del contenedor" }
+    puredb@{ shape: cyl, label: "PureDB<br>cuentas virtuales" }
+    pasta@{ shape: lin-cyl, label: "/data<br>carpeta del usuario" }
+    fim@{ shape: stadium, label: "cuenta lista" }
 
     usuario --> manage --> interno --> puredb --> pasta --> fim
 ```

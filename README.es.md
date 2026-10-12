@@ -33,11 +33,11 @@ Desarrollado por [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    equip@{ shape: hex, label: "Equipamento de rede<br>envia o backup" }
+    equip@{ shape: hex, label: "Equipo de red<br>envía la copia de seguridad" }
     ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, FTPS" }
-    puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
-    dados@{ shape: lin-cyl, label: "/data<br>uma pasta por usuário" }
-    fim@{ shape: stadium, label: "backup guardado" }
+    puredb@{ shape: cyl, label: "PureDB<br>usuarios virtuales" }
+    dados@{ shape: lin-cyl, label: "/data<br>una carpeta por usuario" }
+    fim@{ shape: stadium, label: "copia de seguridad guardada" }
 
     equip --> ftp --> puredb --> dados --> fim
 ```
@@ -215,39 +215,39 @@ El equipo se conecta al puerto `21/tcp`, pide TLS, entra con usuario y contrase�
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph ORIGEM["Origem"]
-        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
+    subgraph ORIGEM["Origen"]
+        equip@{ shape: hex, label: "Equipo de red<br>cliente FTP" }
     end
     subgraph ENTRADA["Entrada"]
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
-        tls@{ shape: diam, label: "pediu<br>TLS?" }
+        tls@{ shape: diam, label: "¿pidió<br>TLS?" }
         cert@{ shape: doc, label: "certificado<br>pure-ftpd.pem" }
-        logs@{ shape: docs, label: "registro do container<br>entradas e transferências" }
+        logs@{ shape: docs, label: "registro del contenedor<br>entradas y transferencias" }
     end
-    subgraph AUTH["Autenticação"]
-        login@{ shape: diam, label: "usuário e senha<br>conferem?" }
-        puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
+    subgraph AUTH["Autenticación"]
+        login@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
+        puredb@{ shape: cyl, label: "PureDB<br>usuarios virtuales" }
     end
-    subgraph DADOS["Dados"]
-        sessao@{ shape: rect, label: "sessão em chroot<br>presa na pasta" }
-        dados@{ shape: lin-cyl, label: "/data<br>pasta do usuário" }
+    subgraph DADOS["Datos"]
+        sessao@{ shape: rect, label: "sesión en chroot<br>encerrada en la carpeta" }
+        dados@{ shape: lin-cyl, label: "/data<br>carpeta del usuario" }
     end
     subgraph RESULTADO["Resultado"]
-        fim@{ shape: stadium, label: "backup guardado" }
-        recusa@{ shape: stadium, label: "conexão recusada" }
+        fim@{ shape: stadium, label: "copia de seguridad guardada" }
+        recusa@{ shape: stadium, label: "conexión rechazada" }
     end
 
     equip -- "1 · conecta, TCP 21" --> ftp
-    ftp -- "2 · exige AUTH TLS, no padrão" --> tls
-    tls -- "3a · sim: usuário e senha" --> login
-    tls -- "3b · não: recusado no padrão" --> recusa
-    login -. "4 · consulta o usuário" .-> puredb
-    login -- "5a · sim: abre a sessão" --> sessao
-    login -- "5b · não: 5 senhas erradas bloqueiam" --> recusa
-    sessao -- "6 · envia o arquivo, faixa passiva do perfil" --> dados
-    dados -- "7 · arquivo gravado" --> fim
-    ftp -. "apresenta" .-> cert
-    ftp -. "registra entradas e transferências" .-> logs
+    ftp -- "2 · exige AUTH TLS, por defecto" --> tls
+    tls -- "3a · sí: usuario y contraseña" --> login
+    tls -- "3b · no: rechazado por defecto" --> recusa
+    login -. "4 · consulta el usuario" .-> puredb
+    login -- "5a · sí: abre la sesión" --> sessao
+    login -- "5b · no: 5 contraseñas incorrectas bloquean" --> recusa
+    sessao -- "6 · envía el archivo, rango pasivo del perfil" --> dados
+    dados -- "7 · archivo guardado" --> fim
+    ftp -. "presenta" .-> cert
+    ftp -. "registra entradas y transferencias" .-> logs
 ```
 
 <sub>Nivel 2 · Flujograma · [fuente](doc/es/diagramas/)</sub>
@@ -284,51 +284,51 @@ Cómo el nginx y el panel deciden si atienden una solicitud, en dos flujogramas:
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph QUEM["Quem usa"]
-        usuario@{ shape: person, label: "Usuário<br>navegador na rede interna" }
+    subgraph QUEM["Quién usa"]
+        usuario@{ shape: person, label: "Usuario<br>navegador en la red interna" }
     end
     subgraph FRENTE["Frente web"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
-        rede@{ shape: diam, label: "rede permitida<br>e dentro do limite?" }
+        rede@{ shape: diam, label: "¿red permitida<br>y dentro del límite?" }
     end
     subgraph ENTRADA["Entrada"]
-        painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
-        senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
-        hash@{ shape: doc, label: "administradores<br>nome e hash da senha" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna" }
-        fator@{ shape: diam, label: "conta já tem<br>segundo fator?" }
-        cadastro@{ shape: rect, label: "cadastro do segundo fator<br>código QR e chave nova" }
-        codigo@{ shape: diam, label: "código do aplicativo<br>confere?" }
-        chave@{ shape: doc, label: "segundo-fator<br>chave de cada conta" }
+        painel@{ shape: rect, label: "Panel web<br>allsafe-ftp-painel, socket Unix" }
+        senha@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
+        hash@{ shape: doc, label: "administradores<br>nombre y hash de la contraseña" }
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, red interna" }
+        fator@{ shape: diam, label: "¿la cuenta ya tiene<br>segundo factor?" }
+        cadastro@{ shape: rect, label: "registro del segundo factor<br>código QR y clave nueva" }
+        codigo@{ shape: diam, label: "¿el código de la aplicación<br>coincide?" }
+        chave@{ shape: doc, label: "segundo-fator<br>clave de cada cuenta" }
     end
-    subgraph SESSAO["Sessão"]
-        sessao@{ shape: rect, label: "sessão de 4 h<br>cookie e token CSRF" }
-        pedidos@{ shape: subproc, label: "pedidos da sessão<br>fluxograma dos pedidos" }
+    subgraph SESSAO["Sesión"]
+        sessao@{ shape: rect, label: "sesión de 4 h<br>cookie y token CSRF" }
+        pedidos@{ shape: subproc, label: "solicitudes de la sesión<br>flujograma de las solicitudes" }
     end
     subgraph RESULTADO["Resultado"]
-        atendido@{ shape: stadium, label: "pedido atendido" }
-        recusa@{ shape: stadium, label: "pedido recusado" }
+        atendido@{ shape: stadium, label: "solicitud atendida" }
+        recusa@{ shape: stadium, label: "solicitud rechazada" }
     end
 
     usuario -- "1 · abre https, TCP 8443" --> nginx
-    nginx -- "2 · confere a origem e a taxa de pedidos" --> rede
-    rede -- "3a · sim: repassa pelo soquete Unix" --> painel
-    rede -- "3b · não: 403 ou 429" --> recusa
-    painel -- "4 · pede usuário e senha e confere" --> senha
-    senha -- "5a · sim: vê se a conta já tem segundo fator" --> fator
-    senha -- "5b · não: 5 erros bloqueiam o endereço" --> recusa
-    fator -- "6a · sim: pede o código de seis dígitos" --> codigo
-    fator -- "6b · não, e é obrigatório: mostra a chave" --> cadastro
-    fator -- "6c · não, e não é obrigatório: abre a sessão" --> sessao
-    cadastro -- "7 · pede o primeiro código do aplicativo" --> codigo
-    codigo -- "8a · sim: abre a sessão" --> sessao
-    codigo -- "8b · não: 5 erros encerram a espera" --> recusa
-    sessao -- "9 · cada pedido passa pelas conferências" --> pedidos
-    pedidos -- "10a · aceito" --> atendido
-    pedidos -- "10b · recusado" --> recusa
-    painel -. "administrador: compara com o hash" .-> hash
-    painel -. "outro nome: o servidor FTP confere a senha" .-> ftp
-    painel -. "segundo fator: grava a chave no cadastro e calcula o código" .-> chave
+    nginx -- "2 · verifica el origen y la tasa de solicitudes" --> rede
+    rede -- "3a · sí: reenvía por el socket Unix" --> painel
+    rede -- "3b · no: 403 o 429" --> recusa
+    painel -- "4 · pide usuario y contraseña y verifica" --> senha
+    senha -- "5a · sí: ve si la cuenta ya tiene segundo factor" --> fator
+    senha -- "5b · no: 5 errores bloquean la dirección" --> recusa
+    fator -- "6a · sí: pide el código de seis dígitos" --> codigo
+    fator -- "6b · no, y es obligatorio: muestra la clave" --> cadastro
+    fator -- "6c · no, y no es obligatorio: abre la sesión" --> sessao
+    cadastro -- "7 · pide el primer código de la aplicación" --> codigo
+    codigo -- "8a · sí: abre la sesión" --> sessao
+    codigo -- "8b · no: 5 errores terminan la espera" --> recusa
+    sessao -- "9 · cada solicitud pasa por las verificaciones" --> pedidos
+    pedidos -- "10a · aceptada" --> atendido
+    pedidos -- "10b · rechazada" --> recusa
+    painel -. "administrador: compara con el hash" .-> hash
+    painel -. "otro nombre: el servidor FTP verifica la contraseña" .-> ftp
+    painel -. "segundo factor: guarda la clave en el registro y calcula el código" .-> chave
 ```
 
 <sub>Nivel 2 · Flujograma · [fuente](doc/es/diagramas/)</sub>
@@ -368,37 +368,37 @@ Qué hace el panel con cada solicitud después de la entrada: el formulario que 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph SESSAO["Sessão"]
-        painel@{ shape: rect, label: "Painel web<br>sessão aberta, token CSRF" }
-        pedido@{ shape: diam, label: "origem e token<br>conferem?" }
+    subgraph SESSAO["Sesión"]
+        painel@{ shape: rect, label: "Panel web<br>sesión abierta, token CSRF" }
+        pedido@{ shape: diam, label: "¿origen y token<br>coinciden?" }
         auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
     end
-    subgraph USUARIOS["Usuários do FTP"]
+    subgraph USUARIOS["Usuarios del FTP"]
         cmd@{ shape: rect, label: "allsafe-ftp-user<br>pure-pw" }
         puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
     end
-    subgraph ARQUIVOS["Arquivos"]
-        caminho@{ shape: diam, label: "caminho dentro<br>da pasta dos dados?" }
-        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>pastas dos usuários" }
+    subgraph ARQUIVOS["Archivos"]
+        caminho@{ shape: diam, label: "¿ruta dentro de la<br>carpeta de los datos?" }
+        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>carpetas de los usuarios" }
     end
     subgraph RESULTADO["Resultado"]
-        fim@{ shape: stadium, label: "usuário pronto no FTP" }
-        barrado@{ shape: stadium, label: "403<br>envio recusado" }
-        feito@{ shape: stadium, label: "arquivo baixado, enviado<br>ou alteração feita" }
-        recusa@{ shape: stadium, label: "pedido recusado" }
+        fim@{ shape: stadium, label: "usuario listo en el FTP" }
+        barrado@{ shape: stadium, label: "403<br>envío rechazado" }
+        feito@{ shape: stadium, label: "archivo descargado, enviado<br>o modificación hecha" }
+        recusa@{ shape: stadium, label: "solicitud rechazada" }
     end
 
-    painel -- "1 · envia um formulário, de usuário ou de arquivos" --> pedido
-    pedido -- "2a · sim, usuário: executa" --> cmd
-    pedido -- "2b · sim, arquivos: confere o caminho" --> caminho
-    pedido -- "2c · não: fora do painel ou sem token" --> barrado
-    cmd -- "3 · grava o usuário e cria a pasta dele, se faltar" --> puredb
-    puredb -- "4 · vale no próximo login, sem reiniciar o FTP" --> fim
-    painel -- "5 · em Arquivos ou em Meus arquivos, abre uma pasta ou baixa um arquivo" --> caminho
-    caminho -- "6a · sim: abre parte por parte, sem seguir link simbólico" --> dados
-    caminho -- "6b · não: 400, 403, 404 ou 409" --> recusa
-    dados -- "7 · entrega o arquivo, grava o enviado, cria a pasta, renomeia ou apaga" --> feito
-    painel -. "registra cada ação" .-> auditoria
+    painel -- "1 · envía un formulario, de usuario o de archivos" --> pedido
+    pedido -- "2a · sí, usuario: ejecuta" --> cmd
+    pedido -- "2b · sí, archivos: verifica la ruta" --> caminho
+    pedido -- "2c · no: fuera del panel o sin token" --> barrado
+    cmd -- "3 · guarda el usuario y crea su carpeta, si falta" --> puredb
+    puredb -- "4 · vale en el próximo login, sin reiniciar el FTP" --> fim
+    painel -- "5 · en Archivos o en Mis archivos, abre una carpeta o descarga un archivo" --> caminho
+    caminho -- "6a · sí: abre parte por parte, sin seguir enlace simbólico" --> dados
+    caminho -- "6b · no: 400, 403, 404 o 409" --> recusa
+    dados -- "7 · entrega el archivo, guarda el enviado, crea la carpeta, cambia el nombre o borra" --> feito
+    painel -. "registra cada acción" .-> auditoria
 ```
 
 <sub>Nivel 2 · Flujograma · [fuente](doc/es/diagramas/)</sub>
@@ -436,45 +436,45 @@ Tres contenedores en una red propia: `ftp` (Pure-FTPd), `painel` (Python) y `ngi
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph USO["Quem usa"]
-        operador@{ shape: person, label: "Usuário<br>opera a stack" }
-        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
+    subgraph USO["Quién usa"]
+        operador@{ shape: person, label: "Usuario<br>opera la stack" }
+        equip@{ shape: hex, label: "Equipo de red<br>cliente FTP" }
     end
     subgraph HOST["Host"]
         scripts@{ shape: console, label: "deploy.sh<br>manage-user.sh" }
     end
-    subgraph CONTAINERS["Containers · rede allsafe-ftp-network"]
+    subgraph CONTAINERS["Contenedores · red allsafe-ftp-network"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, 8443/tcp" }
-        painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
+        painel@{ shape: rect, label: "Panel web<br>allsafe-ftp-painel, socket Unix" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, 2121/tcp" }
     end
-    subgraph VOLUMES["Volumes"]
-        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>soquete e cópia do certificado" }
-        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>administradores e auditoria" }
+    subgraph VOLUMES["Volúmenes"]
+        vnginx@{ shape: lin-cyl, label: "DATA_DIR/nginx<br>socket y copia del certificado" }
+        vpainel@{ shape: lin-cyl, label: "DATA_DIR/painel<br>administradores y auditoría" }
         vauth@{ shape: cyl, label: "DATA_DIR/auth<br>PureDB" }
-        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>arquivos enviados" }
-        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>certificado do FTP" }
+        vdata@{ shape: lin-cyl, label: "DATA_DIR/dados<br>archivos enviados" }
+        vcerts@{ shape: lin-cyl, label: "DATA_DIR/certs<br>certificado del FTP" }
     end
     subgraph RESULTADO["Resultado"]
-        fim@{ shape: stadium, label: "backup guardado" }
+        fim@{ shape: stadium, label: "copia de seguridad guardada" }
     end
 
     operador -- "1 · ./deploy.sh" --> scripts
-    scripts -- "2 · docker compose build e up -d --wait" --> nginx
+    scripts -- "2 · docker compose build y up -d --wait" --> nginx
     operador -- "3 · HTTPS, TCP 8443" --> nginx
-    nginx -- "4 · repassa pelo soquete Unix" --> painel
-    painel -- "5 · cria, edita ou remove o usuário" --> vauth
-    equip -- "6 · FTPS, TCP 21 para 2121" --> ftp
-    ftp -- "7 · grava o arquivo" --> vdata
-    vdata -- "8 · arquivo no volume" --> fim
-    nginx -. "lê, só leitura" .-> vnginx
-    painel -. "cria o soquete" .-> vnginx
-    painel -. "grava" .-> vpainel
-    painel -. "gerencia e lê" .-> vdata
-    painel -. "confere a senha do FTP" ..-> ftp
+    nginx -- "4 · reenvía por el socket Unix" --> painel
+    painel -- "5 · crea, edita o elimina el usuario" --> vauth
+    equip -- "6 · FTPS, TCP 21 a 2121" --> ftp
+    ftp -- "7 · guarda el archivo" --> vdata
+    vdata -- "8 · archivo en el volumen" --> fim
+    nginx -. "lee, solo lectura" .-> vnginx
+    painel -. "crea el socket" .-> vnginx
+    painel -. "escribe" .-> vpainel
+    painel -. "administra y lee" .-> vdata
+    painel -. "verifica la contraseña del FTP" ..-> ftp
     ftp -. "consulta" .-> vauth
-    ftp -. "lê o certificado" .-> vcerts
-    painel -. "lê para a cópia do sistema" .-> vcerts
+    ftp -. "lee el certificado" .-> vcerts
+    painel -. "lee para la copia del sistema" .-> vcerts
 ```
 
 <sub>Nivel 2 · Mapa · [fuente](doc/es/diagramas/)</sub>

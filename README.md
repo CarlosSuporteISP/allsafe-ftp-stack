@@ -8,6 +8,7 @@
 
 [![English](https://img.shields.io/badge/English-0969da?style=for-the-badge)](README.md)
 [![Português (Brasil)](https://img.shields.io/badge/Portugu%C3%AAs_(Brasil)-6e7781?style=for-the-badge)](README.pt-BR.md)
+[![Español](https://img.shields.io/badge/Espa%C3%B1ol-6e7781?style=for-the-badge)](README.es.md)
 
 Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 

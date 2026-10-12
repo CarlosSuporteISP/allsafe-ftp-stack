@@ -14,13 +14,13 @@ La copia de seguridad de un equipo de red trae contraseñas y la configuración 
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    equip@{ shape: hex, label: "Equipamento de rede" }
-    bind@{ shape: rect, label: "Bind e firewall<br>127.0.0.1 por padrão" }
-    tls@{ shape: rect, label: "FTPS obrigatório no padrão<br>AUTH TLS, FTP_TLS_MODE=2" }
-    puredb@{ shape: cyl, label: "PureDB<br>senha de 12 ou mais" }
-    chroot@{ shape: rect, label: "chroot<br>pasta do usuário" }
-    container@{ shape: rect, label: "Container endurecido<br>raiz somente leitura" }
-    fim@{ shape: stadium, label: "backup protegido" }
+    equip@{ shape: hex, label: "Equipo de red" }
+    bind@{ shape: rect, label: "Bind y firewall<br>127.0.0.1 por defecto" }
+    tls@{ shape: rect, label: "FTPS obligatorio por defecto<br>AUTH TLS, FTP_TLS_MODE=2" }
+    puredb@{ shape: cyl, label: "PureDB<br>contraseña de 12 o más" }
+    chroot@{ shape: rect, label: "chroot<br>carpeta del usuario" }
+    container@{ shape: rect, label: "Contenedor endurecido<br>raíz de solo lectura" }
+    fim@{ shape: stadium, label: "copia de seguridad protegida" }
 
     equip --> bind --> tls --> puredb --> chroot --> container --> fim
 ```
@@ -343,41 +343,41 @@ Dónde aparece la dispensa:
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph ORIGEM["Origem"]
-        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
+    subgraph ORIGEM["Origen"]
+        equip@{ shape: hex, label: "Equipo de red<br>cliente FTP" }
     end
-    subgraph ENTRADA["Entrada · TLS por usuário"]
+    subgraph ENTRADA["Entrada · TLS por usuario"]
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
-        tls@{ shape: diam, label: "sessão<br>com TLS?" }
-        algum@{ shape: diam, label: "há usuário<br>dispensado?" }
-        marcado@{ shape: diam, label: "este usuário<br>está dispensado?" }
-        lista@{ shape: doc, label: "sem-tls.lista<br>/auth, um nome por linha" }
-        registro@{ shape: docs, label: "registro do container<br>entrada sem TLS recusada" }
+        tls@{ shape: diam, label: "¿sesión<br>con TLS?" }
+        algum@{ shape: diam, label: "¿hay usuario<br>dispensado?" }
+        marcado@{ shape: diam, label: "¿este usuario<br>está dispensado?" }
+        lista@{ shape: doc, label: "sem-tls.lista<br>/auth, un nombre por línea" }
+        registro@{ shape: docs, label: "registro del contenedor<br>entrada sin TLS rechazada" }
     end
-    subgraph AUTH["Autenticação"]
-        puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
-        login@{ shape: diam, label: "usuário e senha<br>conferem?" }
+    subgraph AUTH["Autenticación"]
+        puredb@{ shape: cyl, label: "PureDB<br>usuarios virtuales" }
+        login@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
     end
     subgraph RESULTADO["Resultado"]
-        sessao@{ shape: stadium, label: "sessão em chroot<br>presa na pasta" }
-        recusa@{ shape: stadium, label: "530<br>entrada recusada" }
-        antes@{ shape: stadium, label: "421<br>recusada antes da senha" }
+        sessao@{ shape: stadium, label: "sesión en chroot<br>encerrada en la carpeta" }
+        recusa@{ shape: stadium, label: "530<br>entrada rechazada" }
+        antes@{ shape: stadium, label: "421<br>rechazada antes de la contraseña" }
     end
 
     equip -- "1 · conecta, TCP 21" --> ftp
-    ftp -- "2 · confere a sessão" --> tls
-    tls -- "3a · sim: recebe usuário e senha" --> login
-    tls -- "3b · não" --> algum
-    algum -- "4a · sim: recebe usuário e senha" --> marcado
-    algum -- "4b · não: recusa" --> antes
-    marcado -- "5a · sim: segue" --> login
-    marcado -- "5b · não: recusa definitiva" --> recusa
-    login -- "6a · sim: abre a sessão" ---> sessao
-    login -- "6b · não" ---> recusa
-    algum -. "observador lê a cada segundo" .-> lista
-    marcado -. "porteiro lê a cada entrada" .-> lista
-    marcado -. "grava a recusa" .-> registro
-    login -. "consulta o usuário" .-> puredb
+    ftp -- "2 · verifica la sesión" --> tls
+    tls -- "3a · sí: recibe usuario y contraseña" --> login
+    tls -- "3b · no" --> algum
+    algum -- "4a · sí: recibe usuario y contraseña" --> marcado
+    algum -- "4b · no: rechaza" --> antes
+    marcado -- "5a · sí: sigue" --> login
+    marcado -- "5b · no: rechazo definitivo" --> recusa
+    login -- "6a · sí: abre la sesión" ---> sessao
+    login -- "6b · no" ---> recusa
+    algum -. "el observador lee cada segundo" .-> lista
+    marcado -. "el portero lee en cada entrada" .-> lista
+    marcado -. "registra el rechazo" .-> registro
+    login -. "consulta el usuario" .-> puredb
 ```
 
 <sub>Nivel 2 · Mapa · [fuente](diagramas/)</sub>
@@ -503,41 +503,41 @@ Mientras haya bloqueo, aparece en:
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph ORIGEM["Origem"]
-        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
+    subgraph ORIGEM["Origen"]
+        equip@{ shape: hex, label: "Equipo de red<br>cliente FTP" }
     end
     subgraph ENTRADA["Entrada"]
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
-        authd@{ shape: rect, label: "pure-authd<br>chama o porteiro" }
-        preso@{ shape: diam, label: "usuário bloqueado<br>para o endereço?" }
-        bloqueios@{ shape: docs, label: "bloqueios<br>/auth, um por usuário e endereço" }
+        authd@{ shape: rect, label: "pure-authd<br>llama al portero" }
+        preso@{ shape: diam, label: "¿usuario bloqueado<br>para la dirección?" }
+        bloqueios@{ shape: docs, label: "bloqueos<br>/auth, uno por usuario y dirección" }
     end
-    subgraph AUTH["Autenticação"]
-        login@{ shape: diam, label: "usuário e senha<br>conferem?" }
-        puredb@{ shape: cyl, label: "PureDB<br>usuários virtuais" }
-        limite@{ shape: diam, label: "vigia soma os erros<br>chegou ao limite?" }
-        limites@{ shape: doc, label: "limites.lista<br>limite próprio do usuário" }
-        bloqueia@{ shape: rect, label: "vigia<br>bloqueia usuário e endereço" }
+    subgraph AUTH["Autenticación"]
+        login@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
+        puredb@{ shape: cyl, label: "PureDB<br>usuarios virtuales" }
+        limite@{ shape: diam, label: "el vigía suma los errores<br>¿llegó al límite?" }
+        limites@{ shape: doc, label: "limites.lista<br>límite propio del usuario" }
+        bloqueia@{ shape: rect, label: "vigía<br>bloquea usuario y dirección" }
     end
     subgraph RESULTADO["Resultado"]
-        sessao@{ shape: stadium, label: "sessão em chroot<br>presa na pasta" }
-        recusa@{ shape: stadium, label: "530<br>entrada recusada" }
+        sessao@{ shape: stadium, label: "sesión en chroot<br>encerrada en la carpeta" }
+        recusa@{ shape: stadium, label: "530<br>entrada rechazada" }
     end
 
-    equip -- "1 · conecta e envia usuário e senha, TCP 21" --> ftp
-    ftp -- "2 · pergunta antes de conferir a senha" --> authd
-    authd -- "3 · porteiro: há bloqueio valendo?" --> preso
-    preso -- "4a · sim: recusa definitiva" --> recusa
-    preso -- "4b · não: segue" --> login
-    login -- "5a · sim: abre a sessão" --> sessao
-    login -- "5b · não: avisa a senha errada ao vigia" --> limite
-    limite -- "6a · sim: bloqueia" --> bloqueia
-    limite -- "6b · não: só recusa" --> recusa
-    bloqueia -- "7 · recusa" --> recusa
-    preso -. "lê" .-> bloqueios
-    login -. "consulta o usuário" .-> puredb
-    limite -. "lê" .-> limites
-    bloqueia -. "grava o bloqueio" .-> bloqueios
+    equip -- "1 · conecta y envía usuario y contraseña, TCP 21" --> ftp
+    ftp -- "2 · pregunta antes de verificar la contraseña" --> authd
+    authd -- "3 · portero: ¿hay bloqueo en vigor?" --> preso
+    preso -- "4a · sí: rechazo definitivo" --> recusa
+    preso -- "4b · no: sigue" --> login
+    login -- "5a · sí: abre la sesión" --> sessao
+    login -- "5b · no: avisa la contraseña incorrecta al vigía" --> limite
+    limite -- "6a · sí: bloquea" --> bloqueia
+    limite -- "6b · no: solo rechaza" --> recusa
+    bloqueia -- "7 · rechaza" --> recusa
+    preso -. "lee" .-> bloqueios
+    login -. "consulta el usuario" .-> puredb
+    limite -. "lee" .-> limites
+    bloqueia -. "guarda el bloqueo" .-> bloqueios
 ```
 
 <sub>Nivel 2 · Mapa · [fuente](diagramas/)</sub>
@@ -675,41 +675,41 @@ Mientras haya bloqueo, aparece en:
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph ORIGEM["Origem"]
-        origem@{ shape: hex, label: "Endereço de origem<br>equipamento ou navegador" }
+    subgraph ORIGEM["Origen"]
+        origem@{ shape: hex, label: "Dirección de origen<br>equipo o navegador" }
     end
     subgraph ENTRADA["Entrada"]
-        servico@{ shape: rect, label: "FTP ou painel<br>allsafe-ftp, allsafe-ftp-painel" }
-        preso@{ shape: diam, label: "endereço<br>bloqueado?" }
-        enderecos@{ shape: docs, label: "enderecos e prefixos<br>/auth, um arquivo por bloqueio" }
+        servico@{ shape: rect, label: "FTP o panel<br>allsafe-ftp, allsafe-ftp-painel" }
+        preso@{ shape: diam, label: "¿dirección<br>bloqueada?" }
+        enderecos@{ shape: docs, label: "enderecos y prefixos<br>/auth, un archivo por bloqueo" }
     end
-    subgraph AUTH["Autenticação"]
-        login@{ shape: diam, label: "usuário e senha<br>conferem?" }
-        passou@{ shape: diam, label: "soma os erros do endereço<br>passou do limite?" }
-        bloqueia@{ shape: rect, label: "vigia ou painel<br>bloqueia o endereço" }
+    subgraph AUTH["Autenticación"]
+        login@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
+        passou@{ shape: diam, label: "suma los errores de la dirección<br>¿pasó del límite?" }
+        bloqueia@{ shape: rect, label: "vigía o panel<br>bloquea la dirección" }
     end
-    subgraph GESTAO["Gestão"]
-        admin@{ shape: person, label: "Usuário<br>administrador" }
-        aba@{ shape: rect, label: "aba Bloqueios<br>ou manage-user.sh" }
+    subgraph GESTAO["Gestión"]
+        admin@{ shape: person, label: "Usuario<br>administrador" }
+        aba@{ shape: rect, label: "pestaña Bloqueos<br>o manage-user.sh" }
     end
     subgraph RESULTADO["Resultado"]
-        entra@{ shape: stadium, label: "entra<br>sessão aberta" }
-        recusa@{ shape: stadium, label: "recusado<br>530 no FTP, 403 no painel" }
+        entra@{ shape: stadium, label: "entra<br>sesión abierta" }
+        recusa@{ shape: stadium, label: "rechazado<br>530 en el FTP, 403 en el panel" }
     end
 
-    origem -- "1 · envia usuário e senha" --> servico
-    servico -- "2 · antes de conferir a senha" --> preso
-    preso -- "3a · sim: recusa com qualquer conta" --> recusa
-    preso -- "3b · não: segue" --> login
-    login -- "4a · sim: entra e zera a contagem" --> entra
-    login -- "4b · não: soma um erro do endereço" --> passou
-    passou -- "5a · sim: bloqueia" --> bloqueia
-    passou -- "5b · não: só recusa" --> recusa
-    bloqueia -- "6 · recusa" --> recusa
-    admin -- "7 · acompanha, bloqueia, libera ou muda o prazo" --> aba
-    preso -. "lê" .-> enderecos
-    bloqueia -. "grava o bloqueio" .-> enderecos
-    aba -. "lê, grava, apaga ou regrava" .-> enderecos
+    origem -- "1 · envía usuario y contraseña" --> servico
+    servico -- "2 · antes de verificar la contraseña" --> preso
+    preso -- "3a · sí: rechaza con cualquier cuenta" --> recusa
+    preso -- "3b · no: sigue" --> login
+    login -- "4a · sí: entra y pone en cero el conteo" --> entra
+    login -- "4b · no: suma un error de la dirección" --> passou
+    passou -- "5a · sí: bloquea" --> bloqueia
+    passou -- "5b · no: solo rechaza" --> recusa
+    bloqueia -- "6 · rechaza" --> recusa
+    admin -- "7 · sigue, bloquea, libera o cambia el plazo" --> aba
+    preso -. "lee" .-> enderecos
+    bloqueia -. "guarda el bloqueo" .-> enderecos
+    aba -. "lee, guarda, borra o vuelve a guardar" .-> enderecos
 ```
 
 <sub>Nivel 2 · Mapa · [fuente](diagramas/)</sub>
@@ -815,43 +815,43 @@ La instalación nace cerrada: FTP y panel en `127.0.0.1`, TLS obligatorio, contr
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    subgraph INSTALA["Quem instala"]
-        instalador@{ shape: person, label: "Usuário<br>quem instala" }
+    subgraph INSTALA["Quien instala"]
+        instalador@{ shape: person, label: "Usuario<br>quien instala" }
     end
-    subgraph REDE["Rede do FTP"]
-        rede@{ shape: diam, label: "FTP só em<br>rede privada?" }
-        publico@{ shape: rect, label: "IP público por opção<br>REDE_PERMITIR_IP_PUBLICO=sim" }
-        tls@{ shape: diam, label: "todo equipamento<br>fala TLS?" }
-        dispensa@{ shape: rect, label: "TLS por usuário<br>dispensa só o antigo" }
+    subgraph REDE["Red del FTP"]
+        rede@{ shape: diam, label: "¿FTP solo en<br>red privada?" }
+        publico@{ shape: rect, label: "IP pública por opción<br>REDE_PERMITIR_IP_PUBLICO=sim" }
+        tls@{ shape: diam, label: "¿todo equipo<br>habla TLS?" }
+        dispensa@{ shape: rect, label: "TLS por usuario<br>dispensa solo al antiguo" }
     end
-    subgraph PAINEL["Painel"]
-        painel@{ shape: diam, label: "painel aberto<br>fora da rede?" }
-        proxy@{ shape: rect, label: "proxy ou túnel<br>PAINEL_PROXY_CONFIAVEL" }
+    subgraph PAINEL["Panel"]
+        painel@{ shape: diam, label: "¿panel abierto<br>fuera de la red?" }
+        proxy@{ shape: rect, label: "proxy o túnel<br>PAINEL_PROXY_CONFIAVEL" }
     end
-    subgraph GUARDA["Segredos e cópia"]
-        copia@{ shape: rect, label: "backup.sh<br>cópia cifrada" }
-        segredos@{ shape: folder, label: ".secrets<br>senhas e chaves, 0600" }
-        confere@{ shape: diam, label: "validate.sh<br>no ar, tudo OK?" }
+    subgraph GUARDA["Secretos y copia"]
+        copia@{ shape: rect, label: "backup.sh<br>copia cifrada" }
+        segredos@{ shape: folder, label: ".secrets<br>contraseñas y claves, 0600" }
+        confere@{ shape: diam, label: "validate.sh<br>en marcha, ¿todo OK?" }
     end
     subgraph RESULTADO["Resultado"]
-        pronto@{ shape: stadium, label: "instalação protegida<br>pronta para uso" }
-        corrige@{ shape: stadium, label: "corrigir<br>antes de usar" }
+        pronto@{ shape: stadium, label: "instalación protegida<br>lista para usar" }
+        corrige@{ shape: stadium, label: "corregir<br>antes de usar" }
     end
 
-    instalador -- "1 · escolhe FTP_BIND_IP" --> rede
-    rede -- "2a · sim: IP privado e firewall" --> tls
-    rede -- "2b · não: escolha de quem instala" --> publico
-    tls -- "3a · sim: FTP_TLS_MODE 2 ou 3" --> painel
-    tls -- "3b · não" --> dispensa
-    dispensa -- "4 · os demais seguem com TLS" --> painel
-    publico -- "5 · TLS obrigatório para todos" --> painel
-    painel -- "6a · não: só a rede de administração" --> copia
-    painel -- "6b · sim" --> proxy
-    proxy -- "7 · FTP continua fechado" --> copia
-    copia -- "8 · cópia levada para fora" --> confere
-    confere -- "9a · sim" --> pronto
-    confere -- "9b · não" --> corrige
-    copia -. "cifra com a chave pública" .-> segredos
+    instalador -- "1 · elige FTP_BIND_IP" --> rede
+    rede -- "2a · sí: IP privada y firewall" --> tls
+    rede -- "2b · no: elección de quien instala" --> publico
+    tls -- "3a · sí: FTP_TLS_MODE 2 o 3" --> painel
+    tls -- "3b · no" --> dispensa
+    dispensa -- "4 · los demás siguen con TLS" --> painel
+    publico -- "5 · TLS obligatorio para todos" --> painel
+    painel -- "6a · no: solo la red de administración" --> copia
+    painel -- "6b · sí" --> proxy
+    proxy -- "7 · el FTP sigue cerrado" --> copia
+    copia -- "8 · copia llevada afuera" --> confere
+    confere -- "9a · sí" --> pronto
+    confere -- "9b · no" --> corrige
+    copia -. "cifra con la clave pública" .-> segredos
 ```
 
 <sub>Nivel 2 · Mapa · [fuente](diagramas/)</sub>

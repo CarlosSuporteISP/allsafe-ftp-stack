@@ -1,0 +1,35 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origen"]
+        equip@{ shape: hex, label: "Equipo de red<br>cliente FTP" }
+    end
+    subgraph ENTRADA["Entrada"]
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+        tls@{ shape: diam, label: "¿pidió<br>TLS?" }
+        cert@{ shape: doc, label: "certificado<br>pure-ftpd.pem" }
+        logs@{ shape: docs, label: "registro del contenedor<br>entradas y transferencias" }
+    end
+    subgraph AUTH["Autenticación"]
+        login@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
+        puredb@{ shape: cyl, label: "PureDB<br>usuarios virtuales" }
+    end
+    subgraph DADOS["Datos"]
+        sessao@{ shape: rect, label: "sesión en chroot<br>encerrada en la carpeta" }
+        dados@{ shape: lin-cyl, label: "/data<br>carpeta del usuario" }
+    end
+    subgraph RESULTADO["Resultado"]
+        fim@{ shape: stadium, label: "copia de seguridad guardada" }
+        recusa@{ shape: stadium, label: "conexión rechazada" }
+    end
+
+    equip -- "1 · conecta, TCP 21" --> ftp
+    ftp -- "2 · exige AUTH TLS, por defecto" --> tls
+    tls -- "3a · sí: usuario y contraseña" --> login
+    tls -- "3b · no: rechazado por defecto" --> recusa
+    login -. "4 · consulta el usuario" .-> puredb
+    login -- "5a · sí: abre la sesión" --> sessao
+    login -- "5b · no: 5 contraseñas incorrectas bloquean" --> recusa
+    sessao -- "6 · envía el archivo, rango pasivo del perfil" --> dados
+    dados -- "7 · archivo guardado" --> fim
+    ftp -. "presenta" .-> cert
+    ftp -. "registra entradas y transferencias" .-> logs

@@ -14,11 +14,11 @@ Usted ejecuta un comando y el servidor FTP arranca solo, ya con contraseña fuer
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    usuario@{ shape: person, label: "Usuário" }
-    deploy@{ shape: console, label: "deploy.sh<br>cria o .env, gera as senhas e sobe" }
-    stack@{ shape: rect, label: "Docker Compose<br>FTP, painel e nginx" }
-    valida@{ shape: console, label: "validate.sh<br>confere a subida" }
-    fim@{ shape: stadium, label: "FTP e painel prontos" }
+    usuario@{ shape: person, label: "Usuario" }
+    deploy@{ shape: console, label: "deploy.sh<br>crea el .env, genera las contraseñas y levanta" }
+    stack@{ shape: rect, label: "Docker Compose<br>FTP, panel y nginx" }
+    valida@{ shape: console, label: "validate.sh<br>verifica el arranque" }
+    fim@{ shape: stadium, label: "FTP y panel listos" }
 
     usuario --> deploy --> stack --> valida --> fim
 ```

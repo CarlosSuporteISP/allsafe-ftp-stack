@@ -1,0 +1,10 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    perfil@{ shape: doc, label: "profiles/medium.env<br>límites del perfil" }
+    deploy@{ shape: console, label: "deploy.sh --size medium<br>guarda los límites en el .env" }
+    env@{ shape: doc, label: ".env<br>entorno y límites" }
+    compose@{ shape: rect, label: "Docker Compose<br>lee solo el .env" }
+    ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+    fim@{ shape: stadium, label: "límites aplicados" }
+
+    perfil --> deploy --> env --> compose --> ftp --> fim

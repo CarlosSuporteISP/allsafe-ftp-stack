@@ -14,12 +14,12 @@ Todo lo que cambia de una instalación a otra queda en un solo archivo, el `.env
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    perfil@{ shape: doc, label: "profiles/medium.env<br>limites do perfil" }
-    deploy@{ shape: console, label: "deploy.sh --size medium<br>grava os limites no .env" }
-    env@{ shape: doc, label: ".env<br>ambiente e limites" }
-    compose@{ shape: rect, label: "Docker Compose<br>lê só o .env" }
+    perfil@{ shape: doc, label: "profiles/medium.env<br>límites del perfil" }
+    deploy@{ shape: console, label: "deploy.sh --size medium<br>guarda los límites en el .env" }
+    env@{ shape: doc, label: ".env<br>entorno y límites" }
+    compose@{ shape: rect, label: "Docker Compose<br>lee solo el .env" }
     ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
-    fim@{ shape: stadium, label: "limites aplicados" }
+    fim@{ shape: stadium, label: "límites aplicados" }
 
     perfil --> deploy --> env --> compose --> ftp --> fim
 ```
