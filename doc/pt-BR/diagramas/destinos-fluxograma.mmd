@@ -1,0 +1,43 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origem"]
+        equip@{ shape: hex, label: "Equipamento de rede<br>cliente FTP" }
+    end
+    subgraph SERVIDOR["Servidor · container painel"]
+        pasta@{ shape: lin-cyl, label: "pasta enviada<br>DATA_DIR/data" }
+        passada@{ shape: rect, label: "passada do destino<br>painel/destinos.py" }
+        inteiro@{ shape: diam, label: "arquivo<br>chegou inteiro?" }
+        https@{ shape: rect, label: "saída por HTTPS<br>painel/saida.py" }
+        rclone@{ shape: rect, label: "rclone<br>painel/rclone.py" }
+        andamento@{ shape: cyl, label: "andamento do destino<br>DATA_DIR/painel/destinos" }
+        segredos@{ shape: docs, label: "segredos do destino<br>SECRETS_DIR/destinos, 0600" }
+    end
+    subgraph FORA["Fora do servidor"]
+        bot@{ shape: cloud, label: "bot do Telegram<br>conversa que recebe" }
+        s3@{ shape: bucket, label: "bucket S3<br>Copiar ou Guardar no S3" }
+        remoto@{ shape: cloud, label: "remoto do rclone<br>SFTP, WebDAV ou nuvem" }
+    end
+    subgraph RESULTADO["Resultado"]
+        confirmou@{ shape: diam, label: "o destino<br>confirmou?" }
+        enviado@{ shape: stadium, label: "arquivo enviado<br>uma vez só" }
+        parou@{ shape: stadium, label: "passada encerrada<br>motivo no cartão" }
+        depois@{ shape: stadium, label: "ainda chegando<br>fica para a próxima" }
+    end
+
+    equip -- "1 · envia o arquivo, FTP" --> pasta
+    pasta -- "2 · lida a cada intervalo" --> passada
+    passada -- "3 · confere cada arquivo novo" --> inteiro
+    inteiro -- "4a · não" -----> depois
+    inteiro -- "4b · sim: bot e S3" --> https
+    inteiro -- "4c · sim: remoto do rclone" --> rclone
+    https -- "5a · envia a mensagem, HTTPS" ---> bot
+    https -- "5b · grava o objeto, HTTPS" ---> s3
+    rclone -- "5c · grava o arquivo, HTTPS ou SSH" ---> remoto
+    bot -- "6a · responde" --> confirmou
+    s3 -- "6b · responde" --> confirmou
+    remoto -- "6c · responde" --> confirmou
+    confirmou -- "7a · sim: anota e segue" --> enviado
+    confirmou -- "7b · não: para" --> parou
+    passada -. "lê a configuração e grava o andamento" .-> andamento
+    https -. "lê as chaves e o token" .-> segredos
+    rclone -. "lê o acesso do remoto" .-> segredos
