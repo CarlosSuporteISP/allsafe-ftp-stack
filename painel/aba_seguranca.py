@@ -2,7 +2,9 @@
 """Aba Segurança: o que o painel consegue conferir da própria stack."""
 import os
 
+import administradores
 import enderecos
+import fator
 from config import ARQ_CERT, ARQ_CERT_FTP, CFG, FALHAS_MAX, PRIVADAS, endereco_privado
 from estado import bloqueios, certificado, sem_tls, senhas_de_custo_antigo
 from graficos import faixa
@@ -52,6 +54,27 @@ def seguranca(pedido, sessao, consulta, formulario, token):
     def marca_ip(ip):
         return 'bom' if endereco_privado(ip) else 'atencao'
     redes_publicas = [str(rede) for rede in CFG['redes'] if not any(rede.subnet_of(p) for p in PRIVADAS)]
+    # Segundo fator: cobrado como atenção só quando o painel é alcançado de fora da rede privada.
+    admins = list(administradores.ler())
+    com_fator = [nome for nome in admins if fator.ligado(nome)]
+    sem_fator = [nome for nome in admins if nome not in com_fator]
+    sem_segredo = [nome for nome in com_fator if not fator.segredo_de(nome)]
+    de_fora = bool(CFG['ip_publico'] or CFG['proxies'] or redes_publicas)
+    if sem_segredo:
+        marca_fator = 'atencao'
+        texto_fator = t('<strong>Ligado sem o segredo no servidor: {nomes}.</strong> Essas contas não entram até o segundo fator '
+                        'ser desligado, em <a href="/usuarios">Usuários</a> ou pelo terminal; depois, cada uma liga de novo.',
+                        nomes=e(', '.join(sem_segredo)))
+    elif not sem_fator:
+        marca_fator = 'bom'
+        texto_fator = t('Todos os administradores entram com a senha e o código de um aplicativo autenticador. '
+                        'Vale só para este painel: o FTP não muda.')
+    else:
+        marca_fator = 'atencao' if de_fora else 'neutro'
+        texto_fator = (t('Entram só com a senha: {nomes}. Cada administrador liga o dele em '
+                         '<a href="/usuarios">Usuários</a>, com um aplicativo autenticador.', nomes=e(', '.join(sem_fator)))
+                       + (' ' + t('<strong>Este painel é alcançado de fora da rede privada:</strong> ligue o de todos.')
+                          if de_fora else ''))
 
     estados = []
 
@@ -95,6 +118,7 @@ def seguranca(pedido, sessao, consulta, formulario, token):
                                     'arquivo ou pasta e mexer em administrador pedem a senha de novo, mesmo com a '
                                     'sessão aberta. {falhas} entradas erradas bloqueiam o endereço por 15 minutos.',
                                     prazo=prazo_da_sessao(), teto=teto_da_sessao(), falhas=FALHAS_MAX)),
+        linha(marca_fator, t('Segundo fator dos administradores'), texto_fator),
         linha('atencao' if CFG['acesso_usuarios'] and CFG['ftp_tls'] == '0' else 'bom', t('Entrada dos usuários do FTP'),
               (t('Ligada (<code>PAINEL_ACESSO_USUARIOS_FTP=sim</code>): cada usuário do FTP entra com o nome e a senha do FTP e só '
                  'navega e baixa na pasta dele. Quem confere a senha é o próprio servidor FTP, pela rede interna da stack,') + ' '

@@ -37,7 +37,7 @@ The panel has a sign-in screen, eight tabs for whoever administers it (Overview,
 |---|---|
 | **User** | Takes the name of the administrator or the name of the FTP user. On the first installation, the administrator is the one in `PAINEL_ADMIN_USER` (`admin`, if it was not changed) |
 | **Password** | Takes the password of the account. The one of the first administrator is in `.secrets/painel-admin-inicial-senha.txt`; the one of the FTP user is the same the device uses |
-| **Sign in** | Checks the account: the administrator goes to the Overview tab and the FTP user, to the My files screen |
+| **Sign in** | Checks the account: the administrator goes to the Overview tab and the FTP user, to the My files screen. The administrator with the second factor on goes through the [Verification code](#entrar) screen first |
 | Text below the title | Says who signs in through this screen. With `PAINEL_ACESSO_USUARIOS_FTP=nao`, it becomes `Administration panel of the stack.` |
 | Note below the button | Reminds that use is restricted to authorized people and that sign-in attempts are recorded. The sign-in screen does not say how the installation is published: only the administrator reads that, after signing in |
 | **PT** · **EN** | Switch the language of the screen before sign-in; the choice is kept in the browser: see [Language](#idioma) |
@@ -63,10 +63,40 @@ The panel has a sign-in screen, eight tabs for whoever administers it (Overview,
 </details>
 
 <details>
+<summary>Sign in ➜ Verification code — click to expand</summary>
+
+### Sign in ➜ Verification code
+
+<a href="images/entrar-codigo.png"><img src="images/entrar-codigo.png" alt="Verification code screen, in place of the sign-in form: the notice that the password matched, the Code field, the Confirm button, the note for whoever is without the device and the shortcut Back to user and password" width="100%"></a>
+
+<sub><b>v1.7.0</b> · sign-in screen, second factor code · captured on 2026-10-12</sub>
+
+It only appears for the administrator who turned on the [second factor](#segundo-fator): the right password does not open the panel, it leads to this screen. The FTP user and the administrator without a second factor do not go through it.
+
+| Screen item | What it does |
+|---|---|
+| **Code** | Takes the six digits the authenticator app shows for this account right now |
+| **Confirm** | Checks the code and opens the panel on the Overview tab |
+| Note below the button | Tells the way out for whoever is without the device: another administrator turns off the second factor of the account, in the Users tab, or someone with access to the server turns it off from the terminal |
+| **Back to user and password** | Goes back to the sign-in screen without opening the panel |
+
+| Message | When it appears | What to do |
+|---|---|---|
+| The code does not match. Wait for the app to show the next one and try again. | The code is wrong, has expired or was already used once | Wait for the next code. If it goes on, check the time on the phone |
+| Could not sign in. | Five wrong codes in a row: the wait for the code ends and the sign-in screen comes back. After five minutes without the code, the sign-in screen also comes back, without a message | Sign in again with user and password, once the block of the address has passed |
+| Too many attempts. Wait a few minutes and try again. | Five wrong sign-ins from the same address in 15 minutes, adding up passwords and codes, or ten refused codes for the same account in 15 minutes, from any address | Wait, or ask another administrator to turn off the second factor of the account |
+| The second factor of this account is on, but its secret is not on the server. Another administrator or someone with access to the server has to turn it off. | The key of the account is not in `.secrets/segundo-fator/`: this is the case of a server restored from a backup | Turn off the second factor of the account and turn it on again: see [Web panel](../panel.md#segundo-fator) |
+
+A wrong code counts as a user name and password error of the address, just like a wrong password.
+
+</details>
+
+<details>
 <summary>Technical detail — sign-in and session</summary>
 
 - Route `GET /entrar` shows the form; `POST /entrar` checks the administrator account first, by the `scrypt` hash in `DATA_DIR/painel/administradores`, and then, if the sign-in of FTP users is on, the FTP account, by a login on the FTP server itself.
 - Response `401` for a wrong user name or password, `429` for a blocked address and `400` for an expired form. Each case writes `entrada_falha` or `entrada_bloqueada` to the [audit log](../panel.md#auditoria), without the name that was typed.
+- With the second factor on, `POST /entrar` with the right password does not create a session: it writes `entrada_senha_ok` and leads to `GET /entrar/codigo`, with the cookie `__Host-etapa` (`Secure`, `HttpOnly`, `SameSite=Strict`), valid for 5 minutes and only from the same address. `POST /entrar/codigo` answers `401` for the wrong code (`entrada_codigo_recusado`), `429` for the paused account and `503` for the account turned on without the key on the server (`entrada_fator_sem_segredo`); the session only starts with the accepted code.
 - The address on the block list gets `403` in plain text on every route, even with an open session, with the event `recusa_endereco`: see [Blocking by address](../security.md#bloqueio-por-endereco).
 - Signing in with the FTP account takes a few seconds: it is the time the FTP server spends checking the password. See [FTP user in the panel](../panel.md#usuario-ftp).
 - The session lives in the cookie `__Host-sessao` (`Secure`, `HttpOnly`, `SameSite=Strict`) and closes after 4 hours without use or after 12 hours, whichever comes first.
@@ -142,9 +172,9 @@ The same alert opens the Security tab. The conditions for exempting a user are i
 
 ## 👥 Users
 
-<a href="images/usuarios.png"><img src="images/usuarios.png" alt="Users tab with the New user button and the list of accounts: first the administrator admin, with the tag you, then the FTP users, each with the profile below the name and the tags initial, limits, cleanup and blocked, the folder, with the tag shared on two of them, usage, files, last upload, the TLS column, with required on every row, the actions Edit, Exempt from TLS, Change password and Remove and, below the list, the collapsed section How profiles and tags work" width="100%"></a>
+<a href="images/usuarios.png"><img src="images/usuarios.png" alt="Users tab with the New user button and the list of accounts: first the administrator admin, with the tag you, the status no second factor and the Second factor button, then the FTP users, each with the profile below the name and the tags initial, limits, cleanup and blocked, the folder, with the tag shared on two of them, usage, files, last upload, the TLS column, with required on every row, the actions Edit, Exempt from TLS, Change password and Remove and, below the list, the collapsed section How profiles and tags work" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Users menu · captured on 2026-10-11</sub>
+<sub><b>v1.7.0</b> · Users menu · captured on 2026-10-12</sub>
 
 **What it is for:** creating the account of each device or person, choosing its profile, choosing and changing the folder it is confined to, changing the password, giving it limits of its own, allowing file upload through the panel, turning on the automatic cleanup of old files, removing the block for wrong passwords and removing the account, with or without the folder, without the command line. It is also where the administrators of the panel are.
 
@@ -293,7 +323,7 @@ Administrator is not among the options: administrator and FTP user are separate 
 
 <a href="images/usuarios-limites-gravados.png"><img src="images/usuarios-limites-gravados.png" alt="Users tab with the message Limits saved, they apply on the user's next FTP sign-in, and the tag limits next to the name roteador-borda" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Users menu, limits saved · captured on 2026-10-11</sub>
+<sub><b>v1.7.0</b> · Users menu, limits saved · captured on 2026-10-12</sub>
 
 The **Limits** card of the **Edit** screen applies only to that user, whether it is the account of a device, which only uploads, or that of a person, who signs in, uploads and downloads. A blank field means no limit of its own: the one of the stack applies.
 
@@ -339,7 +369,7 @@ A blank field turns that rule off, and both blank turn the cleanup off. With bot
 
 <a href="images/usuarios-limpeza-gravada.png"><img src="images/usuarios-limpeza-gravada.png" alt="Users tab with the message Automatic cleanup saved, it applies on the next run of the panel, and the tag cleanup next to the name olt-centro" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Users menu, automatic cleanup saved · captured on 2026-10-11</sub>
+<sub><b>v1.7.0</b> · Users menu, automatic cleanup saved · captured on 2026-10-12</sub>
 
 **Expected result:** after **Save cleanup**, the list comes back with the message `Automatic cleanup saved. It applies on the next run of the panel.` and the tag `cleanup` next to the name; hovering the mouse over it shows the rule. Saved with both fields blank, the message is `Automatic cleanup turned off. No file of this user is deleted on its own.`
 
@@ -381,7 +411,7 @@ The address that gets the password of a user wrong on FTP too many times is bloc
 
 <a href="images/usuarios-desbloqueado.png"><img src="images/usuarios-desbloqueado.png" alt="Users tab with the message Block removed, the user can sign in to FTP again, and the name switch-core without the tag blocked" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Users menu, after the unblock · captured on 2026-10-11</sub>
+<sub><b>v1.7.0</b> · Users menu, after the unblock · captured on 2026-10-12</sub>
 
 **Expected result:** the list comes back with the message `Block removed. The user can sign in to FTP again.`, without the tag `blocked`, and the next sign-in of the device goes through.
 
@@ -428,7 +458,7 @@ This is the short block, of one user for one address. The address that fails too
 
 <a href="images/usuarios-removido.png"><img src="images/usuarios-removido.png" alt="Users tab after the removal, with the message User removed and folder deleted" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Users menu, after the removal · captured on 2026-10-11</sub>
+<sub><b>v1.7.0</b> · Users menu, after the removal · captured on 2026-10-12</sub>
 
 **Expected result:** with the box ticked and the right password, as in the screenshot, the list comes back with the message `User removed and folder deleted.` and the folder is gone. Without the box, the message is `User removed. The files stay in the folder.`: the folder stays in `DATA_DIR/dados` and remains visible in the Files tab, where it can be deleted later.
 
@@ -447,7 +477,7 @@ The initial user, the `FTP_USER` of the installation (`transfer`, in the example
 
 <a href="images/usuarios-tls.png"><img src="images/usuarios-tls.png" alt="Users tab with the warning that the user was exempted from TLS and their password and files travel in plain text, the TLS column, which shows required or no TLS on each row, and the Exempt from TLS and Require TLS buttons next to Edit, Change password and Remove" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Users menu, TLS column · captured on 2026-10-11</sub>
+<sub><b>v1.7.0</b> · Users menu, TLS column · captured on 2026-10-12</sub>
 
 The column and the two buttons are for the old device that does not speak TLS: it alone is exempted, and the others remain required. The same is done on creation, with the **Device without TLS support** box of **New user**, and in the **TLS** card of the **Edit** screen.
 
@@ -503,9 +533,9 @@ On the **Edit** screen, the **TLS** card says how the user signs in and has the 
 
 ## 🛡️ Administrators
 
-<a href="images/administradores.png"><img src="images/administradores.png" alt="Users tab with three administrators at the top of the list, admin, with the tag you, noc-plantao and suporte, each with the Administrator profile, the open sessions and the actions Change password, Change name and Remove, and, below them, the FTP users" width="100%"></a>
+<a href="images/administradores.png"><img src="images/administradores.png" alt="Users tab with three administrators at the top of the list, admin, with the tag you, noc-plantao and suporte, each with the Administrator profile, the open sessions and the state of the second factor and the actions Change password, Change name, Second factor and Remove, and, below them, the FTP users" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Users menu, administrators in the list · captured on 2026-10-11</sub>
+<sub><b>v1.7.0</b> · Users menu, administrators in the list · captured on 2026-10-12</sub>
 
 **What it is for:** giving each person who administers the panel their own user name and password, and changing the user name and the password of the first administrator after the installation.
 
@@ -515,9 +545,10 @@ On the **Edit** screen, the **TLS** card says how the user signs in and has the 
 |---|---|
 | **New user** | Opens the registration; with the **Administrator** profile selected, the account created is an administrator |
 | User and profile | Name of the account, with `Administrator` below it. The tag `you` marks the account of whoever is using the panel |
-| Folder | In place of the folder, `Whole panel` and how many browsers are inside the panel with that account right now |
+| Folder | In place of the folder, `Whole panel`, how many browsers are inside the panel with that account right now and the state of the second factor: `second factor on` or `no second factor` |
 | **Change password** | Opens the password change, one's own or another's |
 | **Change name** | Opens the change of the sign-in name, one's own or another's |
+| **Second factor** | On one's own account, opens the screen to turn on or off the code of the authenticator app; on that of another administrator, it only appears when it is on, to turn it off |
 | **Remove** | Opens the removal confirmation. It does not appear on one's own account: this way there is always one administrator left |
 
 All of them have the same access, and what each one does is in the Log tab with the name of whoever did it. The panel accepts up to 20 administrators. Administrator and FTP user are separate registrations: there is no switching from one to the other, only removing the account and creating the other.
@@ -605,6 +636,50 @@ Changing the name of the first administrator through the panel does not touch th
 
 </details>
 
+<a name="segundo-fator"></a>
+
+<details>
+<summary>Administrators ➜ Second factor — click to expand</summary>
+
+### Administrators ➜ Second factor
+
+<a href="images/administradores-segundo-fator.png"><img src="images/administradores-segundo-fator.png" alt="Turn on the second factor screen: the explanation that the panel starts asking for the six-digit code of an authenticator app, the three steps with the QR code and the key in groups of four characters, the warning that the key will not be shown again, the fields Code from the app and Your current password and the buttons Turn on the second factor and Cancel" width="100%"></a>
+
+<sub><b>v1.7.0</b> · Users menu, Turn on the second factor screen, with an example key that was not saved · captured on 2026-10-12</sub>
+
+Click **Second factor** on the row of your own account. Each administrator turns on their own, with any authenticator app of time-based codes (TOTP).
+
+| Screen item | What it does |
+|---|---|
+| QR code | It is the key, for the app to read with the camera. The account shows in it as `AllSafe FTP:<administrator>@<panel address>` |
+| Key in groups | The same key, to type into the app when there is no camera, choosing the time-based type |
+| **Code from the app** | Takes the six digits the app started to show: it is the proof that it read the key |
+| Your current password | Confirms that whoever turns it on owns the session |
+| **Turn on the second factor** | Saves the key and closes the other sessions of the account |
+| **Cancel** | Goes back to the list without turning anything on |
+
+**Expected result:** the list comes back with the message `Second factor turned on. The next sign-in of this account asks for the code from the app; its other sessions were closed.` and the row of the account starts to say `second factor on`.
+
+> ⚠️ **The key appears only on this screen, until it is confirmed.** Whoever has it generates the codes of the account: do not keep it in a photo or in a message. While the first code does not arrive, the screen opened again shows the same key, for up to 10 minutes; after that, a new one.
+
+### Administrators ➜ Turn off the second factor
+
+<a href="images/administradores-segundo-fator-desligar.png"><img src="images/administradores-segundo-fator-desligar.png" alt="Turn off the second factor screen, of one's own account: the notice that the account goes back to signing in with user and password only and that the stored key is deleted, the field Your current password and the buttons Yes, turn off the second factor and Cancel" width="100%"></a>
+
+<sub><b>v1.7.0</b> · Users menu, Turn off the second factor screen · captured on 2026-10-12</sub>
+
+With the second factor on, the same **Second factor** button opens this screen, on one's own row or on that of another administrator: it is the way out for someone who lost the device.
+
+| Screen item | What it does |
+|---|---|
+| Your current password | Confirms that whoever turns it off owns the session; it is not the password of the changed account |
+| **Yes, turn off the second factor** | Deletes the stored key: the codes from the app stop working and the account goes back to signing in with user and password only |
+| **Cancel** | Goes back to the list without changing anything |
+
+**Expected result:** the list comes back with the message `Second factor turned off. The account goes back to signing in with user and password only.` To turn it on again, the owner of the account repeats the step above, with a new key.
+
+</details>
+
 <details>
 <summary>Technical detail — refusal messages, routes and file</summary>
 
@@ -614,9 +689,13 @@ Changing the name of the first administrator through the panel does not touch th
 | There is already an administrator with this name. | The name is already in use |
 | The new name is the same as the current one. | The name change changed nothing |
 | Limit of 20 administrators reached: remove one before creating another. | The panel already has 20 administrators |
+| The code does not match the key on this screen. Check the time on the phone, wait for the next code and try again. | The code typed on the Turn on the second factor screen is not that of the key shown |
+| The key shown has expired. Scan the new one in the app and try again. | The Turn on the second factor screen stayed more than 10 minutes without the first code; the screen comes back with another key |
+| The second factor of (name) is off. Only the administrator turns on their own, because the key stays on the device of whoever signs in. | The address of the screen was opened for the account of another administrator who has no second factor |
 
 - Registration is `POST /usuarios/novo`, with the profile `administrador`. The old addresses still work: `GET /administradores` leads to the Users tab and `GET /administradores/novo`, to the form with the Administrator profile selected.
 - Routes of the other screens: `GET /administradores/senha?admin=<name>`, `/administradores/nome?admin=<name>` and `/administradores/remover?admin=<name>`; the submission of each form is a `POST` to the same route, with the CSRF token of the session.
+- Second factor: `GET /administradores/fator?admin=<name>` shows the screen to turn it on or the one to turn it off; the submission is a `POST` to `/administradores/fator/ligar` or `/administradores/fator/desligar`. It writes `admin_fator_ligado` or `admin_fator_desligado`. The list of who turned it on is kept in `DATA_DIR/painel/segundo-fator` and the key of each one, in `.secrets/segundo-fator/<name>.txt`. An FTP user gets `404` on these routes.
 - The administrators are kept in `DATA_DIR/painel/administradores` (`0600`, owned by `root`), one `name:hash` line per account. Only the `scrypt` hash is written.
 - Each change writes `admin_criado`, `admin_senha_trocada`, `admin_renomeado` or `admin_removido` to the [audit log](../panel.md#auditoria), with who did it and who was changed; the wrong current password writes `admin_senha_atual_recusada`.
 - The full rules are in [Administrators of the panel](../panel.md#administradores).
@@ -1386,9 +1465,9 @@ Nothing is changed through this tab, and only the administrator sees it. The lim
 
 ## 🔐 Security
 
-<a href="images/seguranca.png"><img src="images/seguranca.png" alt="Security tab with the summary of the check at the top, which says how many items are in order, and one line per item: public address, panel behind a proxy or tunnel, addresses of the FTP and of the panel, TLS mode, the two certificates, allowed networks, session, sign-in of FTP users, blocking by attempts on FTP, with the name of the blocked user, blocking by address, with the number of blocked addresses, cost of the passwords, security contact, container and firewall" width="100%"></a>
+<a href="images/seguranca.png"><img src="images/seguranca.png" alt="Security tab with the summary of the check at the top, which says how many items are in order, and one line per item: public address, panel behind a proxy or tunnel, addresses of the FTP and of the panel, TLS mode, the two certificates, allowed networks, session, second factor of the administrators, sign-in of FTP users, blocking by attempts on FTP, with the name of the blocked user, blocking by address, with the number of blocked addresses, cost of the passwords, security contact, container and firewall" width="100%"></a>
 
-<sub><b>v1.6.0</b> · Security menu · captured on 2026-10-12</sub>
+<sub><b>v1.7.0</b> · Security menu · captured on 2026-10-12</sub>
 
 **What it is for:** checking, on one screen, whether the installation is within what the stack requires: private network, TLS, valid certificates, isolated panel and published security contact.
 
@@ -1405,6 +1484,7 @@ Nothing is changed through this tab, and only the administrator sees it. The lim
 | Panel address · Web front end | Where nginx publishes the panel and how it forwards the requests |
 | Who can open the panel | The networks of `PAINEL_REDES_PERMITIDAS`; a public network in the list is highlighted |
 | Session | Time without use, maximum time and block for wrong sign-in |
+| Second factor of the administrators | Whether all administrators sign in with the password and the code from the app, or who signs in with the password only. It asks for attention when the panel is reached from outside the private network and someone is without it, and when an account is on without the key on the server |
 | Sign-in of FTP users | Whether the FTP users sign in to the panel (`PAINEL_ACESSO_USUARIOS_FTP`) and how their password is checked |
 | Blocking by attempts on FTP | How many wrong passwords from the same address block a user and for how long (`FTP_BLOQUEIO_TENTATIVAS` and `FTP_BLOQUEIO_MINUTOS`), and who is blocked now |
 | Blocking by address | How many user name and password errors, in how many hours, block an address on FTP and on the panel, for how many days (`BLOQUEIO_ENDERECO_ERROS`, `BLOQUEIO_ENDERECO_HORAS` and `BLOQUEIO_ENDERECO_DIAS`), and how many are blocked now, with the shortcut to the Blocks tab |
@@ -1422,7 +1502,7 @@ Nothing is changed through this tab. The example firewall rules are in [Security
 
 <a href="images/seguranca-tls-por-usuario.png"><img src="images/seguranca-tls-por-usuario.png" alt="Security tab with the alert at the top that two users, central-pabx and radio-antigo, sign in to FTP without TLS, and the FTP TLS line with the attention mark and the names of the exempt users" width="100%"></a>
 
-<sub><b>v1.6.0</b> · Security menu, alert of user without TLS · captured on 2026-10-12</sub>
+<sub><b>v1.7.0</b> · Security menu, alert of user without TLS · captured on 2026-10-12</sub>
 
 With at least one user exempt from TLS, the tab opens with the alert and the **FTP TLS** line swaps the checked mark for the attention one, with the number and the names of those who sign in without TLS.
 
@@ -1580,6 +1660,7 @@ The administrator whose own address got blocked does not open the panel: the rel
 |---|---|
 | Panel started · Initial administrator created | The service of the panel started, with the version, and the account of the first administrator was created on installation |
 | Sign-in · Sign-in refused · Sign-in blocked by the attempt limit · Sign-out | Someone signed in, got the user name or the password wrong, had the address blocked or signed out |
+| Password accepted, waiting for the second factor code · Second factor code refused · Sign-in refused: second factor on without the secret on the server | Sign-in of an administrator with the second factor on: the password matched, the code from the app was refused, or the key of the account is not on the server |
 | User created · Password changed · User folder changed · User profile changed · User removed | Change of an FTP user, with the administrator who did it |
 | User limits changed · FTP block of the user removed | Limits saved, with the value of each one, and block for wrong password removed in **Edit** |
 | User automatic cleanup changed · Automatic cleanup: old files deleted · Automatic cleanup not completed | The rule saved or turned off in **Edit**, with the administrator who did it; each run that deleted something, with the user and the amount; and the run that did not finish |
@@ -1591,6 +1672,7 @@ The administrator whose own address got blocked does not open the panel: the rel
 | Files sent to the destination · File sent to the destination on request · Upload to the destination not completed · File refused by the destination left behind | Each run that sent something, with the count and the size; the send requested by the button of a file; the run that stopped before the end, with the reason; and the file the destination refused three times |
 | Folder created · File or folder renamed · File or folder deleted | Change through the Files tab or through the My files screen, with the path; the deleted one also appears when the folder goes together with the user |
 | Administrator created · Administrator password changed · Administrator renamed · Administrator removed | Change of an administrator, with who did it and who was changed |
+| Second factor turned on · Second factor turned off · Second factor turned off from the terminal | The administrator turned on their own; an administrator turned off their own or that of another, with who did it and whose it was; and the turning off done on the server |
 | Current password refused | Change of an administrator refused by the confirmation password |
 | FTP password refused on confirmation | An FTP user got their own password wrong when confirming a name change or a deletion on the My files screen |
 | Screen outside the role or profile requested by an FTP user | An FTP user requested an administration tab, or an action their profile does not have, and got `404` |
@@ -1638,7 +1720,7 @@ The tab shows the last 300 records, and the collapsed **What is recorded**, belo
 
 <a href="images/usuarios-portugues.png"><img src="images/usuarios-portugues.png" alt="Users tab in Portuguese: the title Usuários, the profiles Completo, Envio, Só envio and Leitura, the tags você, limites, dividida and inicial, the TLS column with obrigatório and sem TLS and the buttons Editar, Dispensar TLS, Exigir TLS, Trocar senha, Trocar nome and Remover" width="100%"></a>
 
-<sub><b>v1.1.0</b> · Users menu, in Portuguese · captured on 2026-10-11</sub>
+<sub><b>v1.7.0</b> · Users menu, in Portuguese · captured on 2026-10-12</sub>
 
 <details>
 <summary>Technical detail — where the choice is kept</summary>

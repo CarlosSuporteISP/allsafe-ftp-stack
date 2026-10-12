@@ -11,7 +11,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.6.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.7.0-blue)
 ![Status](https://img.shields.io/badge/status-est%C3%A1vel-brightgreen)
 ![Suporte](https://img.shields.io/badge/suporte-LTS-blue)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
@@ -101,6 +101,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **Rede privada por padrão** | Feita para rede interna, atrás de firewall; endereço público só por uma opção explícita, com alerta |
 | **Só o painel publicado, se quiser** | O painel pode ser aberto por um proxy ou túnel do próprio servidor, com o FTP fechado na rede privada; o endereço do cliente só é aceito do proxy declarado |
 | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão que encerra com 4 horas sem uso, bloqueio depois de cinco senhas erradas e registro de cada ação |
+| **Segundo fator na entrada do painel** | Cada administrador liga o dele: depois da senha, o painel pede o código de seis dígitos de um aplicativo autenticador (TOTP), lido por código QR. Só no painel: o FTP não muda |
 | **Arquivos pelo navegador** | O administrador navega, envia, baixa, renomeia e apaga; o dono dos arquivos entra com o usuário e a senha do FTP, vê só a própria pasta e faz o que o perfil dele deixa. Enviar pelo painel depende de permissão dada a cada usuário |
 | **Limpeza automática** | Por conta, o administrador manda guardar só os últimos arquivos de cada pasta ou só os dos últimos dias; o painel apaga o resto sozinho, de tempos em tempos. Desligada por padrão |
 | **Envio para S3, rclone e bot do Telegram** | Na aba Destinos, o administrador liga uma pasta a um armazenamento S3, para a segunda cópia ou para guardar fora e liberar o disco, a um remoto do rclone, para o que o S3 não alcança (servidor SFTP ou WebDAV, ou uma nuvem de arquivos), e a um bot do Telegram, que entrega em instantes cada arquivo que chega a uma pessoa, um grupo ou um canal, até o tamanho que o bot aceita. Cada tipo aceita até 20 destinos, e um destino novo pode usar o acesso de outro, para outra pasta, outro bucket ou outro grupo. O bot só envia e o remoto do rclone só recebe. Na aba Arquivos, um botão manda um arquivo na hora. A cópia do sistema inteiro, cifrada, vai para um S3 pelo botão ou por rotina. Nada é apagado no destino. Sem configuração por padrão |
@@ -122,18 +123,18 @@ O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página,
 
 | | |
 |---|---|
-| <a href="doc/pt-BR/imagens/aba-usuarios.png"><img src="doc/pt-BR/imagens/aba-usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista das contas: primeiro o administrador admin, com a etiqueta você, depois os usuários do FTP, cada um com o perfil embaixo do nome e as etiquetas inicial, limites, limpeza e bloqueado, a pasta, com a etiqueta dividida em duas, uso, arquivos, último envio, a coluna TLS, com obrigatório em todas as linhas, as ações Editar, Dispensar TLS, Trocar senha e Remover e, abaixo da lista, o recolhido Como funcionam os perfis e as etiquetas" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-arquivos.png"><img src="doc/pt-BR/imagens/aba-arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma, os botões Renomear e Apagar em cada linha e os cartões Nova pasta e Enviar arquivo" width="100%"></a> |
+| <a href="doc/pt-BR/imagens/aba-usuarios.png"><img src="doc/pt-BR/imagens/aba-usuarios.png" alt="Aba Usuários com o botão Novo usuário e a lista das contas: primeiro o administrador admin, com a etiqueta você, a situação sem segundo fator e o botão Segundo fator, depois os usuários do FTP, cada um com o perfil embaixo do nome e as etiquetas inicial, limites, limpeza e bloqueado, a pasta, com a etiqueta dividida em duas, uso, arquivos, último envio, a coluna TLS, com obrigatório em todas as linhas, as ações Editar, Dispensar TLS, Trocar senha e Remover e, abaixo da lista, o recolhido Como funcionam os perfis e as etiquetas" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-arquivos.png"><img src="doc/pt-BR/imagens/aba-arquivos.png" alt="Aba Arquivos no primeiro nível, com a lista das pastas dos usuários, a data de cada uma, os botões Renomear e Apagar em cada linha e os cartões Nova pasta e Enviar arquivo" width="100%"></a> |
 | **Usuários** — cria cada conta, escolhe o perfil, troca a senha, a pasta e os limites, desbloqueia e remove | **Arquivos** — navega nas pastas dos usuários, envia e baixa arquivo, cria pasta, renomeia e apaga |
 | <a href="doc/pt-BR/imagens/aba-destinos.png"><img src="doc/pt-BR/imagens/aba-destinos.png" alt="Aba Destinos com o cartão Cópia do sistema recolhido no alto, o cartão Armazenamento S3 ligado, com o endereço, o bucket, a pasta enviada, as passadas, a última passada e o total enviado, o cartão Remoto do rclone ligado, com o tipo SFTP, a pasta no remoto, a pasta enviada, a chave do servidor, a última passada e o total enviado, o cartão Bot do Telegram ligado, com a pasta, o maior arquivo que o bot envia, a última passada e o total enviado, e os botões Testar, Enviar agora, Alterar, Novo com o mesmo acesso e Remover em cada um, e, no alto da tela, os botões Novo S3, Novo remoto e Novo bot e a explicação Como o painel envia, recolhida" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-servidor.png"><img src="doc/pt-BR/imagens/aba-servidor.png" alt="Aba Servidor com o botão Atualizar sozinha, o cartão Containers da stack, com um quadro para o Servidor FTP, um para o Painel e um para a Frente web, cada um com processador, memória e processos em uso e alocados, o gráfico dos últimos minutos e a parte do tempo em que o limite de processador foi atingido, e o cartão Recursos do servidor, com processador, memória, disco e rede do FTP" width="100%"></a> |
 | **Destinos** — envia sozinho os arquivos de uma pasta para um armazenamento S3, para um remoto do rclone e por um bot do Telegram, com teste e envio na hora | **Servidor** — o uso e o limite de processador, memória e processos de cada container, e os recursos do servidor |
-| <a href="doc/pt-BR/imagens/aba-seguranca.png"><img src="doc/pt-BR/imagens/aba-seguranca.png" alt="Aba Segurança com o resumo da conferência no alto, que diz quantos itens estão em ordem, e uma linha por item: endereço público, painel por proxy ou túnel, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, bloqueio por endereço, com a quantidade de endereços bloqueados, custo das senhas, contato de segurança, container e firewall" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-bloqueios.png"><img src="doc/pt-BR/imagens/aba-bloqueios.png" alt="Aba Bloqueios com a regra em uso abaixo do título, o botão Bloquear endereço, quatro endereços bloqueados, em IPv4 e em IPv6, por erros no FTP, por erros no painel e por um administrador, cada um com desde quando, até quando e os botões Mudar prazo e Desbloquear, e o cartão Usuários bloqueados no FTP, com o usuário switch-core" width="100%"></a> |
+| <a href="doc/pt-BR/imagens/aba-seguranca.png"><img src="doc/pt-BR/imagens/aba-seguranca.png" alt="Aba Segurança com o resumo da conferência no alto, que diz quantos itens estão em ordem, e uma linha por item: endereço público, painel por proxy ou túnel, endereços do FTP e do painel, modo TLS, os dois certificados, redes permitidas, sessão, segundo fator dos administradores, entrada dos usuários do FTP, bloqueio por tentativa no FTP, com o nome do usuário bloqueado, bloqueio por endereço, com a quantidade de endereços bloqueados, custo das senhas, contato de segurança, container e firewall" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-bloqueios.png"><img src="doc/pt-BR/imagens/aba-bloqueios.png" alt="Aba Bloqueios com a regra em uso abaixo do título, o botão Bloquear endereço, quatro endereços bloqueados, em IPv4 e em IPv6, por erros no FTP, por erros no painel e por um administrador, cada um com desde quando, até quando e os botões Mudar prazo e Desbloquear, e o cartão Usuários bloqueados no FTP, com o usuário switch-core" width="100%"></a> |
 | **Segurança** — confere rede, TLS, certificados, bloqueios, senhas e contato de segurança | **Bloqueios** — os endereços e os prefixos bloqueados, por erro de usuário e senha ou pelo administrador, com bloqueio novo, desbloqueio e troca do prazo |
 | <a href="doc/pt-BR/imagens/aba-atividade.png"><img src="doc/pt-BR/imagens/aba-atividade.png" alt="Aba Log com os registros do painel em quatro colunas: quando, de onde, com o endereço inteiro em uma linha só ou no servidor, o que aconteceu, com um ícone por evento, e o detalhe, como arquivos enviados para o destino, arquivo baixado, pasta criada, administrador criado, endereço desbloqueado e tela fora do papel ou do perfil pedida por usuário do FTP" width="100%"></a> | <a href="doc/pt-BR/imagens/aba-administradores.png"><img src="doc/pt-BR/imagens/aba-administradores.png" alt="Aba Usuários com três administradores no começo da lista, admin, com a etiqueta você, noc-plantao e suporte, cada um com o perfil Administrador, as sessões abertas e as ações Trocar senha, Trocar nome e Remover, e, abaixo deles, os usuários do FTP" width="100%"></a> |
 | **Log** — quem entrou, de onde, o que baixou, o que enviou e o que foi alterado | **Administradores** — ficam na aba Usuários, cada pessoa com o próprio nome e a própria senha |
 | <a href="doc/pt-BR/imagens/aba-meus-arquivos.png"><img src="doc/pt-BR/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, de perfil Completo, com as pastas 2026-09 e 2026-10 e um arquivo de configuração, o aviso da limpeza automática acima da lista, os botões Abrir ou Baixar, Renomear e Apagar em cada linha, os cartões Nova pasta e Enviar arquivo e, no menu, só a aba Meus arquivos, os botões PT e EN, o nome do usuário e o botão Sair" width="100%"></a> | |
 | **Meus arquivos** — o usuário do FTP vê a própria pasta e faz nela o que o perfil dele deixa | |
 
-<sub><b>v1.4.0</b> · painel web, uma foto por aba · capturas de 2026-10-11; as das abas Destinos e Segurança são da <b>v1.6.0</b>, de 2026-10-12</sub>
+<sub><b>v1.4.0</b> · painel web, uma foto por aba · capturas de 2026-10-11; a da aba Destinos é da <b>v1.6.0</b> e as das abas Usuários e Segurança são da <b>v1.7.0</b>, de 2026-10-12</sub>
 
 Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplicação](doc/pt-BR/aplicacao/README.md).
 
@@ -179,6 +180,8 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | Trocar o usuário ou a senha do painel | pelo painel, aba Usuários, na linha do administrador |
 | Criar outro administrador do painel | pelo painel, aba Usuários, **Novo usuário** com o perfil Administrador |
 | Recuperar o acesso ao painel | `./scripts/painel-senha.sh --gerar` (outro administrador: `--usuario NOME`) |
+| Pedir um código além da senha na entrada do painel | pelo painel, aba Usuários, **Segundo fator** na linha da própria conta de administrador: veja [Segundo fator](doc/pt-BR/painel.md#segundo-fator) |
+| Desligar o segundo fator de quem perdeu o aparelho | outro administrador, na aba Usuários, ou `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME` |
 | Criar um usuário | pelo painel, aba Usuários, ou `./manage-user.sh add backup-olt` |
 | Limitar o que um usuário faz (envia sem apagar, só envia sem ver os backups, ou só baixa) | pelo painel, aba Usuários, **Editar**, cartão **Perfil**, ou `./manage-user.sh perfil backup-olt envio`: veja [Perfis](doc/pt-BR/painel.md#perfis) |
 | Baixar um backup recebido | pelo painel, aba Arquivos, botão **Baixar** na linha do arquivo |
@@ -292,6 +295,9 @@ flowchart LR
         senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
         hash@{ shape: doc, label: "administradores<br>nome e hash da senha" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna" }
+        fator@{ shape: diam, label: "segundo fator<br>ligado na conta?" }
+        codigo@{ shape: diam, label: "código do aplicativo<br>confere?" }
+        chave@{ shape: doc, label: "segundo-fator<br>chave de cada administrador" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 4 h<br>cookie e token CSRF" }
@@ -307,13 +313,18 @@ flowchart LR
     rede -- "3a · sim: repassa pelo soquete Unix" --> painel
     rede -- "3b · não: 403 ou 429" --> recusa
     painel -- "4 · pede usuário e senha e confere" --> senha
-    senha -- "5a · sim: abre a sessão do administrador ou do usuário do FTP" --> sessao
+    senha -- "5a · sim: vê se a conta tem segundo fator" --> fator
     senha -- "5b · não: 5 erros bloqueiam o endereço" --> recusa
-    sessao -- "6 · cada pedido passa pelas conferências" --> pedidos
-    pedidos -- "7a · aceito" --> atendido
-    pedidos -- "7b · recusado" --> recusa
+    fator -- "6a · não, ou usuário do FTP: abre a sessão" --> sessao
+    fator -- "6b · sim: pede o código de seis dígitos" --> codigo
+    codigo -- "7a · sim: abre a sessão do administrador" --> sessao
+    codigo -- "7b · não: 5 erros encerram a espera" --> recusa
+    sessao -- "8 · cada pedido passa pelas conferências" --> pedidos
+    pedidos -- "9a · aceito" --> atendido
+    pedidos -- "9b · recusado" --> recusa
     painel -. "administrador: compara com o hash" .-> hash
     painel -. "outro nome: o servidor FTP confere a senha" .-> ftp
+    painel -. "segundo fator: calcula o código com a chave" .-> chave
 ```
 
 <sub>Nível 2 · Fluxograma · [fonte](doc/pt-BR/diagramas/)</sub>
@@ -325,11 +336,15 @@ flowchart LR
 | 3a | rede permitida e dentro do limite? ➜ Painel web | Sim: o nginx repassa o pedido pelo soquete Unix, com o endereço do cliente |
 | 3b | rede permitida e dentro do limite? ➜ pedido recusado | Não: `403` para rede de fora, `429` para pedidos demais; o painel nem recebe o pedido |
 | 4 | Painel web ➜ usuário e senha conferem? | O painel confere de novo a rede e o nome de host, mostra a tela de entrada, que pede usuário e senha, e confere o que foi digitado |
-| 5a | usuário e senha conferem? ➜ sessão de 4 h | Sim: abre a sessão, com cookie e token CSRF. A do administrador alcança todas as abas; a do usuário do FTP, só a tela Meus arquivos |
+| 5a | usuário e senha conferem? ➜ segundo fator ligado na conta? | Sim: antes de abrir a sessão, o painel vê se a conta é de um administrador com o [segundo fator](doc/pt-BR/painel.md#segundo-fator) ligado |
 | 5b | usuário e senha conferem? ➜ pedido recusado | Não: `401`, sem dizer qual dos dois errou; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
-| 6 | sessão de 4 h ➜ pedidos da sessão | Cada pedido feito com a sessão aberta passa pelas conferências do fluxograma dos pedidos, logo abaixo |
-| 7a | pedidos da sessão ➜ pedido atendido | Aceito: o usuário fica pronto no FTP, o arquivo é baixado ou a alteração é feita |
-| 7b | pedidos da sessão ➜ pedido recusado | Recusado: nada muda, e a recusa fica na auditoria |
+| 6a | segundo fator ligado na conta? ➜ sessão de 4 h | Não, ou a conta é de usuário do FTP: abre a sessão, com cookie e token CSRF. A do administrador alcança todas as abas; a do usuário do FTP, só a tela Meus arquivos |
+| 6b | segundo fator ligado na conta? ➜ código do aplicativo confere? | Sim: nenhuma sessão é aberta. O painel guarda uma espera de 5 minutos, presa ao endereço, e pede o código de seis dígitos do aplicativo autenticador |
+| 7a | código do aplicativo confere? ➜ sessão de 4 h | Sim: abre a sessão do administrador. O mesmo código não vale uma segunda vez |
+| 7b | código do aplicativo confere? ➜ pedido recusado | Não: `401`, e o erro conta para o bloqueio do endereço; cinco erros encerram a espera e a entrada recomeça pela senha |
+| 8 | sessão de 4 h ➜ pedidos da sessão | Cada pedido feito com a sessão aberta passa pelas conferências do fluxograma dos pedidos, logo abaixo |
+| 9a | pedidos da sessão ➜ pedido atendido | Aceito: o usuário fica pronto no FTP, o arquivo é baixado ou a alteração é feita |
+| 9b | pedidos da sessão ➜ pedido recusado | Recusado: nada muda, e a recusa fica na auditoria |
 
 **Apoio**
 
@@ -337,6 +352,7 @@ flowchart LR
 |---|---|---|
 | Painel web | administradores (`DATA_DIR/painel/administradores`) | compara a senha digitada com o hash `scrypt` do administrador, a cada entrada; nome que não existe passa pela mesma conta |
 | Painel web | Pure-FTPd (`allsafe-ftp`, rede interna da stack) | não é administrador com essa senha e a entrada dos usuários do FTP está ligada: entra no servidor FTP com o nome e a senha e sai em seguida, em TLS com o certificado conferido; quem diz se a senha vale é o servidor |
+| Painel web | segundo-fator (`.secrets/segundo-fator/`) | conta com o segundo fator ligado: lê a chave do administrador e calcula o código do instante, com um passo de 30 segundos de folga para cada lado |
 
 **Pedidos da sessão**
 
@@ -503,7 +519,7 @@ O mapa mostra as peças e os volumes. A configuração, os segredos e o registro
 | Pasta `DATA_DIR/auth` | Banco PureDB dos usuários virtuais, dividido pelo FTP e pelo painel | — | `/auth` |
 | Pasta `DATA_DIR/dados` | Arquivos enviados, uma pasta por usuário | — | `/data` |
 | Pasta `DATA_DIR/certs` | Chave e certificado TLS do FTP (`pure-ftpd.pem`); o painel só lê a pasta, para a cópia do sistema | — | `/etc/ssl/private` no FTP; `/certs` no painel, somente leitura |
-| Pasta `DATA_DIR/painel` | Certificado do painel, administradores (nome e hash da senha), `auditoria.log` e o idioma escolhido por cada conta (`idiomas`) | — | `/painel` |
+| Pasta `DATA_DIR/painel` | Certificado do painel, administradores (nome e hash da senha), `auditoria.log`, o idioma escolhido por cada conta (`idiomas`) e a lista de quem está com o segundo fator ligado (`segundo-fator`) | — | `/painel` |
 | Pasta `DATA_DIR/nginx` | Soquete do painel e cópia do certificado, refeitos a cada subida; o nginx só lê | — | `/nginx` |
 | Segredo `ftp_usuario_inicial_senha` | Senha do usuário inicial (`.secrets/ftp-usuario-inicial-senha.txt`), somente leitura | — | `/run/secrets/ftp_usuario_inicial_senha` |
 | Segredo `painel_admin_inicial_senha_hash` | Hash da senha inicial do primeiro administrador do painel (`.secrets/painel-admin-inicial-senha-hash.txt`), somente leitura | — | `/run/secrets/painel_admin_inicial_senha_hash` |
@@ -654,7 +670,7 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 94 casos funcionais, 140 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 99 casos funcionais, 144 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
 
 ---
 

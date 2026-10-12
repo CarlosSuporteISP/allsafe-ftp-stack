@@ -107,7 +107,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # age: cifra a cópia do sistema que o painel envia para o S3, com a chave pública da cópia (a mesma do scripts/backup.sh).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 ca-certificates age \
-    && mkdir -p /painel /nginx /segredos /certs /opt/painel \
+    && mkdir -p /painel /nginx /segredos /segundo-fator /certs /opt/painel \
     && rm -rf /var/lib/apt/lists/*
 
 # Do pacote do rclone entram só o binário e o texto da licença dele (MIT). O pacote é aberto pelo Python da imagem, e

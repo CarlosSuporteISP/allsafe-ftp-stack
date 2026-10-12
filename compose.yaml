@@ -174,10 +174,17 @@ services:
         bind:
           create_host_path: false
       # Segredos dos destinos de fora (chaves do S3, token e conversa do bot do Telegram): o administrador grava
-      # pelo painel, um arquivo por segredo, em SECRETS_DIR/destinos. É a única pasta de segredos em que o painel escreve.
+      # pelo painel, um arquivo por segredo, em SECRETS_DIR/destinos. Esta e a de baixo são as únicas pastas de
+      # segredos em que o painel escreve.
       - type: bind
         source: ${SECRETS_DIR:-./.secrets}/destinos
         target: /segredos
+        bind:
+          create_host_path: false
+      # Segredo do segundo fator de cada administrador que ligou o dele, um arquivo por administrador.
+      - type: bind
+        source: ${SECRETS_DIR:-./.secrets}/segundo-fator
+        target: /segundo-fator
         bind:
           create_host_path: false
       # Certificados e chaves do FTP, só para leitura: entram na cópia do sistema que o painel envia para o S3.

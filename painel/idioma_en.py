@@ -1374,10 +1374,17 @@ EN = {
         'to sign in to FTP.',
     'Pasta atual: {onde}, com {arquivos} arquivo(s), {tamanho}.':
         'Current folder: {onde}, with {arquivos} file(s), {tamanho}.',
-    'Os arquivos da pasta atual <strong>não são movidos nem apagados</strong>: continuam onde estão, e o usuário deixa de alcançá-los. A troca vale no próximo login no FTP e encerra a sessão dele no painel. A limpeza automática, se estiver ligada, é desligada: a regra era da pasta atual.':
-        'The files in the current folder <strong>are not moved or deleted</strong>: they stay where they are, and the user no longer reaches them. The change applies on the next FTP login and closes their panel session. Automatic cleanup, if it is on, is turned off: the rule belonged to the current folder.',
-    'Pasta trocada. Os arquivos da pasta anterior continuam nela. A limpeza automática foi desligada: a regra era da pasta anterior.':
-        'Folder changed. The files of the previous folder stay in it. Automatic cleanup was turned off: the rule belonged to the previous folder.',
+    'Os arquivos da pasta atual <strong>não são movidos nem apagados</strong>: continuam onde estão, '
+    'e o usuário deixa de alcançá-los. A troca vale no próximo login no FTP e encerra a sessão dele '
+    'no painel. A limpeza automática, se estiver ligada, é desligada: a regra era da pasta atual.':
+        'The files in the current folder <strong>are not moved or deleted</strong>: they stay where '
+        'they are, and the user no longer reaches them. The change applies on the next FTP login and '
+        'closes their panel session. Automatic cleanup, if it is on, is turned off: the rule belonged '
+        'to the current folder.',
+    'Pasta trocada. Os arquivos da pasta anterior continuam nela. A limpeza automática foi desligada: '
+    'a regra era da pasta anterior.':
+        'Folder changed. The files of the previous folder stay in it. Automatic cleanup was turned '
+        'off: the rule belonged to the previous folder.',
     'Limpeza automática gravada. Vale na próxima passada do painel.':
         'Automatic cleanup saved. It applies on the next run of the panel.',
     'Limpeza automática desligada. Nenhum arquivo deste usuário é apagado sozinho.':
@@ -1398,12 +1405,18 @@ EN = {
         'The panel applies the rule every minute.',
     'O painel aplica a regra a cada {n} minutos.':
         'The panel applies the rule every {n} minutes.',
-    'Com <code>PAINEL_RETENCAO_MINUTOS=0</code>, a limpeza automática está parada nesta instalação: a regra fica gravada e não é aplicada.':
-        'With <code>PAINEL_RETENCAO_MINUTOS=0</code>, automatic cleanup is stopped on this installation: the rule stays saved and is not applied.',
-    'A pasta deste usuário também é alcançada por <strong>{outros}</strong>: a limpeza apaga os arquivos antigos de todos os que estiverem nela.':
-        "This user's folder is also reached by <strong>{outros}</strong>: the cleanup deletes the old files of everyone who is in it.",
-    'O painel apaga sozinho os arquivos antigos da pasta deste usuário e das pastas de dentro dela. Campo vazio desliga aquela regra; os dois vazios desligam a limpeza.':
-        "The panel deletes, on its own, the old files of this user's folder and of the folders inside it. An empty field turns that rule off; both empty turn the cleanup off.",
+    'Com <code>PAINEL_RETENCAO_MINUTOS=0</code>, a limpeza automática está parada nesta instalação: a '
+    'regra fica gravada e não é aplicada.':
+        'With <code>PAINEL_RETENCAO_MINUTOS=0</code>, automatic cleanup is stopped on this '
+        'installation: the rule stays saved and is not applied.',
+    'A pasta deste usuário também é alcançada por <strong>{outros}</strong>: a limpeza apaga os '
+    'arquivos antigos de todos os que estiverem nela.':
+        "This user's folder is also reached by <strong>{outros}</strong>: the cleanup deletes the old "
+        'files of everyone who is in it.',
+    'O painel apaga sozinho os arquivos antigos da pasta deste usuário e das pastas de dentro dela. '
+    'Campo vazio desliga aquela regra; os dois vazios desligam a limpeza.':
+        "The panel deletes, on its own, the old files of this user's folder and of the folders inside "
+        'it. An empty field turns that rule off; both empty turn the cleanup off.',
     'Manter só os arquivos mais recentes':
         'Keep only the most recent files',
     'quantos ficam em cada pasta; os mais antigos saem':
@@ -1412,10 +1425,19 @@ EN = {
         'Delete the file older than this many days',
     'dias no servidor, desde que chegou ou foi alterado':
         'days on the server, since it arrived or was changed',
-    'A contagem é por pasta: com 30, cada pasta fica com os 30 arquivos mais recentes dela. Com os dois campos preenchidos, sai o arquivo que passar de qualquer um. Não saem link simbólico nem arquivo ou pasta com o nome começado por ponto; a subpasta que a limpeza esvaziar sai junto.':
-        'The count is per folder: with 30, each folder keeps its own 30 most recent files. With both fields filled in, a file that exceeds either one is deleted. Symbolic links and files or folders whose name starts with a dot are never deleted; a subfolder emptied by the cleanup is deleted too.',
-    'O painel <strong>não tem lixeira</strong>: o que a limpeza apaga não volta. Na regra por dias, o equipamento que parar de enviar fica sem nenhum arquivo depois do prazo; para backup de equipamento, prefira manter os mais recentes.':
-        'The panel <strong>has no recycle bin</strong>: what the cleanup deletes does not come back. With the rule by days, a device that stops sending ends up with no file at all after the period; for device backups, prefer keeping the most recent ones.',
+    'A contagem é por pasta: com 30, cada pasta fica com os 30 arquivos mais recentes dela. Com os '
+    'dois campos preenchidos, sai o arquivo que passar de qualquer um. Não saem link simbólico nem '
+    'arquivo ou pasta com o nome começado por ponto; a subpasta que a limpeza esvaziar sai junto.':
+        'The count is per folder: with 30, each folder keeps its own 30 most recent files. With both '
+        'fields filled in, a file that exceeds either one is deleted. Symbolic links and files or '
+        'folders whose name starts with a dot are never deleted; a subfolder emptied by the cleanup '
+        'is deleted too.',
+    'O painel <strong>não tem lixeira</strong>: o que a limpeza apaga não volta. Na regra por dias, o '
+    'equipamento que parar de enviar fica sem nenhum arquivo depois do prazo; para backup de '
+    'equipamento, prefira manter os mais recentes.':
+        'The panel <strong>has no recycle bin</strong>: what the cleanup deletes does not come back. '
+        'With the rule by days, a device that stops sending ends up with no file at all after the '
+        'period; for device backups, prefer keeping the most recent ones.',
     'para gravar a limpeza':
         'to save the cleanup',
     'Gravar limpeza':
@@ -1444,8 +1466,10 @@ EN = {
         'Automatic cleanup: old files deleted',
     'Limpeza automática não concluída':
         'Automatic cleanup not completed',
-    'Limpeza automática, ligada pelo administrador: o servidor {regra}, sozinho. O que sai não volta: baixe o que precisa guardar.':
-        'Automatic cleanup, turned on by the administrator: the server {regra}, on its own. What is deleted does not come back: download what you need to keep.',
+    'Limpeza automática, ligada pelo administrador: o servidor {regra}, sozinho. O que sai não volta: '
+    'baixe o que precisa guardar.':
+        'Automatic cleanup, turned on by the administrator: the server {regra}, on its own. What is '
+        'deleted does not come back: download what you need to keep.',
     'Trocar pasta':
         'Change folder',
     'Esta já é a pasta do usuário.':
@@ -1821,16 +1845,22 @@ EN = {
         'public address accepted: check the firewall',
     'painel publicado por proxy ou túnel':
         'panel published through a proxy or tunnel',
-    'O painel navega, baixa, envia arquivo, cria pasta, troca o nome e apaga; arquivo enviado não substitui outro. Trocar o nome e apagar pedem a sua senha atual, e apagar não tem lixeira. Todo download e toda alteração ficam registrados na aba Log.':
-        'The panel browses, downloads, uploads files, creates folders, renames and deletes; an uploaded file never replaces another. Renaming and deleting ask for your current password, and deleting has no recycle bin. Every download and every change is recorded on the Log tab.',
+    'O painel navega, baixa, envia arquivo, cria pasta, troca o nome e apaga; arquivo enviado não '
+    'substitui outro. Trocar o nome e apagar pedem a sua senha atual, e apagar não tem lixeira. Todo '
+    'download e toda alteração ficam registrados na aba Log.':
+        'The panel browses, downloads, uploads files, creates folders, renames and deletes; an '
+        'uploaded file never replaces another. Renaming and deleting ask for your current password, '
+        'and deleting has no recycle bin. Every download and every change is recorded on the Log tab.',
     'Arquivo enviado.':
         'File uploaded.',
     'Arquivo enviado. Já havia um com este nome: o novo foi guardado com a data e a hora no nome.':
-        'File uploaded. There was already one with this name: the new one was stored with the date and time in its name.',
+        'File uploaded. There was already one with this name: the new one was stored with the date '
+        'and time in its name.',
     'Arquivo, guardado na pasta do usuário no servidor':
         "File, stored in the user's folder on the server",
     'Nome que já existe não substitui o anterior: o novo é guardado com a data e a hora no nome.':
-        'A name that already exists does not replace the previous file: the new one is stored with the date and time in its name.',
+        'A name that already exists does not replace the previous file: the new one is stored with '
+        'the date and time in its name.',
     'Arquivo, gravado em <code>{onde}</code>':
         'File, saved in <code>{onde}</code>',
     'Nome que já existe na pasta não é substituído: o envio é recusado.':
@@ -1844,13 +1874,16 @@ EN = {
     'Envio não permitido':
         'Upload not allowed',
     'Esta conta não tem a permissão de enviar arquivo pelo painel. Quem dá a permissão é um administrador.':
-        'This account does not have permission to upload files through the panel. An administrator grants the permission.',
+        'This account does not have permission to upload files through the panel. An administrator '
+        'grants the permission.',
     'Escolha o arquivo e envie de novo.':
         'Choose the file and send it again.',
     'Nenhum arquivo escolhido':
         'No file chosen',
-    'O nome do arquivo usa letras, números, _, - e ponto, não começa com ponto e tem até 64 caracteres. Troque o nome do arquivo ou preencha o campo "Gravar com o nome".':
-        'The file name uses letters, numbers, _, - and dot, does not start with a dot and has up to 64 characters. Rename the file or fill in the "Save as" field.',
+    'O nome do arquivo usa letras, números, _, - e ponto, não começa com ponto e tem até 64 '
+    'caracteres. Troque o nome do arquivo ou preencha o campo "Gravar com o nome".':
+        'The file name uses letters, numbers, _, - and dot, does not start with a dot and has up to '
+        '64 characters. Rename the file or fill in the "Save as" field.',
     'Arquivo grande demais':
         'File too large',
     'Arquivo grande demais: o painel recebe até {maximo} por arquivo.':
@@ -1873,16 +1906,27 @@ EN = {
         'File not saved',
     'Não foi possível gravar o arquivo.':
         'Could not save the file.',
-    'Cada arquivo que termina de chegar é guardado na pasta do usuário <strong>{usuario}</strong> no servidor, fora do alcance desta conta: ela não lista, não baixa, não renomeia e não apaga o que já enviou, nem por FTP nem por aqui.':
-        "Each file that finishes arriving is stored in the folder of user <strong>{usuario}</strong> on the server, out of this account's reach: it does not list, download, rename or delete what it has already sent, neither over FTP nor here.",
-    'Aqui você navega, baixa e cria pasta. O perfil desta conta é de envio: o que já foi enviado não é renomeado nem apagado por ela. Todo download e toda pasta criada ficam registrados.':
-        "Here you browse, download and create folders. This account's profile is upload: what has already been sent is not renamed or deleted by it. Every download and every folder created is recorded.",
-    'Aqui você navega, baixa, cria pasta, troca o nome e apaga. Trocar o nome e apagar pedem a sua senha do FTP, e apagar não tem lixeira. Todo download e toda alteração ficam registrados.':
-        'Here you browse, download, create folders, rename and delete. Renaming and deleting ask for your FTP password, and deleting has no recycle bin. Every download and every change is recorded.',
+    'Cada arquivo que termina de chegar é guardado na pasta do usuário <strong>{usuario}</strong> no '
+    'servidor, fora do alcance desta conta: ela não lista, não baixa, não renomeia e não apaga o que '
+    'já enviou, nem por FTP nem por aqui.':
+        'Each file that finishes arriving is stored in the folder of user <strong>{usuario}</strong> '
+        "on the server, out of this account's reach: it does not list, download, rename or delete "
+        'what it has already sent, neither over FTP nor here.',
+    'Aqui você navega, baixa e cria pasta. O perfil desta conta é de envio: o que já foi enviado não '
+    'é renomeado nem apagado por ela. Todo download e toda pasta criada ficam registrados.':
+        "Here you browse, download and create folders. This account's profile is upload: what has "
+        'already been sent is not renamed or deleted by it. Every download and every folder created '
+        'is recorded.',
+    'Aqui você navega, baixa, cria pasta, troca o nome e apaga. Trocar o nome e apagar pedem a sua '
+    'senha do FTP, e apagar não tem lixeira. Todo download e toda alteração ficam registrados.':
+        'Here you browse, download, create folders, rename and delete. Renaming and deleting ask for '
+        'your FTP password, and deleting has no recycle bin. Every download and every change is '
+        'recorded.',
     'Esta conta também envia arquivo por aqui: o envio fica registrado e nunca substitui um arquivo que já existe.':
         'This account also uploads files here: the upload is recorded and never replaces a file that already exists.',
     'Enviar arquivo, só por FTP: o envio por aqui depende de uma permissão que o administrador dá a cada conta.':
-        'Uploading files, only over FTP: uploading here depends on a permission the administrator gives to each account.',
+        'Uploading files, only over FTP: uploading here depends on a permission the administrator '
+        'gives to each account.',
     'Ela envia arquivo, por FTP ou por esta tela, e mais nada.':
         'It uploads files, over FTP or on this screen, and nothing else.',
     'Ela envia arquivo por FTP e mais nada.':
@@ -1891,8 +1935,13 @@ EN = {
         'on FTP and on their uploads through the panel; on FTP, each uploaded file takes at least 256 ÷ rate seconds',
     'Permitir que este usuário <strong>envie arquivo pelo painel</strong>, para a pasta dele':
         'Allow this user to <strong>upload files through the panel</strong>, to their folder',
-    'Sem marcar, o usuário só envia por FTP. Vale para os perfis Só envio, Envio e Completo; o perfil Leitura não envia. A permissão vale na hora. Arquivo enviado pelo painel tem até {maximo}, segue a taxa de envio acima e nunca substitui um arquivo que já existe.':
-        'Unchecked, the user only uploads over FTP. It applies to the Upload only, Upload and Full profiles; the Read only profile does not upload. The permission takes effect immediately. A file uploaded through the panel has up to {maximo}, follows the upload rate above and never replaces a file that already exists.',
+    'Sem marcar, o usuário só envia por FTP. Vale para os perfis Só envio, Envio e Completo; o perfil '
+    'Leitura não envia. A permissão vale na hora. Arquivo enviado pelo painel tem até {maximo}, segue '
+    'a taxa de envio acima e nunca substitui um arquivo que já existe.':
+        'Unchecked, the user only uploads over FTP. It applies to the Upload only, Upload and Full '
+        'profiles; the Read only profile does not upload. The permission takes effect immediately. A '
+        'file uploaded through the panel has up to {maximo}, follows the upload rate above and never '
+        'replaces a file that already exists.',
     'permitido':
         'allowed',
     'envio pelo painel':
@@ -1958,7 +2007,8 @@ EN = {
     'a resposta do serviço não foi entendida':
         'the service answer was not understood',
     'o painel não faz esse pedido a um destino: ele só grava e só envia, e não apaga nada lá':
-        'the panel does not make that request to a destination: it only writes and only sends, and deletes nothing there',
+        'the panel does not make that request to a destination: it only writes and only sends, and '
+        'deletes nothing there',
     'o serviço recusou a credencial ou a permissão':
         'the service refused the credential or the permission',
     'o bucket ou a conversa não existe para esta credencial':
@@ -1972,7 +2022,8 @@ EN = {
     'faltam os segredos do destino: grave-os de novo':
         'the destination secrets are missing: save them again',
     'o S3 espera os outros destinos da mesma pasta entregarem o que falta antes de apagar mais arquivos':
-        'S3 is waiting for the other destinations of the same folder to deliver what is left before deleting more files',
+        'S3 is waiting for the other destinations of the same folder to deliver what is left before '
+        'deleting more files',
     'outro teste está em andamento: tente de novo em instantes':
         'another test is running: try again in a moment',
     'o arquivo está vazio, e o bot não envia arquivo vazio':
@@ -1993,8 +2044,12 @@ EN = {
         '{n} file changed less than two minutes ago and may still be arriving: it goes in a later run',
     '{n} arquivos mudaram há menos de dois minutos e ainda podem estar chegando: vão em uma próxima passada':
         '{n} files changed less than two minutes ago and may still be arriving: they go in a later run',
-    'O arquivo que chega inteiro por FTP ou pelo painel sai em instantes, sem esperar o intervalo. O intervalo confere o que ficou para trás: o arquivo que trocou de nome e o que chegou por outro caminho.':
-        'A file that arrives whole by FTP or through the panel leaves in a moment, without waiting for the interval. The interval checks what was left behind: a file that changed its name and one that arrived another way.',
+    'O arquivo que chega inteiro por FTP ou pelo painel sai em instantes, sem esperar o intervalo. O '
+    'intervalo confere o que ficou para trás: o arquivo que trocou de nome e o que chegou por outro '
+    'caminho.':
+        'A file that arrives whole by FTP or through the panel leaves in a moment, without waiting '
+        'for the interval. The interval checks what was left behind: a file that changed its name and '
+        'one that arrived another way.',
     '{destino}: arquivo enviado.':
         '{destino}: file sent.',
     '{destino}: o envio continua em segundo plano. O resultado aparece na aba Log.':
@@ -2079,10 +2134,16 @@ EN = {
         'Largest file the bot sends',
     'Idioma das mensagens':
         'Message language',
-    'Envia os arquivos de uma pasta para um bucket de qualquer serviço que fale o protocolo do S3, na nuvem ou na rede interna. Pode só copiar, ou guardar lá e liberar o disco do servidor.':
-        'Sends the files of a folder to a bucket of any service that speaks the S3 protocol, in the cloud or on the internal network. It can just copy, or keep them there and free the server disk.',
-    'Envia cada arquivo que chega em uma pasta para uma pessoa, um grupo ou um canal, por um bot do Telegram. O bot só envia: o painel não lê mensagem nem aceita comando pela conversa.':
-        'Sends each file that arrives in a folder to a person, a group or a channel, through a Telegram bot. The bot only sends: the panel reads no message and accepts no command through the chat.',
+    'Envia os arquivos de uma pasta para um bucket de qualquer serviço que fale o protocolo do S3, na '
+    'nuvem ou na rede interna. Pode só copiar, ou guardar lá e liberar o disco do servidor.':
+        'Sends the files of a folder to a bucket of any service that speaks the S3 protocol, in the '
+        'cloud or on the internal network. It can just copy, or keep them there and free the server '
+        'disk.',
+    'Envia cada arquivo que chega em uma pasta para uma pessoa, um grupo ou um canal, por um bot do '
+    'Telegram. O bot só envia: o painel não lê mensagem nem aceita comando pela conversa.':
+        'Sends each file that arrives in a folder to a person, a group or a channel, through a '
+        'Telegram bot. The bot only sends: the panel reads no message and accepts no command through '
+        'the chat.',
     'Testar':
         'Test',
     'Enviar agora':
@@ -2135,34 +2196,65 @@ EN = {
         'run in progress',
     'Configurar':
         'Configure',
-    'A configuração está gravada, mas faltam os segredos deste destino (eles não entram na cópia de segurança). Abra <strong>Alterar</strong> e grave-os de novo; até lá, nada é enviado.':
-        'The settings are saved, but the secrets of this destination are missing (they are not part of the backup). Open <strong>Change</strong> and save them again; until then, nothing is sent.',
+    'A configuração está gravada, mas faltam os segredos deste destino (eles não entram na cópia de '
+    'segurança). Abra <strong>Alterar</strong> e grave-os de novo; até lá, nada é enviado.':
+        'The settings are saved, but the secrets of this destination are missing (they are not part '
+        'of the backup). Open <strong>Change</strong> and save them again; until then, nothing is '
+        'sent.',
     'Chave de acesso e chave secreta':
         'Access key and secret key',
     'Token do bot e conversa':
         'Bot token and chat',
     'dentro dos dados, com as pastas de dentro dela; em branco é a pasta dos dados inteira':
         'inside the data, with the folders inside it; blank is the whole data folder',
-    'Serve qualquer serviço que fale o protocolo do S3. A chave só precisa poder gravar no bucket (<code>s3:PutObject</code> e <code>s3:AbortMultipartUpload</code>): o painel não lê, não lista e não apaga nada no destino.':
-        'Any service that speaks the S3 protocol works. The key only needs to be able to write to the bucket (<code>s3:PutObject</code> and <code>s3:AbortMultipartUpload</code>): the panel does not read, list or delete anything at the destination.',
-    'Em <strong>Guardar no S3</strong>, o destino passa a ter a única cópia: o painel não tem lixeira e não baixa de volta. A primeira passada envia tudo o que já está na pasta; com Guardar no S3, tudo isso sai do servidor. Trocar de Copiar para Guardar vale para o que for enviado dali em diante.':
-        'With <strong>Keep in S3</strong>, the destination holds the only copy: the panel has no recycle bin and does not download it back. The first run sends everything already in the folder; with Keep in S3, all of that leaves the server. Switching from Copy to Keep applies to what is sent from then on.',
-    'O nome do objeto é o prefixo mais o caminho do arquivo dentro dos dados. Trocar o endereço, o bucket, o prefixo ou a pasta recomeça do zero: tudo o que está na pasta é enviado de novo.':
-        'The object name is the prefix plus the path of the file inside the data. Changing the address, the bucket, the prefix or the folder starts from scratch: everything in the folder is sent again.',
-    'O bot <strong>só envia</strong>: o painel usa o envio de arquivo e o envio de mensagem, e nada mais. Não lê a conversa, não registra endereço de retorno e não aceita comando.':
-        'The bot <strong>only sends</strong>: the panel uses file sending and message sending, and nothing else. It does not read the chat, does not register a return address and accepts no command.',
-    'A conversa é o número da pessoa ou do grupo (o de grupo começa com <code>-</code>) ou o <code>@nome</code> de um canal. O bot precisa estar no grupo ou no canal, e a pessoa precisa ter iniciado a conversa com ele.':
-        'The chat is the number of the person or of the group (a group one starts with <code>-</code>) or the <code>@name</code> of a channel. The bot must be in the group or in the channel, and the person must have started the chat with it.',
-    'Vai um arquivo por mensagem, com o caminho, o tamanho e a data. O maior arquivo que o bot envia tem {limite}: acima disso vai só um aviso com o nome e o tamanho. Só é enviado o que chegar depois de o destino ser ligado; desligar e ligar de novo, ou trocar a pasta, recomeça dali.':
-        'One file goes per message, with the path, the size and the date. The largest file the bot sends is {limite}: above that, only a notice with the name and the size goes. Only what arrives after the destination is turned on is sent; turning it off and on again, or changing the folder, starts from there.',
+    'Serve qualquer serviço que fale o protocolo do S3. A chave só precisa poder gravar no bucket '
+    '(<code>s3:PutObject</code> e <code>s3:AbortMultipartUpload</code>): o painel não lê, não lista e '
+    'não apaga nada no destino.':
+        'Any service that speaks the S3 protocol works. The key only needs to be able to write to the '
+        'bucket (<code>s3:PutObject</code> and <code>s3:AbortMultipartUpload</code>): the panel does '
+        'not read, list or delete anything at the destination.',
+    'Em <strong>Guardar no S3</strong>, o destino passa a ter a única cópia: o painel não tem lixeira '
+    'e não baixa de volta. A primeira passada envia tudo o que já está na pasta; com Guardar no S3, '
+    'tudo isso sai do servidor. Trocar de Copiar para Guardar vale para o que for enviado dali em '
+    'diante.':
+        'With <strong>Keep in S3</strong>, the destination holds the only copy: the panel has no '
+        'recycle bin and does not download it back. The first run sends everything already in the '
+        'folder; with Keep in S3, all of that leaves the server. Switching from Copy to Keep applies '
+        'to what is sent from then on.',
+    'O nome do objeto é o prefixo mais o caminho do arquivo dentro dos dados. Trocar o endereço, o '
+    'bucket, o prefixo ou a pasta recomeça do zero: tudo o que está na pasta é enviado de novo.':
+        'The object name is the prefix plus the path of the file inside the data. Changing the '
+        'address, the bucket, the prefix or the folder starts from scratch: everything in the folder '
+        'is sent again.',
+    'O bot <strong>só envia</strong>: o painel usa o envio de arquivo e o envio de mensagem, e nada '
+    'mais. Não lê a conversa, não registra endereço de retorno e não aceita comando.':
+        'The bot <strong>only sends</strong>: the panel uses file sending and message sending, and '
+        'nothing else. It does not read the chat, does not register a return address and accepts no '
+        'command.',
+    'A conversa é o número da pessoa ou do grupo (o de grupo começa com <code>-</code>) ou o '
+    '<code>@nome</code> de um canal. O bot precisa estar no grupo ou no canal, e a pessoa precisa ter '
+    'iniciado a conversa com ele.':
+        'The chat is the number of the person or of the group (a group one starts with '
+        '<code>-</code>) or the <code>@name</code> of a channel. The bot must be in the group or in '
+        'the channel, and the person must have started the chat with it.',
+    'Vai um arquivo por mensagem, com o caminho, o tamanho e a data. O maior arquivo que o bot envia '
+    'tem {limite}: acima disso vai só um aviso com o nome e o tamanho. Só é enviado o que chegar '
+    'depois de o destino ser ligado; desligar e ligar de novo, ou trocar a pasta, recomeça dali.':
+        'One file goes per message, with the path, the size and the date. The largest file the bot '
+        'sends is {limite}: above that, only a notice with the name and the size goes. Only what '
+        'arrives after the destination is turned on is sent; turning it off and on again, or changing '
+        'the folder, starts from there.',
     'Preencha os dois segredos do destino: nenhum deles está gravado ainda.':
         'Fill in both secrets of the destination: neither is saved yet.',
     'A última passada parou antes do fim: {motivo}. A seguinte recomeça do mesmo arquivo.':
         'The last run stopped before the end: {motivo}. The next one resumes from the same file.',
     'Como o painel envia':
         'How the panel sends',
-    'Os segredos ficam no servidor, na pasta <code>destinos</code> dos segredos da instalação, um por arquivo, e não entram na cópia de segurança: depois de restaurar uma cópia, grave-os de novo.':
-        'The secrets stay on the server, in the <code>destinos</code> folder of the installation secrets, one per file, and are not part of the backup: after restoring a backup, save them again.',
+    'Os segredos ficam no servidor, na pasta <code>destinos</code> dos segredos da instalação, um por '
+    'arquivo, e não entram na cópia de segurança: depois de restaurar uma cópia, grave-os de novo.':
+        'The secrets stay on the server, in the <code>destinos</code> folder of the installation '
+        'secrets, one per file, and are not part of the backup: after restoring a backup, save them '
+        'again.',
     'Gravar':
         'Save',
     'Endereço do serviço':
@@ -2191,8 +2283,12 @@ EN = {
         'Receiving chat',
     'Voltar para os destinos':
         'Back to the destinations',
-    'Remover <strong>{destino}</strong>? O painel apaga a configuração, o andamento e os segredos deste destino e para de enviar para ele. O que já foi enviado continua lá, e nenhum arquivo do servidor é apagado.':
-        'Remove <strong>{destino}</strong>? The panel deletes the settings, the progress and the secrets of this destination and stops sending to it. What was already sent stays there, and no file on the server is deleted.',
+    'Remover <strong>{destino}</strong>? O painel apaga a configuração, o andamento e os segredos '
+    'deste destino e para de enviar para ele. O que já foi enviado continua lá, e nenhum arquivo do '
+    'servidor é apagado.':
+        'Remove <strong>{destino}</strong>? The panel deletes the settings, the progress and the '
+        'secrets of this destination and stops sending to it. What was already sent stays there, and '
+        'no file on the server is deleted.',
     'Sim, remover o destino':
         'Yes, remove the destination',
     'À espera de outro destino':
@@ -2244,7 +2340,8 @@ EN = {
     'Destino novo com o acesso de <strong>{origem}</strong>: o segredo deixado em branco é copiado dele, '
     'aqui no servidor. Troque a pasta ou o lugar: dois destinos não levam a mesma pasta ao mesmo lugar.':
         'New destination with the access of <strong>{origem}</strong>: a secret left blank is copied from it, '
-        'here on the server. Change the folder or the place: two destinations do not take the same folder to the same place.',
+        'here on the server. Change the folder or the place: two destinations do not take the same '
+        'folder to the same place.',
     'Este destino já existe: {outro} leva a mesma pasta, ou uma que a contém, ao mesmo lugar. '
     'Troque a pasta ou o lugar.':
         'This destination already exists: {outro} takes the same folder, or one that contains it, to the same place. '
@@ -2309,10 +2406,19 @@ EN = {
         'button only',
     'Cópia do sistema':
         'System copy',
-    'O sistema inteiro em um arquivo só, cifrado, em um armazenamento S3: os usuários do FTP, os arquivos, os certificados e os dados do painel. É a mesma cópia que o <code>scripts/backup.sh</code> grava no servidor, e o <code>scripts/restaurar.sh</code> a abre com a chave privada da cópia. O painel só envia: as cópias se acumulam no bucket, e o prazo delas é da regra do bucket.':
-        'The whole system in a single encrypted file, in an S3 storage: the FTP users, the files, the certificates and the panel data. It is the same copy that <code>scripts/backup.sh</code> writes on the server, and <code>scripts/restaurar.sh</code> opens it with the private key of the copy. The panel only sends: the copies pile up in the bucket, and how long they stay is up to the bucket rule.',
+    'O sistema inteiro em um arquivo só, cifrado, em um armazenamento S3: os usuários do FTP, os '
+    'arquivos, os certificados e os dados do painel. É a mesma cópia que o '
+    '<code>scripts/backup.sh</code> grava no servidor, e o <code>scripts/restaurar.sh</code> a abre '
+    'com a chave privada da cópia. O painel só envia: as cópias se acumulam no bucket, e o prazo '
+    'delas é da regra do bucket.':
+        'The whole system in a single encrypted file, in an S3 storage: the FTP users, the files, the '
+        'certificates and the panel data. It is the same copy that <code>scripts/backup.sh</code> '
+        'writes on the server, and <code>scripts/restaurar.sh</code> opens it with the private key of '
+        'the copy. The panel only sends: the copies pile up in the bucket, and how long they stay is '
+        'up to the bucket rule.',
     'Falta a chave pública da cópia nesta instalação: rode <code>./deploy.sh</code>, que a cria, e volte aqui.':
-        'The public key of the copy is missing in this installation: run <code>./deploy.sh</code>, which creates it, and come back here.',
+        'The public key of the copy is missing in this installation: run <code>./deploy.sh</code>, '
+        'which creates it, and come back here.',
     'Grave primeiro um armazenamento S3, com os segredos: a cópia do sistema vai para um deles.':
         'Save an S3 storage first, with its secrets: the system copy goes to one of them.',
     'A cópia anterior foi interrompida pelo reinício do painel: faça outra.':
@@ -2339,8 +2445,13 @@ EN = {
         'Schedule',
     'Última cópia':
         'Last copy',
-    'A cópia leva as pastas <code>auth</code>, <code>dados</code>, <code>certs</code> e <code>painel</code>, cifradas com a chave pública da cópia. O arquivo <code>.env</code> e os segredos da instalação não entram: guarde-os à parte, junto com a chave privada da cópia.':
-        'The copy takes the folders <code>auth</code>, <code>dados</code>, <code>certs</code> and <code>painel</code>, encrypted with the public key of the copy. The <code>.env</code> file and the secrets of the installation are left out: keep them apart, together with the private key of the copy.',
+    'A cópia leva as pastas <code>auth</code>, <code>dados</code>, <code>certs</code> e '
+    '<code>painel</code>, cifradas com a chave pública da cópia. O arquivo <code>.env</code> e os '
+    'segredos da instalação não entram: guarde-os à parte, junto com a chave privada da cópia.':
+        'The copy takes the folders <code>auth</code>, <code>dados</code>, <code>certs</code> and '
+        '<code>painel</code>, encrypted with the public key of the copy. The <code>.env</code> file '
+        'and the secrets of the installation are left out: keep them apart, together with the private '
+        'key of the copy.',
     'Armazenamento S3 que recebe':
         'S3 storage that receives it',
     'Pasta no bucket':
@@ -2353,8 +2464,10 @@ EN = {
         'Time of the schedule',
     'hora do servidor':
         'server time',
-    'A cópia é feita em segundo plano, com a prioridade mais baixa. Marque a rotina para a hora de menos uso: o tempo dela cresce com o tamanho dos dados.':
-        'The copy runs in the background, at the lowest priority. Schedule it for the quietest hour: it takes longer as the data grows.',
+    'A cópia é feita em segundo plano, com a prioridade mais baixa. Marque a rotina para a hora de '
+    'menos uso: o tempo dela cresce com o tamanho dos dados.':
+        'The copy runs in the background, at the lowest priority. Schedule it for the quietest hour: '
+        'it takes longer as the data grows.',
     'para gravar a cópia do sistema':
         'to save the system copy',
     'Não foi possível gravar a cópia do sistema:':
@@ -2369,26 +2482,40 @@ EN = {
         'System copy not completed',
     'Cópia do sistema ficou sem destino':
         'System copy left without a destination',
-    'O remoto <strong>só recebe</strong>: o painel pede ao rclone que grave cada arquivo, e nada mais. Não lista, não baixa, não sincroniza e não apaga nada no remoto.':
-        'The remote <strong>only receives</strong>: the panel asks rclone to write each file, and nothing else. It does not list, download, sync or delete anything on the remote.',
-    'O token é obtido fora do painel, em um computador com navegador e com o rclone: o comando <code>rclone authorize {tipo}</code> abre a página da conta e imprime o token. O painel não abre essa página.':
-        'The token is obtained outside the panel, on a computer with a browser and rclone: the command <code>rclone authorize {tipo}</code> opens the account page and prints the token. The panel does not open that page.',
+    'O remoto <strong>só recebe</strong>: o painel pede ao rclone que grave cada arquivo, e nada '
+    'mais. Não lista, não baixa, não sincroniza e não apaga nada no remoto.':
+        'The remote <strong>only receives</strong>: the panel asks rclone to write each file, and '
+        'nothing else. It does not list, download, sync or delete anything on the remote.',
+    'O token é obtido fora do painel, em um computador com navegador e com o rclone: o comando '
+    '<code>rclone authorize {tipo}</code> abre a página da conta e imprime o token. O painel não abre '
+    'essa página.':
+        'The token is obtained outside the panel, on a computer with a browser and rclone: the '
+        'command <code>rclone authorize {tipo}</code> opens the account page and prints the token. '
+        'The panel does not open that page.',
     'Remoto do rclone':
         'rclone remote',
     'Novo remoto':
         'New remote',
-    'Depois de gravar, use <strong>Testar</strong> na lista dos destinos: o teste guarda a chave que o servidor apresentar e a ficha passa a mostrar a impressão digital dela, para conferir com a do servidor. Sem a chave guardada nada é enviado, e se ela mudar depois o envio para.':
-        'After saving, use <strong>Test</strong> in the list of destinations: the test stores the key the server presents and the card then shows its fingerprint, to compare with the one on the server. Without the stored key nothing is sent, and if it changes later the sending stops.',
+    'Depois de gravar, use <strong>Testar</strong> na lista dos destinos: o teste guarda a chave que '
+    'o servidor apresentar e a ficha passa a mostrar a impressão digital dela, para conferir com a do '
+    'servidor. Sem a chave guardada nada é enviado, e se ela mudar depois o envio para.':
+        'After saving, use <strong>Test</strong> in the list of destinations: the test stores the key '
+        'the server presents and the card then shows its fingerprint, to compare with the one on the '
+        'server. Without the stored key nothing is sent, and if it changes later the sending stops.',
     'O certificado do servidor é conferido. Informe o usuário com a senha, ou o token de acesso.':
         'The server certificate is checked. Enter the user with the password, or the access token.',
     'Informe o token da conta ou a credencial de uma conta de serviço.':
         'Enter the account token or the credential of a service account.',
-    'A identificação e o tipo do drive são os que o rclone mostra ao configurar o remoto no mesmo computador em que o token foi obtido.':
-        'The drive ID and type are the ones rclone shows when configuring the remote on the same computer where the token was obtained.',
+    'A identificação e o tipo do drive são os que o rclone mostra ao configurar o remoto no mesmo '
+    'computador em que o token foi obtido.':
+        'The drive ID and type are the ones rclone shows when configuring the remote on the same '
+        'computer where the token was obtained.',
     'o painel ainda não guardou a chave deste servidor: use Testar':
         'the panel has not stored the key of this server yet: use Test',
-    'a chave do servidor não é a que o painel guardou: confira o servidor e, se a troca for dele, grave o acesso de novo e teste':
-        'the server key is not the one the panel stored: check the server and, if the change is its own, save the access again and test',
+    'a chave do servidor não é a que o painel guardou: confira o servidor e, se a troca for dele, '
+    'grave o acesso de novo e teste':
+        'the server key is not the one the panel stored: check the server and, if the change is its '
+        'own, save the access again and test',
     'a chave privada não abriu: confira a chave e a frase dela':
         'the private key did not open: check the key and its passphrase',
     'o remoto está sem espaço ou acima da cota':
@@ -2400,7 +2527,8 @@ EN = {
     'Escolha o tipo do remoto.':
         'Choose the remote type.',
     'Pasta no remoto inválida: até 16 níveis separados por barra, com letras, números, espaço, _, - e ponto.':
-        'Invalid folder on the remote: up to 16 levels separated by slashes, with letters, numbers, spaces, _, - and dots.',
+        'Invalid folder on the remote: up to 16 levels separated by slashes, with letters, numbers, '
+        'spaces, _, - and dots.',
     'Cópia automática dos arquivos para fora do servidor: armazenamentos S3, remotos do rclone e bots do Telegram.':
         'Automatic copy of the files out of the server: S3 storages, rclone remotes and Telegram bots.',
     'Enviar este arquivo para o remoto do rclone':
@@ -2435,7 +2563,8 @@ EN = {
         'only when the key is encrypted',
     'Chave pública do servidor':
         'Server public key',
-    'uma por linha, como no arquivo de servidores conhecidos do SSH; em branco, o Testar guarda a que o servidor apresentar':
+    'uma por linha, como no arquivo de servidores conhecidos do SSH; em branco, o Testar guarda a que '
+    'o servidor apresentar':
         'one per line, as in the SSH known hosts file; when blank, Test stores the one the server presents',
     'só HTTPS, com o caminho que o servidor pede: <code>https://nome/caminho</code>':
         'HTTPS only, with the path the server requires: <code>https://name/path</code>',
@@ -2483,8 +2612,10 @@ EN = {
         'Account region',
     'a pasta em que o remoto entra':
         'the folder the remote opens in',
-    'Deixe os campos do acesso em branco para usar o do destino de origem; para usar outro, preencha o acesso inteiro.':
-        'Leave the access fields blank to use the one from the source destination; to use another, fill in the whole access.',
+    'Deixe os campos do acesso em branco para usar o do destino de origem; para usar outro, preencha '
+    'o acesso inteiro.':
+        'Leave the access fields blank to use the one from the source destination; to use another, '
+        'fill in the whole access.',
     'Outro':
         'Other',
     'qualquer servidor WebDAV':
@@ -2517,10 +2648,16 @@ EN = {
         'Remote type',
     'Pasta no remoto':
         'Folder on the remote',
-    'Envia os arquivos de uma pasta, pelo rclone, para o que o S3 não alcança: um servidor SFTP ou WebDAV, ou uma nuvem de arquivos. O remoto só recebe: o painel não lista, não baixa e não apaga nada nele.':
-        'Sends the files of a folder, through rclone, to what S3 does not reach: an SFTP or WebDAV server, or a file cloud. The remote only receives: the panel does not list, download or delete anything on it.',
-    'O acesso gravado não aparece aqui. Deixe os campos abaixo em branco para mantê-lo; para trocar qualquer parte dele, preencha o acesso inteiro de novo.':
-        'The saved access is not shown here. Leave the fields below blank to keep it; to change any part of it, fill in the whole access again.',
+    'Envia os arquivos de uma pasta, pelo rclone, para o que o S3 não alcança: um servidor SFTP ou '
+    'WebDAV, ou uma nuvem de arquivos. O remoto só recebe: o painel não lista, não baixa e não apaga '
+    'nada nele.':
+        'Sends the files of a folder, through rclone, to what S3 does not reach: an SFTP or WebDAV '
+        'server, or a file cloud. The remote only receives: the panel does not list, download or '
+        'delete anything on it.',
+    'O acesso gravado não aparece aqui. Deixe os campos abaixo em branco para mantê-lo; para trocar '
+    'qualquer parte dele, preencha o acesso inteiro de novo.':
+        'The saved access is not shown here. Leave the fields below blank to keep it; to change any '
+        'part of it, fill in the whole access again.',
     'Depois de gravado, o acesso não volta para a tela.':
         'Once saved, the access does not come back to the screen.',
     'Preencha o acesso do remoto: não há nenhum gravado para manter.':
@@ -2529,14 +2666,23 @@ EN = {
         'test pending',
     'Chave do servidor':
         'Server key',
-    'O arquivo vai para a pasta do remoto com o mesmo caminho que tem dentro dos dados, e grava por cima do que tiver o mesmo nome. O arquivo continua no servidor. Trocar a pasta no remoto, a pasta enviada ou o lugar do acesso recomeça do zero: tudo o que está na pasta é enviado de novo.':
-        'The file goes to the remote folder with the same path it has inside the data, and overwrites whatever has the same name. The file stays on the server. Changing the folder on the remote, the folder sent or the place of the access starts from scratch: everything in the folder is sent again.',
+    'O arquivo vai para a pasta do remoto com o mesmo caminho que tem dentro dos dados, e grava por '
+    'cima do que tiver o mesmo nome. O arquivo continua no servidor. Trocar a pasta no remoto, a '
+    'pasta enviada ou o lugar do acesso recomeça do zero: tudo o que está na pasta é enviado de novo.':
+        'The file goes to the remote folder with the same path it has inside the data, and overwrites '
+        'whatever has the same name. The file stays on the server. Changing the folder on the remote, '
+        'the folder sent or the place of the access starts from scratch: everything in the folder is '
+        'sent again.',
     '{campo}: em branco ou fora do formato.':
         '{campo}: blank or in the wrong format.',
     'O rclone não cifrou a senha: {motivo}.':
         'rclone did not encrypt the password: {motivo}.',
-    'O painel ainda não guardou a chave deste servidor. Use <strong>Testar</strong>: o teste guarda a chave que o servidor apresentar e a ficha passa a mostrar a impressão digital dela, para conferir com a do servidor. Até lá, nada é enviado.':
-        'The panel has not stored the key of this server yet. Use <strong>Test</strong>: the test stores the key the server presents and the card then shows its fingerprint, to compare with the one on the server. Until then, nothing is sent.',
+    'O painel ainda não guardou a chave deste servidor. Use <strong>Testar</strong>: o teste guarda a '
+    'chave que o servidor apresentar e a ficha passa a mostrar a impressão digital dela, para '
+    'conferir com a do servidor. Até lá, nada é enviado.':
+        'The panel has not stored the key of this server yet. Use <strong>Test</strong>: the test '
+        'stores the key the server presents and the card then shows its fingerprint, to compare with '
+        'the one on the server. Until then, nothing is sent.',
     'Não informar':
         'Do not set',
     'vale o padrão do rclone':
@@ -2547,16 +2693,140 @@ EN = {
         'Continue',
     'onde os arquivos são gravados; em branco é a pasta em que o remoto entra':
         'where the files are written; blank is the folder the remote opens in',
-    'Acesso incompleto: informe a senha, a chave privada, o token ou a credencial com que o remoto é aberto. O acesso inteiro cabe em 16 KiB.':
-        'Incomplete access: enter the password, the private key, the token or the credential that opens the remote. The whole access fits in 16 KiB.',
+    'Acesso incompleto: informe a senha, a chave privada, o token ou a credencial com que o remoto é '
+    'aberto. O acesso inteiro cabe em 16 KiB.':
+        'Incomplete access: enter the password, the private key, the token or the credential that '
+        'opens the remote. The whole access fits in 16 KiB.',
     'A frase vale só para chave privada cifrada: a chave cifrada pede a frase, e a chave sem cifra não leva frase.':
-        'The passphrase is only for an encrypted private key: an encrypted key requires the passphrase, and an unencrypted key takes none.',
+        'The passphrase is only for an encrypted private key: an encrypted key requires the '
+        'passphrase, and an unencrypted key takes none.',
     'Não trocar':
         'Do not change',
     'com os outros campos em branco, mantém o acesso gravado':
         'with the other fields blank, keeps the saved access',
-    'O painel só sai do servidor para os destinos gravados aqui, por HTTPS com o certificado conferido ou, no remoto SFTP do rclone, por SSH com a chave do servidor conferida. Sai arquivo comum: link simbólico e nome começado por ponto ficam de fora. O bot do Telegram envia em instantes o arquivo que chega inteiro por FTP ou pelo painel; nos outros casos, e sempre no S3 e no rclone, o arquivo só entra na passada depois de dois minutos sem mudar, para o que ainda está chegando não sair pela metade. A ordem é a da chegada ao servidor; uma falha do destino encerra a passada e a seguinte recomeça do mesmo arquivo. Pasta que troca de nome não reenvia os arquivos de dentro.':
-        'The panel only leaves the server for the destinations saved here, over HTTPS with the certificate checked or, for the rclone SFTP remote, over SSH with the server key checked. Regular files go: symbolic links and names starting with a dot stay out. The Telegram bot sends in a moment the file that arrives whole by FTP or through the panel; in the other cases, and always in S3 and rclone, a file only enters the run after two minutes without changing, so that what is still arriving does not leave half done. The order is the order of arrival at the server; a destination failure ends the run and the next one resumes from the same file. A folder that changes its name does not resend the files inside it.',
+    'O painel só sai do servidor para os destinos gravados aqui, por HTTPS com o certificado '
+    'conferido ou, no remoto SFTP do rclone, por SSH com a chave do servidor conferida. Sai arquivo '
+    'comum: link simbólico e nome começado por ponto ficam de fora. O bot do Telegram envia em '
+    'instantes o arquivo que chega inteiro por FTP ou pelo painel; nos outros casos, e sempre no S3 e '
+    'no rclone, o arquivo só entra na passada depois de dois minutos sem mudar, para o que ainda está '
+    'chegando não sair pela metade. A ordem é a da chegada ao servidor; uma falha do destino encerra '
+    'a passada e a seguinte recomeça do mesmo arquivo. Pasta que troca de nome não reenvia os '
+    'arquivos de dentro.':
+        'The panel only leaves the server for the destinations saved here, over HTTPS with the '
+        'certificate checked or, for the rclone SFTP remote, over SSH with the server key checked. '
+        'Regular files go: symbolic links and names starting with a dot stay out. The Telegram bot '
+        'sends in a moment the file that arrives whole by FTP or through the panel; in the other '
+        'cases, and always in S3 and rclone, a file only enters the run after two minutes without '
+        'changing, so that what is still arriving does not leave half done. The order is the order of '
+        'arrival at the server; a destination failure ends the run and the next one resumes from the '
+        'same file. A folder that changes its name does not resend the files inside it.',
+    'Senha aceita, à espera do código do segundo fator':
+        'Password accepted, waiting for the second factor code',
+    'Código do segundo fator recusado':
+        'Second factor code refused',
+    'Entrada recusada: segundo fator ligado sem o segredo no servidor':
+        'Sign-in refused: second factor on without the secret on the server',
+    'Segundo fator ligado':
+        'Second factor turned on',
+    'Segundo fator desligado':
+        'Second factor turned off',
+    'Segundo fator desligado pelo terminal':
+        'Second factor turned off from the terminal',
+    'Segundo fator':
+        'Second factor',
+    'Código QR do segundo fator':
+        'Second factor QR code',
+    'A sua conta volta a entrar só com usuário e senha.':
+        'Your account goes back to signing in with user and password only.',
+    'A conta <strong>{nome}</strong> volta a entrar só com usuário e senha. É o caminho de quem '
+    'perdeu o aparelho: depois de entrar, ele liga de novo, com uma chave nova.':
+        'The account <strong>{nome}</strong> goes back to signing in with user and password only. '
+        'This is the way out for someone who lost the device: after signing in, they turn it on '
+        'again, with a new key.',
+    'A chave mostrada venceu. Leia a nova no aplicativo e tente de novo.':
+        'The key shown has expired. Scan the new one in the app and try again.',
+    'O código não confere com a chave desta tela. Confira a hora do celular, espere o próximo código '
+    'e tente de novo.':
+        'The code does not match the key on this screen. Check the time on the phone, wait for the '
+        'next code and try again.',
+    'Ligar o segundo fator':
+        'Turn on the second factor',
+    'Depois de ligado, o painel pede, além da sua senha, o código de seis dígitos de um aplicativo '
+    'autenticador. Vale só para a entrada neste painel: o FTP não muda.':
+        'Once it is on, the panel asks, besides your password, for the six-digit code of an '
+        'authenticator app. It applies only to signing in to this panel: FTP does not change.',
+    'Abra o aplicativo autenticador no celular e leia o código abaixo.':
+        'Open the authenticator app on the phone and scan the code below.',
+    'Sem câmera: escolha digitar a chave no aplicativo, do tipo baseado em tempo, e copie esta.':
+        'No camera: choose to type the key in the app, of the time-based type, and copy this one.',
+    'Digite o código que o aplicativo mostrar e confirme com a sua senha.':
+        'Type the code the app shows and confirm with your password.',
+    'Esta chave <strong>não será mostrada de novo</strong>. Quem a tiver gera os seus códigos: não a '
+    'guarde em foto nem em mensagem.':
+        'This key <strong>will not be shown again</strong>. Whoever has it generates your codes: do '
+        'not keep it in a photo or in a message.',
+    'Código do aplicativo':
+        'Code from the app',
+    'Desligar o segundo fator':
+        'Turn off the second factor',
+    'A chave guardada é apagada: os códigos do aplicativo deixam de valer.':
+        'The stored key is deleted: the codes from the app stop working.',
+    'Sim, desligar o segundo fator':
+        'Yes, turn off the second factor',
+    'O segundo fator de <strong>{nome}</strong> está desligado. Só o próprio administrador liga o '
+    'dele, porque a chave fica no aparelho de quem entra.':
+        'The second factor of <strong>{nome}</strong> is off. Only the administrator turns on their '
+        'own, because the key stays on the device of whoever signs in.',
+    'Não foi possível gravar o segundo fator:':
+        'Could not save the second factor:',
+    '<strong>Ligado sem o segredo no servidor: {nomes}.</strong> Essas contas não entram até o '
+    'segundo fator ser desligado, em <a href="/usuarios">Usuários</a> ou pelo terminal; depois, cada '
+    'uma liga de novo.':
+        '<strong>On without the secret on the server: {nomes}.</strong> These accounts cannot sign in '
+        'until the second factor is turned off, in <a href="/usuarios">Users</a> or from the '
+        'terminal; after that, each one turns it on again.',
+    'Todos os administradores entram com a senha e o código de um aplicativo autenticador. Vale só '
+    'para este painel: o FTP não muda.':
+        'All administrators sign in with the password and the code of an authenticator app. It '
+        'applies only to this panel: FTP does not change.',
+    'Segundo fator dos administradores':
+        'Second factor of the administrators',
+    'Entram só com a senha: {nomes}. Cada administrador liga o dele em <a '
+    'href="/usuarios">Usuários</a>, com um aplicativo autenticador.':
+        'Signing in with the password only: {nomes}. Each administrator turns on their own in <a '
+        'href="/usuarios">Users</a>, with an authenticator app.',
+    '<strong>Este painel é alcançado de fora da rede privada:</strong> ligue o de todos.':
+        '<strong>This panel is reached from outside the private network:</strong> turn it on for all of them.',
+    'Segundo fator ligado. A próxima entrada desta conta pede o código do aplicativo; as outras '
+    'sessões dela foram encerradas.':
+        'Second factor turned on. The next sign-in of this account asks for the code from the app; '
+        'its other sessions were closed.',
+    'Segundo fator desligado. A conta volta a entrar só com usuário e senha.':
+        'Second factor turned off. The account goes back to signing in with user and password only.',
+    'segundo fator ligado':
+        'second factor on',
+    'sem segundo fator':
+        'no second factor',
+    'Código de verificação':
+        'Verification code',
+    'O segundo fator desta conta está ligado, mas o segredo dele não está no servidor. Outro '
+    'administrador ou quem tem acesso ao servidor precisa desligá-lo.':
+        'The second factor of this account is on, but its secret is not on the server. Another '
+        'administrator or someone with access to the server has to turn it off.',
+    'O código não confere. Espere o aplicativo mostrar o próximo e tente de novo.':
+        'The code does not match. Wait for the app to show the next one and try again.',
+    'A senha conferiu. Digite o código de seis dígitos que o aplicativo autenticador mostra para esta conta.':
+        'The password matched. Type the six-digit code the authenticator app shows for this account.',
+    'Código':
+        'Code',
+    'Confirmar':
+        'Confirm',
+    'Sem o aparelho: outro administrador desliga o segundo fator da sua conta, na aba Usuários, ou '
+    'quem tem acesso ao servidor desliga pelo terminal.':
+        'Without the device: another administrator turns off the second factor of your account, in '
+        'the Users tab, or someone with access to the server turns it off from the terminal.',
+    'Voltar para usuário e senha':
+        'Back to user and password',
 }
 
 # Mensagem de erro do allsafe-ftp-user (ftp/usuario.sh), que fala português sem acento: a expressão que a

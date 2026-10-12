@@ -6,8 +6,8 @@ import secrets
 import threading
 import time
 
-from config import (CFG, FALHAS_MAX, JANELA_FALHAS, SESSAO_ABSOLUTA, SESSOES_MAX, SESSOES_POR_USUARIO,
-                    VALIDADE_FORMULARIO)
+from config import (CFG, ETAPAS_MAX, FALHAS_MAX, JANELA_FALHAS, SESSAO_ABSOLUTA, SESSOES_MAX, SESSOES_POR_USUARIO,
+                    VALIDADE_ETAPA, VALIDADE_FORMULARIO)
 
 CHAVE_PROCESSO = secrets.token_bytes(32)  # assina o formulário de entrada; some ao reiniciar
 TRAVA = threading.Lock()
@@ -15,6 +15,9 @@ TRAVA = threading.Lock()
 # sessão é de um administrador ('admin' com o nome, 'usuario' None) ou de um usuário do FTP ('usuario' com o nome,
 # 'admin' None, mais a marca, a pasta e o perfil do cadastro dele na hora da entrada). 'idioma' é o das telas.
 SESSOES = {}
+# sha256 do token → {'criada', 'ip', 'admin', 'idioma'}: administrador com segundo fator que já acertou a senha e
+# ainda não digitou o código. Não é sessão: não abre tela nenhuma além da que pede o código.
+ETAPAS = {}
 FALHAS = {}    # ip → [instantes das falhas]
 
 
@@ -74,10 +77,44 @@ def encerrar_sessao(token):
 
 
 def encerrar_sessoes_de(admin, menos=None):
-    """Encerra as sessões de um administrador; `menos` é a sessão que continua (a de quem fez a alteração)."""
+    """Encerra as sessões de um administrador; `menos` é a sessão que continua (a de quem fez a alteração). As
+    entradas dele que esperavam o código do segundo fator caem junto."""
     with TRAVA:
         for chave in [c for c, s in SESSOES.items() if s['admin'] and s['admin'] == admin and s is not menos]:
             del SESSOES[chave]
+        for chave in [c for c, etapa in ETAPAS.items() if etapa['admin'] == admin]:
+            del ETAPAS[chave]
+
+
+def criar_etapa(ip, admin, idioma):
+    """A senha do administrador conferiu e falta o código do segundo fator: devolve o token dessa espera."""
+    token = secrets.token_urlsafe(32)
+    agora = time.time()
+    with TRAVA:
+        for chave in [c for c, etapa in ETAPAS.items() if agora - etapa['criada'] > VALIDADE_ETAPA]:
+            del ETAPAS[chave]
+        while len(ETAPAS) >= ETAPAS_MAX:
+            del ETAPAS[min(ETAPAS, key=lambda c: ETAPAS[c]['criada'])]
+        ETAPAS[resumo_token(token)] = {'criada': agora, 'ip': ip, 'admin': admin, 'idioma': idioma}
+    return token
+
+
+def buscar_etapa(token, ip):
+    """A espera do token, se ainda vale para este endereço."""
+    with TRAVA:
+        chave = resumo_token(token)
+        etapa = ETAPAS.get(chave)
+        if etapa is None:
+            return None
+        if time.time() - etapa['criada'] > VALIDADE_ETAPA or etapa['ip'] != ip:
+            del ETAPAS[chave]
+            return None
+        return etapa
+
+
+def encerrar_etapa(token):
+    with TRAVA:
+        ETAPAS.pop(resumo_token(token), None)
 
 
 def sessoes_por_admin():

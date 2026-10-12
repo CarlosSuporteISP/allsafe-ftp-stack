@@ -33,7 +33,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Idioma das telas](#idioma) · [Usuários pelo painel](#usuarios) · [Perfis](#perfis) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Destinos: S3, rclone e bot do Telegram](#destinos) · [Servidor: containers e recursos](#servidor) · [Administradores do painel](#administradores) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
+[Abrir o painel](#abrir) · [O que há em cada aba](#abas) · [Idioma das telas](#idioma) · [Usuários pelo painel](#usuarios) · [Perfis](#perfis) · [Arquivos e download](#arquivos) · [Usuário do FTP no painel](#usuario-ftp) · [Destinos: S3, rclone e bot do Telegram](#destinos) · [Servidor: containers e recursos](#servidor) · [Administradores do painel](#administradores) · [Segundo fator na entrada](#segundo-fator) · [Recuperar o acesso](#senha) · [Certificado do painel](#certificado) · [Abrir para a rede interna](#rede-interna) · [Marca do painel](#marca) · [Como o painel decide](#como-decide) · [Auditoria](#auditoria) · [O que protege o painel](#protecoes)
 
 </details>
 
@@ -57,7 +57,7 @@ Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede priv
 cat .secrets/painel-admin-inicial-senha.txt
 ```
 
-**Resultado esperado:** a tela **Visão geral**, com o FTP `No ar` e, no menu, o nome do administrador que entrou.
+**Resultado esperado:** a tela **Visão geral**, com o FTP `No ar` e, no menu, o nome do administrador que entrou. Com o [segundo fator](#segundo-fator) ligado na conta, antes dela vem a tela que pede o código do aplicativo autenticador.
 
 Impressão digital do certificado do painel, para comparar com a que o navegador mostra:
 
@@ -865,6 +865,75 @@ Regras:
 
 ---
 
+<a name="segundo-fator"></a>
+
+## 📱 Segundo fator na entrada
+
+Com o segundo fator ligado, o administrador entra com a senha **e** com o código de seis dígitos que um aplicativo autenticador mostra no celular dele. Quem descobre a senha não entra sem o aparelho. Serve qualquer aplicativo de código baseado em tempo (TOTP), como o Google Authenticator e o Microsoft Authenticator.
+
+- **Só no painel web.** O FTP não muda: os equipamentos continuam entrando com usuário e senha.
+- **Só para administradores.** O usuário do FTP que entra no painel continua só com usuário e senha.
+- **Cada administrador liga o dele**, porque a chave fica no aparelho de quem entra. Vem desligado para todos.
+
+| Quero | Onde | O que acontece |
+|---|---|---|
+| Ligar o meu | Usuários ➜ **Segundo fator**, na minha linha | O painel mostra o código QR e a chave. Leia com o aplicativo e confirme com o código que ele mostrar e a sua senha |
+| Entrar com ele ligado | Tela de entrada | Depois de usuário e senha, a tela **Código de verificação** pede o código do aplicativo |
+| Desligar o meu ou o de outro | Usuários ➜ **Segundo fator**, na linha da conta | Pede a sua senha. A chave é apagada e a conta volta a entrar só com usuário e senha |
+| Ver quem está sem ele | Usuários, na linha de cada administrador, ou aba Segurança, item **Segundo fator dos administradores** | `segundo fator ligado` ou `sem segundo fator` |
+
+**Ligar, passo a passo:**
+
+1. Entre no painel e abra **Usuários**. Na sua linha, clique em **Segundo fator**.
+2. No aplicativo autenticador, adicione uma conta e leia o código QR da tela. Sem câmera, escolha digitar a chave, do tipo baseado em tempo, e copie a que aparece abaixo do código.
+3. Digite em **Código do aplicativo** os seis dígitos que o aplicativo mostrar e, em **Sua senha atual**, a sua senha.
+4. Clique em **Ligar o segundo fator**.
+
+**Resultado esperado:** a lista volta com o aviso `Segundo fator ligado. A próxima entrada desta conta pede o código do aplicativo; as outras sessões dela foram encerradas.` e a sua linha passa a mostrar `segundo fator ligado`.
+
+> ⚠️ A chave aparece só nessa tela, até ser confirmada. Quem a tiver gera os seus códigos: não a guarde em foto nem em mensagem. Sem a confirmação, nada é gravado e a entrada continua como estava.
+
+**Entrar:** digite usuário e senha como sempre. A tela seguinte pede o código; digite o que o aplicativo mostra naquele momento e clique em **Confirmar**. O painel só abre depois do código certo.
+
+**Perdi o aparelho:** peça a outro administrador para desligar o segundo fator da sua conta, em Usuários. Sem outro administrador, quem tem acesso ao servidor desliga pelo terminal:
+
+```bash
+docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME
+```
+
+```text
+NOME: segundo fator desligado
+```
+
+Depois, entre com usuário e senha e ligue de novo, com uma chave nova. O mesmo comando, sem `desligar NOME`, mostra a situação de cada administrador.
+
+Regras:
+
+- **Ligar e desligar pedem a senha atual** de quem está usando o painel. Ligar pede também o primeiro código, que prova que o aplicativo leu a chave.
+- **Só o próprio administrador liga; qualquer administrador desliga.** O botão Segundo fator aparece na sua linha e na de quem está com ele ligado.
+- **Cada código vale uma vez** e por cerca de 30 segundos. O painel aceita também o código anterior e o seguinte, para relógio um pouco fora.
+- **Código errado conta como erro de entrada:** cinco erros seguidos mandam de volta para usuário e senha, e os erros somam para o bloqueio do endereço, como os de senha. Dez códigos recusados para a mesma conta em 15 minutos pausam a conferência dela, de qualquer endereço.
+- **A senha certa não basta para zerar a contagem** de erros do endereço: isso só acontece depois do código aceito.
+- **Trocar o nome** do administrador leva o segundo fator junto. **Remover** o administrador apaga a chave dele.
+- **O relógio do servidor e o do celular precisam estar certos.** Com mais de um minuto de diferença, o código é recusado.
+
+<details>
+<summary>Detalhe técnico — como o segundo fator funciona</summary>
+
+- **Padrão:** TOTP (RFC 6238) com SHA-1, seis dígitos e passo de 30 segundos, o que os aplicativos autenticadores leem. A chave tem 160 bits, sorteada pelo painel. O código QR é desenhado pelo próprio painel, em SVG, sem biblioteca de fora e sem JavaScript ([`qr.py`](../../painel/qr.py)).
+- **Onde fica:** a lista de quem está com o segundo fator ligado fica em `DATA_DIR/painel/segundo-fator`, junto dos dados do painel. A chave de cada administrador fica em `.secrets/segundo-fator/<nome>.txt` (`0600`), fora do Git e da imagem: veja [Segredos](segredos.md#o-que-fica).
+- **Cópia de segurança:** a lista entra na cópia do `scripts/backup.sh`; as chaves, não. Restaurada a cópia em um servidor sem as chaves, a conta com o segundo fator ligado **não entra** (`503`, evento `entrada_fator_sem_segredo`) até alguém desligar o dela: a falta da chave fecha a entrada, não abre. Veja [Backup e restauração](backup.md#segredos).
+- **Entrada em duas etapas:** com a senha certa, o painel não abre sessão. Ele guarda a espera do código em memória, por 5 minutos, presa ao endereço de origem, e entrega o cookie `__Host-etapa` (`Secure`, `HttpOnly`, `SameSite=Strict`), que só serve para a tela do código. A sessão nasce depois do código aceito.
+- **Rotas:** `GET` e `POST /entrar/codigo` para o código da entrada; `GET /administradores/fator?admin=<nome>` para a tela de ligar ou de desligar, `POST /administradores/fator/ligar` e `POST /administradores/fator/desligar`, com o token CSRF da sessão. O usuário do FTP recebe `404` nas três.
+- **Tela de ligar:** a chave mostrada espera o primeiro código por 10 minutos, guardada só na memória da sessão; a tela aberta de novo mostra a mesma. Passado o prazo, o painel sorteia outra.
+- **Respostas:** código recusado na entrada, `401`; conferência pausada ou endereço com muitas tentativas, `429`; código que não confere na tela de ligar, `400`; segundo fator desligado de outro administrador, aberto para ligar, `409`.
+- **Reinício do painel:** as esperas de código, a contagem de códigos recusados e a marca do último código usado ficam em memória e recomeçam. Quem estava na tela do código digita usuário e senha de novo.
+- **Auditoria:** `entrada_senha_ok`, `entrada_codigo_recusado`, `entrada_fator_sem_segredo`, `admin_fator_ligado`, `admin_fator_desligado` e `admin_fator_desligado_no_host`: veja [Auditoria](#auditoria). Nem a chave nem o código digitado são gravados.
+
+</details>
+
+---
+
 <a name="senha"></a>
 
 ## 🔑 Recuperar o acesso
@@ -877,6 +946,7 @@ Perdeu a senha e não há outro administrador para trocá-la pelo painel? Quem t
 | Escolher a senha, em vez de gerar | `./scripts/painel-senha.sh` (pergunta duas vezes) |
 | Senha nova para outro administrador | `./scripts/painel-senha.sh --usuario NOME --gerar` |
 | Criar um administrador pelo host | o mesmo comando, com um `NOME` que ainda não existe |
+| Desligar o segundo fator de quem perdeu o aparelho | `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME` |
 
 **Resultado esperado:**
 
@@ -885,6 +955,8 @@ Administrador admin com a senha trocada; painel reiniciado e sessões abertas en
 ```
 
 Depois disso, a senha antiga é recusada e quem estava dentro do painel volta para a tela de entrada. Quando o administrador é o de `PAINEL_ADMIN_USER`, o arquivo `.secrets/painel-admin-inicial-senha.txt` (a senha inicial em texto) é apagado. Detalhe em [Scripts](scripts.md#painel-senha) e [Segredos](segredos.md#senha-do-painel).
+
+A senha nova não desliga o segundo fator: a conta que estava com ele continua pedindo o código. Sem o aparelho, desligue com o comando da última linha da tabela, que não reinicia nada: veja [Segundo fator na entrada](#segundo-fator).
 
 > ⚠️ O script reinicia o painel, e o nginx junto: o painel fica alguns segundos fora do ar e todos os administradores entram de novo.
 
@@ -996,7 +1068,7 @@ A linha `Desenvolvido pela allsafe.inf.br` continua no rodapé de todas as telas
 
 ## 🔄 Como o painel decide
 
-Cada pedido passa por três conferências antes de mudar alguma coisa: a rede de origem (nginx), o usuário e a senha, e a origem e o token do formulário (painel). O download de um arquivo passa pelas duas primeiras e pela conferência do caminho pedido. A senha do administrador é conferida pelo painel; a do usuário do FTP, pelo servidor FTP. O primeiro fluxograma vai da abertura da página até a sessão; o segundo mostra o que acontece com cada pedido da sessão.
+Cada pedido passa por três conferências antes de mudar alguma coisa: a rede de origem (nginx), o usuário e a senha, com o código do aplicativo quando o administrador tem o segundo fator ligado, e a origem e o token do formulário (painel). O download de um arquivo passa pelas duas primeiras e pela conferência do caminho pedido. A senha do administrador é conferida pelo painel; a do usuário do FTP, pelo servidor FTP. O primeiro fluxograma vai da abertura da página até a sessão; o segundo mostra o que acontece com cada pedido da sessão.
 
 <details>
 <summary>Fluxogramas do painel, com a sequência escrita — clique para expandir</summary>
@@ -1017,6 +1089,9 @@ flowchart LR
         senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
         hash@{ shape: doc, label: "administradores<br>nome e hash da senha" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna" }
+        fator@{ shape: diam, label: "segundo fator<br>ligado na conta?" }
+        codigo@{ shape: diam, label: "código do aplicativo<br>confere?" }
+        chave@{ shape: doc, label: "segundo-fator<br>chave de cada administrador" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 4 h<br>cookie e token CSRF" }
@@ -1032,13 +1107,18 @@ flowchart LR
     rede -- "3a · sim: repassa pelo soquete Unix" --> painel
     rede -- "3b · não: 403 ou 429" --> recusa
     painel -- "4 · pede usuário e senha e confere" --> senha
-    senha -- "5a · sim: abre a sessão do administrador ou do usuário do FTP" --> sessao
+    senha -- "5a · sim: vê se a conta tem segundo fator" --> fator
     senha -- "5b · não: 5 erros bloqueiam o endereço" --> recusa
-    sessao -- "6 · cada pedido passa pelas conferências" --> pedidos
-    pedidos -- "7a · aceito" --> atendido
-    pedidos -- "7b · recusado" --> recusa
+    fator -- "6a · não, ou usuário do FTP: abre a sessão" --> sessao
+    fator -- "6b · sim: pede o código de seis dígitos" --> codigo
+    codigo -- "7a · sim: abre a sessão do administrador" --> sessao
+    codigo -- "7b · não: 5 erros encerram a espera" --> recusa
+    sessao -- "8 · cada pedido passa pelas conferências" --> pedidos
+    pedidos -- "9a · aceito" --> atendido
+    pedidos -- "9b · recusado" --> recusa
     painel -. "administrador: compara com o hash" .-> hash
     painel -. "outro nome: o servidor FTP confere a senha" .-> ftp
+    painel -. "segundo fator: calcula o código com a chave" .-> chave
 ```
 
 <sub>Nível 2 · Fluxograma · [fonte](diagramas/)</sub>
@@ -1050,11 +1130,15 @@ flowchart LR
 | 3a | rede permitida e dentro do limite? ➜ Painel web | Sim: o nginx repassa o pedido pelo soquete Unix, com o endereço do cliente |
 | 3b | rede permitida e dentro do limite? ➜ pedido recusado | Não: `403` para rede de fora, `429` para pedidos demais; o painel nem recebe o pedido |
 | 4 | Painel web ➜ usuário e senha conferem? | O painel confere de novo a rede e o nome de host, mostra a tela de entrada, que pede usuário e senha, e confere o que foi digitado |
-| 5a | usuário e senha conferem? ➜ sessão de 4 h | Sim: abre a sessão, com cookie e token CSRF. A do administrador alcança todas as abas; a do usuário do FTP, só a tela Meus arquivos |
+| 5a | usuário e senha conferem? ➜ segundo fator ligado na conta? | Sim: antes de abrir a sessão, o painel vê se a conta é de um administrador com o [segundo fator](#segundo-fator) ligado |
 | 5b | usuário e senha conferem? ➜ pedido recusado | Não: `401`, sem dizer qual dos dois errou; cinco erros em 15 minutos bloqueiam o endereço (`429`) |
-| 6 | sessão de 4 h ➜ pedidos da sessão | Cada pedido feito com a sessão aberta passa pelas conferências do fluxograma dos pedidos, logo abaixo |
-| 7a | pedidos da sessão ➜ pedido atendido | Aceito: o usuário fica pronto no FTP, o arquivo é baixado ou a alteração é feita |
-| 7b | pedidos da sessão ➜ pedido recusado | Recusado: nada muda, e a recusa fica na auditoria |
+| 6a | segundo fator ligado na conta? ➜ sessão de 4 h | Não, ou a conta é de usuário do FTP: abre a sessão, com cookie e token CSRF. A do administrador alcança todas as abas; a do usuário do FTP, só a tela Meus arquivos |
+| 6b | segundo fator ligado na conta? ➜ código do aplicativo confere? | Sim: nenhuma sessão é aberta. O painel guarda uma espera de 5 minutos, presa ao endereço, e pede o código de seis dígitos do aplicativo autenticador |
+| 7a | código do aplicativo confere? ➜ sessão de 4 h | Sim: abre a sessão do administrador. O mesmo código não vale uma segunda vez |
+| 7b | código do aplicativo confere? ➜ pedido recusado | Não: `401`, e o erro conta para o bloqueio do endereço; cinco erros encerram a espera e a entrada recomeça pela senha |
+| 8 | sessão de 4 h ➜ pedidos da sessão | Cada pedido feito com a sessão aberta passa pelas conferências do fluxograma dos pedidos, logo abaixo |
+| 9a | pedidos da sessão ➜ pedido atendido | Aceito: o usuário fica pronto no FTP, o arquivo é baixado ou a alteração é feita |
+| 9b | pedidos da sessão ➜ pedido recusado | Recusado: nada muda, e a recusa fica na auditoria |
 
 **Apoio**
 
@@ -1062,6 +1146,7 @@ flowchart LR
 |---|---|---|
 | Painel web | administradores (`DATA_DIR/painel/administradores`) | compara a senha digitada com o hash `scrypt` do administrador, a cada entrada; nome que não existe passa pela mesma conta |
 | Painel web | Pure-FTPd (`allsafe-ftp`, rede interna da stack) | não é administrador com essa senha e a entrada dos usuários do FTP está ligada: entra no servidor FTP com o nome e a senha e sai em seguida, em TLS com o certificado conferido; quem diz se a senha vale é o servidor |
+| Painel web | segundo-fator (`.secrets/segundo-fator/`) | conta com o segundo fator ligado: lê a chave do administrador e calcula o código do instante, com um passo de 30 segundos de folga para cada lado |
 
 **Pedidos da sessão**
 
@@ -1145,6 +1230,7 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 |---|---|
 | `painel_iniciado` | O painel subiu |
 | `entrada_ok` · `entrada_falha` · `entrada_bloqueada` | Entrada aceita, com o administrador (`admin=`) ou o usuário do FTP (`usuario=`) · usuário ou senha errados, sem o nome digitado, e com `conferencia=ftp_indisponivel` quando o servidor FTP não pôde conferir a senha · endereço bloqueado por excesso de erros |
+| `entrada_senha_ok` · `entrada_codigo_recusado` · `entrada_fator_sem_segredo` | Administrador com o [segundo fator](#segundo-fator) ligado, sempre com `admin=`: senha aceita, à espera do código · código do aplicativo recusado · conta ligada sem a chave no servidor, que não entra |
 | `saida` | Alguém clicou em **Sair**, administrador ou usuário do FTP |
 | `sessao_encerrada` | A sessão de um usuário do FTP acabou antes da hora, com o usuário e o motivo: `cadastro_alterado` (senha ou pasta trocada, usuário removido), `nome_de_administrador` ou `acesso_desligado` |
 | `recusa_papel` | Um usuário do FTP pediu uma tela ou um formulário de administração, ou uma ação que o perfil dele não tem; com o usuário, o caminho pedido e o perfil |
@@ -1172,6 +1258,7 @@ Tudo o que o painel faz fica em `DATA_DIR/painel/auditoria.log` (`0600`, do `roo
 | `copia_enviada` · `copia_falhou` | A cópia do sistema chegou ao S3, com a origem (`tela`, `rotina` ou `terminal`), o destino, o objeto, os bytes, as partes e os arquivos · parou antes do fim, com a origem e o motivo. Sem endereço: quem fez foi o painel |
 | `admin_inicial_criado` | Primeira subida: o painel criou o administrador de `PAINEL_ADMIN_USER` |
 | `admin_criado` · `admin_senha_trocada` · `admin_renomeado` · `admin_removido` | Alteração de administrador pelo painel, com quem fez e quem foi alterado |
+| `admin_fator_ligado` · `admin_fator_desligado` · `admin_fator_desligado_no_host` | Segundo fator ligado pelo próprio administrador · desligado pelo painel, com quem fez (`admin=`) e de quem era (`alvo=`) · desligado pelo terminal do servidor |
 | `admin_senha_atual_recusada` | Alteração de administrador ou apagamento recusado: a senha atual de quem pediu não conferiu; com o administrador e o caminho pedido |
 | `usuario_senha_atual_recusada` | Apagamento recusado na tela Meus arquivos: a senha do FTP de quem pediu não conferiu; com o usuário e o caminho pedido |
 | `admin_definido_no_host` | O `scripts/painel-senha.sh` criou um administrador ou trocou a senha dele |
@@ -1196,6 +1283,7 @@ Senha, token e cookie **nunca** são gravados. O nome digitado em uma entrada re
 | Transporte | Só HTTPS, TLS 1.2 ou 1.3, em HTTP/2 ou HTTP/1.1; HTTP puro recebe `400` |
 | Volume de pedidos | No nginx, por endereço: 20 pedidos por segundo (rajada de 40), 16 conexões, 16 KiB por pedido e 5 KiB por endereço ou cabeçalho, em HTTP/2 e em HTTP/1.1; o que passa disso recebe `429`, `413`, `414` ou `400`, ou tem a conexão HTTP/2 encerrada |
 | Entrada | Usuário e senha por administrador; senha de no mínimo 12 caracteres, guardada só como hash `scrypt`; a recusa não diz se o erro foi no usuário ou na senha; cinco erros bloqueiam o endereço por 15 minutos |
+| Segundo fator | Opcional, por administrador: código de seis dígitos de um aplicativo autenticador (TOTP), pedido depois da senha e só no painel web. A senha certa não abre sessão; cada código vale uma vez; código errado conta como erro de entrada; a chave fica em `.secrets/segundo-fator/`, fora da cópia de segurança, e a falta dela fecha a entrada. Veja [Segundo fator na entrada](#segundo-fator) |
 | Usuário do FTP | Entra com o nome e a senha do FTP, conferidos pelo próprio servidor FTP, e alcança só a tela Meus arquivos, na pasta do cadastro, para o que o perfil dele deixa; as telas de administração respondem `404`; a sessão acaba quando o cadastro dele muda; `PAINEL_ACESSO_USUARIOS_FTP=nao` desliga esta entrada |
 | Perfis | O que cada usuário do FTP faz é limitado pelo perfil dele, aplicado pelo sistema de arquivos do servidor e não pela tela: Leitura não grava, Envio não apaga nem altera o que já chegou, Só envio não lista nem baixa; a troca de perfil encerra a sessão dele no painel |
 | Administradores | Toda alteração de administrador pede a senha atual de quem está alterando; o administrador alterado tem as sessões encerradas; ninguém remove a própria conta |
@@ -1240,11 +1328,13 @@ O código fica em [`painel/`](../../painel/), um assunto por arquivo, e vai inte
 
 | Módulo | O que tem |
 |---|---|
-| [`servidor.py`](../../painel/servidor.py) | Ponto de entrada: sobe o servidor, cria o primeiro administrador e atende os modos `--hash`, `--saude`, `--administrador`, `--retencao`, `--destinos` e `--copia` |
+| [`servidor.py`](../../painel/servidor.py) | Ponto de entrada: sobe o servidor, cria o primeiro administrador e atende os modos `--hash`, `--saude`, `--administrador`, `--retencao`, `--destinos`, `--copia` e `--segundo-fator` |
 | [`saude.py`](../../painel/saude.py) | Verificação de saúde do container: o pedido de `/saude` pelo soquete Unix, só com a biblioteca de soquete |
 | [`config.py`](../../painel/config.py) | Caminhos, limites e a leitura das variáveis do container, com as recusas de rede e de sessão |
 | [`senha.py`](../../painel/senha.py) | Hash `scrypt` das senhas dos administradores e a conferência em tempo constante |
 | [`administradores.py`](../../painel/administradores.py) | Leitura e gravação do arquivo de administradores, uma alteração por vez |
+| [`fator.py`](../../painel/fator.py) | Segundo fator: a chave de cada administrador, o cálculo e a conferência do código (TOTP), o código que não entra duas vezes e a pausa por códigos recusados |
+| [`qr.py`](../../painel/qr.py) | Código QR em SVG, desenhado pelo painel, para o aplicativo autenticador ler a chave |
 | [`sessao.py`](../../painel/sessao.py) | Sessões em memória, de administrador e de usuário do FTP, limite de tentativas e token do formulário de entrada |
 | [`auditoria.py`](../../painel/auditoria.py) | Gravação e leitura do `auditoria.log` |
 | [`estado.py`](../../painel/estado.py) | Leitura do estado da stack (usuários, uso das pastas, FTP no ar, certificados, quem entra sem TLS) e a chamada do `allsafe-ftp-user` |
@@ -1278,6 +1368,7 @@ O código fica em [`painel/`](../../painel/), um assunto por arquivo, e vai inte
 | [`recursos.py`](../../painel/recursos.py) | Recursos do servidor e de cada container da stack: leitura do processador, da memória e da rede do FTP, do grupo de controle do painel e do que o ftp e o nginx publicam, e o histórico dos últimos 10 minutos, guardado na memória |
 | [`aba_servidor.py`](../../painel/aba_servidor.py) | Aba Servidor: os containers da stack, com o uso contra o alocado, os cartões de processador, memória, disco e rede do servidor, e a faixa de resumo da Visão geral |
 | [`aba_administradores.py`](../../painel/aba_administradores.py) | Administradores do painel: criação pelo formulário de Novo usuário, troca de senha, troca de nome e remoção; a lista é a da aba Usuários |
+| [`aba_fator.py`](../../painel/aba_fator.py) | Segundo fator dos administradores: a tela que mostra o código QR e a chave, e as de ligar e desligar |
 | [`aba_seguranca.py`](../../painel/aba_seguranca.py) | Aba Segurança |
 | [`enderecos.py`](../../painel/enderecos.py) | Bloqueio por endereço: a escrita única do endereço, IPv4 ou IPv6, a leitura dos bloqueios de endereço e de prefixo em vigor, a contagem dos erros de usuário e senha de cada endereço, zerada na entrada certa, e o pedido de bloqueio ao `allsafe-ftp-user` |
 | [`aba_bloqueios.py`](../../painel/aba_bloqueios.py) | Aba Bloqueios: lista dos endereços e dos prefixos bloqueados, busca, bloqueio à mão de endereço ou de prefixo, mudança de prazo e desbloqueio (`GET /bloqueios`, `GET` e `POST /bloqueios/novo`, `GET /bloqueios/endereco?ip=<endereço>`, `POST /bloqueios/prazo` e `POST /bloqueios/liberar`) |

@@ -15,7 +15,9 @@ Modos: sem argumento, sobe o servidor; --hash lê uma senha da entrada padrão e
 --retencao aplica agora a limpeza automática de cada usuário que tem uma, e com --simular só conta o que sairia;
 --destinos mostra a situação de cada destino (S3, remoto do rclone e bot do Telegram), e --destinos enviar <destino> faz agora a passada dele
 (com --sem-espera, sem aguardar os dois minutos de um arquivo sem mudar);
---copia mostra a situação da cópia do sistema para o S3, e --copia enviar faz a cópia agora e só volta quando ela termina.
+--copia mostra a situação da cópia do sistema para o S3, e --copia enviar faz a cópia agora e só volta quando ela termina;
+--segundo-fator mostra quais administradores estão com o segundo fator ligado, e --segundo-fator desligar <nome> desliga o de um
+(a saída de quem perdeu o aparelho e não tem outro administrador a quem pedir).
 """
 import os
 import sys
@@ -23,6 +25,7 @@ import sys
 import administradores
 import copia
 import destinos
+import fator
 import limpeza
 import recursos
 import saude
@@ -54,6 +57,31 @@ def modo_administrador(nome):
         falha(erro)
     auditar('-', 'admin_definido_no_host', f'admin={nome} resultado={feito}')
     print(f'administrador {nome}: {feito}')
+
+
+def modo_segundo_fator(argumentos):
+    """Situação do segundo fator de cada administrador, ou o desligamento do de um, pedido pelo terminal."""
+    if not argumentos:
+        for nome in administradores.ler():
+            if not fator.ligado(nome):
+                print(f'{nome}: desligado')
+            elif fator.segredo_de(nome):
+                print(f'{nome}: ligado')
+            else:
+                print(f'{nome}: ligado, sem o segredo no servidor (a conta não entra até ser desligado)')
+        return
+    if len(argumentos) != 2 or argumentos[0] != 'desligar':
+        falha('uso: --segundo-fator [desligar <administrador>]')
+    nome = argumentos[1]
+    if not NOME.fullmatch(nome) or nome not in administradores.ler():
+        falha('administrador não encontrado')
+    try:
+        estava = fator.desligar(nome)
+    except OSError as motivo:
+        falha(f'não foi possível gravar o segundo fator: {motivo.strerror}')
+    if estava:
+        auditar('-', 'admin_fator_desligado_no_host', f'alvo={nome}')
+    print(f'{nome}: segundo fator desligado' if estava else f'{nome}: o segundo fator já estava desligado')
 
 
 def modo_retencao(simular):
@@ -158,6 +186,8 @@ def principal():
         return modo_copia(sys.argv[sys.argv.index('--copia') + 1:])
     if '--destinos' in sys.argv[1:]:
         return modo_destinos(sys.argv[sys.argv.index('--destinos') + 1:])
+    if '--segundo-fator' in sys.argv[1:]:
+        return modo_segundo_fator(sys.argv[sys.argv.index('--segundo-fator') + 1:])
     if '--retencao' in sys.argv[1:]:
         return modo_retencao('--simular' in sys.argv[1:])
     if '--saude' in sys.argv[1:]:

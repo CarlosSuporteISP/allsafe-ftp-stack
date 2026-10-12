@@ -33,6 +33,10 @@ CMD_USUARIO = '/usr/local/sbin/allsafe-ftp-user'
 # arquivo, na pasta que vem de SECRETS_DIR/destinos, no host.
 PASTA_DESTINOS = '/painel/destinos'
 PASTA_SEGREDOS = '/segredos'
+# Segundo fator da entrada (fator.py): quem está com ele ligado fica com os dados do painel e entra na cópia de
+# segurança; o segredo de cada um, um por arquivo, na pasta que vem de SECRETS_DIR/segundo-fator, no host.
+ARQ_FATOR = '/painel/segundo-fator'
+PASTA_FATOR = '/segundo-fator'
 PASTA_DADOS = '/data'
 
 # Mesma regra de nome do allsafe-ftp-user; aqui ela só antecipa a mensagem de erro. Vale também para administrador.
@@ -64,6 +68,9 @@ APAGAR_PRAZO = 20           # segundos por pedido de apagar: abaixo do tempo que
 APAGAR_NIVEIS = 64          # pastas uma dentro da outra que o painel desce para apagar
 FALHAS_MAX = 5              # falhas de entrada por IP...
 JANELA_FALHAS = 15 * 60     # ...nesta janela, em segundos
+FATOR_ERROS_MAX = 10        # códigos do segundo fator recusados por conta, de qualquer endereço, na mesma janela
+VALIDADE_ETAPA = 5 * 60     # segundos entre a senha aceita e o código do segundo fator
+ETAPAS_MAX = 200            # entradas à espera do código ao mesmo tempo
 SESSAO_ABSOLUTA = 12 * 3600 # a sessão acaba neste prazo, com ou sem uso; é também o teto de PAINEL_SESSAO_MINUTOS
 SESSOES_MAX = 50
 SESSOES_POR_USUARIO = 3     # sessões de um mesmo usuário do FTP; a mais antiga sai quando entra a quarta
