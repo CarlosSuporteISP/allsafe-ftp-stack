@@ -55,6 +55,9 @@ liga37() { local pote="$1" token="$2" codigo="$3" senha="$4"; shift 4; POTE="$po
 desliga37() { POTE="$1" envio /administradores/fator/desligar --data-urlencode "csrf=$2" --data-urlencode "admin=$3" --data-urlencode "senha_atual@$4"; }
 
 for n in a37 f37 errada37; do nova_senha "$W/$n.senha"; done
+# Os administradores que as etapas anteriores deixaram: a etapa termina com os mesmos, e nenhum deles liga o fator aqui.
+ADM37="$(admins)"; OUTROS37="$(printf '%s' "$ADM37" | tr ' ' '\n' | grep -v -x -F -e "$ADMIN" -e '' | paste -s -d , | sed 's/,/, /g')"
+SEG37='Todos os administradores entram com a senha e o código'; [[ -z "$OUTROS37" ]] || SEG37="Entram só com a senha: $OUTROS37."
 auditoria; a_lig0="$(eventos admin_fator_ligado)"; a_des0="$(eventos 'admin_fator_desligado ')"; a_sen0="$(eventos entrada_senha_ok)"
 a_rec0="$(eventos entrada_codigo_recusado)"; a_sem0="$(eventos entrada_fator_sem_segredo)"; a_host0="$(eventos admin_fator_desligado_no_host)"
 
@@ -71,7 +74,7 @@ r_lig="$(liga37 "$J" "$K" "$W/c37.cod" "$W/painel.senha")"
 x_lig="$(lista37)|$(guardado37 "$ADMIN")"; [[ "$(tr -d '\n' < "$P37/$ADMIN.txt" 2> /dev/null)" == "$(cat "$W/c37.chave")" ]] && mesmo_arquivo=sim || mesmo_arquivo=nao
 t_dep="$(aba -b "$J" "$B/administradores/fator?admin=$ADMIN")"; q_dep="$(tem37 '<svg class="qr"') $(tem37 'class="segredo"') $(tem37 'action="/administradores/fator/desligar"')"
 t_usu="$(aba -b "$J" "$B/usuarios")"; q_usu="$(tem37 'segundo fator ligado')"
-t_seg="$(aba -b "$J" "$B/seguranca")"; q_seg="$(tem37 'Todos os administradores entram com a senha e o código')"
+t_seg="$(aba -b "$J" "$B/seguranca")"; q_seg="$(tem37 "$SEG37")"
 x_term="$(terminal37 | grep -m1 "^$ADMIN: ")"
 
 # Entrada nova: a senha certa leva ao código e não abre sessão.
@@ -103,7 +106,7 @@ igual37 "$e_1 $d_1|$b_1|$k_1" '303 /entrar/codigo|__Host-etapa __Host-idioma |1'
 igual37 "$r_certo|$b_2" '303 /|__Host-etapa(vazio) __Host-sessao '; igual37 "$t_aberto" '200 '
 igual37 "$(( $(eventos admin_fator_ligado) - a_lig0 )) $(( $(eventos entrada_senha_ok) - a_sen0 ))" '1 2'
 caso "$F37" testes 95 "Segundo fator: o administrador liga com a chave da tela e passa a entrar com senha e código" \
-  "antes: lista \"${x_antes%%|*}\", terminal \"${x_antes#*|}\"; tela de ligar: $t_lig, código QR e formulário: $q_lig, chave de $n_chave caracteres, a mesma ao reabrir a tela: $mesma; código errado: $r_errado, lista e segredo depois: $x_errado; código certo com a senha: $r_lig; lista e segredo no host (modo e tamanho): $x_lig, igual à chave da tela: $mesmo_arquivo; a mesma rota depois de ligado: $t_dep, código QR, chave e formulário de desligar: $q_dep; lista de usuários com \"segundo fator ligado\": $q_usu; aba Segurança com todos os administradores no fator: $q_seg; terminal: $x_term; entrada nova com a senha certa: $e_1 $d_1, cookies gravados: $b_1; tela do código: $t_cod, campo do código: $q_cod; código do aplicativo: $r_certo, cookies: $b_2; painel com a sessão nova: $t_aberto; eventos admin_fator_ligado e entrada_senha_ok a mais: $(( $(eventos admin_fator_ligado) - a_lig0 )) e $(( $(eventos entrada_senha_ok) - a_sen0 ))"
+  "antes: lista \"${x_antes%%|*}\", terminal \"${x_antes#*|}\"; tela de ligar: $t_lig, código QR e formulário: $q_lig, chave de $n_chave caracteres, a mesma ao reabrir a tela: $mesma; código errado: $r_errado, lista e segredo depois: $x_errado; código certo com a senha: $r_lig; lista e segredo no host (modo e tamanho): $x_lig, igual à chave da tela: $mesmo_arquivo; a mesma rota depois de ligado: $t_dep, código QR, chave e formulário de desligar: $q_dep; lista de usuários com \"segundo fator ligado\": $q_usu; aba Segurança com quem ainda entra só com a senha (${OUTROS37:-ninguém}): $q_seg; terminal: $x_term; entrada nova com a senha certa: $e_1 $d_1, cookies gravados: $b_1; tela do código: $t_cod, campo do código: $q_cod; código do aplicativo: $r_certo, cookies: $b_2; painel com a sessão nova: $t_aberto; eventos admin_fator_ligado e entrada_senha_ok a mais: $(( $(eventos admin_fator_ligado) - a_lig0 )) e $(( $(eventos entrada_senha_ok) - a_sen0 ))"
 
 F37=0
 igual37 "$k_1" 1; igual37 "$s_antes" 0; igual37 "$t_fechado" '303 /entrar'; igual37 "$t_troca" '303 /entrar'
@@ -267,7 +270,7 @@ caso "$F37" seguranca 144 "Segundo fator: cinco códigos errados derrubam a espe
 r_rem="$(envio /administradores/remover --data-urlencode "csrf=$K" --data-urlencode 'admin=fat37b' --data-urlencode "senha_atual@$W/painel.senha")"
 x_rem="$(lista37)|$(guardado37 fat37b)|$(ls "$P37" 2> /dev/null | wc -l)|$(admins)"
 F37=0
-igual37 "$r_rem" '303 /usuarios?m=admin_removido'; igual37 "$x_rem" "|ausente|0|$ADMIN "
+igual37 "$r_rem" '303 /usuarios?m=admin_removido'; igual37 "$x_rem" "|ausente|0|$ADM37"
 caso "$F37" testes 99 "Segundo fator: sai junto com o administrador removido" \
   "remoção de fat37b, com o fator ligado: $r_rem; lista, segredo dele, arquivos na pasta dos segredos do fator e administradores que ficaram: $x_rem"
 
