@@ -1,13 +1,19 @@
 # SPDX-License-Identifier: Apache-2.0
 """Segundo fator da entrada do painel: código de aplicativo autenticador (TOTP, RFC 6238).
 
-Só para administradores e só na web: depois de usuário e senha, o painel pede o código de seis dígitos que o
-aplicativo mostra. O FTP não muda, porque o protocolo não tem onde pedir o código. Cada administrador liga o
-dele; quem perde o aparelho pede a outro administrador para desligar, ou usa `servidor.py --segundo-fator`.
+Só na web: depois de usuário e senha, o painel pede o código de seis dígitos que o aplicativo mostra. O FTP não
+muda, porque o protocolo não tem onde pedir o código. Com PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim, toda conta que
+entra no painel tem o dela, administrador e usuário do FTP, e quem ainda não cadastrou cadastra na entrada
+(entrada.py); com nao, cada administrador liga o dele, se quiser. Quem perde o aparelho pede a um administrador
+para desligar, ou usa `servidor.py --segundo-fator`.
 
-Duas coisas guardadas, em lugares diferentes. Quem está com o fator ligado fica em /painel/segundo-fator, um
-nome por linha, junto dos dados do painel e dentro da cópia de segurança. O segredo de cada um fica em
-/segundo-fator/<nome>.txt, que vem de SECRETS_DIR/segundo-fator e não entra na cópia. Restaurada a cópia sem os
+A conta do fator é o nome do administrador ou, para o usuário do FTP, `ftp.` mais o nome dele: o ponto não cabe
+em nome nenhum, e por isso as duas nunca se confundem, nem quando um administrador e um usuário do FTP têm o
+mesmo nome.
+
+Duas coisas guardadas, em lugares diferentes. Quem está com o fator ligado fica em /painel/segundo-fator, uma
+conta por linha, junto dos dados do painel e dentro da cópia de segurança. O segredo de cada uma fica em
+/segundo-fator/<conta>.txt, que vem de SECRETS_DIR/segundo-fator e não entra na cópia. Restaurada a cópia sem os
 segredos, a conta continua pedindo o código e não entra até o fator ser desligado: a falta do segredo fecha, não abre.
 
 O código é o padrão que os aplicativos leem: SHA-1, seis dígitos, passo de 30 segundos. Vale o do passo atual e
@@ -31,9 +37,11 @@ PASSO, DIGITOS, FOLGA = 30, 6, 1
 ENDERECO_MAX = 213                  # o que cabe no código QR do painel (qr.py)
 SEGREDO = re.compile(r'[A-Z2-7]{32}')    # 160 bits em base32
 CODIGO = re.compile(r'[0-9]{6}')
+DO_FTP = 'ftp.'                          # começo da conta do fator de um usuário do FTP
+CONTA = re.compile(r'(ftp\.)?' + NOME.pattern)
 TRAVA = threading.Lock()
-USADOS = {}    # nome → contador do último código aceito: o mesmo código não entra duas vezes
-ERROS = {}     # nome → [instantes dos códigos recusados]
+USADOS = {}    # conta → contador do último código aceito: o mesmo código não entra duas vezes
+ERROS = {}     # conta → [instantes dos códigos recusados]
 
 
 def novo_segredo():
@@ -76,11 +84,16 @@ def caminho(nome):
     return os.path.join(PASTA_FATOR, nome + '.txt')
 
 
+def do_usuario(nome):
+    """A conta do fator de um usuário do FTP."""
+    return DO_FTP + nome
+
+
 def ligados():
-    """Os nomes que estão com o segundo fator ligado. Linha fora da regra de nome é ignorada."""
+    """As contas que estão com o segundo fator ligado. Linha fora da regra de conta é ignorada."""
     try:
         with open(ARQ_FATOR, encoding='ascii', errors='replace') as arq:
-            return {linha for linha in arq.read().splitlines() if NOME.fullmatch(linha)}
+            return {linha for linha in arq.read().splitlines() if CONTA.fullmatch(linha)}
     except OSError:
         return set()
 
@@ -90,7 +103,7 @@ def ligado(nome):
 
 
 def segredo_de(nome):
-    """O segredo guardado do administrador, ou '' quando falta, não é um arquivo comum ou não tem o formato."""
+    """O segredo guardado da conta, ou '' quando falta, não é um arquivo comum ou não tem o formato."""
     try:
         descritor = os.open(caminho(nome), os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK)
     except OSError:
@@ -127,19 +140,24 @@ def gravar_lista(nomes):
     gravar_texto(ARQ_FATOR, ''.join(f'{nome}\n' for nome in sorted(nomes)))
 
 
-def ligar(nome, segredo, contador):
-    """Grava o segredo e põe o nome na lista. `contador` é o do código que provou a leitura: ele não entra de novo."""
+def ligar(nome, segredo, contador, so_novo=False):
+    """Grava o segredo e põe a conta na lista. `contador` é o do código que provou a leitura: ele não entra de novo.
+    `so_novo` é o cadastro feito na entrada, por quem só provou a senha: conta que já tem fator não é regravada, e
+    a resposta é False."""
     with TRAVA:
+        if so_novo and nome in ligados():
+            return False
         # A pasta é do host: o arquivo fica com o dono dela, para quem instalou poder guardar e apagar os segredos.
         pasta = os.stat(PASTA_FATOR)
         gravar_texto(caminho(nome), segredo + '\n', (pasta.st_uid, pasta.st_gid))
         gravar_lista(ligados() | {nome})
         USADOS[nome] = contador
         ERROS.pop(nome, None)
+        return True
 
 
 def desligar(nome):
-    """Tira o nome da lista e apaga o segredo. Devolve se o fator estava ligado."""
+    """Tira a conta da lista e apaga o segredo. Devolve se o fator estava ligado."""
     with TRAVA:
         nomes = ligados()
         if nome in nomes:
@@ -148,6 +166,14 @@ def desligar(nome):
         USADOS.pop(nome, None)
         ERROS.pop(nome, None)
         return nome in nomes
+
+
+def esquecer_usuario(nome):
+    """O usuário do FTP foi criado ou removido pelo painel: o fator que houver com o nome dele sai. Falha de disco
+    não desfaz a alteração do usuário: a sobra fecha (a conta pede um código que ninguém tem) e sai com o
+    desligamento, pela aba Usuários ou pelo terminal."""
+    with contextlib.suppress(OSError):
+        desligar(do_usuario(nome))
 
 
 def renomear(antigo, novo):

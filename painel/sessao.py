@@ -7,7 +7,7 @@ import threading
 import time
 
 from config import (CFG, ETAPAS_MAX, FALHAS_MAX, JANELA_FALHAS, SESSAO_ABSOLUTA, SESSOES_MAX, SESSOES_POR_USUARIO,
-                    VALIDADE_ETAPA, VALIDADE_FORMULARIO)
+                    VALIDADE_CADASTRO, VALIDADE_ETAPA, VALIDADE_FORMULARIO)
 
 CHAVE_PROCESSO = secrets.token_bytes(32)  # assina o formulário de entrada; some ao reiniciar
 TRAVA = threading.Lock()
@@ -15,8 +15,10 @@ TRAVA = threading.Lock()
 # sessão é de um administrador ('admin' com o nome, 'usuario' None) ou de um usuário do FTP ('usuario' com o nome,
 # 'admin' None, mais a marca, a pasta e o perfil do cadastro dele na hora da entrada). 'idioma' é o das telas.
 SESSOES = {}
-# sha256 do token → {'criada', 'ip', 'admin', 'idioma'}: administrador com segundo fator que já acertou a senha e
-# ainda não digitou o código. Não é sessão: não abre tela nenhuma além da que pede o código.
+# sha256 do token → {'criada', 'prazo', 'ip', 'admin', 'usuario', 'marca', 'pasta', 'perfil', 'idioma', 'segredo'}:
+# conta que já acertou a senha e ainda não passou pelo segundo fator. Não é sessão: não abre tela nenhuma além da
+# que pede o código ou, com 'segredo' preenchido, da que cadastra o fator (o segredo é a chave mostrada nessa
+# tela, que só é gravada depois do primeiro código certo). Os campos da conta são os mesmos da sessão.
 ETAPAS = {}
 FALHAS = {}    # ip → [instantes das falhas]
 
@@ -78,24 +80,37 @@ def encerrar_sessao(token):
 
 def encerrar_sessoes_de(admin, menos=None):
     """Encerra as sessões de um administrador; `menos` é a sessão que continua (a de quem fez a alteração). As
-    entradas dele que esperavam o código do segundo fator caem junto."""
+    entradas dele que esperavam o segundo fator caem junto."""
     with TRAVA:
         for chave in [c for c, s in SESSOES.items() if s['admin'] and s['admin'] == admin and s is not menos]:
             del SESSOES[chave]
-        for chave in [c for c, etapa in ETAPAS.items() if etapa['admin'] == admin]:
+        for chave in [c for c, etapa in ETAPAS.items() if etapa['admin'] and etapa['admin'] == admin]:
             del ETAPAS[chave]
 
 
-def criar_etapa(ip, admin, idioma):
-    """A senha do administrador conferiu e falta o código do segundo fator: devolve o token dessa espera."""
+def encerrar_sessoes_do_usuario(usuario):
+    """Encerra as sessões de um usuário do FTP e as entradas dele que esperavam o segundo fator."""
+    with TRAVA:
+        for guardadas in (SESSOES, ETAPAS):
+            for chave in [c for c, s in guardadas.items() if s['usuario'] and s['usuario'] == usuario]:
+                del guardadas[chave]
+
+
+def criar_etapa(ip, admin, idioma, usuario=None, conta=None, segredo=''):
+    """A senha conferiu e falta o segundo fator: devolve o token dessa espera. `conta` é o cadastro do usuário do
+    FTP na hora da senha ({'marca', 'pasta', 'perfil'}); `segredo` é a chave de quem vai cadastrar o fator agora."""
     token = secrets.token_urlsafe(32)
     agora = time.time()
+    conta = conta or {}
     with TRAVA:
-        for chave in [c for c, etapa in ETAPAS.items() if agora - etapa['criada'] > VALIDADE_ETAPA]:
+        for chave in [c for c, etapa in ETAPAS.items() if agora - etapa['criada'] > etapa['prazo']]:
             del ETAPAS[chave]
         while len(ETAPAS) >= ETAPAS_MAX:
             del ETAPAS[min(ETAPAS, key=lambda c: ETAPAS[c]['criada'])]
-        ETAPAS[resumo_token(token)] = {'criada': agora, 'ip': ip, 'admin': admin, 'idioma': idioma}
+        ETAPAS[resumo_token(token)] = {'criada': agora, 'prazo': VALIDADE_CADASTRO if segredo else VALIDADE_ETAPA, 'ip': ip,
+                                       'admin': admin, 'usuario': usuario, 'marca': conta.get('marca'),
+                                       'pasta': conta.get('pasta'), 'perfil': conta.get('perfil'), 'idioma': idioma,
+                                       'segredo': segredo}
     return token
 
 
@@ -106,7 +121,7 @@ def buscar_etapa(token, ip):
         etapa = ETAPAS.get(chave)
         if etapa is None:
             return None
-        if time.time() - etapa['criada'] > VALIDADE_ETAPA or etapa['ip'] != ip:
+        if time.time() - etapa['criada'] > etapa['prazo'] or etapa['ip'] != ip:
             del ETAPAS[chave]
             return None
         return etapa

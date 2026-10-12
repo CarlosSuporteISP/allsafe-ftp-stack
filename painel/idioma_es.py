@@ -2691,8 +2691,6 @@ ES = {
         'cambiar, para que lo que todavía está llegando no salga a medias. El orden es el de la llegada al '
         'servidor; un fallo del destino cierra la pasada y la siguiente vuelve a empezar desde el mismo '
         'archivo. La carpeta que cambia de nombre no reenvía los archivos de dentro.',
-    'Senha aceita, à espera do código do segundo fator':
-        'Contraseña aceptada, a la espera del código del segundo factor',
     'Código do segundo fator recusado':
         'Código del segundo factor rechazado',
     'Entrada recusada: segundo fator ligado sem o segredo no servidor':
@@ -2779,10 +2777,6 @@ ES = {
         'sin segundo factor',
     'Código de verificação':
         'Código de verificación',
-    'O segundo fator desta conta está ligado, mas o segredo dele não está no servidor. Outro '
-    'administrador ou quem tem acesso ao servidor precisa desligá-lo.':
-        'El segundo factor de esta cuenta está activado, pero su secreto no está en el servidor. Otro '
-        'administrador o quien tiene acceso al servidor necesita desactivarlo.',
     'O código não confere. Espere o aplicativo mostrar o próximo e tente de novo.':
         'El código no coincide. Espere a que la aplicación muestre el próximo e inténtelo de nuevo.',
     'A senha conferiu. Digite o código de seis dígitos que o aplicativo autenticador mostra para esta conta.':
@@ -2798,6 +2792,62 @@ ES = {
         'Usuarios, o quien tiene acceso al servidor lo desactiva por el terminal.',
     'Voltar para usuário e senha':
         'Volver a usuario y contraseña',
+    'Senha aceita, à espera do segundo fator':
+        'Contraseña aceptada, a la espera del segundo factor',
+    'Segundo fator cadastrado na entrada':
+        'Segundo factor registrado en el inicio de sesión',
+    'Segundo fator de usuário do FTP desligado':
+        'Segundo factor de un usuario del FTP desactivado',
+    'Na sua próxima entrada, o painel pede o cadastro de um aplicativo de novo, com uma chave nova.':
+        'En su próximo inicio de sesión, el panel pide registrar una aplicación de nuevo, con una '
+        'clave nueva.',
+    'Na próxima entrada, a conta <strong>{nome}</strong> cadastra um aplicativo de novo, com uma '
+    'chave nova. É o caminho de quem perdeu ou trocou o aparelho.':
+        'En el próximo inicio de sesión, la cuenta <strong>{nome}</strong> registra una aplicación '
+        'de nuevo, con una clave nueva. Es el camino de quien perdió o cambió el dispositivo.',
+    'A conta <strong>{nome}</strong> volta a entrar no painel só com usuário e senha.':
+        'La cuenta <strong>{nome}</strong> vuelve a entrar en el panel solo con usuario y '
+        'contraseña.',
+    'Aparelho perdido ou roubado: troque também a senha da conta. Até o cadastro novo, quem souber '
+    'a senha cadastra o aplicativo.':
+        'Dispositivo perdido o robado: cambie también la contraseña de la cuenta. Hasta el '
+        'registro nuevo, quien sepa la contraseña registra la aplicación.',
+    'Obrigatório (<code>PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim</code>): toda conta que entra neste '
+    'painel, administrador ou usuário do FTP, passa pela senha e pelo código de um aplicativo '
+    'autenticador; quem ainda não cadastrou cadastra na entrada. Vale só para este painel: o FTP '
+    'não muda.':
+        'Obligatorio (<code>PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim</code>): toda cuenta que entra en '
+        'este panel, administrador o usuario del FTP, pasa por la contraseña y por el código de '
+        'una aplicación de autenticación; quien todavía no la registró la registra en el inicio de '
+        'sesión. Vale solo para este panel: el FTP no cambia.',
+    'Administradores que ainda não cadastraram: {nomes}. Até lá, quem souber a senha da conta faz '
+    'o cadastro.':
+        'Administradores que todavía no lo registraron: {nomes}. Hasta entonces, quien sepa la '
+        'contraseña de la cuenta hace el registro.',
+    'Segundo fator desligado. Na próxima entrada, a conta cadastra um aplicativo de novo.':
+        'Segundo factor desactivado. En el próximo inicio de sesión, la cuenta registra una '
+        'aplicación de nuevo.',
+    'cadastra o segundo fator na próxima entrada':
+        'registra el segundo factor en el próximo inicio de sesión',
+    'Sem o aparelho: peça ao administrador para desligar o segundo fator da sua conta.':
+        'Sin el dispositivo: pida al administrador que desactive el segundo factor de su cuenta.',
+    'Na entrada seguinte, o painel pede o cadastro de um aplicativo de novo.':
+        'En el inicio de sesión siguiente, el panel pide registrar una aplicación de nuevo.',
+    'Cadastre o segundo fator':
+        'Registre el segundo factor',
+    'A senha conferiu. Este painel exige, além da senha, o código de seis dígitos de um aplicativo '
+    'autenticador. Cadastre o seu agora para entrar; vale só para este painel, o FTP não muda.':
+        'La contraseña es correcta. Este panel exige, además de la contraseña, el código de seis '
+        'dígitos de una aplicación de autenticación. Registre la suya ahora para entrar; vale solo '
+        'para este panel, el FTP no cambia.',
+    'Digite o código que o aplicativo mostrar.':
+        'Escriba el código que muestre la aplicación.',
+    'Cadastrar e entrar':
+        'Registrar y entrar',
+    'O segundo fator desta conta está ligado, mas o segredo dele não está no servidor. Um '
+    'administrador ou quem tem acesso ao servidor precisa desligá-lo.':
+        'El segundo factor de esta cuenta está activado, pero su secreto no está en el servidor. '
+        'Un administrador o quien tiene acceso al servidor necesita desactivarlo.',
 }
 
 # Mensagem de erro do allsafe-ftp-user (ftp/usuario.sh), que fala português sem acento: a expressão que a

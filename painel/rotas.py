@@ -72,6 +72,8 @@ ROTAS = {
     ('GET', '/administradores/fator'): aba_fator.tela,
     ('POST', '/administradores/fator/ligar'): aba_fator.ligar,
     ('POST', '/administradores/fator/desligar'): aba_fator.desligar,
+    ('GET', '/usuarios/fator'): aba_fator.tela_do_usuario,
+    ('POST', '/usuarios/fator/desligar'): aba_fator.desligar_do_usuario,
     ('GET', '/seguranca'): aba_seguranca.seguranca,
     ('GET', '/servidor'): aba_servidor.servidor,
     ('GET', '/bloqueios'): aba_bloqueios.lista,

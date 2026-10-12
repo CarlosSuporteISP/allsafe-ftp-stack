@@ -16,8 +16,9 @@ Modos: sem argumento, sobe o servidor; --hash lê uma senha da entrada padrão e
 --destinos mostra a situação de cada destino (S3, remoto do rclone e bot do Telegram), e --destinos enviar <destino> faz agora a passada dele
 (com --sem-espera, sem aguardar os dois minutos de um arquivo sem mudar);
 --copia mostra a situação da cópia do sistema para o S3, e --copia enviar faz a cópia agora e só volta quando ela termina;
---segundo-fator mostra quais administradores estão com o segundo fator ligado, e --segundo-fator desligar <nome> desliga o de um
-(a saída de quem perdeu o aparelho e não tem outro administrador a quem pedir).
+--segundo-fator mostra quais contas estão com o segundo fator ligado, e --segundo-fator desligar <conta> desliga o de uma
+(a saída de quem perdeu o aparelho e não tem outro administrador a quem pedir); a conta é o nome do administrador ou,
+para o usuário do FTP, ftp.<nome>.
 """
 import os
 import sys
@@ -60,10 +61,12 @@ def modo_administrador(nome):
 
 
 def modo_segundo_fator(argumentos):
-    """Situação do segundo fator de cada administrador, ou o desligamento do de um, pedido pelo terminal."""
+    """Situação do segundo fator de cada administrador e de cada usuário do FTP que cadastrou o dele, ou o
+    desligamento do de uma conta, pedido pelo terminal."""
     if not argumentos:
-        for nome in administradores.ler():
-            if not fator.ligado(nome):
+        com_fator = fator.ligados()
+        for nome in list(administradores.ler()) + sorted(conta for conta in com_fator if conta.startswith(fator.DO_FTP)):
+            if nome not in com_fator:
                 print(f'{nome}: desligado')
             elif fator.segredo_de(nome):
                 print(f'{nome}: ligado')
@@ -71,9 +74,11 @@ def modo_segundo_fator(argumentos):
                 print(f'{nome}: ligado, sem o segredo no servidor (a conta não entra até ser desligado)')
         return
     if len(argumentos) != 2 or argumentos[0] != 'desligar':
-        falha('uso: --segundo-fator [desligar <administrador>]')
+        falha('uso: --segundo-fator [desligar <administrador> | desligar ftp.<usuário do FTP>]')
     nome = argumentos[1]
-    if not NOME.fullmatch(nome) or nome not in administradores.ler():
+    # A conta de usuário do FTP não é conferida contra o cadastro: a sobra de um usuário já removido sai por aqui.
+    do_ftp = nome.startswith(fator.DO_FTP) and fator.CONTA.fullmatch(nome)
+    if not do_ftp and (not NOME.fullmatch(nome) or nome not in administradores.ler()):
         falha('administrador não encontrado')
     try:
         estava = fator.desligar(nome)

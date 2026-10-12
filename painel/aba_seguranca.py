@@ -59,12 +59,21 @@ def seguranca(pedido, sessao, consulta, formulario, token):
     com_fator = [nome for nome in admins if fator.ligado(nome)]
     sem_fator = [nome for nome in admins if nome not in com_fator]
     sem_segredo = [nome for nome in com_fator if not fator.segredo_de(nome)]
+    sem_segredo += sorted(f'{conta[len(fator.DO_FTP):]} (FTP)' for conta in fator.ligados()
+                          if conta.startswith(fator.DO_FTP) and not fator.segredo_de(conta))
     de_fora = bool(CFG['ip_publico'] or CFG['proxies'] or redes_publicas)
     if sem_segredo:
         marca_fator = 'atencao'
         texto_fator = t('<strong>Ligado sem o segredo no servidor: {nomes}.</strong> Essas contas não entram até o segundo fator '
                         'ser desligado, em <a href="/usuarios">Usuários</a> ou pelo terminal; depois, cada uma liga de novo.',
                         nomes=e(', '.join(sem_segredo)))
+    elif CFG['fator_obrigatorio']:
+        marca_fator = 'bom' if not sem_fator else 'neutro'
+        texto_fator = (t('Obrigatório (<code>PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim</code>): toda conta que entra neste painel, '
+                         'administrador ou usuário do FTP, passa pela senha e pelo código de um aplicativo autenticador; quem '
+                         'ainda não cadastrou cadastra na entrada. Vale só para este painel: o FTP não muda.')
+                       + (' ' + t('Administradores que ainda não cadastraram: {nomes}. Até lá, quem souber a senha da conta '
+                                  'faz o cadastro.', nomes=e(', '.join(sem_fator))) if sem_fator else ''))
     elif not sem_fator:
         marca_fator = 'bom'
         texto_fator = t('Todos os administradores entram com a senha e o código de um aplicativo autenticador. '
@@ -118,7 +127,8 @@ def seguranca(pedido, sessao, consulta, formulario, token):
                                     'arquivo ou pasta e mexer em administrador pedem a senha de novo, mesmo com a '
                                     'sessão aberta. {falhas} entradas erradas bloqueiam o endereço por 15 minutos.',
                                     prazo=prazo_da_sessao(), teto=teto_da_sessao(), falhas=FALHAS_MAX)),
-        linha(marca_fator, t('Segundo fator dos administradores'), texto_fator),
+        linha(marca_fator, t('Segundo fator') if CFG['fator_obrigatorio'] else t('Segundo fator dos administradores'),
+              texto_fator),
         linha('atencao' if CFG['acesso_usuarios'] and CFG['ftp_tls'] == '0' else 'bom', t('Entrada dos usuários do FTP'),
               (t('Ligada (<code>PAINEL_ACESSO_USUARIOS_FTP=sim</code>): cada usuário do FTP entra com o nome e a senha do FTP e só '
                  'navega e baixa na pasta dele. Quem confere a senha é o próprio servidor FTP, pela rede interna da stack,') + ' '

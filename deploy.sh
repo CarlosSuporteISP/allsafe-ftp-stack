@@ -312,6 +312,9 @@ fi
 acesso_usuarios="$(env_valor PAINEL_ACESSO_USUARIOS_FTP sim)"
 [[ "$acesso_usuarios" == sim || "$acesso_usuarios" == nao ]] \
   || die "PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'; em $env_file está '$acesso_usuarios'."
+fator_obrigatorio="$(env_valor PAINEL_SEGUNDO_FATOR_OBRIGATORIO sim)"
+[[ "$fator_obrigatorio" == sim || "$fator_obrigatorio" == nao ]] \
+  || die "PAINEL_SEGUNDO_FATOR_OBRIGATORIO deve ser 'sim' ou 'nao'; em $env_file está '$fator_obrigatorio'."
 aviso_exposicao="$(env_valor PAINEL_AVISO_EXPOSICAO sim)"
 [[ "$aviso_exposicao" == sim || "$aviso_exposicao" == nao ]] \
   || die "PAINEL_AVISO_EXPOSICAO deve ser 'sim' ou 'nao'; em $env_file está '$aviso_exposicao'."
@@ -447,13 +450,15 @@ destinos/
   desliga o envio daquele destino na passada seguinte.
 
 segundo-fator/
-  Segredo do segundo fator da entrada do painel, gravado quando o administrador liga o dele na aba
-  Usuários: <administrador>.txt. Com ele se geram os códigos daquela conta. Quem está com o fator
-  ligado fica nos dados do painel; por isso, apagar o arquivo aqui não desliga o fator: a conta
-  deixa de entrar até ele ser desligado, por outro administrador ou pelo terminal.
+  Segredo do segundo fator da entrada do painel, gravado quando a conta cadastra o aplicativo, na
+  entrada ou na aba Usuários: <administrador>.txt e, para o usuário do FTP, ftp.<usuário>.txt. Com
+  ele se geram os códigos daquela conta. Quem está com o fator ligado fica nos dados do painel; por
+  isso, apagar o arquivo aqui não desliga o fator: a conta deixa de entrar até ele ser desligado,
+  por um administrador ou pelo terminal.
 
 Perdeu a senha do painel: ./scripts/painel-senha.sh --gerar   (outro administrador: --usuario NOME)
 Perdeu o aparelho do segundo fator: docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME
+  (usuário do FTP: desligar ftp.NOME)
 Estes arquivos não entram na cópia do ./scripts/backup.sh: guarde-os no seu cofre de senhas.
 LEIAME
 chmod 0600 "$secrets_dir/LEIAME.txt"

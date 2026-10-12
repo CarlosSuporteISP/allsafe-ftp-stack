@@ -57,7 +57,7 @@ Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede priv
 cat .secrets/painel-admin-inicial-senha.txt
 ```
 
-**Expected result:** the **Overview** screen, with the FTP `Up` and, in the menu, the name of the administrator who signed in. With the [second factor](#segundo-fator) on for the account, the screen that asks for the code from the authenticator app comes before it.
+**Expected result:** the **Overview** screen, with the FTP `Up` and, in the menu, the name of the administrator who signed in. The [second factor](#segundo-fator) comes before it: at the first sign-in, the screen that sets up the authenticator app; at the following ones, the one that asks for its code.
 
 Fingerprint of the panel certificate, to compare with the one the browser shows:
 
@@ -869,33 +869,34 @@ Rules:
 
 ## 📱 Second factor at sign-in
 
-With the second factor on, the administrator signs in with the password **and** with the six-digit code that an authenticator app shows on their phone. Whoever finds out the password does not get in without the device. Any time-based code (TOTP) app works, such as Google Authenticator and Microsoft Authenticator.
+Every account that signs in to the panel goes through the password **and** the six-digit code that an authenticator app shows on the phone. Whoever finds out the password does not get in without the device. Any time-based code (TOTP) app works, such as Google Authenticator and Microsoft Authenticator.
 
 - **Only in the web panel.** FTP does not change: the devices keep signing in with user and password.
-- **Only for administrators.** The FTP user who signs in to the panel keeps using user and password only.
-- **Each administrator turns on their own**, because the key stays in the device of who signs in. It comes off for everyone.
+- **Required for every account of the panel**, administrator and FTP user. It is the default, set in `PAINEL_SEGUNDO_FATOR_OBRIGATORIO`: see [Configuration](configuration.md).
+- **Whoever has not set it up yet does it at sign-in**, right after the password. The panel only opens after the first right code.
+- **Each account has its own key**, which stays in the device of who signs in. The administrator turns off the second factor of any account and does not see the key of any of them.
 
 | I want to | Where | What happens |
 |---|---|---|
-| Turn mine on | Users ➜ **Second factor**, in my row | The panel shows the QR code and the key. Read it with the app and confirm with the code it shows and your password |
-| Sign in with it on | Sign-in screen | After user and password, the **Verification code** screen asks for the code from the app |
-| Turn off mine or someone else's | Users ➜ **Second factor**, in the row of the account | Asks for your password. The key is deleted and the account goes back to signing in with user and password only |
-| See who is without it | Users, in the row of each administrator, or Security tab, item **Second factor of the administrators** | `second factor on` or `no second factor` |
+| Set mine up | Sign-in screen, after user and password | The **Set up the second factor** screen shows the QR code and the key. Read it with the app and type the code it shows |
+| Sign in after the setup | Sign-in screen | After user and password, the **Verification code** screen asks for the code from the app |
+| Change device or app | Users ➜ **Second factor**, in the row of the account | Asks for the password of who is in the panel. The key is deleted and, at the next sign-in, the account sets up again, with a new key |
+| See who has set it up | Users: in the row of the administrator, `second factor on` or `sets up the second factor at the next sign-in`; in the row of the FTP user, the **Second factor** button appears for who has set it up | The Security tab, item **Second factor**, lists the administrators who have not set it up yet |
 
-**Turning it on, step by step:**
+**Setting it up, step by step:**
 
-1. Sign in to the panel and open **Users**. In your row, click **Second factor**.
+1. On the sign-in screen, type user and password. The panel opens the **Set up the second factor** screen.
 2. In the authenticator app, add an account and read the QR code on the screen. Without a camera, choose to type the key, of the time-based kind, and copy the one shown below the code.
-3. Type in **Code from the app** the six digits the app shows and, in **Your current password**, your password.
-4. Click **Turn on the second factor**.
+3. Type in **Code from the app** the six digits the app shows.
+4. Click **Set up and sign in**.
 
-**Expected result:** the list comes back with the notice `Second factor turned on. The next sign-in of this account asks for the code from the app; its other sessions were closed.` and your row starts showing `second factor on`.
+**Expected result:** the panel opens, on the Overview for the administrator and on My files for the FTP user. At the following sign-in, after user and password, the panel asks for the code.
 
-> ⚠️ The key appears only on that screen, until it is confirmed. Whoever has it generates your codes: do not keep it in a photo or in a message. Without the confirmation, nothing is saved and the sign-in stays as it was.
+> ⚠️ The key appears only on that screen, until it is confirmed. Whoever has it generates your codes: do not keep it in a photo or in a message. Without the right code, nothing is saved; whoever goes back to user and password gets a new key.
 
 **Signing in:** type user and password as always. The next screen asks for the code; type the one the app shows at that moment and click **Confirm**. The panel only opens after the right code.
 
-**I lost the device:** ask another administrator to turn off the second factor of your account, in Users. Without another administrator, whoever has access to the server turns it off from the terminal:
+**I lost or replaced the device:** ask an administrator to turn off the second factor of your account, in Users ➜ **Second factor**. At the following sign-in, the panel asks for the setup again. Without another administrator, whoever has access to the server turns it off from the terminal:
 
 ```bash
 docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME
@@ -905,30 +906,45 @@ docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desli
 NOME: segundo fator desligado
 ```
 
-Then sign in with user and password and turn it on again, with a new key. The same command, without `desligar NOME`, shows the situation of each administrator.
+For the FTP user, the name takes `ftp.` in front: `--segundo-fator desligar ftp.NOME`. The same command, without `desligar NOME`, shows the situation of each administrator and the FTP users who have already set it up.
+
+> ⚠️ Lost or stolen device: change the password of the account too. Between the turning off and the new setup, whoever knows the password sets up the app in place of the owner.
+
+**Without the requirement (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO=nao`):** the second factor becomes the choice of each administrator, and the FTP user signs in with user and password only.
+
+| I want to | Where | What happens |
+|---|---|---|
+| Turn mine on | Users ➜ **Second factor**, in my row | The panel shows the QR code and the key. Read it with the app and confirm with the code it shows and your password |
+| Turn off mine or someone else's | Users ➜ **Second factor**, in the row of the account | Asks for your password. The key is deleted and the account goes back to signing in with user and password only |
+| See who is without it | Users, in the row of each administrator, or Security tab, item **Second factor of the administrators** | `second factor on` or `no second factor` |
+
+Whoever already had the second factor keeps it when the value of the variable changes, in both directions: the saved key does not change.
 
 Rules:
 
-- **Turning on and off ask for the current password** of who is using the panel. Turning on also asks for the first code, which proves that the app read the key.
-- **Only the administrator turns on their own; any administrator turns it off.** The Second factor button appears in your row and in the row of who has it on.
+- **Setting up at sign-in asks for the password and the first code**, which proves that the app read the key. **Turning on and off in the panel ask for the current password** of who is using the panel.
+- **Any administrator turns off the second factor of any account**, of an administrator or of an FTP user. Nobody sets it up for someone else: the key only appears to who is signing in.
+- **The FTP user does not reach any second factor screen of the administration**, nor the key of another account.
 - **Each code is valid once** and for about 30 seconds. The panel also accepts the previous code and the next one, for a clock that is slightly off.
-- **A wrong code counts as a sign-in error:** five errors in a row send back to user and password, and the errors add up to the blocking of the address, like the password ones. Ten refused codes for the same account in 15 minutes pause its checking, from any address.
+- **A wrong code at sign-in counts as a sign-in error:** five errors in a row send back to user and password, and the errors add up to the blocking of the address, like the password ones. Ten refused codes for the same account in 15 minutes pause its checking, from any address.
+- **A wrong code in the setup does not count as a sign-in error:** the key is on the screen of who is typing and nothing has been saved yet.
 - **The right password is not enough to reset the count** of errors of the address: that only happens after the code is accepted.
-- **Changing the name** of the administrator takes the second factor along. **Removing** the administrator deletes their key.
+- **Changing the name** of the administrator takes the second factor along. **Removing** the administrator or the FTP user deletes their key; a user created later with the same name sets up from scratch.
 - **The server clock and the phone clock must be right.** With more than a minute of difference, the code is refused.
 
 <details>
 <summary>Technical detail — how the second factor works</summary>
 
 - **Standard:** TOTP (RFC 6238) with SHA-1, six digits and a 30-second step, what authenticator apps read. The key has 160 bits, drawn by the panel. The QR code is drawn by the panel itself, in SVG, with no outside library and no JavaScript ([`qr.py`](../../painel/qr.py)).
-- **Where it stays:** the list of who has the second factor on stays in `DATA_DIR/painel/segundo-fator`, with the panel data. The key of each administrator stays in `.secrets/segundo-fator/<name>.txt` (`0600`), outside Git and the image: see [Secrets](secrets.md#o-que-fica).
-- **Backup:** the list goes into the `scripts/backup.sh` copy; the keys do not. With the copy restored on a server without the keys, the account with the second factor on **does not sign in** (`503`, event `entrada_fator_sem_segredo`) until someone turns its factor off: the missing key closes the sign-in, it does not open it. See [Backup and restore](backup.md#segredos).
-- **Two-step sign-in:** with the right password, the panel does not open a session. It keeps the wait for the code in memory, for 5 minutes, tied to the source address, and hands over the cookie `__Host-etapa` (`Secure`, `HttpOnly`, `SameSite=Strict`), which only serves the code screen. The session is born after the code is accepted.
-- **Routes:** `GET` and `POST /entrar/codigo` for the sign-in code; `GET /administradores/fator?admin=<name>` for the screen to turn on or off, `POST /administradores/fator/ligar` and `POST /administradores/fator/desligar`, with the CSRF token of the session. The FTP user gets `404` on the three.
-- **Turn-on screen:** the key shown waits for the first code for 10 minutes, kept only in the memory of the session; the screen opened again shows the same one. After that time, the panel draws another.
-- **Responses:** code refused at sign-in, `401`; checking paused or address with too many attempts, `429`; code that does not match on the turn-on screen, `400`; second factor of another administrator that is off, opened to turn on, `409`.
-- **Panel restart:** the waits for the code, the count of refused codes and the mark of the last code used stay in memory and start over. Whoever was on the code screen types user and password again.
-- **Audit:** `entrada_senha_ok`, `entrada_codigo_recusado`, `entrada_fator_sem_segredo`, `admin_fator_ligado`, `admin_fator_desligado` and `admin_fator_desligado_no_host`: see [Audit](#auditoria). Neither the key nor the typed code is recorded.
+- **Where it stays:** the list of who has the second factor on stays in `DATA_DIR/painel/segundo-fator`, with the panel data. The key of each account stays in `.secrets/segundo-fator/`, outside Git and the image: `<name>.txt` for the administrator and `ftp.<name>.txt` for the FTP user, both with mode `0600`. The dot does not fit in any name, and so the two accounts are never mixed up, not even when they have the same name. See [Secrets](secrets.md#o-que-fica).
+- **Backup:** the list goes into the `scripts/backup.sh` copy; the keys do not. With the copy restored on a server without the keys, the account with the second factor on **does not sign in** (`503`, event `entrada_fator_sem_segredo`) until someone turns its factor off: the missing key closes the sign-in, it does not open it, and the account gets no new setup while it is on the list. See [Backup and restore](backup.md#segredos).
+- **Two-step sign-in:** with the right password, the panel does not open a session. It keeps the wait in memory, tied to the source address, and hands over the cookie `__Host-etapa` (`Secure`, `HttpOnly`, `SameSite=Strict`), which only serves the code screen or the setup screen, never both. The wait for the code lasts 5 minutes; the one for the setup, 10. The session is born after the code is accepted.
+- **Setup at sign-in:** the key is drawn when the password matches and stays only in the memory of the wait; the screen opened again shows the same one. It is only saved with the first right code, and only for an account that has no second factor yet: with two sign-ins of the same account open, the one that sets up first wins, and the other goes back to user and password. After the setup, the other sessions of the account are closed.
+- **Routes:** `GET` and `POST /entrar/codigo` for the sign-in code and `GET` and `POST /entrar/cadastro` for the setup; `GET /administradores/fator?admin=<name>` for the screen to turn on or off, `POST /administradores/fator/ligar` and `POST /administradores/fator/desligar`; `GET /usuarios/fator?usuario=<name>` and `POST /usuarios/fator/desligar` for the one of the FTP user. The administration ones carry the CSRF token of the session, and the FTP user gets `404` on all of them.
+- **Turn-on screen** (without the requirement): the key shown waits for the first code for 10 minutes, kept only in the memory of the session; the screen opened again shows the same one. After that time, the panel draws another.
+- **Responses:** code refused at sign-in, `401`; checking paused or address with too many attempts, `429`; code that does not match in the setup or on the turn-on screen, `400`; second factor of another administrator that is off, opened to turn on, `409`.
+- **Panel restart:** the waits, the count of refused codes and the mark of the last code used stay in memory and start over. Whoever was on the code screen or on the setup screen types user and password again.
+- **Audit:** `entrada_senha_ok` (with `admin=` or `usuario=`), `entrada_codigo_recusado`, `entrada_fator_sem_segredo`, `fator_cadastrado_na_entrada`, `admin_fator_ligado`, `admin_fator_desligado`, `usuario_fator_desligado` and `admin_fator_desligado_no_host`: see [Audit](#auditoria). Neither the key nor the typed code is recorded.
 
 </details>
 
@@ -946,7 +962,7 @@ Lost the password and there is no other administrator to change it through the p
 | Choose the password, instead of generating | `./scripts/painel-senha.sh` (asks twice) |
 | New password for another administrator | `./scripts/painel-senha.sh --usuario NOME --gerar` |
 | Create an administrator from the host | the same command, with a `NOME` that does not exist yet |
-| Turn off the second factor of who lost the device | `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME` |
+| Turn off the second factor of who lost the device | `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME` (FTP user: `ftp.NOME`) |
 
 **Expected result:**
 
@@ -1068,7 +1084,7 @@ The line `Developed by allsafe.inf.br` stays in the footer of every screen, with
 
 ## 🔄 How the panel decides
 
-Each request goes through three checks before changing anything: the source network (nginx), the user and the password, with the code from the app when the administrator has the second factor on, and the origin and the token of the form (panel). The download of a file goes through the first two and through the check of the requested path. The administrator's password is checked by the panel; that of the FTP user, by the FTP server. The first flowchart goes from opening the page to the session; the second shows what happens with each request of the session.
+Each request goes through three checks before changing anything: the source network (nginx), the user and the password, with the code from the authenticator app of the account, and the origin and the token of the form (panel). The download of a file goes through the first two and through the check of the requested path. The administrator's password is checked by the panel; that of the FTP user, by the FTP server. The first flowchart goes from opening the page to the session; the second shows what happens with each request of the session.
 
 <details>
 <summary>Flowcharts of the panel, with the written sequence — click to expand</summary>
@@ -1089,9 +1105,10 @@ flowchart LR
         senha@{ shape: diam, label: "user and password<br>match?" }
         hash@{ shape: doc, label: "administradores<br>name and password hash" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, internal network" }
-        fator@{ shape: diam, label: "second factor<br>on for the account?" }
+        fator@{ shape: diam, label: "account already has<br>a second factor?" }
+        cadastro@{ shape: rect, label: "second factor setup<br>QR code and new key" }
         codigo@{ shape: diam, label: "code from the app<br>matches?" }
-        chave@{ shape: doc, label: "segundo-fator<br>key of each administrator" }
+        chave@{ shape: doc, label: "segundo-fator<br>key of each account" }
     end
     subgraph SESSAO["Session"]
         sessao@{ shape: rect, label: "4 h session<br>cookie and CSRF token" }
@@ -1107,18 +1124,20 @@ flowchart LR
     rede -- "3a · yes: forwards through the Unix socket" --> painel
     rede -- "3b · no: 403 or 429" --> recusa
     painel -- "4 · asks for user and password and checks" --> senha
-    senha -- "5a · yes: checks whether the account has a second factor" --> fator
+    senha -- "5a · yes: checks whether the account already has a second factor" --> fator
     senha -- "5b · no: 5 errors block the address" --> recusa
-    fator -- "6a · no, or FTP user: opens the session" --> sessao
-    fator -- "6b · yes: asks for the six-digit code" --> codigo
-    codigo -- "7a · yes: opens the session of the administrator" --> sessao
-    codigo -- "7b · no: 5 errors end the wait" --> recusa
-    sessao -- "8 · every request goes through the checks" --> pedidos
-    pedidos -- "9a · accepted" --> atendido
-    pedidos -- "9b · refused" --> recusa
+    fator -- "6a · yes: asks for the six-digit code" --> codigo
+    fator -- "6b · no, and it is required: shows the key" --> cadastro
+    fator -- "6c · no, and it is not required: opens the session" --> sessao
+    cadastro -- "7 · asks for the first code from the app" --> codigo
+    codigo -- "8a · yes: opens the session" --> sessao
+    codigo -- "8b · no: 5 errors end the wait" --> recusa
+    sessao -- "9 · every request goes through the checks" --> pedidos
+    pedidos -- "10a · accepted" --> atendido
+    pedidos -- "10b · refused" --> recusa
     painel -. "administrator: compares with the hash" .-> hash
     painel -. "any other name: the FTP server checks the password" .-> ftp
-    painel -. "second factor: computes the code with the key" .-> chave
+    painel -. "second factor: saves the key at setup and computes the code" .-> chave
 ```
 
 <sub>Level 2 · Flowchart · [source](diagrams/)</sub>
@@ -1130,15 +1149,17 @@ flowchart LR
 | 3a | allowed network and within the limit? ➜ Web panel | Yes: nginx forwards the request through the Unix socket, with the address of the client |
 | 3b | allowed network and within the limit? ➜ request refused | No: `403` for an outside network, `429` for too many requests; the panel does not even receive the request |
 | 4 | Web panel ➜ user and password match? | The panel checks the network and the host name again, shows the sign-in screen, which asks for user and password, and checks what was typed |
-| 5a | user and password match? ➜ second factor on for the account? | Yes: before opening the session, the panel checks whether the account is an administrator with the [second factor](#segundo-fator) on |
+| 5a | user and password match? ➜ account already has a second factor? | Yes: before opening the session, the panel checks whether the account, of an administrator or of an FTP user, already has the [second factor](#segundo-fator) set up |
 | 5b | user and password match? ➜ request refused | No: `401`, without saying which of the two was wrong; five errors in 15 minutes block the address (`429`) |
-| 6a | second factor on for the account? ➜ 4 h session | No, or the account is an FTP user: it opens the session, with cookie and CSRF token. The administrator's reaches all the tabs; the FTP user's, only the My files screen |
-| 6b | second factor on for the account? ➜ code from the app matches? | Yes: no session is opened. The panel keeps a 5-minute wait, tied to the address, and asks for the six-digit code of the authenticator app |
-| 7a | code from the app matches? ➜ 4 h session | Yes: it opens the session of the administrator. The same code does not work a second time |
-| 7b | code from the app matches? ➜ request refused | No: `401`, and the error counts towards the blocking of the address; five errors end the wait and the sign-in starts again from the password |
-| 8 | 4 h session ➜ session requests | Each request made with the session open goes through the checks of the requests flowchart, right below |
-| 9a | session requests ➜ request served | Accepted: the user is ready on the FTP, the file is downloaded or the change is made |
-| 9b | session requests ➜ request refused | Refused: nothing changes, and the refusal stays in the audit log |
+| 6a | account already has a second factor? ➜ code from the app matches? | Yes: no session is opened. The panel keeps a 5-minute wait, tied to the address, and asks for the six-digit code of the authenticator app |
+| 6b | account already has a second factor? ➜ second factor setup | No, and the second factor is required (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim`, the default): no session is opened. The panel draws a key, keeps a 10-minute wait, tied to the address, and shows the QR code and the key |
+| 6c | account already has a second factor? ➜ 4 h session | No, and the second factor is not required: it opens the session with the password only, with cookie and CSRF token |
+| 7 | second factor setup ➜ code from the app matches? | The account reads the key with the authenticator app and types the first code. The key is only saved if it matches |
+| 8a | code from the app matches? ➜ 4 h session | Yes: it opens the session, with cookie and CSRF token. The administrator's reaches every tab; the FTP user's, only the My files screen. The same code does not work a second time |
+| 8b | code from the app matches? ➜ request refused | No: at sign-in, `401`, and the error counts towards the blocking of the address; five errors end the wait and the sign-in starts again from the password. In the setup, `400`: nothing is saved and the same screen comes back |
+| 9 | 4 h session ➜ session requests | Each request made with the session open goes through the checks of the requests flowchart, right below |
+| 10a | session requests ➜ request served | Accepted: the user is ready on the FTP, the file is downloaded or the change is made |
+| 10b | session requests ➜ request refused | Refused: nothing changes, and the refusal stays in the audit log |
 
 **Support**
 
@@ -1146,7 +1167,7 @@ flowchart LR
 |---|---|---|
 | Web panel | administradores (`DATA_DIR/painel/administradores`) | compares the password typed with the administrator's `scrypt` hash, at each sign-in; a name that does not exist goes through the same calculation |
 | Web panel | Pure-FTPd (`allsafe-ftp`, internal network of the stack) | it is not an administrator with that password and the sign-in of the FTP users is on: it signs in to the FTP server with the name and the password and leaves right after, in TLS with the certificate checked; the one that says whether the password is valid is the server |
-| Web panel | segundo-fator (`.secrets/segundo-fator/`) | account with the second factor on: reads the key of the administrator and computes the code of the moment, with one 30-second step of slack on each side |
+| Web panel | segundo-fator (`.secrets/segundo-fator/`) | setup: saves the key of the account after the first right code. Sign-in: reads the key and computes the code of the moment, with one 30-second step of slack on each side |
 
 **Session requests**
 
@@ -1230,7 +1251,8 @@ Everything the panel does stays in `DATA_DIR/painel/auditoria.log` (`0600`, owne
 |---|---|
 | `painel_iniciado` | The panel started |
 | `entrada_ok` · `entrada_falha` · `entrada_bloqueada` | Sign-in accepted, with the administrator (`admin=`) or the FTP user (`usuario=`) · wrong user or password, without the name typed, and with `conferencia=ftp_indisponivel` when the FTP server could not check the password · address blocked for too many errors |
-| `entrada_senha_ok` · `entrada_codigo_recusado` · `entrada_fator_sem_segredo` | Administrator with the [second factor](#segundo-fator) on, always with `admin=`: password accepted, waiting for the code · code from the app refused · account turned on without the key on the server, which does not sign in |
+| `entrada_senha_ok` · `entrada_codigo_recusado` · `entrada_fator_sem_segredo` | Sign-in with the [second factor](#segundo-fator), with `admin=` or `usuario=`: password accepted, waiting for the code or for the setup · code from the app refused · account turned on without the key on the server, which does not sign in |
+| `fator_cadastrado_na_entrada` | Second factor set up at sign-in, by the account itself (`admin=` or `usuario=`), after the password and the first right code |
 | `saida` | Someone clicked **Sign out**, administrator or FTP user |
 | `sessao_encerrada` | The session of an FTP user ended before its time, with the user and the reason: `cadastro_alterado` (password or folder changed, user removed), `nome_de_administrador` or `acesso_desligado` |
 | `recusa_papel` | An FTP user asked for an administration screen or form, or for an action their profile does not have; with the user, the path requested and the profile |
@@ -1259,6 +1281,7 @@ Everything the panel does stays in `DATA_DIR/painel/auditoria.log` (`0600`, owne
 | `admin_inicial_criado` | First start: the panel created the administrator of `PAINEL_ADMIN_USER` |
 | `admin_criado` · `admin_senha_trocada` · `admin_renomeado` · `admin_removido` | Change of an administrator through the panel, with who made it and who was changed |
 | `admin_fator_ligado` · `admin_fator_desligado` · `admin_fator_desligado_no_host` | Second factor turned on by the administrator themselves · turned off through the panel, with who made it (`admin=`) and whose it was (`alvo=`) · turned off from the server terminal |
+| `usuario_fator_desligado` | Second factor of an FTP user turned off through the panel, with who made it (`admin=`) and whose it was (`usuario=`) |
 | `admin_senha_atual_recusada` | Change of an administrator or deletion refused: the current password of whoever asked did not match; with the administrator and the path requested |
 | `usuario_senha_atual_recusada` | Deletion refused on the My files screen: the FTP password of whoever asked did not match; with the user and the path requested |
 | `admin_definido_no_host` | `scripts/painel-senha.sh` created an administrator or changed their password |
@@ -1283,7 +1306,7 @@ Password, token and cookie are **never** written. Neither is the name typed in a
 | Transport | HTTPS only, TLS 1.2 or 1.3, in HTTP/2 or HTTP/1.1; plain HTTP gets `400` |
 | Volume of requests | In nginx, per address: 20 requests per second (burst of 40), 16 connections, 16 KiB per request and 5 KiB per address or header, in HTTP/2 and in HTTP/1.1; what goes over that gets `429`, `413`, `414` or `400`, or has the HTTP/2 connection closed |
 | Sign-in | User and password per administrator; password of at least 12 characters, kept only as a `scrypt` hash; the refusal does not say whether the error was in the user or in the password; five errors block the address for 15 minutes |
-| Second factor | Optional, per administrator: six-digit code from an authenticator app (TOTP), asked after the password and only in the web panel. The right password does not open a session; each code is valid once; a wrong code counts as a sign-in error; the key stays in `.secrets/segundo-fator/`, outside the backup, and its absence closes the sign-in. See [Second factor at sign-in](#segundo-fator) |
+| Second factor | Required by default for every account of the panel, administrator and FTP user (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO`): six-digit code from an authenticator app (TOTP), asked after the password and only in the web panel. Whoever has not set it up yet does it at sign-in. The right password does not open a session; each code is valid once; a wrong code counts as a sign-in error; the key stays in `.secrets/segundo-fator/`, outside the backup, and its absence closes the sign-in. See [Second factor at sign-in](#segundo-fator) |
 | FTP user | Signs in with the FTP name and password, checked by the FTP server itself, and reaches only the My files screen, in the folder of the record, for what their profile allows; the administration screens answer `404`; the session ends when their record changes; `PAINEL_ACESSO_USUARIOS_FTP=nao` turns this sign-in off |
 | Profiles | What each FTP user does is limited by their profile, applied by the file system of the server and not by the screen: Read only does not write, Upload neither deletes nor changes what has already arrived, Upload only neither lists nor downloads; the change of profile ends their session in the panel |
 | Administrators | Every change of an administrator asks for the current password of whoever is making it; the administrator changed has their sessions ended; nobody removes their own account |
@@ -1333,7 +1356,7 @@ The code is in [`painel/`](../../painel/), one subject per file, and goes whole 
 | [`config.py`](../../painel/config.py) | Paths, limits and the reading of the container variables, with the refusals of network and of session |
 | [`senha.py`](../../painel/senha.py) | `scrypt` hash of the administrators' passwords and the check in constant time |
 | [`administradores.py`](../../painel/administradores.py) | Reading and writing of the administrators file, one change at a time |
-| [`fator.py`](../../painel/fator.py) | Second factor: the key of each administrator, the calculation and the check of the code (TOTP), the code that does not get in twice and the pause for refused codes |
+| [`fator.py`](../../painel/fator.py) | Second factor: the key of each account, the calculation and the check of the code (TOTP), the code that does not get in twice and the pause for refused codes |
 | [`qr.py`](../../painel/qr.py) | QR code in SVG, drawn by the panel, for the authenticator app to read the key |
 | [`sessao.py`](../../painel/sessao.py) | Sessions in memory, of administrator and of FTP user, limit of attempts and token of the sign-in form |
 | [`auditoria.py`](../../painel/auditoria.py) | Writing and reading of `auditoria.log` |
@@ -1369,7 +1392,7 @@ The code is in [`painel/`](../../painel/), one subject per file, and goes whole 
 | [`recursos.py`](../../painel/recursos.py) | Resources of the server and of each container of the stack: reading of the processor, of the memory and of the FTP network, of the control group of the panel and of what the ftp and the nginx publish, and the history of the last 10 minutes, kept in memory |
 | [`aba_servidor.py`](../../painel/aba_servidor.py) | Server tab: the containers of the stack, with the use against the allocated, the cards of CPU, memory, disk and network of the server, and the summary band of the Overview |
 | [`aba_administradores.py`](../../painel/aba_administradores.py) | Panel administrators: creation through the New user form, change of password, change of name and removal; the list is that of the Users tab |
-| [`aba_fator.py`](../../painel/aba_fator.py) | Second factor of the administrators: the screen that shows the QR code and the key, and the ones to turn on and off |
+| [`aba_fator.py`](../../painel/aba_fator.py) | Second factor: the steps of the QR code and of the key, the turn-on screen and the ones to turn off, of the administrator and of the FTP user |
 | [`aba_seguranca.py`](../../painel/aba_seguranca.py) | Security tab |
 | [`enderecos.py`](../../painel/enderecos.py) | Blocking by address: the single spelling of the address, IPv4 or IPv6, the reading of the blocks of address and of prefix in force, the count of the user and password errors of each address, reset at the right sign-in, and the request for a block to `allsafe-ftp-user` |
 | [`aba_bloqueios.py`](../../painel/aba_bloqueios.py) | Blocks tab: list of the addresses and of the prefixes blocked, search, block by hand of an address or of a prefix, change of period and unblock (`GET /bloqueios`, `GET` and `POST /bloqueios/novo`, `GET /bloqueios/endereco?ip=<endereço>`, `POST /bloqueios/prazo` and `POST /bloqueios/liberar`) |
