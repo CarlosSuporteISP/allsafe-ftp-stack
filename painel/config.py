@@ -70,6 +70,7 @@ FALHAS_MAX = 5              # falhas de entrada por IP...
 JANELA_FALHAS = 15 * 60     # ...nesta janela, em segundos
 FATOR_ERROS_MAX = 10        # códigos do segundo fator recusados por conta, de qualquer endereço, na mesma janela
 VALIDADE_ETAPA = 5 * 60     # segundos entre a senha aceita e o código do segundo fator
+VALIDADE_CADASTRO = 10 * 60 # segundos entre a senha aceita e o primeiro código de quem cadastra o fator na entrada
 ETAPAS_MAX = 200            # entradas à espera do código ao mesmo tempo
 SESSAO_ABSOLUTA = 12 * 3600 # a sessão acaba neste prazo, com ou sem uso; é também o teto de PAINEL_SESSAO_MINUTOS
 SESSOES_MAX = 50
@@ -142,6 +143,8 @@ def configuracao():
         falha('PAINEL_ADMIN_USER inválido: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres')
     if amb('PAINEL_ACESSO_USUARIOS_FTP', 'sim') not in ('nao', 'sim'):
         falha("PAINEL_ACESSO_USUARIOS_FTP deve ser 'sim' ou 'nao'")
+    if amb('PAINEL_SEGUNDO_FATOR_OBRIGATORIO', 'sim') not in ('nao', 'sim'):
+        falha("PAINEL_SEGUNDO_FATOR_OBRIGATORIO deve ser 'sim' ou 'nao'")
     if amb('FTP_TLS_EXCECOES', 'sim') not in ('nao', 'sim'):
         falha("FTP_TLS_EXCECOES deve ser 'nao' ou 'sim'")
     if amb('PAINEL_AVISO_EXPOSICAO', 'sim') not in ('nao', 'sim'):
@@ -216,6 +219,7 @@ def configuracao():
         'aviso_exposicao': amb('PAINEL_AVISO_EXPOSICAO', 'sim') == 'sim',
         'admin_inicial': admin,
         'acesso_usuarios': amb('PAINEL_ACESSO_USUARIOS_FTP', 'sim') == 'sim',
+        'fator_obrigatorio': amb('PAINEL_SEGUNDO_FATOR_OBRIGATORIO', 'sim') == 'sim',
         'inatividade': int(minutos) * 60,
         'envio_max': int(envio) * 1024 * 1024,
         'retencao_minutos': int(retencao),

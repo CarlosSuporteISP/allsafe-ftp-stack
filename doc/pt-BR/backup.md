@@ -230,11 +230,11 @@ A cópia não leva o `.env` nem a pasta `.secrets/`, para que um arquivo de back
 | `.secrets/ftp-usuario-inicial-senha.txt` | Senha do usuário inicial do FTP |
 | `.secrets/painel-admin-inicial-senha-hash.txt` | Hash da senha inicial do primeiro administrador do painel |
 | `.secrets/destinos/` | Chaves do S3, acesso do remoto do rclone, token do bot do Telegram e conversa que recebe, gravados pelo painel na aba Destinos |
-| `.secrets/segundo-fator/` | Chave do segundo fator de cada administrador que ligou o dele, gravada pelo painel na aba Usuários |
+| `.secrets/segundo-fator/` | Chave do segundo fator de cada conta do painel, administrador e usuário do FTP, gravada pelo painel no cadastro |
 
 A chave privada é a única sem volta: sem ela a cópia não abre. Sem os outros, a stack volta do mesmo jeito: o `./deploy.sh` cria um `.env` novo e senhas novas, e os segredos dos destinos são digitados de novo na aba Destinos, em **Alterar**; até lá, o cartão mostra a marca **faltam os segredos** e nada é enviado. Nesse caso, o usuário inicial passa a ter a senha nova, que precisa ser configurada no equipamento que o usa. Os demais usuários e os administradores do painel não são afetados: o hash da senha deles está na cópia. Detalhes de cada arquivo em [Segredos](segredos.md).
 
-A cópia leva a lista de quem está com o [segundo fator](painel.md#segundo-fator) ligado, mas não a chave de cada um. Se a pasta `.secrets/segundo-fator/` não voltar junto, a conta com o fator ligado não entra (`503`): desligue o fator dela pelo terminal, entre só com a senha e ligue de novo pelo painel, com uma chave nova:
+A cópia leva a lista de quem está com o [segundo fator](painel.md#segundo-fator) ligado, mas não a chave de cada um. Se a pasta `.secrets/segundo-fator/` não voltar junto, a conta com o fator ligado não entra (`503`): desligue o fator dela pelo terminal (usuário do FTP: `ftp.NOME`). Na entrada seguinte, a conta cadastra o aplicativo de novo, com uma chave nova; com `PAINEL_SEGUNDO_FATOR_OBRIGATORIO=nao`, ela entra só com a senha e o administrador liga de novo pelo painel:
 
 ```bash
 docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME

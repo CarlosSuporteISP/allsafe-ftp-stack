@@ -369,6 +369,8 @@ class Painel(http.server.BaseHTTPRequestHandler):
             return entrada.entrar(self, metodo, formulario)
         if self.caminho == '/entrar/codigo':
             return entrada.codigo(self, metodo, formulario)
+        if self.caminho == '/entrar/cadastro':
+            return entrada.cadastro(self, metodo, formulario)
 
         token = self.token_do_cookie()
         # Atualização automática da aba Servidor: quem pede é o navegador, sozinho, e isso não conta como uso da sessão.

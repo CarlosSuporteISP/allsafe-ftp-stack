@@ -60,6 +60,7 @@ MENSAGENS = {
     'fator_ligado': N('Segundo fator ligado. A próxima entrada desta conta pede o código do aplicativo; as outras sessões '
                       'dela foram encerradas.'),
     'fator_desligado': N('Segundo fator desligado. A conta volta a entrar só com usuário e senha.'),
+    'fator_zerado': N('Segundo fator desligado. Na próxima entrada, a conta cadastra um aplicativo de novo.'),
 }
 
 ALERTA_SEM_TLS = N('A senha e os arquivos deste usuário passam a trafegar em texto puro e podem ser lidos por quem estiver '
@@ -101,7 +102,8 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
                       f'{icone("lixeira")}{t("Remover")}</a>')
         quantas = abertas.get(nome, 0)
         marca = f' <span class="etiqueta">{t("você")}</span>' if proprio else ''
-        segundo = t('segundo fator ligado') if nome in com_fator else t('sem segundo fator')
+        segundo = (t('segundo fator ligado') if nome in com_fator else
+                   t('cadastra o segundo fator na próxima entrada') if CFG['fator_obrigatorio'] else t('sem segundo fator'))
         linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}<span class="perfil">{t(NOME_DO_PERFIL["administrador"])}</span></td>'
                       f'<td class="suave" colspan="{colunas - 2}">'
                       f'{tn(quantas, "Painel inteiro; {n} sessão aberta", "Painel inteiro; {n} sessões abertas")}; {segundo}</td>'
@@ -144,6 +146,9 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
                 coluna_tls = f'<td data-rotulo="TLS">{t("obrigatório")}</td>'
                 acoes += (f' <a class="botao" href="/usuarios/tls?usuario={destino}">'
                           f'{icone("cadeado-aberto")}{t("Dispensar TLS")}</a>')
+        # Desligar o segundo fator de quem cadastrou: é a saída de quem perdeu ou trocou o aparelho.
+        if fator.do_usuario(nome) in com_fator:
+            acoes += f' <a class="botao" href="/usuarios/fator?usuario={destino}">{icone("escudo")}{t("Segundo fator")}</a>'
         acoes += senha + remover
         linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}'
                       f'<span class="perfil">{t(NOME_DO_PERFIL[papeis.get(nome, "completo")])}</span></td>'
@@ -302,6 +307,7 @@ def criar_usuario(pedido, sessao, consulta, formulario, token):
                          pasta=informada, sem_tls_marcado=dispensar, perfil=perfil)
     auditar(pedido.ip, 'usuario_criado',
             f'admin={sessao["admin"]} usuario={nome} credencial={"gerada" if gerada else "informada"} pasta={pasta} perfil={perfil}')
+    fator.esquecer_usuario(nome)    # sobra de um usuário de mesmo nome, removido pelo terminal, não passa para este
     resultado = 'criado'
     if dispensar:
         # O usuário já existe: se a dispensa falhar, ele fica obrigado a usar TLS, que é o lado seguro.
@@ -720,6 +726,7 @@ def remover_usuario(pedido, sessao, consulta, formulario, token):
         auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=remover usuario={nome}')
         return pedido.recusar(500, t('Não foi possível remover:') + ' ' + do_comando(mensagem))
     idioma.esquecer('usuario', nome)
+    fator.esquecer_usuario(nome)
     auditar(pedido.ip, 'usuario_removido', f'admin={sessao["admin"]} usuario={nome}' + (f' pasta={pasta}' if com_pasta else ''))
     if not com_pasta:
         return pedido.redirecionar('/usuarios?m=removido')

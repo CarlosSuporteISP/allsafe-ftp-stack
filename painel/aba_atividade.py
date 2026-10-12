@@ -10,7 +10,7 @@ from pagina import cabeca, como, e, pagina, tamanho, vazio
 EVENTOS = {
     'painel_iniciado': ('inicio', N('Painel iniciado')),
     'entrada_ok': ('ok', N('Entrada')),
-    'entrada_senha_ok': ('chave', N('Senha aceita, à espera do código do segundo fator')),
+    'entrada_senha_ok': ('chave', N('Senha aceita, à espera do segundo fator')),
     'entrada_codigo_recusado': ('erro', N('Código do segundo fator recusado')),
     'entrada_fator_sem_segredo': ('alerta', N('Entrada recusada: segundo fator ligado sem o segredo no servidor')),
     'entrada_falha': ('erro', N('Entrada recusada')),
@@ -63,6 +63,8 @@ EVENTOS = {
     'admin_fator_ligado': ('escudo', N('Segundo fator ligado')),
     'admin_fator_desligado': ('escudo', N('Segundo fator desligado')),
     'admin_fator_desligado_no_host': ('escudo', N('Segundo fator desligado pelo terminal')),
+    'fator_cadastrado_na_entrada': ('escudo', N('Segundo fator cadastrado na entrada')),
+    'usuario_fator_desligado': ('escudo', N('Segundo fator de usuário do FTP desligado')),
     'admin_definido_no_host': ('terminal', N('Administrador definido pelo host')),
     'admin_senha_atual_recusada': ('erro', N('Senha atual recusada')),
     'usuario_senha_atual_recusada': ('erro', N('Senha do FTP recusada na confirmação')),

@@ -2720,8 +2720,6 @@ EN = {
         'changing, so that what is still arriving does not leave half done. The order is the order of '
         'arrival at the server; a destination failure ends the run and the next one resumes from the '
         'same file. A folder that changes its name does not resend the files inside it.',
-    'Senha aceita, à espera do código do segundo fator':
-        'Password accepted, waiting for the second factor code',
     'Código do segundo fator recusado':
         'Second factor code refused',
     'Entrada recusada: segundo fator ligado sem o segredo no servidor':
@@ -2809,10 +2807,6 @@ EN = {
         'no second factor',
     'Código de verificação':
         'Verification code',
-    'O segundo fator desta conta está ligado, mas o segredo dele não está no servidor. Outro '
-    'administrador ou quem tem acesso ao servidor precisa desligá-lo.':
-        'The second factor of this account is on, but its secret is not on the server. Another '
-        'administrator or someone with access to the server has to turn it off.',
     'O código não confere. Espere o aplicativo mostrar o próximo e tente de novo.':
         'The code does not match. Wait for the app to show the next one and try again.',
     'A senha conferiu. Digite o código de seis dígitos que o aplicativo autenticador mostra para esta conta.':
@@ -2827,6 +2821,60 @@ EN = {
         'the Users tab, or someone with access to the server turns it off from the terminal.',
     'Voltar para usuário e senha':
         'Back to user and password',
+    'Senha aceita, à espera do segundo fator':
+        'Password accepted, waiting for the second factor',
+    'Segundo fator cadastrado na entrada':
+        'Second factor set up at sign-in',
+    'Segundo fator de usuário do FTP desligado':
+        'Second factor of an FTP user turned off',
+    'Na sua próxima entrada, o painel pede o cadastro de um aplicativo de novo, com uma chave nova.':
+        'At your next sign-in, the panel asks you to set up an app again, with a new key.',
+    'Na próxima entrada, a conta <strong>{nome}</strong> cadastra um aplicativo de novo, com uma '
+    'chave nova. É o caminho de quem perdeu ou trocou o aparelho.':
+        'At the next sign-in, the account <strong>{nome}</strong> sets up an app again, with a new '
+        'key. It is the way out for someone who lost or replaced the device.',
+    'A conta <strong>{nome}</strong> volta a entrar no painel só com usuário e senha.':
+        'The account <strong>{nome}</strong> goes back to signing in to the panel with user and '
+        'password only.',
+    'Aparelho perdido ou roubado: troque também a senha da conta. Até o cadastro novo, quem souber '
+    'a senha cadastra o aplicativo.':
+        'Lost or stolen device: change the password of the account too. Until the new setup, '
+        'whoever knows the password sets up the app.',
+    'Obrigatório (<code>PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim</code>): toda conta que entra neste '
+    'painel, administrador ou usuário do FTP, passa pela senha e pelo código de um aplicativo '
+    'autenticador; quem ainda não cadastrou cadastra na entrada. Vale só para este painel: o FTP '
+    'não muda.':
+        'Required (<code>PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim</code>): every account that signs in '
+        'to this panel, administrator or FTP user, goes through the password and the code from an '
+        'authenticator app; whoever has not set one up yet does it at sign-in. It applies to this '
+        'panel only: FTP does not change.',
+    'Administradores que ainda não cadastraram: {nomes}. Até lá, quem souber a senha da conta faz '
+    'o cadastro.':
+        'Administrators who have not set it up yet: {nomes}. Until then, whoever knows the '
+        'password of the account does the setup.',
+    'Segundo fator desligado. Na próxima entrada, a conta cadastra um aplicativo de novo.':
+        'Second factor turned off. At the next sign-in, the account sets up an app again.',
+    'cadastra o segundo fator na próxima entrada':
+        'sets up the second factor at the next sign-in',
+    'Sem o aparelho: peça ao administrador para desligar o segundo fator da sua conta.':
+        'Without the device: ask the administrator to turn off the second factor of your account.',
+    'Na entrada seguinte, o painel pede o cadastro de um aplicativo de novo.':
+        'At the following sign-in, the panel asks you to set up an app again.',
+    'Cadastre o segundo fator':
+        'Set up the second factor',
+    'A senha conferiu. Este painel exige, além da senha, o código de seis dígitos de um aplicativo '
+    'autenticador. Cadastre o seu agora para entrar; vale só para este painel, o FTP não muda.':
+        'The password is right. This panel requires, besides the password, the six-digit code from '
+        'an authenticator app. Set yours up now to sign in; it applies to this panel only, FTP '
+        'does not change.',
+    'Digite o código que o aplicativo mostrar.':
+        'Type the code the app shows.',
+    'Cadastrar e entrar':
+        'Set up and sign in',
+    'O segundo fator desta conta está ligado, mas o segredo dele não está no servidor. Um '
+    'administrador ou quem tem acesso ao servidor precisa desligá-lo.':
+        'The second factor of this account is on, but its secret is not on the server. An '
+        'administrator or someone with access to the server has to turn it off.',
 }
 
 # Mensagem de erro do allsafe-ftp-user (ftp/usuario.sh), que fala português sem acento: a expressão que a

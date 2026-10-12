@@ -6,6 +6,29 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.9.0] - 2026-10-12
+
+O segundo fator passa a ser obrigatório para toda conta do painel, e quem ainda não cadastrou cadastra na própria entrada.
+
+Quem atualiza de uma versão anterior: na primeira entrada depois da atualização, cada conta do painel, administrador e usuário do FTP, é levada a cadastrar um aplicativo autenticador antes de entrar. Para manter a entrada como era, grave `PAINEL_SEGUNDO_FATOR_OBRIGATORIO=nao` no `.env` e rode `./deploy.sh`. O FTP não muda.
+
+### Adicionado
+
+- **Segundo fator obrigatório**: variável `PAINEL_SEGUNDO_FATOR_OBRIGATORIO`, `sim` por padrão. Toda conta que entra no painel, administrador e usuário do FTP, passa pela senha e pelo código de seis dígitos do aplicativo autenticador. Com `nao`, vale o modo da `1.7.0`: cada administrador liga o dele. Valor fora de `sim` e `nao` é recusado pelo `deploy.sh` e pelo container do painel.
+- **Cadastro na entrada**: a conta sem segundo fator, depois da senha, vê o código QR e a chave e só entra com o primeiro código certo do aplicativo. A chave só é gravada nesse momento, a espera vale 10 minutos e não abre tela nenhuma do painel; código errado não grava nada. Conta que já tem o fator não recebe cadastro novo por esse caminho.
+- **Segundo fator do usuário do FTP**: quem entra no painel com a conta do FTP também cadastra o aplicativo. Vale só para o painel: no FTP, a conta continua entrando com a senha. A chave fica em `.secrets/segundo-fator/ftp.<nome>.txt`, `0600`.
+- **Zerar o segundo fator de um usuário do FTP**: botão **Segundo fator** na linha do usuário, na aba Usuários, para quem já cadastrou, com a senha do administrador; pelo terminal, `--segundo-fator desligar ftp.NOME`. O administrador nunca vê a chave. Remover o usuário pelo painel apaga a chave dele.
+- **Auditoria**: `fator_cadastrado_na_entrada` e `usuario_fator_desligado`, com a descrição nos três idiomas na aba Log.
+- **Bateria**: quatro casos funcionais e quatro de segurança para o cadastro na entrada, com o administrador e o usuário do FTP. São 104 casos funcionais, 148 de segurança e 14 de rede.
+
+### Alterado
+
+- **Desligar o segundo fator**: com a obrigação ligada, desligar o de uma conta é mandá-la cadastrar de novo na entrada seguinte, com uma chave nova. A tela avisa para trocar também a senha quando o aparelho foi perdido ou roubado.
+- **Aba Usuários e aba Segurança**: a linha de cada administrador mostra quem ainda cadastra na próxima entrada, e o item do segundo fator da conferência diz se a obrigação está ligada.
+- **Fluxograma da entrada do painel**: ganha o cadastro do segundo fator, com a sequência renumerada nos guias e nos README.
+- **Telas da entrada**: o atalho **Voltar para usuário e senha** fica afastado da caixa de aviso, na tela do código e na do cadastro.
+- **Guia de telas**: fotos refeitas na `1.9.0`, com o segundo fator obrigatório, em português e em inglês; entram a tela **Cadastre o segundo fator**, da entrada, e a de desligar o segundo fator de um usuário do FTP.
+
 ## [1.8.0] - 2026-10-12
 
 O painel passa a ter espanhol, ao lado do português e do inglês.

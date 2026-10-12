@@ -215,8 +215,8 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
   printf '%-9s %s → %s\n' "$tipo" "$resultado" "$arquivo"
 }
 declare -A ESPERADOS=(
-  [testes]="$(seq -s ' ' 1 99)"
-  [seguranca]="$(seq -s ' ' 1 144)"
+  [testes]="$(seq -s ' ' 1 104)"
+  [seguranca]="$(seq -s ' ' 1 148)"
   [rede]="$(seq -s ' ' 1 14)"
 )
 ARQUIVOS=()
@@ -275,4 +275,7 @@ preparar() { # <arquivo> <sufixo> <porta FTP> <porta do painel> <início da faix
   gravar_env "$1" FTP_PASSIVE_PORT_END "$(( $5 + 19 ))"
   gravar_env "$1" FTP_SUBNET "$6"
   gravar_env "$1" PAINEL_ADMIN_USER "$ADMIN"
+  # A bateria entra no painel centenas de vezes só com usuário e senha: o segundo fator obrigatório fica desligado
+  # aqui e é ligado na etapa que o prova.
+  gravar_env "$1" PAINEL_SEGUNDO_FATOR_OBRIGATORIO nao
 }

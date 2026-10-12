@@ -11,7 +11,7 @@
 
 Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Version](https://img.shields.io/badge/version-1.8.0-blue)
+![Version](https://img.shields.io/badge/version-1.9.0-blue)
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
 ![Support](https://img.shields.io/badge/support-LTS-blue)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -26,7 +26,7 @@ Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf
 
 <a href="doc/en/images/painel-principal.png"><img src="doc/en/images/painel-principal.png" alt="Overview tab with the menu on the left, in two groups, the FTP server band, which says Up and TLS required on sign-in, the four measurements Users, Space used, Last upload and FTP certificate, each with the shortcut to the detail, the Server and containers card, with the CPU and the memory of the server and of the containers, the charts Files received per day, Last upload per user and Space per folder, the Recent activity card, with the last six records, and the Details to set up the device card" width="100%"></a>
 
-<sub><b>v1.8.0</b> · web panel, Overview tab · captured on 2026-10-12</sub>
+<sub><b>v1.9.0</b> · web panel, Overview tab · captured on 2026-10-12</sub>
 
 <!-- diagrama: doc/en/diagrams/overview-diagram.mmd -->
 ```mermaid
@@ -100,7 +100,7 @@ There are **three containers**: the FTP server, the panel and **nginx**, the onl
 | **Private network by default** | Made for an internal network, behind a firewall; a public address only through an explicit option, with a warning |
 | **Only the panel published, if you want** | The panel can be opened through a proxy or tunnel on the server itself, with the FTP closed on the private network; the client address is only accepted from the declared proxy |
 | **Secure web panel** | Creates users, changes passwords and removes users in the browser: HTTPS only, a session that ends after 4 hours without use, blocking after five wrong passwords and a record of every action |
-| **Second factor at the panel sign-in** | Each administrator turns on their own: after the password, the panel asks for the six-digit code of an authenticator app (TOTP), read from a QR code. Panel only: the FTP does not change |
+| **Second factor at the panel sign-in** | Required by default for every account of the panel, administrator and FTP user: after the password, the panel asks for the six-digit code of an authenticator app (TOTP). Whoever has not set it up yet does it at the sign-in itself, from a QR code. Panel only: the FTP does not change |
 | **Files in the browser** | The administrator browses, uploads, downloads, renames and deletes; the owner of the files signs in with the FTP user and password, sees only their own folder and does what their profile allows. Uploading through the panel depends on a permission given to each user |
 | **Automatic cleanup** | Per account, the administrator tells the panel to keep only the last files of each folder or only those of the last days; the panel deletes the rest by itself, from time to time. Off by default |
 | **Sending to S3, rclone and Telegram bot** | In the Destinations tab, the administrator connects a folder to an S3 storage, for the second copy or to keep the files elsewhere and free the disk, to an rclone remote, for what S3 does not reach (an SFTP or WebDAV server, or a file cloud), and to a Telegram bot, which delivers within moments each file that arrives to a person, a group or a channel, up to the size the bot accepts. Each type accepts up to 20 destinations, and a new destination can use the access of another one, for another folder, another bucket or another group. The bot only sends and the rclone remote only receives. In the Files tab, a button sends one file right away. The copy of the whole system, encrypted, goes to an S3 by the button or by schedule. Nothing is deleted in the destination. No settings by default |
@@ -122,18 +122,18 @@ The web panel, tab by tab. The Overview tab is the image at the top of this page
 
 | | |
 |---|---|
-| <a href="doc/en/images/aba-usuarios.png"><img src="doc/en/images/aba-usuarios.png" alt="Users tab with the New user button and the list of accounts: first the administrator admin, with the tag you, the status no second factor and the Second factor button, then the FTP users, each with the profile below the name and the tags initial, limits, cleanup and blocked, the folder, with the tag shared on two of them, usage, files, last upload, the TLS column, with required on every row, the actions Edit, Exempt from TLS, Change password and Remove and, below the list, the collapsed section How profiles and tags work" width="100%"></a> | <a href="doc/en/images/aba-arquivos.png"><img src="doc/en/images/aba-arquivos.png" alt="Files tab at the first level, with the list of the users' folders, the date of each one, the Rename and Delete buttons on each row and the New folder and Upload file cards" width="100%"></a> |
+| <a href="doc/en/images/aba-usuarios.png"><img src="doc/en/images/aba-usuarios.png" alt="Users tab with the New user button and the list of accounts: first the administrator admin, with the tag you, the status second factor on and the Second factor button, then the FTP users, each with the profile below the name and the tags initial, limits, cleanup and blocked, the folder, with the tag shared on two of them, usage, files, last upload, the TLS column, with required on every row, the actions Edit, Exempt from TLS, Change password and Remove, plus Second factor on the account that already set up its own, and, below the list, the collapsed section How profiles and tags work" width="100%"></a> | <a href="doc/en/images/aba-arquivos.png"><img src="doc/en/images/aba-arquivos.png" alt="Files tab at the first level, with the list of the users' folders, the date of each one, the Rename and Delete buttons on each row and the New folder and Upload file cards" width="100%"></a> |
 | **Users** — creates each account, chooses the profile, changes the password, the folder and the limits, unblocks and removes | **Files** — browses the user folders, uploads and downloads files, creates folders, renames and deletes |
 | <a href="doc/en/images/aba-destinos.png"><img src="doc/en/images/aba-destinos.png" alt="Destinations tab with the System copy card collapsed at the top, the S3 storage card turned on, with the address, the bucket, the folder sent, the runs, the last run and the total sent, the rclone remote card turned on, with the type SFTP, the folder on the remote, the folder sent, the server key, the last run and the total sent, the Telegram bot card turned on, with the folder, the largest file the bot sends, the last run and the total sent, and the Test, Send now, Change, New with the same access and Remove buttons on each one, and, at the top of the screen, the New S3, New remote and New bot buttons and the How the panel sends explanation, collapsed" width="100%"></a> | <a href="doc/en/images/aba-servidor.png"><img src="doc/en/images/aba-servidor.png" alt="Server tab with the Auto-refresh button, the Stack containers card, with one box for the FTP server, one for the Panel and one for the Web front end, each with CPU, memory and processes in use and allocated, the chart of the last minutes and the share of the time in which the CPU limit was reached, and the Server resources card, with CPU, memory, disk and FTP network" width="100%"></a> |
 | **Destinations** — sends by itself the files of a folder to an S3 storage, to an rclone remote and through a Telegram bot, with test and send right away | **Server** — the usage and the limit of processor, memory and processes of each container, and the resources of the server |
-| <a href="doc/en/images/aba-seguranca.png"><img src="doc/en/images/aba-seguranca.png" alt="Security tab with the summary of the check at the top, which says how many items are in order, and one line per item: public address, panel behind a proxy or tunnel, addresses of the FTP and of the panel, TLS mode, the two certificates, allowed networks, session, second factor of the administrators, sign-in of FTP users, blocking by attempts on FTP, with the name of the blocked user, blocking by address, with the number of blocked addresses, cost of the passwords, security contact, container and firewall" width="100%"></a> | <a href="doc/en/images/aba-bloqueios.png"><img src="doc/en/images/aba-bloqueios.png" alt="Blocks tab with the rule in use below the title, the Block address button, four blocked addresses, in IPv4 and in IPv6, for errors on FTP, for errors on the panel and by an administrator, each with since when, until when and the Change period and Unblock buttons, and the Users blocked on FTP card, with the user switch-core" width="100%"></a> |
+| <a href="doc/en/images/aba-seguranca.png"><img src="doc/en/images/aba-seguranca.png" alt="Security tab with the summary of the check at the top, which says how many items are in order, and one line per item: public address, panel behind a proxy or tunnel, addresses of the FTP and of the panel, TLS mode, the two certificates, allowed networks, session, second factor, sign-in of FTP users, blocking by attempts on FTP, with the name of the blocked user, blocking by address, with the number of blocked addresses, cost of the passwords, security contact, container and firewall" width="100%"></a> | <a href="doc/en/images/aba-bloqueios.png"><img src="doc/en/images/aba-bloqueios.png" alt="Blocks tab with the rule in use below the title, the Block address button, four blocked addresses, in IPv4 and in IPv6, for errors on FTP, for errors on the panel and by an administrator, each with since when, until when and the Change period and Unblock buttons, and the Users blocked on FTP card, with the user switch-core" width="100%"></a> |
 | **Security** — checks network, TLS, certificates, blocks, passwords and security contact | **Blocks** — the blocked addresses and prefixes, by user and password errors or by the administrator, with new block, unblock and change of period |
 | <a href="doc/en/images/aba-atividade.png"><img src="doc/en/images/aba-atividade.png" alt="Log tab with the records of the panel in four columns: when, from where, with the whole address on a single line or on the server, what happened, with one icon per event, and the detail, such as files sent to the destination, file downloaded, folder created, administrator created, address unblocked and screen outside the role or profile requested by an FTP user" width="100%"></a> | <a href="doc/en/images/aba-administradores.png"><img src="doc/en/images/aba-administradores.png" alt="Users tab with three administrators at the top of the list, admin, with the tag you, noc-plantao and suporte, each with the Administrator profile, the open sessions and the actions Change password, Change name and Remove, and, below them, the FTP users" width="100%"></a> |
 | **Log** — who signed in, from where, what they downloaded, what they uploaded and what was changed | **Administrators** — they are in the Users tab, each person with their own name and their own password |
 | <a href="doc/en/images/aba-meus-arquivos.png"><img src="doc/en/images/aba-meus-arquivos.png" alt="My files screen of the user olt-centro, with the Full profile, with the folders 2026-09 and 2026-10 and a configuration file, the automatic cleanup warning above the list, the Open or Download, Rename and Delete buttons on each row, the New folder and Upload file cards and, in the menu, only the My files tab, the PT, EN and ES buttons, the name of the user and the Sign out button" width="100%"></a> | |
 | **My files** — the FTP user sees their own folder and does in it what their profile allows | |
 
-<sub><b>v1.8.0</b> · web panel, one screenshot per tab · captured on 2026-10-12</sub>
+<sub><b>v1.9.0</b> · web panel, one screenshot per tab · captured on 2026-10-12</sub>
 
 Every screen, menu by menu, with the explanation of each one: [application screenshots](doc/en/application/README.md).
 
@@ -179,8 +179,8 @@ To serve the internal network, adjust the `.env` (template in [`.env.example`](.
 | Change the panel user or password | in the panel, Users tab, on the row of the administrator |
 | Create another panel administrator | in the panel, Users tab, **New user** with the Administrator profile |
 | Recover access to the panel | `./scripts/painel-senha.sh --gerar` (another administrator: `--usuario NOME`) |
-| Ask for a code besides the password at the panel sign-in | in the panel, Users tab, **Second factor** on the row of your own administrator account: see [Second factor](doc/en/panel.md#segundo-fator) |
-| Turn off the second factor of whoever lost the device | another administrator, in the Users tab, or `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME` |
+| Ask for a code besides the password at the panel sign-in | already on for every account (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim`): each one sets up the authenticator app at the first sign-in. See [Second factor](doc/en/panel.md#segundo-fator) |
+| Reset the second factor of whoever lost the device | an administrator, in the Users tab, or `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME` (FTP user: `ftp.NOME`). The account sets it up again at the next sign-in |
 | Create a user | in the panel, Users tab, or `./manage-user.sh add backup-olt` |
 | Limit what a user does (uploads without deleting, only uploads without seeing the backups, or only downloads) | in the panel, Users tab, **Edit**, **Profile** card, or `./manage-user.sh perfil backup-olt envio`: see [Profiles](doc/en/panel.md#perfis) |
 | Download a backup that was received | in the panel, Files tab, **Download** button on the row of the file |
@@ -293,9 +293,10 @@ flowchart LR
         senha@{ shape: diam, label: "user and password<br>match?" }
         hash@{ shape: doc, label: "administradores<br>name and password hash" }
         ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, internal network" }
-        fator@{ shape: diam, label: "second factor<br>on for the account?" }
+        fator@{ shape: diam, label: "account already has<br>a second factor?" }
+        cadastro@{ shape: rect, label: "second factor setup<br>QR code and new key" }
         codigo@{ shape: diam, label: "code from the app<br>matches?" }
-        chave@{ shape: doc, label: "segundo-fator<br>key of each administrator" }
+        chave@{ shape: doc, label: "segundo-fator<br>key of each account" }
     end
     subgraph SESSAO["Session"]
         sessao@{ shape: rect, label: "4 h session<br>cookie and CSRF token" }
@@ -311,18 +312,20 @@ flowchart LR
     rede -- "3a · yes: forwards through the Unix socket" --> painel
     rede -- "3b · no: 403 or 429" --> recusa
     painel -- "4 · asks for user and password and checks" --> senha
-    senha -- "5a · yes: checks whether the account has a second factor" --> fator
+    senha -- "5a · yes: checks whether the account already has a second factor" --> fator
     senha -- "5b · no: 5 errors block the address" --> recusa
-    fator -- "6a · no, or FTP user: opens the session" --> sessao
-    fator -- "6b · yes: asks for the six-digit code" --> codigo
-    codigo -- "7a · yes: opens the session of the administrator" --> sessao
-    codigo -- "7b · no: 5 errors end the wait" --> recusa
-    sessao -- "8 · every request goes through the checks" --> pedidos
-    pedidos -- "9a · accepted" --> atendido
-    pedidos -- "9b · refused" --> recusa
+    fator -- "6a · yes: asks for the six-digit code" --> codigo
+    fator -- "6b · no, and it is required: shows the key" --> cadastro
+    fator -- "6c · no, and it is not required: opens the session" --> sessao
+    cadastro -- "7 · asks for the first code from the app" --> codigo
+    codigo -- "8a · yes: opens the session" --> sessao
+    codigo -- "8b · no: 5 errors end the wait" --> recusa
+    sessao -- "9 · every request goes through the checks" --> pedidos
+    pedidos -- "10a · accepted" --> atendido
+    pedidos -- "10b · refused" --> recusa
     painel -. "administrator: compares with the hash" .-> hash
     painel -. "any other name: the FTP server checks the password" .-> ftp
-    painel -. "second factor: computes the code with the key" .-> chave
+    painel -. "second factor: saves the key at setup and computes the code" .-> chave
 ```
 <sub>Level 2 · Flowchart · [source](doc/en/diagrams/)</sub>
 
@@ -333,15 +336,17 @@ flowchart LR
 | 3a | allowed network and within the limit? ➜ Web panel | Yes: nginx forwards the request through the Unix socket, with the client address |
 | 3b | allowed network and within the limit? ➜ request refused | No: `403` for a network from outside, `429` for too many requests; the panel does not even receive the request |
 | 4 | Web panel ➜ user and password match? | The panel checks the network and the host name again, shows the sign-in screen, which asks for user and password, and checks what was typed |
-| 5a | user and password match? ➜ second factor on for the account? | Yes: before opening the session, the panel checks whether the account is an administrator with the [second factor](doc/en/panel.md#segundo-fator) on |
+| 5a | user and password match? ➜ account already has a second factor? | Yes: before opening the session, the panel checks whether the account, of an administrator or of an FTP user, already has the [second factor](doc/en/panel.md#segundo-fator) set up |
 | 5b | user and password match? ➜ request refused | No: `401`, without saying which of the two was wrong; five errors in 15 minutes block the address (`429`) |
-| 6a | second factor on for the account? ➜ 4 h session | No, or the account is an FTP user: it opens the session, with cookie and CSRF token. The administrator's reaches every tab; the FTP user's, only the My files screen |
-| 6b | second factor on for the account? ➜ code from the app matches? | Yes: no session is opened. The panel keeps a 5-minute wait, tied to the address, and asks for the six-digit code of the authenticator app |
-| 7a | code from the app matches? ➜ 4 h session | Yes: it opens the session of the administrator. The same code does not work a second time |
-| 7b | code from the app matches? ➜ request refused | No: `401`, and the error counts towards the blocking of the address; five errors end the wait and the sign-in starts again from the password |
-| 8 | 4 h session ➜ session requests | Every request made with the session open goes through the checks of the requests flowchart, right below |
-| 9a | session requests ➜ request served | Accepted: the user is ready on the FTP, the file is downloaded or the change is made |
-| 9b | session requests ➜ request refused | Refused: nothing changes, and the refusal goes to the audit log |
+| 6a | account already has a second factor? ➜ code from the app matches? | Yes: no session is opened. The panel keeps a 5-minute wait, tied to the address, and asks for the six-digit code of the authenticator app |
+| 6b | account already has a second factor? ➜ second factor setup | No, and the second factor is required (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim`, the default): no session is opened. The panel draws a key, keeps a 10-minute wait, tied to the address, and shows the QR code and the key |
+| 6c | account already has a second factor? ➜ 4 h session | No, and the second factor is not required: it opens the session with the password only, with cookie and CSRF token |
+| 7 | second factor setup ➜ code from the app matches? | The account reads the key with the authenticator app and types the first code. The key is only saved if it matches |
+| 8a | code from the app matches? ➜ 4 h session | Yes: it opens the session, with cookie and CSRF token. The administrator's reaches every tab; the FTP user's, only the My files screen. The same code does not work a second time |
+| 8b | code from the app matches? ➜ request refused | No: at sign-in, `401`, and the error counts towards the blocking of the address; five errors end the wait and the sign-in starts again from the password. In the setup, `400`: nothing is saved and the same screen comes back |
+| 9 | 4 h session ➜ session requests | Every request made with the session open goes through the checks of the requests flowchart, right below |
+| 10a | session requests ➜ request served | Accepted: the user is ready on the FTP, the file is downloaded or the change is made |
+| 10b | session requests ➜ request refused | Refused: nothing changes, and the refusal goes to the audit log |
 
 **Support**
 
@@ -349,7 +354,7 @@ flowchart LR
 |---|---|---|
 | Web panel | administrators (`DATA_DIR/painel/administradores`) | compares the typed password with the `scrypt` hash of the administrator, at every sign-in; a name that does not exist goes through the same computation |
 | Web panel | Pure-FTPd (`allsafe-ftp`, internal network of the stack) | it is not an administrator with that password and the sign-in of FTP users is on: it logs in to the FTP server with the name and the password and logs out right away, over TLS with the certificate checked; the server is the one that says whether the password is valid |
-| Web panel | segundo-fator (`.secrets/segundo-fator/`) | account with the second factor on: reads the key of the administrator and computes the code of the moment, with one 30-second step of slack on each side |
+| Web panel | segundo-fator (`.secrets/segundo-fator/`) | setup: saves the key of the account after the first right code. Sign-in: reads the key and computes the code of the moment, with one 30-second step of slack on each side |
 
 **Session requests**
 
@@ -665,7 +670,7 @@ The safest path for each decision of whoever installs, as a flowchart, is in [be
 | Check the running installation | `./scripts/validate.sh --runtime` | the same, plus `servico ftp: running, healthy`, likewise for `painel` and `nginx`, and the initial user in PureDB or removed by the administrator |
 | Run the full suite: functional, security and network | `./tests/testar.sh` | one line per case and, at the end, `Bateria aprovada: nenhum desvio.` |
 
-The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 100 functional cases, 144 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
+The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 104 functional cases, 148 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
 
 ---
 
