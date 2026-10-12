@@ -844,6 +844,7 @@ p > .botao { margin-top: 0; }
 .entrada-acesso h1 { margin-bottom: 8px; }
 .entrada-acesso button { width: 100%; margin-top: 20px; }
 .entrada-acesso .nota, .entrada-acesso .aviso { margin: 24px 0 0; }
+.entrada-acesso .nota + p, .entrada-acesso .aviso + p { margin-top: 12px; }
 .entrada-acesso .idioma { --idioma-traco: var(--borda); --idioma-texto: var(--suave); --idioma-marcado: var(--superficie-2); --idioma-forte: var(--texto); margin: 16px 0 0; }
 
 /* ------------------------------------------------------------ larguras */

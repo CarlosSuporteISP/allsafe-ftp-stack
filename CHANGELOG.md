@@ -26,6 +26,8 @@ Quem atualiza de uma versão anterior: na primeira entrada depois da atualizaç�
 - **Desligar o segundo fator**: com a obrigação ligada, desligar o de uma conta é mandá-la cadastrar de novo na entrada seguinte, com uma chave nova. A tela avisa para trocar também a senha quando o aparelho foi perdido ou roubado.
 - **Aba Usuários e aba Segurança**: a linha de cada administrador mostra quem ainda cadastra na próxima entrada, e o item do segundo fator da conferência diz se a obrigação está ligada.
 - **Fluxograma da entrada do painel**: ganha o cadastro do segundo fator, com a sequência renumerada nos guias e nos README.
+- **Telas da entrada**: o atalho **Voltar para usuário e senha** fica afastado da caixa de aviso, na tela do código e na do cadastro.
+- **Guia de telas**: fotos refeitas na `1.9.0`, com o segundo fator obrigatório, em português e em inglês; entram a tela **Cadastre o segundo fator**, da entrada, e a de desligar o segundo fator de um usuário do FTP.
 
 ## [1.8.0] - 2026-10-12
 
