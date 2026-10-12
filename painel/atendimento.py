@@ -204,10 +204,10 @@ class Painel(http.server.BaseHTTPRequestHandler):
         referencia = self.headers.get('Referer', '')
         return referencia.startswith(esperado + '/')
 
-    def token_do_cookie(self):
+    def token_do_cookie(self, cookie='__Host-sessao'):
         for parte in self.headers.get('Cookie', '').split(';'):
             nome, _, valor = parte.strip().partition('=')
-            if nome == '__Host-sessao' and re.fullmatch(r'[A-Za-z0-9_-]{20,100}', valor):
+            if nome == cookie and re.fullmatch(r'[A-Za-z0-9_-]{20,100}', valor):
                 return valor
         return None
 
@@ -367,6 +367,8 @@ class Painel(http.server.BaseHTTPRequestHandler):
 
         if self.caminho == '/entrar':
             return entrada.entrar(self, metodo, formulario)
+        if self.caminho == '/entrar/codigo':
+            return entrada.codigo(self, metodo, formulario)
 
         token = self.token_do_cookie()
         # Atualização automática da aba Servidor: quem pede é o navegador, sozinho, e isso não conta como uso da sessão.

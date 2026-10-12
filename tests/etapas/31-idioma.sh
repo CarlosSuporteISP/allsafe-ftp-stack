@@ -110,15 +110,15 @@ ver31 "$J" 200 / /usuarios /usuarios/novo "/usuarios/novo?pasta=idioma31/a" "/us
   /arquivos "/arquivos?pasta=idioma31" "/arquivos?pasta=idioma31/a" "/arquivos?pasta=idioma31/a/sub" "/arquivos/renomear?item=idioma31/a/sub/backup.cfg" \
   "/arquivos/renomear?item=idioma31/a/sub" "/arquivos/apagar?item=idioma31/a/sub/backup.cfg" "/arquivos/apagar?item=idioma31/a/sub" \
   "/usuarios/novo?perfil=administrador" "/administradores/senha?admin=$ADMIN" "/administradores/senha?admin=idioma31" "/administradores/nome?admin=idioma31" \
-  "/administradores/remover?admin=idioma31" /seguranca /servidor /bloqueios "/bloqueios?q=203.0.113" "/bloqueios?q=198.18" \
+  "/administradores/remover?admin=idioma31" "/administradores/fator?admin=$ADMIN" /seguranca /servidor /bloqueios "/bloqueios?q=203.0.113" "/bloqueios?q=198.18" \
   "/bloqueios/endereco?ip=$BLOQUEADO31" /bloqueios/novo "/bloqueios?q=2001:db8" "/bloqueios/endereco?ip=$V631" "/bloqueios/endereco?ip=$P31" /atividade
-# Telas de recusa e de aviso, que também são do painel: a de quem tenta remover a si mesmo, a que não existe e as
-# que dependem do modo de TLS da instância.
-ver31 "$J" '200|400|403|404|409' "/administradores/remover?admin=$ADMIN" /nao-existe "/usuarios/editar?usuario=ninguem31" "/usuarios/tls?usuario=id31c" \
+# Telas de recusa e de aviso, que também são do painel: a de quem tenta remover a si mesmo, a do segundo fator de
+# outro administrador, a que não existe e as que dependem do modo de TLS da instância.
+ver31 "$J" '200|400|403|404|409' "/administradores/remover?admin=$ADMIN" "/administradores/fator?admin=idioma31" /nao-existe "/usuarios/editar?usuario=ninguem31" "/usuarios/tls?usuario=id31c" \
   "/arquivos?pasta=nao-existe-31"
 # Os avisos que cada lista mostra depois de uma ação, pedidos pelo nome que vai na consulta.
 for n in criado criado_sem_tls criado_tls_falhou senha pasta pasta_sem_limpeza perfil limites limpeza limpeza_desligada desbloqueado removido removido_com_pasta tls_dispensado tls_exigido \
-  admin_criado admin_senha admin_nome admin_removido; do ver31 "$J" 200 "/usuarios?m=$n"; done
+  admin_criado admin_senha admin_nome admin_removido fator_ligado fator_desligado; do ver31 "$J" 200 "/usuarios?m=$n"; done
 for n in bloqueado prazo liberado ausente; do ver31 "$J" 200 "/bloqueios?m=$n"; done
 for n in criada renomeado apagado enviado enviado_com_data limite erro ocupado; do ver31 "$J" 200 "/arquivos?pasta=idioma31/a&m=$n"; done
 telas_adm=$telas31

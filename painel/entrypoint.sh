@@ -86,6 +86,9 @@ if [[ "$PAINEL_DESTINOS" == sim ]]; then
   grep -q ' /certs ' /proc/self/mountinfo \
     || die "pasta /certs não veio do host: use o compose.yaml desta versão (rode ./deploy.sh) ou PAINEL_DESTINOS=nao"
 fi
+# O segredo do segundo fator dos administradores também vem do host, de SECRETS_DIR/segundo-fator.
+grep -q ' /segundo-fator ' /proc/self/mountinfo \
+  || die "pasta /segundo-fator não veio do host: rode ./deploy.sh, que cria SECRETS_DIR/segundo-fator"
 [[ "${STACK_NAME:-allsafe-ftp-stack}" =~ ^[a-z0-9][a-z0-9_-]{0,62}$ ]] \
   || die "STACK_NAME deve ter letras minúsculas, números, _ e -, começar por letra ou número e ter até 63 caracteres"
 
@@ -101,6 +104,11 @@ chmod 0600 /painel/auditoria.log
 if [[ -e /painel/administradores ]]; then
   chown root:root /painel/administradores
   chmod 0600 /painel/administradores
+fi
+# Quem está com o segundo fator ligado: mesmo cuidado.
+if [[ -e /painel/segundo-fator ]]; then
+  chown root:root /painel/segundo-fator
+  chmod 0600 /painel/segundo-fator
 fi
 
 # Certificado autoassinado, válido para os endereços pelos quais o painel é aberto.

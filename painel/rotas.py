@@ -12,6 +12,7 @@ import aba_arquivos
 import aba_atividade
 import aba_bloqueios
 import aba_destinos
+import aba_fator
 import aba_meus_arquivos
 import aba_seguranca
 import aba_servidor
@@ -68,6 +69,9 @@ ROTAS = {
     ('POST', '/administradores/nome'): aba_administradores.trocar_nome,
     ('GET', '/administradores/remover'): aba_administradores.tela_remover,
     ('POST', '/administradores/remover'): aba_administradores.remover,
+    ('GET', '/administradores/fator'): aba_fator.tela,
+    ('POST', '/administradores/fator/ligar'): aba_fator.ligar,
+    ('POST', '/administradores/fator/desligar'): aba_fator.desligar,
     ('GET', '/seguranca'): aba_seguranca.seguranca,
     ('GET', '/servidor'): aba_servidor.servidor,
     ('GET', '/bloqueios'): aba_bloqueios.lista,

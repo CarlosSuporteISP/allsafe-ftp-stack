@@ -10,6 +10,7 @@ import secrets
 import urllib.parse
 
 import administradores
+import fator
 import idioma
 import limites
 import retencao
@@ -56,6 +57,9 @@ MENSAGENS = {
     'admin_senha': N('Senha trocada. As outras sessões desse administrador foram encerradas.'),
     'admin_nome': N('Nome trocado. As outras sessões desse administrador foram encerradas.'),
     'admin_removido': N('Administrador removido. As sessões dele foram encerradas.'),
+    'fator_ligado': N('Segundo fator ligado. A próxima entrada desta conta pede o código do aplicativo; as outras sessões '
+                      'dela foram encerradas.'),
+    'fator_desligado': N('Segundo fator desligado. A conta volta a entrar só com usuário e senha.'),
 }
 
 ALERTA_SEM_TLS = N('A senha e os arquivos deste usuário passam a trafegar em texto puro e podem ser lidos por quem estiver '
@@ -82,19 +86,25 @@ def lista_usuarios(pedido, sessao, consulta, formulario, token):
     papeis = perfis()
     abertas = sessoes_por_admin()
     colunas = 7 if excecoes else 6
+    com_fator = fator.ligados()
     for nome in administradores.ler():
         destino = urllib.parse.quote(nome)
         proprio = nome == sessao['admin']
         acoes = (f'<a class="botao" href="/administradores/senha?admin={destino}">{icone("chave")}{t("Trocar senha")}</a> '
                  f'<a class="botao" href="/administradores/nome?admin={destino}">{icone("lapis")}{t("Trocar nome")}</a>')
+        # Ligar, só o próprio administrador; desligar, qualquer um: é a saída de quem perdeu o aparelho.
+        if proprio or nome in com_fator:
+            acoes += (f' <a class="botao" href="/administradores/fator?admin={destino}">'
+                      f'{icone("escudo")}{t("Segundo fator")}</a>')
         if not proprio:
             acoes += (f' <a class="botao perigo" href="/administradores/remover?admin={destino}">'
                       f'{icone("lixeira")}{t("Remover")}</a>')
         quantas = abertas.get(nome, 0)
         marca = f' <span class="etiqueta">{t("você")}</span>' if proprio else ''
+        segundo = t('segundo fator ligado') if nome in com_fator else t('sem segundo fator')
         linhas.append(f'<tr><td><strong>{e(nome)}</strong>{marca}<span class="perfil">{t(NOME_DO_PERFIL["administrador"])}</span></td>'
                       f'<td class="suave" colspan="{colunas - 2}">'
-                      f'{tn(quantas, "Painel inteiro; {n} sessão aberta", "Painel inteiro; {n} sessões abertas")}</td>'
+                      f'{tn(quantas, "Painel inteiro; {n} sessão aberta", "Painel inteiro; {n} sessões abertas")}; {segundo}</td>'
                       f'<td class="acoes">{acoes}</td></tr>')
     for nome, pasta in cadastro.items():
         uso = uso_da_pasta(pasta)

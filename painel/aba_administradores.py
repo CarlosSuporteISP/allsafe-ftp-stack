@@ -8,6 +8,7 @@ import urllib.parse
 
 import aba_usuarios
 import administradores
+import fator
 import idioma
 from aba_usuarios import campos_de_senha, senha_do_formulario
 from auditoria import auditar
@@ -202,6 +203,7 @@ def trocar_nome(pedido, sessao, consulta, formulario, token):
     encerrar_sessoes_de(nome, menos=sessao)
     renomear_sessoes(nome, novo)
     idioma.renomear('admin', nome, novo)
+    fator.renomear(nome, novo)
     auditar(pedido.ip, 'admin_renomeado', f'admin={quem} de={nome} para={novo}')
     return pedido.redirecionar(LISTA + '?m=admin_nome')
 
@@ -254,5 +256,6 @@ def remover(pedido, sessao, consulta, formulario, token):
         return pedido.recusar(codigo, erro)
     encerrar_sessoes_de(nome)
     idioma.esquecer('admin', nome)
+    fator.desligar(nome)
     auditar(pedido.ip, 'admin_removido', f'admin={sessao["admin"]} alvo={nome}')
     return pedido.redirecionar(LISTA + '?m=admin_removido')

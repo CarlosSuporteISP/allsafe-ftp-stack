@@ -503,6 +503,10 @@ p > strong.numero { margin: 0 6px 0 0; color: var(--texto); font-size: 1.25rem; 
 
 .segredo { margin: 16px 0; }
 .segredo code { display: block; padding: 12px; font-size: var(--texto-destaque); user-select: all; }
+/* Segundo fator: os passos numerados e o código QR, preto sobre branco nos dois temas, que é o que a câmera lê. */
+.roteiro { margin: 0 0 16px; padding-left: 20px; }
+.roteiro li { margin-bottom: 12px; }
+.qr { display: block; width: 216px; max-width: 100%; height: auto; margin: 12px 0; border-radius: var(--raio); }
 
 /* ------------------------------------------------------------ tabelas */
 

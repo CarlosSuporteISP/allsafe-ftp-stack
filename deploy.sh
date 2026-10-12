@@ -392,6 +392,9 @@ chmod 0700 "$secrets_dir"
 # Segredos dos destinos de fora (S3 e bot do Telegram): quem grava é o painel, pela aba Destinos. A pasta nasce vazia.
 mkdir -p "$secrets_dir/destinos"
 chmod 0700 "$secrets_dir/destinos"
+# Segredo do segundo fator dos administradores: quem grava é o painel, quando o administrador liga o dele.
+mkdir -p "$secrets_dir/segundo-fator"
+chmod 0700 "$secrets_dir/segundo-fator"
 secret_file="$secrets_dir/ftp-usuario-inicial-senha.txt"
 if [[ ! -s "$secret_file" ]]; then
   command -v openssl >/dev/null 2>&1 || die "openssl não encontrado no host (necessário para gerar a senha)"
@@ -443,7 +446,14 @@ destinos/
   nenhum deles volta para a tela. Trocar ou remover: pela aba Destinos. Apagar um arquivo aqui
   desliga o envio daquele destino na passada seguinte.
 
+segundo-fator/
+  Segredo do segundo fator da entrada do painel, gravado quando o administrador liga o dele na aba
+  Usuários: <administrador>.txt. Com ele se geram os códigos daquela conta. Quem está com o fator
+  ligado fica nos dados do painel; por isso, apagar o arquivo aqui não desliga o fator: a conta
+  deixa de entrar até ele ser desligado, por outro administrador ou pelo terminal.
+
 Perdeu a senha do painel: ./scripts/painel-senha.sh --gerar   (outro administrador: --usuario NOME)
+Perdeu o aparelho do segundo fator: docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME
 Estes arquivos não entram na cópia do ./scripts/backup.sh: guarde-os no seu cofre de senhas.
 LEIAME
 chmod 0600 "$secrets_dir/LEIAME.txt"
