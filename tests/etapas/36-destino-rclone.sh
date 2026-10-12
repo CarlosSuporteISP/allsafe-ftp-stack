@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
-# Etapa AJ: destino rclone. O administrador grava pelo painel, com a senha dele, um remoto do rclone (SFTP, WebDAV ou
-# nuvem de arquivos), e o painel envia o que chega na pasta escolhida: só envia. A etapa sobe, na rede da instância de
+# Etapa AJ: destino rclone. O administrador grava pelo painel, com a senha dele, um remoto do rclone (um dos 41 tipos
+# da lista do painel), e o painel envia o que chega na pasta escolhida: só envia. A etapa sobe, na rede da instância de
 # teste, um servidor de arquivos (tests/apoio/servidor_rclone.sh: WebDAV com certificado de uma autoridade criada aqui
-# e SFTP, pelo `rclone serve` da imagem do painel) e confere na pasta dele o que chegou: nome e soma de cada arquivo,
-# e nada apagado. As quatro nuvens são gravadas desligadas e conferidas com o rclone em container sem rede: nenhum
-# pedido sai para terceiros. A senha, a frase, as chaves e os tokens são gerados na hora e não entram em evidência.
+# e SFTP, pelo `rclone serve` da imagem do painel) e, depois dele, um servidor de FTP com TLS da imagem `ftp` da
+# própria stack, e confere na pasta de cada um o que chegou: nome e soma de cada arquivo, e nada apagado. Os outros
+# tipos são gravados desligados e conferidos com o rclone em container sem rede: nenhum pedido sai para terceiros. A
+# lista do painel é comparada com a do rclone da imagem por tests/apoio/rclone_tipos.py, também sem rede. A senha, a
+# frase, as chaves e os tokens são gerados na hora e não entram em evidência.
 # Trecho da bateria: carregado pelo tests/testar.sh, na ordem do nome do arquivo; não roda sozinho.
 
 # O reinício do painel encerra as sessões e zera a memória das recusas (a auditoria guarda uma por minuto de cada tipo).
@@ -175,7 +177,7 @@ e_adm2="$(entrar "$J" "$W/painel.senha")"; proibir "$(biscoito_de "$J")"; K="$(c
 # Formulário fora da regra: recusado antes de a senha ser conferida, com o motivo na tela. Tipo e campo fora da lista,
 # endereço sem HTTPS, e o que o leitor de configuração do rclone trataria: aspas, crase e %(nome)s.
 ok_inv=0; ev_inv=""
-recusa36 'Escolha o tipo do remoto.' remoto=ftp r_host=sftp.remoto36.test r_user=teste "r_pass@$D36/rem/senha.txt"
+recusa36 'Escolha o tipo do remoto.' remoto=http r_host=sftp.remoto36.test r_user=teste "r_pass@$D36/rem/senha.txt"
 recusa36 'Escolha o tipo do remoto.' remoto=local r_host=sftp.remoto36.test
 recusa36 'Pasta no remoto inválida:' "${SF36[@]}" caminho=../x
 recusa36 'Pasta no remoto inválida:' "${SF36[@]}" 'caminho=a:b'
@@ -556,10 +558,239 @@ igual36 "$s_sen0 $s_fim" "$s_sen igual"; igual36 "$x_fim" 'rclone: não configur
 caso "$F36" seguranca 136 "Remoto do rclone: só envia; nenhum subcomando que lista, baixa, move ou apaga, e nada some do servidor de teste" \
   "subcomandos pedidos à função que monta a linha do rclone: $x_sub; verbo que não existe no terminal: saída $r_verbo, aviso de uso: $x_verbo; a1.txt apagado no servidor da stack e passada: saída $r_apg, $p_apg; a1.txt na stack, no SFTP e no WebDAV de teste: $h_apg; arquivos no servidor de teste antes e depois: $n_ant e $n_dep; remoção dos seis destinos: $m_fim; arquivos no servidor de teste antes e depois dela: $n_fim0 e $n_fim; arquivo que já estava no servidor de teste, antes de tudo e no fim: ${s_sen0:0:16} e ${s_sen:0:16}; a1.txt no SFTP de teste no fim: $s_fim; destinos, segredos e configurações do rclone depois da remoção: $x_fim; a2.bin, grande.bin e a1.txt no servidor da stack: $h_fim; linhas de apagar no registro do servidor de teste: $v_reg"
 
-# ------------------------------------------------------------------ limpeza
+# ------------------------------------------------------------------ os outros tipos de remoto
+# Os seis destinos saíram: o destino novo volta a ser `rclone`. O servidor de SFTP e de WebDAV não serve mais, e o
+# endereço dele na rede de teste fica para o servidor de FTP. Os segredos novos saem dos que a etapa já gerou.
 docker rm -f "$REM36" > /dev/null 2>&1
+FTP36="$NOME-ftp36"; REDE36='lookup |dial tcp|no such host|network is unreachable'
+( umask 077; cd "$D36" || exit 1
+  conta='{"type":"service_account","project_id":"p","private_key_id":"k","private_key":"%s","client_email":"a@p.iam.gserviceaccount.com","token_uri":"%s"}'
+  openssl rand -hex 20 | tr -d '\n' > ftp.senha
+  openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out conta.key 2> /dev/null
+  # shellcheck disable=SC2059
+  printf "$conta" "$(awk '{ printf "%s\\n", $0 }' conta.key)" https://oauth2.googleapis.com/token > conta.json
+  # shellcheck disable=SC2059
+  printf "$conta" "$(cat renovacao.txt)" https://token.example/token > conta-fora.json
+  printf 'https://conta.blob.core.windows.net/copias?sv=2022-11-02&sp=cw&sig=%s' "$(cat acesso.txt)" > sas-blob.txt
+  printf 'https://conta.file.core.windows.net/?sv=2022-11-02&sp=cw&sig=%s' "$(cat acesso.txt)" > sas-arquivos.txt
+  printf 'http://conta.blob.core.windows.net/copias?sv=2022-11-02&sp=cw&sig=%s' "$(cat acesso.txt)" > sas-http.txt )
+proibir "$(cat "$D36/ftp.senha")"; { cat "$D36/ftp.senha"; echo; } >> "$D36/lista"
+proibir "$(sed -n 2p "$D36/conta.key")"; sed -n 2p "$D36/conta.key" >> "$D36/lista"
+: > "$W/telas36n"
+
+apoio36() { # <modo> [arquivo para a entrada padrão]: tests/apoio/rclone_tipos.py na imagem do painel, em container sem rede → a última linha
+  docker run --rm -i --name "$NOME-export" --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+    --user "$(id -u):$(id -g)" --tmpfs /tmp:size=16m,mode=1777 -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 \
+    -v "$root_dir/tests/apoio/rclone_tipos.py:/tipos.py:ro" --entrypoint python3 "$IMG_PAINEL" -I /tipos.py "$1" < "${2:-/dev/null}" 2>&1 | tail -n 1
+}
+novas36() { tail -n "+$(( $1 + 1 ))" "$W/auditoria" | grep -c -E -- "$2" || true; }  # <linhas de antes> <expressão>: linhas da auditoria depois daquelas
+tipo36() { # <rótulo> <tipo> <onde o rclone sem rede para> <pasta no remoto> [campo...]: grava desligado, confere com o rclone sem rede e remove; acumula em ok_tip, ev_tip e ev_tipx
+  local rotulo="$1" tipo="$2" parada="$3" caminho="$4" tela g tipo_ok v parou ruim r; shift 4
+  tela="$(aba -b "$J" "$B/destinos/rclone?id=novo&remoto=$tipo")"
+  g="$(grava36 "$J" "$K" "$W/painel.senha" id=novo -ligado "remoto=$tipo" "caminho=$caminho" "$@")"
+  tipo_ok="$(grep -c -x -F "type = $tipo" "$(segredo36 rclone)" 2> /dev/null || true)"
+  v="$(vaza36 "$(segredo36 rclone)")"; v_tip=$(( v_tip + ${v:-0} ))
+  { aba -b "$J" "$B/destinos" > /dev/null; cat "$W/corpo"; aba -b "$J" "$B/destinos/rclone?id=rclone" > /dev/null; cat "$W/corpo"; } >> "$W/telas36n"
+  # O registro do rclone pode trazer a chave de teste na URL do erro: fica na pasta dos segredos da etapa, fora das evidências.
+  docker run --rm --name "$NOME-export" --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+    --user "$(id -u):$(id -g)" --tmpfs /tmp:size=16m,mode=1777 -e HOME=/tmp -e ALVO="destino:$caminho/x.txt" -v "$(segredo36 rclone):/remoto.conf:ro" \
+    --entrypoint sh "$IMG_PAINEL" -c 'cp /remoto.conf /tmp/r.conf && echo x | timeout 60 rclone --config /tmp/r.conf --retries 1 --low-level-retries 1 --contimeout 5s --timeout 10s rcat --size 2 "$ALVO"' \
+    > "$D36/tipo.log" 2>&1
+  parou="$(grep -c -E -- "$parada" "$D36/tipo.log" || true)"
+  ruim="$(grep -c -i -E "didn.t find section|failed to load config|failed to reveal|unknown type|config name contains" "$D36/tipo.log" || true)"
+  r="$(remove36 rclone)"; n_tip=$(( n_tip + 1 )); TIPOS36[$tipo]=1
+  if [[ "$tela" == '200 ' && "$g" == "$GRAVADO36" && "$tipo_ok" == 1 && "$parou" -ge 1 && "$ruim" == 0 && "$r" == '303 /destinos?m=removido' ]]; then ev_tip+="$rotulo "
+  else ok_tip=1; ev_tipx+="$rotulo: formulário $tela, gravação $g, type = $tipo no arquivo: $tipo_ok, linhas do rclone sem rede no ponto esperado: $parou, de configuração recusada: $ruim, remoção $r; "; fi
+}
+
+# Cada tipo novo é gravado desligado, com dados de exemplo, e nunca testado pelo painel: nenhum pedido sai para
+# terceiros. O arquivo do remoto vai para um container sem rede, onde o rclone da imagem tenta gravar: aceito é o que
+# só para ao procurar o serviço. Onde o tipo tem duas formas de acesso, as duas.
+t_esc="$(aba -b "$J" "$B/destinos/rclone?id=novo")"; f_esc="$(vezes36 '<option value="') $(vezes36 '<optgroup') $(tem36 'Serviço compatível com S3 não está nesta lista')"
+o_esc="$(grep -o -E '<option value="[a-z0-9]+"' "$W/corpo" | cut -d'"' -f2 | sort | tr '\n' ' ')"
+auditoria; l_tip="$(wc -l < "$W/auditoria")"
+declare -A TIPOS36=(); ok_tip=0; ev_tip=""; ev_tipx=""; n_tip=0; v_tip=0
+SE36="r_pass@$D36/rem/senha.txt"; CH36N="$D36/acesso.txt"; TK36="r_token@$D36/token.json"
+tipo36 ftp ftp "$REDE36" copias/teste r_host=arquivos.example r_user=u "$SE36" r_explicit_tls=true
+tipo36 ftp/implicito ftp "$REDE36" copias/teste r_host=arquivos.example r_port=990 r_user=u "$SE36" r_explicit_tls=false
+tipo36 seafile seafile "$REDE36" copias/teste r_url=https://arquivos.example/ r_user=u@example.com "$SE36" 'r_library=Minha Biblioteca'
+tipo36 seafile/token seafile "$REDE36" copias/teste r_url=https://arquivos.example/ r_user=u@example.com "r_auth_token@$CH36N" r_library=copias "r_library_key@$D36/frase.txt"
+tipo36 box box "$REDE36" copias/teste "$TK36" r_box_sub_type=enterprise
+tipo36 mega mega "couldn.t login" copias/teste r_user=u@example.com "$SE36"
+tipo36 protondrive protondrive "$REDE36" copias/teste r_username=u@example.com "r_password@$D36/rem/senha.txt" "r_mailbox_password@$D36/frase.txt"
+tipo36 koofr koofr "$REDE36" copias/teste r_provider=koofr r_user=u@example.com "r_password@$D36/rem/senha.txt"
+tipo36 koofr/outro koofr "$REDE36" copias/teste r_provider=other r_endpoint=https://arquivos.example r_user=u@example.com "r_password@$D36/rem/senha.txt"
+tipo36 yandex yandex "$REDE36" copias/teste "$TK36"
+tipo36 mailru mailru "$REDE36" copias/teste r_user=u@mail.ru "$SE36"
+tipo36 hidrive hidrive "$REDE36" copias/teste "$TK36"
+tipo36 huaweidrive huaweidrive "$REDE36" copias/teste "$TK36"
+tipo36 zoho zoho "$REDE36" copias/teste "$TK36" r_region=eu
+tipo36 putio putio "$REDE36" copias/teste "$TK36"
+tipo36 premiumizeme premiumizeme "$REDE36" copias/teste "r_api_key@$CH36N"
+tipo36 opendrive opendrive "$REDE36" copias/teste r_username=u@example.com "r_password@$D36/rem/senha.txt"
+tipo36 filen filen "$REDE36" copias/teste r_email=u@example.com "r_password@$D36/rem/senha.txt" "r_api_key@$CH36N"
+tipo36 fichier fichier "$REDE36" copias/teste "r_api_key@$CH36N"
+tipo36 filelu filelu "$REDE36" copias/teste "r_key@$CH36N"
+tipo36 gofile gofile "$REDE36" copias/teste "r_access_token@$CH36N"
+tipo36 pixeldrain pixeldrain "$REDE36" copias/teste "r_api_key@$CH36N" r_root_folder_id=me
+tipo36 drime drime "$REDE36" copias/teste "r_access_token@$CH36N"
+tipo36 linkbox linkbox "$REDE36" copias/teste "r_token@$CH36N" r_email=u@example.com "r_password@$D36/rem/senha.txt"
+tipo36 ulozto ulozto "$REDE36" copias/teste "r_app_token@$CH36N" r_username=u "r_password@$D36/rem/senha.txt"
+tipo36 shade shade "$REDE36" copias/teste r_drive_id=d1 "r_api_key@$CH36N"
+tipo36 azureblob azureblob "$REDE36" balde/copias r_account=conta "r_key@$CH36N"
+tipo36 azureblob/sas azureblob "$REDE36" copias/teste "r_sas_url@$D36/sas-blob.txt"
+tipo36 azurefiles azurefiles "$REDE36" copias/teste r_account=conta r_share_name=copias "r_key@$CH36N"
+tipo36 azurefiles/sas azurefiles "$REDE36" copias/teste r_share_name=copias "r_sas_url@$D36/sas-arquivos.txt"
+tipo36 b2 b2 "$REDE36" balde/copias r_account=000aaaa "r_key@$CH36N"
+tipo36 gcs gcs "$REDE36" balde/copias "$TK36" r_bucket_policy_only=true
+tipo36 gcs/conta gcs "$REDE36" balde/copias "r_service_account_credentials@$D36/conta.json"
+tipo36 swift swift "$REDE36" balde/copias r_auth=https://auth.example:5000/v3 r_auth_version=3 r_user=u "r_key@$CH36N" r_domain=Default 'r_tenant=projeto um' r_tenant_domain=Default r_region=RegionOne
+tipo36 qingstor qingstor "$REDE36" balde/copias r_access_key_id=AAAA "r_secret_access_key@$CH36N" r_zone=pek3a
+tipo36 storj storj "access grant" balde/copias "r_access_grant@$CH36N"
+tipo36 netstorage netstorage "$REDE36" copias/teste r_host=empresa-nsu.akamaihd.net/123456/pasta r_account=u "r_secret@$D36/rem/senha.txt"
+tipo36 filescom filescom "$REDE36" copias/teste r_site=empresa "r_api_key@$CH36N"
+tipo36 filescom/senha filescom "$REDE36" copias/teste r_site=arquivos.example r_username=u "r_password@$D36/rem/senha.txt"
+tipo36 quatrix quatrix "$REDE36" copias/teste r_host=empresa.quatrix.it "r_api_key@$CH36N"
+tipo36 sharefile sharefile "$REDE36" copias/teste "$TK36" r_endpoint=https://empresa.sf-api.com r_root_folder_id=top
+tipo36 filefabric filefabric "$REDE36" copias/teste r_url=https://arquivos.example "r_permanent_token@$CH36N" r_root_folder_id=123
+auditoria
+o_tip="$(printf '%s\n' "${!TIPOS36[@]}" sftp webdav drive onedrive dropbox pcloud | sort | tr '\n' ' ')"
+a_tip="$(novas36 "$l_tip" " evento=destino_gravado admin=$ADMIN destino=rclone situacao=desligado pasta=dst36 intervalo=1440 remoto=[a-z0-9]+ segredos=trocados\$")"
+a_tip+=" $(tail -n "+$(( l_tip + 1 ))" "$W/auditoria" | grep -o -E ' evento=destino_gravado .* remoto=[a-z0-9]+ ' | sed -E 's/.* remoto=//' | sort -u | wc -l)"
+a_tip+=" $(novas36 "$l_tip" " evento=destino_removido admin=$ADMIN destino=rclone\$") $(novas36 "$l_tip" ' evento=destino_teste ')"
+F36="$ok_tip"; igual36 "$t_esc$f_esc" '200 42 4 1'; igual36 "$o_esc" "$o_tip"; igual36 "${#TIPOS36[@]}" 35
+igual36 "$a_tip" "$n_tip 35 $n_tip 0"; igual36 "$v_tip" 30
+caso "$F36" testes 105 "Remoto do rclone: os 35 tipos novos estão na tela de escolha e gravam um remoto que o rclone aceita" \
+  "tela de escolha $t_esc(opções, grupos e aviso do S3: $f_esc); os tipos da tela são os gravados aqui mais os seis de antes: $([[ "$o_esc" == "$o_tip" ]] && echo sim || echo nao); gravados desligados, aceitos pelo rclone em container sem rede e removidos ($n_tip gravações, ${#TIPOS36[@]} tipos): ${ev_tip}; fora do esperado: ${ev_tipx:-nenhum}; auditoria (gravações, tipos, remoções, testes pedidos ao painel): $a_tip"
+
+# ------------------------------------------------------------------ FTP com TLS, de ponta a ponta
+# O servidor é a imagem `ftp` da própria stack, na rede de teste, com TLS obrigatório e senha gerada aqui. O painel só
+# confia no certificado dele depois de ele entrar em /painel/destinos/ca.pem.
+docker run -d --name "$FTP36" --no-healthcheck --network "$NOME-network" --network-alias ftp.remoto36.test --read-only \
+  --tmpfs /run:rw,noexec,nosuid,nodev,size=8m,mode=0755 --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777 --tmpfs /data:rw,nosuid,nodev,size=32m \
+  --tmpfs /auth:rw,nosuid,nodev,size=8m --tmpfs /etc/ssl/private:rw,nosuid,nodev,size=1m --cap-drop ALL --cap-add CHOWN --cap-add AUDIT_WRITE \
+  --cap-add DAC_OVERRIDE --cap-add DAC_READ_SEARCH --cap-add FOWNER --cap-add NET_BIND_SERVICE --cap-add SETGID --cap-add SETUID --cap-add SYS_CHROOT \
+  --cap-add SYS_NICE --security-opt no-new-privileges --memory 256m --pids-limit 128 --init -e FTP_USER=destino -e FTP_CERT_CN=ftp.remoto36.test \
+  -e FTP_TLS_MODE=2 -e FTP_TLS_EXCECOES=nao -v "$D36/ftp.senha:/run/secrets/ftp_usuario_inicial_senha:ro" "$IMG_FTP" > /dev/null 2>> "$W/rem36.log"; r_ftp=$?
+for _ in $(seq 1 30); do docker logs "$FTP36" 2>&1 | grep -q 'FTP pronto' && break; sleep 1; done
+docker logs "$FTP36" 2>&1 | grep -q 'FTP pronto'; p_ftp=$?
+noftp36() { docker exec "$FTP36" sh -c 'find /data -type f | wc -l' 2> /dev/null || echo falta; }   # arquivos no servidor de FTP
+B36=(b1.txt b2.bin sub/b3.txt 'cópia final.txt'); ALVO36=/data/destino/painel36/ftp/dst36/tls
+FT36=(remoto=ftp r_host=ftp.remoto36.test r_port=2121 r_user=destino "r_pass@$D36/ftp.senha" caminho=painel36/ftp pasta=dst36/tls)
+docker exec "$FTP" sh -c 'mkdir -p /data/dst36/tls && chown ftpdata:ftpdata /data/dst36/tls'
+auditoria; l_ft="$(wc -l < "$W/auditoria")"
+g_ft="$(grava36 "$J" "$K" "$W/painel.senha" id=novo -ligado "${FT36[@]}" r_explicit_tls=true)"; guardar36 rclone
+x_ft="$(grep -c -x 'explicit_tls = true' "$(segredo36 rclone)" || true) $(grep -c '^tls = ' "$(segredo36 rclone)" || true)"
+m_ft0="$(testa36 rclone)"; n_ft0="$(noftp36)"
+docker exec "$FTP36" cat /auth/ftp-cert.pem | docker exec -i "$PAINEL" sh -c 'cat > /painel/destinos/ca.pem'; r_ca2=$?
+m_ft="$(testa36 rclone)"; n_ft="$(noftp36)"
+# Ligado, o destino faz a primeira passada sozinho, com a pasta ainda vazia; os arquivos entram depois dela, e quem os
+# envia é a passada pedida pelo terminal.
+g_ft2="$(grava36 "$J" "$K" "$W/painel.senha" id=rclone remoto=ftp caminho=painel36/ftp pasta=dst36/tls)"
+passou36 rclone; r_ft1=$?
+planta36 <<'SH'
+set -e
+mkdir -p /data/dst36/tls/sub
+cd /data/dst36/tls
+echo um > b1.txt; head -c 300000 /dev/urandom > b2.bin; echo tres > sub/b3.txt; echo quatro > 'cópia final.txt'
+chown -hR ftpdata:ftpdata .
+SH
+r_pla2=$?
+b_B=0; for n in "${B36[@]}"; do b_B=$(( b_B + $(tam36 "dst36/tls/$n") )); done
+passa36 rclone; r_ft2=$?; p_ft2="$(doterminal36 rclone)"
+c_ft=0; for n in "${B36[@]}"; do s="$(soma36 "dst36/tls/$n")"; [[ -n "$s" && "$(docker exec "$FTP36" sha256sum "$ALVO36/$n" 2> /dev/null | cut -c1-64)" == "$s" ]] && c_ft=$(( c_ft + 1 )); done
+n_ft2="$(noftp36)"
+passa36 rclone; r_ft3=$?; p_ft3="$(doterminal36 rclone)"; n_ft3="$(noftp36)"
+# TLS implícito na porta do explícito: não fecha, e nada chega. Este é o arquivo que o caso da lista fechada adultera.
+g_ft4="$(grava36 "$J" "$K" "$W/painel.senha" id=rclone -ligado "${FT36[@]}" r_explicit_tls=false)"; guardar36 rclone
+x_ft4="$(grep -c -x 'explicit_tls = false' "$(segredo36 rclone)" || true) $(grep -c -x 'tls = true' "$(segredo36 rclone)" || true)"
+m_ft4="$(testa36 rclone)"; n_ft4="$(noftp36)"
+{ aba -b "$J" "$B/destinos" > /dev/null; cat "$W/corpo"; aba -b "$J" "$B/destinos/rclone?id=rclone" > /dev/null; cat "$W/corpo"; } >> "$W/telas36n"
+auditoria
+a_ft="$(novas36 "$l_ft" " evento=destino_gravado admin=$ADMIN destino=rclone situacao=desligado pasta=dst36/tls intervalo=1440 remoto=ftp segredos=trocados\$")"
+a_ft+=" $(novas36 "$l_ft" " evento=destino_gravado admin=$ADMIN destino=rclone situacao=ligado pasta=dst36/tls intervalo=1440 remoto=ftp segredos=mantidos\$")"
+a_ft+=" $(novas36 "$l_ft" " evento=destino_teste admin=$ADMIN destino=rclone resultado=ok\$")"
+a_ft+=" $(novas36 "$l_ft" ' evento=destino_teste ') $(novas36 "$l_ft" " evento=destino_enviado destino=rclone arquivos=4 bytes=$b_B apagados=0 grandes=0 ignorados=0 erros=0\$")"
+F36=0
+igual36 "$r_ftp $p_ftp $r_ca2 $r_ft1 $r_pla2" '0 0 0 0 0'; igual36 "$g_ft|$x_ft" "$GRAVADO36|1 0"; igual36 "$m_ft0|$n_ft0" '303 /destinos?m=falha&d=rclone&f=tls|0'
+igual36 "$m_ft|$n_ft" "$TESTADO36|1"; igual36 "$g_ft2" "$GRAVADO36"; igual36 "$r_ft2 $p_ft2" "0 rclone: 4 arquivo(s), $b_B bytes, $SEM36; chegou ao fim"
+igual36 "$c_ft $n_ft2" '4 5'; igual36 "$r_ft3 $p_ft3 $n_ft3" "0 rclone: 0 arquivo(s), 0 bytes, $SEM36; chegou ao fim 5"
+igual36 "$g_ft4|$x_ft4|$n_ft4" "$GRAVADO36|1 1|5"; [[ "$m_ft4" == '303 /destinos?m=falha&d=rclone&f='* ]] || F36=1; igual36 "$a_ft" '2 1 1 3 1'
+caso "$F36" testes 106 "Remoto do rclone: FTP com TLS grava de ponta a ponta num servidor da própria stack, só com o certificado conferido" \
+  "servidor de FTP de teste (0 = criado, pronto, certificado levado ao painel): $r_ftp $p_ftp $r_ca2; gravação com TLS explícito: $g_ft, linhas explicit_tls = true e tls no arquivo: $x_ft; Testar antes de o painel confiar no certificado: $m_ft0, arquivos no servidor: $n_ft0; depois: $m_ft, arquivos: $n_ft; ligado: $g_ft2, primeira passada da rotina (0 = feita): $r_ft1; passada com quatro arquivos, um com espaço e acento no nome: saída $r_ft2, $p_ft2; no servidor com a mesma soma: $c_ft de ${#B36[@]}, arquivos: $n_ft2; passada seguinte: saída $r_ft3, $p_ft3, arquivos: $n_ft3; TLS implícito na porta do explícito: gravação $g_ft4, linhas explicit_tls = false e tls = true: $x_ft4, Testar: $m_ft4, arquivos: $n_ft4; auditoria (gravações com acesso novo e com o mantido, teste certo, testes ao todo, envio dos quatro): $a_ft"
+
+# ------------------------------------------------------------------ lista fechada
+# O arquivo do FTP mexido por fora: sem a linha do TLS, ou com a conferência do certificado desligada, o destino fica
+# sem acesso e o rclone não é chamado.
+( umask 077; docker exec "$PAINEL" cat /segredos/rclone-remoto.txt > "$D36/guardado" )
+grep -v -x 'tls = true' "$D36/guardado" | docker exec -i "$PAINEL" sh -c 'cat > /segredos/rclone-remoto.txt'; r_ad1=$?
+s_ad1="$(situ36 rclone)"; m_ad1="$(testa36 rclone)"
+{ cat "$D36/guardado"; echo 'no_check_certificate = true'; } | docker exec -i "$PAINEL" sh -c 'cat > /segredos/rclone-remoto.txt'; r_ad2=$?
+s_ad2="$(situ36 rclone)"; m_ad2="$(testa36 rclone)"
+docker exec -i "$PAINEL" sh -c 'cat > /segredos/rclone-remoto.txt' < "$D36/guardado"; r_ad3=$?
+s_ad3="$(situ36 rclone)"; n_ad="$(noftp36)"; m_ad4="$(remove36 rclone)"
+docker rm -f "$FTP36" > /dev/null 2>&1; docker exec "$PAINEL" rm -f /painel/destinos/ca.pem > /dev/null 2>&1
+# Formulário fora da lista: tipo que o rclone tem e o painel não oferece, FTP sem TLS, endereço sem HTTPS, escolha que
+# não existe, duas formas de acesso ou nenhuma. Recusado antes de a senha ser conferida; a tela volta sem o que veio.
+recusan36() { recusa36 "$@"; cat "$W/corpo" >> "$W/telas36n"; }
+ok_inv=0; ev_inv=""
+for n in http s3 alias crypt smb local memory union; do recusan36 'Escolha o tipo do remoto.' "remoto=$n" r_host=arquivos.example r_user=u "$SE36"; done
+recusan36 'Tipo de TLS: em branco ou fora do formato.' remoto=ftp r_host=arquivos.example r_user=u "$SE36"
+recusan36 'Tipo de TLS: em branco ou fora do formato.' remoto=ftp r_host=arquivos.example r_user=u "$SE36" r_explicit_tls=nao
+recusan36 'Endereço: em branco ou fora do formato.' remoto=seafile r_url=http://arquivos.example/ r_user=u@example.com "$SE36" r_library=copias
+recusan36 'Endereço: em branco ou fora do formato.' remoto=filefabric r_url=http://arquivos.example "r_permanent_token@$CH36N"
+recusan36 'Endereço de autenticação: em branco ou fora do formato.' remoto=swift caminho=balde/copias r_auth=http://auth.example:5000/v3 r_user=u "r_key@$CH36N"
+recusan36 'Endereço do serviço: em branco ou fora do formato.' remoto=koofr r_provider=other r_endpoint=http://arquivos.example r_user=u@example.com "r_password@$D36/rem/senha.txt"
+recusan36 'Endereço do serviço: em branco ou fora do formato.' remoto=koofr r_provider=other r_user=u@example.com "r_password@$D36/rem/senha.txt"
+recusan36 'Endereço do serviço: em branco ou fora do formato.' remoto=koofr r_provider=koofr r_endpoint=https://arquivos.example r_user=u@example.com "r_password@$D36/rem/senha.txt"
+recusan36 'Endereço com assinatura (SAS): em branco ou fora do formato.' remoto=azureblob caminho=copias/teste "r_sas_url@$D36/sas-http.txt"
+recusan36 'Região da conta: em branco ou fora do formato.' remoto=zoho "$TK36" r_region=br
+recusan36 'Tipo da conta: em branco ou fora do formato.' remoto=box "$TK36" r_box_sub_type=admin
+recusan36 'Token da conta: em branco ou fora do formato.' remoto=box "r_token@$CH36N"
+recusan36 'Informe a pasta no remoto:' remoto=b2 r_account=000aaaa "r_key@$CH36N"
+recusan36 'Acesso com campos a mais:' remoto=azureblob caminho=copias/teste r_account=conta "r_key@$CH36N" "r_sas_url@$D36/sas-blob.txt"
+recusan36 'Chave: em branco ou fora do formato.' remoto=azureblob caminho=balde/copias r_account=conta
+recusan36 'Acesso incompleto:' remoto=gcs caminho=balde/copias r_bucket_policy_only=true
+recusan36 'Credencial da conta de serviço: em branco ou fora do formato.' remoto=gcs caminho=balde/copias "r_service_account_credentials@$D36/conta-fora.json"
+recusan36 'Servidor: em branco ou fora do formato.' remoto=netstorage r_host=empresa-nsu.akamaihd.net/../pasta r_account=u "r_secret@$D36/rem/senha.txt"
+recusan36 'Senha: em branco ou fora do formato.' remoto=mega r_user=u@example.com
+h_inv="$(situ36 rclone)|$(ls "$S/destinos"/rclone* 2> /dev/null | wc -l)"
+# Campo que o tipo não tem não chega ao arquivo: o Mega é gravado só com o usuário e a senha.
+g_ign="$(grava36 "$J" "$K" "$W/painel.senha" id=novo -ligado remoto=mega r_user=u@example.com "$SE36" r_no_check_certificate=true r_proxy=socks5://127.0.0.1:1 r_ssh=touch r_2fa=123456 r_type=local)"
+x_ign="$(grep -c -E '^(no_check_certificate|proxy|ssh|2fa) = |^type = local' "$(segredo36 rclone)" || true) $(wc -l < "$(segredo36 rclone)") $(grep -c -x 'type = mega' "$(segredo36 rclone)" || true)"
+cat "$W/corpo" >> "$W/telas36n"; m_ign="$(remove36 rclone)"
+x_adu="$(apoio36 adulterados)"
+F36="$ok_inv"; igual36 "$r_ad1 $r_ad2 $r_ad3" '0 0 0'; [[ "$s_ad1" == 'rclone: '*'faltam os segredos; '* && "$s_ad2" == 'rclone: '*'faltam os segredos; '* && "$s_ad3" != *'faltam os segredos'* ]] || F36=1
+igual36 "$m_ad1|$m_ad2" '303 /destinos?m=falha&d=rclone&f=segredo|303 /destinos?m=falha&d=rclone&f=segredo'; igual36 "$n_ad" "$n_ft4"; igual36 "$m_ad4" '303 /destinos?m=removido'
+igual36 "$h_inv" 'rclone: não configurado|0'; igual36 "$g_ign|$x_ign|$m_ign" "$GRAVADO36|0 5 1|303 /destinos?m=removido"
+igual36 "$x_adu" 'certo: arquivos que o painel grava, aceitos (controle): 6 de 6; adulterados recusados com o motivo segredo: 22 de 22'
+caso "$F36" seguranca 149 "Remoto do rclone: lista fechada; tipo, opção e arquivo de remoto fora dela são recusados, e o FTP não sai sem TLS" \
+  "arquivo do FTP sem a linha tls = true (0 = regravado): $r_ad1, terminal: ${s_ad1%%;*}, Testar: $m_ad1; com no_check_certificate = true: $r_ad2, ${s_ad2%%;*}, $m_ad2; devolvido: $r_ad3, ${s_ad3%%;*}; arquivos no servidor de FTP depois dos dois testes: $n_ad; formulários recusados: $ev_inv; destino gravado por eles: $h_inv; Mega com no_check_certificate, proxy, ssh, 2fa e type a mais no formulário: gravação $g_ign, linhas dessas, linhas do arquivo e type = mega: $x_ign; apoio em container sem rede: $x_adu"
+
+# ------------------------------------------------------------------ a lista do painel contra a do próprio rclone
+# O rclone ignora, sem erro, opção que não conhece: o caso dos 35 tipos não acusa nome errado. Quem acusa é este.
+x_con="$(apoio36 consistencia)"
+F36=0; igual36 "$x_con" 'certo: tipos da lista no rclone: 41 de 41; opções da lista que o rclone conhece: 157 de 157; campos cifrados só onde o rclone cifra: 139 de 139, 18 senhas; escolhas dentro do que o rclone lista: 10 de 10, 2 sem lista no rclone; opções de comando, arquivo local, proxy e afins nesses tipos: 64 no rclone, 0 na lista; tipos do rclone: 69 = 41 da lista + 28 de fora'
+caso "$F36" seguranca 150 "Remoto do rclone: cada tipo e cada opção da lista existem no rclone da imagem, cifrados como ele cifra, e nenhuma roda comando, lê arquivo local ou desvia a conexão" \
+  "rclone config providers em container sem rede, contra a lista do painel: $x_con"
+
+# ------------------------------------------------------------------ segredos dos tipos novos, e servidor em endereço interno
+# O que foi gravado nos tipos novos não aparece nas telas, na auditoria nem no registro do painel; do erro do rclone,
+# que em alguns serviços traz a chave na URL, só sai o motivo; e servidor em endereço interno é recusado antes da conexão.
+auditoria; docker logs "$PAINEL" > "$W/logs36n" 2>&1
+v_tel="$(vaza36 "$W/telas36n")"; v_aud="$(vaza36 "$W/auditoria")"; v_log="$(vaza36 "$W/logs36n")"; b_tel="$(wc -c < "$W/telas36n")"
+x_mot="$(apoio36 motivo "$D36/acesso.txt")"; x_red="$(apoio36 rede)"
+F36=0; igual36 "${v_tel:-falta} ${v_aud:-falta} ${v_log:-falta}" '0 0 0'; [[ "$v_tip" -ge 1 && "$b_tel" -ge 100000 ]] || F36=1
+igual36 "$x_mot" 'certo: erros do rclone com a chave na URL: 4; motivos: dns tempo recusado rclone; a chave em nenhum deles'
+igual36 "$x_red" 'certo: tipos com servidor escolhido pelo administrador: 14, em 14 campos; endereço interno recusado com o motivo endereco: 48 de 48; endereço interno que o campo nem aceita: 36; endereço de fora aceito (controle): 14 de 14'
+caso "$F36" seguranca 151 "Remoto do rclone: segredos dos tipos novos fora das telas e dos registros, e servidor em endereço interno recusado" \
+  "linhas com senha, chave ou token de teste nos arquivos de remoto gravados (controle): $v_tip; nas telas dos destinos e nas recusas ($b_tel bytes): ${v_tel:-falta}; na auditoria: ${v_aud:-falta}; no registro do painel: ${v_log:-falta}; $x_mot; $x_red"
+
+
+# ------------------------------------------------------------------ limpeza
+docker rm -f "$REM36" "$FTP36" > /dev/null 2>&1
 mu del dst36
 docker exec "$FTP" rm -rf /data/dst36 > /dev/null 2>&1
 docker exec "$PAINEL" rm -f /painel/destinos/ca.pem > /dev/null 2>&1
-rm -rf "$D36"; rm -f "$W"/dst36.* "$W/vazio36.jar" "$W/proc36" "$W/copia36" "$W/telas36" "$W/logs36" "$W/terminal36" "$W/passada36.saida"
+rm -rf "$D36"; rm -f "$W"/dst36.* "$W/vazio36.jar" "$W/proc36" "$W/copia36" "$W/telas36" "$W/logs36" "$W/terminal36" "$W/passada36.saida" "$W/telas36n" "$W/logs36n"
 painel_de_pe

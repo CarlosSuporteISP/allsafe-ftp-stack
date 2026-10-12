@@ -296,10 +296,12 @@ BALDES = ('azureblob', 'b2', 'gcs', 'swift', 'qingstor', 'storj')
 # O que o painel escreve por conta própria em cada tipo. No SFTP o rclone não abre terminal no servidor nem pede a
 # ele a soma do arquivo. Onde o envio é em pedaços, o tamanho e o número de pedaços ao mesmo tempo cabem na memória do
 # painel. No Azure Blob e no Google Cloud Storage o rclone não confere nem cria o contêiner ou o bucket: só grava.
+# No Mega, o padrão do rclone é transferir por HTTP sem TLS: o painel fixa o HTTPS.
 EM_PEDACOS = (('chunk_size', '16Mi'), ('upload_concurrency', '1'))
 FIXOS = {
     'sftp': (('shell_type', 'none'), ('disable_hashcheck', 'true')),
     'dropbox': (('chunk_size', '8Mi'),),
+    'mega': (('use_https', 'true'),),
     'mailru': (('speedup_enable', 'false'),),
     'hidrive': EM_PEDACOS,
     'filelu': EM_PEDACOS[:1],
