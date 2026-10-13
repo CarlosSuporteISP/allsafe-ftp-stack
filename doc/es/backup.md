@@ -46,7 +46,7 @@ flowchart LR
 | Carpeta de `DATA_DIR` | Qué guarda | Entra en la copia |
 |---|---|---|
 | `dados/` | Archivos enviados por los equipos, una carpeta por usuario, y `.entrada/`, el área de entrada de las cuentas de perfil Solo envío, vacía fuera del instante de cada envío | Sí |
-| `auth/` | Usuarios del FTP, con el hash de cada contraseña, los límites propios de cada uno, la lista de quién está dispensado del TLS y los bloqueos en vigor, por intento y por dirección | Sí |
+| `auth/` | Usuarios del FTP, con el hash de cada contraseña, los límites propios de cada uno, las otras carpetas liberadas a cada uno en el panel, la lista de quién está dispensado del TLS y los bloqueos en vigor, por intento y por dirección | Sí |
 | `certs/` | Certificado y clave privada del FTP | Sí |
 | `painel/` | Certificado y clave privada del panel, los administradores (nombre y hash de la contraseña), el `auditoria.log`, el idioma de las pantallas elegido por cada cuenta y la configuración y el avance de los [destinos](panel.md#destinos) y de la copia del sistema a S3, sin sus secretos | Sí |
 | `nginx/` | Socket del panel y copia del certificado, rehechos en cada arranque | No |

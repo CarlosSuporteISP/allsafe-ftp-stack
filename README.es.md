@@ -12,7 +12,7 @@
 
 Desarrollado por [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versión](https://img.shields.io/badge/versi%C3%B3n-1.12.0-blue)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-1.13.0-blue)
 ![Estado](https://img.shields.io/badge/estado-estable-brightgreen)
 ![Soporte](https://img.shields.io/badge/soporte-LTS-blue)
 [![Licencia](https://img.shields.io/badge/licencia-Apache--2.0-blue)](LICENSE)
@@ -105,6 +105,7 @@ Son **tres contenedores**: el servidor FTP, el panel y el **nginx**, la única p
 | **Panel web seguro** | Crea usuarios, les cambia la contraseña y los elimina desde el navegador: solo HTTPS, sesión que termina con 4 horas sin uso, bloqueo después de cinco contraseñas incorrectas y registro de cada acción |
 | **Segundo factor en la entrada del panel** | Obligatorio por defecto para toda cuenta del panel, administrador y usuario del FTP: después de la contraseña, el panel pide el código de seis dígitos de una aplicación autenticadora (TOTP). Quien todavía no lo registró lo registra en la propia entrada, por código QR. Solo en el panel: el FTP no cambia |
 | **Archivos desde el navegador** | El administrador navega, envía, descarga, renombra y borra; el dueño de los archivos entra con el usuario y la contraseña del FTP, ve solo su propia carpeta y hace lo que su perfil permite. Enviar por el panel depende del permiso dado a cada usuario |
+| **Otras carpetas por cuenta** | El administrador libera a una cuenta, solo en el panel, carpetas además de la suya, cada una con su propio permiso: lectura, envío o completo. Sirve para la carpeta común a varios usuarios y para la cuenta de consulta. La carpeta del registro sigue privada, y el FTP no cambia |
 | **Limpieza automática** | Por cuenta, el administrador manda conservar solo los últimos archivos de cada carpeta o solo los de los últimos días; el panel borra el resto por sí solo, cada cierto tiempo. Desactivada por defecto |
 | **Envío a S3, rclone y bot de Telegram** | En la pestaña Destinos, el administrador conecta una carpeta a un almacenamiento S3, para la segunda copia o para guardar fuera y liberar el disco, a un remoto del rclone, para lo que el S3 no alcanza (servidor de archivos, nube de archivos, almacenamiento de proveedor de nube o servicio de transferencia de archivos, en 41 tipos), y a un bot de Telegram, que entrega en instantes cada archivo que llega a una persona, un grupo o un canal, hasta el tamaño que el bot acepta. Cada tipo acepta hasta 20 destinos, y un destino nuevo puede usar el acceso de otro, para otra carpeta, otro bucket u otro grupo. El bot solo envía y el remoto del rclone solo recibe. En la pestaña Archivos, un botón manda un archivo en el acto. La copia del sistema entero, cifrada, va a un S3 con el botón o por rutina. Nada se borra en el destino. Sin configuración por defecto |
 | **Salud del servidor en el panel** | La pestaña Servidor muestra los tres contenedores de la stack, cada uno con lo que usa de procesador, memoria y procesos frente a lo que se le asignó, y el procesador, la memoria, el disco y la red del FTP del servidor, con el historial de los últimos minutos |
@@ -189,6 +190,7 @@ Para atender la red interna, ajuste en el `.env` (modelo en [`.env.example`](.en
 | Descargar una copia recibida | desde el panel, pestaña Archivos, botón **Descargar** en la fila del archivo |
 | Dejar que el dueño de los archivos descargue los suyos | abre el panel con el usuario y la contraseña del FTP y ve solo su propia carpeta; para que el panel acepte solo administradores, `PAINEL_ACESSO_USUARIOS_FTP=nao` en el `.env` y `./deploy.sh` |
 | Dejar que un usuario envíe archivos desde el navegador | desde el panel, pestaña Usuarios, **Editar**, casilla **Permitir que este usuario envíe archivos por el panel**, o `./manage-user.sh limites backup-olt enviar=1`: vea [Enviar archivo por el panel](doc/es/panel.md#enviar-arquivo) |
+| Dar a un usuario acceso a otra carpeta, solo lectura o más | desde el panel, pestaña Usuarios, **Editar**, tarjeta **Otras carpetas**, o `./manage-user.sh outras backup-olt comum/relatorios leitura`: vea [Otras carpetas](doc/es/panel.md#outras-pastas) |
 | Conservar solo los archivos más nuevos de una cuenta | desde el panel, pestaña Usuarios, **Editar**, tarjeta **Limpieza automática**, o `./manage-user.sh retencao backup-olt ultimos=30`: vea [Limpieza automática](doc/es/panel.md#limpeza) |
 | Mandar los archivos de una carpeta a un S3, a un remoto del rclone o a Telegram | desde el panel, pestaña Destinos, **Configurar** en la tarjeta del destino; para un solo archivo, pestaña Archivos, botón **Telegram**, **rclone** o **S3** en su fila: vea [Destinos](doc/es/panel.md#destinos) |
 | Mandar la copia del sistema entero a un S3 | desde el panel, pestaña Destinos, abra la tarjeta **Copia del sistema**, **Configurar** y **Copiar y enviar ahora**: vea [Copia del sistema a S3](doc/es/panel.md#copia-do-sistema) |
@@ -678,7 +680,7 @@ El camino más seguro para cada decisión de quien instala, en flujograma, está
 | Verificar la instalación en marcha | `./scripts/validate.sh --runtime` | lo mismo, más `servico ftp: running, healthy`, igual para `painel` y `nginx`, y el usuario inicial en el PureDB o eliminado por el administrador |
 | Ejecutar la batería completa: funcional, seguridad y red | `./tests/testar.sh` | una línea por caso y, al final, `Bateria aprovada: nenhum desvio.` |
 
-La batería levanta una instancia de prueba separada, en `127.0.0.2`, y la elimina al terminar: la instalación en uso no se toca. Son 108 casos funcionales, 155 de seguridad y 17 de red, y ninguna versión se publica con desvío. Lo que la batería de seguridad intenta, objetivo por objetivo, está en [pruebas ejecutadas](doc/es/seguridad.md#testes-executados); las opciones del script, en [Scripts](doc/es/scripts.md#testar).
+La batería levanta una instancia de prueba separada, en `127.0.0.2`, y la elimina al terminar: la instalación en uso no se toca. Son 111 casos funcionales, 161 de seguridad y 19 de red, y ninguna versión se publica con desvío. Lo que la batería de seguridad intenta, objetivo por objetivo, está en [pruebas ejecutadas](doc/es/seguridad.md#testes-executados); las opciones del script, en [Scripts](doc/es/scripts.md#testar).
 
 ---
 
@@ -774,7 +776,7 @@ El plan de creación y cambio de la stack (fases, pruebas, evidencias y avance) 
 
 ## 🏷️ Versión
 
-**1.12.0**, registrada en [`VERSION`](VERSION). Cambios por versión en [`CHANGELOG.md`](CHANGELOG.md). Cada versión publicada tiene una etiqueta `vX.Y.Z` y una Release en el [repositorio oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), el de la empresa; el espejo en la cuenta personal recibe la misma versión enseguida.
+**1.13.0**, registrada en [`VERSION`](VERSION). Cambios por versión en [`CHANGELOG.md`](CHANGELOG.md). Cada versión publicada tiene una etiqueta `vX.Y.Z` y una Release en el [repositorio oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), el de la empresa; el espejo en la cuenta personal recibe la misma versión enseguida.
 
 La versión avanza en cada publicación, siempre en el número del medio (`1.1.0`, `1.2.0`) o en el primero: el número de corrección queda en cero. `0.x` fue la fase de construcción; **la `1.0.0` es la primera versión lista para producción** y abre la línea de largo plazo (LTS) `1.x`. Las versiones se renumeraron el 2026-10-11: el [`CHANGELOG.md`](CHANGELOG.md) trae lo que cambió en cada una y la tabla con los números de antes.
 

@@ -45,7 +45,7 @@ flowchart LR
 | Folder of `DATA_DIR` | What it keeps | Goes into the copy |
 |---|---|---|
 | `dados/` | Files uploaded by the devices, one folder per user, and `.entrada/`, the entry area of the accounts with the Upload only profile, empty outside the instant of each upload | Yes |
-| `auth/` | FTP users, with the hash of each password, the limits of each one, the list of who is exempt from TLS and the blocks in effect, by attempts and by address | Yes |
+| `auth/` | FTP users, with the hash of each password, the limits of each one, the other folders granted to each one in the panel, the list of who is exempt from TLS and the blocks in effect, by attempts and by address | Yes |
 | `certs/` | Certificate and private key of the FTP | Yes |
 | `painel/` | Certificate and private key of the panel, the administrators (name and password hash), the `auditoria.log`, the language of the screens chosen by each account and the settings and the progress of the [destinations](panel.md#destinos) and of the system copy to S3, without their secrets | Yes |
 | `nginx/` | Panel socket and copy of the certificate, remade at every start | No |

@@ -10,7 +10,7 @@
 
 Every screen of the web panel, menu by menu, with a screenshot of each one and an explanation of what can be done on it. The screenshots are real captures of version **1.8.0**, in dark theme and in English, with example users, such as `olt-centro`, `switch-core` and `roteador-borda`. The panel follows the light or dark theme of the system and also opens in Portuguese and in Spanish: see [Language](#idioma). Click any screenshot to open it at full size.
 
-The panel has a sign-in screen, eight tabs for whoever administers it (Overview, Users, Files, Destinations, Server, Security, Blocks and Log) and one screen for the FTP user, which changes with the profile of the account: My files or File upload. The administrators are in the Users tab, together with the FTP accounts. How to open it, how to create administrators and what protects the panel are in [Web panel](../panel.md).
+The panel has a sign-in screen, eight tabs for whoever administers it (Overview, Users, Files, Destinations, Server, Security, Blocks and Log) and one screen for the FTP user, which changes with the profile of the account: My files or File upload. The folders the administrator granted to the account beyond its own open on the Granted folder screen. The administrators are in the Users tab, together with the FTP accounts. How to open it, how to create administrators and what protects the panel are in [Web panel](../panel.md).
 
 > 🧱 **Private network use only:** by default, the panel opens only on a private IP, behind a firewall, off the internet. See [Security](../security.md#rede-privada).
 
@@ -248,6 +248,8 @@ The profile decides what the account does, on FTP and in the panel:
 
 The permission to upload files through the panel is given user by user, in the **Limits** card of the **Edit** screen: see [Users ➜ Limits](#usuarios). Without it, the account only uploads by FTP.
 
+The profile applies in the folder of the record and on FTP. In the other folders the administrator grants to the account, in the panel only, the permission given in each one applies: see [Users ➜ Other folders](#usuarios).
+
 The screen of each profile is in [My files](#meus-arquivos); the rules, the shared folder and what changes on a switch, in [Web panel](../panel.md#perfis).
 
 <details>
@@ -315,9 +317,9 @@ It appears when the two password fields are left blank, on registration or on a 
 
 ### Users ➜ Edit
 
-<a href="images/usuarios-editar.png"><img src="images/usuarios-editar.png" alt="Edit user screen of roteador-borda, with the Profile card, which lists the four FTP profiles, with what each one allows, and has the Save profile button, the Folder card, which shows the current folder and the New folder field, the TLS card, which says the user only signs in with TLS and has the Exempt from TLS button, the Limits card filled in with sessions, rates, hours, downloads through the panel, wrong passwords before the block and minutes of block, with the box that allows file upload through the panel, and the Automatic cleanup card, off" width="100%"></a>
+<a href="images/usuarios-editar.png"><img src="images/usuarios-editar.png" alt="Edit user screen of roteador-borda, with the Profile card, which lists the four FTP profiles, with what each one allows, and has the Save profile button, the Folder card, which shows the current folder, says it is granted in the panel to olt-centro and has the New folder field, the Other folders card, with no folder granted, with the Folder to grant field and the three permissions, the TLS card, which says the user only signs in with TLS and has the Exempt from TLS button, the Limits card filled in with sessions, rates, hours, downloads through the panel, wrong passwords before the block and minutes of block, with the box that allows file upload through the panel, and the Automatic cleanup card, off, with the warning that the folder is also reached by olt-centro" width="100%"></a>
 
-<sub><b>v1.9.0</b> · Users menu, Edit user screen · captured on 2026-10-12</sub>
+<sub><b>v1.13.0</b> · Users menu, Edit user screen · captured on 2026-10-13</sub>
 
 It gathers what changes in a user without creating it again. The name does not change: it is with it that the device signs in to FTP.
 
@@ -327,6 +329,7 @@ It gathers what changes in a user without creating it again. The name does not c
 | **Blocks** | Only appears when the FTP is refusing the user for too many wrong passwords: see [Users ➜ Blocks](#usuarios) |
 | **Profile** | Shows the profile of the account and switches to another of the four FTP profiles |
 | **Folder** | Shows the current folder, with the number of files and the space taken, and changes the folder of the user |
+| **Other folders** | Grants the user, in the panel only, folders beyond the one of the record, each with its own permission: see [Users ➜ Other folders](#usuarios) |
 | **TLS** | Says whether the user signs in with or without TLS and leads to the confirmation of the change: see [Users ➜ TLS per user](#usuarios) |
 | **Limits** | Saves the user's own limits and the permission to upload files through the panel: see [Users ➜ Limits](#usuarios) |
 | **Automatic cleanup** | Turns on, changes and turns off the rule that deletes the old files of the user's folder on its own: see [Users ➜ Automatic cleanup](#usuarios) |
@@ -379,9 +382,36 @@ The **Limits** card of the **Edit** screen applies only to that user, whether it
 
 The upload permission applies immediately. A file uploaded through the panel is at most the size of `PAINEL_ENVIO_MAX_MB` (1024 MB, by default), follows the upload rate of the user and never replaces a file that already exists: see [My files ➜ Upload file](#meus-arquivos).
 
-In the screenshot of the **Edit** screen, `roteador-borda` has 2 sessions, 2048 KB per second of download, 1024 of upload, sign-in from `22:00` to `06:00`, 1 download at a time through the panel and a 30-minute block on the third wrong password.
+In the screenshot of the **Edit** screen, `roteador-borda` has 2 sessions, 2048 KB per second of download, 1024 of upload, sign-in from `22:00` to `06:00`, 1 download at a time through the panel and a 30-minute block on the third wrong password. Its folder shows as granted to `olt-centro`, which reads it through the panel: see [Users ➜ Other folders](#usuarios).
 
 > ⚠️ **Upload rate and small files:** with the upload rate set, the server holds each uploaded file for about `256 ÷ rate` seconds. For a device that sends many small files, use a high rate or leave it blank. The values and what each limit changes for the user are in [Web panel](../panel.md#limites).
+
+</details>
+
+<details>
+<summary>Users ➜ Other folders — click to expand</summary>
+
+### Users ➜ Other folders
+
+<a href="images/usuarios-outras-pastas.png"><img src="images/usuarios-outras-pastas.png" alt="Edit user screen of olt-centro at the Other folders card: the Folder granted notice, the list with comum/relatorios, of permission Upload and also reached by consulta-filiais and nobreak-sala, and roteador-borda, of permission Read only, the warning that roteador-borda is the folder of another user, the Folder to grant field, the permissions Read only, Upload and Full and the Grant folder button" width="100%"></a>
+
+<sub><b>v1.13.0</b> · Users menu, Other folders card · captured on 2026-10-13</sub>
+
+Grants a user folders beyond the one of the record, in the panel only and each with its own permission. The folder of the record stays private, and by FTP the account keeps signing in only to it.
+
+| Part of the card | What it shows or does |
+|---|---|
+| List | One row per granted folder: the folder, the permission, **Who else reaches it** and the **Take away** button |
+| Warning below the list | Appears when the folder is the one of another user, contains that user's folder or is inside it, and says whose it is |
+| **Folder to grant** | The folder, with the same rule as the folder of the user; it is created if it does not exist |
+| **What this user can do in it** | Read only: browses and downloads. Upload: also creates folders and, with the permission to upload through the panel, uploads files. Full: also renames and deletes, with the password of the account |
+| **Grant folder** | Saves. Granting again a folder from the list changes its permission |
+
+**Expected result:** the card comes back with `Folder granted. It applies on the user's next request in the panel.`; the change of permission, with `Permission changed. It applies on the user's next request in the panel.`; and **Take away**, with `Folder taken away from the user. The files stay in it.`
+
+In the screenshot, `olt-centro` opens in the panel the shared folder `comum/relatorios`, where it also uploads, and reads the folder of `roteador-borda` without being able to change it. The shared folder is the same one of `consulta-filiais` and `nobreak-sala`, which only read.
+
+Up to 20 folders per user; the Upload only profile gets none. The rules and what happens on removal and on a change of profile are in [Web panel](../panel.md#outras-pastas); what the user sees, in [My files ➜ Granted folder](#meus-arquivos).
 
 </details>
 
@@ -1003,7 +1033,7 @@ The folder of an FTP user, and the folder that has the one of a user inside it, 
 
 **What it is for:** the owner of the files browses their own folder and downloads the backups through the browser, without depending on whoever administers and without a new account. What else they do depends on the profile of the account and, for file upload, on the permission the administrator gives.
 
-**How to get there:** open the address of the panel and sign in with **the FTP name and password**, the same ones the device uses. It is the only screen the FTP user sees.
+**How to get there:** open the address of the panel and sign in with **the FTP name and password**, the same ones the device uses. It is the screen the FTP user lands on; the folders the administrator granted to them are in the menu.
 
 | Screen item | What it does | Profiles that have it |
 |---|---|---|
@@ -1020,7 +1050,7 @@ The folder of an FTP user, and the folder that has the one of a user inside it, 
 | **PT** · **EN** · **ES** | Switch the language of the account: see [Language](#idioma) | All |
 | **Sign out** | Closes the session immediately | All |
 
-The user sees only the folder of their registration and what is inside it. The path of the folder on the server does not appear, and the menu has only the screen of the account, without the administration tabs, with the name of the user and the role **FTP user**. The button the profile does not have does not appear, and the action requested directly by the address answers `404`. Uploading a file from here depends on a permission the administrator gives to each account: without it, the **Upload file** card does not appear and upload is by FTP only. The account with the Upload only profile has another screen: see [My files ➜ Upload only profile](#meus-arquivos).
+On this screen, the user sees only the folder of their record and what is inside it. The path of the folder on the server does not appear, and the menu has only the screen of the account and the folders granted to it, without the administration tabs, with the name of the user and the role **FTP user**. The button the profile does not have does not appear, and the action requested directly by the address answers `404`. Uploading a file from here depends on a permission the administrator gives to each account: without it, the **Upload file** card does not appear and upload is by FTP only. The account with the Upload only profile has another screen: see [My files ➜ Upload only profile](#meus-arquivos).
 
 <details>
 <summary>My files ➜ Inside a folder — click to expand</summary>
@@ -1128,13 +1158,37 @@ Whoever needs to check or download what was uploaded asks an administrator or us
 </details>
 
 <details>
+<summary>My files ➜ Granted folder — click to expand</summary>
+
+### My files ➜ Granted folder
+
+<a href="images/pasta-liberada.png"><img src="images/pasta-liberada.png" alt="Granted folder screen of the user olt-centro in the folder comum/relatorios: the menu with My files and the Granted folders group, with relatorios and roteador-borda, the list with one folder and four files, each with the Download button, and the Upload file and New folder cards" width="100%"></a>
+
+<sub><b>v1.13.0</b> · Granted folder screen, permission Upload · captured on 2026-10-13</sub>
+
+Each folder the administrator granted to the account gets an entry in the menu, in the **Granted folders** group, with the last name of the path; the whole path appears at the top of the screen. The screen works like My files, with what the permission of that folder allows, and not the profile of the account.
+
+| Permission in the folder | What the screen has |
+|---|---|
+| Read only | The list, with **Open** and **Download** |
+| Upload | Also the **New folder** card and, with the permission to upload through the panel, the **Upload file** card |
+| Full | Also **Rename** and **Delete** on each row, with the FTP password of the account |
+
+In the screenshot, `olt-centro` has the permission Upload in `comum/relatorios`: it browses, downloads, creates folders and uploads, but does not rename or delete, although its profile is Full. In `roteador-borda`, the other entry of the menu, it only browses and downloads.
+
+The collapsed **What this account can do** says the folder was granted by the administrator, that it opens only in the panel and that other accounts may have access to it, without saying which. A folder the administrator takes away leaves the menu on the next request, and its address starts answering `404`. The rules are in [Web panel](../panel.md#outras-pastas).
+
+</details>
+
+<details>
 <summary>Technical detail — what the FTP account reaches</summary>
 
 - Routes of the session of the FTP user, by profile. Upload only: `GET /` (leads to `/meus-arquivos`), `GET /meus-arquivos`, `POST /idioma` and `POST /sair`. Read only adds `GET /meus-arquivos?pasta=<path>` and `GET /meus-arquivos/baixar?arquivo=<path>`. Upload adds `POST /meus-arquivos/pasta`. With the permission to upload through the panel, Upload only, Upload and Full gain `POST /meus-arquivos/enviar`; without it, the route answers `403`, with the event `recusa_envio`. Full adds `GET` and `POST` on `/meus-arquivos/renomear?item=<path>` and `/meus-arquivos/apagar?item=<path>`.
 - Any other route answers `404`. When it is an administration route, or an action the profile of the account does not have, the event `recusa_papel` is recorded, with the user, the path and the profile.
+- In the granted folders, the same routes apply under `/pastas/<identificador>`, by the permission given in that folder and not by the profile: the list, `/baixar`, `/pasta`, `/enviar`, `/renomear` and `/apagar`. A folder that is not granted to the account answers `404`, with the event `recusa_pasta`; an action the permission does not have, `404`, with `recusa_papel`.
 - Renaming and deleting check the FTP password of the account; the wrong password writes `usuario_senha_atual_recusada`.
 - The one that checks the password is `pure-ftpd`, by a login on the internal network of the stack; the panel does not read the hash of the user database.
-- The path is always relative to the folder of the registration, which is its root, with the same checks as the [Files tab](#arquivos).
+- The path is always relative to the folder of the record, which is its root, or to the granted folder, when the request is for one of them, with the same checks as the [Files tab](#arquivos).
 - `PAINEL_ACESSO_USUARIOS_FTP=nao` turns this sign-in off: the panel starts accepting administrators only.
 - The full behaviour is in [FTP user in the panel](../panel.md#usuario-ftp).
 
@@ -1725,6 +1779,7 @@ The administrator whose own address got blocked does not open the panel: the rel
 | Sign-in · Sign-in refused · Sign-in blocked by the attempt limit · Sign-out | Someone signed in, got the user name or the password wrong, had the address blocked or signed out |
 | Password accepted, waiting for the second factor · Second factor code refused · Sign-in refused: second factor on without the secret on the server | Sign-in of an account that has, or is required to have, the second factor: the password matched, the code from the app was refused, or the key of the account is not on the server |
 | User created · Password changed · User folder changed · User profile changed · User removed | Change of an FTP user, with the administrator who did it |
+| Other folder granted to a user · Other folder taken away from a user | An administrator granted an FTP user a folder beyond the one of the record, or changed its permission, and took it away, with the user, the folder and the permission |
 | User limits changed · FTP block of the user removed | Limits saved, with the value of each one, and block for wrong password removed in **Edit** |
 | User automatic cleanup changed · Automatic cleanup: old files deleted · Automatic cleanup not completed | The rule saved or turned off in **Edit**, with the administrator who did it; each run that deleted something, with the user and the amount; and the run that did not finish |
 | Address blocked for user name and password errors · Address or prefix blocked by the administrator · Address block period changed · Address unblocked · Request from a blocked address | The panel blocked an address, an administrator blocked, changed the period or released it in the Blocks tab, and each refused request from a blocked address |
@@ -1738,7 +1793,8 @@ The administrator whose own address got blocked does not open the panel: the rel
 | Second factor set up at sign-in · Second factor turned on · Second factor turned off · Second factor of an FTP user turned off · Second factor turned off from the terminal | The account set up its own at sign-in; the administrator turned on their own in the Users tab; an administrator turned off their own, that of another administrator or that of an FTP user, with who did it and whose it was; and the turning off done on the server |
 | Current password refused | Change of an administrator refused by the confirmation password |
 | FTP password refused on confirmation | An FTP user got their own password wrong when confirming a name change or a deletion on the My files screen |
-| Screen outside the role or profile requested by an FTP user | An FTP user requested an administration tab, or an action their profile does not have, and got `404` |
+| Screen outside the role or profile requested by an FTP user | An FTP user requested an administration tab, or an action their profile, or their permission in the granted folder, does not have, and got `404` |
+| Folder not granted requested by an FTP user | An FTP user requested by address a folder that is not granted to them and got `404` |
 | FTP user session closed | The password, the folder or the profile of the user changed, or the user was removed |
 | File path refused | Request that tries to leave the data folder or that goes through a symbolic link |
 

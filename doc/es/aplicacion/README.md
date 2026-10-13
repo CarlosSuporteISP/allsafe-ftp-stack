@@ -10,7 +10,7 @@
 
 Todas las pantallas del panel web, menú por menú, con la foto de cada una y la explicación de lo que se puede hacer en ella. Las fotos son capturas reales de la versión **1.11.0**, en tema oscuro y en español, con usuarios de ejemplo, como `olt-centro`, `switch-core` y `roteador-borda`. El panel acompaña el tema claro u oscuro del sistema y también se abre en portugués y en inglés: vea [Idioma](#idioma). Haga clic en cualquier foto para abrirla en tamaño real.
 
-El panel tiene una pantalla de entrada, ocho pestañas para quien administra (Visión general, Usuarios, Archivos, Destinos, Servidor, Seguridad, Bloqueos y Log) y una pantalla para el usuario del FTP, que cambia con el perfil de la cuenta: Mis archivos o Envío de archivos. Los administradores están en la pestaña Usuarios, junto con las cuentas del FTP. Cómo abrirlo, crear administradores y qué protege el panel está en [Panel web](../panel.md).
+El panel tiene una pantalla de entrada, ocho pestañas para quien administra (Visión general, Usuarios, Archivos, Destinos, Servidor, Seguridad, Bloqueos y Log) y una pantalla para el usuario del FTP, que cambia con el perfil de la cuenta: Mis archivos o Envío de archivos. Las carpetas que el administrador liberó de más a la cuenta se abren en la pantalla Carpeta liberada. Los administradores están en la pestaña Usuarios, junto con las cuentas del FTP. Cómo abrirlo, crear administradores y qué protege el panel está en [Panel web](../panel.md).
 
 > 🧱 **Uso solo en red privada:** por defecto, el panel se abre solo en IP privada, detrás de un firewall, fuera de internet. Vea [Seguridad](../seguridad.md#rede-privada).
 
@@ -248,6 +248,8 @@ El perfil decide qué hace la cuenta, en el FTP y en el panel:
 
 El permiso de enviar archivos por el panel se da usuario por usuario, en la tarjeta **Límites** de la pantalla **Editar**: vea [Usuarios ➜ Límites](#usuarios). Sin él, la cuenta solo envía por FTP.
 
+El perfil vale en la carpeta del registro y en el FTP. En las otras carpetas que el administrador libera a la cuenta, solo en el panel, vale el permiso dado en cada una: vea [Usuarios ➜ Otras carpetas](#usuarios).
+
 La pantalla de cada perfil está en [Mis archivos](#meus-arquivos); las reglas, la carpeta compartida y lo que cambia en el cambio, en [Panel web](../panel.md#perfis).
 
 <details>
@@ -315,9 +317,9 @@ Aparece cuando los dos campos de contraseña quedan en blanco, en el registro o 
 
 ### Usuarios ➜ Editar
 
-<a href="imagenes/usuarios-editar.png"><img src="imagenes/usuarios-editar.png" alt="Pantalla Editar usuario de roteador-borda, con la tarjeta Perfil, que lista los cuatro perfiles del FTP, con lo que cada uno permite, y trae el botón Guardar perfil, la tarjeta Carpeta, que muestra la carpeta actual y el campo Carpeta nueva, la tarjeta TLS, que dice que el usuario solo entra con TLS y trae el botón Dispensar del TLS, la tarjeta Límites rellenada con sesiones, tasas, horario, descargas por el panel, contraseñas incorrectas hasta el bloqueo y minutos de bloqueo, con la casilla que permite el envío de archivos por el panel, y la tarjeta Limpieza automática, desactivada" width="100%"></a>
+<a href="imagenes/usuarios-editar.png"><img src="imagenes/usuarios-editar.png" alt="Pantalla Editar usuario de roteador-borda, con la tarjeta Perfil, que lista los cuatro perfiles del FTP, con lo que cada uno permite, y trae el botón Guardar perfil, la tarjeta Carpeta, que muestra la carpeta actual, dice que está liberada en el panel a olt-centro y trae el campo Carpeta nueva, la tarjeta Otras carpetas, sin ninguna carpeta liberada, con el campo Carpeta a liberar y los tres permisos, la tarjeta TLS, que dice que el usuario solo entra con TLS y trae el botón Dispensar del TLS, la tarjeta Límites rellenada con sesiones, tasas, horario, descargas por el panel, contraseñas incorrectas hasta el bloqueo y minutos de bloqueo, con la casilla que permite el envío de archivos por el panel, y la tarjeta Limpieza automática, desactivada, con el aviso de que la carpeta también es alcanzada por olt-centro" width="100%"></a>
 
-<sub><b>v1.11.0</b> · menú Usuarios, pantalla Editar usuario · captura del 2026-10-12</sub>
+<sub><b>v1.13.0</b> · menú Usuarios, pantalla Editar usuario · captura del 2026-10-13</sub>
 
 Reúne lo que cambia en un usuario sin crearlo de nuevo. El nombre no cambia: es con él que el equipo entra en el FTP.
 
@@ -327,6 +329,7 @@ Reúne lo que cambia en un usuario sin crearlo de nuevo. El nombre no cambia: es
 | **Bloqueos** | Solo aparece cuando el FTP está rechazando al usuario por demasiadas contraseñas incorrectas: vea [Usuarios ➜ Bloqueos](#usuarios) |
 | **Perfil** | Muestra el perfil de la cuenta y lo cambia por otro de los cuatro del FTP |
 | **Carpeta** | Muestra la carpeta actual, con la cantidad de archivos y el espacio ocupado, y cambia la carpeta del usuario |
+| **Otras carpetas** | Libera al usuario, solo en el panel, carpetas además de la del registro, cada una con su permiso: vea [Usuarios ➜ Otras carpetas](#usuarios) |
 | **TLS** | Dice si el usuario entra con o sin TLS y lleva a la confirmación del cambio: vea [Usuarios ➜ TLS por usuario](#usuarios) |
 | **Límites** | Guarda los límites propios del usuario y el permiso de enviar archivos por el panel: vea [Usuarios ➜ Límites](#usuarios) |
 | **Limpieza automática** | Activa, cambia y desactiva la regla que borra por sí sola los archivos antiguos de la carpeta del usuario: vea [Usuarios ➜ Limpieza automática](#usuarios) |
@@ -379,9 +382,36 @@ La tarjeta **Límites** de la pantalla **Editar** vale solo para ese usuario, se
 
 El permiso de envío vale en el acto. El archivo enviado por el panel tiene hasta el tamaño de `PAINEL_ENVIO_MAX_MB` (1024 MB, por defecto), sigue la tasa de envío del usuario y nunca sustituye un archivo que ya existe: vea [Mis archivos ➜ Enviar archivo](#meus-arquivos).
 
-En la foto de la pantalla **Editar**, `roteador-borda` está con 2 sesiones, 2048 KB por segundo de descarga, 1024 de envío, entrada de `22:00` a `06:00`, 1 descarga por vez por el panel y bloqueo de 30 minutos en la tercera contraseña incorrecta.
+En la foto de la pantalla **Editar**, `roteador-borda` está con 2 sesiones, 2048 KB por segundo de descarga, 1024 de envío, entrada de `22:00` a `06:00`, 1 descarga por vez por el panel y bloqueo de 30 minutos en la tercera contraseña incorrecta. Su carpeta aparece como liberada a `olt-centro`, que la consulta por el panel: vea [Usuarios ➜ Otras carpetas](#usuarios).
 
 > ⚠️ **Tasa de envío y archivo pequeño:** con la tasa de envío definida, el servidor retiene cada archivo enviado durante unos `256 ÷ taxa` segundos. Para un equipo que manda muchos archivos pequeños, use una tasa alta o deje en blanco. Los valores y lo que cada límite cambia para el usuario están en [Panel web](../panel.md#limites).
+
+</details>
+
+<details>
+<summary>Usuarios ➜ Otras carpetas — haga clic para expandir</summary>
+
+### Usuarios ➜ Otras carpetas
+
+<a href="imagenes/usuarios-outras-pastas.png"><img src="imagenes/usuarios-outras-pastas.png" alt="Pantalla Editar usuario de olt-centro en la tarjeta Otras carpetas: el aviso Carpeta liberada, la lista con comum/relatorios, de permiso Envío y alcanzada también por consulta-filiais y nobreak-sala, y roteador-borda, de permiso Lectura, la alerta de que roteador-borda es la carpeta de otro usuario, el campo Carpeta a liberar, los permisos Lectura, Envío y Completo y el botón Liberar carpeta" width="100%"></a>
+
+<sub><b>v1.13.0</b> · menú Usuarios, tarjeta Otras carpetas · captura del 2026-10-13</sub>
+
+Libera a un usuario carpetas además de la del registro, solo en el panel y cada una con su permiso. La carpeta del registro sigue siendo privada, y por FTP la cuenta sigue entrando solo en ella.
+
+| Parte de la tarjeta | Qué muestra o hace |
+|---|---|
+| Lista | Una línea por carpeta liberada: la carpeta, el permiso, **Quién más la alcanza** y el botón **Retirar** |
+| Alerta debajo de la lista | Aparece cuando la carpeta es la de otro usuario, contiene la carpeta de él o queda dentro de ella, y dice de quién es |
+| **Carpeta a liberar** | La carpeta, con la misma regla de la carpeta del usuario; se crea si no existe |
+| **Qué puede hacer este usuario en ella** | Lectura: navega y descarga. Envío: también crea carpetas y, con el permiso de envío por el panel, envía archivos. Completo: también cambia el nombre y borra, con la contraseña de la cuenta |
+| **Liberar carpeta** | Guarda. Liberar de nuevo una carpeta de la lista cambia su permiso |
+
+**Resultado esperado:** la tarjeta vuelve con `Carpeta liberada. Vale en la próxima solicitud del usuario en el panel.`; el cambio de permiso, con `Permiso cambiado. Vale en la próxima solicitud del usuario en el panel.`; y **Retirar**, con `Carpeta retirada al usuario. Los archivos siguen en ella.`
+
+En la foto, `olt-centro` abre en el panel la carpeta común `comum/relatorios`, donde también envía, y consulta la carpeta de `roteador-borda` sin poder modificarla. La carpeta común es la misma de `consulta-filiais` y `nobreak-sala`, que solo leen.
+
+Hasta 20 carpetas por usuario; el perfil Solo envío no recibe ninguna. Las reglas y lo que ocurre en la eliminación y en el cambio de perfil están en [Panel web](../panel.md#outras-pastas); lo que ve el usuario, en [Mis archivos ➜ Carpeta liberada](#meus-arquivos).
 
 </details>
 
@@ -1003,7 +1033,7 @@ La carpeta de un usuario del FTP, y la carpeta que tiene dentro la de un usuario
 
 **Para qué sirve:** el dueño de los archivos navega por su propia carpeta y descarga las copias de seguridad por el navegador, sin depender de quien administra y sin cuenta nueva. Lo demás que hace depende del perfil de la cuenta y, en el envío de archivos, del permiso que da el administrador.
 
-**Cómo llegar:** abra la dirección del panel y entre con **el nombre y la contraseña del FTP**, los mismos que usa el equipo. Es la única pantalla que ve el usuario del FTP.
+**Cómo llegar:** abra la dirección del panel y entre con **el nombre y la contraseña del FTP**, los mismos que usa el equipo. Es la pantalla a la que llega el usuario del FTP; las carpetas que el administrador le liberó quedan en el menú.
 
 | Elemento de la pantalla | Qué hace | Perfiles que lo tienen |
 |---|---|---|
@@ -1020,7 +1050,7 @@ La carpeta de un usuario del FTP, y la carpeta que tiene dentro la de un usuario
 | **PT** · **EN** · **ES** | Cambian el idioma de la cuenta: vea [Idioma](#idioma) | Todos |
 | **Salir** | Cierra la sesión en el acto | Todos |
 
-El usuario ve solo la carpeta de su registro y lo que hay dentro de ella. La ruta de la carpeta en el servidor no aparece, y el menú trae solo la pantalla de la cuenta, sin las pestañas de administración, con el nombre del usuario y el rol **Usuario del FTP**. El botón que el perfil no tiene no aparece, y la acción pedida directamente por la dirección responde `404`. Enviar archivos por aquí depende de un permiso que el administrador da a cada cuenta: sin él, la tarjeta **Enviar archivo** no aparece y el envío es solo por FTP. La cuenta de perfil Solo envío tiene otra pantalla: vea [Mis archivos ➜ Perfil Solo envío](#meus-arquivos).
+En esta pantalla, el usuario ve solo la carpeta de su registro y lo que hay dentro de ella. La ruta de la carpeta en el servidor no aparece, y el menú trae solo la pantalla de la cuenta y las carpetas liberadas a ella, sin las pestañas de administración, con el nombre del usuario y el rol **Usuario del FTP**. El botón que el perfil no tiene no aparece, y la acción pedida directamente por la dirección responde `404`. Enviar archivos por aquí depende de un permiso que el administrador da a cada cuenta: sin él, la tarjeta **Enviar archivo** no aparece y el envío es solo por FTP. La cuenta de perfil Solo envío tiene otra pantalla: vea [Mis archivos ➜ Perfil Solo envío](#meus-arquivos).
 
 <details>
 <summary>Mis archivos ➜ Dentro de una carpeta — haga clic para expandir</summary>
@@ -1128,13 +1158,37 @@ Quien necesita verificar o descargar lo que se envió se lo pide a un administra
 </details>
 
 <details>
+<summary>Mis archivos ➜ Carpeta liberada — haga clic para expandir</summary>
+
+### Mis archivos ➜ Carpeta liberada
+
+<a href="imagenes/pasta-liberada.png"><img src="imagenes/pasta-liberada.png" alt="Pantalla Carpeta liberada del usuario olt-centro en la carpeta comum/relatorios: el menú con Mis archivos y el grupo Carpetas liberadas, con relatorios y roteador-borda, la lista con una carpeta y cuatro archivos, cada uno con el botón Descargar, y las tarjetas Enviar archivo y Nueva carpeta" width="100%"></a>
+
+<sub><b>v1.13.0</b> · pantalla Carpeta liberada, permiso Envío · captura del 2026-10-13</sub>
+
+Cada carpeta que el administrador liberó a la cuenta gana una entrada en el menú, en el grupo **Carpetas liberadas**, con el último nombre de la ruta; la ruta entera aparece en lo alto de la pantalla. La pantalla funciona como Mis archivos, con lo que el permiso de esa carpeta deja hacer, y no el perfil de la cuenta.
+
+| Permiso en la carpeta | Qué trae la pantalla |
+|---|---|
+| Lectura | La lista, con **Abrir** y **Descargar** |
+| Envío | También la tarjeta **Nueva carpeta** y, con el permiso de envío por el panel, la tarjeta **Enviar archivo** |
+| Completo | También **Renombrar** y **Borrar** en cada línea, con la contraseña del FTP de la cuenta |
+
+En la foto, `olt-centro` tiene el permiso Envío en `comum/relatorios`: navega, descarga, crea carpetas y envía, pero no cambia el nombre ni borra, aunque su perfil sea Completo. En `roteador-borda`, la otra entrada del menú, solo navega y descarga.
+
+El recogido **Qué puede hacer esta cuenta** dice que la carpeta fue liberada por el administrador, que se abre solo en el panel y que otras cuentas pueden tener acceso a ella, sin decir cuáles. La carpeta que el administrador retira desaparece del menú en la solicitud siguiente, y su dirección pasa a responder `404`. Las reglas están en [Panel web](../panel.md#outras-pastas).
+
+</details>
+
+<details>
 <summary>Detalle técnico — lo que alcanza la cuenta del FTP</summary>
 
 - Rutas de la sesión del usuario del FTP, por perfil. Solo envío: `GET /` (lleva a `/meus-arquivos`), `GET /meus-arquivos`, `POST /idioma` y `POST /sair`. Lectura añade `GET /meus-arquivos?pasta=<caminho>` y `GET /meus-arquivos/baixar?arquivo=<caminho>`. Envío añade `POST /meus-arquivos/pasta`. Con el permiso de envío por el panel, Solo envío, Envío y Completo ganan `POST /meus-arquivos/enviar`; sin él, la ruta responde `403`, con el evento `recusa_envio`. Completo añade `GET` y `POST` en `/meus-arquivos/renomear?item=<caminho>` y `/meus-arquivos/apagar?item=<caminho>`.
 - Cualquier otra ruta responde `404`. Cuando es una ruta de administración, o una acción que el perfil de la cuenta no tiene, queda el evento `recusa_papel`, con el usuario, la ruta y el perfil.
+- En las carpetas liberadas, las mismas rutas valen bajo `/pastas/<identificador>`, por el permiso dado en esa carpeta y no por el perfil: la lista, `/baixar`, `/pasta`, `/enviar`, `/renomear` y `/apagar`. La carpeta que no está liberada a la cuenta responde `404`, con el evento `recusa_pasta`; la acción que el permiso no tiene, `404`, con `recusa_papel`.
 - Renombrar y borrar verifican la contraseña del FTP de la cuenta; la contraseña incorrecta escribe `usuario_senha_atual_recusada`.
 - Quien verifica la contraseña es el `pure-ftpd`, por un inicio de sesión en la red interna de la stack; el panel no lee el hash del registro.
-- La ruta es siempre relativa a la carpeta del registro, que es su raíz, con las mismas verificaciones de la [pestaña Archivos](#arquivos).
+- La ruta es siempre relativa a la carpeta del registro, que es su raíz, o a la carpeta liberada, cuando la solicitud es de una de ellas, con las mismas verificaciones de la [pestaña Archivos](#arquivos).
 - `PAINEL_ACESSO_USUARIOS_FTP=nao` desactiva esta entrada: el panel pasa a aceptar solo administradores.
 - El funcionamiento completo está en [Usuario del FTP en el panel](../panel.md#usuario-ftp).
 
@@ -1725,6 +1779,7 @@ El administrador que quedó con su propia dirección bloqueada no abre el panel:
 | Entrada · Entrada rechazada · Entrada bloqueada por el límite de intentos · Salida | Alguien entró, falló el usuario o la contraseña, tuvo la dirección bloqueada o salió |
 | Contraseña aceptada, a la espera del segundo factor · Código del segundo factor rechazado · Entrada rechazada: segundo factor activado sin el secreto en el servidor | Entrada de cuenta que tiene, o está obligada a tener, el segundo factor: la contraseña coincidió, el código de la aplicación fue rechazado, o la clave de la cuenta no está en el servidor |
 | Usuario creado · Contraseña cambiada · Carpeta del usuario cambiada · Perfil del usuario cambiado · Usuario eliminado | Modificación de usuario del FTP, con el administrador que la hizo |
+| Otra carpeta liberada a un usuario · Otra carpeta retirada a un usuario | Un administrador liberó a un usuario del FTP una carpeta además de la del registro, o cambió su permiso, y la retiró, con el usuario, la carpeta y el permiso |
 | Límites del usuario modificados · Bloqueo del usuario en el FTP eliminado | Límites guardados, con el valor de cada uno, y bloqueo por contraseña incorrecta quitado en **Editar** |
 | Limpieza automática del usuario modificada · Limpieza automática: archivos antiguos borrados · Limpieza automática no concluida | La regla guardada o desactivada en **Editar**, con el administrador que lo hizo; cada pasada que borró algo, con el usuario y la cantidad; y la pasada que no terminó |
 | Dirección bloqueada por errores de usuario y contraseña · Dirección o prefijo bloqueado por el administrador · Plazo del bloqueo de dirección modificado · Dirección desbloqueada · Solicitud desde una dirección bloqueada | El panel bloqueó una dirección, un administrador bloqueó, cambió el plazo o liberó en la pestaña Bloqueos, y cada solicitud rechazada de una dirección bloqueada |
@@ -1738,7 +1793,8 @@ El administrador que quedó con su propia dirección bloqueada no abre el panel:
 | Segundo factor registrado en el inicio de sesión · Segundo factor activado · Segundo factor desactivado · Segundo factor de un usuario del FTP desactivado · Segundo factor desactivado por el terminal | La cuenta registró el suyo en la entrada; el administrador activó el suyo por la pestaña Usuarios; un administrador desactivó el propio, el de otro administrador o el de un usuario del FTP, con quién lo hizo y de quién era; y la desactivación hecha en el servidor |
 | Contraseña actual rechazada | Modificación de administrador rechazada por la contraseña de confirmación |
 | Contraseña del FTP rechazada en la confirmación | El usuario del FTP falló su propia contraseña al confirmar un cambio de nombre o un borrado en la pantalla Mis archivos |
-| Pantalla fuera del rol o del perfil solicitada por usuario del FTP | Un usuario del FTP pidió una pestaña de administración, o una acción que su perfil no tiene, y recibió `404` |
+| Pantalla fuera del rol o del perfil solicitada por usuario del FTP | Un usuario del FTP pidió una pestaña de administración, o una acción que su perfil, o su permiso en la carpeta liberada, no tiene, y recibió `404` |
+| Carpeta no liberada solicitada por usuario del FTP | Un usuario del FTP pidió por la dirección una carpeta que no está liberada a él y recibió `404` |
 | Sesión de usuario del FTP cerrada | La contraseña, la carpeta o el perfil del usuario cambió, o fue eliminado |
 | Ruta de archivo rechazada | Solicitud que intenta salir de la carpeta de los datos o que pasa por un enlace simbólico |
 
