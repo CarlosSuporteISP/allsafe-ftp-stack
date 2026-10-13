@@ -29,6 +29,7 @@ Ajustes por variável de ambiente (padrão entre parênteses):
   TESTE_IP (127.0.0.2) · TESTE_FTP_PORT (2121) · TESTE_PAINEL_PORT (8444)
   TESTE_PASSIVA_INICIO (32000) · TESTE_SUBNET (172.29.2.0/29) · TESTE_SUBNET_B (172.29.3.0/29)
   TESTE_SUBNET_C (172.29.3.8/29) · TESTE_SUBNET_D (172.29.3.16/29): redes da etapa do bloqueio por endereço
+  TESTE_IP6 (::1) · TESTE_SUBNET6 (fd29:2::/64) · TESTE_SUBNET6_B (fd29:3::/64): endereço e redes da etapa do IPv6
   TESTE_ADMIN (gestor): nome do primeiro administrador do painel, de propósito diferente do padrão
   TEMP_DIR (o do .env; sem ele, o do .env.example)
 
@@ -61,9 +62,16 @@ PAINEL_PORTA="${TESTE_PAINEL_PORT:-8444}"
 PASSIVA="${TESTE_PASSIVA_INICIO:-32000}"
 SUBREDE="${TESTE_SUBNET:-172.29.2.0/29}"
 SUBREDE_B="${TESTE_SUBNET_B:-172.29.3.0/29}"
+IP6="${TESTE_IP6:-::1}"
+SUBREDE6="${TESTE_SUBNET6:-fd29:2::/64}"
+SUBREDE6_B="${TESTE_SUBNET6_B:-fd29:3::/64}"
 ADMIN="${TESTE_ADMIN:-gestor}"
 [[ "$ADMIN" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || die "TESTE_ADMIN=$ADMIN não serve como nome de administrador."
 ip_privado "$IP" || die "TESTE_IP=$IP não é IP privado. A instância de teste também é só para rede interna."
+ip6_privado "$IP6" || die "TESTE_IP6=$IP6 não é IPv6 privado. A instância de teste também é só para rede interna."
+for rede6 in "$SUBREDE6" "$SUBREDE6_B"; do
+  [[ "$rede6" =~ ^fd[0-9a-f]{2}(:[0-9a-f]{1,4}){1,3}::/64$ ]] || die "$rede6 não serve para a etapa do IPv6: use uma faixa local única escrita como fdXX:...::/64."
+done
 
 temp="${TEMP_DIR:-}"
 [[ -z "$temp" && -f .env ]] && temp="$(env_file=.env env_valor TEMP_DIR)"
@@ -76,6 +84,7 @@ ENVA="$T/env"; ENVB="$T/env-b"
 FTP="$NOME"; PAINEL="$NOME-painel"; NGINX="$NOME-nginx"
 IMG_FTP="$NOME:local"; IMG_PAINEL="$NOME-painel:local"; IMG_NGINX="$NOME-nginx:local"
 B="https://$IP:$PAINEL_PORTA"; F="ftp://$IP:$FTP_PORTA"
+B6="https://[$IP6]:$PAINEL_PORTA"; F6="ftp://[$IP6]:$FTP_PORTA"
 CARIMBO="$(date +%Y%m%d-%H%M%S)"; QUANDO="$(date '+%Y-%m-%d %H:%M:%S')"
 
 if [[ -f .env ]]; then

@@ -72,7 +72,7 @@ recusa30() {
 }
 # <usuário> <endereço> → o que o porteiro responde ao pure-authd: auth_ok:0 (segue para a senha) ou auth_ok:-1 (recusado)
 porteiro30() { docker exec -e "AUTHD_ACCOUNT=$1" -e "AUTHD_REMOTE_IP=$2" -e AUTHD_ENCRYPTED=1 "$FTP" allsafe-ftp-porteiro 2>/dev/null | head -1; }
-# O FTP escuta só em IPv4: para o vigia ver um endereço IPv6, a etapa escreve no /dev/log do container o aviso que
+# Sem REDE_IPV6=sim o FTP escuta só em IPv4: para o vigia ver um endereço IPv6, a etapa escreve no /dev/log do container o aviso que
 # o Pure-FTPd escreveria, no formato dele. <prioridade> <conta ou ?> <endereço> <NÍVEL> <texto>
 aviso30() {
   docker exec -i "$FTP" perl - "$@" <<'PERL'
