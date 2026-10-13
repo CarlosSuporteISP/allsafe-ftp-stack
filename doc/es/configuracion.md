@@ -190,7 +190,7 @@ Solo el usuario inicial viene del `.env`. Los demás se crean desde el [panel](p
 |---|---|---|---|
 | `FTP_TLS_MODE` | Política de TLS del `pure-ftpd` (opción `-Y`) | `0`, `1`, `2` o `3` (tabla abajo) | `2` |
 | `FTP_TLS_EXCECOES` | TLS por usuario: con `sim`, el administrador puede dispensar del TLS, en la pestaña Usuarios del panel, al usuario de un equipo que no habla TLS; los demás siguen obligados a usarlo. Sin ningún dispensado, nada cambia: la sesión sin TLS se rechaza antes de la contraseña. Solo vale con `FTP_TLS_MODE=2` y sin `REDE_PERMITIR_IP_PUBLICO=sim`; fuera de eso queda sin efecto | `sim` o `nao` | `sim` |
-| `FTP_CERT_CN` | `CN` y `SAN` del certificado autofirmado generado en el primer arranque. Si es una IPv4, entra como `IP:`; si no, como `DNS:` | hostname o IPv4 | `ftp.exemplo.com.br` en el ejemplo; `localhost` si la variable falta |
+| `FTP_CERT_CN` | `CN` y `SAN` del certificado autofirmado generado en el primer arranque. Si es una IPv4 o una IPv6 (sin corchetes), entra como `IP:`; si no, como `DNS:` | hostname, IPv4 o IPv6 | `ftp.exemplo.com.br` en el ejemplo; `localhost` si la variable falta |
 
 | Modo | Sesión sin TLS | Canal de datos sin cifrado | Cuándo usar |
 |---|---|---|---|
