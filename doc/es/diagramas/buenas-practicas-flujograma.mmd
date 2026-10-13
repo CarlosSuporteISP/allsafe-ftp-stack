@@ -1,0 +1,39 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph INSTALA["Quien instala"]
+        instalador@{ shape: person, label: "Usuario<br>quien instala" }
+    end
+    subgraph REDE["Red del FTP"]
+        rede@{ shape: diam, label: "¿FTP solo en<br>red privada?" }
+        publico@{ shape: rect, label: "IP pública por opción<br>REDE_PERMITIR_IP_PUBLICO=sim" }
+        tls@{ shape: diam, label: "¿todo equipo<br>habla TLS?" }
+        dispensa@{ shape: rect, label: "TLS por usuario<br>dispensa solo al antiguo" }
+    end
+    subgraph PAINEL["Panel"]
+        painel@{ shape: diam, label: "¿panel abierto<br>fuera de la red?" }
+        proxy@{ shape: rect, label: "proxy o túnel<br>PAINEL_PROXY_CONFIAVEL" }
+    end
+    subgraph GUARDA["Secretos y copia"]
+        copia@{ shape: rect, label: "backup.sh<br>copia cifrada" }
+        segredos@{ shape: folder, label: ".secrets<br>contraseñas y claves, 0600" }
+        confere@{ shape: diam, label: "validate.sh<br>en marcha, ¿todo OK?" }
+    end
+    subgraph RESULTADO["Resultado"]
+        pronto@{ shape: stadium, label: "instalación protegida<br>lista para usar" }
+        corrige@{ shape: stadium, label: "corregir<br>antes de usar" }
+    end
+
+    instalador -- "1 · elige FTP_BIND_IP" --> rede
+    rede -- "2a · sí: IP privada y firewall" --> tls
+    rede -- "2b · no: elección de quien instala" --> publico
+    tls -- "3a · sí: FTP_TLS_MODE 2 o 3" --> painel
+    tls -- "3b · no" --> dispensa
+    dispensa -- "4 · los demás siguen con TLS" --> painel
+    publico -- "5 · TLS obligatorio para todos" --> painel
+    painel -- "6a · no: solo la red de administración" --> copia
+    painel -- "6b · sí" --> proxy
+    proxy -- "7 · el FTP sigue cerrado" --> copia
+    copia -- "8 · copia llevada afuera" --> confere
+    confere -- "9a · sí" --> pronto
+    confere -- "9b · no" --> corrige
+    copia -. "cifra con la clave pública" .-> segredos

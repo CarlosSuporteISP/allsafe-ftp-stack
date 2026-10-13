@@ -1,0 +1,43 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origen"]
+        equip@{ shape: hex, label: "Equipo de red<br>cliente FTP" }
+    end
+    subgraph SERVIDOR["Servidor · contenedor painel"]
+        pasta@{ shape: lin-cyl, label: "carpeta enviada<br>DATA_DIR/data" }
+        passada@{ shape: rect, label: "pasada del destino<br>painel/destinos.py" }
+        inteiro@{ shape: diam, label: "¿el archivo<br>llegó entero?" }
+        https@{ shape: rect, label: "salida por HTTPS<br>painel/saida.py" }
+        rclone@{ shape: rect, label: "rclone<br>painel/rclone.py" }
+        andamento@{ shape: cyl, label: "avance del destino<br>DATA_DIR/painel/destinos" }
+        segredos@{ shape: docs, label: "secretos del destino<br>SECRETS_DIR/destinos, 0600" }
+    end
+    subgraph FORA["Fuera del servidor"]
+        bot@{ shape: cloud, label: "bot de Telegram<br>conversación que recibe" }
+        s3@{ shape: bucket, label: "bucket S3<br>Copiar o Conservar en S3" }
+        remoto@{ shape: cloud, label: "remoto del rclone<br>servidor, nube o servicio de archivos" }
+    end
+    subgraph RESULTADO["Resultado"]
+        confirmou@{ shape: diam, label: "¿el destino<br>confirmó?" }
+        enviado@{ shape: stadium, label: "archivo enviado<br>una sola vez" }
+        parou@{ shape: stadium, label: "pasada terminada<br>motivo en la tarjeta" }
+        depois@{ shape: stadium, label: "todavía llegando<br>queda para la próxima" }
+    end
+
+    equip -- "1 · envía el archivo, FTP" --> pasta
+    pasta -- "2 · leída en cada intervalo" --> passada
+    passada -- "3 · verifica cada archivo nuevo" --> inteiro
+    inteiro -- "4a · no" -----> depois
+    inteiro -- "4b · sí: bot y S3" --> https
+    inteiro -- "4c · sí: remoto del rclone" --> rclone
+    https -- "5a · envía el mensaje, HTTPS" ---> bot
+    https -- "5b · guarda el objeto, HTTPS" ---> s3
+    rclone -- "5c · guarda el archivo, HTTPS, SSH o FTP con TLS" ---> remoto
+    bot -- "6a · responde" --> confirmou
+    s3 -- "6b · responde" --> confirmou
+    remoto -- "6c · responde" --> confirmou
+    confirmou -- "7a · sí: anota y sigue" --> enviado
+    confirmou -- "7b · no: se detiene" --> parou
+    passada -. "lee la configuración y guarda el avance" .-> andamento
+    https -. "lee las claves y el token" .-> segredos
+    rclone -. "lee el acceso del remoto" .-> segredos

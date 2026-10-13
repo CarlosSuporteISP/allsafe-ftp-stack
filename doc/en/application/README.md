@@ -1,6 +1,8 @@
 # 📸 Application screenshots — allsafe-ftp-stack
 
-🌐 **English** · [Português (Brasil)](../../pt-BR/aplicacao/README.md)
+[![English](https://img.shields.io/badge/English-0969da?style=for-the-badge)](README.md)
+[![Português (Brasil)](https://img.shields.io/badge/Portugu%C3%AAs_(Brasil)-6e7781?style=for-the-badge)](../../pt-BR/aplicacao/README.md)
+[![Español](https://img.shields.io/badge/Espa%C3%B1ol-6e7781?style=for-the-badge)](../../es/aplicacion/README.md)
 
 ↩ [Project README](../../../README.md) · [Documentation index](../README.md)
 
@@ -1809,7 +1811,7 @@ The tab shows the last 300 records, and the collapsed **What is recorded**, belo
 
 ## 🎞️ How the screenshots were made
 
-Real captures of the running panel, made with Playwright on Google Chrome, at 1440×900, in dark theme and in English; three screens were repeated in Portuguese and two in Spanish, for the [Language](#idioma) section. The guide in Portuguese has the same screens, photographed with the panel in Portuguese. The photographed stack was a demonstration installation, separate from the installation in use: it came up on `127.0.0.4`, with its own container names, network, data folder and secrets, and received example users and files over FTPS; the uploads through the panel used example files, created for the screenshot. Where the panel states the folder of the server, as in the caption of the Users tab and on the **Edit** screen, the demonstration shows the default folder of `.env.example`, in place of the temporary folder it actually came up in.
+Real captures of the running panel, made with Playwright on Google Chrome, at 1440×900, in dark theme and in English; three screens were repeated in Portuguese and two in Spanish, for the [Language](#idioma) section. The guides in Portuguese and in Spanish have the same screens, photographed with the panel in each language. The photographed stack was a demonstration installation, separate from the installation in use: it came up on `127.0.0.4`, with its own container names, network, data folder and secrets, and received example users and files over FTPS; the uploads through the panel used example files, created for the screenshot. Where the panel states the folder of the server, as in the caption of the Users tab and on the **Edit** screen, the demonstration shows the default folder of `.env.example`, in place of the temporary folder it actually came up in.
 
 The destinations in the screenshots are example services, which came up together with the demonstration and only exist on its internal network: the names end in `.example`, the access key is an example identifier, and no file left the machine. The example bot only receives what the panel sends, and the example SFTP server of the rclone remote is a container of the demonstration itself.
 

@@ -1,0 +1,49 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph OPERACAO["Operación"]
+        operador@{ shape: person, label: "Usuario" }
+        deploy@{ shape: console, label: "deploy.sh<br>instala en un comando" }
+    end
+    subgraph HOST["Host"]
+        env@{ shape: doc, label: ".env<br>configuración y límites" }
+        segredo@{ shape: doc, label: ".secrets<br>ftp-usuario-inicial-senha.txt" }
+        compose@{ shape: rect, label: "Docker Compose<br>compose.yaml" }
+    end
+    subgraph CONTAINER["Contenedor allsafe-ftp · raíz de solo lectura"]
+        entry@{ shape: rect, label: "entrypoint<br>allsafe-ftp-entrypoint" }
+        valida@{ shape: diam, label: "¿variables<br>válidas?" }
+        pw@{ shape: rect, label: "pure-pw<br>crea o actualiza el usuario" }
+        puredb@{ shape: cyl, label: "PureDB<br>/auth/pureftpd.pdb" }
+        dados@{ shape: lin-cyl, label: "/data<br>carpeta del usuario" }
+        certq@{ shape: diam, label: "¿existe el<br>certificado?" }
+        gera@{ shape: rect, label: "openssl<br>autofirmado, 825 días" }
+        cert@{ shape: doc, label: "pure-ftpd.pem<br>/etc/ssl/private" }
+        pure@{ shape: rect, label: "pure-ftpd<br>0.0.0.0, 2121" }
+        authd@{ shape: rect, label: "vigía y pure-authd<br>bloqueo y portero, listas en /auth" }
+        saude@{ shape: rect, label: "healthcheck<br>saludo en el puerto 2121" }
+    end
+    subgraph RESULTADO["Resultado"]
+        pronto@{ shape: stadium, label: "FTP listo<br>healthy" }
+        falha@{ shape: stadium, label: "FALHA en el log<br>el contenedor no arranca" }
+    end
+
+    operador -- "1 · ejecuta" --> deploy
+    deploy -- "2 · docker compose build y up -d --wait" --> compose
+    compose -- "3 · inicia el contenedor" --> entry
+    entry -- "4 · verifica usuario, contraseña, rango y TLS" --> valida
+    valida -- "5a · sí" --> pw
+    valida -- "5b · no" --> falha
+    pw -- "6 · base compilada" --> certq
+    certq -- "7a · sí: reutiliza" --> cert
+    certq -- "7b · no: genera" --> gera
+    gera -- "8 · guarda el certificado" --> cert
+    cert -- "9 · leído en el arranque" --> pure
+    pure -- "10 · verificado cada 20 s" --> saude
+    saude -- "11 · el servidor atiende" ---> pronto
+    deploy -. "genera la contraseña si está vacío, 0600" .-> segredo
+    compose -. "lee" .-> env
+    entry -. "lee, solo lectura" .-> segredo
+    entry -. "crea la carpeta" .-> dados
+    pw -. "escribe" .-> puredb
+    pure -. "consulta" .-> puredb
+    pure -. "pregunta en cada entrada y avisa la contraseña incorrecta" .-> authd

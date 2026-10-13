@@ -1,0 +1,10 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    usuario@{ shape: person, label: "Usuario" }
+    host@{ shape: console, label: "deploy.sh, manage-user.sh<br>y validate.sh, en el host" }
+    compose@{ shape: rect, label: "Docker Compose" }
+    interno@{ shape: console, label: "entrypoints y allsafe-ftp-user<br>dentro de los contenedores" }
+    ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+    fim@{ shape: stadium, label: "servicio operando" }
+
+    usuario --> host --> compose --> interno --> ftp --> fim

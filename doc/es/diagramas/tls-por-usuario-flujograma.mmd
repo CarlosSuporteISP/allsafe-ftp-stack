@@ -1,0 +1,37 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origen"]
+        equip@{ shape: hex, label: "Equipo de red<br>cliente FTP" }
+    end
+    subgraph ENTRADA["Entrada · TLS por usuario"]
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+        tls@{ shape: diam, label: "¿sesión<br>con TLS?" }
+        algum@{ shape: diam, label: "¿hay usuario<br>dispensado?" }
+        marcado@{ shape: diam, label: "¿este usuario<br>está dispensado?" }
+        lista@{ shape: doc, label: "sem-tls.lista<br>/auth, un nombre por línea" }
+        registro@{ shape: docs, label: "registro del contenedor<br>entrada sin TLS rechazada" }
+    end
+    subgraph AUTH["Autenticación"]
+        puredb@{ shape: cyl, label: "PureDB<br>usuarios virtuales" }
+        login@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
+    end
+    subgraph RESULTADO["Resultado"]
+        sessao@{ shape: stadium, label: "sesión en chroot<br>encerrada en la carpeta" }
+        recusa@{ shape: stadium, label: "530<br>entrada rechazada" }
+        antes@{ shape: stadium, label: "421<br>rechazada antes de la contraseña" }
+    end
+
+    equip -- "1 · conecta, TCP 21" --> ftp
+    ftp -- "2 · verifica la sesión" --> tls
+    tls -- "3a · sí: recibe usuario y contraseña" --> login
+    tls -- "3b · no" --> algum
+    algum -- "4a · sí: recibe usuario y contraseña" --> marcado
+    algum -- "4b · no: rechaza" --> antes
+    marcado -- "5a · sí: sigue" --> login
+    marcado -- "5b · no: rechazo definitivo" --> recusa
+    login -- "6a · sí: abre la sesión" ---> sessao
+    login -- "6b · no" ---> recusa
+    algum -. "el observador lee cada segundo" .-> lista
+    marcado -. "el portero lee en cada entrada" .-> lista
+    marcado -. "registra el rechazo" .-> registro
+    login -. "consulta el usuario" .-> puredb

@@ -1,0 +1,47 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph QUEM["Quién usa"]
+        usuario@{ shape: person, label: "Usuario<br>navegador en la red interna" }
+    end
+    subgraph FRENTE["Frente web"]
+        nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
+        rede@{ shape: diam, label: "¿red permitida<br>y dentro del límite?" }
+    end
+    subgraph ENTRADA["Entrada"]
+        painel@{ shape: rect, label: "Panel web<br>allsafe-ftp-painel, socket Unix" }
+        senha@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
+        hash@{ shape: doc, label: "administradores<br>nombre y hash de la contraseña" }
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, red interna" }
+        fator@{ shape: diam, label: "¿la cuenta ya tiene<br>segundo factor?" }
+        cadastro@{ shape: rect, label: "registro del segundo factor<br>código QR y clave nueva" }
+        codigo@{ shape: diam, label: "¿el código de la aplicación<br>coincide?" }
+        chave@{ shape: doc, label: "segundo-fator<br>clave de cada cuenta" }
+    end
+    subgraph SESSAO["Sesión"]
+        sessao@{ shape: rect, label: "sesión de 4 h<br>cookie y token CSRF" }
+        pedidos@{ shape: subproc, label: "solicitudes de la sesión<br>flujograma de las solicitudes" }
+    end
+    subgraph RESULTADO["Resultado"]
+        atendido@{ shape: stadium, label: "solicitud atendida" }
+        recusa@{ shape: stadium, label: "solicitud rechazada" }
+    end
+
+    usuario -- "1 · abre https, TCP 8443" --> nginx
+    nginx -- "2 · verifica el origen y la tasa de solicitudes" --> rede
+    rede -- "3a · sí: reenvía por el socket Unix" --> painel
+    rede -- "3b · no: 403 o 429" --> recusa
+    painel -- "4 · pide usuario y contraseña y verifica" --> senha
+    senha -- "5a · sí: ve si la cuenta ya tiene segundo factor" --> fator
+    senha -- "5b · no: 5 errores bloquean la dirección" --> recusa
+    fator -- "6a · sí: pide el código de seis dígitos" --> codigo
+    fator -- "6b · no, y es obligatorio: muestra la clave" --> cadastro
+    fator -- "6c · no, y no es obligatorio: abre la sesión" --> sessao
+    cadastro -- "7 · pide el primer código de la aplicación" --> codigo
+    codigo -- "8a · sí: abre la sesión" --> sessao
+    codigo -- "8b · no: 5 errores terminan la espera" --> recusa
+    sessao -- "9 · cada solicitud pasa por las verificaciones" --> pedidos
+    pedidos -- "10a · aceptada" --> atendido
+    pedidos -- "10b · rechazada" --> recusa
+    painel -. "administrador: compara con el hash" .-> hash
+    painel -. "otro nombre: el servidor FTP verifica la contraseña" .-> ftp
+    painel -. "segundo factor: guarda la clave en el registro y calcula el código" .-> chave

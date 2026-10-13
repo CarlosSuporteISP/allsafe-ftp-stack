@@ -1,6 +1,8 @@
 # 🔐 Política de segurança — allsafe-ftp-stack
 
-🌐 [English](SECURITY.md) · **Português (Brasil)**
+[![English](https://img.shields.io/badge/English-6e7781?style=for-the-badge)](SECURITY.md)
+[![Português (Brasil)](https://img.shields.io/badge/Portugu%C3%AAs_(Brasil)-0969da?style=for-the-badge)](SECURITY.pt-BR.md)
+[![Español](https://img.shields.io/badge/Espa%C3%B1ol-6e7781?style=for-the-badge)](SECURITY.es.md)
 
 ↩ [README do projeto](README.pt-BR.md) · [Segurança](doc/pt-BR/seguranca.md) · [Configuração](doc/pt-BR/configuracao.md#contato-de-seguranca)
 

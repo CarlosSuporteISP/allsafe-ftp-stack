@@ -1,6 +1,8 @@
 # ⌨️ Scripts — allsafe-ftp-stack
 
-🌐 [English](../en/scripts.md) · **Português (Brasil)**
+[![English](https://img.shields.io/badge/English-6e7781?style=for-the-badge)](../en/scripts.md)
+[![Português (Brasil)](https://img.shields.io/badge/Portugu%C3%AAs_(Brasil)-0969da?style=for-the-badge)](scripts.md)
+[![Español](https://img.shields.io/badge/Espa%C3%B1ol-6e7781?style=for-the-badge)](../es/scripts.md)
 
 ↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
@@ -235,7 +237,7 @@ Confere a cópia antes de alterar qualquer coisa, abrindo-a com a chave de `SECR
 ./scripts/validate.sh --runtime  # também exige os três serviços running e healthy e o usuário no PureDB
 ```
 
-**Resultado esperado:** `painel OK: <n> módulos Python`, `idioma OK: <n> textos do painel com tradução em inglês e em espanhol, <n> mensagens do comando de usuários`, `.env.example OK: <n> variáveis, todas comentadas e no guia de configuração, nos dois idiomas`, `caminhos OK: nenhum arquivo do repositório cita pasta pessoal`, `marca OK: 6 arquivos em web/marca/`, `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Com `--runtime`, também `servico ftp: running, healthy`, o mesmo para `painel` e `nginx`, e `usuario inicial '<usuário>' presente no PureDB`. Qualquer falha encerra com código diferente de zero.
+**Resultado esperado:** `painel OK: <n> módulos Python`, `idioma OK: <n> textos do painel com tradução em inglês e em espanhol, <n> mensagens do comando de usuários`, `.env.example OK: <n> variáveis, todas comentadas e no guia de configuração, nos três idiomas`, `caminhos OK: nenhum arquivo do repositório cita pasta pessoal`, `marca OK: 6 arquivos em web/marca/`, `política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo`, `licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em <n> arquivos de código`, `compose OK com <perfil>.env` para cada perfil e, no fim, `Validacao FTP concluida.` Com `--runtime`, também `servico ftp: running, healthy`, o mesmo para `painel` e `nginx`, e `usuario inicial '<usuário>' presente no PureDB`. Qualquer falha encerra com código diferente de zero.
 
 <details>
 <summary>Detalhe técnico — o que cada modo confere</summary>
@@ -249,9 +251,9 @@ O modo `--runtime` confere a instalação do `.env` desta pasta. Para conferir o
 
 Recusa dos caminhos: `ERRO: pasta pessoal em arquivo do repositório; use o padrão do .env.example ou leia o valor do .env:`, seguida do arquivo e da linha.
 
-Recusa da política de segurança: `ERRO: <arquivo> falta, não cita SEGURANCA_CONTATO_EMAIL ou traz um endereço de e-mail fixo.`, para o `SECURITY.md` e para o `SECURITY.pt-BR.md`
+Recusa da política de segurança: `ERRO: <arquivo> falta, não cita SEGURANCA_CONTATO_EMAIL ou traz um endereço de e-mail fixo.`, para o `SECURITY.md`, o `SECURITY.pt-BR.md` e o `SECURITY.es.md`
 
-Recusas da licença: `ERRO: LICENSE falta ou não é o texto oficial da Apache-2.0.`, `ERRO: NOTICE falta ou está sem a linha de autoria e o endereço do GitHub.`, `ERRO: MARCA.md falta.`, `ERRO: TRADEMARK.md falta.` e `ERRO: <arquivo> sem a linha SPDX-License-Identifier: Apache-2.0 no começo.` A linha da licença vai na primeira linha do arquivo de código ou, quando ele começa com `#!`, na segunda.
+Recusas da licença: `ERRO: LICENSE falta ou não é o texto oficial da Apache-2.0.`, `ERRO: NOTICE falta ou está sem a linha de autoria e o endereço do GitHub.`, `ERRO: MARCA.md falta.`, `ERRO: MARCA.es.md falta.`, `ERRO: TRADEMARK.md falta.` e `ERRO: <arquivo> sem a linha SPDX-License-Identifier: Apache-2.0 no começo.` A linha da licença vai na primeira linha do arquivo de código ou, quando ele começa com `#!`, na segunda.
 
 </details>
 

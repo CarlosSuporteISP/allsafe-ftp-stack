@@ -1,6 +1,8 @@
 # 🔐 Segurança — allsafe-ftp-stack
 
-🌐 [English](../en/security.md) · **Português (Brasil)**
+[![English](https://img.shields.io/badge/English-6e7781?style=for-the-badge)](../en/security.md)
+[![Português (Brasil)](https://img.shields.io/badge/Portugu%C3%AAs_(Brasil)-0969da?style=for-the-badge)](seguranca.md)
+[![Español](https://img.shields.io/badge/Espa%C3%B1ol-6e7781?style=for-the-badge)](../es/seguridad.md)
 
 ↩ [README do projeto](../../README.pt-BR.md) · [Índice da documentação](README.md)
 
@@ -272,7 +274,7 @@ A stack não deixa o modo passar despercebido. Enquanto ele estiver ligado, o al
 | Fim do `./deploy.sh` e do `./deploy.sh --check-only` | O `AVISO` de três linhas acima |
 | Resumo do `./deploy.sh` | `SEM TLS (texto puro)` ou `TLS explícito opcional (aceita texto puro)` na linha do FTP |
 | Registro do container (`docker compose logs ftp`) | A cada subida: `AVISO: FTP_TLS_MODE=0, FTP sem TLS: senhas e arquivos trafegam em texto puro. Só para equipamento sem suporte a TLS, em rede interna isolada.` |
-| Painel, telas Visão geral e Segurança | Faixa de alerta no começo da tela e o item `TLS do FTP` marcado com |
+| Painel, telas Visão geral e Segurança | Faixa de alerta no começo da tela e o item `TLS do FTP` marcado com o sinal de atenção |
 
 O aviso informa, não bloqueia: a decisão é de quem opera o servidor. O painel web **não** é afetado por esta variável e continua só em HTTPS.
 
@@ -989,7 +991,7 @@ Todo o resto fica interno aos containers. O painel não publica porta: quem aten
 
 O que cada proteção significa na prática e o fluxograma da decisão: [Painel web](painel.md#protecoes).
 
-> Tudo acima foi conferido nos portões de validação das versões `0.5.0` (painel), `0.7.0` (nginx na frente), `0.22.0` (administradores), `0.23.0` (aba Arquivos), `0.24.0` (pastas), `0.25.0` (entrada do usuário do FTP), `0.26.0` (TLS por usuário), `0.27.0` (logo e ícone entregues pelo nginx), `0.28.0` (`robots.txt` e `security.txt`), `0.29.0` (sem senha, senha aleatória, exaustão e acesso direto ao cadastro), `0.38.0` (edição de usuário), `0.39.0` (renomear e apagar pelo painel), `0.40.0` (limites por usuário), `0.41.0` (bloqueio por tentativa no FTP), `0.42.0` (HTTP/2 e compressão do estilo), `0.45.0` (TLS por usuário pelo painel), `0.51.0` (perfis, bloqueio por endereço e idioma das telas), `0.52.0` (envio pelo painel, bloqueio de IPv6 e de prefixo e limpeza automática) `1.1.0` (destinos de fora: S3 e bot do Telegram), `1.5.0` (remoto do rclone) e `1.7.0` (segundo fator), em instância de teste. O firewall do host continua sendo de quem opera o servidor.
+> Tudo acima foi conferido nos portões de validação das versões `0.5.0` (painel), `0.7.0` (nginx na frente), `0.22.0` (administradores), `0.23.0` (aba Arquivos), `0.24.0` (pastas), `0.25.0` (entrada do usuário do FTP), `0.26.0` (TLS por usuário), `0.27.0` (logo e ícone entregues pelo nginx), `0.28.0` (`robots.txt` e `security.txt`), `0.29.0` (sem senha, senha aleatória, exaustão e acesso direto ao cadastro), `0.38.0` (edição de usuário), `0.39.0` (renomear e apagar pelo painel), `0.40.0` (limites por usuário), `0.41.0` (bloqueio por tentativa no FTP), `0.42.0` (HTTP/2 e compressão do estilo), `0.45.0` (TLS por usuário pelo painel), `0.51.0` (perfis, bloqueio por endereço e idioma das telas), `0.52.0` (envio pelo painel, bloqueio de IPv6 e de prefixo e limpeza automática), `1.1.0` (destinos de fora: S3 e bot do Telegram), `1.5.0` (remoto do rclone) e `1.7.0` (segundo fator), em instância de teste. O firewall do host continua sendo de quem opera o servidor.
 
 ---
 
@@ -1001,8 +1003,8 @@ Nenhuma versão é publicada sem a bateria inteira aprovada. Ela roda em um clon
 
 | Bateria | Casos | O que responde |
 |---|---|---|
-| Funcional | 73 | A instalação faz o que promete: instalar em um comando, enviar e baixar, usuários pelo terminal e pelo painel, reinício sem perda, cópia e restauração |
-| Segurança | 124 | O que deveria ser recusado é recusado: cada caso tenta uma coisa que não pode acontecer e confere a recusa |
+| Funcional | 106 | A instalação faz o que promete: instalar em um comando, enviar e baixar, usuários pelo terminal e pelo painel, reinício sem perda, cópia e restauração |
+| Segurança | 151 | O que deveria ser recusado é recusado: cada caso tenta uma coisa que não pode acontecer e confere a recusa |
 | Rede | 14 | Só o que foi configurado fica aberto: portas, endereço de escuta, modo passivo, sub-rede e redes aceitas pelo painel |
 
 **O que a bateria de segurança tenta**, por alvo. O número é o do caso, o mesmo que aparece na saída do `./tests/testar.sh`:
@@ -1281,7 +1283,7 @@ O nginx registra só o que ele mesmo recusa, no formato `ip método caminho cód
 - Chave da cópia de segurança: `.secrets/backup-chave-privada.txt` abre e `.secrets/backup-chave-publica.txt` cifra, as duas `0600`. Não são montadas nos serviços: só os containers descartáveis da cópia e da restauração as usam. Quem lê a privada no servidor abre as cópias feitas com ela: para tirar isso do servidor, guarde-a no cofre e apague-a dele. Veja [Backup e restauração](backup.md#chave).
 - Chave do certificado do painel: gerada em `DATA_DIR/painel/tls` e copiada a cada subida para `DATA_DIR/nginx/tls`, que o nginx monta somente leitura (chave `0640`, grupo `10001`; pasta `0750`). Veja [Segredos](segredos.md).
 - [`.gitignore`](../../.gitignore): `.env` e `.secrets/*.txt` (mantém só `.secrets/.gitkeep`, para a pasta existir no clone).
-- [`.dockerignore`](../../.dockerignore): `.env`, `.env.example`, `.git`, `.gitignore`, `.secrets`, `doc`, `profiles`, `README.md`, `README.pt-BR.md`, `deploy.sh` e `manage-user.sh`. `*.pdf` também fica fora. Chegam ao build o `Dockerfile`, o `compose.yaml`, o `CHANGELOG.md`, o `VERSION` e as pastas `scripts/`, `painel/` e `nginx/`, e o `Dockerfile` copia só os scripts, o painel, a configuração do nginx e o `VERSION`; nada de segredo entra na imagem.
+- [`.dockerignore`](../../.dockerignore): `.env`, `.env.example`, `.git`, `.gitignore`, `.secrets`, `doc`, `profiles`, `README.md`, `README.pt-BR.md`, `README.es.md`, `deploy.sh` e `manage-user.sh`. `*.pdf` também fica fora. Chegam ao build o `Dockerfile`, o `compose.yaml`, o `CHANGELOG.md`, o `VERSION` e as pastas `scripts/`, `painel/` e `nginx/`, e o `Dockerfile` copia só os scripts, o painel, a configuração do nginx e o `VERSION`; nada de segredo entra na imagem.
 - O [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh) recusa senha em variável de ambiente e faz `unset` da variável interna da senha antes do `exec`. O [`painel/entrypoint.sh`](../../painel/entrypoint.sh) recusa `PAINEL_PASSWORD` e `PAINEL_PASSWORD_HASH`.
 
 ---

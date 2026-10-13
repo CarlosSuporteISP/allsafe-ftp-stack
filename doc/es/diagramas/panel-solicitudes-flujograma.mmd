@@ -1,0 +1,33 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph SESSAO["Sesión"]
+        painel@{ shape: rect, label: "Panel web<br>sesión abierta, token CSRF" }
+        pedido@{ shape: diam, label: "¿origen y token<br>coinciden?" }
+        auditoria@{ shape: docs, label: "auditoria.log<br>DATA_DIR/painel" }
+    end
+    subgraph USUARIOS["Usuarios del FTP"]
+        cmd@{ shape: rect, label: "allsafe-ftp-user<br>pure-pw" }
+        puredb@{ shape: cyl, label: "PureDB<br>DATA_DIR/auth" }
+    end
+    subgraph ARQUIVOS["Archivos"]
+        caminho@{ shape: diam, label: "¿ruta dentro de la<br>carpeta de los datos?" }
+        dados@{ shape: lin-cyl, label: "DATA_DIR/dados<br>carpetas de los usuarios" }
+    end
+    subgraph RESULTADO["Resultado"]
+        fim@{ shape: stadium, label: "usuario listo en el FTP" }
+        barrado@{ shape: stadium, label: "403<br>envío rechazado" }
+        feito@{ shape: stadium, label: "archivo descargado, enviado<br>o modificación hecha" }
+        recusa@{ shape: stadium, label: "solicitud rechazada" }
+    end
+
+    painel -- "1 · envía un formulario, de usuario o de archivos" --> pedido
+    pedido -- "2a · sí, usuario: ejecuta" --> cmd
+    pedido -- "2b · sí, archivos: verifica la ruta" --> caminho
+    pedido -- "2c · no: fuera del panel o sin token" --> barrado
+    cmd -- "3 · guarda el usuario y crea su carpeta, si falta" --> puredb
+    puredb -- "4 · vale en el próximo login, sin reiniciar el FTP" --> fim
+    painel -- "5 · en Archivos o en Mis archivos, abre una carpeta o descarga un archivo" --> caminho
+    caminho -- "6a · sí: abre parte por parte, sin seguir enlace simbólico" --> dados
+    caminho -- "6b · no: 400, 403, 404 o 409" --> recusa
+    dados -- "7 · entrega el archivo, guarda el enviado, crea la carpeta, cambia el nombre o borra" --> feito
+    painel -. "registra cada acción" .-> auditoria

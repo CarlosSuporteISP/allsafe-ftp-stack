@@ -1,0 +1,37 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    subgraph ORIGEM["Origen"]
+        equip@{ shape: hex, label: "Equipo de red<br>cliente FTP" }
+    end
+    subgraph ENTRADA["Entrada"]
+        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp" }
+        authd@{ shape: rect, label: "pure-authd<br>llama al portero" }
+        preso@{ shape: diam, label: "¿usuario bloqueado<br>para la dirección?" }
+        bloqueios@{ shape: docs, label: "bloqueos<br>/auth, uno por usuario y dirección" }
+    end
+    subgraph AUTH["Autenticación"]
+        login@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
+        puredb@{ shape: cyl, label: "PureDB<br>usuarios virtuales" }
+        limite@{ shape: diam, label: "el vigía suma los errores<br>¿llegó al límite?" }
+        limites@{ shape: doc, label: "limites.lista<br>límite propio del usuario" }
+        bloqueia@{ shape: rect, label: "vigía<br>bloquea usuario y dirección" }
+    end
+    subgraph RESULTADO["Resultado"]
+        sessao@{ shape: stadium, label: "sesión en chroot<br>encerrada en la carpeta" }
+        recusa@{ shape: stadium, label: "530<br>entrada rechazada" }
+    end
+
+    equip -- "1 · conecta y envía usuario y contraseña, TCP 21" --> ftp
+    ftp -- "2 · pregunta antes de verificar la contraseña" --> authd
+    authd -- "3 · portero: ¿hay bloqueo en vigor?" --> preso
+    preso -- "4a · sí: rechazo definitivo" --> recusa
+    preso -- "4b · no: sigue" --> login
+    login -- "5a · sí: abre la sesión" --> sessao
+    login -- "5b · no: avisa la contraseña incorrecta al vigía" --> limite
+    limite -- "6a · sí: bloquea" --> bloqueia
+    limite -- "6b · no: solo rechaza" --> recusa
+    bloqueia -- "7 · rechaza" --> recusa
+    preso -. "lee" .-> bloqueios
+    login -. "consulta el usuario" .-> puredb
+    limite -. "lee" .-> limites
+    bloqueia -. "guarda el bloqueo" .-> bloqueios

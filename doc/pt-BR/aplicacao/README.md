@@ -1,6 +1,8 @@
 # 📸 Fotos da aplicação — allsafe-ftp-stack
 
-🌐 [English](../../en/application/README.md) · **Português (Brasil)**
+[![English](https://img.shields.io/badge/English-6e7781?style=for-the-badge)](../../en/application/README.md)
+[![Português (Brasil)](https://img.shields.io/badge/Portugu%C3%AAs_(Brasil)-0969da?style=for-the-badge)](README.md)
+[![Español](https://img.shields.io/badge/Espa%C3%B1ol-6e7781?style=for-the-badge)](../../es/aplicacion/README.md)
 
 ↩ [README do projeto](../../../README.pt-BR.md) · [Índice da documentação](../README.md)
 
@@ -1809,7 +1811,7 @@ A aba mostra os últimos 300 registros, e o recolhido **O que fica registrado**,
 
 ## 🎞️ Como as fotos foram feitas
 
-Capturas reais do painel no ar, feitas com Playwright no Google Chrome, em 1440×900, tema escuro e português; três telas foram repetidas em inglês e duas em espanhol, para a seção [Idioma](#idioma). O guia em inglês tem as mesmas telas, fotografadas com o painel em inglês. A stack fotografada foi uma instalação de demonstração, separada da instalação em uso: subiu em `127.0.0.4`, com nomes de container, rede, pasta de dados e segredos próprios, e recebeu usuários e arquivos de exemplo por FTPS; os envios pelo painel usaram arquivos de exemplo, criados para a foto. Onde o painel diz a pasta do servidor, como na legenda da aba Usuários e na tela **Editar**, a demonstração mostra a pasta padrão do `.env.example`, no lugar da pasta temporária em que ela de fato subiu.
+Capturas reais do painel no ar, feitas com Playwright no Google Chrome, em 1440×900, tema escuro e português; três telas foram repetidas em inglês e duas em espanhol, para a seção [Idioma](#idioma). Os guias em inglês e em espanhol têm as mesmas telas, fotografadas com o painel em cada idioma. A stack fotografada foi uma instalação de demonstração, separada da instalação em uso: subiu em `127.0.0.4`, com nomes de container, rede, pasta de dados e segredos próprios, e recebeu usuários e arquivos de exemplo por FTPS; os envios pelo painel usaram arquivos de exemplo, criados para a foto. Onde o painel diz a pasta do servidor, como na legenda da aba Usuários e na tela **Editar**, a demonstração mostra a pasta padrão do `.env.example`, no lugar da pasta temporária em que ela de fato subiu.
 
 Os destinos das fotos são serviços de exemplo, que subiram junto com a demonstração e só existem na rede interna dela: os nomes terminam em `.example`, a chave de acesso é um identificador de exemplo, e nenhum arquivo saiu da máquina. O bot de exemplo só recebe o que o painel envia, e o servidor SFTP de exemplo do remoto do rclone é um container da própria demonstração.
 

@@ -1,6 +1,8 @@
 # 🚨 Troubleshooting — allsafe-ftp-stack
 
-🌐 **English** · [Português (Brasil)](../pt-BR/solucao-de-problemas.md)
+[![English](https://img.shields.io/badge/English-0969da?style=for-the-badge)](troubleshooting.md)
+[![Português (Brasil)](https://img.shields.io/badge/Portugu%C3%AAs_(Brasil)-6e7781?style=for-the-badge)](../pt-BR/solucao-de-problemas.md)
+[![Español](https://img.shields.io/badge/Espa%C3%B1ol-6e7781?style=for-the-badge)](../es/solucion-de-problemas.md)
 
 ↩ [Project README](../../README.md) · [Documentation index](README.md)
 
@@ -228,7 +230,7 @@ While there is any exempt user, the same test changes its answer: the server ask
 | `ERRO: o ImageMagick 7 (comando magick) não está instalado neste computador.` | `gerar-marca.sh` needs ImageMagick 7; the server does not need it to run the stack | `magick -version` | Run the script on a computer that has ImageMagick 7 and take the `web/marca/` folder to the server |
 | The **FTP network** card of the Server tab says **no reading** | The FTP service has just started, or its watcher is not publishing the network | `docker exec allsafe-ftp ls -l /auth/rede.estado` | Wait a few seconds and open the tab again. If the file does not exist, `docker logs allsafe-ftp --tail 30` shows whether the watcher started; `./deploy.sh` rebuilds the container |
 | A container card of the Server tab says **no reading** | The container has just started, or stopped publishing its resources: a reading older than 90 s does not count | `docker exec allsafe-ftp ls -l /auth/recursos.estado` and `docker exec allsafe-ftp-nginx ls -l /estado/recursos.estado` | Wait a few seconds and open the tab again. If the nginx file does not exist, `docker logs allsafe-ftp-nginx --tail 30` shows the warning about the `/estado` folder; `./deploy.sh` rebuilds the containers and the folder |
-| The session drops with the Server tab open on **Auto-refresh** | Automatic refresh does not count as use of the panel | `grep '^PAINEL_SESSAO_MINUTOS=' .env` | Sign in again. To follow for longer, raise the idle time, from `1` to `120` minutes |
+| The session drops with the Server tab open on **Auto-refresh** | Automatic refresh does not count as use of the panel | `grep '^PAINEL_SESSAO_MINUTOS=' .env` | Sign in again. To follow for longer, raise the idle time, from `1` to `720` minutes |
 | The session drops by itself | 4 hours without use, ceiling of 12 hours, change of the client address or restart of the panel | `grep '^PAINEL_SESSAO_MINUTOS=' .env` | Sign in again. The idle time goes from `1` to `720` minutes |
 | `The submission did not come from this panel.` or `Form without a valid token.` (`403`) | Old tab, after signing out or after the session expired, or panel opened through an intermediary that changes the address. In a version older than `0.14.0`, the browser was refused on every submission, including sign-in | `cat VERSION` | Open the page again, directly at the panel address, and repeat. In a version older than `0.14.0`, update the stack |
 | I removed the initial user and want it back | `FTP_USER` is created once, at installation; once removed, the `ftp` service does not recreate it, and the log says `removido pelo administrador; não é recriado` | `docker compose logs ftp \| grep 'Usuário inicial'` | Users ➜ **New user**, with the same name and the password you want, or `./manage-user.sh add <user>` |

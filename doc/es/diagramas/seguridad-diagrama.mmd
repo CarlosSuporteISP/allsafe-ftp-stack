@@ -1,0 +1,11 @@
+%%{init: {"theme": "dark"}}%%
+flowchart LR
+    equip@{ shape: hex, label: "Equipo de red" }
+    bind@{ shape: rect, label: "Bind y firewall<br>127.0.0.1 por defecto" }
+    tls@{ shape: rect, label: "FTPS obligatorio por defecto<br>AUTH TLS, FTP_TLS_MODE=2" }
+    puredb@{ shape: cyl, label: "PureDB<br>contraseña de 12 o más" }
+    chroot@{ shape: rect, label: "chroot<br>carpeta del usuario" }
+    container@{ shape: rect, label: "Contenedor endurecido<br>raíz de solo lectura" }
+    fim@{ shape: stadium, label: "copia de seguridad protegida" }
+
+    equip --> bind --> tls --> puredb --> chroot --> container --> fim
