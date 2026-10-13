@@ -663,6 +663,8 @@ ES = {
         'Panel por proxy o túnel',
     'Endereço do FTP':
         'Dirección del FTP',
+    'Endereço do FTP em IPv6':
+        'Dirección del FTP en IPv6',
     'IP anunciado no modo passivo':
         'IP anunciada en el modo pasivo',
     'TLS do FTP':
@@ -671,6 +673,8 @@ ES = {
         'Certificado del FTP',
     'Endereço do painel':
         'Dirección del panel',
+    'Endereço do painel em IPv6':
+        'Dirección del panel en IPv6',
     'Frente web':
         'Frente web',
     'O navegador fala com o nginx, a única porta publicada do painel: ele fecha o HTTPS, limita redes '

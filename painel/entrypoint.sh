@@ -16,6 +16,7 @@ done
 [[ -r "$secret_file" ]] || die "segredo $secret_file ausente: rode ./deploy.sh, que cria .secrets/painel-admin-inicial-senha-hash.txt"
 
 PAINEL_BIND_IP="${PAINEL_BIND_IP:-127.0.0.1}"
+PAINEL_BIND_IPV6="${PAINEL_BIND_IPV6:-::1}"
 PAINEL_REDES_PERMITIDAS="${PAINEL_REDES_PERMITIDAS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
 PAINEL_CERT_CN="${PAINEL_CERT_CN:-}"
 PAINEL_PROXY_CONFIAVEL="${PAINEL_PROXY_CONFIAVEL:-}"
@@ -23,6 +24,7 @@ PAINEL_ADMIN_USER="${PAINEL_ADMIN_USER:-admin}"
 
 conferir_opcao_ip_publico
 exigir_ip PAINEL_BIND_IP "$PAINEL_BIND_IP" || exit 1
+if rede_ipv6; then exigir_ip6 PAINEL_BIND_IPV6 "$PAINEL_BIND_IPV6" || exit 1; fi
 IFS=',' read -r -a redes <<< "$PAINEL_REDES_PERMITIDAS"
 [[ ${#redes[@]} -gt 0 ]] || die "PAINEL_REDES_PERMITIDAS está vazia"
 for rede in "${redes[@]}"; do
@@ -30,8 +32,8 @@ for rede in "${redes[@]}"; do
   exigir_rede PAINEL_REDES_PERMITIDAS "$rede" || exit 1
 done
 exigir_proxies "$PAINEL_PROXY_CONFIAVEL" "$PAINEL_REDES_PERMITIDAS" || exit 1
-[[ -z "$PAINEL_CERT_CN" || "$PAINEL_CERT_CN" =~ ^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$ ]] \
-  || die "PAINEL_CERT_CN inválido: use um nome em minúsculas ou um endereço IPv4"
+[[ -z "$PAINEL_CERT_CN" || "$PAINEL_CERT_CN" == *:* || "$PAINEL_CERT_CN" =~ ^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$ ]] \
+  || die "PAINEL_CERT_CN inválido: use um nome em minúsculas ou um endereço IPv4 ou IPv6 (sem colchetes)"
 [[ "$PAINEL_ADMIN_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] \
   || die "PAINEL_ADMIN_USER inválido: letras minúsculas, números, _ e -; começa com letra ou _; até 32 caracteres"
 [[ "${PAINEL_ACESSO_USUARIOS_FTP:-sim}" == sim || "${PAINEL_ACESSO_USUARIOS_FTP:-sim}" == nao ]] \
@@ -75,6 +77,9 @@ cn_ip=false
 if [[ "$PAINEL_CERT_CN" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   cn_ip=true
   exigir_ip PAINEL_CERT_CN "$PAINEL_CERT_CN" || exit 1
+elif [[ "$PAINEL_CERT_CN" == *:* ]]; then
+  cn_ip=true
+  exigir_ip6 PAINEL_CERT_CN "$PAINEL_CERT_CN" || exit 1
 fi
 
 [[ -d /auth && -d /data ]] || die "pastas /auth e /data ausentes: o painel usa as mesmas do serviço ftp"
@@ -122,8 +127,13 @@ chave=/painel/tls/painel-key.pem
 marca=/painel/tls/painel-san.txt
 san="DNS:localhost,IP:127.0.0.1"
 [[ "$PAINEL_BIND_IP" == 127.0.0.1 ]] || san+=",IP:${PAINEL_BIND_IP}"
+# Com REDE_IPV6=sim o painel também é aberto por https://[::1] e pelo endereço de PAINEL_BIND_IPV6.
+if rede_ipv6; then
+  san+=",IP:::1"
+  [[ "$PAINEL_BIND_IPV6" == ::1 ]] || san+=",IP:${PAINEL_BIND_IPV6}"
+fi
 if [[ "$cn_ip" == true ]]; then
-  [[ "$PAINEL_CERT_CN" == "$PAINEL_BIND_IP" || "$PAINEL_CERT_CN" == 127.0.0.1 ]] || san+=",IP:${PAINEL_CERT_CN}"
+  [[ ",$san," == *",IP:${PAINEL_CERT_CN},"* ]] || san+=",IP:${PAINEL_CERT_CN}"
 elif [[ -n "$PAINEL_CERT_CN" && "$PAINEL_CERT_CN" != localhost ]]; then
   san+=",DNS:${PAINEL_CERT_CN}"
 fi
