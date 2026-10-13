@@ -19,6 +19,7 @@ ARQ_USUARIOS = '/auth/pureftpd.passwd'
 ARQ_CERT_FTP = '/auth/ftp-cert.pem'
 ARQ_SEM_TLS = '/auth/sem-tls.lista'   # quem entra sem TLS com o TLS por usuário valendo; quem grava é o allsafe-ftp-user
 ARQ_LIMITES = '/auth/limites.lista'   # limites por usuário que o painel aplica; quem grava é o allsafe-ftp-user
+ARQ_PASTAS = '/auth/pastas.lista'     # outras pastas de cada usuário no painel; quem grava é o allsafe-ftp-user
 ARQ_REDE = '/auth/rede.estado'        # contadores de rede do container do ftp, para a aba Servidor; quem grava é o vigia do ftp
 # Recursos (processador, memória e processos) que cada container lê do próprio cgroup e publica para a aba Servidor.
 ARQ_RECURSOS_FTP = '/auth/recursos.estado'              # quem grava é o vigia do ftp

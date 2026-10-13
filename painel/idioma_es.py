@@ -218,6 +218,22 @@ ES = {
         'Volver a la carpeta',
     'Pasta de usuário do FTP':
         'Carpeta de usuario del FTP',
+    'Pasta liberada a usuário do FTP':
+        'Carpeta liberada a usuario del FTP',
+    'Pasta liberada':
+        'Carpeta liberada',
+    'uma conta do FTP':
+        'una cuenta del FTP',
+    'A pasta <strong>{nome}</strong> não é renomeada por aqui: ela, ou uma pasta dentro dela, está '
+    'liberada a {de_quem} em Outras pastas.':
+        'La carpeta <strong>{nome}</strong> no se renombra desde aquí: ella, o una carpeta dentro de ella, '
+        'está liberada a {de_quem} en Otras carpetas.',
+    'A pasta <strong>{nome}</strong> não é apagada por aqui: ela, ou uma pasta dentro dela, está liberada'
+    ' a {de_quem} em Outras pastas.':
+        'La carpeta <strong>{nome}</strong> no se borra desde aquí: ella, o una carpeta dentro de ella, está '
+        'liberada a {de_quem} en Otras carpetas.',
+    'Para retirar a pasta de um usuário, use <strong>Usuários ➜ Editar ➜ Outras pastas</strong>.':
+        'Para retirar la carpeta a un usuario, use <strong>Usuarios ➜ Editar ➜ Otras carpetas</strong>.',
     'O que está dentro dela pode ser renomeado e apagado item por item.':
         'Lo que hay dentro de ella puede renombrarse y borrarse elemento por elemento.',
     'O item continua na mesma pasta: o painel não move de uma pasta para outra. O equipamento que '
@@ -363,6 +379,8 @@ ES = {
         'Ruta de archivo rechazada',
     'Tela fora do papel ou do perfil pedida por usuário do FTP':
         'Pantalla fuera del rol o del perfil solicitada por usuario del FTP',
+    'Pasta não liberada pedida por usuário do FTP':
+        'Carpeta no liberada solicitada por usuario del FTP',
     'Nada registrado ainda':
         'Nada registrado todavía',
     'Cada entrada no painel e cada alteração feita por ele passa a aparecer aqui.':

@@ -6,6 +6,9 @@ perfil, todas presas à pasta dele: Leitura navega e baixa, Envio também cria p
 e apaga. Só envio não tem lista nem download: vê só como enviar. Enviar arquivo pelo painel existe para o
 administrador e para os perfis que enviam por FTP (Só envio, Envio e Completo); no usuário do FTP, só com a permissão
 dele, que a própria rota confere. O que não está na tabela do papel ou do perfil não existe para ele.
+As outras pastas que o administrador liberou a um usuário (/pastas/<identificador>) usam as mesmas tabelas: a
+permissão dele naquela pasta escolhe a tabela do perfil de mesmo nome, e o caminho é lido como o de /meus-arquivos
+(atendimento.py).
 Toda função recebe (pedido, sessao, consulta, formulario, token); `pedido` é o tratador de atendimento.py."""
 import aba_administradores
 import aba_arquivos
@@ -112,6 +115,7 @@ ROTAS_COMPLETO = {
 }
 ROTAS_USUARIO = {'soenvio': ROTAS_SOENVIO, 'leitura': ROTAS_LEITURA, 'envio': ROTAS_ENVIO, 'completo': ROTAS_COMPLETO}
 # Rotas que recebem arquivo: o corpo delas é lido em fluxo (envio.py), e são as únicas em que o nginx aceita corpo grande.
+# A de uma pasta liberada (/pastas/<identificador>/enviar) entra pela de /meus-arquivos.
 ROTAS_DE_ENVIO = ('/arquivos/enviar', '/meus-arquivos/enviar')
 # Rotas de formulário longo: o acesso do remoto do rclone leva chave privada e token, que não cabem no limite comum
 # (CORPO_REMOTO_MAX no lugar de CORPO_MAX). O nginx abre a mesma folga só nelas.

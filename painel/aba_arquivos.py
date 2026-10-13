@@ -4,8 +4,9 @@ trocar o nome e apagar.
 
 Arquivo enviado nunca substitui outro. Apagar pede a caixa de confirmação e a senha de quem está na sessão. Toda alteração
 é feita em relação à pasta de cima já aberta, sem seguir link simbólico. As mesmas funções servem à tela Meus
-arquivos, do usuário do FTP: a Vista diz de onde cada um vê os arquivos, e a tabela de rotas do perfil (rotas.py)
-diz quais destas ações existem para ele."""
+arquivos, do usuário do FTP, e às outras pastas que o administrador liberou a ele: a Vista diz de onde cada um vê
+os arquivos, e a tabela de rotas do perfil, ou da permissão dele na pasta liberada (rotas.py), diz quais destas
+ações existem para ele."""
 import ctypes
 import errno
 import itertools
@@ -19,6 +20,7 @@ import urllib.parse
 
 import chegadas
 import envio
+import pastas
 from auditoria import auditar, limpo
 from config import (APAGAR_MAX, APAGAR_NIVEIS, APAGAR_PRAZO, CFG, DONO_DADOS, DOWNLOADS_MAX, ENVIOS_MAX, LISTA_MAX, NIVEL, PASTA,
                     PASTA_DADOS)
@@ -70,6 +72,12 @@ APAGAR = {
 DE_USUARIO = {
     'renomeada': N('A pasta <strong>{nome}</strong> não é renomeada por aqui: é a pasta, ou tem dentro dela a pasta, de {de_quem}.'),
     'apagada': N('A pasta <strong>{nome}</strong> não é apagada por aqui: é a pasta, ou tem dentro dela a pasta, de {de_quem}.'),
+}
+LIBERADA = {
+    'renomeada': N('A pasta <strong>{nome}</strong> não é renomeada por aqui: ela, ou uma pasta dentro dela, está liberada a '
+                   '{de_quem} em Outras pastas.'),
+    'apagada': N('A pasta <strong>{nome}</strong> não é apagada por aqui: ela, ou uma pasta dentro dela, está liberada a '
+                 '{de_quem} em Outras pastas.'),
 }
 # renameat2 da libc: é o kernel que recusa o nome que já existe, sem intervalo entre conferir e trocar.
 LIBC = ctypes.CDLL(None, use_errno=True)
@@ -150,14 +158,20 @@ def abrir(lista, pasta):
 
 class Vista:
     """De onde quem está na sessão vê os arquivos: o administrador, da pasta dos dados, pela aba Arquivos; o usuário
-    do FTP, da pasta do cadastro dele, pela tela Meus arquivos. O caminho que vem do navegador é sempre relativo
-    à raiz da vista, e é a raiz que o prende ali."""
+    do FTP, da pasta do cadastro dele, pela tela Meus arquivos, ou de outra pasta que o administrador liberou a
+    ele, pela tela dela (a sessão chega com essa pasta e com `area`, postas pelo roteamento a cada pedido). O
+    caminho que vem do navegador é sempre relativo à raiz da vista, e é a raiz que o prende ali."""
 
     def __init__(self, sessao):
         self.usuario = sessao['usuario']
-        self.rota, self.tela = ('/meus-arquivos', N('Meus arquivos')) if self.usuario else ('/arquivos', N('Arquivos'))
+        self.area = sessao.get('area', '')
+        if self.area:
+            self.rota, self.tela, self.inicio = f'/pastas/{self.area}', N('Pasta liberada'), sessao['pasta']
+        elif self.usuario:
+            self.rota, self.tela, self.inicio = '/meus-arquivos', N('Meus arquivos'), t('Início')
+        else:
+            self.rota, self.tela, self.inicio = '/arquivos', N('Arquivos'), CFG['pasta_host']
         self.raiz = partes(sessao['pasta']) if self.usuario else []
-        self.inicio = t('Início') if self.usuario else CFG['pasta_host']
 
     def real(self, caminho):
         """O mesmo caminho a partir da pasta dos dados: é o que vai para a auditoria e para a conta do cadastro."""
@@ -395,22 +409,30 @@ def tipo_de(dados):
 
 
 def usuarios_presos(caminho):
-    """Usuários do FTP com a pasta do cadastro neste caminho (a partir da pasta dos dados) ou dentro dele: trocar
-    o nome da pasta ou apagá-la por aqui os deixaria sem ter onde entrar."""
-    return [nome for nome, dele in usuarios().items() if dele and (dele == caminho or dele.startswith(caminho + '/'))]
+    """Usuários do FTP presos a este caminho (a partir da pasta dos dados) ou ao que há dentro dele: (os que têm ali
+    a pasta do cadastro, os que têm ali outra pasta liberada); vazio se não há nenhum. Trocar o nome da pasta ou
+    apagá-la por aqui deixaria os primeiros sem ter onde entrar e os outros com a liberação apontando para nada."""
+    donos = [nome for nome, dele in usuarios().items() if dele and (dele == caminho or dele.startswith(caminho + '/'))]
+    com_liberada = pastas.presos(caminho)
+    return (donos, com_liberada) if donos or com_liberada else ()
 
 
 def pasta_de_usuario(pedido, sessao, lista, presos, feita):
     v = Vista(sessao)
+    donos, com_liberada = presos
+    frase, titulo = (DE_USUARIO, t('Pasta de usuário do FTP')) if donos else (LIBERADA, t('Pasta liberada a usuário do FTP'))
     if v.usuario:  # quem são os outros usuários é assunto do administrador: a tela dele não diz os nomes
-        de_quem = t('outro usuário do FTP')
+        de_quem = t('outro usuário do FTP') if donos else t('uma conta do FTP')
         saida = t('Peça ao administrador do painel.')
-    else:
-        de_quem = f'<strong>{e(", ".join(presos))}</strong>'
+    elif donos:
+        de_quem = f'<strong>{e(", ".join(donos))}</strong>'
         saida = t('Para dar outra pasta a um usuário, use <strong>Usuários ➜ Editar</strong>. Para apagar a pasta junto com '
                   'o usuário, use <strong>Usuários ➜ Remover</strong>.')
-    pedido.enviar(409, pagina(t(v.tela), f'''<section class="cartao"><h1>{t('Pasta de usuário do FTP')}</h1>
-<p>{t(DE_USUARIO[feita], nome=e(visivel(lista[-1])), de_quem=de_quem)}</p>
+    else:
+        de_quem = f'<strong>{e(", ".join(com_liberada))}</strong>'
+        saida = t('Para retirar a pasta de um usuário, use <strong>Usuários ➜ Editar ➜ Outras pastas</strong>.')
+    pedido.enviar(409, pagina(t(v.tela), f'''<section class="cartao"><h1>{titulo}</h1>
+<p>{t(frase[feita], nome=e(visivel(lista[-1])), de_quem=de_quem)}</p>
 <p>{saida} {t('O que está dentro dela pode ser renomeado e apagado item por item.')}</p>
 <p><a href="{e(endereco(v.rota, "pasta", "/".join(lista[:-1])))}">{t('Voltar para a pasta')}</a></p></section>''', sessao, v.rota))
 
@@ -466,8 +488,8 @@ def tela_renomear(pedido, sessao, consulta, formulario=None, token=None, erro=''
 
 def renomear(pedido, sessao, consulta, formulario, token):
     """Troca o nome de um arquivo ou de uma pasta, dentro da mesma pasta. Pede a senha de quem está na sessão. O
-    nome novo segue a regra do nome de pasta; a pasta de um usuário do FTP, ou a que tem uma dentro, não é
-    renomeada por aqui."""
+    nome novo segue a regra do nome de pasta; a pasta de um usuário do FTP, a liberada a um deles, ou a que tem uma
+    dessas dentro, não é renomeada por aqui."""
     v = Vista(sessao)
     caminho, novo = item_do_formulario(formulario), formulario.get('nome', '').strip()
     try:
@@ -600,7 +622,8 @@ def tela_apagar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
 
 def apagar(pedido, sessao, consulta, formulario, token):
     """Apaga um arquivo, ou uma pasta com tudo o que há nela. Pede a caixa de confirmação e a senha de quem está
-    na sessão; a pasta de um usuário do FTP, ou a que tem uma dentro, só sai junto com o usuário."""
+    na sessão; a pasta de um usuário do FTP, ou a que tem uma dentro, só sai junto com o usuário, e a liberada a um
+    deles, depois de retirada."""
     v = Vista(sessao)
     caminho = item_do_formulario(formulario)
     try:

@@ -196,13 +196,14 @@ http {
                 client_body_buffer_size 40k;
             }
 
-            # Envio de arquivo pelo painel: só nestas duas rotas o corpo pode ser grande (PAINEL_ENVIO_MAX_MB, mais
-            # 1 MB para os campos do formulário). O corpo segue para o painel enquanto chega, sem arquivo temporário
+            # Envio de arquivo pelo painel: só nestas rotas o corpo pode ser grande (PAINEL_ENVIO_MAX_MB, mais
+            # 1 MB para os campos do formulário): a do administrador, a do usuário do FTP e a de cada pasta que o
+            # administrador liberou a ele. O corpo segue para o painel enquanto chega, sem arquivo temporário
             # (o /tmp/nginx é pequeno e fica na memória): o painel confere a sessão e a permissão antes de receber
             # o arquivo. Os prazos são maiores porque o painel recebe na taxa de envio do usuário, que pode ser baixa:
             # com o painel segurando o ritmo, o nginx fica sem ler do navegador (client_body_timeout) e sem escrever
             # para o painel (proxy_send_timeout) por mais tempo do que nas outras rotas.
-            location ~ ^/(?:arquivos|meus-arquivos)/enviar$ {
+            location ~ "^/(?:arquivos|meus-arquivos|pastas/[0-9a-f]{16})/enviar$" {
                 proxy_pass http://unix:/nginx/painel.sock;
 @ENVIO@
                 proxy_request_buffering off;

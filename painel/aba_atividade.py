@@ -75,6 +75,7 @@ EVENTOS = {
     'recusa_endereco': ('bloqueio', N('Pedido de endereço bloqueado')),
     'recusa_caminho': ('bloqueio', N('Caminho de arquivo recusado')),
     'recusa_papel': ('bloqueio', N('Tela fora do papel ou do perfil pedida por usuário do FTP')),
+    'recusa_pasta': ('bloqueio', N('Pasta não liberada pedida por usuário do FTP')),
 }
 
 

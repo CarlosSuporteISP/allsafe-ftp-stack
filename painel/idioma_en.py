@@ -221,6 +221,22 @@ EN = {
         'Back to the folder',
     'Pasta de usuário do FTP':
         'Folder of an FTP user',
+    'Pasta liberada a usuário do FTP':
+        'Folder granted to an FTP user',
+    'Pasta liberada':
+        'Granted folder',
+    'uma conta do FTP':
+        'an FTP account',
+    'A pasta <strong>{nome}</strong> não é renomeada por aqui: ela, ou uma pasta dentro dela, está '
+    'liberada a {de_quem} em Outras pastas.':
+        'The folder <strong>{nome}</strong> cannot be renamed here: it, or a folder inside it, is granted to '
+        '{de_quem} in Other folders.',
+    'A pasta <strong>{nome}</strong> não é apagada por aqui: ela, ou uma pasta dentro dela, está liberada'
+    ' a {de_quem} em Outras pastas.':
+        'The folder <strong>{nome}</strong> cannot be deleted here: it, or a folder inside it, is granted to '
+        '{de_quem} in Other folders.',
+    'Para retirar a pasta de um usuário, use <strong>Usuários ➜ Editar ➜ Outras pastas</strong>.':
+        'To take the folder away from a user, use <strong>Users ➜ Edit ➜ Other folders</strong>.',
     'O que está dentro dela pode ser renomeado e apagado item por item.':
         'What is inside it can be renamed and deleted item by item.',
     'O item continua na mesma pasta: o painel não move de uma pasta para outra. O equipamento que '
@@ -366,6 +382,8 @@ EN = {
         'File path refused',
     'Tela fora do papel ou do perfil pedida por usuário do FTP':
         'Screen outside the role or profile requested by an FTP user',
+    'Pasta não liberada pedida por usuário do FTP':
+        'Folder not granted requested by an FTP user',
     'Nada registrado ainda':
         'Nothing recorded yet',
     'Cada entrada no painel e cada alteração feita por ele passa a aparecer aqui.':
