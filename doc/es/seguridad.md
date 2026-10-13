@@ -1032,6 +1032,7 @@ Ninguna versión se publica sin la batería entera aprobada. Se ejecuta en un cl
 | Otras carpetas | Abrir una carpeta sin liberación, por la pantalla y por la dirección; enviar, crear carpeta, cambiar el nombre y borrar por solicitud falsificada, con un permiso que no da la acción; salir de la carpeta liberada por `..`, por enlace simbólico y por la carpeta de arriba; seguir usando la carpeta después de la retirada o del cambio de permiso, con la sesión abierta; liberar una carpeta con la sesión de un usuario del FTP; leer en la pantalla del usuario quién más alcanza la carpeta; liberar una carpeta fuera de la regla y pasar de veinte por usuario | 156 a 161 |
 | Panel por proxy o túnel | Falsificar la dirección del cliente por encabezado, con y sin proxy declarado; contar la contraseña incorrecta y la sesión por la dirección de quien no es el cliente; leer en la pantalla de entrada cómo se publicó el panel; ocultar el aviso de exposición | 93 a 96 |
 | Pestaña Servidor | Abrirla sin sesión o con la sesión de un usuario del FTP; cambiar el archivo de la red y el de los recursos del nginx por texto con marcado y por un enlace al registro del FTP; mantener la sesión abierta solo con la actualización automática | 97, 98 |
+| Pestaña Servicio | Abrirla sin sesión o con la sesión de un usuario del FTP, por `GET` y por `POST`; buscar en la pantalla los secretos de los destinos, la dirección, el bucket y la conversación; buscar formulario de acción; comprobar si abrir la pantalla llama a algún destino o cambia su configuración | 162 |
 | Entrada y sesión del panel | Abrir una ruta sin sesión o con una cookie inventada, contraseña incorrecta y aleatoria hasta el bloqueo, descubrir si un administrador existe, modificar la cuenta sin la contraseña actual, usar una sesión ya cerrada, eliminar la propia cuenta | 22 a 24, 28, 37, 46 a 49, 51, 69, 72 |
 | Solicitud falsificada | Enviar sin token CSRF, con `Origin` de fuera, con `Origin: null` y con `Host` inesperado | 25 a 27, 38 |
 | Idioma de las pantallas | Cambiar el idioma sin token, con un token inventado o de otra sesión, desde otro origen, por `GET` y a un idioma que no existe; cambiar el idioma de otra cuenta; usar la cookie de idioma como sesión o con marcado en el valor; hacer que la vuelta del cambio lleve a otro sitio o a la pantalla de otro papel | 113, 114 |
@@ -1063,7 +1064,7 @@ Además de la batería, cada versión pasa por:
 ./tests/testar.sh
 ```
 
-**Resultado esperado:** una línea por caso y, al final, `Bateria aprovada: nenhum desvio.`, con 111 casos funcionales, 161 de seguridad y 19 de red. La batería tarda cerca de 1 hora y 40 minutos; las opciones y lo que se guarda están en [Scripts](scripts.md#testar).
+**Resultado esperado:** una línea por caso y, al final, `Bateria aprovada: nenhum desvio.`, con 112 casos funcionales, 162 de seguridad y 19 de red. La batería tarda cerca de 1 hora y 40 minutos; las opciones y lo que se guarda están en [Scripts](scripts.md#testar).
 
 > ⚠️ **Límite — lo que la batería no alcanza:** se ejecuta en el propio servidor, contra la instancia de prueba. El firewall del host, el proxy o el túnel del borde y el equipo que envía la copia de seguridad son de quien instala y no entran en ella: verifíquelos con el [paso a paso de producción](#boas-praticas).
 

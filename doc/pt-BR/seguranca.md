@@ -1032,6 +1032,7 @@ Nenhuma versão é publicada sem a bateria inteira aprovada. Ela roda em um clon
 | Outras pastas | Abrir pasta sem liberação, pela tela e pelo endereço; enviar, criar pasta, trocar o nome e apagar por pedido forjado, com permissão que não dá a ação; sair da pasta liberada por `..`, por link simbólico e pela pasta de cima; seguir usando a pasta depois da retirada ou da troca de permissão, com a sessão aberta; liberar pasta com a sessão de um usuário do FTP; ler na tela do usuário quem mais alcança a pasta; liberar pasta fora da regra e passar de vinte por usuário | 156 a 161 |
 | Painel por proxy ou túnel | Forjar o endereço do cliente por cabeçalho, com e sem proxy declarado; contar senha errada e sessão pelo endereço de quem não é o cliente; ler na tela de entrada como o painel foi publicado; ocultar o aviso de exposição | 93 a 96 |
 | Aba Servidor | Abrir sem sessão ou com a sessão de um usuário do FTP; trocar o arquivo da rede e o dos recursos do nginx por texto com marcação e por link para o cadastro do FTP; manter a sessão aberta só com a atualização automática | 97, 98 |
+| Aba Serviço | Abrir sem sessão ou com a sessão de um usuário do FTP, por `GET` e por `POST`; procurar na tela os segredos dos destinos, o endereço, o bucket e a conversa; procurar formulário de ação; conferir se abrir a tela chama algum destino ou muda a configuração deles | 162 |
 | Entrada e sessão do painel | Abrir rota sem sessão ou com cookie inventado, senha errada e sorteada até o bloqueio, descobrir se um administrador existe, alterar conta sem a senha atual, usar sessão já encerrada, remover a própria conta | 22 a 24, 28, 37, 46 a 49, 51, 69, 72 |
 | Pedido forjado | Enviar sem token CSRF, com `Origin` de fora, com `Origin: null` e com `Host` inesperado | 25 a 27, 38 |
 | Idioma das telas | Trocar o idioma sem token, com token inventado ou de outra sessão, de outra origem, por `GET` e para idioma que não existe; trocar o idioma de outra conta; usar o cookie de idioma como sessão ou com marcação no valor; fazer a volta da troca levar a outro site ou a tela de outro papel | 113, 114 |
@@ -1063,7 +1064,7 @@ Além da bateria, cada versão passa por:
 ./tests/testar.sh
 ```
 
-**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 111 casos funcionais, 161 de segurança e 19 de rede. A bateria leva cerca de 1 hora e 40 minutos; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
+**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 112 casos funcionais, 162 de segurança e 19 de rede. A bateria leva cerca de 1 hora e 40 minutos; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
 
 > ⚠️ **Limite — o que a bateria não alcança:** ela roda no próprio servidor, contra a instância de teste. O firewall do host, o proxy ou o túnel da borda e o equipamento que envia o backup são de quem instala e não entram nela: confira-os pelo [passo a passo de produção](#boas-praticas).
 

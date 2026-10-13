@@ -12,7 +12,7 @@
 
 Desarrollado por [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versión](https://img.shields.io/badge/versi%C3%B3n-1.14.0-blue)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-1.15.0-blue)
 ![Estado](https://img.shields.io/badge/estado-estable-brightgreen)
 ![Soporte](https://img.shields.io/badge/soporte-LTS-blue)
 [![Licencia](https://img.shields.io/badge/licencia-Apache--2.0-blue)](LICENSE)
@@ -109,6 +109,7 @@ Son **tres contenedores**: el servidor FTP, el panel y el **nginx**, la única p
 | **Limpieza automática** | Por cuenta, el administrador manda conservar solo los últimos archivos de cada carpeta o solo los de los últimos días; el panel borra el resto por sí solo, cada cierto tiempo. Desactivada por defecto |
 | **Envío a S3, rclone y bot de Telegram** | En la pestaña Destinos, el administrador conecta una carpeta a un almacenamiento S3, para la segunda copia o para guardar fuera y liberar el disco, a un remoto del rclone, para lo que el S3 no alcanza (servidor de archivos, nube de archivos, almacenamiento de proveedor de nube o servicio de transferencia de archivos, en 41 tipos), y a un bot de Telegram, que entrega en instantes cada archivo que llega a una persona, un grupo o un canal, hasta el tamaño que el bot acepta. Cada tipo acepta hasta 20 destinos, y un destino nuevo puede usar el acceso de otro, para otra carpeta, otro bucket u otro grupo. El bot solo envía y el remoto del rclone solo recibe. En la pestaña Archivos, un botón manda un archivo en el acto. La copia del sistema entero, cifrada, va a un S3 con el botón o por rutina. Nada se borra en el destino. Sin configuración por defecto |
 | **Salud del servidor en el panel** | La pestaña Servidor muestra los tres contenedores de la stack, cada uno con lo que usa de procesador, memoria y procesos frente a lo que se le asignó, y el procesador, la memoria, el disco y la red del FTP del servidor, con el historial de los últimos minutos |
+| **Monitoreo del servicio en el panel** | La pestaña Servicio muestra cuántos usuarios y archivos guarda el servicio, el tamaño de cada carpeta y, para cada destino guardado (S3, rclone o bot de Telegram, cuantos haya), lo que ya se envió, lo que no, con el motivo, y lo que está en la cola, con el nombre de los archivos. La pantalla solo lee, y la Visión general trae el resumen |
 | **nginx delante del panel** | Solo el nginx publica el puerto del panel: TLS 1.2 y 1.3, HTTP/2, lista de redes permitidas, límite de solicitudes y de conexiones por dirección; el panel queda sin puerto de red |
 | **Contenedores endurecidos** | `read_only`, `cap_drop: ALL`, `no-new-privileges`, límites de CPU, memoria y PID; el nginx corre sin `root` y sin ninguna `capability` |
 | **Secretos en archivo** | Las contraseñas quedan en `.secrets/`, nunca en la imagen ni en el `compose.yaml`; la del panel, solo como hash |
@@ -680,7 +681,7 @@ El camino más seguro para cada decisión de quien instala, en flujograma, está
 | Verificar la instalación en marcha | `./scripts/validate.sh --runtime` | lo mismo, más `servico ftp: running, healthy`, igual para `painel` y `nginx`, y el usuario inicial en el PureDB o eliminado por el administrador |
 | Ejecutar la batería completa: funcional, seguridad y red | `./tests/testar.sh` | una línea por caso y, al final, `Bateria aprovada: nenhum desvio.` |
 
-La batería levanta una instancia de prueba separada, en `127.0.0.2`, y la elimina al terminar: la instalación en uso no se toca. Son 111 casos funcionales, 161 de seguridad y 19 de red, y ninguna versión se publica con desvío. Lo que la batería de seguridad intenta, objetivo por objetivo, está en [pruebas ejecutadas](doc/es/seguridad.md#testes-executados); las opciones del script, en [Scripts](doc/es/scripts.md#testar).
+La batería levanta una instancia de prueba separada, en `127.0.0.2`, y la elimina al terminar: la instalación en uso no se toca. Son 112 casos funcionales, 162 de seguridad y 19 de red, y ninguna versión se publica con desvío. Lo que la batería de seguridad intenta, objetivo por objetivo, está en [pruebas ejecutadas](doc/es/seguridad.md#testes-executados); las opciones del script, en [Scripts](doc/es/scripts.md#testar).
 
 ---
 
@@ -776,7 +777,7 @@ El plan de creación y cambio de la stack (fases, pruebas, evidencias y avance) 
 
 ## 🏷️ Versión
 
-**1.14.0**, registrada en [`VERSION`](VERSION). Cambios por versión en [`CHANGELOG.md`](CHANGELOG.md). Cada versión publicada tiene una etiqueta `vX.Y.Z` y una Release en el [repositorio oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), el de la empresa; el espejo en la cuenta personal recibe la misma versión enseguida.
+**1.15.0**, registrada en [`VERSION`](VERSION). Cambios por versión en [`CHANGELOG.md`](CHANGELOG.md). Cada versión publicada tiene una etiqueta `vX.Y.Z` y una Release en el [repositorio oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), el de la empresa; el espejo en la cuenta personal recibe la misma versión enseguida.
 
 La versión avanza en cada publicación, siempre en el número del medio (`1.1.0`, `1.2.0`) o en el primero: el número de corrección queda en cero. `0.x` fue la fase de construcción; **la `1.0.0` es la primera versión lista para producción** y abre la línea de largo plazo (LTS) `1.x`. Las versiones se renumeraron el 2026-10-11: el [`CHANGELOG.md`](CHANGELOG.md) trae lo que cambió en cada una y la tabla con los números de antes.
 
