@@ -85,6 +85,7 @@ http {
 
     server {
         listen 8443 ssl default_server;
+@ESCUTA6@
         # HTTP/2 para o navegador que pedir (ALPN): a página, o estilo e as imagens vêm por uma conexão só,
         # com um aperto de mão do TLS. Quem não pede continua em HTTP/1.1. Cada pedido aberto ao mesmo tempo
         # conta como uma conexão no limite por endereço, logo abaixo: o teto por conexão é o mesmo número.
