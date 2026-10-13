@@ -228,6 +228,8 @@ nav a.ativa { color: var(--marca-texto); font-weight: 600; }
 nav a.ativa .i { color: var(--marca-realce); }
 nav a.ativa::after { content: ""; position: absolute; right: 12px; bottom: 0; left: 12px; height: 2px; border-radius: 2px 2px 0 0; background: var(--marca-realce); }
 nav .sinal { display: inline-flex; }
+/* Pasta liberada ao usuário do FTP: o nome é o que o administrador deu à pasta e pode ser longo. */
+nav a .nome-pasta { min-width: 0; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; }
 /* O menu é escuro nos dois temas: o sinal usa o âmbar claro, e não o do tema. */
 nav a .sinal .i, nav a.ativa .sinal .i { color: var(--ambar-82); }
 .grupo { display: none; }

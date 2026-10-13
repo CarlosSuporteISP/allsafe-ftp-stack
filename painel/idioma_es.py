@@ -222,6 +222,33 @@ ES = {
         'Carpeta liberada a usuario del FTP',
     'Pasta liberada':
         'Carpeta liberada',
+    'Pastas liberadas':
+        'Carpetas liberadas',
+    'A pasta nasce vazia, dentro desta pasta liberada.':
+        'La carpeta nace vacía, dentro de esta carpeta liberada.',
+    'Pasta que o administrador liberou a esta conta, para navegar e baixar.':
+        'Carpeta que el administrador liberó a esta cuenta, para navegar y descargar.',
+    'Pasta que o administrador liberou a esta conta, para navegar, baixar e criar pasta.':
+        'Carpeta que el administrador liberó a esta cuenta, para navegar, descargar y crear carpetas.',
+    'Pasta que o administrador liberou a esta conta, para navegar, baixar e organizar.':
+        'Carpeta que el administrador liberó a esta cuenta, para navegar, descargar y organizar.',
+    'Aqui você navega e baixa. Nesta pasta a permissão desta conta é de leitura: ela não cria, não envia,'
+    ' não renomeia e não apaga nada. Todo download fica registrado.':
+        'Aquí usted navega y descarga. En esta carpeta el permiso de esta cuenta es de lectura: no crea, no '
+        'envía, no renombra y no borra nada. Toda descarga queda registrada.',
+    'Aqui você navega, baixa e cria pasta. Nesta pasta a permissão desta conta é de envio: o que já está '
+    'nela não é renomeado nem apagado por ela. Todo download e toda pasta criada ficam registrados.':
+        'Aquí usted navega, descarga y crea carpetas. En esta carpeta el permiso de esta cuenta es de envío: '
+        'lo que ya está en ella no es renombrado ni borrado por ella. Toda descarga y toda carpeta creada '
+        'quedan registradas.',
+    'Esta conta não envia arquivo para esta pasta: o envio por aqui depende de uma permissão que o '
+    'administrador dá a cada conta.':
+        'Esta cuenta no envía archivos a esta carpeta: el envío por aquí depende de un permiso que el '
+        'administrador da a cada cuenta.',
+    'Pasta <code>{pasta}</code>, liberada a esta conta pelo administrador: ela abre só aqui no painel, '
+    'não por FTP, e outras contas podem ter acesso a ela.':
+        'Carpeta <code>{pasta}</code>, liberada a esta cuenta por el administrador: se abre solo aquí en el '
+        'panel, no por FTP, y otras cuentas pueden tener acceso a ella.',
     'uma conta do FTP':
         'una cuenta del FTP',
     'A pasta <strong>{nome}</strong> não é renomeada por aqui: ela, ou uma pasta dentro dela, está '
@@ -234,6 +261,80 @@ ES = {
         'liberada a {de_quem} en Otras carpetas.',
     'Para retirar a pasta de um usuário, use <strong>Usuários ➜ Editar ➜ Outras pastas</strong>.':
         'Para retirar la carpeta a un usuario, use <strong>Usuarios ➜ Editar ➜ Otras carpetas</strong>.',
+    'Outras pastas':
+        'Otras carpetas',
+    'Pasta liberada no painel a: <strong>{contas}</strong>.':
+        'Carpeta liberada en el panel a: <strong>{contas}</strong>.',
+    'Outra pasta liberada a usuário':
+        'Otra carpeta liberada a un usuario',
+    'Outra pasta retirada de usuário':
+        'Otra carpeta retirada a un usuario',
+    'Pasta liberada. Vale no próximo pedido do usuário no painel.':
+        'Carpeta liberada. Vale en la próxima solicitud del usuario en el panel.',
+    'Permissão trocada. Vale no próximo pedido do usuário no painel.':
+        'Permiso cambiado. Vale en la próxima solicitud del usuario en el panel.',
+    'Pasta retirada do usuário. Os arquivos continuam nela.':
+        'Carpeta retirada al usuario. Los archivos siguen en ella.',
+    'navega e baixa':
+        'navega y descarga',
+    'navega, baixa e cria pasta; envia arquivo se a conta tem a permissão de envio pelo painel':
+        'navega, descarga y crea carpetas; envía archivos si la cuenta tiene el permiso de envío por el panel',
+    'faz o mesmo do Envio e ainda troca o nome e apaga, com a senha da conta':
+        'hace lo mismo que Envío y además cambia el nombre y borra, con la contraseña de la cuenta',
+    'Nenhuma: este usuário só alcança a pasta do cadastro.':
+        'Ninguna: este usuario solo alcanza su propia carpeta.',
+    'Além da pasta do cadastro, que continua só dele, este usuário abre no painel as pastas abaixo, cada '
+    'uma com a permissão dada aqui. Por FTP ele continua entrando só na pasta do cadastro.':
+        'Además de su propia carpeta, que sigue siendo solo suya, este usuario abre en el panel las carpetas '
+        'de abajo, cada una con el permiso dado aquí. Por FTP sigue entrando solo en su propia carpeta.',
+    'Permissão':
+        'Permiso',
+    'Quem mais alcança':
+        'Quién más la alcanza',
+    'nenhuma outra conta':
+        'ninguna otra cuenta',
+    'Retirar':
+        'Retirar',
+    'A pasta <code>{pasta}</code> é a pasta de <strong>{donos}</strong>, contém a pasta ou fica dentro '
+    'dela: por ela, este usuário alcança arquivos dessa conta.':
+        'La carpeta <code>{pasta}</code> es la carpeta de <strong>{donos}</strong>, la contiene o queda '
+        'dentro de ella: por ella, este usuario alcanza archivos de esa cuenta.',
+    'Pasta a liberar':
+        'Carpeta a liberar',
+    'O que este usuário pode fazer nela':
+        'Qué puede hacer este usuario en ella',
+    'A mesma pasta pode ser liberada a vários usuários, e cada um fica com a permissão dele. Liberar de '
+    'novo uma pasta da lista troca a permissão. Liberar, trocar e retirar valem no próximo pedido do '
+    'usuário, sem ele sair do painel. Até {maximo} pastas por usuário; a troca para o perfil Só envio '
+    'retira todas.':
+        'La misma carpeta puede liberarse a varios usuarios, y cada uno queda con su permiso. Liberar de '
+        'nuevo una carpeta de la lista cambia el permiso. Liberar, cambiar y retirar valen en la próxima '
+        'solicitud del usuario, sin que salga del panel. Hasta {maximo} carpetas por usuario; el cambio al '
+        'perfil Solo envío las retira todas.',
+    'Se a pasta for a de outro usuário, contiver a pasta dele ou ficar dentro dela, este usuário passa a '
+    'alcançar arquivos dele; depois de gravar, a lista mostra quem mais alcança cada pasta.':
+        'Si la carpeta es la de otro usuario, la contiene o queda dentro de ella, este usuario pasa a '
+        'alcanzar archivos de él; después de guardar, la lista muestra quién más alcanza cada carpeta.',
+    'Liberar pasta':
+        'Liberar carpeta',
+    'Liberada no painel, inteira ou em parte, a: <strong>{contas}</strong>.':
+        'Liberada en el panel, entera o en parte, a: <strong>{contas}</strong>.',
+    'Não se aplica ao perfil Só envio: a conta não lista nem baixa nada, e as outras pastas são de '
+    'navegar.':
+        'No se aplica al perfil Solo envío: la cuenta no lista ni descarga nada, y las otras carpetas son '
+        'para navegar.',
+    'Esta pasta não está liberada a este usuário.':
+        'Esta carpeta no está liberada a este usuario.',
+    'Permissão inválida.':
+        'Permiso no válido.',
+    'O perfil Só envio não recebe outras pastas.':
+        'El perfil Solo envío no recibe otras carpetas.',
+    'Esta já é a pasta do usuário: ele a alcança sem liberação.':
+        'Esta ya es la carpeta del usuario: la alcanza sin liberación.',
+    'O usuário já tem esta pasta com esta permissão.':
+        'El usuario ya tiene esta carpeta con este permiso.',
+    'Limite atingido: o usuário já tem {maximo} outras pastas.':
+        'Límite alcanzado: el usuario ya tiene {maximo} otras carpetas.',
     'O que está dentro dela pode ser renomeado e apagado item por item.':
         'Lo que hay dentro de ella puede renombrarse y borrarse elemento por elemento.',
     'O item continua na mesma pasta: o painel não move de uma pasta para outra. O equipamento que '

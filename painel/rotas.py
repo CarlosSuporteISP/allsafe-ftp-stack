@@ -31,6 +31,7 @@ ROTAS = {
     ('GET', '/usuarios/editar'): aba_usuarios.tela_editar,
     ('POST', '/usuarios/perfil'): aba_usuarios.trocar_perfil,
     ('POST', '/usuarios/pasta'): aba_usuarios.trocar_pasta,
+    ('POST', '/usuarios/outras'): aba_usuarios.gravar_outra,
     ('POST', '/usuarios/limites'): aba_usuarios.gravar_limites,
     ('POST', '/usuarios/limpeza'): aba_usuarios.gravar_limpeza,
     ('POST', '/usuarios/desbloquear'): aba_usuarios.desbloquear,

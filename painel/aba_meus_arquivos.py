@@ -2,6 +2,9 @@
 """Tela Meus arquivos: o usuário do FTP navega pela pasta dele, baixa os próprios arquivos e, conforme o perfil,
 cria pasta, troca o nome e apaga. Com a permissão de envio pelo painel, também envia arquivo.
 
+A mesma tela abre cada pasta que o administrador liberou à conta (/pastas/<identificador>): a raiz passa a ser a
+pasta liberada e o que a tela oferece vem da permissão dada naquela pasta, e não do perfil da conta.
+
 A raiz é a pasta do cadastro, guardada na sessão. O caminho pedido é sempre relativo a ela e passa pelas
 mesmas conferências da aba Arquivos: parte por parte, sem `..` e sem seguir link simbólico. O perfil, também
 guardado na sessão, diz o que a tela oferece; quem recusa o resto é a tabela de rotas do perfil (rotas.py), e as
@@ -34,9 +37,23 @@ PODE = {
                  N('Aqui você navega, baixa, cria pasta, troca o nome e apaga. Trocar o nome e apagar pedem a sua senha do FTP, '
                    'e apagar não tem lixeira. Todo download e toda alteração ficam registrados.')),
 }
+# permissão na pasta liberada ➜ (linha de cima da tela, o que a tela diz que esta conta faz nela)
+PODE_AREA = {
+    'leitura': (N('Pasta que o administrador liberou a esta conta, para navegar e baixar.'),
+                N('Aqui você navega e baixa. Nesta pasta a permissão desta conta é de leitura: ela não cria, não envia, não '
+                  'renomeia e não apaga nada. Todo download fica registrado.')),
+    'envio': (N('Pasta que o administrador liberou a esta conta, para navegar, baixar e criar pasta.'),
+              N('Aqui você navega, baixa e cria pasta. Nesta pasta a permissão desta conta é de envio: o que já está nela não '
+                'é renomeado nem apagado por ela. Todo download e toda pasta criada ficam registrados.')),
+    'completo': (N('Pasta que o administrador liberou a esta conta, para navegar, baixar e organizar.'), PODE['completo'][1]),
+}
 # a conta tem a permissão de enviar pelo painel? ➜ o que a tela diz do envio
 ENVIO = {True: N('Esta conta também envia arquivo por aqui: o envio fica registrado e nunca substitui um arquivo que já existe.'),
          False: N('Enviar arquivo, só por FTP: o envio por aqui depende de uma permissão que o administrador dá a cada conta.')}
+# O mesmo, na pasta liberada: por FTP a conta não chega nela.
+ENVIO_AREA = {True: ENVIO[True],
+              False: N('Esta conta não envia arquivo para esta pasta: o envio por aqui depende de uma permissão que o '
+                       'administrador dá a cada conta.')}
 
 
 def inicio(pedido, sessao, consulta, formulario, token):
@@ -62,16 +79,20 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
             pass
         finally:
             os.close(descritor)
-    resumo, texto = PODE[perfil]
+    resumo, texto = (PODE_AREA if v.area else PODE)[perfil]
     feito = MENSAGENS.get(consulta.get('m', ''), '')
     nova_pasta = formulario_nova_pasta(sessao, caminho) if existe and perfil != 'leitura' else ''
     envia = perfil != 'leitura' and envio_pelo_painel(sessao['usuario'])[0]
-    do_envio = '' if perfil == 'leitura' else ' ' + t(ENVIO[envia])
-    da_pasta = t('Arquivos da pasta do usuário <strong>{usuario}</strong> no FTP.', usuario=e(sessao['usuario']))
+    do_envio = '' if perfil == 'leitura' else ' ' + t((ENVIO_AREA if v.area else ENVIO)[envia])
+    if v.area:   # a pasta do cadastro é só da conta; esta pode estar liberada a outras, e a tela não diz a quais
+        da_pasta = t('Pasta <code>{pasta}</code>, liberada a esta conta pelo administrador: ela abre só aqui no painel, não '
+                     'por FTP, e outras contas podem ter acesso a ela.', pasta=e(sessao['pasta']))
+    else:
+        da_pasta = t('Arquivos da pasta do usuário <strong>{usuario}</strong> no FTP.', usuario=e(sessao['usuario']))
     limpeza = ''.join('<p class="aviso">' + t('Limpeza automática, ligada pelo administrador: o servidor {regra}, sozinho. O '
                                               'que sai não volta: baixe o que precisa guardar.', regra=e(retencao.resumo(regra)))
                       + '</p>' for regra in retencao.que_alcancam(usuarios(), '/'.join(v.raiz)))
-    pedido.enviar(200, pagina(t('Meus arquivos'), f'''{cabeca('Meus arquivos', t(resumo))}
+    pedido.enviar(200, pagina(t(v.tela), f'''{cabeca(v.tela, t(resumo))}
 {f'<p class="ok" role="status">{e(t(feito))}</p>' if feito else ''}
 <p class="trilha">{trilha(v, lista)}</p>
 {limpeza}{aviso_de_corte(cortado)}<section class="cartao lista"><div class="rolagem"><table class="blocos itens">

@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """Aba Usuários: todas as contas em uma lista, cada uma com o seu perfil. Os administradores entram no painel; os
-usuários do FTP têm o perfil Completo, Envio, Só envio ou Leitura. Aqui ficam a lista, a criação, a edição (perfil, pasta, TLS,
-limites e bloqueios), a troca de senha e a remoção dos usuários do FTP; as alterações de administrador ficam em
-aba_administradores.py.
+usuários do FTP têm o perfil Completo, Envio, Só envio ou Leitura. Aqui ficam a lista, a criação, a edição (perfil, pasta,
+outras pastas, TLS, limites e bloqueios), a troca de senha e a remoção dos usuários do FTP; as alterações de administrador
+ficam em aba_administradores.py.
 
-A remoção pode levar junto a pasta do usuário, quando nenhum outro a alcança; apagar pede a senha atual
-do administrador."""
+A remoção pode levar junto a pasta do usuário, quando nenhum outro a alcança, nem pelo cadastro nem por pasta
+liberada no painel; apagar pede a senha atual do administrador."""
 import secrets
 import urllib.parse
 
@@ -13,6 +13,7 @@ import administradores
 import fator
 import idioma
 import limites
+import pastas
 import retencao
 from aba_arquivos import Recusado, apagar_caminho, endereco, resposta_parcial
 from auditoria import auditar, limpo
@@ -35,6 +36,19 @@ PERFIS = (
 )
 PERFIS_FTP = tuple(chave for chave, _, _ in PERFIS[1:])
 NOME_DO_PERFIL = {chave: rotulo for chave, rotulo, _ in PERFIS}
+# Permissão em outra pasta ➜ nome na tela e o que a conta faz naquela pasta, pelo painel.
+PERMISSOES = (
+    ('leitura', N('Leitura'), N('navega e baixa')),
+    ('envio', N('Envio'), N('navega, baixa e cria pasta; envia arquivo se a conta tem a permissão de envio pelo painel')),
+    ('completo', N('Completo'), N('faz o mesmo do Envio e ainda troca o nome e apaga, com a senha da conta')),
+)
+NOME_DA_PERMISSAO = {chave: rotulo for chave, rotulo, _ in PERMISSOES}
+# O que o cartão Outras pastas diz depois de gravar (?m= em Editar).
+OUTRAS = {
+    'liberada': N('Pasta liberada. Vale no próximo pedido do usuário no painel.'),
+    'trocada': N('Permissão trocada. Vale no próximo pedido do usuário no painel.'),
+    'retirada': N('Pasta retirada do usuário. Os arquivos continuam nela.'),
+}
 
 MENSAGENS = {
     'criado': N('Usuário criado.'),
@@ -66,6 +80,9 @@ MENSAGENS = {
 ALERTA_SEM_TLS = N('A senha e os arquivos deste usuário passam a trafegar em texto puro e podem ser lidos por quem estiver '
                    'na mesma rede. Use só para equipamento antigo sem suporte a TLS, em rede interna isolada, com o firewall '
                    'liberando só esse equipamento. Os outros usuários continuam obrigados a usar TLS.')
+REGRA_DA_PASTA = N('Fica dentro de <code>{pasta}</code> e é criada se não existir. Até 4 níveis separados por <code>/</code>; '
+                   'letras, números, <code>_</code>, <code>-</code> e ponto; nenhum nível começa com ponto.')
+FORMATO_DA_PASTA = r'[A-Za-z0-9_][A-Za-z0-9._\-]{0,63}(/[A-Za-z0-9_][A-Za-z0-9._\-]{0,63}){0,3}'   # o PASTA do config, no navegador
 REGRA_DO_NOME = N('Letras minúsculas, números, <code>_</code> e <code>-</code>; começa com letra ou <code>_</code>; até 32 caracteres.')
 
 
@@ -227,11 +244,9 @@ def campo_da_pasta(rotulo, pasta, obrigatoria=False):
     sugestoes = ''.join(f'<option value="{e(item)}">' for item in pastas_do_primeiro_nivel())
     return f'''<label for="pasta">{rotulo}</label>
 <input id="pasta" name="pasta" maxlength="259" list="pastas" value="{e(pasta)}" autocapitalize="none" spellcheck="false"{' required' if obrigatoria else ''}
- pattern="[A-Za-z0-9_][A-Za-z0-9._\\-]{{0,63}}(/[A-Za-z0-9_][A-Za-z0-9._\\-]{{0,63}}){{0,3}}">
+ pattern="{FORMATO_DA_PASTA}">
 <datalist id="pastas">{sugestoes}</datalist>
-<p class="suave">{t('Fica dentro de <code>{pasta}</code> e é criada se não existir. Até 4 níveis separados por <code>/</code>; '
-                    'letras, números, <code>_</code>, <code>-</code> e ponto; nenhum nível começa com ponto.',
-                    pasta=e(CFG['pasta_host']))}</p>
+<p class="suave">{t(REGRA_DA_PASTA, pasta=e(CFG['pasta_host']))}</p>
 <p class="aviso">{t('Usuários com a mesma pasta, ou com uma dentro da outra, alcançam os arquivos um do outro, cada um até onde o '
                     'perfil dele deixa. Para um equipamento não alcançar o backup de outro, dê a cada um a própria pasta.')}</p>'''
 
@@ -460,6 +475,68 @@ def cartao_perfil(sessao, nome, atual, erro=''):
 </form></section>'''
 
 
+def alcancam(cadastro, nome, pasta):
+    """Quem mais alcança esta pasta, fora o próprio usuário: (os que têm no cadastro a mesma, uma acima ou uma abaixo
+    dela; os que a alcançam por pasta liberada no painel)."""
+    donos = [outro for outro, dele in cadastro.items()
+             if outro != nome and dele and (dele == pasta or dele.startswith(pasta + '/') or pasta.startswith(dele + '/'))]
+    return donos, sorted({outro for outro, _, _ in pastas.com_acesso(pasta) if outro != nome})
+
+
+def cartao_outras(sessao, nome, cadastro, perfil, feito='', erro='', digitada=('', '')):
+    """Outras pastas do usuário no painel: as que ele tem, com quem mais alcança cada uma, e o formulário que libera
+    uma pasta ou troca a permissão dela. `digitada` é o par (pasta, permissão) que volta ao formulário depois de uma
+    recusa. A conta do perfil só envio não recebe nenhuma."""
+    abre = f'<section class="cartao medio" id="outras"><h2>{t("Outras pastas")}</h2>'
+    if perfil == 'soenvio':
+        return abre + '<p class="suave">' + t('Não se aplica ao perfil Só envio: a conta não lista nem baixa nada, e as outras '
+                                              'pastas são de navegar.') + '</p></section>'
+    linhas, avisos = '', ''
+    for outra, permissao in sorted(pastas.do_usuario(nome).items()):
+        donos, liberada = alcancam(cadastro, nome, outra)
+        tambem = ', '.join(donos + [conta for conta in liberada if conta not in donos])
+        linhas += f'''<tr><td><code>{e(outra)}</code></td>
+<td data-rotulo="{t('Permissão')}">{t(NOME_DA_PERMISSAO[permissao])}</td>
+<td data-rotulo="{t('Quem mais alcança')}">{e(tambem) or f'<span class="suave">{t("nenhuma outra conta")}</span>'}</td>
+<td class="acoes"><form method="post" action="/usuarios/outras">
+<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+<input type="hidden" name="usuario" value="{e(nome)}">
+<input type="hidden" name="pasta" value="{e(outra)}">
+<input type="hidden" name="permissao" value="nenhuma">
+<button type="submit">{t('Retirar')}</button></form></td></tr>'''
+        if donos:
+            avisos += '<p class="aviso">' + t('A pasta <code>{pasta}</code> é a pasta de <strong>{donos}</strong>, contém a pasta '
+                                              'ou fica dentro dela: por ela, este usuário alcança arquivos dessa conta.',
+                                              pasta=e(outra), donos=e(', '.join(donos))) + '</p>'
+    nenhuma = f'<tr><td colspan="4" class="suave">{t("Nenhuma: este usuário só alcança a pasta do cadastro.")}</td></tr>'
+    opcoes = ''.join(
+        f'<label class="marcar"><input type="radio" id="permissao-{chave}" name="permissao" value="{chave}"'
+        f'{" checked" if chave == (digitada[1] or "leitura") else ""}> <span><strong>{t(rotulo)}</strong>: {e(t(nota))}.</span></label>'
+        for chave, rotulo, nota in PERMISSOES)
+    return f'''{abre}{f'<p class="ok" role="status">{e(t(feito))}</p>' if feito else ''}{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
+<p>{t('Além da pasta do cadastro, que continua só dele, este usuário abre no painel as pastas abaixo, cada uma com a '
+      'permissão dada aqui. Por FTP ele continua entrando só na pasta do cadastro.')}</p>
+<div class="rolagem"><table class="blocos">
+<thead><tr><th>{t('Pasta')}</th><th>{t('Permissão')}</th><th>{t('Quem mais alcança')}</th><th>{t('Ações')}</th></tr></thead>
+<tbody>{linhas or nenhuma}</tbody></table></div>
+{avisos}<form method="post" action="/usuarios/outras" autocomplete="off">
+<input type="hidden" name="csrf" value="{e(sessao['csrf'])}">
+<input type="hidden" name="usuario" value="{e(nome)}">
+<label for="outra">{t('Pasta a liberar')}</label>
+<input id="outra" name="pasta" maxlength="259" list="pastas" value="{e(digitada[0])}" autocapitalize="none" spellcheck="false" required
+ pattern="{FORMATO_DA_PASTA}">
+<p class="suave">{t(REGRA_DA_PASTA, pasta=e(CFG['pasta_host']))}</p>
+<fieldset class="perfis"><legend>{t('O que este usuário pode fazer nela')}</legend>{opcoes}</fieldset>
+<p class="suave">{t('A mesma pasta pode ser liberada a vários usuários, e cada um fica com a permissão dele. Liberar de novo uma '
+                    'pasta da lista troca a permissão. Liberar, trocar e retirar valem no próximo pedido do usuário, sem ele '
+                    'sair do painel. Até {maximo} pastas por usuário; a troca para o perfil Só envio retira todas.',
+                    maximo=pastas.PASTAS_MAX)}</p>
+<p class="aviso">{t('Se a pasta for a de outro usuário, contiver a pasta dele ou ficar dentro dela, este usuário passa a '
+                    'alcançar arquivos dele; depois de gravar, a lista mostra quem mais alcança cada pasta.')}</p>
+<button type="submit">{t('Liberar pasta')}</button>
+</form></section>'''
+
+
 def sem_dispensa():
     """Por que nenhum usuário é dispensado do TLS nesta instalação, e quem muda isso."""
     return t('Dispensar um usuário do TLS não está disponível nesta instalação: {motivo}. Quem muda isso é quem administra o '
@@ -486,7 +563,7 @@ def cartao_tls(nome):
 
 
 def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200, pasta='', erro_limites='', digitado=None,
-                erro_bloqueio='', erro_perfil='', erro_limpeza='', da_limpeza=None):
+                erro_bloqueio='', erro_perfil='', erro_limpeza='', da_limpeza=None, erro_outras='', outra=('', '')):
     nome = consulta.get('usuario', '')
     if not usuario_alteravel(pedido, sessao, nome):
         return
@@ -498,6 +575,10 @@ def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
             f'<span class="suave">{t("fora da pasta dos dados")}</span>')
     outros = vizinhos(cadastro, nome)
     dividida = ' ' + t('Também alcançada por: <strong>{outros}</strong>.', outros=e(', '.join(outros))) if outros else ''
+    liberada = alcancam(cadastro, nome, atual)[1] if atual else []
+    dividida += ' ' + t('Liberada no painel, inteira ou em parte, a: <strong>{contas}</strong>.',
+                        contas=e(', '.join(liberada))) if liberada else ''
+    perfil = perfis().get(nome, 'completo')
     mais = ou_mais(uso['parcial'])
     inicial = f' <span class="etiqueta">{t("inicial")}</span>' if nome == CFG['ftp_usuario'] else ''
     if digitado is None:
@@ -512,7 +593,7 @@ def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
 <p><a class="botao" href="/usuarios/senha?usuario={destino}">{t('Trocar senha')}</a> <a class="botao" href="/usuarios">{t('Voltar para a lista')}</a></p>
 </section>
 {cartao_bloqueios(sessao, nome, erro_bloqueio)}
-{cartao_perfil(sessao, nome, perfis().get(nome, 'completo'), erro_perfil)}
+{cartao_perfil(sessao, nome, perfil, erro_perfil)}
 <section class="cartao estreito"><h2>{t('Pasta')}</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>{t('Pasta atual: {onde}, com {arquivos} arquivo(s), {tamanho}.', onde=onde, arquivos=f'{uso["arquivos"]}{mais}', tamanho=e(tamanho(uso['bytes'])) + mais)}{dividida}</p>
 <form method="post" action="/usuarios/pasta" autocomplete="off">
@@ -524,9 +605,10 @@ def tela_editar(pedido, sessao, consulta, formulario=None, token=None, erro='', 
                     'automática, se estiver ligada, é desligada: a regra era da pasta atual.')}</p>
 <button type="submit">{t('Trocar pasta')}</button> <a class="botao" href="/usuarios">{t('Cancelar')}</a>
 </form></section>
+{cartao_outras(sessao, nome, cadastro, perfil, OUTRAS.get(consulta.get('m', ''), ''), erro_outras, outra)}
 {cartao_tls(nome)}
 {cartao_limites(sessao, nome, digitado, erro_limites)}
-{cartao_limpeza(sessao, nome, da_limpeza or retencao.ler(nome), outros, erro_limpeza) if atual else ''}
+{cartao_limpeza(sessao, nome, da_limpeza or retencao.ler(nome), outros + [conta for conta in liberada if conta not in outros], erro_limpeza) if atual else ''}
 </div>''', sessao, '/usuarios'))
 
 
@@ -626,6 +708,50 @@ def trocar_pasta(pedido, sessao, consulta, formulario, token):
     return pedido.redirecionar('/usuarios?m=' + ('pasta_sem_limpeza' if com_limpeza else 'pasta'))
 
 
+def gravar_outra(pedido, sessao, consulta, formulario, token):
+    """Libera ao usuário outra pasta no painel, troca a permissão dela ou, com a permissão `nenhuma`, retira. Quem
+    grava é o allsafe-ftp-user, que repete as conferências; as daqui antecipam a resposta na tela."""
+    nome = formulario.get('usuario', '')
+    if not usuario_alteravel(pedido, sessao, nome):
+        return None
+    pasta, permissao = formulario.get('pasta', '').strip(), formulario.get('permissao', '')
+    dele = pastas.do_usuario(nome)
+    anterior = dele.get(pasta)
+
+    def recusar(erro, codigo=409):
+        return tela_editar(pedido, sessao, {'usuario': nome}, erro_outras=erro, codigo=codigo,
+                           outra=(pasta, permissao if permissao in pastas.PERMISSOES else ''))
+    if permissao == 'nenhuma':
+        if not anterior:
+            return recusar(t('Esta pasta não está liberada a este usuário.'))
+    elif permissao not in pastas.PERMISSOES:
+        return recusar(t('Permissão inválida.'), 400)
+    elif perfis().get(nome, 'completo') == 'soenvio':
+        return recusar(t('O perfil Só envio não recebe outras pastas.'))
+    else:
+        impedimento = impedimento_da_pasta(pasta) if PASTA.fullmatch(pasta) else t('Pasta inválida. Veja a regra abaixo do campo.')
+        if impedimento:
+            auditar(pedido.ip, 'recusa_caminho', f'admin={sessao["admin"]} caminho={limpo(pasta, 120)}')
+            return recusar(impedimento, 400)
+        if pasta == usuarios().get(nome):
+            return recusar(t('Esta já é a pasta do usuário: ele a alcança sem liberação.'))
+        if permissao == anterior:
+            return recusar(t('O usuário já tem esta pasta com esta permissão.'))
+        if not anterior and len(dele) >= pastas.PASTAS_MAX:
+            return recusar(t('Limite atingido: o usuário já tem {maximo} outras pastas.', maximo=pastas.PASTAS_MAX))
+    feito, mensagem = executar_usuario('outras', nome, pasta=pasta, pares=(permissao,))
+    if not feito:
+        auditar(pedido.ip, 'falha_comando', f'admin={sessao["admin"]} acao=gravar_outra usuario={nome}')
+        return recusar(t('Não foi possível gravar:') + ' ' + do_comando(mensagem), 500)
+    if permissao == 'nenhuma':
+        auditar(pedido.ip, 'pasta_retirada', f'admin={sessao["admin"]} usuario={nome} pasta={pasta} permissao={anterior}')
+    else:
+        auditar(pedido.ip, 'pasta_liberada',
+                f'admin={sessao["admin"]} usuario={nome} pasta={pasta} permissao={permissao} anterior={anterior or "-"}')
+    marca = 'retirada' if permissao == 'nenhuma' else 'trocada' if anterior else 'liberada'
+    return pedido.redirecionar(f'/usuarios/editar?usuario={urllib.parse.quote(nome)}&m={marca}#outras')
+
+
 def tela_trocar_senha(pedido, sessao, consulta, formulario=None, token=None, erro='', codigo=200):
     nome = consulta.get('usuario', '')
     if not usuario_alteravel(pedido, sessao, nome):
@@ -673,6 +799,7 @@ def tela_remover(pedido, sessao, consulta, formulario=None, token=None, erro='',
     mais = ou_mais(uso['parcial'])
     onde = f"<code>{e(CFG['pasta_host'])}/{e(pasta)}</code>" if pasta else t('na pasta dele')
     outros = vizinhos(cadastro, nome)
+    outros += [conta for conta in (alcancam(cadastro, nome, pasta)[1] if pasta else []) if conta not in outros]
     if outros:
         opcao = ('<p class="suave">'
                  + t('Esta pasta também é alcançada por: <strong>{outros}</strong>. Por isso ela não é apagada junto com o '
@@ -703,7 +830,8 @@ def tela_remover(pedido, sessao, consulta, formulario=None, token=None, erro='',
 
 def remover_usuario(pedido, sessao, consulta, formulario, token):
     """Remove o usuário do cadastro. Com a caixa marcada, apaga também a pasta dele, depois de conferir a senha
-    atual do administrador e que nenhum outro usuário alcança a mesma pasta, uma de dentro ou uma de fora."""
+    atual do administrador e que nenhum outro usuário alcança a mesma pasta, uma de dentro ou uma de fora, nem pelo
+    cadastro nem por pasta liberada no painel."""
     nome = formulario.get('usuario', '')
     if not usuario_alteravel(pedido, sessao, nome):
         return None
@@ -714,7 +842,7 @@ def remover_usuario(pedido, sessao, consulta, formulario, token):
     if com_pasta:
         cadastro = usuarios()
         pasta = cadastro.get(nome)
-        if not pasta or vizinhos(cadastro, nome):
+        if not pasta or vizinhos(cadastro, nome) or alcancam(cadastro, nome, pasta)[1]:
             return tela_remover(pedido, sessao, {'usuario': nome}, codigo=409,
                                 erro=t('A pasta deste usuário não pode ser apagada junto: outro usuário a alcança, ou ela fica '
                                        'fora da pasta dos dados. Nada foi alterado.'))

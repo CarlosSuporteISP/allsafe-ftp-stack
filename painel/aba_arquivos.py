@@ -258,6 +258,14 @@ def aviso_de_corte(cortado):
                 maximo=LISTA_MAX) + '</p>') if cortado else ''
 
 
+def liberada_a(caminho):
+    """Linha da aba Arquivos com os usuários que abrem esta pasta no painel por liberação: a liberada é ela ou uma
+    acima dela. Vazia quando não há nenhum."""
+    contas = sorted({nome for nome, pasta, _ in pastas.com_acesso(caminho) if pasta == caminho or caminho.startswith(pasta + '/')})
+    return ('<p class="suave">' + t('Pasta liberada no painel a: <strong>{contas}</strong>.', contas=e(', '.join(contas))) + '</p>'
+            ) if contas else ''
+
+
 def lista_arquivos(pedido, sessao, consulta, formulario, token):
     caminho = parametro(pedido, 'pasta')
     try:
@@ -281,6 +289,7 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
     donos = [nome for nome, dele in usuarios().items() if dele == caminho] if caminho else []
     de_quem = ('<p class="suave">' + t('Pasta do usuário do FTP: <strong>{donos}</strong>.', donos=e(', '.join(donos))) + '</p>'
                ) if donos else ''
+    de_quem += liberada_a(caminho) if caminho else ''
     novo_usuario = (f' <a class="botao" href="{e(endereco("/usuarios/novo", "pasta", caminho))}">{t("Novo usuário nesta pasta")}</a>'
                     if PASTA.fullmatch(caminho) else '')
     ajuda = ('<p class="suave">'
@@ -307,7 +316,8 @@ def formulario_nova_pasta(sessao, caminho):
     except UnicodeEncodeError:
         return ''
     v = Vista(sessao)
-    nasce = (t('A pasta nasce vazia, dentro da sua pasta no FTP.') if v.usuario else
+    nasce = (t('A pasta nasce vazia, dentro desta pasta liberada.') if v.area else
+             t('A pasta nasce vazia, dentro da sua pasta no FTP.') if v.usuario else
              t('A pasta nasce vazia; para um equipamento gravar nela, crie um usuário com esta pasta.'))
     dentro = f'{e(v.inicio)}{"/" + e(caminho) if caminho else ""}'
     return f'''<section class="cartao estreito"><h2>{t('Nova pasta')}</h2>

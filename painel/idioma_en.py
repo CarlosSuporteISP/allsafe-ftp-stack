@@ -225,6 +225,33 @@ EN = {
         'Folder granted to an FTP user',
     'Pasta liberada':
         'Granted folder',
+    'Pastas liberadas':
+        'Granted folders',
+    'A pasta nasce vazia, dentro desta pasta liberada.':
+        'The folder starts empty, inside this granted folder.',
+    'Pasta que o administrador liberou a esta conta, para navegar e baixar.':
+        'A folder the administrator granted to this account, to browse and download.',
+    'Pasta que o administrador liberou a esta conta, para navegar, baixar e criar pasta.':
+        'A folder the administrator granted to this account, to browse, download and create folders.',
+    'Pasta que o administrador liberou a esta conta, para navegar, baixar e organizar.':
+        'A folder the administrator granted to this account, to browse, download and organize.',
+    'Aqui você navega e baixa. Nesta pasta a permissão desta conta é de leitura: ela não cria, não envia,'
+    ' não renomeia e não apaga nada. Todo download fica registrado.':
+        'Here you browse and download. In this folder this account has read-only permission: it does not '
+        'create, upload, rename or delete anything. Every download is recorded.',
+    'Aqui você navega, baixa e cria pasta. Nesta pasta a permissão desta conta é de envio: o que já está '
+    'nela não é renomeado nem apagado por ela. Todo download e toda pasta criada ficam registrados.':
+        'Here you browse, download and create folders. In this folder this account has upload permission: '
+        'what is already in it is not renamed or deleted by it. Every download and every folder created is '
+        'recorded.',
+    'Esta conta não envia arquivo para esta pasta: o envio por aqui depende de uma permissão que o '
+    'administrador dá a cada conta.':
+        'This account does not upload files to this folder: uploading here depends on a permission the '
+        'administrator gives to each account.',
+    'Pasta <code>{pasta}</code>, liberada a esta conta pelo administrador: ela abre só aqui no painel, '
+    'não por FTP, e outras contas podem ter acesso a ela.':
+        'Folder <code>{pasta}</code>, granted to this account by the administrator: it opens only here in the'
+        ' panel, not over FTP, and other accounts may have access to it.',
     'uma conta do FTP':
         'an FTP account',
     'A pasta <strong>{nome}</strong> não é renomeada por aqui: ela, ou uma pasta dentro dela, está '
@@ -237,6 +264,81 @@ EN = {
         '{de_quem} in Other folders.',
     'Para retirar a pasta de um usuário, use <strong>Usuários ➜ Editar ➜ Outras pastas</strong>.':
         'To take the folder away from a user, use <strong>Users ➜ Edit ➜ Other folders</strong>.',
+    'Outras pastas':
+        'Other folders',
+    'Pasta liberada no painel a: <strong>{contas}</strong>.':
+        'Folder granted in the panel to: <strong>{contas}</strong>.',
+    'Outra pasta liberada a usuário':
+        'Other folder granted to a user',
+    'Outra pasta retirada de usuário':
+        'Other folder taken away from a user',
+    'Pasta liberada. Vale no próximo pedido do usuário no painel.':
+        "Folder granted. It applies on the user's next request in the panel.",
+    'Permissão trocada. Vale no próximo pedido do usuário no painel.':
+        "Permission changed. It applies on the user's next request in the panel.",
+    'Pasta retirada do usuário. Os arquivos continuam nela.':
+        'Folder taken away from the user. The files stay in it.',
+    'navega e baixa':
+        'browses and downloads',
+    'navega, baixa e cria pasta; envia arquivo se a conta tem a permissão de envio pelo painel':
+        'browses, downloads and creates folders; uploads files if the account has the permission to upload '
+        'through the panel',
+    'faz o mesmo do Envio e ainda troca o nome e apaga, com a senha da conta':
+        'does the same as Upload and also renames and deletes, with the account password',
+    'Nenhuma: este usuário só alcança a pasta do cadastro.':
+        "None: this user only reaches the user's own folder.",
+    'Além da pasta do cadastro, que continua só dele, este usuário abre no painel as pastas abaixo, cada '
+    'uma com a permissão dada aqui. Por FTP ele continua entrando só na pasta do cadastro.':
+        "Besides the user's own folder, which stays private, this user opens in the panel the folders below, "
+        "each with the permission given here. Over FTP the user still enters only the user's own folder.",
+    'Permissão':
+        'Permission',
+    'Quem mais alcança':
+        'Who else reaches it',
+    'nenhuma outra conta':
+        'no other account',
+    'Retirar':
+        'Take away',
+    'A pasta <code>{pasta}</code> é a pasta de <strong>{donos}</strong>, contém a pasta ou fica dentro '
+    'dela: por ela, este usuário alcança arquivos dessa conta.':
+        'The folder <code>{pasta}</code> is the folder of <strong>{donos}</strong>, contains that folder or '
+        'is inside it: through it, this user reaches files of that account.',
+    'Pasta a liberar':
+        'Folder to grant',
+    'O que este usuário pode fazer nela':
+        'What this user can do in it',
+    'A mesma pasta pode ser liberada a vários usuários, e cada um fica com a permissão dele. Liberar de '
+    'novo uma pasta da lista troca a permissão. Liberar, trocar e retirar valem no próximo pedido do '
+    'usuário, sem ele sair do painel. Até {maximo} pastas por usuário; a troca para o perfil Só envio '
+    'retira todas.':
+        'The same folder can be granted to several users, and each one keeps its own permission. Granting '
+        'again a folder from the list changes the permission. Granting, changing and taking away apply on the'
+        " user's next request, without signing out of the panel. Up to {maximo} folders per user; changing to"
+        ' the Upload only profile takes all of them away.',
+    'Se a pasta for a de outro usuário, contiver a pasta dele ou ficar dentro dela, este usuário passa a '
+    'alcançar arquivos dele; depois de gravar, a lista mostra quem mais alcança cada pasta.':
+        "If the folder is another user's folder, contains it or is inside it, this user starts reaching that "
+        "user's files; after saving, the list shows who else reaches each folder.",
+    'Liberar pasta':
+        'Grant folder',
+    'Liberada no painel, inteira ou em parte, a: <strong>{contas}</strong>.':
+        'Granted in the panel, whole or in part, to: <strong>{contas}</strong>.',
+    'Não se aplica ao perfil Só envio: a conta não lista nem baixa nada, e as outras pastas são de '
+    'navegar.':
+        'Does not apply to the Upload only profile: the account does not list or download anything, and the '
+        'other folders are for browsing.',
+    'Esta pasta não está liberada a este usuário.':
+        'This folder is not granted to this user.',
+    'Permissão inválida.':
+        'Invalid permission.',
+    'O perfil Só envio não recebe outras pastas.':
+        'The Upload only profile does not receive other folders.',
+    'Esta já é a pasta do usuário: ele a alcança sem liberação.':
+        "This is already the user's folder: it is reached without a grant.",
+    'O usuário já tem esta pasta com esta permissão.':
+        'The user already has this folder with this permission.',
+    'Limite atingido: o usuário já tem {maximo} outras pastas.':
+        'Limit reached: the user already has {maximo} other folders.',
     'O que está dentro dela pode ser renomeado e apagado item por item.':
         'What is inside it can be renamed and deleted item by item.',
     'O item continua na mesma pasta: o painel não move de uma pasta para outra. O equipamento que '
