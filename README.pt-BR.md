@@ -27,7 +27,7 @@ Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsaf
 
 <a href="doc/pt-BR/imagens/painel-principal.png"><img src="doc/pt-BR/imagens/painel-principal.png" alt="Aba Visão geral com o menu à esquerda, em dois grupos, a faixa Servidor FTP, que diz No ar e TLS obrigatório no login, as quatro medidas Usuários, Espaço usado, Último envio e Certificado do FTP, cada uma com o atalho para o detalhe, o cartão Servidor e containers, com o processador e a memória do servidor e dos containers, os gráficos Arquivos recebidos por dia, Último envio por usuário e Espaço por pasta, o cartão Atividade recente, com os seis últimos registros, e o cartão Dados para configurar o equipamento" width="100%"></a>
 
-<sub><b>v1.9.0</b> · painel web, aba Visão geral · captura de 2026-10-12</sub>
+<sub><b>v1.14.0</b> · painel web, aba Visão geral · captura de 2026-10-13</sub>
 
 <!-- diagrama: doc/pt-BR/diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -138,7 +138,7 @@ O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página,
 | <a href="doc/pt-BR/imagens/aba-meus-arquivos.png"><img src="doc/pt-BR/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, de perfil Completo, com as pastas 2026-09 e 2026-10 e um arquivo de configuração, o aviso da limpeza automática acima da lista, os botões Abrir ou Baixar, Renomear e Apagar em cada linha, os cartões Nova pasta e Enviar arquivo e, no menu, só a aba Meus arquivos, os botões PT, EN e ES, o nome do usuário e o botão Sair" width="100%"></a> | |
 | **Meus arquivos** — o usuário do FTP vê a própria pasta e faz nela o que o perfil dele deixa | |
 
-<sub><b>v1.9.0</b> · painel web, uma foto por aba · capturas de 2026-10-12</sub>
+<sub><b>v1.14.0</b> · painel web, uma foto por aba · capturas de 2026-10-13</sub>
 
 Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplicação](doc/pt-BR/aplicacao/README.md).
 

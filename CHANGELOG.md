@@ -32,6 +32,7 @@ Dois ajustes de tela pedidos pelo uso: a tela Editar usuário passa a acompanhar
 
 - **Formulários de arquivo lado a lado**: nas telas Arquivos, Meus arquivos e Pasta liberada, os cartões **Enviar arquivo** e **Nova pasta** ficam um ao lado do outro, na mesma altura, a partir de 748 px de largura; em tela mais estreita, um embaixo do outro.
 - **Cartões Outras pastas e Bloqueios da tela Editar**: passam a ter a largura dos outros cartões, e as listas deles ficam em blocos em qualquer largura, com o rótulo de cada dado.
+- **Fotos**: as da aplicação foram refeitas, nos três idiomas.
 
 ### Corrigido
 

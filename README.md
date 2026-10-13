@@ -27,7 +27,7 @@ Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf
 
 <a href="doc/en/images/painel-principal.png"><img src="doc/en/images/painel-principal.png" alt="Overview tab with the menu on the left, in two groups, the FTP server band, which says Up and TLS required on sign-in, the four measurements Users, Space used, Last upload and FTP certificate, each with the shortcut to the detail, the Server and containers card, with the CPU and the memory of the server and of the containers, the charts Files received per day, Last upload per user and Space per folder, the Recent activity card, with the last six records, and the Details to set up the device card" width="100%"></a>
 
-<sub><b>v1.9.0</b> · web panel, Overview tab · captured on 2026-10-12</sub>
+<sub><b>v1.14.0</b> · web panel, Overview tab · captured on 2026-10-13</sub>
 
 <!-- diagrama: doc/en/diagrams/overview-diagram.mmd -->
 ```mermaid
@@ -137,7 +137,7 @@ The web panel, tab by tab. The Overview tab is the image at the top of this page
 | <a href="doc/en/images/aba-meus-arquivos.png"><img src="doc/en/images/aba-meus-arquivos.png" alt="My files screen of the user olt-centro, with the Full profile, with the folders 2026-09 and 2026-10 and a configuration file, the automatic cleanup warning above the list, the Open or Download, Rename and Delete buttons on each row, the New folder and Upload file cards and, in the menu, only the My files tab, the PT, EN and ES buttons, the name of the user and the Sign out button" width="100%"></a> | |
 | **My files** — the FTP user sees their own folder and does in it what their profile allows | |
 
-<sub><b>v1.9.0</b> · web panel, one screenshot per tab · captured on 2026-10-12</sub>
+<sub><b>v1.14.0</b> · web panel, one screenshot per tab · captured on 2026-10-13</sub>
 
 Every screen, menu by menu, with the explanation of each one: [application screenshots](doc/en/application/README.md).
 
