@@ -7,6 +7,7 @@ usage() {
   echo "     $0 perfil <usuario> [completo|envio|soenvio|leitura]" >&2
   echo "     $0 limites <usuario> [sessoes=N] [download=KB] [envio=KB] [horario=HHMM-HHMM] [baixar=N] [tentativas=N] [minutos=N] [enviar=1]" >&2
   echo "     $0 retencao <usuario> [ultimos=N] [dias=N]" >&2
+  echo "     $0 outras <usuario> [<pasta> leitura|envio|completo|nenhuma]" >&2
   echo "     $0 bloqueios [usuario]" >&2
   echo "     $0 desbloquear <usuario> [origem]" >&2
   echo "     $0 enderecos" >&2
@@ -38,6 +39,12 @@ lista_tls=/auth/sem-tls.lista
 # Limites por usuário que não são do cadastro do Pure-FTPd: uma linha por usuário, `nome chave=valor ...`.
 # `baixar` é lido e aplicado pelo painel; `tentativas` e `minutos`, pelo vigia do FTP.
 lista_limites=/auth/limites.lista
+# Outras pastas do usuário, além da do cadastro: uma linha por usuário, `nome pasta=permissao ...`, com a
+# permissão de cada pasta (leitura, envio ou completo). Valem só no painel web, que lê a lista a cada pedido e
+# aplica a permissão; o FTP não as conhece: a sessão continua presa à pasta do cadastro.
+lista_pastas=/auth/pastas.lista
+pastas_max=20
+regra_outra='^[A-Za-z0-9_][A-Za-z0-9._-]{0,63}(/[A-Za-z0-9_][A-Za-z0-9._-]{0,63}){0,3}=(leitura|envio|completo)$'
 # Bloqueios por tentativa: um arquivo por usuário e endereço, `<usuario>@<origem>`, com `<vale até> <desde>
 # <senhas erradas>`. Quem grava é o vigia do FTP e quem aplica é o porteiro; apagar o arquivo desbloqueia.
 pasta_bloqueios=/auth/bloqueios
@@ -69,7 +76,7 @@ gravar_marca() { # <arquivo>: grava o nome do usuário inicial, só para o root
   ( umask 077; printf '%s\n' "$inicial" > "$1.novo" )
   mv -f "$1.novo" "$1"
 }
-[[ $# -le 2 || "$action" == add || "$action" == pasta || "$action" == perfil || "$action" == limites || "$action" == retencao || "$action" == desbloquear || "$action" == endereco-bloquear ]] || usage
+[[ $# -le 2 || "$action" == add || "$action" == pasta || "$action" == perfil || "$action" == limites || "$action" == retencao || "$action" == outras || "$action" == desbloquear || "$action" == endereco-bloquear ]] || usage
 perfil_invalido() { echo "Perfil invalido: use completo, envio, soenvio ou leitura" >&2; exit 1; }
 pasta_invalida() {
   echo "Pasta invalida: ate 4 niveis separados por /; letras, numeros, _ - e ponto; nenhum nivel comeca com ponto" >&2
@@ -227,6 +234,72 @@ gravar_limite() {
     (( ${#pares[@]} == 0 )) || printf '%s %s\n' "$user" "${pares[*]}" >> "$novo"
   fi
   mv -f "$novo" "$lista_limites"
+}
+
+# Cria a outra pasta como preparar_pasta. O nível criado dentro de uma pasta que já existia fica com o modo
+# dela, como a pasta criada pelo painel: quem alcança a de cima por FTP alcança a nova do mesmo jeito.
+preparar_outra() {
+  local nivel atual=/data
+  local -a niveis novos=()
+  IFS=/ read -r -a niveis <<< "$1"
+  for nivel in "${niveis[@]}"; do
+    atual+="/$nivel"
+    [[ -e "$atual" || -L "$atual" ]] || novos+=("$atual")
+  done
+  preparar_pasta "$1"
+  for atual in "${novos[@]}"; do
+    [[ "${atual%/*}" == /data ]] || chmod --reference="${atual%/*}" "$atual"
+  done
+}
+
+# Grava uma outra pasta do usuário, com a permissão; a permissão "nenhuma" tira a pasta, e sem pasta o usuário
+# sai da lista. Vai para um arquivo ao lado e troca de nome, para o painel nunca ler a lista pela metade.
+gravar_outras() {
+  local alvo="${1:-}" permissao="${2:-}" nome resto par dele=""
+  local novo="$lista_pastas.novo"
+  local -a pares=() antes=()
+  : > "$novo"
+  chmod 0600 "$novo"
+  if [[ -f "$lista_pastas" ]]; then
+    while read -r nome resto; do
+      [[ "$nome" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || continue
+      if [[ "$nome" == "$user" ]]; then
+        dele="$resto"
+      elif pasta_de "$nome" > /dev/null; then  # conta que saiu do cadastro sai da lista
+        printf '%s %s\n' "$nome" "$resto" >> "$novo"
+      fi
+    done < "$lista_pastas"
+  fi
+  if [[ -n "$alvo" ]]; then
+    read -r -a antes <<< "$dele"
+    for par in "${antes[@]}"; do
+      if [[ "$par" =~ $regra_outra && "${par%=*}" != "$alvo" ]]; then pares+=("$par"); fi
+    done
+    if [[ "$permissao" != nenhuma ]]; then
+      if (( ${#pares[@]} >= pastas_max )); then
+        rm -f "$novo"
+        echo "Limite atingido: o usuario $user ja tem $pastas_max outras pastas" >&2; exit 1
+      fi
+      preparar_outra "$alvo"
+      pares+=("$alvo=$permissao")
+    fi
+    (( ${#pares[@]} == 0 )) || printf '%s %s\n' "$user" "$(printf '%s\n' "${pares[@]}" | sort | tr '\n' ' ' | sed 's/ $//')" >> "$novo"
+  fi
+  mv -f "$novo" "$lista_pastas"
+}
+
+# Outras pastas do usuário, uma por linha: `pasta permissao`.
+mostrar_outras() {
+  local nome resto par
+  local -a pares=()
+  [[ -f "$lista_pastas" ]] || return 0
+  while read -r nome resto; do
+    [[ "$nome" == "$user" ]] || continue
+    read -r -a pares <<< "$resto"
+    for par in "${pares[@]}"; do
+      [[ ! "$par" =~ $regra_outra ]] || printf '%s %s\n' "${par%=*}" "${par##*=}"
+    done
+  done < "$lista_pastas"
 }
 
 # Limites do usuário, uma chave por linha; valor vazio quer dizer sem limite próprio: vale o da stack.
@@ -436,6 +509,11 @@ case "$action" in
     ajustar_pastas
     [[ "$anterior" != soenvio || "$perfil" == soenvio ]] || retirar_entrada "$user" "$casa"
     echo "Perfil do usuario $user: $perfil. Vale na proxima entrada no FTP."
+    # O perfil só envio não lista nem baixa: as outras pastas, que são de navegar, saem com a troca.
+    if [[ "$perfil" == soenvio && -n "$(mostrar_outras)" ]]; then
+      gravar_outras
+      echo "Outras pastas do usuario $user retiradas: o perfil soenvio nao as tem."
+    fi
     ;;
   ajustar)
     # Uso da partida do serviço ftp, antes de o servidor aceitar sessão: refaz o modo das pastas pelos perfis
@@ -478,6 +556,10 @@ case "$action" in
     ajustar_pastas "$anterior"
     avisar_divisao
     echo "Pasta do usuario $user: /data/$pasta. Os arquivos de ${anterior:-/data/$user} continuam la."
+    # A pasta do cadastro não é "outra pasta": se estava liberada ao usuário, a concessão sai.
+    while read -r outra _; do
+      [[ "$outra" != "$pasta" ]] || { gravar_outras "$pasta" nenhuma; break; }
+    done < <(mostrar_outras)
     # A limpeza automática foi ligada olhando a pasta anterior: na pasta nova ela só vale se for ligada de novo.
     if [[ "$(mostrar_retencao)" != $'ultimos=\ndias=' ]]; then
       gravar_limite ultimos ""
@@ -499,11 +581,45 @@ case "$action" in
     gravar_banco
     [[ -z "$casa" ]] || ajustar_pastas "$casa"
     [[ "$anterior" != soenvio || -z "$casa" ]] || retirar_entrada "$user" "${casa#/data/}"
-    # Um usuário novo com o mesmo nome não herda a dispensa do TLS, os limites nem os bloqueios.
+    # Um usuário novo com o mesmo nome não herda a dispensa do TLS, os limites, as outras pastas nem os bloqueios.
     [[ ! -f "$lista_tls" ]] || gravar_lista_tls exigir
     [[ ! -f "$lista_limites" ]] || gravar_limite ""
+    [[ ! -f "$lista_pastas" ]] || gravar_outras
     tirar_bloqueios > /dev/null
     echo "Usuario removido; os dados em ${casa:-/data/$user} foram preservados."
+    ;;
+  outras)
+    # Outras pastas do usuário, além da do cadastro, cada uma com a permissão dela. Valem só no painel web.
+    # Sem a pasta, mostra as que ele tem. Com a pasta e a permissão, concede ou troca; "nenhuma" retira.
+    # A pasta que não existe é criada; os arquivos de uma pasta retirada continuam nela.
+    [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || usage
+    [[ $# -eq 2 || $# -eq 4 ]] || usage
+    if [[ $# -eq 2 ]]; then
+      { [[ -f "$passwd_file" ]] && pasta_de "$user" > /dev/null; } || { echo "Usuario nao existe: $user" >&2; exit 1; }
+      mostrar_outras
+      exit 0
+    fi
+    permissao="$4"
+    [[ "$pasta" =~ $regra_pasta ]] || pasta_invalida
+    [[ "$permissao" =~ ^(leitura|envio|completo|nenhuma)$ ]] || {
+      echo "Permissao invalida: use leitura, envio, completo ou nenhuma" >&2; exit 1; }
+    travar
+    if ! { [[ -f "$passwd_file" ]] && casa="$(pasta_de "$user")"; }; then
+      echo "Usuario nao existe: $user" >&2; exit 1
+    fi
+    if [[ "$permissao" == nenhuma ]]; then
+      gravar_outras "$pasta" nenhuma
+      echo "Pasta /data/$pasta retirada do usuario $user. Os arquivos continuam la."
+      exit 0
+    fi
+    if [[ "$(perfil_de "$user")" == soenvio ]]; then
+      echo "Pasta recusada: usuario de perfil soenvio nao recebe outras pastas" >&2; exit 1
+    fi
+    if [[ "/data/$pasta" == "$casa" ]]; then
+      echo "Pasta recusada: /data/$pasta ja e a pasta do usuario $user" >&2; exit 1
+    fi
+    gravar_outras "$pasta" "$permissao"
+    echo "Pasta /data/$pasta liberada ao usuario $user no painel web: $permissao."
     ;;
   tls-dispensar|tls-exigir)
     [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || usage

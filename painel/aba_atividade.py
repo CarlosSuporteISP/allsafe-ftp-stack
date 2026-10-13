@@ -20,6 +20,8 @@ EVENTOS = {
     'usuario_criado': ('usuario', N('Usuário criado')),
     'senha_trocada': ('chave', N('Senha trocada')),
     'pasta_trocada': ('pasta', N('Pasta do usuário trocada')),
+    'pasta_liberada': ('pasta', N('Outra pasta liberada a usuário')),
+    'pasta_retirada': ('pasta', N('Outra pasta retirada de usuário')),
     'perfil_trocado': ('usuario', N('Perfil do usuário trocado')),
     'limites_alterados': ('relogio', N('Limites do usuário alterados')),
     'retencao_alterada': ('relogio', N('Limpeza automática do usuário alterada')),
@@ -75,6 +77,7 @@ EVENTOS = {
     'recusa_endereco': ('bloqueio', N('Pedido de endereço bloqueado')),
     'recusa_caminho': ('bloqueio', N('Caminho de arquivo recusado')),
     'recusa_papel': ('bloqueio', N('Tela fora do papel ou do perfil pedida por usuário do FTP')),
+    'recusa_pasta': ('bloqueio', N('Pasta não liberada pedida por usuário do FTP')),
 }
 
 

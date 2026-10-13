@@ -17,6 +17,7 @@ import conta_ftp
 import entrada
 import envio
 import idioma
+import pastas
 from auditoria import auditar, limpo
 from config import (BLOCO_ARQUIVO, CFG, CONEXOES_MAX, CORPO_MAX, CORPO_REMOTO_MAX, ENVIO_FOLGA, ESCOAR_MAX, ESCOAR_PRAZO, GID_NGINX, TEMPO_CONEXAO,
                     VALIDADE_CONTATO, privado)
@@ -27,6 +28,8 @@ from pagina import e, pagina, tamanho
 from rotas import ROTAS, ROTAS_DE_ENVIO, ROTAS_LONGAS, ROTAS_USUARIO
 from sessao import buscar_sessao, encerrar_sessao, trocar_idioma
 
+# Outra pasta liberada a um usuário do FTP: /pastas/<identificador>, com a mesma ação que viria depois de /meus-arquivos.
+AREA = re.compile(r'/pastas/([0-9a-f]{16})(/[a-z]+)?')
 CABECALHOS = (
     ('Content-Security-Policy', "default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; "
                                 "frame-ancestors 'none'; base-uri 'none'"),
@@ -287,6 +290,27 @@ class Painel(http.server.BaseHTTPRequestHandler):
             return
         corpo.escoar(ESCOAR_PRAZO, ESCOAR_MAX)
 
+    # ------------------------------------------------------------ papel e pasta de cada pedido
+
+    def rota_do_pedido(self, sessao, metodo, caminho):
+        """(função que responde, sessão que ela recebe); a função é None quando o caminho não existe para quem pede.
+        Cada papel tem a tabela dele: para o usuário do FTP, as telas de administração não existem, nem as ações
+        que o perfil dele não tem. Em /pastas/<identificador>, outra pasta que o administrador liberou a ele, a
+        liberação é lida da lista neste pedido, pelo usuário da sessão, e as ações são as do perfil de mesmo nome da
+        permissão, presas àquela pasta: a função recebe a sessão com a pasta e a permissão no lugar das do
+        cadastro. O que chega no endereço só escolhe entre as pastas que ele já tem."""
+        if not sessao['usuario']:
+            return ROTAS.get((metodo, caminho)), sessao
+        area = AREA.fullmatch(caminho)
+        if not area:
+            return ROTAS_USUARIO[sessao['perfil']].get((metodo, caminho)), sessao
+        liberada = pastas.da_area(sessao['usuario'], area.group(1))
+        if liberada is None:
+            return None, sessao
+        pasta, permissao = liberada
+        return (ROTAS_USUARIO[permissao].get((metodo, '/meus-arquivos' + (area.group(2) or ''))),
+                dict(sessao, pasta=pasta, perfil=permissao, area=area.group(1)))
+
     # ------------------------------------------------------------ idioma das telas
 
     def tela_de_origem(self, sessao):
@@ -298,7 +322,7 @@ class Painel(http.server.BaseHTTPRequestHandler):
             consulta = [(n, v) for n, v in urllib.parse.parse_qsl(url.query, max_num_fields=5) if n != 'm']
         except ValueError:
             return '/'
-        if ('GET', url.path) not in (ROTAS_USUARIO[sessao['perfil']] if sessao['usuario'] else ROTAS):
+        if self.rota_do_pedido(sessao, 'GET', url.path)[0] is None:
             return '/'
         return url.path + ('?' + urllib.parse.urlencode(consulta) if consulta else '')
 
@@ -367,7 +391,9 @@ class Painel(http.server.BaseHTTPRequestHandler):
         formulario = {}
         self.corpo = None
         if metodo == 'POST':
-            formulario = (self.ler_envio() if self.caminho in ROTAS_DE_ENVIO else
+            area = AREA.fullmatch(self.caminho)
+            de_envio = ('/meus-arquivos' + (area.group(2) or '') if area else self.caminho) in ROTAS_DE_ENVIO
+            formulario = (self.ler_envio() if de_envio else
                           self.ler_formulario(CORPO_REMOTO_MAX, 24) if self.caminho in ROTAS_LONGAS else self.ler_formulario())
             if formulario is None:
                 return None
@@ -404,13 +430,18 @@ class Painel(http.server.BaseHTTPRequestHandler):
         if metodo == 'POST' and self.caminho == '/idioma':
             return self.escolher_idioma(sessao, formulario)
 
-        # Cada papel tem a tabela dele: para o usuário do FTP, as telas de administração não existem, nem as ações
-        # que o perfil dele não tem.
-        rota = (ROTAS_USUARIO[sessao['perfil']] if sessao['usuario'] else ROTAS).get((metodo, self.caminho))
+        rota, vista = self.rota_do_pedido(sessao, metodo, self.caminho)
         if rota is None:
-            if sessao['usuario'] and ((metodo, self.caminho) in ROTAS or (metodo, self.caminho) in ROTAS_USUARIO['completo']):
+            if sessao['usuario'] and AREA.fullmatch(self.caminho):
+                # Pasta que não está liberada a ele, ou ação que a permissão dele naquela pasta não tem.
+                if vista is sessao:
+                    auditar(self.ip, 'recusa_pasta', f'usuario={sessao["usuario"]} caminho={limpo(self.caminho)}')
+                else:
+                    auditar(self.ip, 'recusa_papel', f'usuario={sessao["usuario"]} caminho={limpo(self.caminho)} '
+                                                     f'perfil={vista["perfil"]}')
+            elif sessao['usuario'] and ((metodo, self.caminho) in ROTAS or (metodo, self.caminho) in ROTAS_USUARIO['completo']):
                 auditar(self.ip, 'recusa_papel', f'usuario={sessao["usuario"]} caminho={limpo(self.caminho)} '
                                                  f'perfil={sessao["perfil"]}')
             return self.enviar(404, pagina(t('Não encontrado'), f'<section class="cartao"><h1>{t("Página não encontrada")}</h1>'
                                            f'<p><a href="/">{t("Voltar ao painel")}</a></p></section>', sessao))
-        return rota(self, sessao, consulta, formulario, token)
+        return rota(self, vista, consulta, formulario, token)

@@ -5,6 +5,7 @@ import re
 import time
 
 import idioma
+import pastas
 from cena import miniatura
 from config import CFG, SESSAO_ABSOLUTA
 from estado import dias_restantes, sem_tls
@@ -20,6 +21,7 @@ ABAS_SOENVIO = (('/meus-arquivos', 'envio', N('Envio de arquivos')),)   # perfil
 GRUPOS = ((N('Operação'), ABAS[:4]), (N('Sistema'), ABAS[4:]))
 # Título da aba, em português ➜ ícone dela no menu: é o mesmo que abre a faixa de cabeçalho da tela.
 DESENHO_DA_ABA = {rotulo: desenho for _, desenho, rotulo in ABAS + ABAS_USUARIO + ABAS_SOENVIO}
+DESENHO_DA_ABA['Pasta liberada'] = 'pasta'   # cada pasta que o administrador liberou ao usuário do FTP (/pastas/<identificador>)
 # Estado de um item conferido ➜ (ícone, o que o leitor de tela diz). A cor acompanha, mas nunca é o único sinal.
 ESTADOS = {'bom': ('ok', N('em ordem')), 'atencao': ('alerta', N('atenção')), 'ruim': ('erro', N('problema')),
            'neutro': ('neutro', N('não se aplica')), 'manual': ('muro', N('conferir no servidor'))}
@@ -180,6 +182,13 @@ def menu_lateral(sessao, ativa):
                      ) if caminho == '/seguranca' and publicado() else ''
             links += (f'<a href="{caminho}"' + (' class="ativa" aria-current="page"' if caminho == ativa else '')
                       + f'>{icone(desenho)}{t(rotulo)}{sinal}</a>')
+    # As pastas que o administrador liberou ao usuário do FTP, lidas da lista a cada tela: a retirada some daqui na hora.
+    liberadas = {} if admin else pastas.do_usuario(sessao['usuario'])
+    links += f'<span class="grupo">{t("Pastas liberadas")}</span>' if liberadas else ''
+    for pasta in sorted(liberadas):
+        caminho = '/pastas/' + pastas.identificador(pasta)
+        links += (f'<a href="{caminho}" title="{e(pasta)}"' + (' class="ativa" aria-current="page"' if caminho == ativa else '')
+                  + f'>{icone("pasta")}<span class="nome-pasta">{e(pasta.rsplit("/", 1)[-1])}</span></a>')
     nome, papel = (sessao['admin'], t('Administrador')) if admin else (sessao['usuario'], t('Usuário do FTP'))
     return (f'<nav aria-label="{t("Abas do painel")}">{links}</nav>{troca_de_idioma("csrf", sessao["csrf"])}'
             '<form class="sair" method="post" action="/sair">'

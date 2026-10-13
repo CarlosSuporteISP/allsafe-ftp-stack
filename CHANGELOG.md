@@ -6,6 +6,29 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.13.0] - 2026-10-13
+
+O administrador passa a liberar a um usuário do FTP outras pastas no painel web, além da pasta do cadastro, cada uma com a permissão dela. Serve para a pasta comum a vários usuários e para a conta que consulta a pasta de outra sem poder alterá-la. A pasta do cadastro continua privada, e o FTP não muda.
+
+### Adicionado
+
+- **Cartão Outras pastas**, na tela **Editar** do usuário: o administrador libera uma pasta com a permissão Leitura, Envio ou Completo, troca a permissão e retira. A lista mostra, para cada pasta, quem mais a alcança, e o cartão avisa quando a pasta é a de outro usuário, contém a pasta dele ou fica dentro dela.
+- **Tela Pasta liberada**, do usuário do FTP: cada pasta liberada ganha uma entrada no menu, no grupo **Pastas liberadas**, e abre como a Meus arquivos, com o que a permissão dada naquela pasta deixa fazer. A tela não diz quais outras contas alcançam a pasta.
+- **Permissão por pasta, e não pelo perfil**: Leitura navega e baixa; Envio também cria pasta e, com a permissão de envio pelo painel, envia arquivo; Completo também troca o nome e apaga, com a senha do FTP da conta. O perfil continua valendo na pasta do cadastro e no FTP.
+- **Conferência a cada pedido**: o painel relê a lista e procura a pasta só entre as do usuário da sessão; liberar, trocar e retirar valem no pedido seguinte, sem encerrar a sessão. Pasta que não foi liberada, pedida direto pelo endereço, responde `404`, com o evento `recusa_pasta`.
+- **`./manage-user.sh outras <usuario> [<pasta> leitura|envio|completo|nenhuma]`**: mostra, libera, troca e retira pelo terminal, com as mesmas conferências do painel.
+- **Lista `/auth/pastas.lista`**, em `DATA_DIR/auth`, com modo `0600`: uma linha por usuário, gravada só pelo `allsafe-ftp-user`. Entra na cópia do `backup.sh` com o resto do cadastro.
+- **Regras da liberação**: até 20 outras pastas por usuário; a pasta do próprio cadastro não entra; o perfil Só envio não recebe, e a troca para esse perfil retira todas; remover o usuário retira as pastas dele; pasta liberada a alguém não tem o nome trocado nem é apagada pelo painel enquanto a liberação existir.
+- **Eventos do Log**: `pasta_liberada`, `pasta_retirada` e `recusa_pasta`.
+- **Etapa 39 da bateria**: onze casos das outras pastas, três funcionais, seis de segurança e dois de rede. A bateria passa a 111 casos funcionais, 161 de segurança e 19 de rede.
+- **Documentação nos três idiomas**: seção Outras pastas no guia do painel, as duas telas novas no guia de fotos, o comando no guia de scripts e os casos novos no guia de segurança.
+
+### Alterado
+
+- **Remoção de usuário com a pasta junto**: recusada também quando outro usuário alcança a pasta por liberação no painel, e não só pelo cadastro.
+- **Aba Arquivos**: mostra a quem cada pasta está liberada e não troca o nome nem apaga a pasta liberada, nem a que tem uma liberada dentro.
+- **nginx**: a rota de envio da pasta liberada aceita corpo grande, como as outras rotas de envio; o resto de `/pastas/` fica no limite dos formulários.
+
 ## [1.12.0] - 2026-10-13
 
 O FTP e o painel passam a atender também por IPv6, por opção de quem instala. Fica desligado por padrão, e nada muda para quem não liga.

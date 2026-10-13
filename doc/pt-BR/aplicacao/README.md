@@ -10,7 +10,7 @@
 
 Todas as telas do painel web, menu por menu, com a foto de cada uma e a explicação do que dá para fazer nela. As fotos são capturas reais da versão **1.8.0**, em tema escuro e em português, com usuários de exemplo, como `olt-centro`, `switch-core` e `roteador-borda`. O painel acompanha o tema claro ou escuro do sistema e também abre em inglês e em espanhol: veja [Idioma](#idioma). Clique em qualquer foto para abri-la em tamanho real.
 
-O painel tem uma tela de entrada, oito abas para quem administra (Visão geral, Usuários, Arquivos, Destinos, Servidor, Segurança, Bloqueios e Log) e uma tela para o usuário do FTP, que muda com o perfil da conta: Meus arquivos ou Envio de arquivos. Os administradores ficam na aba Usuários, junto com as contas do FTP. Como abrir, criar administradores e o que protege o painel está em [Painel web](../painel.md).
+O painel tem uma tela de entrada, oito abas para quem administra (Visão geral, Usuários, Arquivos, Destinos, Servidor, Segurança, Bloqueios e Log) e uma tela para o usuário do FTP, que muda com o perfil da conta: Meus arquivos ou Envio de arquivos. As pastas que o administrador liberou a mais para a conta abrem na tela Pasta liberada. Os administradores ficam na aba Usuários, junto com as contas do FTP. Como abrir, criar administradores e o que protege o painel está em [Painel web](../painel.md).
 
 > 🧱 **Uso só em rede privada:** por padrão, o painel abre apenas em IP privado, atrás de firewall, fora da internet. Veja [Segurança](../seguranca.md#rede-privada).
 
@@ -248,6 +248,8 @@ O perfil decide o que a conta faz, no FTP e no painel:
 
 A permissão de enviar arquivo pelo painel é dada usuário por usuário, no cartão **Limites** da tela **Editar**: veja [Usuários ➜ Limites](#usuarios). Sem ela, a conta só envia por FTP.
 
+O perfil vale na pasta do cadastro e no FTP. Nas outras pastas que o administrador libera à conta, só no painel, vale a permissão dada em cada uma: veja [Usuários ➜ Outras pastas](#usuarios).
+
 A tela de cada perfil está em [Meus arquivos](#meus-arquivos); as regras, a pasta dividida e o que muda na troca, em [Painel web](../painel.md#perfis).
 
 <details>
@@ -315,9 +317,9 @@ Aparece quando os dois campos de senha ficam em branco, no cadastro ou na troca 
 
 ### Usuários ➜ Editar
 
-<a href="imagens/usuarios-editar.png"><img src="imagens/usuarios-editar.png" alt="Tela Editar usuário de roteador-borda, com o cartão Perfil, que lista os quatro perfis do FTP, com o que cada um permite, e traz o botão Gravar perfil, o cartão Pasta, que mostra a pasta atual e o campo Pasta nova, o cartão TLS, que diz que o usuário só entra com TLS e traz o botão Dispensar TLS, o cartão Limites preenchido com sessões, taxas, horário, downloads pelo painel, senhas erradas até o bloqueio e minutos de bloqueio, com a caixa que permite o envio de arquivo pelo painel, e o cartão Limpeza automática, desligada" width="100%"></a>
+<a href="imagens/usuarios-editar.png"><img src="imagens/usuarios-editar.png" alt="Tela Editar usuário de roteador-borda, com o cartão Perfil, que lista os quatro perfis do FTP, com o que cada um permite, e traz o botão Gravar perfil, o cartão Pasta, que mostra a pasta atual, diz que ela está liberada no painel a olt-centro e traz o campo Pasta nova, o cartão Outras pastas, sem nenhuma pasta liberada, com o campo Pasta a liberar e as três permissões, o cartão TLS, que diz que o usuário só entra com TLS e traz o botão Dispensar TLS, o cartão Limites preenchido com sessões, taxas, horário, downloads pelo painel, senhas erradas até o bloqueio e minutos de bloqueio, com a caixa que permite o envio de arquivo pelo painel, e o cartão Limpeza automática, desligada, com o aviso de que a pasta também é alcançada por olt-centro" width="100%"></a>
 
-<sub><b>v1.9.0</b> · menu Usuários, tela Editar usuário · captura de 2026-10-12</sub>
+<sub><b>v1.13.0</b> · menu Usuários, tela Editar usuário · captura de 2026-10-13</sub>
 
 Reúne o que muda em um usuário sem criá-lo de novo. O nome não muda: é com ele que o equipamento entra no FTP.
 
@@ -327,6 +329,7 @@ Reúne o que muda em um usuário sem criá-lo de novo. O nome não muda: é com 
 | **Bloqueios** | Só aparece quando o FTP está recusando o usuário por senhas erradas demais: veja [Usuários ➜ Bloqueios](#usuarios) |
 | **Perfil** | Mostra o perfil da conta e troca por outro dos quatro do FTP |
 | **Pasta** | Mostra a pasta atual, com a quantidade de arquivos e o espaço ocupado, e troca a pasta do usuário |
+| **Outras pastas** | Libera ao usuário, só no painel, pastas além da do cadastro, cada uma com a permissão dela: veja [Usuários ➜ Outras pastas](#usuarios) |
 | **TLS** | Diz se o usuário entra com ou sem TLS e leva à confirmação da troca: veja [Usuários ➜ TLS por usuário](#usuarios) |
 | **Limites** | Grava os limites próprios do usuário e a permissão de enviar arquivo pelo painel: veja [Usuários ➜ Limites](#usuarios) |
 | **Limpeza automática** | Liga, muda e desliga a regra que apaga sozinha os arquivos antigos da pasta do usuário: veja [Usuários ➜ Limpeza automática](#usuarios) |
@@ -379,9 +382,36 @@ O cartão **Limites** da tela **Editar** vale só para aquele usuário, seja a c
 
 A permissão de envio vale na hora. O arquivo enviado pelo painel tem até o tamanho de `PAINEL_ENVIO_MAX_MB` (1024 MB, por padrão), segue a taxa de envio do usuário e nunca substitui um arquivo que já existe: veja [Meus arquivos ➜ Enviar arquivo](#meus-arquivos).
 
-Na foto da tela **Editar**, `roteador-borda` está com 2 sessões, 2048 KB por segundo de download, 1024 de envio, entrada das `22:00` às `06:00`, 1 download por vez pelo painel e bloqueio de 30 minutos na terceira senha errada.
+Na foto da tela **Editar**, `roteador-borda` está com 2 sessões, 2048 KB por segundo de download, 1024 de envio, entrada das `22:00` às `06:00`, 1 download por vez pelo painel e bloqueio de 30 minutos na terceira senha errada. A pasta dele aparece como liberada a `olt-centro`, que a consulta pelo painel: veja [Usuários ➜ Outras pastas](#usuarios).
 
 > ⚠️ **Taxa de envio e arquivo pequeno:** com a taxa de envio definida, o servidor segura cada arquivo enviado por cerca de `256 ÷ taxa` segundos. Para equipamento que manda muitos arquivos pequenos, use uma taxa alta ou deixe em branco. Os valores e o que cada limite muda para o usuário estão em [Painel web](../painel.md#limites).
+
+</details>
+
+<details>
+<summary>Usuários ➜ Outras pastas — clique para expandir</summary>
+
+### Usuários ➜ Outras pastas
+
+<a href="imagens/usuarios-outras-pastas.png"><img src="imagens/usuarios-outras-pastas.png" alt="Tela Editar usuário de olt-centro no cartão Outras pastas: o aviso Pasta liberada, a lista com comum/relatorios, de permissão Envio e alcançada também por consulta-filiais e nobreak-sala, e roteador-borda, de permissão Leitura, o alerta de que roteador-borda é a pasta de outro usuário, o campo Pasta a liberar, as permissões Leitura, Envio e Completo e o botão Liberar pasta" width="100%"></a>
+
+<sub><b>v1.13.0</b> · menu Usuários, cartão Outras pastas · captura de 2026-10-13</sub>
+
+Libera a um usuário pastas além da do cadastro, só no painel e cada uma com a permissão dela. A pasta do cadastro continua privada, e por FTP a conta continua entrando só nela.
+
+| Parte do cartão | O que mostra ou faz |
+|---|---|
+| Lista | Uma linha por pasta liberada: a pasta, a permissão, **Quem mais alcança** e o botão **Retirar** |
+| Alerta abaixo da lista | Aparece quando a pasta é a de outro usuário, contém a pasta dele ou fica dentro dela, e diz de quem é |
+| **Pasta a liberar** | A pasta, com a mesma regra da pasta do usuário; é criada se não existir |
+| **O que este usuário pode fazer nela** | Leitura: navega e baixa. Envio: também cria pasta e, com a permissão de envio pelo painel, envia arquivo. Completo: também troca o nome e apaga, com a senha da conta |
+| **Liberar pasta** | Grava. Liberar de novo uma pasta da lista troca a permissão dela |
+
+**Resultado esperado:** o cartão volta com `Pasta liberada. Vale no próximo pedido do usuário no painel.`; a troca de permissão, com `Permissão trocada. Vale no próximo pedido do usuário no painel.`; e **Retirar**, com `Pasta retirada do usuário. Os arquivos continuam nela.`
+
+Na foto, `olt-centro` abre no painel a pasta comum `comum/relatorios`, onde também envia, e consulta a pasta de `roteador-borda` sem poder alterá-la. A pasta comum é a mesma de `consulta-filiais` e `nobreak-sala`, que só leem.
+
+Até 20 pastas por usuário; o perfil Só envio não recebe nenhuma. As regras e o que acontece na remoção e na troca de perfil estão em [Painel web](../painel.md#outras-pastas); o que o usuário vê, em [Meus arquivos ➜ Pasta liberada](#meus-arquivos).
 
 </details>
 
@@ -1003,7 +1033,7 @@ A pasta de um usuário do FTP, e a pasta que tem a de um usuário dentro, não �
 
 **Para que serve:** o dono dos arquivos navega na própria pasta e baixa os backups pelo navegador, sem depender de quem administra e sem conta nova. O que mais ele faz depende do perfil da conta e, no envio de arquivo, da permissão que o administrador dá.
 
-**Como chegar:** abra o endereço do painel e entre com **o nome e a senha do FTP**, os mesmos que o equipamento usa. É a única tela que o usuário do FTP vê.
+**Como chegar:** abra o endereço do painel e entre com **o nome e a senha do FTP**, os mesmos que o equipamento usa. É a tela em que o usuário do FTP cai; as pastas que o administrador liberou a ele ficam no menu.
 
 | Item da tela | O que faz | Perfis que têm |
 |---|---|---|
@@ -1020,7 +1050,7 @@ A pasta de um usuário do FTP, e a pasta que tem a de um usuário dentro, não �
 | **PT** · **EN** · **ES** | Trocam o idioma da conta: veja [Idioma](#idioma) | Todos |
 | **Sair** | Encerra a sessão na hora | Todos |
 
-O usuário vê só a pasta do cadastro dele e o que há dentro dela. O caminho da pasta no servidor não aparece, e o menu traz só a tela da conta, sem as abas de administração, com o nome do usuário e o papel **Usuário do FTP**. O botão que o perfil não tem não aparece, e a ação pedida direto pelo endereço responde `404`. Enviar arquivo por aqui depende de uma permissão que o administrador dá a cada conta: sem ela, o cartão **Enviar arquivo** não aparece e o envio é só por FTP. A conta de perfil Só envio tem outra tela: veja [Meus arquivos ➜ Perfil Só envio](#meus-arquivos).
+Nesta tela, o usuário vê só a pasta do cadastro dele e o que há dentro dela. O caminho da pasta no servidor não aparece, e o menu traz só a tela da conta e as pastas liberadas a ela, sem as abas de administração, com o nome do usuário e o papel **Usuário do FTP**. O botão que o perfil não tem não aparece, e a ação pedida direto pelo endereço responde `404`. Enviar arquivo por aqui depende de uma permissão que o administrador dá a cada conta: sem ela, o cartão **Enviar arquivo** não aparece e o envio é só por FTP. A conta de perfil Só envio tem outra tela: veja [Meus arquivos ➜ Perfil Só envio](#meus-arquivos).
 
 <details>
 <summary>Meus arquivos ➜ Dentro de uma pasta — clique para expandir</summary>
@@ -1128,13 +1158,37 @@ Quem precisa conferir ou baixar o que foi enviado pede a um administrador ou usa
 </details>
 
 <details>
+<summary>Meus arquivos ➜ Pasta liberada — clique para expandir</summary>
+
+### Meus arquivos ➜ Pasta liberada
+
+<a href="imagens/pasta-liberada.png"><img src="imagens/pasta-liberada.png" alt="Tela Pasta liberada do usuário olt-centro na pasta comum/relatorios: o menu com Meus arquivos e o grupo Pastas liberadas, com relatorios e roteador-borda, a lista com uma pasta e quatro arquivos, cada um com o botão Baixar, e os cartões Enviar arquivo e Nova pasta" width="100%"></a>
+
+<sub><b>v1.13.0</b> · tela Pasta liberada, permissão Envio · captura de 2026-10-13</sub>
+
+Cada pasta que o administrador liberou à conta ganha uma entrada no menu, no grupo **Pastas liberadas**, com o último nome do caminho; o caminho inteiro aparece no alto da tela. A tela funciona como a Meus arquivos, com o que a permissão daquela pasta deixa fazer, e não o perfil da conta.
+
+| Permissão na pasta | O que a tela traz |
+|---|---|
+| Leitura | A lista, com **Abrir** e **Baixar** |
+| Envio | Também o cartão **Nova pasta** e, com a permissão de envio pelo painel, o cartão **Enviar arquivo** |
+| Completo | Também **Renomear** e **Apagar** em cada linha, com a senha do FTP da conta |
+
+Na foto, `olt-centro` tem a permissão Envio em `comum/relatorios`: navega, baixa, cria pasta e envia, mas não troca o nome nem apaga, embora o perfil dele seja Completo. Em `roteador-borda`, a outra entrada do menu, ele só navega e baixa.
+
+O recolhido **O que esta conta pode fazer** diz que a pasta foi liberada pelo administrador, que ela abre só no painel e que outras contas podem ter acesso a ela, sem dizer quais. A pasta que o administrador retira some do menu no pedido seguinte, e o endereço dela passa a responder `404`. As regras estão em [Painel web](../painel.md#outras-pastas).
+
+</details>
+
+<details>
 <summary>Detalhe técnico — o que a conta do FTP alcança</summary>
 
 - Rotas da sessão do usuário do FTP, por perfil. Só envio: `GET /` (leva a `/meus-arquivos`), `GET /meus-arquivos`, `POST /idioma` e `POST /sair`. Leitura acrescenta `GET /meus-arquivos?pasta=<caminho>` e `GET /meus-arquivos/baixar?arquivo=<caminho>`. Envio acrescenta `POST /meus-arquivos/pasta`. Com a permissão de envio pelo painel, Só envio, Envio e Completo ganham `POST /meus-arquivos/enviar`; sem ela, a rota responde `403`, com o evento `recusa_envio`. Completo acrescenta `GET` e `POST` em `/meus-arquivos/renomear?item=<caminho>` e `/meus-arquivos/apagar?item=<caminho>`.
 - Qualquer outra rota responde `404`. Quando é uma rota de administração, ou uma ação que o perfil da conta não tem, fica o evento `recusa_papel`, com o usuário, o caminho e o perfil.
+- Nas pastas liberadas, as mesmas rotas valem sob `/pastas/<identificador>`, pela permissão dada naquela pasta e não pelo perfil: a lista, `/baixar`, `/pasta`, `/enviar`, `/renomear` e `/apagar`. A pasta que não está liberada à conta responde `404`, com o evento `recusa_pasta`; a ação que a permissão não tem, `404`, com `recusa_papel`.
 - Renomear e apagar conferem a senha do FTP da conta; a senha errada grava `usuario_senha_atual_recusada`.
 - Quem confere a senha é o `pure-ftpd`, por um login na rede interna da stack; o painel não lê o hash do cadastro.
-- O caminho é sempre relativo à pasta do cadastro, que é a raiz dele, com as mesmas conferências da [aba Arquivos](#arquivos).
+- O caminho é sempre relativo à pasta do cadastro, que é a raiz dele, ou à pasta liberada, quando o pedido é de uma delas, com as mesmas conferências da [aba Arquivos](#arquivos).
 - `PAINEL_ACESSO_USUARIOS_FTP=nao` desliga esta entrada: o painel passa a aceitar só administradores.
 - O funcionamento completo está em [Usuário do FTP no painel](../painel.md#usuario-ftp).
 
@@ -1725,6 +1779,7 @@ O administrador que ficou com o próprio endereço bloqueado não abre o painel:
 | Entrada · Entrada recusada · Entrada bloqueada pelo limite de tentativas · Saída | Alguém entrou, errou o usuário ou a senha, teve o endereço bloqueado ou saiu |
 | Senha aceita, à espera do segundo fator · Código do segundo fator recusado · Entrada recusada: segundo fator ligado sem o segredo no servidor | Entrada de conta que tem, ou é obrigada a ter, o segundo fator: a senha conferiu, o código do aplicativo foi recusado, ou a chave da conta não está no servidor |
 | Usuário criado · Senha trocada · Pasta do usuário trocada · Perfil do usuário trocado · Usuário removido | Alteração de usuário do FTP, com o administrador que fez |
+| Outra pasta liberada a usuário · Outra pasta retirada de usuário | Um administrador liberou a um usuário do FTP uma pasta além da do cadastro, ou trocou a permissão dela, e a retirou, com o usuário, a pasta e a permissão |
 | Limites do usuário alterados · Bloqueio do usuário no FTP removido | Limites gravados, com o valor de cada um, e bloqueio por senha errada tirado em **Editar** |
 | Limpeza automática do usuário alterada · Limpeza automática: arquivos antigos apagados · Limpeza automática não concluída | A regra gravada ou desligada em **Editar**, com o administrador que fez; cada passada que apagou algo, com o usuário e a quantidade; e a passada que não terminou |
 | Endereço bloqueado por erros de usuário e senha · Endereço ou prefixo bloqueado pelo administrador · Prazo do bloqueio de endereço alterado · Endereço desbloqueado · Pedido de endereço bloqueado | O painel bloqueou um endereço, um administrador bloqueou, mudou o prazo ou liberou na aba Bloqueios, e cada pedido recusado de um endereço bloqueado |
@@ -1738,7 +1793,8 @@ O administrador que ficou com o próprio endereço bloqueado não abre o painel:
 | Segundo fator cadastrado na entrada · Segundo fator ligado · Segundo fator desligado · Segundo fator de usuário do FTP desligado · Segundo fator desligado pelo terminal | A conta cadastrou o dela na entrada; o administrador ligou o dele pela aba Usuários; um administrador desligou o próprio, o de outro administrador ou o de um usuário do FTP, com quem fez e de quem era; e o desligamento feito no servidor |
 | Senha atual recusada | Alteração de administrador recusada pela senha de confirmação |
 | Senha do FTP recusada na confirmação | Usuário do FTP errou a própria senha ao confirmar uma troca de nome ou um apagamento na tela Meus arquivos |
-| Tela fora do papel ou do perfil pedida por usuário do FTP | Um usuário do FTP pediu uma aba de administração, ou uma ação que o perfil dele não tem, e recebeu `404` |
+| Tela fora do papel ou do perfil pedida por usuário do FTP | Um usuário do FTP pediu uma aba de administração, ou uma ação que o perfil dele, ou a permissão dele na pasta liberada, não tem, e recebeu `404` |
+| Pasta não liberada pedida por usuário do FTP | Um usuário do FTP pediu pelo endereço uma pasta que não está liberada a ele e recebeu `404` |
 | Sessão de usuário do FTP encerrada | A senha, a pasta ou o perfil do usuário mudou, ou ele foi removido |
 | Caminho de arquivo recusado | Pedido que tenta sair da pasta dos dados ou que passa por link simbólico |
 

@@ -12,7 +12,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.12.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.13.0-blue)
 ![Status](https://img.shields.io/badge/status-est%C3%A1vel-brightgreen)
 ![Suporte](https://img.shields.io/badge/suporte-LTS-blue)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
@@ -105,6 +105,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão que encerra com 4 horas sem uso, bloqueio depois de cinco senhas erradas e registro de cada ação |
 | **Segundo fator na entrada do painel** | Obrigatório por padrão para toda conta do painel, administrador e usuário do FTP: depois da senha, o painel pede o código de seis dígitos de um aplicativo autenticador (TOTP). Quem ainda não cadastrou cadastra na própria entrada, por código QR. Só no painel: o FTP não muda |
 | **Arquivos pelo navegador** | O administrador navega, envia, baixa, renomeia e apaga; o dono dos arquivos entra com o usuário e a senha do FTP, vê só a própria pasta e faz o que o perfil dele deixa. Enviar pelo painel depende de permissão dada a cada usuário |
+| **Outras pastas por conta** | O administrador libera a uma conta, só no painel, pastas além da dela, cada uma com a permissão própria: leitura, envio ou completo. Serve para a pasta comum a vários usuários e para a conta de consulta. A pasta do cadastro continua privada, e o FTP não muda |
 | **Limpeza automática** | Por conta, o administrador manda guardar só os últimos arquivos de cada pasta ou só os dos últimos dias; o painel apaga o resto sozinho, de tempos em tempos. Desligada por padrão |
 | **Envio para S3, rclone e bot do Telegram** | Na aba Destinos, o administrador liga uma pasta a um armazenamento S3, para a segunda cópia ou para guardar fora e liberar o disco, a um remoto do rclone, para o que o S3 não alcança (servidor de arquivos, nuvem de arquivos, armazenamento de provedor de nuvem ou serviço de transferência de arquivos, em 41 tipos), e a um bot do Telegram, que entrega em instantes cada arquivo que chega a uma pessoa, um grupo ou um canal, até o tamanho que o bot aceita. Cada tipo aceita até 20 destinos, e um destino novo pode usar o acesso de outro, para outra pasta, outro bucket ou outro grupo. O bot só envia e o remoto do rclone só recebe. Na aba Arquivos, um botão manda um arquivo na hora. A cópia do sistema inteiro, cifrada, vai para um S3 pelo botão ou por rotina. Nada é apagado no destino. Sem configuração por padrão |
 | **Saúde do servidor no painel** | A aba Servidor mostra os três containers da stack, cada um com o que usa de processador, memória e processos contra o que foi alocado a ele, e o processador, a memória, o disco e a rede do FTP do servidor, com o histórico dos últimos minutos |
@@ -189,6 +190,7 @@ Para atender a rede interna, ajuste no `.env` (modelo em [`.env.example`](.env.e
 | Baixar um backup recebido | pelo painel, aba Arquivos, botão **Baixar** na linha do arquivo |
 | Deixar o dono dos arquivos baixar os dele | ele abre o painel com o usuário e a senha do FTP e vê só a própria pasta; para o painel aceitar só administradores, `PAINEL_ACESSO_USUARIOS_FTP=nao` no `.env` e `./deploy.sh` |
 | Deixar um usuário enviar arquivo pelo navegador | pelo painel, aba Usuários, **Editar**, caixa **Permitir que este usuário envie arquivo pelo painel**, ou `./manage-user.sh limites backup-olt enviar=1`: veja [Enviar arquivo pelo painel](doc/pt-BR/painel.md#enviar-arquivo) |
+| Dar a um usuário acesso a outra pasta, só leitura ou mais | pelo painel, aba Usuários, **Editar**, cartão **Outras pastas**, ou `./manage-user.sh outras backup-olt comum/relatorios leitura`: veja [Outras pastas](doc/pt-BR/painel.md#outras-pastas) |
 | Guardar só os arquivos mais novos de uma conta | pelo painel, aba Usuários, **Editar**, cartão **Limpeza automática**, ou `./manage-user.sh retencao backup-olt ultimos=30`: veja [Limpeza automática](doc/pt-BR/painel.md#limpeza) |
 | Mandar os arquivos de uma pasta para um S3, um remoto do rclone ou o Telegram | pelo painel, aba Destinos, **Configurar** no cartão do destino; para um arquivo só, aba Arquivos, botão **Telegram**, **rclone** ou **S3** na linha dele: veja [Destinos](doc/pt-BR/painel.md#destinos) |
 | Mandar a cópia do sistema inteiro para um S3 | pelo painel, aba Destinos, abra o cartão **Cópia do sistema**, **Configurar** e **Copiar e enviar agora**: veja [Cópia do sistema para o S3](doc/pt-BR/painel.md#copia-do-sistema) |
@@ -678,7 +680,7 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 108 casos funcionais, 155 de segurança e 17 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 111 casos funcionais, 161 de segurança e 19 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
 
 ---
 
@@ -774,7 +776,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**1.12.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
+**1.13.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
 
 A versão avança a cada publicação, sempre no número do meio (`1.1.0`, `1.2.0`) ou no primeiro: o número de correção fica em zero. `0.x` foi a fase de construção; **a `1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo (LTS) `1.x`. As versões foram renumeradas em 2026-10-11: o [`CHANGELOG.md`](CHANGELOG.md) traz o que mudou em cada uma e a tabela com os números de antes.
 

@@ -46,7 +46,7 @@ flowchart LR
 | Pasta de `DATA_DIR` | O que guarda | Entra na cópia |
 |---|---|---|
 | `dados/` | Arquivos enviados pelos equipamentos, uma pasta por usuário, e `.entrada/`, a área de entrada das contas de perfil Só envio, vazia fora do instante de cada envio | Sim |
-| `auth/` | Usuários do FTP, com o hash de cada senha, os limites próprios de cada um, a lista de quem está dispensado do TLS e os bloqueios em vigor, por tentativa e por endereço | Sim |
+| `auth/` | Usuários do FTP, com o hash de cada senha, os limites próprios de cada um, as outras pastas liberadas a cada um no painel, a lista de quem está dispensado do TLS e os bloqueios em vigor, por tentativa e por endereço | Sim |
 | `certs/` | Certificado e chave privada do FTP | Sim |
 | `painel/` | Certificado e chave privada do painel, os administradores (nome e hash da senha), o `auditoria.log`, o idioma das telas escolhido por cada conta e a configuração e o andamento dos [destinos](painel.md#destinos) e da cópia do sistema para o S3, sem os segredos deles | Sim |
 | `nginx/` | Soquete do painel e cópia do certificado, refeitos a cada subida | Não |

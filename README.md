@@ -12,7 +12,7 @@
 
 Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Version](https://img.shields.io/badge/version-1.12.0-blue)
+![Version](https://img.shields.io/badge/version-1.13.0-blue)
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
 ![Support](https://img.shields.io/badge/support-LTS-blue)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -104,6 +104,7 @@ There are **three containers**: the FTP server, the panel and **nginx**, the onl
 | **Secure web panel** | Creates users, changes passwords and removes users in the browser: HTTPS only, a session that ends after 4 hours without use, blocking after five wrong passwords and a record of every action |
 | **Second factor at the panel sign-in** | Required by default for every account of the panel, administrator and FTP user: after the password, the panel asks for the six-digit code of an authenticator app (TOTP). Whoever has not set it up yet does it at the sign-in itself, from a QR code. Panel only: the FTP does not change |
 | **Files in the browser** | The administrator browses, uploads, downloads, renames and deletes; the owner of the files signs in with the FTP user and password, sees only their own folder and does what their profile allows. Uploading through the panel depends on a permission given to each user |
+| **Other folders per account** | The administrator grants an account, in the panel only, folders beyond its own, each one with its own permission: read only, upload or full. It serves the folder shared by several users and the account that only consults. The folder of the record stays private, and FTP does not change |
 | **Automatic cleanup** | Per account, the administrator tells the panel to keep only the last files of each folder or only those of the last days; the panel deletes the rest by itself, from time to time. Off by default |
 | **Sending to S3, rclone and Telegram bot** | In the Destinations tab, the administrator connects a folder to an S3 storage, for the second copy or to keep the files elsewhere and free the disk, to an rclone remote, for what S3 does not reach (a file server, a file cloud, the storage of a cloud provider or a file transfer service, in 41 types), and to a Telegram bot, which delivers within moments each file that arrives to a person, a group or a channel, up to the size the bot accepts. Each type accepts up to 20 destinations, and a new destination can use the access of another one, for another folder, another bucket or another group. The bot only sends and the rclone remote only receives. In the Files tab, a button sends one file right away. The copy of the whole system, encrypted, goes to an S3 by the button or by schedule. Nothing is deleted in the destination. No settings by default |
 | **Server health in the panel** | The Server tab shows the three containers of the stack, each with what it uses of processor, memory and processes against what was allocated to it, and the processor, the memory, the disk and the FTP network of the server, with the history of the last minutes |
@@ -188,6 +189,7 @@ To serve the internal network, adjust the `.env` (template in [`.env.example`](.
 | Download a backup that was received | in the panel, Files tab, **Download** button on the row of the file |
 | Let the owner of the files download their own | they open the panel with the FTP user and password and see only their own folder; for the panel to accept only administrators, `PAINEL_ACESSO_USUARIOS_FTP=nao` in the `.env` and `./deploy.sh` |
 | Let a user upload files in the browser | in the panel, Users tab, **Edit**, checkbox **Allow this user to upload files through the panel**, or `./manage-user.sh limites backup-olt enviar=1`: see [Uploading files through the panel](doc/en/panel.md#enviar-arquivo) |
+| Give a user access to another folder, read only or more | in the panel, Users tab, **Edit**, **Other folders** card, or `./manage-user.sh outras backup-olt comum/relatorios leitura`: see [Other folders](doc/en/panel.md#outras-pastas) |
 | Keep only the newest files of an account | in the panel, Users tab, **Edit**, **Automatic cleanup** card, or `./manage-user.sh retencao backup-olt ultimos=30`: see [Automatic cleanup](doc/en/panel.md#limpeza) |
 | Send the files of a folder to an S3, an rclone remote or Telegram | in the panel, Destinations tab, **Configure** on the card of the destination; for a single file, Files tab, **Telegram**, **rclone** or **S3** button on its line: see [Destinations](doc/en/panel.md#destinos) |
 | Send the copy of the whole system to an S3 | in the panel, Destinations tab, open the **System copy** card, **Configure** and **Copy and send now**: see [System copy to S3](doc/en/panel.md#copia-do-sistema) |
@@ -673,7 +675,7 @@ The safest path for each decision of whoever installs, as a flowchart, is in [be
 | Check the running installation | `./scripts/validate.sh --runtime` | the same, plus `servico ftp: running, healthy`, likewise for `painel` and `nginx`, and the initial user in PureDB or removed by the administrator |
 | Run the full suite: functional, security and network | `./tests/testar.sh` | one line per case and, at the end, `Bateria aprovada: nenhum desvio.` |
 
-The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 108 functional cases, 155 security cases and 17 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
+The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 111 functional cases, 161 security cases and 19 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
 
 ---
 
@@ -769,7 +771,7 @@ The plan for creating and changing the stack (phases, tests, evidence and progre
 
 ## 🏷️ Version
 
-**1.12.0**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
+**1.13.0**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
 
 The version advances at every publication, always in the middle number (`1.1.0`, `1.2.0`) or in the first one: the correction number stays at zero. `0.x` was the construction phase; **`1.0.0` is the first version ready for production** and opens the long-term support (LTS) line `1.x`. The versions were renumbered on 2026-10-11: [`CHANGELOG.md`](CHANGELOG.md) has what changed in each one and the table with the numbers from before.
 
