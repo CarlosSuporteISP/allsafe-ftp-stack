@@ -670,6 +670,8 @@ EN = {
         'Panel behind a proxy or tunnel',
     'Endereço do FTP':
         'FTP address',
+    'Endereço do FTP em IPv6':
+        'FTP address over IPv6',
     'IP anunciado no modo passivo':
         'IP announced in passive mode',
     'TLS do FTP':
@@ -678,6 +680,8 @@ EN = {
         'FTP certificate',
     'Endereço do painel':
         'Panel address',
+    'Endereço do painel em IPv6':
+        'Panel address over IPv6',
     'Frente web':
         'Web front end',
     'O navegador fala com o nginx, a única porta publicada do painel: ele fecha o HTTPS, limita redes '

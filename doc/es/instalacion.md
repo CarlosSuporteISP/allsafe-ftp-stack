@@ -49,6 +49,7 @@ flowchart LR
 | Una IP dedicada para el FTP | No comparta la IP con otros servicios; el modo pasivo abre de 50 a 1600 puertos, según el perfil |
 | Firewall en el host | Libere `21/tcp` y el rango pasivo del perfil (`30000-30049/tcp` en el `small`) **solo** para las redes de gestión de los equipos, y el puerto del panel (`8443/tcp`) **solo** para quien administra |
 | Red privada | Por defecto la stack solo acepta IP interna: vea [Seguridad](seguridad.md#rede-privada). La dirección pública depende de una opción con alerta: [IP pública](seguridad.md#ip-publico) |
+| IPv6 (opcional) | De fábrica la stack queda solo en IPv4. Para publicar el FTP y el panel también en IPv6, el servidor necesita Docker Engine 27 o más nuevo y el IPv6 activado en el sistema: [IPv6](configuracion.md#ipv6) |
 | Carpeta para los datos | El valor por defecto es `/srv/allsafe-ftp-stack`, con `data`, `backups` y `tmp` dentro. Quien instala sin ser root crea la carpeta una vez: `sudo install -d -o "$USER" /srv/allsafe-ftp-stack`. Otro lugar: `DATA_DIR`, `BACKUP_DIR` y `TEMP_DIR` en [Configuración](configuracion.md#pastas-e-nomes) |
 | Reloj sincronizado | El certificado TLS depende de fecha y hora correctas (la stack `allsafe-ntp-nts-stack` se encarga de eso) |
 

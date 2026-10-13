@@ -196,6 +196,7 @@ Dos arquivos de `.secrets/`, o `ftp` vê um, o `painel` vê dois, o hash da senh
 - O painel não publica nem escuta porta: o nginx o alcança pelo soquete Unix da pasta `DATA_DIR/nginx`, sem passar pela rede.
 - O painel fala com o FTP pela rede em dois casos, sempre em `ftp:2121`, dentro desta rede: para ver se ele está no ar, pela saudação da porta, e para conferir a senha do usuário do FTP que entra no painel, com um login em TLS. O cadastro e os arquivos, os dois dividem pelas pastas `auth` e `dados`.
 - Quem abre o painel pelo próprio servidor, em `127.0.0.1`, chega ao nginx com o endereço do gateway desta rede (`172.29.1.1`), que já está dentro das redes permitidas por padrão.
+- IPv6 é opcional e vem desligado. Com `REDE_IPV6=sim`, o `deploy.sh` acrescenta o arquivo [`compose.ipv6.yaml`](../../compose.ipv6.yaml): a rede ganha a sub-rede `FTP_SUBNET_IPV6` (`fd29:1::/64`) e as três publicações acima se repetem em `FTP_BIND_IPV6` e `PAINEL_BIND_IPV6`, nas mesmas portas. O `pure-ftpd` e o nginx passam a escutar nas duas famílias, e o cliente IPv6 chega aos dois com o endereço real dele. Quem abre o painel pelo próprio servidor, em `::1`, chega ao nginx com o gateway IPv6 da rede (`fd29:1::1`). Veja [IPv6](configuracao.md#ipv6).
 - Sem DNS reverso (`-H`): o `pure-ftpd` nunca resolve o IP do cliente.
 
 ---
@@ -332,7 +333,7 @@ Linha final do [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh):
 | `-l puredb:/auth/pureftpd.pdb` | Backend de autenticação |
 | `-p INICIO:FIM` | Faixa de portas passivas |
 | `-P <ip>` | IP anunciado no `PASV` (`FTP_PASSIVE_IP`) |
-| `-S 0.0.0.0,2121` | Escuta na porta 2121 (não privilegiada) |
+| `-S 0.0.0.0,2121` | Escuta na porta 2121 (não privilegiada), só em IPv4. Com `REDE_IPV6=sim` vai `-S 2121`, que escuta em IPv4 e IPv6 |
 | `-Y <modo>` | Política TLS (`FTP_TLS_MODE`): veja [Configuração](configuracao.md#tls). Com o TLS por usuário valendo e pelo menos um usuário dispensado, vai `-Y 1`, e a exigência do TLS passa a ser feita usuário por usuário pelo porteiro; sem nenhum dispensado, vai o `-Y 2`: [Segurança](seguranca.md#tls-por-usuario) |
 
 ---

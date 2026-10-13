@@ -48,7 +48,7 @@ flowchart LR
 
 | Rule | What to do |
 |---|---|
-| Private IP | `FTP_BIND_IP`, `FTP_PASSIVE_IP` and `PAINEL_BIND_IP` only in `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` or `127.0.0.1`. `0.0.0.0` is always refused; a public IP, only with its [own option](#ip-publico) |
+| Private IP | `FTP_BIND_IP`, `FTP_PASSIVE_IP` and `PAINEL_BIND_IP` only in `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` or `127.0.0.1`. `0.0.0.0` is always refused; a public IP, only with its [own option](#ip-publico). With [IPv6 turned on](configuration.md#ipv6), `FTP_BIND_IPV6` and `PAINEL_BIND_IPV6` only on `::1` or in the unique local range (`fc00::/7`), and `::` is always refused |
 | Host firewall | Open the control port and the passive range **only** to the internal networks that send backups, and the panel port **only** to the machines of whoever administers; the rest is dropped |
 | Panel networks | `PAINEL_REDES_PERMITIDAS` reduced to the administration network; by default, the list only accepts private networks |
 | Edge firewall | No port forwarding from the internet to this host |
@@ -65,6 +65,14 @@ Example with `iptables`, allowing only the management network `10.10.0.0/24` on 
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 21 ! -s 10.10.0.0/24 -j DROP
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30049 ! -s 10.10.0.0/24 -j DROP
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 8443 ! -s 10.10.0.0/24 -j DROP
+```
+
+With `REDE_IPV6=sim`, the same ports are published on IPv6 too, and `iptables` does not see that traffic: repeat the rules with `ip6tables`, in the same chain, with the management network in IPv6 (in the example, `fd00:10:10::/64`):
+
+```bash
+ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 21 ! -s fd00:10:10::/64 -j DROP
+ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30049 ! -s fd00:10:10::/64 -j DROP
+ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 8443 ! -s fd00:10:10::/64 -j DROP
 ```
 
 **Expected result:** from a machine outside `10.10.0.0/24`, the ports `21/tcp` and `8443/tcp` do not answer; from inside, the FTPS login and the panel work.
@@ -105,6 +113,8 @@ The option exists for the server that only has a public address, such as a VPS, 
 | Public IP in `FTP_BIND_IP`, `FTP_PASSIVE_IP`, `PAINEL_BIND_IP` and `PAINEL_CERT_CN` | Accepted, if it is a server IPv4 (first octet from `1` to `223`) |
 | Public network in `PAINEL_REDES_PERMITIDAS` | Accepted, with a prefix from `/8` to `/32` |
 | `0.0.0.0`, multicast and reserved addresses | Refused: the address is always chosen, never "all" |
+| Public IPv6 in `FTP_BIND_IPV6`, `PAINEL_BIND_IPV6` and `PAINEL_CERT_CN`, with `REDE_IPV6=sim` | Accepted, if it is a global address (`2000::/3`). `::`, link-local (`fe80::/10`), multicast and IPv4 written as IPv6 are refused |
+| Public IPv6 network in `PAINEL_REDES_PERMITIDAS` | Accepted, with a prefix from `/16` to `/128` |
 | Network wider than `/8`, such as `0.0.0.0/0` | Refused |
 | `FTP_TLS_MODE` at `0` or `1` | Refused |
 | Value other than `nao` and `sim` | Refused before any other check |
@@ -114,7 +124,7 @@ The option exists for the server that only has a public address, such as a VPS, 
 
 - The variable reaches the three containers through [`compose.yaml`](../../compose.yaml) and is read by the same functions of [`scripts/rede-privada.sh`](../../scripts/rede-privada.sh) in [`deploy.sh`](../../deploy.sh) and in the three entrypoints: `conferir_opcao_ip_publico`, `exigir_ip`, `exigir_rede` and `aviso_ip_publico`. The panel checks it again in [`painel/config.py`](../../painel/config.py).
 - A value other than `nao` and `sim` stops everything with `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'`: no value is treated as `sim` by approximation.
-- With the option on, the panel accepts being opened by any IPv4 address typed in place of the name; by name, only `localhost` and the `PAINEL_CERT_CN` are still valid.
+- With the option on, the panel accepts being opened by any IPv4 address typed in place of the name and, with `REDE_IPV6=sim`, by a global IPv6 address between brackets; by name, only `localhost` and the `PAINEL_CERT_CN` are still valid.
 - The limit of password attempts, the short session and the request limits of nginx still apply, but they do not replace the firewall: they reduce the speed of the attack, not the exposure.
 - The refusals and the alert are checked by the [test suite](scripts.md#testar); the messages are in [Troubleshooting](troubleshooting.md#o-container-nao-sobe).
 
@@ -214,7 +224,7 @@ Where the option is checked:
 - The variable reaches the panel and nginx containers through [`compose.yaml`](../../compose.yaml). The function `exigir_proxies`, of [`scripts/rede-privada.sh`](../../scripts/rede-privada.sh), is called by [`deploy.sh`](../../deploy.sh) and by the two entrypoints; the panel checks it again in [`painel/config.py`](../../painel/config.py).
 - In [`nginx/nginx.conf.modelo`](../../nginx/nginx.conf.modelo), the list becomes a `geo` block, and the address of whoever accesses (`$cliente`) is the last one of `X-Forwarded-For` only when the connection comes from the list. The `realip` module is left out on purpose: with it, `allow` and `deny` would start applying to the reported address, and not to who opened the connection.
 - nginx sends the panel the address of the connection (`X-Real-IP`) and that of whoever accesses (`X-Cliente-IP`), always rewritten by it. The panel only uses the second when the first is in the list ([`painel/atendimento.py`](../../painel/atendimento.py)); the two written by the client do not reach the panel.
-- The reported address can be IPv4 or IPv6. The addresses of the list are IPv4.
+- The reported address can be IPv4 or IPv6. The addresses of the list are IPv4 or IPv6.
 - The refusals, the alert and the forged address are checked by the [test suite](scripts.md#testar).
 
 </details>
@@ -952,7 +962,7 @@ The step by step, in the order in which it is done:
 | Passive range (data): `30000-30049` in `small`, up to `31599` in `extended` | The same sources of the control port |
 | `PAINEL_PORT` (panel, HTTPS, published by nginx) | Only the machines of whoever administers the stack |
 
-Everything else stays internal to the containers. The panel does not publish a port: the one that answers on `PAINEL_PORT` is nginx. On `PAINEL_PORT`, what answers without user and password is only the sign-in screen, the stylesheet, the logo and the icon, `/saude`, `/robots.txt` and, when configured, `/.well-known/security.txt`: [Security contact and search robots](#contato-de-seguranca). The management of the users is through the [panel](panel.md) or by command line, with [`manage-user.sh`](../../manage-user.sh).
+With [`REDE_IPV6=sim`](configuration.md#ipv6), the same three ports are published on IPv6 too, on the addresses `FTP_BIND_IPV6` and `PAINEL_BIND_IPV6`, and ask for the same origin restrictions. Everything else stays internal to the containers. The panel does not publish a port: the one that answers on `PAINEL_PORT` is nginx. On `PAINEL_PORT`, what answers without user and password is only the sign-in screen, the stylesheet, the logo and the icon, `/saude`, `/robots.txt` and, when configured, `/.well-known/security.txt`: [Security contact and search robots](#contato-de-seguranca). The management of the users is through the [panel](panel.md) or by command line, with [`manage-user.sh`](../../manage-user.sh).
 
 ---
 
@@ -963,7 +973,7 @@ Everything else stays internal to the containers. The panel does not publish a p
 | Protection | How it works |
 |---|---|
 | nginx in front | Only nginx publishes the port of the panel. It terminates the HTTPS, checks the network and the rate of requests and passes on to the panel through an internal socket; the panel does not listen on a network port |
-| Internal network only | nginx refuses the client outside `PAINEL_REDES_PERMITIDAS` with `403`, before reaching the panel; the panel checks again and refuses with `400` the request with a `Host` that is not a private IP, `localhost` or the `PAINEL_CERT_CN` (with `REDE_PERMITIR_IP_PUBLICO=sim`, any IPv4 address) |
+| Internal network only | nginx refuses the client outside `PAINEL_REDES_PERMITIDAS` with `403`, before reaching the panel; the panel checks again and refuses with `400` the request with a `Host` that is not a private IP, `localhost` or the `PAINEL_CERT_CN` (with `REDE_PERMITIR_IP_PUBLICO=sim`, any IPv4 address; with `REDE_IPV6=sim`, also IPv6 between brackets, by the same rule) |
 | HTTPS only | TLS 1.2 or 1.3, in HTTP/2 for the browser that asks for it and in HTTP/1.1 for the others. Plain HTTP on the port of the panel gets `400` (`pedido não aceito`), without any screen, and HTTP/2 without TLS is not served |
 | Limit of requests | 20 requests per second per address, with a burst of 40, and 16 connections per address; above that, `429`. A request larger than 16 KiB gets `413`; only the two file upload routes accept more, up to `PAINEL_ENVIO_MAX_MB`. An address or header larger than 5 KiB, or a set of headers larger than 20 KiB, is refused: in HTTP/1.1 with `414` or `400`; in HTTP/2, where the limit applies to the field still compressed, nginx closes the connection, and no field above 8192 bytes gets through. The limits of requests are the same in HTTP/2 and in HTTP/1.1: in HTTP/2, each open request counts as one connection, and one connection carries at most 16 requests at the same time |
 | Page never compressed | nginx compresses a single file, `estilo.css`, which is fixed, the same for everyone and without secret. The pages of the panel always go out whole, even when the browser accepts compression: they carry the form token, and a compressed page with a secret lets the secret be guessed by the size of the answer (BREACH attack) |
@@ -1003,9 +1013,9 @@ No version is published without the whole suite approved. It runs on a clean clo
 
 | Suite | Cases | What it answers |
 |---|---|---|
-| Functional | 106 | The installation does what it promises: install in one command, upload and download, users from the terminal and from the panel, restart without loss, copy and restore |
-| Security | 151 | What should be refused is refused: each case tries something that cannot happen and checks the refusal |
-| Network | 14 | Only what was configured stays open: ports, listening address, passive mode, subnet and networks accepted by the panel |
+| Functional | 108 | The installation does what it promises: install in one command, upload and download, users from the terminal and from the panel, restart without loss, copy and restore |
+| Security | 155 | What should be refused is refused: each case tries something that cannot happen and checks the refusal |
+| Network | 17 | Only what was configured stays open: ports, listening address, passive mode, subnet and networks accepted by the panel, with IPv6 turned off and on |
 
 **What the security suite tries**, by target. The number is that of the case, the same that appears in the output of `./tests/testar.sh`:
 
@@ -1017,6 +1027,7 @@ No version is published without the whole suite approved. It runs on a clean clo
 | Blocking by address | Keeping on signing in to the FTP after the sixth error, with TLS and without, in passive and active mode, and with the right password; signing in to the panel with the address blocked by the FTP and to the FTP with the one blocked by the panel; blocking the outgoing address of the container, the internal network and the accepted proxy; opening the tab, changing the period and unblocking without session, without token, with the session of an FTP user and with a value outside the rule; starting with the variables out of range; repeating the block with IPv6, on the FTP and on the panel; adding up errors from before a right sign-in; blocking through the tab the own address, the network of the stack, the server and what is outside the rule | 106 to 112, 115 to 118 |
 | User profiles | Deleting, renaming and writing over with the Upload profile; writing, creating a folder and deleting with the Read only profile; checking the mode of the folders after changing the profile, changing the folder and removing the user; changing the profile without session, without token, with the session of an FTP user and with a value outside the list; through the panel, creating a folder with the Read only profile, renaming and deleting with the Read only and Upload profiles, deleting with the wrong password and leaving the own folder with the Full profile; with the Upload only profile, listing, downloading, asking for the size, deleting and renaming, reaching the destination folder by the whole path and by `..`, leaving in the entry area a file of another owner and a symbolic link, and, through the panel, opening a folder, downloading, creating a folder, renaming and deleting with its session, opening the entry area through the Files tab and creating a folder or a user pointing to it | 99 to 105 |
 | Network and exposure | Starting with the FTP on all the interfaces or on a public IP, announcing a public IP, opening the panel to a public network, turning on the public IP option with an invalid value, without TLS or on "all" | 16 to 21, 40 to 45 |
+| IPv6 | Opening the panel by an IPv6 address outside the rule, with a zone, without brackets or as IPv4 written as IPv6; continuing to sign in to the FTP from an outside IPv6 address after the sixth error; blocking the IPv6 outgoing address of the stack; opening the panel from an IPv6 network outside the allowed ones; forging the address of the client over IPv6, with a declared proxy | 152 to 155 |
 | Panel through proxy or tunnel | Forging the address of the client by header, with and without a declared proxy; counting the wrong password and the session by the address of who is not the client; reading on the sign-in screen how the panel was published; hiding the exposure warning | 93 to 96 |
 | Server tab | Opening without session or with the session of an FTP user; replacing the file of the network and that of the resources of nginx by text with markup and by a link to the user database of the FTP; keeping the session open only with the automatic refresh | 97, 98 |
 | Sign-in and session of the panel | Opening a route without session or with an invented cookie, wrong and random password until the block, finding out whether an administrator exists, changing an account without the current password, using a session already ended, removing the own account | 22 to 24, 28, 37, 46 to 49, 51, 69, 72 |
@@ -1050,7 +1061,7 @@ Besides the suite, each version goes through:
 ./tests/testar.sh
 ```
 
-**Expected result:** one line per case and, at the end, `Bateria aprovada: nenhum desvio.`, with 106 functional cases, 151 of security and 14 of network. The suite takes about 1 hour and 40 minutes; the options and what is written are in [Scripts](scripts.md#testar).
+**Expected result:** one line per case and, at the end, `Bateria aprovada: nenhum desvio.`, with 108 functional cases, 155 of security and 17 of network. The suite takes about 1 hour and 40 minutes; the options and what is written are in [Scripts](scripts.md#testar).
 
 > ⚠️ **Limit — what the suite does not reach:** it runs on the server itself, against the test instance. The host firewall, the proxy or the tunnel at the edge and the device that sends the backup are up to whoever installs and are not part of it: check them by the [production step by step](#boas-praticas).
 

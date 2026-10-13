@@ -48,7 +48,7 @@ flowchart LR
 
 | Regla | Qué hacer |
 |---|---|
-| IP privada | `FTP_BIND_IP`, `FTP_PASSIVE_IP` y `PAINEL_BIND_IP` solo en `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` o `127.0.0.1`. `0.0.0.0` se rechaza siempre; IP pública, solo con la [opción propia](#ip-publico) |
+| IP privada | `FTP_BIND_IP`, `FTP_PASSIVE_IP` y `PAINEL_BIND_IP` solo en `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` o `127.0.0.1`. `0.0.0.0` se rechaza siempre; IP pública, solo con la [opción propia](#ip-publico). Con el [IPv6 activado](configuracion.md#ipv6), `FTP_BIND_IPV6` y `PAINEL_BIND_IPV6` solo en `::1` o en el rango local único (`fc00::/7`), y `::` se rechaza siempre |
 | Firewall del host | Liberar el puerto de control y el rango pasivo **solo** para las redes internas que envían copias, y el puerto del panel **solo** para las máquinas de quien administra; el resto se descarta |
 | Redes del panel | `PAINEL_REDES_PERMITIDAS` reducida a la red de administración; por defecto, la lista solo acepta red privada |
 | Firewall de borde | Ninguna redirección de puerto de internet hacia este host |
@@ -65,6 +65,14 @@ Ejemplo con `iptables`, liberando solo la red de gestión `10.10.0.0/24` en la i
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 21 ! -s 10.10.0.0/24 -j DROP
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30049 ! -s 10.10.0.0/24 -j DROP
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 8443 ! -s 10.10.0.0/24 -j DROP
+```
+
+Con `REDE_IPV6=sim`, los mismos puertos quedan publicados también en IPv6, y el `iptables` no ve ese tráfico: repita las reglas con `ip6tables`, en la misma cadena, con la red de gestión en IPv6 (en el ejemplo, `fd00:10:10::/64`):
+
+```bash
+ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 21 ! -s fd00:10:10::/64 -j DROP
+ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30049 ! -s fd00:10:10::/64 -j DROP
+ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 8443 ! -s fd00:10:10::/64 -j DROP
 ```
 
 **Resultado esperado:** desde una máquina fuera de `10.10.0.0/24`, los puertos `21/tcp` y `8443/tcp` no responden; desde dentro, el login por FTPS y el panel funcionan.
@@ -105,6 +113,8 @@ La opción existe para el servidor que solo tiene dirección pública, como una 
 | IP pública en `FTP_BIND_IP`, `FTP_PASSIVE_IP`, `PAINEL_BIND_IP` y `PAINEL_CERT_CN` | Aceptada, si es IPv4 de servidor (primer octeto de `1` a `223`) |
 | Red pública en `PAINEL_REDES_PERMITIDAS` | Aceptada, con prefijo de `/8` a `/32` |
 | `0.0.0.0`, multicast y direcciones reservadas | Rechazados: la dirección siempre se elige, nunca "todas" |
+| IPv6 pública en `FTP_BIND_IPV6`, `PAINEL_BIND_IPV6` y `PAINEL_CERT_CN`, con `REDE_IPV6=sim` | Aceptada, si es una dirección global (`2000::/3`). `::`, enlace local (`fe80::/10`), multicast e IPv4 escrita en IPv6 se rechazan |
+| Red IPv6 pública en `PAINEL_REDES_PERMITIDAS` | Aceptada, con prefijo de `/16` a `/128` |
 | Red más ancha que `/8`, como `0.0.0.0/0` | Rechazada |
 | `FTP_TLS_MODE` en `0` o `1` | Rechazado |
 | Valor distinto de `nao` y de `sim` | Rechazado antes de cualquier otra verificación |
@@ -114,7 +124,7 @@ La opción existe para el servidor que solo tiene dirección pública, como una 
 
 - La variable llega a los tres contenedores por el [`compose.yaml`](../../compose.yaml) y la leen las mismas funciones de [`scripts/rede-privada.sh`](../../scripts/rede-privada.sh) en el [`deploy.sh`](../../deploy.sh) y en los tres entrypoints: `conferir_opcao_ip_publico`, `exigir_ip`, `exigir_rede` y `aviso_ip_publico`. El panel la verifica de nuevo en [`painel/config.py`](../../painel/config.py).
 - Un valor fuera de `nao` y de `sim` detiene todo con `FALHA: REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'`: ningún valor se trata como `sim` por aproximación.
-- Con la opción activada, el panel acepta ser abierto por cualquier dirección IPv4 escrita en lugar del nombre; por nombre, sigue valiendo solo `localhost` y el `PAINEL_CERT_CN`.
+- Con la opción activada, el panel acepta ser abierto por cualquier dirección IPv4 escrita en lugar del nombre y, con `REDE_IPV6=sim`, por una dirección IPv6 global entre corchetes; por nombre, sigue valiendo solo `localhost` y el `PAINEL_CERT_CN`.
 - El límite de intentos de contraseña, la sesión corta y los límites de solicitudes de nginx siguen en vigor, pero no sustituyen al firewall: reducen la velocidad del ataque, no la exposición.
 - Los rechazos y la alerta los verifica la [batería de pruebas](scripts.md#testar); los mensajes están en [Solución de problemas](solucion-de-problemas.md#o-container-nao-sobe).
 
@@ -214,7 +224,7 @@ Dónde se verifica la opción:
 - La variable llega a los contenedores del panel y de nginx por el [`compose.yaml`](../../compose.yaml). La función `exigir_proxies`, de [`scripts/rede-privada.sh`](../../scripts/rede-privada.sh), la llaman el [`deploy.sh`](../../deploy.sh) y los dos entrypoints; el panel la verifica de nuevo en [`painel/config.py`](../../painel/config.py).
 - En el [`nginx/nginx.conf.modelo`](../../nginx/nginx.conf.modelo), la lista se vuelve un bloque `geo`, y la dirección de quien accede (`$cliente`) es la última del `X-Forwarded-For` solo cuando la conexión viene de la lista. El módulo `realip` queda fuera a propósito: con él, el `allow` y el `deny` pasarían a valer sobre la dirección informada, y no sobre quién abrió la conexión.
 - nginx manda al panel la dirección de la conexión (`X-Real-IP`) y la de quien accede (`X-Cliente-IP`), siempre reescritas por él. El panel solo usa la segunda cuando la primera está en la lista ([`painel/atendimento.py`](../../painel/atendimento.py)); las dos escritas por el cliente no llegan al panel.
-- La dirección informada puede ser IPv4 o IPv6. Las direcciones de la lista son IPv4.
+- La dirección informada puede ser IPv4 o IPv6. Las direcciones de la lista son IPv4 o IPv6.
 - Los rechazos, la alerta y la dirección falsificada los verifica la [batería de pruebas](scripts.md#testar).
 
 </details>
@@ -952,7 +962,7 @@ El paso a paso, en el orden en que se hace:
 | Rango pasivo (datos): `30000-30049` en `small`, hasta `31599` en `extended` | Los mismos orígenes del puerto de control |
 | `PAINEL_PORT` (panel, HTTPS, publicado por nginx) | Solo las máquinas de quien administra la stack |
 
-Todo lo demás queda interno a los contenedores. El panel no publica puerto: quien atiende en `PAINEL_PORT` es nginx. En `PAINEL_PORT`, lo que responde sin usuario y contraseña es solo la pantalla de entrada, el estilo, el logo y el ícono, `/saude`, `/robots.txt` y, cuando está configurado, `/.well-known/security.txt`: [Contacto de seguridad y robots de búsqueda](#contato-de-seguranca). La gestión de los usuarios es por el [panel](panel.md) o por línea de comandos, con [`manage-user.sh`](../../manage-user.sh).
+Con [`REDE_IPV6=sim`](configuracion.md#ipv6), los mismos tres puertos se publican también en IPv6, en las direcciones `FTP_BIND_IPV6` y `PAINEL_BIND_IPV6`, y piden las mismas restricciones de origen. Todo lo demás queda interno a los contenedores. El panel no publica puerto: quien atiende en `PAINEL_PORT` es nginx. En `PAINEL_PORT`, lo que responde sin usuario y contraseña es solo la pantalla de entrada, el estilo, el logo y el ícono, `/saude`, `/robots.txt` y, cuando está configurado, `/.well-known/security.txt`: [Contacto de seguridad y robots de búsqueda](#contato-de-seguranca). La gestión de los usuarios es por el [panel](panel.md) o por línea de comandos, con [`manage-user.sh`](../../manage-user.sh).
 
 ---
 
@@ -963,7 +973,7 @@ Todo lo demás queda interno a los contenedores. El panel no publica puerto: qui
 | Protección | Cómo funciona |
 |---|---|
 | nginx delante | Solo nginx publica el puerto del panel. Cierra el HTTPS, verifica la red y la tasa de solicitudes y reenvía al panel por un socket interno; el panel no escucha en puerto de red |
-| Solo red interna | nginx rechaza al cliente fuera de `PAINEL_REDES_PERMITIDAS` con `403`, antes de llegar al panel; el panel verifica de nuevo y rechaza con `400` la solicitud con `Host` que no sea IP privada, `localhost` o el `PAINEL_CERT_CN` (con `REDE_PERMITIR_IP_PUBLICO=sim`, cualquier dirección IPv4) |
+| Solo red interna | nginx rechaza al cliente fuera de `PAINEL_REDES_PERMITIDAS` con `403`, antes de llegar al panel; el panel verifica de nuevo y rechaza con `400` la solicitud con `Host` que no sea IP privada, `localhost` o el `PAINEL_CERT_CN` (con `REDE_PERMITIR_IP_PUBLICO=sim`, cualquier dirección IPv4; con `REDE_IPV6=sim`, también el IPv6 entre corchetes, por la misma regla) |
 | Solo HTTPS | TLS 1.2 o 1.3, en HTTP/2 para el navegador que lo pide y en HTTP/1.1 para los demás. HTTP puro en el puerto del panel recibe `400` (`pedido não aceito`), sin ninguna pantalla, y HTTP/2 sin TLS no se atiende |
 | Límite de solicitudes | 20 solicitudes por segundo por dirección, con ráfaga de 40, y 16 conexiones por dirección; por encima de eso, `429`. La solicitud mayor que 16 KiB recibe `413`; solo las dos rutas de envío de archivo aceptan más, hasta `PAINEL_ENVIO_MAX_MB`. La dirección o el encabezado mayor que 5 KiB, o el conjunto de encabezados mayor que 20 KiB, se rechaza: en HTTP/1.1 con `414` o `400`; en HTTP/2, donde el límite vale para el campo todavía comprimido, nginx cierra la conexión, y ningún campo por encima de 8192 bytes pasa. Los límites de solicitudes son los mismos en HTTP/2 y en HTTP/1.1: en HTTP/2, cada solicitud abierta cuenta como una conexión, y una conexión lleva como máximo 16 solicitudes al mismo tiempo |
 | Página nunca comprimida | nginx comprime un solo archivo, `estilo.css`, que es fijo, igual para todos y sin secreto. Las páginas del panel salen siempre enteras, incluso cuando el navegador acepta compresión: traen el token del formulario, y una página con secreto comprimida deja adivinar el secreto por el tamaño de la respuesta (ataque BREACH) |
@@ -1003,9 +1013,9 @@ Ninguna versión se publica sin la batería entera aprobada. Se ejecuta en un cl
 
 | Batería | Casos | Qué responde |
 |---|---|---|
-| Funcional | 106 | La instalación hace lo que promete: instalar con un comando, enviar y descargar, usuarios por la terminal y por el panel, reinicio sin pérdida, copia y restauración |
-| Seguridad | 151 | Lo que debería rechazarse se rechaza: cada caso intenta algo que no puede ocurrir y verifica el rechazo |
-| Red | 14 | Solo lo que se configuró queda abierto: puertos, dirección de escucha, modo pasivo, subred y redes aceptadas por el panel |
+| Funcional | 108 | La instalación hace lo que promete: instalar con un comando, enviar y descargar, usuarios por la terminal y por el panel, reinicio sin pérdida, copia y restauración |
+| Seguridad | 155 | Lo que debería rechazarse se rechaza: cada caso intenta algo que no puede ocurrir y verifica el rechazo |
+| Red | 17 | Solo lo que se configuró queda abierto: puertos, dirección de escucha, modo pasivo, subred y redes aceptadas por el panel, con el IPv6 desactivado y activado |
 
 **Lo que la batería de seguridad intenta**, por objetivo. El número es el del caso, el mismo que aparece en la salida de `./tests/testar.sh`:
 
@@ -1017,6 +1027,7 @@ Ninguna versión se publica sin la batería entera aprobada. Se ejecuta en un cl
 | Bloqueo por dirección | Seguir entrando en el FTP después del sexto error, con TLS y sin él, en modo pasivo y activo, y con la contraseña correcta; entrar en el panel con la dirección bloqueada por el FTP y en el FTP con la bloqueada por el panel; bloquear la dirección de salida del contenedor, la red interna y el proxy aceptado; abrir la pestaña, cambiar el plazo y desbloquear sin sesión, sin token, con la sesión de un usuario del FTP y con un valor fuera de la regla; arrancar con las variables fuera del rango; repetir el bloqueo con IPv6, en el FTP y en el panel; sumar errores anteriores a una entrada correcta; bloquear desde la pestaña la propia dirección, la red de la stack, el servidor y lo que está fuera de la regla | 106 a 112, 115 a 118 |
 | Perfiles de usuario | Borrar, cambiar el nombre y escribir por encima con el perfil Envío; escribir, crear carpeta y borrar con el perfil Lectura; verificar el modo de las carpetas después de cambiar el perfil, cambiar la carpeta y eliminar al usuario; cambiar el perfil sin sesión, sin token, con la sesión de un usuario del FTP y con un valor fuera de la lista; por el panel, crear carpeta con el perfil Lectura, cambiar el nombre y borrar con los perfiles Lectura y Envío, borrar con la contraseña incorrecta y salir de la propia carpeta con el perfil Completo; con el perfil Solo envío, listar, descargar, pedir el tamaño, borrar y cambiar el nombre, llegar a la carpeta de destino por la ruta entera y por `..`, dejar en el área de entrada un archivo de otro dueño y un enlace simbólico, y, por el panel, abrir carpeta, descargar, crear carpeta, cambiar el nombre y borrar con su sesión, abrir el área de entrada desde la pestaña Archivos y crear una carpeta o un usuario que apunte a ella | 99 a 105 |
 | Red y exposición | Arrancar con el FTP en todas las interfaces o en IP pública, anunciar una IP pública, abrir el panel a una red pública, activar la opción de IP pública con un valor inválido, sin TLS o en "todos" | 16 a 21, 40 a 45 |
+| IPv6 | Abrir el panel por una dirección IPv6 fuera de la regla, con zona, sin corchetes o en IPv4 escrita en IPv6; seguir entrando al FTP por una dirección IPv6 de fuera después del sexto error; bloquear la dirección de salida IPv6 de la stack; abrir el panel desde una red IPv6 fuera de las permitidas; falsificar la dirección del cliente por IPv6, con proxy declarado | 152 a 155 |
 | Panel por proxy o túnel | Falsificar la dirección del cliente por encabezado, con y sin proxy declarado; contar la contraseña incorrecta y la sesión por la dirección de quien no es el cliente; leer en la pantalla de entrada cómo se publicó el panel; ocultar el aviso de exposición | 93 a 96 |
 | Pestaña Servidor | Abrirla sin sesión o con la sesión de un usuario del FTP; cambiar el archivo de la red y el de los recursos del nginx por texto con marcado y por un enlace al registro del FTP; mantener la sesión abierta solo con la actualización automática | 97, 98 |
 | Entrada y sesión del panel | Abrir una ruta sin sesión o con una cookie inventada, contraseña incorrecta y aleatoria hasta el bloqueo, descubrir si un administrador existe, modificar la cuenta sin la contraseña actual, usar una sesión ya cerrada, eliminar la propia cuenta | 22 a 24, 28, 37, 46 a 49, 51, 69, 72 |
@@ -1050,7 +1061,7 @@ Además de la batería, cada versión pasa por:
 ./tests/testar.sh
 ```
 
-**Resultado esperado:** una línea por caso y, al final, `Bateria aprovada: nenhum desvio.`, con 106 casos funcionales, 151 de seguridad y 14 de red. La batería tarda cerca de 1 hora y 40 minutos; las opciones y lo que se guarda están en [Scripts](scripts.md#testar).
+**Resultado esperado:** una línea por caso y, al final, `Bateria aprovada: nenhum desvio.`, con 108 casos funcionales, 155 de seguridad y 17 de red. La batería tarda cerca de 1 hora y 40 minutos; las opciones y lo que se guarda están en [Scripts](scripts.md#testar).
 
 > ⚠️ **Límite — lo que la batería no alcanza:** se ejecuta en el propio servidor, contra la instancia de prueba. El firewall del host, el proxy o el túnel del borde y el equipo que envía la copia de seguridad son de quien instala y no entran en ella: verifíquelos con el [paso a paso de producción](#boas-praticas).
 

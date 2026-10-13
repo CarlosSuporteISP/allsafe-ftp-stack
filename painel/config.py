@@ -51,6 +51,9 @@ EMAIL = re.compile(r'[A-Za-z0-9._+-]{1,64}@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A
 ENDERECO_HTTPS = re.compile(r'https://([a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?)(?::([0-9]{1,5}))?')
 DONO_DADOS = 'ftpdata'      # usuário do sistema dono das pastas e dos arquivos do FTP
 PRIVADAS = [ipaddress.ip_network(r) for r in ('127.0.0.0/8', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16')]
+# No IPv6, privado é o ::1 e a faixa local única; o global (2000::/3) é o "público" de REDE_PERMITIR_IP_PUBLICO.
+PRIVADAS6 = [ipaddress.ip_network(r) for r in ('::1/128', 'fc00::/7')]
+GLOBAL6 = ipaddress.ip_network('2000::/3')
 
 CORPO_MAX = 8192            # bytes de um envio de formulário
 CORPO_REMOTO_MAX = 32768    # bytes do formulário do remoto do rclone, que leva chave privada e token
@@ -95,7 +98,16 @@ def falha(texto):
 
 
 def privado(ip):
-    return ip.version == 4 and any(ip in rede for rede in PRIVADAS)
+    return any(ip in rede for rede in (PRIVADAS if ip.version == 4 else PRIVADAS6))
+
+
+def rede_privada(rede):
+    return any(rede.subnet_of(p) for p in (PRIVADAS if rede.version == 4 else PRIVADAS6))
+
+
+def utilizavel(ip):
+    """Endereço que um servidor pode ter quando o endereço público é aceito: a mesma regra do scripts/rede-privada.sh."""
+    return 1 <= int(ip) >> 24 <= 223 if ip.version == 4 else privado(ip) or ip in GLOBAL6
 
 
 def endereco_privado(texto):
@@ -110,18 +122,21 @@ def configuracao():
     if amb('REDE_PERMITIR_IP_PUBLICO', 'nao') not in ('nao', 'sim'):
         falha("REDE_PERMITIR_IP_PUBLICO deve ser 'nao' ou 'sim'")
     publico = amb('REDE_PERMITIR_IP_PUBLICO', 'nao') == 'sim'
+    if amb('REDE_IPV6', 'nao') not in ('nao', 'sim'):
+        falha("REDE_IPV6 deve ser 'nao' ou 'sim'")
     redes = []
     for texto in amb('PAINEL_REDES_PERMITIDAS', '127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16').split(','):
         try:
             rede = ipaddress.ip_network(texto.strip())
         except ValueError:
             falha(f'PAINEL_REDES_PERMITIDAS: "{texto.strip()}" não é uma rede válida')
-        if rede.version != 4:
-            falha(f'PAINEL_REDES_PERMITIDAS: {rede} não é uma rede IPv4')
-        if not any(rede.subnet_of(p) for p in PRIVADAS):
+        if not rede_privada(rede):
             if not publico:
                 falha(f'PAINEL_REDES_PERMITIDAS: {rede} não é rede privada. Rede pública só com REDE_PERMITIR_IP_PUBLICO=sim.')
-            if rede.prefixlen < 8 or not 1 <= int(rede.network_address) >> 24 <= 223:
+            if rede.version == 6:
+                if rede.prefixlen < 16 or not rede.subnet_of(GLOBAL6):
+                    falha(f'PAINEL_REDES_PERMITIDAS: {rede} não é uma rede IPv6 aceita (prefixo de /16 a /128; "todo mundo" é recusado)')
+            elif rede.prefixlen < 8 or not 1 <= int(rede.network_address) >> 24 <= 223:
                 falha(f'PAINEL_REDES_PERMITIDAS: {rede} não é uma rede aceita (prefixo de /8 a /32; "todo mundo" é recusado)')
         redes.append(rede)
     # Painel publicado por proxy ou túnel: os endereços de onde o nginx aceita o endereço do cliente.
@@ -130,8 +145,8 @@ def configuracao():
         try:
             proxy = ipaddress.ip_address(texto)
         except ValueError:
-            falha(f'PAINEL_PROXY_CONFIAVEL: "{texto}" não é um endereço IPv4 (um a um, sem máscara)')
-        if proxy.version != 4 or not (privado(proxy) or (publico and 1 <= int(proxy) >> 24 <= 223)):
+            falha(f'PAINEL_PROXY_CONFIAVEL: "{texto}" não é um endereço IPv4 nem IPv6 (um a um, sem máscara e sem colchetes)')
+        if not (privado(proxy) or (publico and utilizavel(proxy))):
             falha(f'PAINEL_PROXY_CONFIAVEL: {proxy} não é IP privado. Endereço público só com REDE_PERMITIR_IP_PUBLICO=sim.')
         if not any(proxy in rede for rede in redes):
             falha(f'PAINEL_PROXY_CONFIAVEL: {proxy} está fora de PAINEL_REDES_PERMITIDAS: o nginx recusaria o proxy antes do painel')
@@ -229,11 +244,14 @@ def configuracao():
         'stack': stack,
         'cert_cn': amb('PAINEL_CERT_CN', '').strip().lower(),
         'contato_seguranca': contato,
+        'ipv6': amb('REDE_IPV6', 'nao') == 'sim',
         'painel_bind': amb('PAINEL_BIND_IP', '127.0.0.1'),
+        'painel_bind6': amb('PAINEL_BIND_IPV6', '::1'),
         'painel_porta': amb('PAINEL_PORT', '8443'),
         'ftp_host': amb('PAINEL_FTP_HOST', 'ftp'),
         'ftp_usuario': amb('FTP_USER', 'transfer'),
         'ftp_bind': amb('FTP_BIND_IP', '127.0.0.1'),
+        'ftp_bind6': amb('FTP_BIND_IPV6', '::1'),
         'ftp_porta': amb('FTP_PORT', '21'),
         'ftp_anunciado': amb('FTP_PASSIVE_IP', '127.0.0.1'),
         'ftp_tls': amb('FTP_TLS_MODE', '2'),

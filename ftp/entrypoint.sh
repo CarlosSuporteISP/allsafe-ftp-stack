@@ -14,6 +14,7 @@ secret_file=/run/secrets/ftp_usuario_inicial_senha
 FTP_USER="${FTP_USER:-transfer}"
 FTP_BIND_IP="${FTP_BIND_IP:-127.0.0.1}"
 FTP_PASSIVE_IP="${FTP_PASSIVE_IP:-127.0.0.1}"
+FTP_BIND_IPV6="${FTP_BIND_IPV6:-::1}"
 FTP_PASSIVE_PORT_START="${FTP_PASSIVE_PORT_START:-30000}"
 FTP_PASSIVE_PORT_END="${FTP_PASSIVE_PORT_END:-30049}"
 FTP_TLS_MODE="${FTP_TLS_MODE:-2}"
@@ -30,6 +31,13 @@ password="$(tr -d '\r\n' < "$secret_file")"
 conferir_opcao_ip_publico
 exigir_ip FTP_BIND_IP "$FTP_BIND_IP" || exit 1
 exigir_ip FTP_PASSIVE_IP "$FTP_PASSIVE_IP" || exit 1
+# Com o endereço 0.0.0.0 o Pure-FTPd escuta só em IPv4; sem endereço, nas duas famílias. Em IPv6 não há
+# endereço anunciado: o cliente usa EPSV, que só informa a porta.
+escuta="0.0.0.0,2121"
+if rede_ipv6; then
+  exigir_ip6 FTP_BIND_IPV6 "$FTP_BIND_IPV6" || exit 1
+  escuta="2121"
+fi
 
 [[ "$FTP_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || die "FTP_USER invalido"
 [[ ${#password} -ge 12 ]] || die "a senha FTP deve ter pelo menos 12 caracteres"
@@ -183,6 +191,9 @@ if [[ ! -s "$certificate" ]]; then
   umask 077
   if [[ "${FTP_CERT_CN:-localhost}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     certificate_san="IP:${FTP_CERT_CN:-127.0.0.1}"
+  elif [[ "${FTP_CERT_CN:-localhost}" == *:* ]]; then
+    ipv6_valido "$FTP_CERT_CN" || die "FTP_CERT_CN=$FTP_CERT_CN não é nome nem endereço: o IPv6 vai sem colchetes e sem zona"
+    certificate_san="IP:${FTP_CERT_CN}"
   else
     certificate_san="DNS:${FTP_CERT_CN:-localhost}"
   fi
@@ -208,7 +219,7 @@ opcoes=(
   -c "$FTP_MAX_CLIENTS" -C "$FTP_MAX_CLIENTS_PER_IP"
   -I 15 -L 10000:8 -u 10000 -U 133:022
   -p "${FTP_PASSIVE_PORT_START}:${FTP_PASSIVE_PORT_END}"
-  -P "$FTP_PASSIVE_IP" -S "0.0.0.0,2121"
+  -P "$FTP_PASSIVE_IP" -S "$escuta"
 )
 # Toda entrada passa pelo porteiro. O pure-ftpd pergunta primeiro ao pure-authd, que chama o porteiro: ele
 # recusa quem está bloqueado por senhas erradas e, com o TLS por usuário, quem chega sem TLS sem estar em

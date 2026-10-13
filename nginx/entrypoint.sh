@@ -35,6 +35,11 @@ for proxy in "${confiaveis[@]}"; do
   [[ -n "${proxy// /}" ]] && proxies+="        ${proxy// /} 1;"$'\n'
 done
 
+# Com REDE_IPV6=sim o nginx escuta também em IPv6, na porta que o Compose publica em PAINEL_BIND_IPV6. As regras
+# allow e deny são as mesmas: o cliente IPv6 só passa se a rede dele estiver em PAINEL_REDES_PERMITIDAS.
+escuta6=""
+if rede_ipv6; then escuta6=$'        listen [::]:8443 ssl default_server;\n'; fi
+
 # Arquivo enviado pelo painel: o teto do corpo nas rotas de envio é o do arquivo mais 1 MB para os campos do formulário.
 PAINEL_ENVIO_MAX_MB="${PAINEL_ENVIO_MAX_MB:-1024}"
 [[ "$PAINEL_ENVIO_MAX_MB" =~ ^[1-9][0-9]{0,5}$ ]] && (( PAINEL_ENVIO_MAX_MB <= 102400 )) \
@@ -54,6 +59,8 @@ while IFS= read -r linha; do
     printf '%s' "$regras"
   elif [[ "$linha" == "@PROXIES@" ]]; then
     printf '%s' "$proxies"
+  elif [[ "$linha" == "@ESCUTA6@" ]]; then
+    printf '%s' "$escuta6"
   elif [[ "$linha" == "@ENVIO@" ]]; then
     printf '                client_max_body_size %sm;\n' "$(( PAINEL_ENVIO_MAX_MB + 1 ))"
   else
@@ -116,5 +123,5 @@ else
 fi
 aviso_ip_publico >&2
 aviso_proxy >&2
-echo "nginx pronto em 8443/tcp (HTTPS), à frente do painel; redes permitidas: ${PAINEL_REDES_PERMITIDAS}; proxy ou túnel aceito: ${PAINEL_PROXY_CONFIAVEL:-nenhum}"
+echo "nginx pronto em 8443/tcp (HTTPS${escuta6:+, IPv4 e IPv6}), à frente do painel; redes permitidas: ${PAINEL_REDES_PERMITIDAS}; proxy ou túnel aceito: ${PAINEL_PROXY_CONFIAVEL:-nenhum}"
 exec nginx -e stderr -c "$configuracao"

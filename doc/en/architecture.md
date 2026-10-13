@@ -194,6 +194,7 @@ Of the files of `.secrets/`, `ftp` sees one, `painel` sees two, the hash of the 
 - The panel neither publishes nor listens on a port: nginx reaches it through the Unix socket of the `DATA_DIR/nginx` folder, without going through the network.
 - The panel talks to the FTP over the network in two cases, always at `ftp:2121`, inside this network: to see whether it is up, by the greeting of the port, and to check the password of the FTP user who signs in to the panel, with a login over TLS. The user database and the files are shared by the two through the `auth` and `dados` folders.
 - Whoever opens the panel from the server itself, at `127.0.0.1`, reaches nginx with the address of the gateway of this network (`172.29.1.1`), which is already inside the networks allowed by default.
+- IPv6 is optional and comes turned off. With `REDE_IPV6=sim`, `deploy.sh` adds the file [`compose.ipv6.yaml`](../../compose.ipv6.yaml): the network gets the subnet `FTP_SUBNET_IPV6` (`fd29:1::/64`) and the three publications above are repeated on `FTP_BIND_IPV6` and `PAINEL_BIND_IPV6`, on the same ports. `pure-ftpd` and nginx start to listen on both families, and the IPv6 client reaches both with its real address. Whoever opens the panel from the server itself, at `::1`, reaches nginx with the IPv6 gateway of the network (`fd29:1::1`). See [IPv6](configuration.md#ipv6).
 - No reverse DNS (`-H`): `pure-ftpd` never resolves the client IP.
 
 ---
@@ -329,7 +330,7 @@ Final line of [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh):
 | `-l puredb:/auth/pureftpd.pdb` | Authentication backend |
 | `-p INICIO:FIM` | Passive port range |
 | `-P <ip>` | IP announced in `PASV` (`FTP_PASSIVE_IP`) |
-| `-S 0.0.0.0,2121` | Listens on port 2121 (unprivileged) |
+| `-S 0.0.0.0,2121` | Listens on port 2121 (unprivileged), on IPv4 only. With `REDE_IPV6=sim` it becomes `-S 2121`, which listens on IPv4 and IPv6 |
 | `-Y <modo>` | TLS policy (`FTP_TLS_MODE`): see [Configuration](configuration.md#tls). With per-user TLS in effect and at least one exempt user, `-Y 1` is used, and the TLS requirement is then enforced user by user by the gatekeeper; with no exempt user, `-Y 2` is used: [Security](security.md#tls-por-usuario) |
 
 ---

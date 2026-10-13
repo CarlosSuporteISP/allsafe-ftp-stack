@@ -184,6 +184,16 @@ class Painel(http.server.BaseHTTPRequestHandler):
 
     def host_valido(self):
         host = self.headers.get('Host', '').lower()
+        if host.startswith('['):
+            # IPv6 vem entre colchetes, com ou sem porta, e só é aceito com REDE_IPV6=sim.
+            nome, separador, porta = host[1:].partition(']')
+            if not separador or '%' in nome or (porta and not (porta[0] == ':' and porta[1:].isdigit())):
+                return False
+            try:
+                ip = ipaddress.IPv6Address(nome)
+            except ValueError:
+                return False
+            return CFG['ipv6'] and (CFG['ip_publico'] or privado(ip))
         nome, separador, porta = host.partition(':')
         if separador and not porta.isdigit():
             return False

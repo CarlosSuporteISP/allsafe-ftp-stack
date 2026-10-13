@@ -176,6 +176,15 @@ if [[ "$env_antigo" == true || ${#segredos_antigos[@]} -gt 0 ]]; then
   fi
 fi
 
+# IPv6: desligado por padrão. Com REDE_IPV6=sim entra a sobreposição compose.ipv6.yaml, que publica as portas também
+# em IPv6 e dá a sub-rede IPv6 à rede dos containers; com 'nao' ela sai. A lista vale para todo `compose` daqui.
+REDE_IPV6="$(env_valor REDE_IPV6 nao)"
+arquivos_compose=":${COMPOSE_FILE:-$(env_valor COMPOSE_FILE compose.yaml)}:"
+arquivos_compose="${arquivos_compose//:compose.ipv6.yaml:/:}"
+arquivos_compose="${arquivos_compose#:}"; arquivos_compose="${arquivos_compose%:}"
+arquivos_compose="${arquivos_compose:-compose.yaml}"
+if rede_ipv6; then arquivos_compose+=":compose.ipv6.yaml"; fi
+export COMPOSE_FILE="$arquivos_compose"
 compose() { docker compose --env-file "$env_file" "$@"; }
 
 if [[ "$remover" == true ]]; then
@@ -228,6 +237,21 @@ done
 # Painel publicado por proxy ou túnel: opção de quem instala; vazio = o endereço do cliente é sempre o da conexão.
 PAINEL_PROXY_CONFIAVEL="$(env_valor PAINEL_PROXY_CONFIAVEL)"
 exigir_proxies "$PAINEL_PROXY_CONFIAVEL" "$(env_valor PAINEL_REDES_PERMITIDAS 127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16)" || exit 1
+# IPv6: os endereços seguem a regra do IPv4, e nada é mudado no servidor para ele funcionar.
+ipv6_texto=""
+if rede_ipv6; then
+  ipv6_texto=", IPv6 ligado"
+  exigir_ip6 FTP_BIND_IPV6 "$(env_valor FTP_BIND_IPV6 ::1)" || exit 1
+  exigir_ip6 PAINEL_BIND_IPV6 "$(env_valor PAINEL_BIND_IPV6 ::1)" || exit 1
+  exigir_subrede_ipv6 FTP_SUBNET_IPV6 "$(env_valor FTP_SUBNET_IPV6 fd29:1::/64)" || exit 1
+  [[ "$(env_valor PAINEL_REDES_PERMITIDAS)" == *:* ]] \
+    || die "REDE_IPV6=sim, mas PAINEL_REDES_PERMITIDAS não tem nenhuma rede IPv6: o nginx recusaria todo cliente do painel em IPv6. Acrescente em $env_file a rede IPv6 de quem administra; para abrir do próprio servidor, em https://[::1], a rede é a de FTP_SUBNET_IPV6 ($(env_valor FTP_SUBNET_IPV6 fd29:1::/64))."
+  [[ -e /proc/net/if_inet6 && "$(cat /proc/sys/net/ipv6/conf/all/disable_ipv6 2>/dev/null)" == 0 ]] \
+    || die "REDE_IPV6=sim, mas o IPv6 está desligado no kernel deste servidor. Ligue o IPv6 no servidor ou volte para REDE_IPV6=nao em $env_file."
+  docker_versao="$(docker version --format '{{.Server.Version}}' 2>/dev/null || true)"
+  [[ "${docker_versao%%.*}" =~ ^[0-9]+$ ]] && (( 10#${docker_versao%%.*} >= 27 )) \
+    || die "REDE_IPV6=sim pede Docker 27 ou mais novo, que dá IPv6 à rede dos containers sem mexer na configuração do serviço; este servidor tem '${docker_versao:-versão não lida}'. Atualize o Docker ou volte para REDE_IPV6=nao em $env_file."
+fi
 # TLS do FTP: 0 e 1 deixam passar senha em texto puro e só existem para equipamento antigo.
 tls_modo="$(env_valor FTP_TLS_MODE 2)"
 case "$tls_modo" in
@@ -308,6 +332,8 @@ aviso_tls() {
 painel_cn="$(env_valor PAINEL_CERT_CN)"
 if [[ "$painel_cn" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   exigir_ip PAINEL_CERT_CN "$painel_cn" || exit 1
+elif [[ "$painel_cn" == *:* ]]; then
+  exigir_ip6 PAINEL_CERT_CN "$painel_cn" || exit 1
 fi
 acesso_usuarios="$(env_valor PAINEL_ACESSO_USUARIOS_FTP sim)"
 [[ "$acesso_usuarios" == sim || "$acesso_usuarios" == nao ]] \
@@ -334,7 +360,7 @@ if [[ "$check_only" == true ]]; then
   else
     compose config --quiet
   fi
-  echo "OK: perfil '$perfil_nome', $rede_texto, recursos do servidor e compose validados; nada foi alterado."
+  echo "OK: perfil '$perfil_nome', $rede_texto$ipv6_texto, recursos do servidor e compose validados; nada foi alterado."
   aviso_tls
   aviso_ip_publico
   aviso_proxy
@@ -351,22 +377,41 @@ if [[ -n "$size" ]]; then
   env_gravar FTP_PROFILE "$size"
 fi
 
+# A lista de arquivos do Compose vai para o .env, para o `docker compose` direto e os outros scripts lerem a mesma.
+# Quem nunca ligou o IPv6 não ganha a linha.
+if rede_ipv6 || grep -q '^COMPOSE_FILE=' "$env_file"; then
+  env_gravar COMPOSE_FILE "$COMPOSE_FILE"
+fi
+
 # Portas: nenhuma pode estar em uso por outro programa. As que os containers desta stack já publicam não contam.
+# Em IPv6 o endereço é comparado por extenso: o mesmo endereço pode ser escrito de mais de um jeito.
 if command -v ss >/dev/null 2>&1; then
   declare -A escuta=() propria=()
+  marcar() { # <mapa> <endereço:porta>
+    local -n mapa="$1"
+    if [[ "$2" =~ ^\[([0-9A-Fa-f:]+)\]:([0-9]+)$ ]] && ipv6_valido "${BASH_REMATCH[1]}"; then
+      mapa["6:$IPV6_HEX:${BASH_REMATCH[2]}"]=1
+    elif [[ "$2" == \*:* ]]; then
+      mapa["0.0.0.0:${2#\*:}"]=1; mapa["6:00000000000000000000000000000000:${2#\*:}"]=1
+    elif [[ -n "$2" ]]; then
+      mapa["$2"]=1
+    fi
+  }
   while IFS= read -r alvo; do
-    [[ -n "$alvo" ]] && escuta["${alvo/#\*:/0.0.0.0:}"]=1
+    marcar escuta "$alvo"
   done < <(ss -Hltn 2>/dev/null | awk '{print $4}')
   for servico in ftp painel nginx; do
     id="$(compose ps -q "$servico" 2>/dev/null || true)"
     [[ -n "$id" ]] || continue
     while IFS= read -r alvo; do
-      [[ -n "$alvo" ]] && propria["$alvo"]=1
+      marcar propria "$alvo"
     done < <(docker port "$id" 2>/dev/null | sed -n 's/.*-> //p')
   done
   ocupadas=()
   porta_em_uso() { # <ip> <porta>
-    [[ -z "${propria[$1:$2]:-}" ]] && [[ -n "${escuta[$1:$2]:-}${escuta[0.0.0.0:$2]:-}" ]]
+    local chave="$1:$2" todos="0.0.0.0:$2"
+    if ipv6_valido "$1"; then chave="6:$IPV6_HEX:$2" todos="6:00000000000000000000000000000000:$2"; fi
+    [[ -z "${propria[$chave]:-}" ]] && [[ -n "${escuta[$chave]:-}${escuta[$todos]:-}" ]]
   }
   ftp_ip="$(env_valor FTP_BIND_IP 127.0.0.1)"
   painel_ip="$(env_valor PAINEL_BIND_IP 127.0.0.1)"
@@ -377,6 +422,15 @@ if command -v ss >/dev/null 2>&1; then
   for ((porta = passiva_inicio; porta <= passiva_fim; porta++)); do
     porta_em_uso "$ftp_ip" "$porta" && ocupadas+=("$ftp_ip:$porta")
   done
+  if rede_ipv6; then
+    ftp_ip6="$(env_valor FTP_BIND_IPV6 ::1)"
+    painel_ip6="$(env_valor PAINEL_BIND_IPV6 ::1)"
+    porta_em_uso "$ftp_ip6" "$(env_valor FTP_PORT 21)" && ocupadas+=("[$ftp_ip6]:$(env_valor FTP_PORT 21)")
+    porta_em_uso "$painel_ip6" "$(env_valor PAINEL_PORT 8443)" && ocupadas+=("[$painel_ip6]:$(env_valor PAINEL_PORT 8443)")
+    for ((porta = passiva_inicio; porta <= passiva_fim; porta++)); do
+      porta_em_uso "$ftp_ip6" "$porta" && ocupadas+=("[$ftp_ip6]:$porta")
+    done
+  fi
   if [[ ${#ocupadas[@]} -gt 0 ]]; then
     die "porta já em uso por outro programa: ${ocupadas[*]:0:8}. Veja quem usa com 'ss -ltnp' e troque FTP_PORT, PAINEL_PORT ou a faixa passiva em $env_file."
   fi
@@ -518,10 +572,22 @@ portas_passivas=$(( $(env_valor FTP_PASSIVE_PORT_END 30049) - $(env_valor FTP_PA
 if (( portas_passivas > 400 )); then
   echo "Publicando $portas_passivas portas passivas: a subida pode levar alguns minutos."
 fi
+# Ligar ou desligar o IPv6 troca a rede dos containers. O Compose atual refaz a rede sozinho; o antigo manteria a
+# rede sem IPv6 e o cliente IPv6 chegaria com o endereço da rede no lugar do dele, o que cegaria o bloqueio por
+# endereço. Por isso a rede é derrubada aqui antes de subir, e conferida depois. Os dados ficam.
+rede_nome="$(env_valor FTP_NETWORK_NAME allsafe-ftp-network)"
+rede_tem_ipv6="$(docker network inspect --format '{{.EnableIPv6}}' "$rede_nome" 2>/dev/null || true)"
+if rede_ipv6; then rede_quer_ipv6=true; else rede_quer_ipv6=false; fi
+if [[ -n "$rede_tem_ipv6" && "$rede_tem_ipv6" != "$rede_quer_ipv6" ]]; then
+  echo "REDE_IPV6 mudou: refazendo a rede $rede_nome (os containers sobem de novo; os dados ficam)."
+  compose down --remove-orphans
+fi
 if ! compose up -d --wait --wait-timeout $(( 180 + portas_passivas / 4 )); then
   compose ps || true
   die "os containers não ficaram healthy. Veja o motivo com: docker compose logs --tail 50 ftp painel nginx"
 fi
+[[ "$(docker network inspect --format '{{.EnableIPv6}}' "$rede_nome" 2>/dev/null)" == "$rede_quer_ipv6" ]] \
+  || die "a rede $rede_nome não ficou com o IPv6 pedido em REDE_IPV6. Rode ./deploy.sh --remover e depois ./deploy.sh (os dados ficam)."
 # O painel recebe a chave pública da cópia como arquivo montado: trocada no host, o container em pé continua com a
 # antiga até ser recriado, e a cópia do sistema que ele envia para o S3 sairia cifrada para a chave errada.
 if [[ "$(compose exec -T painel cat /run/secrets/backup_chave_publica 2>/dev/null)" != "$(< "$chave_publica")" ]]; then
@@ -535,6 +601,7 @@ ftp_ip="$(env_valor FTP_BIND_IP 127.0.0.1)"
 echo
 echo "Pronto: FTP, painel e nginx no ar (healthy), perfil '$(env_valor FTP_PROFILE small)'."
 echo "FTP:    $ftp_ip:$(env_valor FTP_PORT 21), $tls_texto, modo passivo $(env_valor FTP_PASSIVE_PORT_START 30000)-$(env_valor FTP_PASSIVE_PORT_END 30049)"
+if rede_ipv6; then echo "        e em IPv6: [$(env_valor FTP_BIND_IPV6 ::1)]:$(env_valor FTP_PORT 21), mesma faixa passiva"; fi
 [[ "$tls_por_usuario" != sim ]] || echo "        equipamento sem suporte a TLS: o administrador dispensa o usuário dele na aba Usuários do painel"
 ftp_usuario="$(env_valor FTP_USER transfer)"
 # Senha do usuário inicial trocada pelo painel ou pelo manage-user.sh: a do arquivo volta a valer quando ele mudar.
@@ -547,6 +614,7 @@ else
   echo "        usuário '$ftp_usuario', senha no arquivo $secret_file"
 fi
 echo "Painel: https://$(env_valor PAINEL_BIND_IP 127.0.0.1):$(env_valor PAINEL_PORT 8443)  (pelo nginx; certificado autoassinado; $rede_texto, atrás de firewall)"
+if rede_ipv6; then echo "        e em IPv6: https://[$(env_valor PAINEL_BIND_IPV6 ::1)]:$(env_valor PAINEL_PORT 8443)"; fi
 if [[ -s "$painel_senha" ]]; then
   echo "        usuário '$painel_admin', senha inicial no arquivo $painel_senha"
   echo "        (valem até serem trocados na aba Usuários do painel)"

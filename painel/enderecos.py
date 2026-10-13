@@ -84,7 +84,8 @@ def alvo(texto):
 
 
 def redes_do_container():
-    """Redes ligadas direto a este container, lidas de /proc/net/route; None quando não dá para ler."""
+    """Redes ligadas direto a este container, lidas de /proc/net/route e, com REDE_IPV6=sim, de /proc/net/ipv6_route;
+    None quando não dá para ler."""
     redes = []
     try:
         with open('/proc/net/route', encoding='ascii') as arq:
@@ -95,6 +96,17 @@ def redes_do_container():
                     continue
                 destino, mascara = (int.from_bytes(int(campos[n], 16).to_bytes(4, sys.byteorder), 'big') for n in (1, 7))
                 redes.append(ipaddress.ip_network((destino, bin(mascara).count('1'))))
+        if CFG['ipv6']:
+            with open('/proc/net/ipv6_route', encoding='ascii') as arq:
+                for linha in arq:
+                    campos = linha.split()
+                    # A mesma regra: sem próximo salto (campo 5 zerado) e com prefixo. Ficam de fora a 'lo', a rota de um
+                    # endereço só, o enlace local e o multicast.
+                    if len(campos) < 10 or campos[9] == 'lo' or int(campos[4], 16) or not 0 < int(campos[1], 16) < 128:
+                        continue
+                    rede = ipaddress.IPv6Network((int(campos[0], 16), int(campos[1], 16)), strict=False)
+                    if not (rede.is_link_local or rede.is_multicast):
+                        redes.append(rede)
     except (OSError, ValueError):
         return None
     return redes
@@ -105,8 +117,8 @@ def poupado(ip):
     endereco = endereco_de(ip)
     if endereco is None or do_servidor(endereco) or endereco in CFG['proxies']:
         return True
-    if endereco.version == 6:
-        return False    # as redes ligadas a este container são IPv4: endereço IPv6 só chega informado por proxy
+    if endereco.version == 6 and not CFG['ipv6']:
+        return False    # sem REDE_IPV6 as redes ligadas a este container são IPv4: endereço IPv6 só chega informado por proxy
     redes = com_cache('redes_do_container', 60, redes_do_container)
     return redes is None or any(endereco in rede for rede in redes)
 
@@ -120,7 +132,9 @@ def protegido(rede, ip):
     if any(proxy.version == rede.version and proxy in rede for proxy in CFG['proxies']):
         return 'stack'
     redes = com_cache('redes_do_container', 60, redes_do_container)
-    if rede.version == 4 and (redes is None or any(rede.overlaps(outra) for outra in redes)):
+    if rede.version == 6 and not CFG['ipv6']:
+        return ''
+    if redes is None or any(rede.version == outra.version and rede.overlaps(outra) for outra in redes):
         return 'stack'
     return ''
 

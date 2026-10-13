@@ -6,6 +6,33 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.12.0] - 2026-10-13
+
+O FTP e o painel passam a atender também por IPv6, por opção de quem instala. Fica desligado por padrão, e nada muda para quem não liga.
+
+### Adicionado
+
+- **`REDE_IPV6`** (`nao` por padrão): com `sim`, a rede dos containers ganha uma sub-rede IPv6 e o FTP, a faixa passiva e o painel são publicados também em IPv6. Liga e desliga pelo `.env` e pelo `./deploy.sh`, que refaz a rede dos containers; os dados ficam.
+- **`FTP_SUBNET_IPV6`, `FTP_BIND_IPV6` e `PAINEL_BIND_IPV6`**: a sub-rede IPv6 dos containers, uma faixa local única `/64` (`fd29:1::/64`), e o endereço IPv6 do servidor em que o FTP e o painel são publicados (`::1`).
+- **`compose.ipv6.yaml`**: sobreposição do Compose lida só com `REDE_IPV6=sim`. O `deploy.sh` grava `COMPOSE_FILE` no `.env`, para o `docker compose` direto ler os mesmos arquivos; quem nunca ligou o IPv6 não ganha a linha.
+- **Mesma regra de rede privada em IPv6**: por padrão só `::1` e faixa local única (`fc00::/7`); endereço global só com `REDE_PERMITIR_IP_PUBLICO=sim`, com o mesmo alerta; `::`, enlace local, multicast, IPv4 escrito em IPv6, zona e colchetes são sempre recusados.
+- **`PAINEL_REDES_PERMITIDAS`, `PAINEL_PROXY_CONFIAVEL` e `PAINEL_CERT_CN` aceitam IPv6**: o certificado autoassinado do painel leva `::1` e o `PAINEL_BIND_IPV6` entre os nomes, e o painel aceita ser aberto por endereço IPv6 entre colchetes.
+- **Conferências do `deploy.sh` antes de ligar**: IPv6 ligado no kernel do servidor, Docker 27 ou mais novo e ao menos uma rede IPv6 em `PAINEL_REDES_PERMITIDAS`; a rede dos containers é conferida depois da subida. O deploy não muda a configuração do Docker, do kernel nem do firewall do servidor.
+- **Bloqueio por endereço com o IPv6 ligado**: o vigia do FTP e o painel leem também as redes IPv6 da stack; o endereço de saída em IPv6 é poupado, como o do IPv4.
+- **Aba Segurança**: com o IPv6 ligado, mostra o endereço do FTP e o do painel em IPv6.
+- **Etapa 38 da bateria**: nove casos de IPv6, dois funcionais, quatro de segurança e três de rede. A bateria passa a 108 casos funcionais, 155 de segurança e 17 de rede; em servidor sem IPv6 no kernel, os nove ficam de fora.
+- **Documentação nos três idiomas**: seção de IPv6 no guia de configuração, pré-requisito na instalação, rede e escuta na arquitetura, regra e exemplo de firewall no guia de segurança, e as mensagens novas na solução de problemas e no guia de scripts.
+
+### Alterado
+
+- **Pure-FTPd**: escuta em IPv4 e IPv6 (`-S 2121`) só com `REDE_IPV6=sim`; sem a opção, continua em `-S 0.0.0.0,2121`.
+- **nginx**: com a opção, escuta também em `[::]:8443`, com as mesmas regras `allow` e `deny`.
+- **`scripts/validate.sh`**: valida o Compose também com a sobreposição do IPv6.
+
+### Corrigido
+
+- **Guia de solução de problemas, nos três idiomas**: cinco linhas de tabela tinham barra vertical sem escape dentro de comando, e a linha aparecia cortada na página.
+
 ## [1.11.0] - 2026-10-12
 
 A documentação passa a existir também em espanhol, completa, ao lado do inglês e do português.

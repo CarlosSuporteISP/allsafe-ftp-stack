@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 """Aba Segurança: o que o painel consegue conferir da própria stack."""
+import ipaddress
 import os
 
 import administradores
 import enderecos
 import fator
-from config import ARQ_CERT, ARQ_CERT_FTP, CFG, FALHAS_MAX, PRIVADAS, endereco_privado
+from config import ARQ_CERT, ARQ_CERT_FTP, CFG, FALHAS_MAX, endereco_privado, rede_privada
 from estado import bloqueios, certificado, sem_tls, senhas_de_custo_antigo
 from graficos import faixa
 from icones import icone
@@ -45,7 +46,7 @@ def seguranca(pedido, sessao, consulta, formulario, token):
     presos_endereco = enderecos.lista()
 
     def local(ip):
-        if ip.startswith('127.'):
+        if ip.startswith('127.') or (':' in ip and endereco_privado(ip) and ipaddress.ip_address(ip).is_loopback):
             return t('IP privado, só o próprio host alcança')
         if endereco_privado(ip):
             return t('IP privado, alcançável pela rede interna deste endereço')
@@ -53,7 +54,7 @@ def seguranca(pedido, sessao, consulta, formulario, token):
 
     def marca_ip(ip):
         return 'bom' if endereco_privado(ip) else 'atencao'
-    redes_publicas = [str(rede) for rede in CFG['redes'] if not any(rede.subnet_of(p) for p in PRIVADAS)]
+    redes_publicas = [str(rede) for rede in CFG['redes'] if not rede_privada(rede)]
     # Segundo fator: cobrado como atenção só quando o painel é alcançado de fora da rede privada.
     admins = list(administradores.ler())
     com_fator = [nome for nome in admins if fator.ligado(nome)]
@@ -109,6 +110,8 @@ def seguranca(pedido, sessao, consulta, formulario, token):
                 '<code>X-Forwarded-For</code> é ignorado. Publicar só o painel por proxy ou túnel é opção de quem instala.')),
         linha(marca_ip(CFG['ftp_bind']), t('Endereço do FTP'),
               f'<code>{e(CFG["ftp_bind"])}:{e(CFG["ftp_porta"])}</code> — {local(CFG["ftp_bind"])}.'),
+        *([linha(marca_ip(CFG['ftp_bind6']), t('Endereço do FTP em IPv6'),
+                 f'<code>[{e(CFG["ftp_bind6"])}]:{e(CFG["ftp_porta"])}</code> — {local(CFG["ftp_bind6"])}.')] if CFG['ipv6'] else []),
         linha(marca_ip(CFG['ftp_anunciado']), t('IP anunciado no modo passivo'), f'<code>{e(CFG["ftp_anunciado"])}</code> — '
               + (t('IP privado.') if endereco_privado(CFG['ftp_anunciado']) else t('<strong>IP público</strong>.'))),
         linha(marca_tls, t('TLS do FTP'), f'{t("Modo")} <code>{e(CFG["ftp_tls"])}</code>: {texto_tls}'),
@@ -116,6 +119,9 @@ def seguranca(pedido, sessao, consulta, formulario, token):
               f'<code>{e(cert_ftp["digital"] if cert_ftp else "—")}</code>'),
         linha(marca_ip(CFG['painel_bind']), t('Endereço do painel'),
               f'<code>{e(CFG["painel_bind"])}:{e(CFG["painel_porta"])}</code> — {t("só HTTPS")}, {local(CFG["painel_bind"])}.'),
+        *([linha(marca_ip(CFG['painel_bind6']), t('Endereço do painel em IPv6'),
+                 f'<code>[{e(CFG["painel_bind6"])}]:{e(CFG["painel_porta"])}</code> — {t("só HTTPS")}, '
+                 f'{local(CFG["painel_bind6"])}.')] if CFG['ipv6'] else []),
         linha('bom', t('Frente web'), t('O navegador fala com o nginx, a única porta publicada do painel: ele fecha o HTTPS, '
                                         'limita redes e taxa de pedidos e repassa por soquete Unix. O painel não escuta em porta de rede.')),
         linha(marca_painel, t('Certificado do painel'), f'{data_inteira(e(validade_painel))}<br><span class="suave">SHA-256</span> '

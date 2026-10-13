@@ -12,7 +12,7 @@
 
 Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Version](https://img.shields.io/badge/version-1.11.0-blue)
+![Version](https://img.shields.io/badge/version-1.12.0-blue)
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
 ![Support](https://img.shields.io/badge/support-LTS-blue)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -99,6 +99,7 @@ There are **three containers**: the FTP server, the panel and **nginx**, the onl
 | **Blocking by address, IPv4 and IPv6** | The address that goes over five user and password errors in 24 hours stays 120 days without signing in to the FTP and to the panel, and a successful sign-in resets the count. In the Blocks tab, the administrator blocks an address or a prefix, unblocks it and changes the period |
 | **Local bind by default** | It starts on `127.0.0.1`; you open only one dedicated **private** IP, with a firewall on the host |
 | **Private network by default** | Made for an internal network, behind a firewall; a public address only through an explicit option, with a warning |
+| **IPv6, if you want** | Off by default. With `REDE_IPV6=sim`, the FTP and the panel also answer over IPv6, under the same private network rule as IPv4 |
 | **Only the panel published, if you want** | The panel can be opened through a proxy or tunnel on the server itself, with the FTP closed on the private network; the client address is only accepted from the declared proxy |
 | **Secure web panel** | Creates users, changes passwords and removes users in the browser: HTTPS only, a session that ends after 4 hours without use, blocking after five wrong passwords and a record of every action |
 | **Second factor at the panel sign-in** | Required by default for every account of the panel, administrator and FTP user: after the password, the panel asks for the six-digit code of an authenticator app (TOTP). Whoever has not set it up yet does it at the sign-in itself, from a QR code. Panel only: the FTP does not change |
@@ -637,6 +638,7 @@ Each profile widens the passive range together with `FTP_MAX_CLIENTS`: adjust th
 
 - **Private network by default:** private IP, behind a firewall, with no port forward from the internet. See [private network and firewall](doc/en/security.md#rede-privada).
 - **Public IP only by choice:** `REDE_PERMITIR_IP_PUBLICO=sim` accepts a public address and requires TLS; the stack warns about it in `deploy.sh`, in the container logs and in the panel. Only with a firewall on the server. See [public IP](doc/en/security.md#ip-publico).
+- **IPv6 only by choice:** `REDE_IPV6=sim` publishes the FTP and the panel over IPv6 as well, on `::1` by default. The rule is the same as in IPv4: only `::1` and unique local ranges, and a global address only with the public IP option. See [IPv6](doc/en/configuration.md#ipv6).
 - **Only the panel published, without exposing the FTP:** `PAINEL_PROXY_CONFIAVEL` declares the proxy or the tunnel that runs on the server itself. The panel then counts the wrong password and the session by the client address that it reports, and the address written in a header by anyone else is ignored. See [panel through proxy or tunnel](doc/en/security.md#painel-por-proxy).
 <details>
 <summary>Protections applied, one by one — click to expand</summary>
@@ -671,7 +673,7 @@ The safest path for each decision of whoever installs, as a flowchart, is in [be
 | Check the running installation | `./scripts/validate.sh --runtime` | the same, plus `servico ftp: running, healthy`, likewise for `painel` and `nginx`, and the initial user in PureDB or removed by the administrator |
 | Run the full suite: functional, security and network | `./tests/testar.sh` | one line per case and, at the end, `Bateria aprovada: nenhum desvio.` |
 
-The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 106 functional cases, 151 security cases and 14 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
+The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 108 functional cases, 155 security cases and 17 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
 
 ---
 
@@ -687,6 +689,7 @@ At the root are `compose.yaml`, the `Dockerfile` and the day-to-day commands (`d
 | Path | What it is |
 |---|---|
 | [`compose.yaml`](compose.yaml) | Definition of the services `ftp`, `painel` and `nginx`, volumes, network, limits and healthchecks |
+| [`compose.ipv6.yaml`](compose.ipv6.yaml) | Overlay read only with `REDE_IPV6=sim`: publishes the ports over IPv6 as well and gives the IPv6 subnet to the network of the containers |
 | [`Dockerfile`](Dockerfile) | Images on Debian 13 slim: targets `ftp` and `painel`, with Pure-FTPd and the user `ftpdata`, and target `nginx` |
 | [`deploy.sh`](deploy.sh) | Installs, reapplies, updates or removes the stack in one command |
 | [`manage-user.sh`](manage-user.sh) | Host shortcut for `add` (with the folder and the profile, if you want), `passwd`, `pasta`, `perfil`, `del` and `list` of users |
@@ -766,7 +769,7 @@ The plan for creating and changing the stack (phases, tests, evidence and progre
 
 ## 🏷️ Version
 
-**1.11.0**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
+**1.12.0**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
 
 The version advances at every publication, always in the middle number (`1.1.0`, `1.2.0`) or in the first one: the correction number stays at zero. `0.x` was the construction phase; **`1.0.0` is the first version ready for production** and opens the long-term support (LTS) line `1.x`. The versions were renumbered on 2026-10-11: [`CHANGELOG.md`](CHANGELOG.md) has what changed in each one and the table with the numbers from before.
 

@@ -17,8 +17,8 @@ derrubar() {
     docker network rm "$nome-network" > /dev/null 2>&1
   done
   docker rm -f "$NOME-recusa" "$NOME-export" > /dev/null 2>&1
-  # Redes da etapa do bloqueio por endereço: ficam para trás quando a bateria é interrompida no meio dela.
-  docker network rm "$NOME-network-30a" "$NOME-network-30b" > /dev/null 2>&1
+  # Redes das etapas do bloqueio por endereço e do IPv6: ficam para trás quando a bateria é interrompida no meio delas.
+  docker network rm "$NOME-network-30a" "$NOME-network-30b" "$NOME-network-38" > /dev/null 2>&1
   # Sobra de dados (arquivos do root e do ftpdata): quem apaga é um container sem rede.
   if [[ -d "$T/dados" || -d "$T/dados-b" ]] && docker image inspect "$IMG_FTP" > /dev/null 2>&1; then
     docker run --rm --network none --read-only -v "$T":/alvo --entrypoint sh "$IMG_FTP" \
@@ -215,9 +215,9 @@ gravar() { # <tipo> <sufixo do arquivo> <título> <rótulo do índice> <o que fo
   printf '%-9s %s → %s\n' "$tipo" "$resultado" "$arquivo"
 }
 declare -A ESPERADOS=(
-  [testes]="$(seq -s ' ' 1 106)"
-  [seguranca]="$(seq -s ' ' 1 151)"
-  [rede]="$(seq -s ' ' 1 14)"
+  [testes]="$(seq -s ' ' 1 108)"
+  [seguranca]="$(seq -s ' ' 1 155)"
+  [rede]="$(seq -s ' ' 1 17)"
 )
 ARQUIVOS=()
 LIMPEZA="instância mantida no ar (--manter)"

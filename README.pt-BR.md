@@ -12,7 +12,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.11.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.12.0-blue)
 ![Status](https://img.shields.io/badge/status-est%C3%A1vel-brightgreen)
 ![Suporte](https://img.shields.io/badge/suporte-LTS-blue)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
@@ -100,6 +100,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 | **Bloqueio por endereço, IPv4 e IPv6** | O endereço que passa de cinco erros de usuário e senha em 24 horas fica 120 dias sem entrar no FTP e no painel, e a entrada certa zera a contagem. Na aba Bloqueios, o administrador bloqueia um endereço ou um prefixo, libera e muda o prazo |
 | **Bind local por padrão** | Sobe em `127.0.0.1`; você abre só um IP **privado** dedicado, com firewall no host |
 | **Rede privada por padrão** | Feita para rede interna, atrás de firewall; endereço público só por uma opção explícita, com alerta |
+| **IPv6, se você quiser** | Desligado por padrão. Com `REDE_IPV6=sim`, o FTP e o painel atendem também por IPv6, com a mesma regra de rede privada do IPv4 |
 | **Só o painel publicado, se quiser** | O painel pode ser aberto por um proxy ou túnel do próprio servidor, com o FTP fechado na rede privada; o endereço do cliente só é aceito do proxy declarado |
 | **Painel web seguro** | Cria, troca a senha e remove usuários pelo navegador: só HTTPS, sessão que encerra com 4 horas sem uso, bloqueio depois de cinco senhas erradas e registro de cada ação |
 | **Segundo fator na entrada do painel** | Obrigatório por padrão para toda conta do painel, administrador e usuário do FTP: depois da senha, o painel pede o código de seis dígitos de um aplicativo autenticador (TOTP). Quem ainda não cadastrou cadastra na própria entrada, por código QR. Só no painel: o FTP não muda |
@@ -642,6 +643,7 @@ Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`: ajuste o firewal
 
 - **Rede privada por padrão:** IP privado, atrás de firewall, sem redirecionamento de porta da internet. Veja [rede privada e firewall](doc/pt-BR/seguranca.md#rede-privada).
 - **IP público só por escolha:** `REDE_PERMITIR_IP_PUBLICO=sim` aceita endereço público e exige TLS obrigatório; a stack alerta disso no `deploy.sh`, no registro dos containers e no painel. Só com firewall no servidor. Veja [IP público](doc/pt-BR/seguranca.md#ip-publico).
+- **IPv6 só por escolha:** `REDE_IPV6=sim` publica o FTP e o painel também em IPv6, em `::1` por padrão. A regra é a mesma do IPv4: só `::1` e faixa local única, e endereço global só com a opção de IP público. Veja [IPv6](doc/pt-BR/configuracao.md#ipv6).
 - **Só o painel publicado, sem expor o FTP:** `PAINEL_PROXY_CONFIAVEL` declara o proxy ou o túnel que roda no próprio servidor. O painel passa a contar a senha errada e a sessão pelo endereço do cliente que ele informa, e o endereço escrito em cabeçalho por qualquer outro é ignorado. Veja [painel por proxy ou túnel](doc/pt-BR/seguranca.md#painel-por-proxy).
 <details>
 <summary>Proteções aplicadas, uma a uma — clique para expandir</summary>
@@ -676,7 +678,7 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 106 casos funcionais, 151 de segurança e 14 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 108 casos funcionais, 155 de segurança e 17 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
 
 ---
 
@@ -692,6 +694,7 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | Caminho | O que é |
 |---|---|
 | [`compose.yaml`](compose.yaml) | Definição dos serviços `ftp`, `painel` e `nginx`, volumes, rede, limites e healthchecks |
+| [`compose.ipv6.yaml`](compose.ipv6.yaml) | Sobreposição lida só com `REDE_IPV6=sim`: publica as portas também em IPv6 e dá a sub-rede IPv6 à rede dos containers |
 | [`Dockerfile`](Dockerfile) | Imagens sobre o Debian 13 slim: alvos `ftp` e `painel`, com Pure-FTPd e o usuário `ftpdata`, e alvo `nginx` |
 | [`deploy.sh`](deploy.sh) | Instala, reaplica, atualiza ou remove a stack em um comando |
 | [`manage-user.sh`](manage-user.sh) | Atalho do host para `add` (com a pasta e o perfil, se quiser), `passwd`, `pasta`, `perfil`, `del` e `list` de usuários |
@@ -771,7 +774,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**1.11.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
+**1.12.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
 
 A versão avança a cada publicação, sempre no número do meio (`1.1.0`, `1.2.0`) ou no primeiro: o número de correção fica em zero. `0.x` foi a fase de construção; **a `1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo (LTS) `1.x`. As versões foram renumeradas em 2026-10-11: o [`CHANGELOG.md`](CHANGELOG.md) traz o que mudou em cada uma e a tabela com os números de antes.
 

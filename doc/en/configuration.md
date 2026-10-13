@@ -32,7 +32,7 @@ flowchart LR
 <details>
 <summary>Contents — click to expand</summary>
 
-[Minimal production example](#exemplo-minimo-de-producao) · [General](#geral) · [Network and ports](#rede-e-portas) · [Initial user and password](#usuario-inicial-e-senha) · [TLS](#tls) · [Session limits](#limites-de-sessao) · [Web panel](#painel) · [Security contact](#contato-de-seguranca) · [Resource limits of the container](#limites-de-recurso-do-container) · [Docker network](#rede-docker-sub-rede)
+[Minimal production example](#exemplo-minimo-de-producao) · [General](#geral) · [Network and ports](#rede-e-portas) · [IPv6](#ipv6) · [Initial user and password](#usuario-inicial-e-senha) · [TLS](#tls) · [Session limits](#limites-de-sessao) · [Web panel](#painel) · [Security contact](#contato-de-seguranca) · [Resource limits of the container](#limites-de-recurso-do-container) · [Docker network](#rede-docker-sub-rede)
 
 </details>
 
@@ -107,7 +107,7 @@ The **Default** column of the tables below is the value of [`.env.example`](../.
 | `NGINX_CONTAINER_NAME` | Name of the container and of the host of nginx | Container name | `allsafe-ftp-nginx` |
 | `FTP_NETWORK_NAME` | Name of the Docker network of the stack | Network name | `allsafe-ftp-network` |
 
-For a **second instance** on the same host, change the five names, the three images, the folders, the ports (of the FTP and of the panel) and `FTP_SUBNET`. [`deploy.sh`](../../deploy.sh) accepts another file in the place of the `.env`: `ENV_FILE=/caminho/outro.env ./deploy.sh`.
+For a **second instance** on the same host, change the five names, the three images, the folders, the ports (of the FTP and of the panel) and `FTP_SUBNET`; with IPv6 turned on, `FTP_SUBNET_IPV6` too. [`deploy.sh`](../../deploy.sh) accepts another file in the place of the `.env`: `ENV_FILE=/caminho/outro.env ./deploy.sh`.
 
 ---
 
@@ -124,7 +124,7 @@ For a **second instance** on the same host, change the five names, the three ima
 | `FTP_PASSIVE_PORT_START` | Start of the range of data ports (passive mode) | `1024` to `65535`, less than or equal to the end | `30000` |
 | `FTP_PASSIVE_PORT_END` | End of the passive range. Number of ports greater than or equal to `FTP_MAX_CLIENTS` | `1024` to `65535`, greater than or equal to the start | `30049` |
 
-> 🧱 **Private network:** by default only `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` and `192.168.0.0/16` are accepted. [`deploy.sh`](../../deploy.sh) and the container stop with `não é IP privado` for any other value ([`scripts/rede-privada.sh`](../../scripts/rede-privada.sh)).
+> 🧱 **Private network:** by default only `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` and `192.168.0.0/16` are accepted. [`deploy.sh`](../../deploy.sh) and the container stop with `não é IP privado` for any other value ([`scripts/rede-privada.sh`](../../scripts/rede-privada.sh)). In IPv6 the rule is the same, with `::1` and the unique local range (`fc00::/7`): [IPv6](#ipv6).
 
 <a name="rede-permitir-ip-publico"></a>
 
@@ -138,6 +138,32 @@ For a **second instance** on the same host, change the five names, the three ima
 > **What is `FTP_PASSIVE_IP` for?** In passive mode, the server tells the client on which IP and on which port to open the data connection. Pure-FTPd, inside the container, only knows the address of the Docker network, which the device does not reach; that is why the stack tells it which address to announce (option `-P`). The value is the **private** IP of the host through which the devices arrive, in general the same as `FTP_BIND_IP`. It is only different when there is internal NAT between the device and the server. An internet IP is refused.
 
 > **Installation before `0.17.0`:** the variable was called `FTP_PUBLIC_IP`. `./deploy.sh` changes the name by itself, keeps the value and stores the previous `.env` in `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env`. Until it runs, the commands that call Compose stop with `defina FTP_PASSIVE_IP no .env`. The files in `.secrets/` also changed name, in `0.18.0`, and are converted in the same run: [Secrets](secrets.md#nomes-antigos).
+
+<a name="ipv6"></a>
+
+### IPv6
+
+From the factory the stack runs on IPv4 only. With `REDE_IPV6=sim`, the FTP and the panel are **also** published on IPv6, on the same ports; IPv4 stays as it is.
+
+| Variable | What it is for | Values | Default |
+|---|---|---|---|
+| `REDE_IPV6` | Publishing the FTP and the panel on IPv6 as well | `nao` or `sim` | `nao` |
+| `FTP_BIND_IPV6` | IPv6 address of the **host** where the control port and the passive range listen | IPv6 without brackets: `::1` or from the unique local range (`fc00::/7`); `::` is always refused; public IPv6, only with `REDE_PERMITIR_IP_PUBLICO=sim` | `::1` |
+| `PAINEL_BIND_IPV6` | IPv6 address of the **host** where nginx publishes the panel | The same as `FTP_BIND_IPV6` | `::1` |
+| `FTP_SUBNET_IPV6` | IPv6 subnet of the Docker network of the stack | Unique local range with a `/64` prefix | `fd29:1::/64` |
+
+With `nao`, the last three are not read. After turning it on or off, run `./deploy.sh`: it checks the addresses, rebuilds the network of the containers with or without the IPv6 subnet and writes to the `.env` the line `COMPOSE_FILE`, which adds or removes the file [`compose.ipv6.yaml`](../../compose.ipv6.yaml). That way a direct `docker compose` and the other scripts read the same configuration. The line `COMPOSE_FILE` belongs to `deploy.sh`: do not edit it.
+
+With `REDE_IPV6=sim`, `deploy.sh` stops before any change when:
+
+- an address is not accepted (`não é IPv6 privado`) or the subnet is not a unique local `/64` range;
+- `PAINEL_REDES_PERMITIDAS` has no IPv6 network;
+- IPv6 is turned off in the kernel of the server;
+- Docker is older than version 27.
+
+> **Panel over IPv6:** add to `PAINEL_REDES_PERMITIDAS` the IPv6 network of whoever administers. Whoever opens the panel on the server itself, at `https://[::1]:8443`, reaches nginx with the address of the Docker network on IPv6: for that access, the network to add is the one in `FTP_SUBNET_IPV6`.
+
+> **Passive mode on IPv6:** there is no announced address to configure. On IPv6 the client uses extended passive mode (`EPSV`): the server tells only the port and the client goes back to the address it is already connected to. The port range is the same as on IPv4.
 
 ---
 
@@ -163,7 +189,7 @@ Only the initial user comes from the `.env`. The others are created through the 
 |---|---|---|---|
 | `FTP_TLS_MODE` | TLS policy of `pure-ftpd` (option `-Y`) | `0`, `1`, `2` or `3` (table below) | `2` |
 | `FTP_TLS_EXCECOES` | Per-user TLS: with `sim`, the administrator can exempt from TLS, in the Users tab of the panel, the user of a device that does not speak TLS; the others are still required to use it. With nobody exempt, nothing changes: the session without TLS is refused before the password. It only holds with `FTP_TLS_MODE=2` and without `REDE_PERMITIR_IP_PUBLICO=sim`; outside that it has no effect | `sim` or `nao` | `sim` |
-| `FTP_CERT_CN` | `CN` and `SAN` of the self-signed certificate generated at the first start. If it is an IPv4, it goes in as `IP:`; otherwise, as `DNS:` | hostname or IPv4 | `ftp.exemplo.com.br` in the example; `localhost` if the variable is missing |
+| `FTP_CERT_CN` | `CN` and `SAN` of the self-signed certificate generated at the first start. If it is an IPv4 or an IPv6 (without brackets), it goes in as `IP:`; otherwise, as `DNS:` | hostname, IPv4 or IPv6 | `ftp.exemplo.com.br` in the example; `localhost` if the variable is missing |
 
 | Mode | Session without TLS | Data channel without encryption | When to use |
 |---|---|---|---|
@@ -210,7 +236,7 @@ Replacing the self-signed certificate with a real one: [Operation](operation.md#
 |---|---|---|---|
 | `PAINEL_BIND_IP` | IP of the **host** where nginx publishes the panel | Private IP of the host; `0.0.0.0` is always refused; public IP, only with `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.1` |
 | `PAINEL_PORT` | HTTPS port of the panel published on the host by nginx (mapped to `8443` in the nginx container) | `1` to `65535` | `8443` |
-| `PAINEL_REDES_PERMITIDAS` | Networks from which the panel accepts a client. Whoever is outside gets `403` from nginx, before reaching the panel; the panel checks again | List of **private** networks separated by comma, in CIDR notation; public network (from `/8` to `/32`), only with `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
+| `PAINEL_REDES_PERMITIDAS` | Networks from which the panel accepts a client. Whoever is outside gets `403` from nginx, before reaching the panel; the panel checks again | List of **private** networks separated by comma, in CIDR notation, IPv4 or IPv6 (in IPv6, private is `::1/128` or inside `fc00::/7`); public network (from `/8` to `/32` in IPv4, from `/16` to `/128` in IPv6), only with `REDE_PERMITIR_IP_PUBLICO=sim`. With `REDE_IPV6=sim`, the list needs at least one IPv6 network ([IPv6](#ipv6)) | `127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
 | `PAINEL_ADMIN_USER` | Name of the first administrator of the panel, created at the first start with the initial password in `.secrets/`. It only holds while no administrator exists: after that, name, password and the other administrators are changed in the Users tab | Lowercase letters, numbers, `_` and `-`; starts with a letter or `_`; up to 32 characters | `admin` |
 | `PAINEL_SESSAO_MINUTOS` | Minutes without use until the session ends; with or without use, it ends in 12 hours. The auto-refresh of the Server tab does not count as use. Deleting, renaming and touching an administrator ask for the password again, even with the session open | `1` to `720` | `240` (4 hours) |
 | `PAINEL_ENVIO_MAX_MB` | Maximum size, in MB, of each file uploaded through the panel. The administrator always uploads; the FTP user, only with the permission ticked when editing it, in the Limits card. nginx and the panel refuse what goes past the ceiling with `413`; a larger file goes by FTP: [Upload file](panel.md#enviar-arquivo) | `1` to `102400` | `1024` (1 GB) |
@@ -220,8 +246,8 @@ Replacing the self-signed certificate with a real one: [Operation](operation.md#
 | `PAINEL_TELEGRAM_MAX_MB` | Largest file, in MB, that the bot sends at once. A larger file is not sent: the chat receives only the notice with the name and the size. The default is the ceiling of the public API; only raise it with your own bot API server | `1` to `2000` | `50` |
 | `PAINEL_ACESSO_USUARIOS_FTP` | Sign-in of the FTP users to the panel. With `sim`, each FTP user signs in with the FTP name and password and sees only its own folder, where it does what its profile allows, without any administration screen; with `nao`, only an administrator signs in. The FTP server checks the password, through the internal network of the stack: [FTP user in the panel](panel.md#usuario-ftp) | `sim` or `nao` | `sim` |
 | `PAINEL_SEGUNDO_FATOR_OBRIGATORIO` | Second factor at the sign-in of the panel. With `sim`, every account that signs in to the panel, administrator or FTP user, goes through the password and the code from an authenticator app, and whoever has not set the app up yet does it at sign-in, right after the password; with `nao`, each administrator turns on their own, if they want, and the FTP user signs in with the password only. It applies to the panel only: on FTP the sign-in is still user and password. Whoever updates from a version before `1.9.0` starts being asked at the following sign-in: [Second factor at sign-in](panel.md#segundo-fator) | `sim` or `nao` | `sim` |
-| `PAINEL_CERT_CN` | Extra internal name or private IP in the self-signed certificate of the panel | Lowercase name or **private** IP (public IP, only with `REDE_PERMITIR_IP_PUBLICO=sim`); empty for none | empty |
-| `PAINEL_PROXY_CONFIAVEL` | Publishing **only the panel** through a proxy or tunnel, without exposing the FTP: the addresses from which nginx accepts `X-Forwarded-For` as the address of whoever accesses. It is optional and is the choice of whoever installs. Read the [alert](#painel-proxy-confiavel) before filling it in | Up to 8 IPv4 addresses separated by comma, one by one, without a mask; each one private (public, only with `REDE_PERMITIR_IP_PUBLICO=sim`) and inside `PAINEL_REDES_PERMITIDAS`; empty not to use it | empty |
+| `PAINEL_CERT_CN` | Extra internal name or private IP in the self-signed certificate of the panel | Lowercase name or **private** IP, IPv4 or IPv6 without brackets (public IP, only with `REDE_PERMITIR_IP_PUBLICO=sim`); empty for none | empty |
+| `PAINEL_PROXY_CONFIAVEL` | Publishing **only the panel** through a proxy or tunnel, without exposing the FTP: the addresses from which nginx accepts `X-Forwarded-For` as the address of whoever accesses. It is optional and is the choice of whoever installs. Read the [alert](#painel-proxy-confiavel) before filling it in | Up to 8 IPv4 or IPv6 addresses separated by comma, one by one, without a mask and without brackets; each one private (public, only with `REDE_PERMITIR_IP_PUBLICO=sim`) and inside `PAINEL_REDES_PERMITIDAS`; empty not to use it | empty |
 | `PAINEL_AVISO_EXPOSICAO` | Exposure warning on the screen of the panel. With `sim`, when `REDE_PERMITIR_IP_PUBLICO=sim` or `PAINEL_PROXY_CONFIAVEL` is filled in, the administrator reads how the installation is published in three places: in the sign next to **Security** in the menu, at the beginning of the Security tab and in the footer. With `nao`, the three disappear. The sign-in screen and the screens of the FTP user never say how the panel was published. The lines **Public address** and **Panel behind a proxy or tunnel** of the Security tab, which only an administrator sees, keep showing the state, and the alert stays in the output of `deploy.sh` and in the log of the containers | `sim` or `nao` | `sim` |
 | `PAINEL_MEMORY_LIMIT` | `mem_limit` of the panel, without swap | example: `192M` | `192M` |
 | `PAINEL_CPU_LIMIT` | `cpus` of the panel | example: `0.5` | `0.5` |
@@ -323,6 +349,7 @@ The Docker network of this stack has a fixed subnet, changeable through a variab
 | Variable | Network | Containers | Default | Example |
 |---|---|---|---|---|
 | `FTP_SUBNET` | `ftp` (`allsafe-ftp-network`) | `allsafe-ftp`, `allsafe-ftp-painel` and `allsafe-ftp-nginx` | `172.29.1.0/29` | `FTP_SUBNET=10.250.1.0/29` |
+| `FTP_SUBNET_IPV6` | The same network, in IPv6; only with `REDE_IPV6=sim` | The same | `fd29:1::/64` | `FTP_SUBNET_IPV6=fd00:250:1::/64` |
 
 On an installation that is already running, the new subnet only holds after recreating the network (the volumes and the data are not affected):
 

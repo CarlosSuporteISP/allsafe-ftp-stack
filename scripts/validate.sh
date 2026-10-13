@@ -183,7 +183,7 @@ for arquivo in SECURITY.md SECURITY.pt-BR.md SECURITY.es.md; do
 done
 echo "política de segurança OK: SECURITY.md aponta para SEGURANCA_CONTATO_EMAIL, sem endereço fixo"
 com_licenca=0; sem_licenca=0
-for arquivo in Dockerfile compose.yaml deploy.sh manage-user.sh scripts/*.sh ftp/*.sh ftp/*.pl painel/*.sh painel/*.py nginx/*.sh nginx/*.conf \
+for arquivo in Dockerfile compose.yaml compose.ipv6.yaml deploy.sh manage-user.sh scripts/*.sh ftp/*.sh ftp/*.pl painel/*.sh painel/*.py nginx/*.sh nginx/*.conf \
   nginx/*.modelo web/*.css tests/*.sh tests/etapas/*.sh; do
   if head -n 2 "$arquivo" | grep -q -F 'SPDX-License-Identifier: Apache-2.0'; then
     com_licenca=$((com_licenca + 1))
@@ -195,6 +195,7 @@ done
 echo "licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em $com_licenca arquivos de código"
 for profile in profiles/*.env; do
   docker compose --env-file .env.example --env-file "$profile" config --quiet
+  COMPOSE_FILE=compose.yaml:compose.ipv6.yaml docker compose --env-file .env.example --env-file "$profile" config --quiet
   echo "compose OK com $(basename "$profile")"
 done
 if [[ "${1:-}" == "--runtime" ]]; then

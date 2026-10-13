@@ -26,7 +26,8 @@
 # administrador bloqueia (/auth/prefixos), e o vigia só o respeita. Não contam a rede interna da stack, a recusa
 # do porteiro por falta de TLS e a tentativa feita durante um bloqueio; entrada certa zera a contagem do
 # endereço. O endereço de saída do container nunca é bloqueado: por ele chegam os clientes do próprio host e,
-# onde o Docker não preserva a origem da conexão, todos os clientes.
+# onde o Docker não preserva a origem da conexão, todos os clientes. Com REDE_IPV6=sim o container tem um
+# endereço de saída e uma rede interna também em IPv6, e vale para eles a mesma regra.
 #
 # Só módulos do perl-base, que já vem na imagem. O laço não espera por nada além do soquete: se ele parar
 # de ler, o Pure-FTPd trava ao registrar. Se o vigia sair, o entrypoint encerra o container.
@@ -99,8 +100,34 @@ sub ler_redes {
     }
     close $arq;
 }
+# O mesmo em IPv6, só com REDE_IPV6=sim: /proc/net/ipv6_route traz destino, tamanho do prefixo e próximo salto
+# em hexadecimal. Ficam de fora o enlace local (fe80::/10), o multicast, as rotas de um endereço só e a 'lo'.
+# Tudo em texto de zeros e uns, como no endereco.pl: a rede guarda só os bits do prefixo.
+my (@redes6, $saida6);
+sub ler_redes6 {
+    return unless ($ENV{REDE_IPV6} // 'nao') eq 'sim';
+    open(my $arq, '<', '/proc/net/ipv6_route') or return;
+    while (my $linha = <$arq>) {
+        my @campo = split ' ', $linha;
+        next unless @campo >= 10 && $campo[0] =~ /^[0-9a-f]{32}$/ && $campo[1] =~ /^[0-9a-f]{2}$/ && $campo[4] =~ /^[0-9a-f]{32}$/;
+        next if $campo[9] eq 'lo';
+        my ($destino, $porta) = map { unpack('B128', pack('H32', $_)) } @campo[0, 4];
+        my $tamanho = hex $campo[1];
+        if ($tamanho == 0) { $saida6 = $porta if $porta =~ /1/ && $porta !~ /^1111111010/; }
+        elsif ($porta !~ /1/ && $tamanho < 128 && $destino !~ /^(?:1111111010|11111111)/) { push @redes6, substr($destino, 0, $tamanho); }
+    }
+    close $arq;
+}
+sub interno6 {
+    my ($familia, $bits) = endereco_ler($_[0]) or return 0;
+    return 0 unless $familia == 6;
+    return 0 if defined $saida6 && $bits eq $saida6;
+    for my $rede (@redes6) { return 1 if index($bits, $rede) == 0; }
+    return 0;
+}
 sub interno {
     my ($ip) = @_;
+    return interno6($ip) if $ip =~ /:/;
     return 0 unless $ip =~ /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/ && $1 < 256 && $2 < 256 && $3 < 256 && $4 < 256;
     return 1 if $1 == 127;
     my $numero = ($1 << 24) | ($2 << 16) | ($3 << 8) | $4;
@@ -183,9 +210,10 @@ sub endereco_bloqueado {
     my ($ip) = @_;
     return bloqueio_vale("$ENDERECOS/$ip") || defined prefixo_que_cobre($PREFIXOS, $ip) ? 1 : 0;
 }
-# Endereço que o vigia nunca bloqueia: o de saída do container.
+# Endereço que o vigia nunca bloqueia: o de saída do container, em cada família.
 sub poupado {
     my ($ip) = @_;
+    return defined $saida6 && ((endereco_ler($ip))[1] // '') eq $saida6 ? 1 : 0 if $ip =~ /:/;
     return defined $saida && $ip eq join('.', unpack('C4', pack('N', $saida))) ? 1 : 0;
 }
 sub bloquear_endereco {
@@ -566,6 +594,7 @@ sub publicar {
 $SIG{TERM} = $SIG{INT} = sub { exit 0 };
 umask 0077;
 ler_redes();
+ler_redes6();
 socket(my $escuta, AF_UNIX, SOCK_DGRAM, 0) or die "vigia: FALHA: soquete: $!\n";
 unlink $SOQUETE;
 bind($escuta, pack_sockaddr_un($SOQUETE)) or die "vigia: FALHA: $SOQUETE não abre: $!\n";

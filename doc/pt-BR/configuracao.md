@@ -33,7 +33,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Exemplo mínimo de produção](#exemplo-minimo-de-producao) · [Geral](#geral) · [Rede e portas](#rede-e-portas) · [Usuário inicial e senha](#usuario-inicial-e-senha) · [TLS](#tls) · [Limites de sessão](#limites-de-sessao) · [Painel web](#painel) · [Contato de segurança](#contato-de-seguranca) · [Limites de recurso do container](#limites-de-recurso-do-container) · [Rede Docker](#rede-docker-sub-rede)
+[Exemplo mínimo de produção](#exemplo-minimo-de-producao) · [Geral](#geral) · [Rede e portas](#rede-e-portas) · [IPv6](#ipv6) · [Usuário inicial e senha](#usuario-inicial-e-senha) · [TLS](#tls) · [Limites de sessão](#limites-de-sessao) · [Painel web](#painel) · [Contato de segurança](#contato-de-seguranca) · [Limites de recurso do container](#limites-de-recurso-do-container) · [Rede Docker](#rede-docker-sub-rede)
 
 </details>
 
@@ -108,7 +108,7 @@ A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../../.en
 | `NGINX_CONTAINER_NAME` | Nome do container e do host do nginx | Nome de container | `allsafe-ftp-nginx` |
 | `FTP_NETWORK_NAME` | Nome da rede Docker da stack | Nome de rede | `allsafe-ftp-network` |
 
-Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três imagens, as pastas, as portas (do FTP e do painel) e a `FTP_SUBNET`. O [`deploy.sh`](../../deploy.sh) aceita outro arquivo no lugar do `.env`: `ENV_FILE=/caminho/outro.env ./deploy.sh`.
+Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três imagens, as pastas, as portas (do FTP e do painel) e a `FTP_SUBNET`; com o IPv6 ligado, também a `FTP_SUBNET_IPV6`. O [`deploy.sh`](../../deploy.sh) aceita outro arquivo no lugar do `.env`: `ENV_FILE=/caminho/outro.env ./deploy.sh`.
 
 ---
 
@@ -125,7 +125,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 | `FTP_PASSIVE_PORT_START` | Início da faixa de portas de dados (modo passivo) | `1024` a `65535`, menor ou igual ao fim | `30000` |
 | `FTP_PASSIVE_PORT_END` | Fim da faixa passiva. Número de portas maior ou igual a `FTP_MAX_CLIENTS` | `1024` a `65535`, maior ou igual ao início | `30049` |
 
-> 🧱 **Rede privada:** por padrão só são aceitos `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16`. O [`deploy.sh`](../../deploy.sh) e o container param com `não é IP privado` para qualquer outro valor ([`scripts/rede-privada.sh`](../../scripts/rede-privada.sh)).
+> 🧱 **Rede privada:** por padrão só são aceitos `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16`. O [`deploy.sh`](../../deploy.sh) e o container param com `não é IP privado` para qualquer outro valor ([`scripts/rede-privada.sh`](../../scripts/rede-privada.sh)). Em IPv6 a regra é a mesma, com `::1` e a faixa local única (`fc00::/7`): [IPv6](#ipv6).
 
 <a name="rede-permitir-ip-publico"></a>
 
@@ -139,6 +139,32 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 > **Para que serve `FTP_PASSIVE_IP`?** No modo passivo, o servidor diz ao cliente em qual IP e em qual porta abrir a conexão de dados. O Pure-FTPd, dentro do container, só conhece o endereço da rede Docker, que o equipamento não alcança; por isso a stack informa a ele qual endereço anunciar (opção `-P`). O valor é o IP **privado** do host pelo qual os equipamentos chegam, em geral o mesmo de `FTP_BIND_IP`. Só é diferente quando existe NAT interno entre o equipamento e o servidor. IP de internet é recusado.
 
 > **Instalação anterior à `0.17.0`:** a variável se chamava `FTP_PUBLIC_IP`. O `./deploy.sh` troca o nome sozinho, mantém o valor e guarda o `.env` de antes em `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env`. Até ele rodar, os comandos que chamam o Compose param com `defina FTP_PASSIVE_IP no .env`. Os arquivos de `.secrets/` também mudaram de nome, na `0.18.0`, e são convertidos na mesma execução: [Segredos](segredos.md#nomes-antigos).
+
+<a name="ipv6"></a>
+
+### IPv6
+
+De fábrica a stack fica só em IPv4. Com `REDE_IPV6=sim`, o FTP e o painel são publicados **também** em IPv6, nas mesmas portas; o IPv4 continua como está.
+
+| Variável | Para que serve | Valores | Padrão |
+|---|---|---|---|
+| `REDE_IPV6` | Publicar o FTP e o painel também em IPv6 | `nao` ou `sim` | `nao` |
+| `FTP_BIND_IPV6` | Endereço IPv6 do **host** onde a porta de controle e a faixa passiva escutam | IPv6 sem colchetes: `::1` ou da faixa local única (`fc00::/7`); `::` é sempre recusado; IPv6 público, só com `REDE_PERMITIR_IP_PUBLICO=sim` | `::1` |
+| `PAINEL_BIND_IPV6` | Endereço IPv6 do **host** onde o nginx publica o painel | Os mesmos de `FTP_BIND_IPV6` | `::1` |
+| `FTP_SUBNET_IPV6` | Sub-rede IPv6 da rede Docker da stack | Faixa local única com prefixo `/64` | `fd29:1::/64` |
+
+Com `nao`, as três últimas não são lidas. Depois de ligar ou desligar, rode o `./deploy.sh`: ele confere os endereços, refaz a rede dos containers com ou sem a sub-rede IPv6 e grava no `.env` a linha `COMPOSE_FILE`, que põe ou tira o arquivo [`compose.ipv6.yaml`](../../compose.ipv6.yaml). Assim o `docker compose` direto e os outros scripts leem a mesma configuração. A linha `COMPOSE_FILE` é do `deploy.sh`: não a edite.
+
+Com `REDE_IPV6=sim`, o `deploy.sh` para antes de qualquer alteração quando:
+
+- um endereço não é aceito (`não é IPv6 privado`) ou a sub-rede não é uma faixa local única `/64`;
+- `PAINEL_REDES_PERMITIDAS` não tem nenhuma rede IPv6;
+- o IPv6 está desligado no kernel do servidor;
+- o Docker é anterior à versão 27.
+
+> **Painel por IPv6:** acrescente a `PAINEL_REDES_PERMITIDAS` a rede IPv6 de quem administra. Quem abre o painel no próprio servidor, em `https://[::1]:8443`, chega ao nginx com o endereço da rede Docker em IPv6: para esse acesso, a rede a acrescentar é a de `FTP_SUBNET_IPV6`.
+
+> **Modo passivo em IPv6:** não existe endereço anunciado para configurar. Em IPv6 o cliente usa o modo passivo estendido (`EPSV`): o servidor informa só a porta e o cliente volta ao endereço em que já está conectado. A faixa de portas é a mesma do IPv4.
 
 ---
 
@@ -164,7 +190,7 @@ Só o usuário inicial vem do `.env`. Os demais são criados pelo [painel](paine
 |---|---|---|---|
 | `FTP_TLS_MODE` | Política de TLS do `pure-ftpd` (opção `-Y`) | `0`, `1`, `2` ou `3` (tabela abaixo) | `2` |
 | `FTP_TLS_EXCECOES` | TLS por usuário: com `sim`, o administrador pode dispensar do TLS, na aba Usuários do painel, o usuário de um equipamento que não fala TLS; os demais continuam obrigados a usar. Sem nenhum dispensado, nada muda: a sessão sem TLS é recusada antes da senha. Só vale com `FTP_TLS_MODE=2` e sem `REDE_PERMITIR_IP_PUBLICO=sim`; fora disso fica sem efeito | `sim` ou `nao` | `sim` |
-| `FTP_CERT_CN` | `CN` e `SAN` do certificado autoassinado gerado na primeira subida. Se for um IPv4, entra como `IP:`; senão, como `DNS:` | hostname ou IPv4 | `ftp.exemplo.com.br` no exemplo; `localhost` se a variável faltar |
+| `FTP_CERT_CN` | `CN` e `SAN` do certificado autoassinado gerado na primeira subida. Se for um IPv4 ou um IPv6 (sem colchetes), entra como `IP:`; senão, como `DNS:` | hostname, IPv4 ou IPv6 | `ftp.exemplo.com.br` no exemplo; `localhost` se a variável faltar |
 
 | Modo | Sessão sem TLS | Canal de dados sem criptografia | Quando usar |
 |---|---|---|---|
@@ -211,7 +237,7 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 |---|---|---|---|
 | `PAINEL_BIND_IP` | IP do **host** onde o nginx publica o painel | IP privado do host; `0.0.0.0` é sempre recusado; IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.1` |
 | `PAINEL_PORT` | Porta HTTPS do painel publicada no host pelo nginx (mapeada para `8443` no container do nginx) | `1` a `65535` | `8443` |
-| `PAINEL_REDES_PERMITIDAS` | Redes de onde o painel aceita cliente. Quem está fora recebe `403` do nginx, antes de chegar ao painel; o painel confere de novo | Lista de redes **privadas** separadas por vírgula, em notação CIDR; rede pública (de `/8` a `/32`), só com `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
+| `PAINEL_REDES_PERMITIDAS` | Redes de onde o painel aceita cliente. Quem está fora recebe `403` do nginx, antes de chegar ao painel; o painel confere de novo | Lista de redes **privadas** separadas por vírgula, em notação CIDR, IPv4 ou IPv6 (em IPv6, privada é `::1/128` ou dentro de `fc00::/7`); rede pública (de `/8` a `/32` em IPv4, de `/16` a `/128` em IPv6), só com `REDE_PERMITIR_IP_PUBLICO=sim`. Com `REDE_IPV6=sim`, a lista precisa ter ao menos uma rede IPv6 ([IPv6](#ipv6)) | `127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
 | `PAINEL_ADMIN_USER` | Nome do primeiro administrador do painel, criado na primeira subida com a senha inicial de `.secrets/`. Só vale enquanto não existe nenhum administrador: depois, nome, senha e os outros administradores são alterados na aba Usuários | Letras minúsculas, números, `_` e `-`; começa com letra ou `_`; até 32 caracteres | `admin` |
 | `PAINEL_SESSAO_MINUTOS` | Minutos sem uso até a sessão encerrar; com ou sem uso, ela acaba em 12 horas. A atualização automática da aba Servidor não conta como uso. Apagar, trocar o nome e mexer em administrador pedem a senha de novo, mesmo com a sessão aberta | `1` a `720` | `240` (4 horas) |
 | `PAINEL_ENVIO_MAX_MB` | Tamanho máximo, em MB, de cada arquivo enviado pelo painel. O administrador sempre envia; o usuário do FTP, só com a permissão marcada na edição dele, no cartão Limites. O nginx e o painel recusam o que passa do teto com `413`; arquivo maior vai por FTP: [Enviar arquivo](painel.md#enviar-arquivo) | `1` a `102400` | `1024` (1 GB) |
@@ -221,8 +247,8 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 | `PAINEL_TELEGRAM_MAX_MB` | Maior arquivo, em MB, que o bot envia de uma vez. Arquivo maior não é enviado: a conversa recebe só o aviso com o nome e o tamanho. O padrão é o teto da API pública; só aumente com um servidor próprio da API de bot | `1` a `2000` | `50` |
 | `PAINEL_ACESSO_USUARIOS_FTP` | Entrada dos usuários do FTP no painel. Com `sim`, cada usuário do FTP entra com o nome e a senha do FTP e vê só a própria pasta, onde faz o que o perfil dele deixa, sem nenhuma tela de administração; com `nao`, só administrador entra. Quem confere a senha é o servidor FTP, pela rede interna da stack: [Usuário do FTP no painel](painel.md#usuario-ftp) | `sim` ou `nao` | `sim` |
 | `PAINEL_SEGUNDO_FATOR_OBRIGATORIO` | Segundo fator na entrada do painel. Com `sim`, toda conta que entra no painel, administrador ou usuário do FTP, passa pela senha e pelo código de um aplicativo autenticador, e quem ainda não cadastrou o aplicativo cadastra na própria entrada, logo depois da senha; com `nao`, cada administrador liga o dele, se quiser, e o usuário do FTP entra só com a senha. Vale só para o painel: no FTP a entrada continua sendo usuário e senha. Quem atualiza de uma versão anterior à `1.9.0` passa a ser cobrado na entrada seguinte: [Segundo fator na entrada](painel.md#segundo-fator) | `sim` ou `nao` | `sim` |
-| `PAINEL_CERT_CN` | Nome interno ou IP privado a mais no certificado autoassinado do painel | Nome em minúsculas ou IP **privado** (IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim`); vazio para nenhum | vazio |
-| `PAINEL_PROXY_CONFIAVEL` | Publicar **só o painel** por um proxy ou túnel, sem expor o FTP: os endereços dos quais o nginx aceita o `X-Forwarded-For` como endereço de quem acessa. É opcional e é escolha de quem instala. Leia o [alerta](#painel-proxy-confiavel) antes de preencher | Até 8 endereços IPv4 separados por vírgula, um a um, sem máscara; cada um privado (público, só com `REDE_PERMITIR_IP_PUBLICO=sim`) e dentro de `PAINEL_REDES_PERMITIDAS`; vazio para não usar | vazio |
+| `PAINEL_CERT_CN` | Nome interno ou IP privado a mais no certificado autoassinado do painel | Nome em minúsculas ou IP **privado**, IPv4 ou IPv6 sem colchetes (IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim`); vazio para nenhum | vazio |
+| `PAINEL_PROXY_CONFIAVEL` | Publicar **só o painel** por um proxy ou túnel, sem expor o FTP: os endereços dos quais o nginx aceita o `X-Forwarded-For` como endereço de quem acessa. É opcional e é escolha de quem instala. Leia o [alerta](#painel-proxy-confiavel) antes de preencher | Até 8 endereços IPv4 ou IPv6 separados por vírgula, um a um, sem máscara e sem colchetes; cada um privado (público, só com `REDE_PERMITIR_IP_PUBLICO=sim`) e dentro de `PAINEL_REDES_PERMITIDAS`; vazio para não usar | vazio |
 | `PAINEL_AVISO_EXPOSICAO` | Aviso de exposição na tela do painel. Com `sim`, quando `REDE_PERMITIR_IP_PUBLICO=sim` ou `PAINEL_PROXY_CONFIAVEL` está preenchida, o administrador lê como a instalação está publicada em três lugares: no sinal ao lado de **Segurança** no menu, no começo da aba Segurança e no rodapé. Com `nao`, os três somem. A tela de entrada e as telas do usuário do FTP nunca dizem como o painel foi publicado. As linhas **Endereço público** e **Painel por proxy ou túnel** da aba Segurança, que só administrador vê, continuam mostrando o estado, e o alerta continua na saída do `deploy.sh` e no registro dos containers | `sim` ou `nao` | `sim` |
 | `PAINEL_MEMORY_LIMIT` | `mem_limit` do painel, sem swap | exemplo: `192M` | `192M` |
 | `PAINEL_CPU_LIMIT` | `cpus` do painel | exemplo: `0.5` | `0.5` |
@@ -324,6 +350,7 @@ A rede Docker desta stack tem sub-rede fixa, trocável por uma variável no `.en
 | Variável | Rede | Containers | Padrão | Exemplo |
 |---|---|---|---|---|
 | `FTP_SUBNET` | `ftp` (`allsafe-ftp-network`) | `allsafe-ftp`, `allsafe-ftp-painel` e `allsafe-ftp-nginx` | `172.29.1.0/29` | `FTP_SUBNET=10.250.1.0/29` |
+| `FTP_SUBNET_IPV6` | A mesma rede, em IPv6; só com `REDE_IPV6=sim` | Os mesmos | `fd29:1::/64` | `FTP_SUBNET_IPV6=fd00:250:1::/64` |
 
 Numa instalação que já está rodando, a sub-rede nova só vale depois de recriar a rede (os volumes e os dados não são afetados):
 
