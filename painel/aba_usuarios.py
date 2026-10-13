@@ -438,13 +438,15 @@ def cartao_bloqueios(sessao, nome, erro=''):
     dele = bloqueios().get(nome, [])
     if not dele and not erro:
         return ''
-    linhas = ''.join(f'<tr><td class="origem"><code>{e(origem)}</code></td><td>{erradas}</td><td class="quando">{e(quando(desde))}</td><td class="quando">{e(quando(expira))}</td></tr>'
+    linhas = ''.join(f'<tr><td class="origem"><code>{e(origem)}</code></td><td data-rotulo="{t("Senhas erradas")}">{erradas}</td>'
+                     f'<td class="quando" data-rotulo="{t("Bloqueado em")}">{e(quando(desde))}</td>'
+                     f'<td class="quando" data-rotulo="{t("Até")}">{e(quando(expira))}</td></tr>'
                      for origem, expira, desde, erradas in dele)
     nenhum = f'<tr><td colspan="4" class="suave">{t("Nenhum bloqueio em vigor.")}</td></tr>'
-    return f'''<section class="cartao medio" id="bloqueios"><h2>{t('Bloqueios')}</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
+    return f'''<section class="cartao estreito" id="bloqueios"><h2>{t('Bloqueios')}</h2>{f'<p class="erro" role="alert">{e(erro)}</p>' if erro else ''}
 <p>{t('O FTP está recusando este usuário quando ele chega dos endereços abaixo, por senhas erradas demais. Com a senha certa '
       'ele também é recusado, até o fim do prazo.')}</p>
-<div class="rolagem"><table>
+<div class="rolagem"><table class="blocos">
 <thead><tr><th>{t('Origem')}</th><th>{t('Senhas erradas')}</th><th>{t('Bloqueado em')}</th><th>{t('Até')}</th></tr></thead>
 <tbody>{linhas or nenhum}</tbody></table></div>
 <form method="post" action="/usuarios/desbloquear" autocomplete="off">
@@ -487,7 +489,7 @@ def cartao_outras(sessao, nome, cadastro, perfil, feito='', erro='', digitada=('
     """Outras pastas do usuário no painel: as que ele tem, com quem mais alcança cada uma, e o formulário que libera
     uma pasta ou troca a permissão dela. `digitada` é o par (pasta, permissão) que volta ao formulário depois de uma
     recusa. A conta do perfil só envio não recebe nenhuma."""
-    abre = f'<section class="cartao medio" id="outras"><h2>{t("Outras pastas")}</h2>'
+    abre = f'<section class="cartao estreito" id="outras"><h2>{t("Outras pastas")}</h2>'
     if perfil == 'soenvio':
         return abre + '<p class="suave">' + t('Não se aplica ao perfil Só envio: a conta não lista nem baixa nada, e as outras '
                                               'pastas são de navegar.') + '</p></section>'

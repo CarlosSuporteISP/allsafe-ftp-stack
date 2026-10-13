@@ -280,13 +280,24 @@ footer .autoria { margin-top: 4px; }
 .cartao > :last-child { margin-bottom: 0; }
 .cartao h2 > .i { color: var(--link); }
 .cartao.estreito { max-width: 560px; }
-.cartao.medio { max-width: 800px; }   /* tabela com endereço: cabe um IPv6 inteiro sem rolar */
-/* Tela com vários formulários (Editar usuário): os cartões se distribuem em até três colunas de pelo menos 440 px,
-   conforme a largura, empilhados para a altura das colunas ficar parecida. O cartão com a tabela de endereços
-   atravessa as colunas. */
-.fichas { columns: 3 440px; column-gap: 12px; }
+/* Tela com vários formulários (Editar usuário, Destinos): os cartões se distribuem em até cinco colunas de pelo menos
+   440 px, conforme a largura e o zoom, empilhados para a altura das colunas ficar parecida. */
+.fichas { columns: 5 440px; column-gap: 12px; }
 .fichas > .cartao { max-width: none; margin-bottom: 12px; break-inside: avoid; }
-.fichas > .cartao.medio { max-width: 800px; column-span: all; }
+/* Na ficha a coluna é estreita em qualquer tela: a tabela fica sempre em blocos, como no celular, com o rótulo de cada
+   dado vindo do HTML (data-rotulo). A linha de títulos fica só para leitor de tela. */
+.fichas .blocos thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.fichas .blocos, .fichas .blocos tbody, .fichas .blocos tr, .fichas .blocos td { display: block; }
+.fichas .blocos tr { padding: 12px 0; border-bottom: 1px solid var(--borda); }
+.fichas .blocos tbody tr:last-child { border-bottom: 0; }
+.fichas .blocos td { padding: 2px 0; border: 0; overflow-wrap: anywhere; white-space: normal; }
+.fichas .blocos td code { overflow-wrap: anywhere; white-space: normal; }
+.fichas .blocos td[data-rotulo] { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 16px; font-size: var(--texto-rotulo); }
+.fichas .blocos td[data-rotulo]::before { content: attr(data-rotulo); color: var(--suave); }
+.fichas .blocos td.acoes { padding-top: 8px; }
+/* Dois formulários curtos lado a lado (Enviar arquivo e Nova pasta), na mesma altura; um embaixo do outro quando não cabem. */
+.pareados { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 352px), 1fr)); gap: 12px; max-width: 1132px; margin: 0 0 12px; }
+.pareados > .cartao { margin: 0; }
 /* Cartão de lista: a tabela vai de borda a borda, com a linha de títulos em faixa; o que vem depois dela volta à margem. */
 .cartao.lista { padding: 0; overflow: hidden; }
 .lista > :not(.rolagem) { margin: 16px 20px; }
@@ -1005,12 +1016,6 @@ p > .botao { margin-top: 0; }
   .lado > section { display: grid; grid-row: span 3; grid-template-rows: subgrid; }
   .lado .recursos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .lado .recursos.quatro { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-/* A partir daqui cabem os cinco formulários de Editar usuário lado a lado, um por coluna. */
-@media (min-width: 2560px) {
-  .fichas { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); align-items: start; gap: 0 12px; columns: auto; }
-  .fichas > .cartao.medio { grid-column: 1 / -1; }
 }
 
 @media (min-width: 1600px) {

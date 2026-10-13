@@ -12,7 +12,7 @@
 
 Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Version](https://img.shields.io/badge/version-1.13.0-blue)
+![Version](https://img.shields.io/badge/version-1.14.0-blue)
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
 ![Support](https://img.shields.io/badge/support-LTS-blue)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -27,7 +27,7 @@ Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf
 
 <a href="doc/en/images/painel-principal.png"><img src="doc/en/images/painel-principal.png" alt="Overview tab with the menu on the left, in two groups, the FTP server band, which says Up and TLS required on sign-in, the four measurements Users, Space used, Last upload and FTP certificate, each with the shortcut to the detail, the Server and containers card, with the CPU and the memory of the server and of the containers, the charts Files received per day, Last upload per user and Space per folder, the Recent activity card, with the last six records, and the Details to set up the device card" width="100%"></a>
 
-<sub><b>v1.9.0</b> · web panel, Overview tab · captured on 2026-10-12</sub>
+<sub><b>v1.14.0</b> · web panel, Overview tab · captured on 2026-10-13</sub>
 
 <!-- diagrama: doc/en/diagrams/overview-diagram.mmd -->
 ```mermaid
@@ -136,7 +136,7 @@ The web panel, tab by tab. The Overview tab is the image at the top of this page
 | <a href="doc/en/images/aba-meus-arquivos.png"><img src="doc/en/images/aba-meus-arquivos.png" alt="My files screen of the user olt-centro, with the Full profile, with the folders 2026-09 and 2026-10 and a configuration file, the automatic cleanup warning above the list, the Open or Download, Rename and Delete buttons on each row, the New folder and Upload file cards and, in the menu, only the My files tab, the PT, EN and ES buttons, the name of the user and the Sign out button" width="100%"></a> | |
 | **My files** — the FTP user sees their own folder and does in it what their profile allows | |
 
-<sub><b>v1.9.0</b> · web panel, one screenshot per tab · captured on 2026-10-12</sub>
+<sub><b>v1.14.0</b> · web panel, one screenshot per tab · captured on 2026-10-13</sub>
 
 Every screen, menu by menu, with the explanation of each one: [application screenshots](doc/en/application/README.md).
 
@@ -771,7 +771,7 @@ The plan for creating and changing the stack (phases, tests, evidence and progre
 
 ## 🏷️ Version
 
-**1.13.0**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
+**1.14.0**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
 
 The version advances at every publication, always in the middle number (`1.1.0`, `1.2.0`) or in the first one: the correction number stays at zero. `0.x` was the construction phase; **`1.0.0` is the first version ready for production** and opens the long-term support (LTS) line `1.x`. The versions were renumbered on 2026-10-11: [`CHANGELOG.md`](CHANGELOG.md) has what changed in each one and the table with the numbers from before.
 

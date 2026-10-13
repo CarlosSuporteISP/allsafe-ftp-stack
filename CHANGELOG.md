@@ -6,6 +6,20 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.14.0] - 2026-10-13
+
+Dois ajustes de tela pedidos pelo uso: a tela Editar usuário passa a acompanhar a largura da janela e o zoom, e nas telas de arquivos os formulários de envio e de nova pasta ficam lado a lado.
+
+### Alterado
+
+- **Formulários de arquivo lado a lado**: nas telas Arquivos, Meus arquivos e Pasta liberada, os cartões **Enviar arquivo** e **Nova pasta** ficam um ao lado do outro, na mesma altura, a partir de 748 px de largura; em tela mais estreita, um embaixo do outro.
+- **Cartões Outras pastas e Bloqueios da tela Editar**: passam a ter a largura dos outros cartões, e as listas deles ficam em blocos em qualquer largura, com o rótulo de cada dado.
+- **Fotos**: as da aplicação foram refeitas, nos três idiomas.
+
+### Corrigido
+
+- **Tela Editar usuário em janela larga ou com zoom reduzido**: de 1920 a 3840 px de largura, os cartões ficavam presos em três colunas, e a partir de 2560 px, estreitos à esquerda, com o resto da tela vazio. Agora eles se distribuem em colunas de pelo menos 440 px, de uma a cinco, conforme a largura e o zoom, e a tela fica mais curta. O cartão Outras pastas não parte mais a grade em dois blocos. A aba Destinos usa a mesma grade.
+
 ## [1.13.0] - 2026-10-13
 
 O administrador passa a liberar a um usuário do FTP outras pastas no painel web, além da pasta do cadastro, cada uma com a permissão dela. Serve para a pasta comum a vários usuários e para a conta que consulta a pasta de outra sem poder alterá-la. A pasta do cadastro continua privada, e o FTP não muda.

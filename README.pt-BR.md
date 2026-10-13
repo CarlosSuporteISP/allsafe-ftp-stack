@@ -12,7 +12,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.13.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.14.0-blue)
 ![Status](https://img.shields.io/badge/status-est%C3%A1vel-brightgreen)
 ![Suporte](https://img.shields.io/badge/suporte-LTS-blue)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
@@ -27,7 +27,7 @@ Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsaf
 
 <a href="doc/pt-BR/imagens/painel-principal.png"><img src="doc/pt-BR/imagens/painel-principal.png" alt="Aba Visão geral com o menu à esquerda, em dois grupos, a faixa Servidor FTP, que diz No ar e TLS obrigatório no login, as quatro medidas Usuários, Espaço usado, Último envio e Certificado do FTP, cada uma com o atalho para o detalhe, o cartão Servidor e containers, com o processador e a memória do servidor e dos containers, os gráficos Arquivos recebidos por dia, Último envio por usuário e Espaço por pasta, o cartão Atividade recente, com os seis últimos registros, e o cartão Dados para configurar o equipamento" width="100%"></a>
 
-<sub><b>v1.9.0</b> · painel web, aba Visão geral · captura de 2026-10-12</sub>
+<sub><b>v1.14.0</b> · painel web, aba Visão geral · captura de 2026-10-13</sub>
 
 <!-- diagrama: doc/pt-BR/diagramas/visao-geral-diagrama.mmd -->
 ```mermaid
@@ -137,7 +137,7 @@ O painel web, aba por aba. A aba Visão geral é a imagem do topo desta página,
 | <a href="doc/pt-BR/imagens/aba-meus-arquivos.png"><img src="doc/pt-BR/imagens/aba-meus-arquivos.png" alt="Tela Meus arquivos do usuário olt-centro, de perfil Completo, com as pastas 2026-09 e 2026-10 e um arquivo de configuração, o aviso da limpeza automática acima da lista, os botões Abrir ou Baixar, Renomear e Apagar em cada linha, os cartões Nova pasta e Enviar arquivo e, no menu, só a aba Meus arquivos, os botões PT, EN e ES, o nome do usuário e o botão Sair" width="100%"></a> | |
 | **Meus arquivos** — o usuário do FTP vê a própria pasta e faz nela o que o perfil dele deixa | |
 
-<sub><b>v1.9.0</b> · painel web, uma foto por aba · capturas de 2026-10-12</sub>
+<sub><b>v1.14.0</b> · painel web, uma foto por aba · capturas de 2026-10-13</sub>
 
 Todas as telas, menu por menu, com a explicação de cada uma: [fotos da aplicação](doc/pt-BR/aplicacao/README.md).
 
@@ -776,7 +776,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**1.13.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
+**1.14.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
 
 A versão avança a cada publicação, sempre no número do meio (`1.1.0`, `1.2.0`) ou no primeiro: o número de correção fica em zero. `0.x` foi a fase de construção; **a `1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo (LTS) `1.x`. As versões foram renumeradas em 2026-10-11: o [`CHANGELOG.md`](CHANGELOG.md) traz o que mudou em cada uma e a tabela com os números de antes.
 

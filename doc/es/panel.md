@@ -102,6 +102,8 @@ Las listas se ajustan al ancho de la pantalla, sin desplazamiento lateral de la 
 
 Una lista sin nada que mostrar (carpeta vacía, Log sin registro) dice qué falta y cuándo pasa a aparecer. El texto largo de cada pantalla, como la explicación de los perfiles y de las etiquetas de la pestaña Usuarios, queda plegado en una línea debajo de la lista y se abre con un clic.
 
+Las pantallas de formulario siguen la misma regla. En la pantalla **Editar** del usuario y en la pestaña Destinos, las tarjetas se distribuyen en columnas de al menos 440 px, de una a cinco, según el ancho de la ventana y el zoom del navegador; las listas de dentro de esas tarjetas, la de las otras carpetas y la de los bloqueos del usuario, quedan siempre en bloques. En las pantallas de archivos, los formularios **Enviar archivo** y **Nueva carpeta** quedan lado a lado a partir de 748 px de ancho y uno debajo del otro en pantalla más estrecha.
+
 Quien entra con la cuenta del FTP no ve ninguna de esas pestañas: ve una sola pantalla, **Mis archivos**, descrita en [Usuario del FTP en el panel](#usuario-ftp).
 
 La foto de cada pantalla, con la explicación elemento por elemento, está en [Fotos de la aplicación](aplicacion/README.md).
