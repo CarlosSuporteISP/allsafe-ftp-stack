@@ -162,6 +162,8 @@ EN = {
         'Empty folder',
     'O que for enviado para ela por FTP aparece aqui.':
         'Whatever is sent to it by FTP shows up here.',
+    'O que for gravado nela aparece aqui.':
+        'Whatever is saved to it shows up here.',
     'Arquivos':
         'Files',
     'Nova pasta':

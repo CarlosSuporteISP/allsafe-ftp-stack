@@ -160,6 +160,8 @@ ES = {
         'Carpeta vacía',
     'O que for enviado para ela por FTP aparece aqui.':
         'Lo que se envíe a ella por FTP aparece aquí.',
+    'O que for gravado nela aparece aqui.':
+        'Lo que se guarde en ella aparece aquí.',
     'Arquivos':
         'Archivos',
     'Nova pasta':

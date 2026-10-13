@@ -503,7 +503,7 @@ def cartao_outras(sessao, nome, cadastro, perfil, feito='', erro='', digitada=('
 <input type="hidden" name="usuario" value="{e(nome)}">
 <input type="hidden" name="pasta" value="{e(outra)}">
 <input type="hidden" name="permissao" value="nenhuma">
-<button type="submit">{t('Retirar')}</button></form></td></tr>'''
+<button class="botao perigo" type="submit">{icone('lixeira')}{t('Retirar')}</button></form></td></tr>'''
         if donos:
             avisos += '<p class="aviso">' + t('A pasta <code>{pasta}</code> é a pasta de <strong>{donos}</strong>, contém a pasta '
                                               'ou fica dentro dela: por ela, este usuário alcança arquivos dessa conta.',

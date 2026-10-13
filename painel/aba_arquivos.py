@@ -249,7 +249,9 @@ def linhas_da_lista(rota, caminho, pastas, arquivos, gerir=False, mais=None):
             linhas.append(f'<tr><td><span class="item">{icone("atalho")}{e(visivel(nome))}</span> <span class="etiqueta">{tipo}</span></td><td class="suave" data-rotulo="{do_tamanho}">—</td>'
                           f'<td class="quando" data-rotulo="{do_modificado}">{e(quando(dados.st_mtime))}</td><td class="acoes"><span class="suave sem-acao">{t("não abre aqui")}</span>'
                           f'{gestao}</td></tr>')
-    return ''.join(linhas) or vazio(4, 'pasta', t('Pasta vazia'), t('O que for enviado para ela por FTP aparece aqui.'))
+    # Na pasta liberada (/pastas/<identificador>) a conta não entra por FTP: o texto da lista vazia não fala dele.
+    return ''.join(linhas) or vazio(4, 'pasta', t('Pasta vazia'), t('O que for gravado nela aparece aqui.') if rota.startswith('/pastas/')
+                                    else t('O que for enviado para ela por FTP aparece aqui.'))
 
 
 def aviso_de_corte(cortado):
