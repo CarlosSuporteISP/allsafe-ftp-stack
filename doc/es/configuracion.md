@@ -140,6 +140,32 @@ Para una **segunda instancia** en el mismo host, cambie los cinco nombres, las t
 
 > **Instalación anterior a la `0.17.0`:** la variable se llamaba `FTP_PUBLIC_IP`. El `./deploy.sh` cambia el nombre solo, mantiene el valor y guarda el `.env` de antes en `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env`. Hasta que se ejecute, los comandos que llaman a Compose se detienen con `defina FTP_PASSIVE_IP no .env`. Los archivos de `.secrets/` también cambiaron de nombre, en la `0.18.0`, y se convierten en la misma ejecución: [Secretos](secretos.md#nomes-antigos).
 
+<a name="ipv6"></a>
+
+### IPv6
+
+De fábrica la stack queda solo en IPv4. Con `REDE_IPV6=sim`, el FTP y el panel se publican **también** en IPv6, en los mismos puertos; el IPv4 sigue como está.
+
+| Variable | Para qué sirve | Valores | Por defecto |
+|---|---|---|---|
+| `REDE_IPV6` | Publicar el FTP y el panel también en IPv6 | `nao` o `sim` | `nao` |
+| `FTP_BIND_IPV6` | Dirección IPv6 del **host** donde escuchan el puerto de control y el rango pasivo | IPv6 sin corchetes: `::1` o del rango local único (`fc00::/7`); `::` siempre se rechaza; IPv6 pública, solo con `REDE_PERMITIR_IP_PUBLICO=sim` | `::1` |
+| `PAINEL_BIND_IPV6` | Dirección IPv6 del **host** donde el nginx publica el panel | Los mismos de `FTP_BIND_IPV6` | `::1` |
+| `FTP_SUBNET_IPV6` | Subred IPv6 de la red Docker de la stack | Rango local único con prefijo `/64` | `fd29:1::/64` |
+
+Con `nao`, las tres últimas no se leen. Después de activarlo o desactivarlo, ejecute el `./deploy.sh`: verifica las direcciones, rehace la red de los contenedores con o sin la subred IPv6 y graba en el `.env` la línea `COMPOSE_FILE`, que pone o quita el archivo [`compose.ipv6.yaml`](../../compose.ipv6.yaml). Así el `docker compose` directo y los demás scripts leen la misma configuración. La línea `COMPOSE_FILE` es del `deploy.sh`: no la edite.
+
+Con `REDE_IPV6=sim`, el `deploy.sh` se detiene antes de cualquier modificación cuando:
+
+- una dirección no se acepta (`não é IPv6 privado`) o la subred no es un rango local único `/64`;
+- `PAINEL_REDES_PERMITIDAS` no tiene ninguna red IPv6;
+- el IPv6 está desactivado en el kernel del servidor;
+- el Docker es anterior a la versión 27.
+
+> **Panel por IPv6:** añada a `PAINEL_REDES_PERMITIDAS` la red IPv6 de quien administra. Quien abre el panel en el propio servidor, en `https://[::1]:8443`, llega al nginx con la dirección de la red Docker en IPv6: para ese acceso, la red que hay que añadir es la de `FTP_SUBNET_IPV6`.
+
+> **Modo pasivo en IPv6:** no existe dirección anunciada que configurar. En IPv6 el cliente usa el modo pasivo extendido (`EPSV`): el servidor informa solo el puerto y el cliente vuelve a la dirección a la que ya está conectado. El rango de puertos es el mismo del IPv4.
+
 ---
 
 <a name="usuario-inicial-e-senha"></a>

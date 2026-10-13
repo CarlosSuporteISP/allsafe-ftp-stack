@@ -139,6 +139,32 @@ For a **second instance** on the same host, change the five names, the three ima
 
 > **Installation before `0.17.0`:** the variable was called `FTP_PUBLIC_IP`. `./deploy.sh` changes the name by itself, keeps the value and stores the previous `.env` in `BACKUP_DIR/<data>-antes-da-migracao-de-nomes/env`. Until it runs, the commands that call Compose stop with `defina FTP_PASSIVE_IP no .env`. The files in `.secrets/` also changed name, in `0.18.0`, and are converted in the same run: [Secrets](secrets.md#nomes-antigos).
 
+<a name="ipv6"></a>
+
+### IPv6
+
+From the factory the stack runs on IPv4 only. With `REDE_IPV6=sim`, the FTP and the panel are **also** published on IPv6, on the same ports; IPv4 stays as it is.
+
+| Variable | What it is for | Values | Default |
+|---|---|---|---|
+| `REDE_IPV6` | Publishing the FTP and the panel on IPv6 as well | `nao` or `sim` | `nao` |
+| `FTP_BIND_IPV6` | IPv6 address of the **host** where the control port and the passive range listen | IPv6 without brackets: `::1` or from the unique local range (`fc00::/7`); `::` is always refused; public IPv6, only with `REDE_PERMITIR_IP_PUBLICO=sim` | `::1` |
+| `PAINEL_BIND_IPV6` | IPv6 address of the **host** where nginx publishes the panel | The same as `FTP_BIND_IPV6` | `::1` |
+| `FTP_SUBNET_IPV6` | IPv6 subnet of the Docker network of the stack | Unique local range with a `/64` prefix | `fd29:1::/64` |
+
+With `nao`, the last three are not read. After turning it on or off, run `./deploy.sh`: it checks the addresses, rebuilds the network of the containers with or without the IPv6 subnet and writes to the `.env` the line `COMPOSE_FILE`, which adds or removes the file [`compose.ipv6.yaml`](../../compose.ipv6.yaml). That way a direct `docker compose` and the other scripts read the same configuration. The line `COMPOSE_FILE` belongs to `deploy.sh`: do not edit it.
+
+With `REDE_IPV6=sim`, `deploy.sh` stops before any change when:
+
+- an address is not accepted (`não é IPv6 privado`) or the subnet is not a unique local `/64` range;
+- `PAINEL_REDES_PERMITIDAS` has no IPv6 network;
+- IPv6 is turned off in the kernel of the server;
+- Docker is older than version 27.
+
+> **Panel over IPv6:** add to `PAINEL_REDES_PERMITIDAS` the IPv6 network of whoever administers. Whoever opens the panel on the server itself, at `https://[::1]:8443`, reaches nginx with the address of the Docker network on IPv6: for that access, the network to add is the one in `FTP_SUBNET_IPV6`.
+
+> **Passive mode on IPv6:** there is no announced address to configure. On IPv6 the client uses extended passive mode (`EPSV`): the server tells only the port and the client goes back to the address it is already connected to. The port range is the same as on IPv4.
+
 ---
 
 <a name="usuario-inicial-e-senha"></a>

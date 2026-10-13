@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+# Sobreposição do IPv6: só entra com REDE_IPV6=sim. Quem liga e desliga é o ./deploy.sh, que grava COMPOSE_FILE
+# no .env; com 'nao' este arquivo não é lido e a stack fica só em IPv4. As portas daqui se somam às do
+# compose.yaml; a lista de sub-redes substitui a de lá, e por isso a de IPv4 se repete.
+services:
+  ftp:
+    ports:
+      - "[${FTP_BIND_IPV6:-::1}]:${FTP_PORT:-21}:2121/tcp"
+      - "[${FTP_BIND_IPV6:-::1}]:${FTP_PASSIVE_PORT_START:-30000}-${FTP_PASSIVE_PORT_END:-30049}:${FTP_PASSIVE_PORT_START:-30000}-${FTP_PASSIVE_PORT_END:-30049}/tcp"
+  nginx:
+    ports:
+      - "[${PAINEL_BIND_IPV6:-::1}]:${PAINEL_PORT:-8443}:8443/tcp"
+
+networks:
+  ftp:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: ${FTP_SUBNET:-172.29.1.0/29}
+        - subnet: ${FTP_SUBNET_IPV6:-fd29:1::/64}
