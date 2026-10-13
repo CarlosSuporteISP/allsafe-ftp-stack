@@ -33,7 +33,7 @@ flowchart LR
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[Exemplo mínimo de produção](#exemplo-minimo-de-producao) · [Geral](#geral) · [Rede e portas](#rede-e-portas) · [Usuário inicial e senha](#usuario-inicial-e-senha) · [TLS](#tls) · [Limites de sessão](#limites-de-sessao) · [Painel web](#painel) · [Contato de segurança](#contato-de-seguranca) · [Limites de recurso do container](#limites-de-recurso-do-container) · [Rede Docker](#rede-docker-sub-rede)
+[Exemplo mínimo de produção](#exemplo-minimo-de-producao) · [Geral](#geral) · [Rede e portas](#rede-e-portas) · [IPv6](#ipv6) · [Usuário inicial e senha](#usuario-inicial-e-senha) · [TLS](#tls) · [Limites de sessão](#limites-de-sessao) · [Painel web](#painel) · [Contato de segurança](#contato-de-seguranca) · [Limites de recurso do container](#limites-de-recurso-do-container) · [Rede Docker](#rede-docker-sub-rede)
 
 </details>
 
@@ -108,7 +108,7 @@ A coluna **Padrão** das tabelas abaixo é o valor do [`.env.example`](../../.en
 | `NGINX_CONTAINER_NAME` | Nome do container e do host do nginx | Nome de container | `allsafe-ftp-nginx` |
 | `FTP_NETWORK_NAME` | Nome da rede Docker da stack | Nome de rede | `allsafe-ftp-network` |
 
-Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três imagens, as pastas, as portas (do FTP e do painel) e a `FTP_SUBNET`. O [`deploy.sh`](../../deploy.sh) aceita outro arquivo no lugar do `.env`: `ENV_FILE=/caminho/outro.env ./deploy.sh`.
+Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três imagens, as pastas, as portas (do FTP e do painel) e a `FTP_SUBNET`; com o IPv6 ligado, também a `FTP_SUBNET_IPV6`. O [`deploy.sh`](../../deploy.sh) aceita outro arquivo no lugar do `.env`: `ENV_FILE=/caminho/outro.env ./deploy.sh`.
 
 ---
 
@@ -125,7 +125,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 | `FTP_PASSIVE_PORT_START` | Início da faixa de portas de dados (modo passivo) | `1024` a `65535`, menor ou igual ao fim | `30000` |
 | `FTP_PASSIVE_PORT_END` | Fim da faixa passiva. Número de portas maior ou igual a `FTP_MAX_CLIENTS` | `1024` a `65535`, maior ou igual ao início | `30049` |
 
-> 🧱 **Rede privada:** por padrão só são aceitos `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16`. O [`deploy.sh`](../../deploy.sh) e o container param com `não é IP privado` para qualquer outro valor ([`scripts/rede-privada.sh`](../../scripts/rede-privada.sh)).
+> 🧱 **Rede privada:** por padrão só são aceitos `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16`. O [`deploy.sh`](../../deploy.sh) e o container param com `não é IP privado` para qualquer outro valor ([`scripts/rede-privada.sh`](../../scripts/rede-privada.sh)). Em IPv6 a regra é a mesma, com `::1` e a faixa local única (`fc00::/7`): [IPv6](#ipv6).
 
 <a name="rede-permitir-ip-publico"></a>
 
@@ -350,6 +350,7 @@ A rede Docker desta stack tem sub-rede fixa, trocável por uma variável no `.en
 | Variável | Rede | Containers | Padrão | Exemplo |
 |---|---|---|---|---|
 | `FTP_SUBNET` | `ftp` (`allsafe-ftp-network`) | `allsafe-ftp`, `allsafe-ftp-painel` e `allsafe-ftp-nginx` | `172.29.1.0/29` | `FTP_SUBNET=10.250.1.0/29` |
+| `FTP_SUBNET_IPV6` | A mesma rede, em IPv6; só com `REDE_IPV6=sim` | Os mesmos | `fd29:1::/64` | `FTP_SUBNET_IPV6=fd00:250:1::/64` |
 
 Numa instalação que já está rodando, a sub-rede nova só vale depois de recriar a rede (os volumes e os dados não são afetados):
 

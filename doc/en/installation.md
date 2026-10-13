@@ -48,6 +48,7 @@ flowchart LR
 | One dedicated IP for the FTP | Do not share the IP with other services; passive mode opens from 50 to 1600 ports, depending on the profile |
 | Firewall on the host | Allow `21/tcp` and the passive range of the profile (`30000-30049/tcp` on `small`) **only** for the management networks of the devices, and the panel port (`8443/tcp`) **only** for whoever administers |
 | Private network | By default the stack only accepts an internal IP: see [Security](security.md#rede-privada). A public address depends on an option with a warning: [Public IP](security.md#ip-publico) |
+| IPv6 (optional) | Out of the box the stack stays on IPv4 only. To publish the FTP and the panel on IPv6 too, the server needs Docker Engine 27 or newer and IPv6 turned on in the system: [IPv6](configuration.md#ipv6) |
 | Folder for the data | The default is `/srv/allsafe-ftp-stack`, with `data`, `backups` and `tmp` inside. Whoever installs without being root creates the folder once: `sudo install -d -o "$USER" /srv/allsafe-ftp-stack`. Another place: `DATA_DIR`, `BACKUP_DIR` and `TEMP_DIR` in [Configuration](configuration.md#pastas-e-nomes) |
 | Synchronized clock | The TLS certificate depends on the correct date and time (the `allsafe-ntp-nts-stack` stack takes care of that) |
 

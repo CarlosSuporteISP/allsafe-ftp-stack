@@ -254,11 +254,12 @@ docker compose ps                                   # estado y puertos
 docker inspect --format '{{.State.Health.Status}}' allsafe-ftp
 docker inspect --format '{{.State.Health.Status}}' allsafe-ftp-painel
 docker inspect --format '{{.State.Health.Status}}' allsafe-ftp-nginx
+docker network inspect --format '{{.EnableIPv6}}' allsafe-ftp-network   # true solo con REDE_IPV6=sim
 ./manage-user.sh list                               # usuarios del PureDB
 docker compose exec ftp pure-pw show transfer -f /auth/pureftpd.passwd
 ```
 
-**Resultado esperado:** los tres contenedores `running` y `healthy`, la lista de usuarios y los datos del usuario `transfer` (carpeta, uid y gid; la contraseña aparece solo como hash).
+**Resultado esperado:** los tres contenedores `running` y `healthy`, `false` en la red mientras el IPv6 está desactivado, la lista de usuarios y los datos del usuario `transfer` (carpeta, uid y gid; la contraseña aparece solo como hash).
 
 ---
 

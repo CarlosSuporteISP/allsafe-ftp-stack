@@ -196,6 +196,7 @@ De los archivos de `.secrets/`, el `ftp` ve uno, el `painel` ve dos, el hash de 
 - El panel no publica ni escucha puerto: el nginx lo alcanza por el socket Unix de la carpeta `DATA_DIR/nginx`, sin pasar por la red.
 - El panel habla con el FTP por la red en dos casos, siempre en `ftp:2121`, dentro de esta red: para ver si está en marcha, por el saludo del puerto, y para verificar la contraseña del usuario del FTP que entra en el panel, con un login en TLS. El registro y los archivos, los dos los comparten por las carpetas `auth` y `dados`.
 - Quien abre el panel desde el propio servidor, en `127.0.0.1`, llega al nginx con la dirección del gateway de esta red (`172.29.1.1`), que ya está dentro de las redes permitidas por defecto.
+- IPv6 es opcional y viene desactivado. Con `REDE_IPV6=sim`, el `deploy.sh` añade el archivo [`compose.ipv6.yaml`](../../compose.ipv6.yaml): la red recibe la subred `FTP_SUBNET_IPV6` (`fd29:1::/64`) y las tres publicaciones de arriba se repiten en `FTP_BIND_IPV6` y `PAINEL_BIND_IPV6`, en los mismos puertos. El `pure-ftpd` y el nginx pasan a escuchar en las dos familias, y el cliente IPv6 llega a los dos con su dirección real. Quien abre el panel desde el propio servidor, en `::1`, llega al nginx con el gateway IPv6 de la red (`fd29:1::1`). Vea [IPv6](configuracion.md#ipv6).
 - Sin DNS inverso (`-H`): el `pure-ftpd` nunca resuelve la IP del cliente.
 
 ---
@@ -332,7 +333,7 @@ Línea final del [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh):
 | `-l puredb:/auth/pureftpd.pdb` | Backend de autenticación |
 | `-p INICIO:FIM` | Rango de puertos pasivos |
 | `-P <ip>` | IP anunciada en el `PASV` (`FTP_PASSIVE_IP`) |
-| `-S 0.0.0.0,2121` | Escucha en el puerto 2121 (no privilegiado) |
+| `-S 0.0.0.0,2121` | Escucha en el puerto 2121 (no privilegiado), solo en IPv4. Con `REDE_IPV6=sim` va `-S 2121`, que escucha en IPv4 e IPv6 |
 | `-Y <modo>` | Política TLS (`FTP_TLS_MODE`): vea [Configuración](configuracion.md#tls). Con el TLS por usuario en vigor y al menos un usuario dispensado, va `-Y 1`, y la exigencia del TLS pasa a hacerse usuario por usuario por el portero; sin ningún dispensado, va el `-Y 2`: [Seguridad](seguridad.md#tls-por-usuario) |
 
 ---
