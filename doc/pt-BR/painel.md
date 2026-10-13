@@ -102,6 +102,8 @@ As listas se ajustam à largura da tela, sem rolagem lateral da página:
 
 Lista sem nada para mostrar (pasta vazia, Log sem registro) diz o que falta e quando passa a aparecer. O texto longo de cada tela, como a explicação dos perfis e das etiquetas da aba Usuários, fica recolhido em uma linha embaixo da lista e abre com um clique.
 
+As telas de formulário seguem a mesma regra. Na tela **Editar** do usuário e na aba Destinos, os cartões se distribuem em colunas de pelo menos 440 px, de uma a cinco, conforme a largura da janela e o zoom do navegador; as listas de dentro desses cartões, a das outras pastas e a dos bloqueios do usuário, ficam sempre em blocos. Nas telas de arquivos, os formulários **Enviar arquivo** e **Nova pasta** ficam lado a lado a partir de 748 px de largura e um embaixo do outro em tela mais estreita.
+
 Quem entra com a conta do FTP não vê nenhuma dessas abas: vê uma tela só, **Meus arquivos**, descrita em [Usuário do FTP no painel](#usuario-ftp).
 
 A foto de cada tela, com a explicação item por item, está em [Fotos da aplicação](aplicacao/README.md).

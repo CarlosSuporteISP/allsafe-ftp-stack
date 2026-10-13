@@ -12,7 +12,7 @@
 
 Desarrollado por [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versión](https://img.shields.io/badge/versi%C3%B3n-1.13.0-blue)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-1.14.0-blue)
 ![Estado](https://img.shields.io/badge/estado-estable-brightgreen)
 ![Soporte](https://img.shields.io/badge/soporte-LTS-blue)
 [![Licencia](https://img.shields.io/badge/licencia-Apache--2.0-blue)](LICENSE)
@@ -776,7 +776,7 @@ El plan de creación y cambio de la stack (fases, pruebas, evidencias y avance) 
 
 ## 🏷️ Versión
 
-**1.13.0**, registrada en [`VERSION`](VERSION). Cambios por versión en [`CHANGELOG.md`](CHANGELOG.md). Cada versión publicada tiene una etiqueta `vX.Y.Z` y una Release en el [repositorio oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), el de la empresa; el espejo en la cuenta personal recibe la misma versión enseguida.
+**1.14.0**, registrada en [`VERSION`](VERSION). Cambios por versión en [`CHANGELOG.md`](CHANGELOG.md). Cada versión publicada tiene una etiqueta `vX.Y.Z` y una Release en el [repositorio oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), el de la empresa; el espejo en la cuenta personal recibe la misma versión enseguida.
 
 La versión avanza en cada publicación, siempre en el número del medio (`1.1.0`, `1.2.0`) o en el primero: el número de corrección queda en cero. `0.x` fue la fase de construcción; **la `1.0.0` es la primera versión lista para producción** y abre la línea de largo plazo (LTS) `1.x`. Las versiones se renumeraron el 2026-10-11: el [`CHANGELOG.md`](CHANGELOG.md) trae lo que cambió en cada una y la tabla con los números de antes.
 

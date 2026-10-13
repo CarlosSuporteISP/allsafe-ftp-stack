@@ -306,8 +306,13 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
 <thead><tr><th>{t('Nome')}</th><th>{t('Tamanho')}</th><th>{t('Modificado')}</th><th>{t('Ações')}</th></tr></thead>
 <tbody>{corpo}</tbody></table></div>
 {como(t('O que dá para fazer nesta aba'), ajuda)}</section>
-{formulario_envio(sessao, caminho)}
-{formulario_nova_pasta(sessao, caminho)}''', sessao, '/arquivos'))
+{pareados(formulario_envio(sessao, caminho), formulario_nova_pasta(sessao, caminho))}''', sessao, '/arquivos'))
+
+
+def pareados(*cartoes):
+    """Os formulários de envio e de nova pasta, lado a lado quando cabem; só os que a tela tem."""
+    juntos = ''.join(cartoes)
+    return f'<div class="pareados">{juntos}</div>' if juntos else ''
 
 
 def formulario_nova_pasta(sessao, caminho):

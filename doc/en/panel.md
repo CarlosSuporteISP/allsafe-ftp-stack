@@ -102,6 +102,8 @@ The lists adjust to the width of the screen, without sideways scrolling of the p
 
 A list with nothing to show (empty folder, Log without records) says what is missing and when it starts to appear. The long text of each screen, such as the explanation of the profiles and of the labels in the Users tab, stays collapsed in one line under the list and opens with a click.
 
+The form screens follow the same rule. On the user's **Edit** screen and on the Destinations tab, the cards spread across columns of at least 440 px, from one to five, according to the window width and the browser zoom; the lists inside those cards, the one of the other folders and the one of the user's blocks, always appear as blocks. On the file screens, the **Upload file** and **New folder** forms sit side by side from 748 px of width up and one below the other on a narrower screen.
+
 Whoever signs in with the FTP account sees none of these tabs: they see a single screen, **My files**, described in [FTP user in the panel](#usuario-ftp).
 
 The picture of each screen, with the explanation item by item, is in [Application screenshots](application/README.md).

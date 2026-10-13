@@ -17,7 +17,7 @@ import os
 
 import retencao
 from aba_arquivos import (MENSAGENS, Recusado, Vista, abrir, aviso_de_corte, conteudo, entregar, formulario_envio,
-                          formulario_nova_pasta, linhas_da_lista, parametro, partes, recusa, trilha)
+                          formulario_nova_pasta, linhas_da_lista, parametro, pareados, partes, recusa, trilha)
 from config import CFG
 from estado import usuarios
 from icones import icone
@@ -99,8 +99,7 @@ def lista_arquivos(pedido, sessao, consulta, formulario, token):
 <thead><tr><th>{t('Nome')}</th><th>{t('Tamanho')}</th><th>{t('Modificado')}</th><th>{t('Ações')}</th></tr></thead>
 <tbody>{linhas_da_lista(v.rota, caminho, pastas, arquivos, gerir=perfil == 'completo')}</tbody></table></div>
 {como(t('O que esta conta pode fazer'), f'<p class="suave">{da_pasta} {t(texto)}{do_envio}</p>')}</section>
-{formulario_envio(sessao, caminho) if existe and envia else ''}
-{nova_pasta}''', sessao, v.rota))
+{pareados(formulario_envio(sessao, caminho) if existe and envia else '', nova_pasta)}''', sessao, v.rota))
 
 
 def so_envio(pedido, sessao, consulta, formulario, token):
