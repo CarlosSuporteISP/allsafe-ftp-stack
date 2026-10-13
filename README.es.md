@@ -27,7 +27,7 @@ Desarrollado por [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe
 
 <a href="doc/es/imagenes/painel-principal.png"><img src="doc/es/imagenes/painel-principal.png" alt="Pestaña Visión general con el menú a la izquierda, en dos grupos, la franja Servidor FTP, que dice En servicio y TLS obligatorio en el inicio de sesión, las cuatro medidas Usuarios, Espacio usado, Último envío y Certificado del FTP, cada una con el acceso directo al detalle, la tarjeta Servidor y contenedores, con el procesador y la memoria del servidor y de los contenedores, los gráficos Archivos recibidos por día, Último envío por usuario y Espacio por carpeta, la tarjeta Actividad reciente, con los seis últimos registros, y la tarjeta Datos para configurar el equipo" width="100%"></a>
 
-<sub><b>v1.9.0</b> · panel web, pestaña Visión general · captura del 2026-10-12</sub>
+<sub><b>v1.11.0</b> · panel web, pestaña Visión general · captura del 2026-10-12</sub>
 
 <!-- diagrama: doc/es/diagramas/vision-general-diagrama.mmd -->
 ```mermaid
@@ -135,7 +135,7 @@ El panel web, pestaña por pestaña. La pestaña Visión general es la imagen de
 | <a href="doc/es/imagenes/aba-meus-arquivos.png"><img src="doc/es/imagenes/aba-meus-arquivos.png" alt="Pantalla Mis archivos del usuario olt-centro, de perfil Completo, con las carpetas 2026-09 y 2026-10 y un archivo de configuración, el aviso de la limpieza automática encima de la lista, los botones Abrir o Descargar, Renombrar y Borrar en cada fila, las tarjetas Nueva carpeta y Enviar archivo y, en el menú, solo la pestaña Mis archivos, los botones PT, EN y ES, el nombre del usuario y el botón Salir" width="100%"></a> | |
 | **Mis archivos** — el usuario del FTP ve su propia carpeta y hace en ella lo que su perfil permite | |
 
-<sub><b>v1.9.0</b> · panel web, una foto por pestaña · capturas del 2026-10-12</sub>
+<sub><b>v1.11.0</b> · panel web, una foto por pestaña · capturas del 2026-10-12</sub>
 
 Todas las pantallas, menú por menú, con la explicación de cada una: [fotos de la aplicación](doc/es/aplicacion/README.md).
 

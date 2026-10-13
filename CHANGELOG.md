@@ -14,6 +14,7 @@ A documentação passa a existir também em espanhol, completa, ao lado do ingl�
 
 - **Documentação em espanhol**: `README.es.md`, `SECURITY.es.md` e `MARCA.es.md` na raiz, e a pasta `doc/es/` com os treze guias: índice, instalação, configuração, arquitetura, segurança, segredos, scripts, operação, cópia de segurança, perfis, painel, solução de problemas e o guia das telas. As seções e as âncoras são as mesmas dos outros dois idiomas. Comando, variável, nome de arquivo, valor do `.env` e saída de programa ficam como são; o texto de tela é citado como aparece no painel em espanhol.
 - **Diagramas em espanhol**: os 21 diagramas, com a fonte em `doc/es/diagramas/` e o visualizador da pasta.
+- **Fotos do painel em espanhol**: as 80 telas do guia das telas e as 10 do README, em `doc/es/aplicacion/imagenes/` e `doc/es/imagenes/`, capturas reais da versão `1.11.0` com o painel em espanhol e os mesmos dados de exemplo; na seção de idioma, as telas de comparação são as do português e do inglês.
 - **Três selos de idioma no topo de toda página**, em inglês, português e espanhol, com o da página em destaque, no lugar da linha de troca entre dois idiomas.
 - **`scripts/validate.sh` confere os três idiomas**: toda variável do `.env.example` tem de estar também no guia de configuração em espanhol, o `SECURITY.es.md` passa pela mesma conferência dos outros dois e o `MARCA.es.md` tem de existir.
 
