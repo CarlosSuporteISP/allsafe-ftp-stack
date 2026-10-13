@@ -60,6 +60,8 @@ tem38() { grep -c -F -- "$1" "$W/corpo"; }
 
 # ------------------------------------------------------------------ desligado por padrão e recusas
 # Com 'nao', nada de IPv6 existe na instância. As recusas vêm do deploy.sh --check-only, que não muda nada.
+# Portas que o FTP publica em IPv4 antes da etapa (controle e faixa passiva do perfil em uso): as mesmas têm de aparecer em IPv6.
+pf_ini="$(portas38 "$FTP" "$IP")"
 arq_0="$(grep -c '^COMPOSE_FILE=' "$ENVA")"; rede_0="$(rede38)"; pf_0="$(portas38 "$FTP" "[$IP6]")"; pn_0="$(portas38 "$NGINX" "[$IP6]")"
 esc_0="$(escuta38)"; tcp_0="$(tcp6_38)"; cert_0="$(cert38 "$IP:$PAINEL_PORTA" ::1)"
 c -o /dev/null "$F6/" 2> /dev/null; r_f0=$?; h_0="$(c -o /dev/null -w '%{http_code}' -H "Host: [::1]:$PAINEL_PORTA" "$B/entrar")"
@@ -106,10 +108,10 @@ esc_s="$(escuta38)"; tcp_s="$(tcp6_38)"; cert_s="$(cert38 "[$IP6]:$PAINEL_PORTA"
 GS6="$(na38 "$FTP" "$NOME-network" IPv6Gateway)"; GS4="$(na38 "$FTP" "$NOME-network" Gateway)"
 F38=0
 igual38 "$r_s $refez_s $dito_s" '0 1 2'; igual38 "$saude_s" 'healthy healthy healthy '; igual38 "$arq_s" 'compose.yaml:compose.ipv6.yaml'
-igual38 "$rede_s" "true $SUBREDE $SUBREDE6 "; igual38 "$pf_s" '21 21'; igual38 "$pn_s" '1 1'; igual38 "$esc_s" 1; [[ "$tcp_s" -ge 1 ]] || F38=1
+igual38 "$rede_s" "true $SUBREDE $SUBREDE6 "; igual38 "$pf_s" "$pf_ini $pf_ini"; [[ "$pf_ini" -ge 2 ]] || F38=1; igual38 "$pn_s" '1 1'; igual38 "$esc_s" 1; [[ "$tcp_s" -ge 1 ]] || F38=1
 igual38 "$cert_s" '1 1'; igual38 "$GS6" "${SUBREDE6%/*}1"
 caso "$F38" rede 16 "${NOMES38[1]}" \
-  "REDE_IPV6=sim, FTP_SUBNET_IPV6=$SUBREDE6 e a rede $SUBREDE6 em PAINEL_REDES_PERMITIDAS; deploy.sh: saída $r_s, aviso de que refez a rede: $refez_s, endereços em IPv6 na mensagem final: $dito_s; saúde: $saude_s; COMPOSE_FILE gravado: $arq_s; IPv6 na rede e sub-redes: $rede_s; portas publicadas pelo FTP em $IP e em [$IP6]: $pf_s; pelo nginx: $pn_s; escuta em IPv6 no nginx: $esc_s; soquetes IPv6 no container do FTP: $tcp_s; certificado do painel vale para ::1 e para $IP: $cert_s; gateway IPv6 e IPv4 da rede: $GS6 e $GS4"
+  "REDE_IPV6=sim, FTP_SUBNET_IPV6=$SUBREDE6 e a rede $SUBREDE6 em PAINEL_REDES_PERMITIDAS; deploy.sh: saída $r_s, aviso de que refez a rede: $refez_s, endereços em IPv6 na mensagem final: $dito_s; saúde: $saude_s; COMPOSE_FILE gravado: $arq_s; IPv6 na rede e sub-redes: $rede_s; portas publicadas pelo FTP em $IP e em [$IP6] (antes da etapa, em $IP: $pf_ini): $pf_s; pelo nginx: $pn_s; escuta em IPv6 no nginx: $esc_s; soquetes IPv6 no container do FTP: $tcp_s; certificado do painel vale para ::1 e para $IP: $cert_s; gateway IPv6 e IPv4 da rede: $GS6 e $GS4"
 
 # ------------------------------------------------------------------ FTP por IPv6
 nova_senha "$W/v38.senha"; nova_senha "$W/w38.senha"; nova_senha "$W/errada38.senha"
@@ -224,9 +226,9 @@ rm -f "$J38" "$P38" "$W"/v38.* "$W/w38.senha" "$W/errada38.senha"
 redes_fim="$(docker network ls -q --filter "name=$X38" | wc -l)"; usuarios_fim="$(usuarios_ftp | tr ' ' '\n' | grep -c -E '^[vw]38$')"
 F38=0
 igual38 "$r_n $refez_n $dito_n" '0 1 0'; igual38 "$saude_n" 'healthy healthy healthy '; igual38 "$arq_n" compose.yaml; igual38 "$rede_n" "false $SUBREDE "
-igual38 "$pf_n" '21 0'; igual38 "$pn_n" '1 0'; igual38 "$esc_n $tcp_n" '0 0'; igual38 "$cert_n" '0 1'; igual38 "$r_f6 $r_p6" '7 7'
+igual38 "$pf_n" "$pf_ini 0"; igual38 "$pn_n" '1 0'; igual38 "$esc_n $tcp_n" '0 0'; igual38 "$cert_n" '0 1'; igual38 "$r_f6 $r_p6" '7 7'
 igual38 "$r_v4 $soma_n" "0 $soma_38"; igual38 "$e_n" 303; igual38 "$a_n" "ip=$GS4 evento=entrada_ok"; igual38 "${t_segn%% *} $q_segn" '200 0'
 igual38 "$pasta_n" "$GX "; igual38 "${t_blon%% *}" 200; [[ "$q_blon" -ge 1 ]] || F38=1; igual38 "$r_lib" 0; igual38 "$pasta_fim" ''; igual38 "$redes_fim $usuarios_fim" '0 0'
 caso "$F38" rede 17 "${NOMES38[2]}" \
-  "REDE_IPV6=nao e as outras opções como estavam; deploy.sh: saída $r_n, aviso de que refez a rede: $refez_n, endereços em IPv6 na mensagem final: $dito_n; saúde: $saude_n; COMPOSE_FILE: $arq_n; IPv6 na rede e sub-redes: $rede_n; portas publicadas pelo FTP em $IP e em [$IP6]: $pf_n; pelo nginx: $pn_n; escuta em IPv6 no nginx e soquetes IPv6 no container do FTP: $esc_n $tcp_n; certificado do painel vale para ::1 e para $IP: $cert_n; curl em $F6 e em $B6: saídas $r_f6 e $r_p6 · arquivo enviado antes, de volta por $F: saída $r_v4, soma $soma_n (a enviada: $soma_38); entrada de $ADMIN por $B: $e_n, na auditoria: $a_n; aba Segurança: ${t_segn%% *}, linhas com \"em IPv6\": $q_segn · bloqueio de $GX depois da volta: $pasta_n, aba Bloqueios: ${t_blon%% *}, linhas com ele: $q_blon; liberado pelo terminal: $r_lib, endereços bloqueados depois: \"$pasta_fim\" · redes e usuários da etapa que sobraram: $redes_fim e $usuarios_fim"
+  "REDE_IPV6=nao e as outras opções como estavam; deploy.sh: saída $r_n, aviso de que refez a rede: $refez_n, endereços em IPv6 na mensagem final: $dito_n; saúde: $saude_n; COMPOSE_FILE: $arq_n; IPv6 na rede e sub-redes: $rede_n; portas publicadas pelo FTP em $IP e em [$IP6] (antes da etapa, em $IP: $pf_ini): $pf_n; pelo nginx: $pn_n; escuta em IPv6 no nginx e soquetes IPv6 no container do FTP: $esc_n $tcp_n; certificado do painel vale para ::1 e para $IP: $cert_n; curl em $F6 e em $B6: saídas $r_f6 e $r_p6 · arquivo enviado antes, de volta por $F: saída $r_v4, soma $soma_n (a enviada: $soma_38); entrada de $ADMIN por $B: $e_n, na auditoria: $a_n; aba Segurança: ${t_segn%% *}, linhas com \"em IPv6\": $q_segn · bloqueio de $GX depois da volta: $pasta_n, aba Bloqueios: ${t_blon%% *}, linhas com ele: $q_blon; liberado pelo terminal: $r_lib, endereços bloqueados depois: \"$pasta_fim\" · redes e usuários da etapa que sobraram: $redes_fim e $usuarios_fim"
 painel_de_pe
