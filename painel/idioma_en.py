@@ -3184,6 +3184,100 @@ EN = {
     'administrador ou quem tem acesso ao servidor precisa desligá-lo.':
         'The second factor of this account is on, but its secret is not on the server. An '
         'administrator or someone with access to the server has to turn it off.',
+    # Aba Serviço
+    'pelo menos {quantos}':
+        'at least {quantos}',
+    'a maior tem {tamanho}':
+        'the largest holds {tamanho}',
+    'nenhuma pasta de usuário ainda':
+        'no user folder yet',
+    '{n} destino ficou sem medida agora':
+        '{n} destination could not be measured just now',
+    '{n} destinos ficaram sem medida agora':
+        '{n} destinations could not be measured just now',
+    'nos destinos ligados':
+        'across the destinations that are on',
+    'Últimos enviados':
+        'Latest sent',
+    'Últimos não enviados':
+        'Latest not sent',
+    'Ela aparece aqui quando o primeiro usuário for criado.':
+        'It shows up here once the first user is created.',
+    'sem medida agora':
+        'not measured just now',
+    'Os {mostrados} que chegaram primeiro, de {todos}: são os que saem primeiro.':
+        'The {mostrados} that arrived first, out of {todos}: they are the first to go.',
+    'Próximos da fila':
+        'Next in the queue',
+    'Na fila':
+        'In the queue',
+    'Não enviados':
+        'Not sent',
+    'Envio aos destinos':
+        'Sending to destinations',
+    'O que saiu, o que espera e o que ficou de fora, em cada destino gravado.':
+        'What went out, what is waiting and what was left out, for each saved destination.',
+    'Tamanho das pastas':
+        'Folder sizes',
+    'A pasta de cada usuário, da maior para a menor. A que fica dentro de outra entra na conta da de fora.':
+        "Each user's folder, largest first. A folder inside another one is counted in the outer one.",
+    'ver o serviço':
+        'see the service',
+    'nas pastas dos usuários':
+        "in the users' folders",
+    'Pastas':
+        'Folders',
+    'ver o tamanho de cada uma':
+        'see the size of each',
+    '{ligados} de {gravados}':
+        '{ligados} of {gravados}',
+    'ligados, com os segredos no lugar':
+        'on, with the secrets in place',
+    'ver os destinos':
+        'see the destinations',
+    'Enviados':
+        'Sent',
+    'recusados pelo destino ou fora do que ele aceita':
+        'refused by the destination or outside what it accepts',
+    'parada: o destino não está enviando':
+        'on hold: the destination is not sending',
+    'O envio para fora do servidor começa em <a href="/destinos">Destinos</a>, com um armazenamento S3, um '
+    'remoto do rclone ou um bot do Telegram.':
+        'Sending out of the server starts in <a href="/destinos">Destinations</a>, with an S3 storage, an rclone '
+        'remote or a Telegram bot.',
+    'nenhuma conta cadastrada':
+        'no account registered',
+    'somados os destinos':
+        'all destinations added up',
+    'O que o serviço guarda':
+        'What the service holds',
+    'As contas do FTP e o que está nas pastas delas agora.':
+        'The FTP accounts and what is in their folders right now.',
+    'Nenhum destino gravado':
+        'No destination saved',
+    'Destinos ligados':
+        'Destinations on',
+    'O que o serviço guarda e o que ele manda para os destinos.':
+        'What the service holds and what it sends to the destinations.',
+    'Os arquivos e o espaço são contados nas pastas dos usuários e valem por um minuto. <strong>Na '
+    'fila</strong> é o que está na pasta do destino e chegou depois do último arquivo que ele tratou: o que '
+    'ainda está chegando conta também, e a fila do destino desligado fica parada até ele ser ligado. A medida '
+    'de cada pasta vale por {segundos} s; em pasta grande demais ela para antes do fim e a tela escreve '
+    '<strong>pelo menos</strong>. <strong>Não enviados</strong> são os arquivos que o destino recusou depois '
+    'de {tropecos} passadas e os que ficaram fora do que ele aceita: acima do limite, vazios ou com nome que '
+    'o destino não guarda. A fila segue sem eles. As listas guardam os últimos {guardados} de cada destino, e '
+    'os números contam desde que o destino foi ligado. O arquivo enviado um a um, pelos botões de destino da '
+    'aba Arquivos, não entra nelas. Esta tela só lê: nada é enviado, repetido nem apagado por ela.':
+        "Files and space are counted in the users' folders and are valid for one minute. <strong>In the "
+        "queue</strong> is what sits in the destination's folder and arrived after the last file it handled: what "
+        'is still arriving counts too, and the queue of a destination that is off stays on hold until it is '
+        'turned on. The measure of each folder is valid for {segundos} s; in a folder that is too large it stops '
+        'before the end and the screen says <strong>at least</strong>. <strong>Not sent</strong> are the files '
+        'the destination refused after {tropecos} runs and those outside what it accepts: above the limit, empty '
+        'or with a name the destination does not store. The queue moves on without them. The lists keep the '
+        'latest {guardados} of each destination, and the numbers count since the destination was turned on. A '
+        'file sent one at a time, with the destination buttons of the Files tab, does not go into them. This '
+        'screen only reads: nothing is sent, repeated or deleted by it.',
 }
 
 # Mensagem de erro do allsafe-ftp-user (ftp/usuario.sh), que fala português sem acento: a expressão que a

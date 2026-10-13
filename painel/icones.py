@@ -21,6 +21,7 @@ TRACOS = {
     'sair': 'M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9',
     'servidor': 'M4 5h16v6H4zM4 13h16v6H4zM7.5 8h.01M7.5 16h.01',
     'pulso': 'M3 12h4l2.5-7 5 14 2.5-7h4',
+    'medidor': 'M4 18a8 8 0 1 1 16 0M12 18l4-6',
     'processador': 'M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4',
     'memoria': 'M3 7h18v9H3zM6 16v3M10 16v3M14 16v3M18 16v3M7.5 10v3M12 10v3M16.5 10v3',
     'rede': 'M8 20V5M4 9l4-4 4 4M16 4v15M12 15l4 4 4-4',

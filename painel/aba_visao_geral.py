@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Aba Visão geral: situação do FTP, o servidor e os containers em quatro medidas, o que chegou nos últimos dias,
-quem parou de enviar e os dados do equipamento."""
+"""Aba Visão geral: situação do FTP, o servidor e os containers em quatro medidas, o envio aos destinos em outras
+quatro, o que chegou nos últimos dias, quem parou de enviar e os dados do equipamento."""
 import datetime
 import shutil
 import time
@@ -8,6 +8,7 @@ import urllib.parse
 
 import idioma
 from aba_atividade import recentes
+from aba_servico import resumo as resumo_do_servico
 from aba_servidor import resumo
 from config import ARQ_CERT_FTP, CFG, PASTA_DADOS
 from estado import DIAS_DO_GRAFICO, certificado, dias_restantes, ftp_no_ar, pastas_distintas, sem_tls, uso_da_pasta, usuarios
@@ -138,6 +139,7 @@ def visao_geral(pedido, sessao, consulta, formulario, token):
 <p class="atalho"><a href="/seguranca">{t('conferir a impressão digital')}</a></p></div>
 </section>
 {resumo()}
+{resumo_do_servico()}
 <div class="dupla">
 {recebidos(usos)}
 {ultimos_envios(nomes)}
