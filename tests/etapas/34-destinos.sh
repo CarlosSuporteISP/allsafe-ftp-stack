@@ -982,15 +982,13 @@ m_133=$(marca34); auditoria; n_cp="$(eventos copia_pedida)"; n_cg="$(eventos cop
 cs_k0="$(docker exec "$PAINEL" sha256sum /painel/destinos/copia.conf | cut -c1-64)"
 cs_ru="$(rotasc34 "$W/dst34.jar" "$K_u3")"
 # A aba Serviço, enquanto isso: só o administrador a abre, ela não tem ação nenhuma e não mostra segredo nem endereço do destino.
-auditoria; n_sg="$(eventos 'recusa_papel usuario=dst34 caminho=/servico')"
-sg_u="$(aba -b "$W/dst34.jar" "$B/servico" | cut -c1-3) $(POTE="$W/dst34.jar" envio /servico --data-urlencode "csrf=$K_u3" | cut -c1-3)"
+sg_u="$(aba -b "$W/dst34.jar" "$B/servico" | cut -c1-3) $(POTE="$W/dst34.jar" envio /servico --data-urlencode "csrf=$K_u3" | cut -c1-3)"; sg_ini=$SECONDS
 sg_um="$(aba -b "$W/dst34.jar" "$B/meus-arquivos" | cut -c1-3) $(tem34 '/servico')"
 sg_s="$(aba -b "$W/vazio34.jar" "$B/servico")"; sg_p="$(envio /servico --data-urlencode "csrf=$K" | cut -c1-3)"
 sg_k0="$(docker exec "$PAINEL" sh -c 'cat /painel/destinos/*.conf | sha256sum' | cut -c1-64)"; sg_c0=$(marca34)
 sg_a="$(aba -b "$J" "$B/servico")"; sg_c=$(( $(marca34) - sg_c0 )); sg_k1="$(docker exec "$PAINEL" sh -c 'cat /painel/destinos/*.conf | sha256sum' | cut -c1-64)"
 sg_v="$(vaza34 "$W/corpo")"; sg_d="$(tem34 'balde34') $(tem34 'copias/teste') $(tem34 "$FIM34")"; sg_m="$(tem34 'href="/servico"')"; sg_t="$(faltam34 'Armazenamento S3 <span class="etiqueta' 'Bot do Telegram <span class="etiqueta' 'Últimos enviados')"
 sg_f="$(grep -o '<form[^>]*>' "$W/corpo" | grep -c -v -e 'action="/idioma"' -e 'action="/sair"' || true)"
-auditoria; sg_r=$(( $(eventos 'recusa_papel usuario=dst34 caminho=/servico') - n_sg ))
 cs_z="$(gcopia34 "$J" "" "$W/painel.senha" prefixo=copia34/invasor)$(gcopia34 "$J" token-errado "$W/painel.senha" prefixo=copia34/invasor)$(ORIGEM34=https://fora.example gcopia34 "$J" "$K" "$W/painel.senha" prefixo=copia34/invasor)$(gcopia34 "$W/vazio34.jar" "$K" "$W/painel.senha" prefixo=copia34/invasor)"
 cs_zb="$(botao34 '')$(botao34 token-errado)$(c -o /dev/null -w '%{http_code} %{redirect_url}' -b "$J" -H 'Origin: https://fora.example' --data-urlencode "csrf=$K" "$B/destinos/copia/agora" | sed "s|$B||")$(POTE="$W/vazio34.jar" botao34)"
 # A chave privada da cópia não existe no painel: ele só tem a pública, e enxerga os certificados sem poder escrever.
@@ -999,6 +997,11 @@ cs_pub="$(docker exec "$PAINEL" cat /run/secrets/backup_chave_publica | cmp -s -
 cs_priv="$(docker exec "$PAINEL" sh -c 'grep -r -l -a -F AGE-SECRET-KEY /run/secrets /painel /certs /auth 2> /dev/null | wc -l') $(grep -c -F AGE-SECRET-KEY "$S/backup-chave-privada.txt" || true)"
 cs_ro="$(docker exec "$PAINEL" sh -c 'touch /certs/x34 2> /dev/null && echo gravou || echo recusou') $(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/certs"}}{{.RW}}{{end}}{{end}}' "$PAINEL")"
 while (( SECONDS - cs_ini < 75 )); do sleep 3; done
+# A recusa por papel fica na auditoria, uma linha por minuto por endereço: passado o minuto das recusas acima, o pedido repetido ganha a linha dele.
+while (( SECONDS - sg_ini < 62 )); do sleep 1; done
+auditoria; n_sg="$(eventos 'recusa_papel usuario=dst34 caminho=/servico')"
+sg_u2="$(aba -b "$W/dst34.jar" "$B/servico" | cut -c1-3)"
+auditoria; sg_r=$(( $(eventos 'recusa_papel usuario=dst34 caminho=/servico') - n_sg ))
 auditoria; cs_d133="$(copias34 "$m_133") $(( $(eventos copia_pedida) - n_cp )) $(( $(eventos copia_gravada) - n_cg ))"; cs_lr="$(linhas34 ' evento=copia_enviada origem=rotina ') $(linhas34 ' evento=copia_falhou origem=rotina ')"
 cs_k1="$(docker exec "$PAINEL" sha256sum /painel/destinos/copia.conf | cut -c1-64)"
 
@@ -1028,8 +1031,8 @@ caso $? seguranca 133 "Cópia do sistema: só o administrador, com sessão, toke
 
 # ------------------------------------------------------------------ a aba Serviço: só do administrador, só leitura e sem segredo
 [[ "$sg_u" == "404 404" && "$sg_um" == "200 0" && "$sg_s" == "303 /entrar" && "$sg_p" == 404 && "$sg_a" == "200 " && "$sg_t" == 0 && "$sg_m" -ge 1 && "$sg_f" == 0 \
-  && "$sg_v" == 0 && "$sg_d" == "0 0 0" && "$sg_c" == 0 && "$sg_k1" == "$sg_k0" && -n "$sg_k0" && "$sg_r" == 1 ]]
-caso $? seguranca 162 "Aba Serviço: só o administrador, só leitura e sem segredo" "usuário do FTP dst34, com a sessão e o token dele: GET e POST em /servico $sg_u, com $sg_r recusa_papel na auditoria; tela dele ($sg_um: código e vezes em que /servico aparece); sem sessão: $sg_s; POST do administrador, com o token dele: $sg_p (a aba não tem rota de envio); aba com o administrador: $sg_a, cartões dos destinos e listas na tela (faltam $sg_t), no menu ($sg_m), formulários além do idioma e da saída: $sg_f; linhas com chave do S3, token do bot ou conversa: $sg_v; vezes do bucket, do prefixo e do endereço do destino: $sg_d; pedidos ao serviço de exemplo ao abrir a tela: $sg_c; soma dos .conf dos destinos igual antes e depois"
+  && "$sg_v" == 0 && "$sg_d" == "0 0 0" && "$sg_c" == 0 && "$sg_k1" == "$sg_k0" && -n "$sg_k0" && "$sg_u2" == 404 && "$sg_r" == 1 ]]
+caso $? seguranca 162 "Aba Serviço: só o administrador, só leitura e sem segredo" "usuário do FTP dst34, com a sessão e o token dele: GET e POST em /servico $sg_u; passado o minuto em que a auditoria junta as recusas do mesmo endereço, outro GET: $sg_u2, com $sg_r linha recusa_papel dele para /servico; tela dele ($sg_um: código e vezes em que /servico aparece); sem sessão: $sg_s; POST do administrador, com o token dele: $sg_p (a aba não tem rota de envio); aba com o administrador: $sg_a, cartões dos destinos e listas na tela (faltam $sg_t), no menu ($sg_m), formulários além do idioma e da saída: $sg_f; linhas com chave do S3, token do bot ou conversa: $sg_v; vezes do bucket, do prefixo e do endereço do destino: $sg_d; pedidos ao serviço de exemplo ao abrir a tela: $sg_c; soma dos .conf dos destinos igual antes e depois"
 
 [[ "$cs_uo" == "1 1" && "$cs_rt" == 0 && -n "$cs_nt" && "$cs_nt" != "$cs_n" && "$cs_ht" =~ ^[0-9a-f]{64}$ && "$cs_st" == "$cs_ht" && "$cs_dt" == "$cs_ht" && "$cs_at" == 1 \
   && "$cs_gr" == "303 /destinos?m=copia_gravada" && "$cs_fr" == 0 && "$cs_rw" == 0 && "$cs_lr" == "1 0" \
