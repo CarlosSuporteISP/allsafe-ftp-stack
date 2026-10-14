@@ -1221,7 +1221,7 @@ Os três containers sobem sem `privileged`, sem `docker.sock` e sem `network_mod
 | `cap_drop: [ALL]` | Zera privilégios e devolve só o mínimo (tabela seguinte) |
 | `security_opt: [no-new-privileges:true]` | Impede ganho de privilégio por `setuid` ou `setgid` depois do início |
 | `pids_limit` | Barreira contra _fork bomb_ |
-| `mem_limit` e `cpus` | Contém o consumo; evita afetar vizinhos no host |
+| `mem_limit` e `cpus` (no painel, `cpu_period` e `cpu_quota`) | Contém o consumo; evita afetar vizinhos no host |
 | `memswap_limit` igual ao `mem_limit` | Sem swap: o limite de memória é o teto de verdade. Sem ela, o container poderia usar o dobro, em swap |
 | `ulimits.nofile` | Teto de descritores de arquivo |
 | `init: true` | `tini` como processo 1: recolhe processos zumbis e repassa os sinais |

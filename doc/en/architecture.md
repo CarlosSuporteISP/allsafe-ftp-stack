@@ -374,7 +374,7 @@ interval: 20s   timeout: 8s   retries: 5   start_period: 20s
 | A single port for the panel | only `nginx` publishes a port; `painel` serves through a Unix socket |
 | No control of Docker | no container mounts the Docker socket |
 | No privilege gain | `no-new-privileges: true` |
-| Resource limits | `pids_limit`, `mem_limit`, `memswap_limit` equal to the memory limit (no swap), `cpus`, `ulimits.nofile` |
+| Resource limits | `pids_limit`, `mem_limit`, `memswap_limit` equal to the memory limit (no swap), `cpus` (in the panel, `cpu_period` and `cpu_quota`), `ulimits.nofile` |
 | Log with rotation | `logging: local`, 10 MB × 3 |
 
 Reason for each directive and each `cap_add`: [Security](security.md#hardening-do-compose-yaml-linha-a-linha).

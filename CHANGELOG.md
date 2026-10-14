@@ -6,6 +6,20 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.16.0] - 2026-10-14
+
+A linha **Limite de processador atingido** do container do painel, na aba Servidor, deixa de acusar a cada entrada no painel: a cota de processador do painel passa a ser medida em períodos de 500 ms, com a mesma média de antes.
+
+### Corrigido
+
+- **Cota de processador do painel**: conferir uma senha gasta uns 65 ms de processador de uma vez, e `cpus: 0.5` dava 50 ms a cada 100 ms. Toda entrada no painel esgotava a cota de um período e somava na linha **Limite de processador atingido**, sem faltar processador. O painel passa a ter a mesma média de `PAINEL_CPU_LIMIT` em períodos de 500 ms: 250 ms a cada 500 ms, no padrão. Em container de prova, 20 conferências de senha, uma a cada 0,4 s, esgotavam a cota em 19 períodos; agora, em nenhum.
+
+### Alterado
+
+- **`PAINEL_CPU_LIMIT`**: o `deploy.sh` confere o valor, calcula a cota de cada período (`PAINEL_CPU_QUOTA`) e a grava no `.env` quando o valor não é `0.5`. Depois de mudar o limite, rode `./deploy.sh`. A média não muda; em carga contínua, a pausa mais longa com a cota esgotada passa de 50 para 250 ms.
+- **Aba Servidor**: a porcentagem de **Limite de processador atingido** usa o período da cota de cada container: 500 ms no painel, 100 ms no FTP e no nginx, que continuam com `cpus`.
+- **Casos de teste**: um funcional, para a cota de processador do painel. A bateria passa a ter 113 casos funcionais, 162 de segurança e 19 de rede.
+
 ## [1.15.0] - 2026-10-13
 
 O painel ganha a aba **Serviço**, de monitoramento: o que o serviço guarda e, para cada destino gravado, o que já foi enviado, o que não foi e o que está na fila, com o nome dos arquivos. A Visão geral traz o resumo. A aba só lê: nada é enviado, repetido nem apagado por ela.

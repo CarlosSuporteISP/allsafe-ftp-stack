@@ -185,6 +185,17 @@ arquivos_compose="${arquivos_compose#:}"; arquivos_compose="${arquivos_compose%:
 arquivos_compose="${arquivos_compose:-compose.yaml}"
 if rede_ipv6; then arquivos_compose+=":compose.ipv6.yaml"; fi
 export COMPOSE_FILE="$arquivos_compose"
+# Processador do painel: a média de PAINEL_CPU_LIMIT em períodos de 500 ms, o cpu_period do compose.yaml (o `cpus` do
+# Docker mede em períodos de 100 ms, e a cota de um deles não comporta uma conferência de senha). O Compose não faz
+# a conta: a cota de cada período, em microssegundos, sai daqui.
+PAINEL_CPU_PERIODO=500000
+if [[ "$remover" == false ]]; then
+  painel_cpu="$(env_valor PAINEL_CPU_LIMIT 0.5)"
+  [[ "$painel_cpu" =~ ^[0-9]{1,3}(\.[0-9]{1,3})?$ ]] && awk -v n="$painel_cpu" 'BEGIN { exit !(n >= 0.01) }' \
+    || die "PAINEL_CPU_LIMIT inválido em $env_file: um número de núcleos a partir de 0.01, como 0.5 ou 1."
+  PAINEL_CPU_QUOTA="$(awk -v n="$painel_cpu" -v p="$PAINEL_CPU_PERIODO" 'BEGIN { printf "%d", n * p + 0.5 }')"
+  export PAINEL_CPU_QUOTA
+fi
 compose() { docker compose --env-file "$env_file" "$@"; }
 
 if [[ "$remover" == true ]]; then
@@ -381,6 +392,12 @@ fi
 # Quem nunca ligou o IPv6 não ganha a linha.
 if rede_ipv6 || grep -q '^COMPOSE_FILE=' "$env_file"; then
   env_gravar COMPOSE_FILE "$COMPOSE_FILE"
+fi
+
+# A cota de processador do painel também, pelo mesmo motivo. Com PAINEL_CPU_LIMIT=0.5 ela é a do compose.yaml e a
+# linha não é criada.
+if [[ "$PAINEL_CPU_QUOTA" != 250000 ]] || grep -q '^PAINEL_CPU_QUOTA=' "$env_file"; then
+  env_gravar PAINEL_CPU_QUOTA "$PAINEL_CPU_QUOTA"
 fi
 
 # Portas: nenhuma pode estar em uso por outro programa. As que os containers desta stack já publicam não contam.

@@ -1221,7 +1221,7 @@ The three containers start without `privileged`, without `docker.sock` and witho
 | `cap_drop: [ALL]` | Zeroes the privileges and gives back only the minimum (next table) |
 | `security_opt: [no-new-privileges:true]` | Prevents privilege gain by `setuid` or `setgid` after the start |
 | `pids_limit` | Barrier against _fork bomb_ |
-| `mem_limit` and `cpus` | Contains the consumption; avoids affecting neighbors on the host |
+| `mem_limit` and `cpus` (in the panel, `cpu_period` and `cpu_quota`) | Contains the consumption; avoids affecting neighbors on the host |
 | `memswap_limit` equal to `mem_limit` | No swap: the memory limit is the real ceiling. Without it, the container could use twice as much, in swap |
 | `ulimits.nofile` | Ceiling of file descriptors |
 | `init: true` | `tini` as process 1: reaps zombie processes and forwards the signals |

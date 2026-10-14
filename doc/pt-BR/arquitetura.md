@@ -377,7 +377,7 @@ interval: 20s   timeout: 8s   retries: 5   start_period: 20s
 | Uma porta só para o painel | só o `nginx` publica porta; o `painel` atende por soquete Unix |
 | Sem controle do Docker | nenhum container monta o socket do Docker |
 | Sem ganho de privilégio | `no-new-privileges: true` |
-| Limites de recurso | `pids_limit`, `mem_limit`, `memswap_limit` igual ao de memória (sem swap), `cpus`, `ulimits.nofile` |
+| Limites de recurso | `pids_limit`, `mem_limit`, `memswap_limit` igual ao de memória (sem swap), `cpus` (no painel, `cpu_period` e `cpu_quota`), `ulimits.nofile` |
 | Log com rotação | `logging: local`, 10 MB × 3 |
 
 Justificativa de cada diretiva e de cada `cap_add`: [Segurança](seguranca.md#hardening-do-compose-yaml-linha-a-linha).

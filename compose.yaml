@@ -220,7 +220,11 @@ services:
     mem_limit: ${PAINEL_MEMORY_LIMIT:-192M}
     # Sem swap: o limite de memória é o teto de verdade (sem esta linha, o container usaria o dobro, em swap).
     memswap_limit: ${PAINEL_MEMORY_LIMIT:-192M}
-    cpus: ${PAINEL_CPU_LIMIT:-0.5}
+    # A mesma média de PAINEL_CPU_LIMIT, em períodos de 500 ms no lugar dos 100 ms de `cpus`: uma conferência de senha
+    # gasta uns 65 ms de processador de uma vez e precisa caber na cota de um período. A cota é PAINEL_CPU_LIMIT vezes
+    # o período; o Compose não faz a conta, quem faz é o deploy.sh. O padrão daqui é o de PAINEL_CPU_LIMIT=0.5.
+    cpu_period: 500000
+    cpu_quota: ${PAINEL_CPU_QUOTA:-250000}
     stop_grace_period: 10s
     healthcheck:
       # Só o saude.py, sem os módulos do painel (-I -S): a verificação cabe com folga na cota de processador de um período.

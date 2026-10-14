@@ -18,11 +18,13 @@ doze28='^[0-9]+( [0-9]+){11}$'                                                  
 publicado28() { docker exec "$1" cat "$2" 2>/dev/null | tr -d '\n'; }                             # <container> <arquivo>
 # <container>: os limites dele como a tela escreve ("de 0,5 núcleo", "de 64,0 MiB", "de 32"), um por linha
 limites28() {
-  docker inspect -f '{{.HostConfig.NanoCpus}} {{.HostConfig.Memory}} {{.HostConfig.PidsLimit}}' "$1" | awk '{
-    n = sprintf("%.2f", $1 / 1e9); sub(/0+$/, "", n); sub(/\.$/, "", n); sub(/\./, ",", n)
-    m = $2 / 1048576; u = "MiB"; if (m >= 1024) { m /= 1024; u = "GiB" }
+  # O painel tem cpu_period e cpu_quota no lugar de `cpus` (NanoCpus fica 0): os núcleos são a cota sobre o período.
+  docker inspect -f '{{.HostConfig.NanoCpus}} {{.HostConfig.CpuQuota}} {{.HostConfig.CpuPeriod}} {{.HostConfig.Memory}} {{.HostConfig.PidsLimit}}' "$1" | awk '{
+    c = $1 > 0 ? $1 / 1e9 : $2 / $3
+    n = sprintf("%.2f", c); sub(/0+$/, "", n); sub(/\.$/, "", n); sub(/\./, ",", n)
+    m = $4 / 1048576; u = "MiB"; if (m >= 1024) { m /= 1024; u = "GiB" }
     m = sprintf("%.1f", m); sub(/\./, ",", m)
-    printf "de %s\302\240%s\nde %s\302\240%s\n>[0-9.]+ de %d</span>\n", n, ($1 >= 2e9 ? "núcleos" : "núcleo"), m, u, $3 }'
+    printf "de %s\302\240%s\nde %s\302\240%s\n>[0-9.]+ de %d</span>\n", n, (c >= 2 ? "núcleos" : "núcleo"), m, u, $5 }'
 }
 # <espera em s> <comando...>: repete o comando até ele passar ou o tempo acabar
 ate28() { local fim=$((SECONDS + $1)); shift; until "$@"; do (( SECONDS < fim )) || return 1; sleep 1; done; }
