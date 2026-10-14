@@ -117,20 +117,18 @@ def periodo(series, teto, resumo):
 SERVICOS = {'ftp': ('servidor', N('Servidor FTP')), 'painel': ('painel', N('Painel')), 'nginx': ('escudo', N('Frente web'))}
 
 
-PERIODO_DA_COTA = 0.1   # segundos: o período do limite de processador que o Docker usa com `cpus` (cpu.max)
-
-
 def contido_no_periodo(nome, amostras):
     """Parte do histórico, em %, em que o limite de processador segurou o container. O contador do grupo de controle
-    (nr_throttled) vale desde que o container subiu, soma cada período de 100 ms em que a cota acabou e nunca volta:
+    (nr_throttled) vale desde que o container subiu, soma cada período da cota em que ela acabou e nunca volta:
     a subida deixa alguns, um pedido mais pesado deixa outro, e o número só cresce sem dizer se falta processador.
-    Aqui entra o que o contador andou entre uma amostra e a seguinte, contra o tempo do histórico; quando ele recua,
-    o container reiniciou, e a diferença não conta."""
-    contador = [amostra[4][nome][2] for amostra in amostras if nome in amostra[4] and amostra[4][nome][2] is not None]
+    Aqui entra o que o contador andou entre uma amostra e a seguinte, vezes o período da cota do container (cpu.max:
+    500 ms no painel, 100 ms nos que usam `cpus`), contra o tempo do histórico; quando o contador recua, o container
+    reiniciou, e a diferença não conta."""
+    contador = [amostra[4][nome][2:4] for amostra in amostras if nome in amostra[4] and amostra[4][nome][2] is not None]
     if len(contador) < 2:
         return 0
-    periodos = sum(max(depois - antes, 0) for antes, depois in zip(contador, contador[1:]))
-    return min(100 * periodos * PERIODO_DA_COTA / ((len(contador) - 1) * recursos.INTERVALO), 100)
+    parado = sum(max(depois[0] - antes[0], 0) * (depois[1] or 0) for antes, depois in zip(contador, contador[1:]))
+    return min(100 * parado / ((len(contador) - 1) * recursos.INTERVALO), 100)
 
 
 def parte_do_tempo(parte):

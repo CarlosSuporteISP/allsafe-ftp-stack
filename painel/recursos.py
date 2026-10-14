@@ -161,16 +161,17 @@ def do_cgroup(nome, chave=None):
     return None
 
 
-def limite_de_nucleos():
-    """Núcleos que o container do painel pode usar (cota dividida pelo período); None sem limite."""
+def limite_de_processador():
+    """Limite de processador do container do painel: (núcleos que ele pode usar, que é a cota dividida pelo período, e
+    o período da cota em segundos); (None, None) sem limite."""
     try:
         with open(f'{CGROUP}/cpu.max', encoding='ascii', errors='replace') as arq:
             campos = arq.read(64).split()
     except OSError:
-        return None
+        return None, None
     if len(campos) == 2 and all(NUMERO.fullmatch(campo) for campo in campos) and int(campos[0]) and int(campos[1]):
-        return int(campos[0]) / int(campos[1])
-    return None
+        return int(campos[0]) / int(campos[1]), int(campos[1]) / 1e6
+    return None, None
 
 
 def ler_proprio(antes=None):
@@ -183,7 +184,8 @@ def ler_proprio(antes=None):
     nucleos = None
     if antes and instante > antes[0] and gasto >= antes[1]:
         nucleos = (gasto - antes[1]) / 1e6 / (instante - antes[0])
-    return {'inicio': INICIO, 'cpu': nucleos, 'nucleos': limite_de_nucleos(),
+    limite, periodo = limite_de_processador()
+    return {'inicio': INICIO, 'cpu': nucleos, 'nucleos': limite, 'periodo': periodo,
             # Como o `docker stats`: o cache de arquivo que o sistema solta quando precisa não conta como uso.
             'memoria': max(em_uso - inativa, 0), 'memoria_max': do_cgroup('memory.max'),
             'processos': do_cgroup('pids.current') or 0, 'processos_max': do_cgroup('pids.max'),
@@ -207,7 +209,7 @@ def ler_publicado(caminho, agora=None):
     if not -RECURSOS_VALE <= agora - quando <= RECURSOS_VALE:
         return None
     return {'inicio': inicio, 'cpu': gasto / 1000 / intervalo if intervalo else None,
-            'nucleos': cota / periodo if cota and periodo else None,
+            'nucleos': cota / periodo if cota and periodo else None, 'periodo': periodo / 1e6 if cota and periodo else None,
             'memoria': memoria, 'memoria_max': memoria_max or None,
             'processos': processos, 'processos_max': processos_max or None, 'contido': contido, 'faltou': faltou}
 
@@ -240,8 +242,8 @@ def amostrar():
         with TRAVA:
             PROPRIO.clear()
             PROPRIO.update(proprio or {})
-        por_container = {nome: (leitura['cpu'], leitura['memoria'], leitura['contido']) if leitura else (None, None, None)
-                         for nome, leitura in containers()}
+        por_container = {nome: ((leitura['cpu'], leitura['memoria'], leitura['contido'], leitura['periodo']) if leitura
+                                else (None, None, None, None)) for nome, leitura in containers()}
         with TRAVA:
             HISTORICO.append((uso, usada, recebendo, enviando, por_container))
 
@@ -253,7 +255,7 @@ def iniciar():
 
 def historico():
     """As amostras guardadas, da mais antiga para a mais nova: (processador %, memória %, recebendo, enviando e,
-    por container, o processador em núcleos, a memória em bytes e o contador de vezes em que o limite de processador
-    o segurou desde que ele subiu)."""
+    por container, o processador em núcleos, a memória em bytes, o contador de vezes em que o limite de processador
+    o segurou desde que ele subiu e o período da cota desse limite, em segundos)."""
     with TRAVA:
         return list(HISTORICO)
