@@ -3157,6 +3157,101 @@ ES = {
     'administrador ou quem tem acesso ao servidor precisa desligá-lo.':
         'El segundo factor de esta cuenta está activado, pero su secreto no está en el servidor. '
         'Un administrador o quien tiene acceso al servidor necesita desactivarlo.',
+    # Aba Serviço
+    'pelo menos {quantos}':
+        'al menos {quantos}',
+    'a maior tem {tamanho}':
+        'la mayor tiene {tamanho}',
+    'nenhuma pasta de usuário ainda':
+        'ninguna carpeta de usuario todavía',
+    '{n} destino ficou sem medida agora':
+        '{n} destino quedó sin medida ahora',
+    '{n} destinos ficaram sem medida agora':
+        '{n} destinos quedaron sin medida ahora',
+    'nos destinos ligados':
+        'en los destinos activados',
+    'Últimos enviados':
+        'Últimos enviados',
+    'Últimos não enviados':
+        'Últimos no enviados',
+    'Ela aparece aqui quando o primeiro usuário for criado.':
+        'Aparece aquí cuando se cree el primer usuario.',
+    'sem medida agora':
+        'sin medida ahora',
+    'Os {mostrados} que chegaram primeiro, de {todos}: são os que saem primeiro.':
+        'Los {mostrados} que llegaron primero, de {todos}: son los que salen primero.',
+    'Próximos da fila':
+        'Próximos de la cola',
+    'Na fila':
+        'En la cola',
+    'Não enviados':
+        'No enviados',
+    'Envio aos destinos':
+        'Envío a los destinos',
+    'O que saiu, o que espera e o que ficou de fora, em cada destino gravado.':
+        'Lo que salió, lo que espera y lo que quedó fuera, en cada destino guardado.',
+    'Tamanho das pastas':
+        'Tamaño de las carpetas',
+    'A pasta de cada usuário, da maior para a menor. A que fica dentro de outra entra na conta da de fora.':
+        'La carpeta de cada usuario, de la mayor a la menor. La que está dentro de otra entra en la cuenta de la '
+        'de fuera.',
+    'ver o serviço':
+        'ver el servicio',
+    'nas pastas dos usuários':
+        'en las carpetas de los usuarios',
+    'Pastas':
+        'Carpetas',
+    'ver o tamanho de cada uma':
+        'ver el tamaño de cada una',
+    '{ligados} de {gravados}':
+        '{ligados} de {gravados}',
+    'ligados, com os segredos no lugar':
+        'activados, con los secretos en su lugar',
+    'ver os destinos':
+        'ver los destinos',
+    'Enviados':
+        'Enviados',
+    'recusados pelo destino ou fora do que ele aceita':
+        'rechazados por el destino o fuera de lo que acepta',
+    'parada: o destino não está enviando':
+        'detenida: el destino no está enviando',
+    'O envio para fora do servidor começa em <a href="/destinos">Destinos</a>, com um armazenamento S3, um '
+    'remoto do rclone ou um bot do Telegram.':
+        'El envío fuera del servidor empieza en <a href="/destinos">Destinos</a>, con un almacenamiento S3, un '
+        'remoto de rclone o un bot de Telegram.',
+    'nenhuma conta cadastrada':
+        'ninguna cuenta registrada',
+    'somados os destinos':
+        'sumados los destinos',
+    'O que o serviço guarda':
+        'Lo que guarda el servicio',
+    'As contas do FTP e o que está nas pastas delas agora.':
+        'Las cuentas del FTP y lo que hay en sus carpetas ahora.',
+    'Nenhum destino gravado':
+        'Ningún destino guardado',
+    'Destinos ligados':
+        'Destinos activados',
+    'O que o serviço guarda e o que ele manda para os destinos.':
+        'Lo que guarda el servicio y lo que envía a los destinos.',
+    'Os arquivos e o espaço são contados nas pastas dos usuários e valem por um minuto. <strong>Na '
+    'fila</strong> é o que está na pasta do destino e chegou depois do último arquivo que ele tratou: o que '
+    'ainda está chegando conta também, e a fila do destino desligado fica parada até ele ser ligado. A medida '
+    'de cada pasta vale por {segundos} s; em pasta grande demais ela para antes do fim e a tela escreve '
+    '<strong>pelo menos</strong>. <strong>Não enviados</strong> são os arquivos que o destino recusou depois '
+    'de {tropecos} passadas e os que ficaram fora do que ele aceita: acima do limite, vazios ou com nome que '
+    'o destino não guarda. A fila segue sem eles. As listas guardam os últimos {guardados} de cada destino, e '
+    'os números contam desde que o destino foi ligado. O arquivo enviado um a um, pelos botões de destino da '
+    'aba Arquivos, não entra nelas. Esta tela só lê: nada é enviado, repetido nem apagado por ela.':
+        'Los archivos y el espacio se cuentan en las carpetas de los usuarios y valen por un minuto. <strong>En '
+        'la cola</strong> es lo que está en la carpeta del destino y llegó después del último archivo que este '
+        'trató: lo que todavía está llegando también cuenta, y la cola del destino desactivado queda detenida '
+        'hasta que se active. La medida de cada carpeta vale por {segundos} s; en una carpeta demasiado grande se '
+        'detiene antes del final y la pantalla escribe <strong>al menos</strong>. <strong>No enviados</strong> '
+        'son los archivos que el destino rechazó después de {tropecos} pasadas y los que quedaron fuera de lo que '
+        'acepta: por encima del límite, vacíos o con un nombre que el destino no guarda. La cola sigue sin ellos. '
+        'Las listas guardan los últimos {guardados} de cada destino, y los números cuentan desde que el destino '
+        'fue activado. El archivo enviado uno a uno, con los botones de destino de la pestaña Archivos, no entra '
+        'en ellas. Esta pantalla solo lee: no envía, no repite ni borra nada.',
 }
 
 # Mensagem de erro do allsafe-ftp-user (ftp/usuario.sh), que fala português sem acento: a expressão que a

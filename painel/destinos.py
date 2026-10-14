@@ -25,6 +25,9 @@ segue pela espera, porque no modo `mover` ele apaga o que enviou.
 O administrador também envia um arquivo só, pela aba Arquivos (enviar_arquivo): esse envio não mexe na marca das
 passadas e nunca apaga o arquivo.
 
+Para a aba Serviço, o andamento guarda também os últimos HISTORICO arquivos enviados e os últimos que ficaram de fora,
+com o motivo, e a tela mede a fila: o que está na pasta depois da marca de cada destino (filas).
+
 No S3, o modo `copiar` deixa o arquivo no servidor e o `mover` apaga o arquivo depois que o destino confirma a
 gravação, e só se ele não mudou desde o envio. O Telegram só envia o que chegar depois de ligado. Com mais de um
 destino na mesma pasta, os bots e os S3 em `copiar` passam primeiro, e o `mover` só apaga o arquivo depois que todos
@@ -53,7 +56,7 @@ import telegram
 from aba_arquivos import ABRIR, Recusado, abrir, partes
 from auditoria import auditar, limpo
 from config import APAGAR_NIVEIS, CFG, ENDERECO_HTTPS, PASTA, PASTA_DESTINOS, PASTA_SEGREDOS
-from estado import limpar_cache
+from estado import com_cache, limpar_cache
 from idioma import t
 from pagina import quando, tamanho as com_unidade
 
@@ -80,6 +83,12 @@ CALMA = 3                    # segundos entre o anúncio e o envio: o cliente FT
                              # depois de enviar já acertou, e o arquivo não sai duas vezes
 CONFERIR = 60                # segundos entre uma conferência do que está na hora e a seguinte
 AVULSO_MAX = 20              # segundos que a tela espera pelo envio de um arquivo pedido por ela; depois ele segue sozinho
+HISTORICO = 30               # últimos arquivos enviados, e últimos não enviados, que cada destino guarda para a aba Serviço
+FILA_NA_TELA = 30            # arquivos da fila que a aba Serviço lista por destino: os mais antigos, que saem primeiro
+FILA_PRAZO = 2               # segundos da medida da fila de uma pasta...
+FILA_MAX = 50000             # ...e arquivos lidos nela; acima disso a conta sai como parcial
+FILAS_PRAZO = 6              # segundos da medida de todas as filas em uma tela; a pasta que não coube fica sem medida
+FILA_VALE = 20               # segundos que a medida da fila de uma pasta vale
 
 ACORDAR = threading.Event()
 PEDIDOS = set()              # destinos com passada pedida pelo botão Enviar agora
@@ -335,10 +344,26 @@ def remover(destino):
 
 # ------------------------------------------------------------ andamento
 
+def historico_de(lido):
+    """As listas da aba Serviço, do andamento lido: os últimos enviados, [quando, caminho, tamanho], e os últimos
+    não enviados, com o motivo no fim. O andamento gravado antes delas, ou com elas fora do formato, vale do mesmo
+    jeito: as listas começam vazias e a marca não muda."""
+    listas, guardado = {'enviados': [], 'recusados': []}, lido.get('historico')
+    if not isinstance(guardado, dict):
+        return listas
+    for chave, campos in (('enviados', 3), ('recusados', 4)):
+        linhas = guardado.get(chave)
+        if isinstance(linhas, list) and all(
+                isinstance(linha, list) and len(linha) == campos and type(linha[0]) is int and isinstance(linha[1], str)
+                and type(linha[2]) is int and all(isinstance(resto, str) for resto in linha[3:]) for linha in linhas):
+            listas[chave] = linhas[-HISTORICO:]
+    return listas
+
+
 def ler_estado(destino, conf):
     """O andamento do destino nesta configuração. Andamento de outro lugar (série diferente) não vale."""
     novo = {'serie': conf['serie'], 'marca': [conf['desde'], ''], 'adiados': {}, 'ultima': {}, 'tropeco': ['', 0],
-            'total': {'arquivos': 0, 'bytes': 0}}
+            'total': {'arquivos': 0, 'bytes': 0, 'recusados': 0}, 'historico': {'enviados': [], 'recusados': []}}
     try:
         with open(arquivo(destino, 'estado'), encoding='utf-8') as arq:
             lido = json.load(arq)
@@ -347,7 +372,12 @@ def ler_estado(destino, conf):
                 and isinstance(lido['adiados'], dict) and isinstance(lido['ultima'], dict)
                 and isinstance(lido['tropeco'][0], str) and type(lido['tropeco'][1]) is int and len(lido['tropeco']) == 2
                 and all(type(lido['total'][chave]) is int for chave in ('arquivos', 'bytes'))):
-            return {chave: lido[chave] for chave in novo}
+            estado = {chave: lido[chave] for chave in novo if chave != 'historico'}
+            # O que a aba Serviço acrescentou é conferido à parte: o andamento de uma versão anterior continua valendo.
+            estado['historico'] = historico_de(lido)
+            if type(estado['total'].get('recusados')) is not int:
+                estado['total']['recusados'] = 0
+            return estado
     except (OSError, ValueError, KeyError, TypeError, IndexError):
         pass
     return novo
@@ -363,7 +393,8 @@ def situacao(destino):
     estado = ler_estado(destino, conf) if conf else {}
     return {'conf': conf, 'segredos': segredos_de(destino) is not None, 'ultima': estado.get('ultima', {}),
             'total': estado.get('total', {}), 'adiados': len(estado.get('adiados', ())), 'andamento': ANDAMENTO.get(destino),
-            'chaves': chaves_do_servidor(destino)}
+            'chaves': chaves_do_servidor(destino), 'historico': estado.get('historico', {'enviados': [], 'recusados': []}),
+            'marca': tuple(estado['marca']) if estado else None}
 
 
 # ------------------------------------------------------------ a pasta
@@ -426,6 +457,68 @@ def escolher(conf, marca, corte, conta, anunciados=None):
         return item[0] <= corte or (anuncio is not None and anuncio + calma <= agora and item[0] <= anuncio + calma)
     prontos = list(itertools.takewhile(inteiro, novos))
     return prontos, len(novos) - len(prontos)
+
+
+def medir_fila(pasta, marcas):
+    """O que a pasta tem depois de cada marca: marca ➜ (arquivos, bytes, os FILA_NA_TELA mais antigos, cada um
+    [chegada, caminho, tamanho]), e se a conta parou antes do fim, pelo prazo ou pelo teto. None: a pasta não existe."""
+    try:
+        raiz = abrir(partes(pasta), True)
+    except Recusado:
+        return None
+    contas = {marca: [0, 0, []] for marca in marcas}
+    lidos, parcial, prazo = 0, False, time.monotonic() + FILA_PRAZO
+    try:
+        with contextlib.closing(caminhar(raiz, pasta + '/' if pasta else '', {'ignorados': 0})) as itens:
+            for item in itens:
+                lidos += 1
+                for marca, conta in contas.items():
+                    if marca < item[:2]:
+                        conta[0] += 1
+                        conta[1] += item[2]
+                        conta[2].append(item[:3])
+                        if len(conta[2]) > 8 * FILA_NA_TELA:
+                            conta[2] = heapq.nsmallest(FILA_NA_TELA, conta[2])
+                if lidos >= FILA_MAX or (lidos % 256 == 0 and time.monotonic() > prazo):
+                    parcial = True
+                    break
+    except OSError:
+        parcial = True
+    finally:
+        os.close(raiz)
+    return {'parcial': parcial,
+            'marcas': {marca: (conta[0], conta[1], heapq.nsmallest(FILA_NA_TELA, conta[2])) for marca, conta in contas.items()}}
+
+
+def filas(vistos, prazo=FILAS_PRAZO):
+    """A fila de cada destino configurado: destino ➜ {'arquivos', 'bytes', 'primeiros', 'parcial'}. `vistos` é
+    destino ➜ situacao(destino). Uma leitura por pasta serve a todos os destinos dela, e vale por FILA_VALE segundos
+    enquanto as marcas forem as mesmas. None: a pasta não existe mais, ou o tempo da tela acabou antes dela."""
+    por_pasta = {}
+    for destino, visto in vistos.items():
+        if visto['conf']:
+            por_pasta.setdefault(visto['conf']['pasta'], set()).add(visto['marca'])
+    fim, medidas = time.monotonic() + prazo, {}
+    for pasta, marcas in sorted(por_pasta.items()):
+        marcas = tuple(sorted(marcas))
+
+        def medir(pasta=pasta, marcas=marcas):
+            return marcas, medir_fila(pasta, marcas)
+        if time.monotonic() > fim:
+            continue
+        guardado = com_cache(('fila', pasta), FILA_VALE, medir)
+        if guardado[0] != marcas:
+            guardado = com_cache(('fila', pasta), 0, medir)   # uma passada andou: a medida anterior não serve
+        medidas[pasta] = guardado[1]
+    resposta = {}
+    for destino, visto in vistos.items():
+        medida = medidas.get(visto['conf']['pasta']) if visto['conf'] else None
+        if medida:
+            arquivos, octetos, primeiros = medida['marcas'][visto['marca']]
+            resposta[destino] = {'arquivos': arquivos, 'bytes': octetos, 'primeiros': primeiros, 'parcial': medida['parcial']}
+        else:
+            resposta[destino] = None
+    return resposta
 
 
 def abrir_igual(item):
@@ -599,6 +692,32 @@ def desistir(estado, caminho, motivo):
     return estado['tropeco'][1] >= TROPECOS
 
 
+def desfecho(qual, tamanho, antes, resumo):
+    """O que a entrega fez com o arquivo, pela conta da passada antes e depois dele: '' é enviado; um motivo, o que
+    o deixou de fora (MOTIVOS em aba_destinos.py); None, o arquivo que mudou ou saiu do servidor no meio do envio, e
+    que por isso não entra em lista nenhuma: a versão nova dele vai em outra passada."""
+    if resumo['arquivos'] > antes[0]:
+        return ''
+    if resumo['grandes'] > antes[1]:
+        return 'limite'
+    if resumo['ignorados'] > antes[2]:
+        if qual == 'telegram':
+            return 'vazio'
+        return 'limite' if qual == 's3' and tamanho > s3.OBJETO_MAX else 'nome'
+    return None
+
+
+def anotar(estado, item, motivo):
+    """Guarda o arquivo para a aba Serviço: sem motivo, entre os últimos enviados; com motivo, entre os últimos não
+    enviados, que também entram na soma do destino."""
+    linha = [int(time.time()), item[1], item[2]]
+    lista = estado['historico']['recusados' if motivo else 'enviados']
+    lista.append(linha + [motivo] if motivo else linha)
+    del lista[:-HISTORICO]
+    if motivo:
+        estado['total']['recusados'] += 1
+
+
 def canal_de(destino, conf, prazo=saida.PRAZO):
     valores = segredos_de(destino)
     if not valores:
@@ -636,6 +755,7 @@ def passada(destino, conf, recentes=False, anunciados=None):
             conta = {'ignorados': 0}
             itens, esperando = escolher(conf, tuple(estado['marca']), corte, conta, anunciados)
             for item in itens:
+                antes = (resumo['arquivos'], resumo['grandes'], resumo['ignorados'])
                 try:
                     entregar(conf, canal, estado, item, resumo, outros)
                 except saida.Falha as falha:
@@ -643,6 +763,11 @@ def passada(destino, conf, recentes=False, anunciados=None):
                         raise
                     resumo['erros'] += 1
                     auditar('-', 'destino_pulado', f'destino={destino} arquivo={limpo(item[1], 200)} motivo={falha.motivo}')
+                    anotar(estado, item, falha.motivo)
+                else:
+                    motivo = desfecho(qual, item[2], antes, resumo)
+                    if motivo is not None:
+                        anotar(estado, item, motivo)
                 estado['marca'] = [item[0], item[1]]
                 if qual == 'telegram' or time.monotonic() - gravado > GRAVAR_A_CADA:
                     gravar_estado(destino, estado)

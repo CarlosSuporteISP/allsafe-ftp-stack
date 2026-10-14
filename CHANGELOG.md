@@ -6,6 +6,25 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.15.0] - 2026-10-13
+
+O painel ganha a aba **Serviço**, de monitoramento: o que o serviço guarda e, para cada destino gravado, o que já foi enviado, o que não foi e o que está na fila, com o nome dos arquivos. A Visão geral traz o resumo. A aba só lê: nada é enviado, repetido nem apagado por ela.
+
+### Adicionado
+
+- **Aba Serviço**, no grupo **Sistema** do menu, só do administrador: as contas do FTP por perfil, os arquivos, o espaço usado, com o que resta livre no disco, e as pastas, com a maior.
+- **Envio aos destinos, destino a destino**: uma faixa soma os destinos ligados, os arquivos enviados, a fila e os não enviados, e cada destino gravado, S3, remoto do rclone ou bot do Telegram, em qualquer quantidade, tem um cartão com a pasta, a fila, os não enviados, a última passada e três listas recolhidas: **Próximos da fila**, **Últimos enviados** e **Últimos não enviados**, esta com o motivo de cada arquivo. A cópia do sistema tem um cartão próprio.
+- **Tamanho das pastas**: a pasta de cada usuário, da maior para a menor, com quantas contas a usam, os arquivos, o espaço e o último envio.
+- **Faixa Envio aos destinos na Visão geral**: destinos ligados, enviados, na fila e não enviados, com o atalho para a aba Serviço, quando há destino gravado.
+- **Histórico de envio por destino**: a passada guarda, no andamento de cada destino, os últimos 30 arquivos enviados e os últimos 30 não enviados, com o motivo, e a contagem dos não enviados.
+- **Casos de teste**: um funcional e um de segurança, para a aba Serviço. A bateria passa a ter 112 casos funcionais, 162 de segurança e 19 de rede.
+
+### Alterado
+
+- **Menu**: o grupo **Sistema** passa a ter Servidor, Serviço, Segurança, Bloqueios e Log.
+- **Fotos**: as da aplicação foram refeitas, nos três idiomas, com a aba Serviço e a faixa nova da Visão geral.
+- **Andamento dos destinos**: o gravado por versão anterior continua valendo. As listas e a contagem dos não enviados começam vazias e se enchem com as passadas seguintes; o total enviado continua o de antes.
+
 ## [1.14.0] - 2026-10-13
 
 Dois ajustes de tela pedidos pelo uso: a tela Editar usuário passa a acompanhar a largura da janela e o zoom, e nas telas de arquivos os formulários de envio e de nova pasta ficam lado a lado.

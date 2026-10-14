@@ -35,7 +35,7 @@ flowchart LR
 <details>
 <summary>Contents — click to expand</summary>
 
-[Open the panel](#abrir) · [What is in each tab](#abas) · [Language of the screens](#idioma) · [Users through the panel](#usuarios) · [Profiles](#perfis) · [Files and download](#arquivos) · [FTP user in the panel](#usuario-ftp) · [Destinations: S3, rclone and Telegram bot](#destinos) · [Server: containers and resources](#servidor) · [Panel administrators](#administradores) · [Second factor at sign-in](#segundo-fator) · [Recover access](#senha) · [Panel certificate](#certificado) · [Open to the internal network](#rede-interna) · [Panel brand](#marca) · [How the panel decides](#como-decide) · [Audit log](#auditoria) · [What protects the panel](#protecoes)
+[Open the panel](#abrir) · [What is in each tab](#abas) · [Language of the screens](#idioma) · [Users through the panel](#usuarios) · [Profiles](#perfis) · [Files and download](#arquivos) · [FTP user in the panel](#usuario-ftp) · [Destinations: S3, rclone and Telegram bot](#destinos) · [Server: containers and resources](#servidor) · [Service: what it holds and what it sends](#servico) · [Panel administrators](#administradores) · [Second factor at sign-in](#segundo-fator) · [Recover access](#senha) · [Panel certificate](#certificado) · [Open to the internal network](#rede-interna) · [Panel brand](#marca) · [How the panel decides](#como-decide) · [Audit log](#auditoria) · [What protects the panel](#protecoes)
 
 </details>
 
@@ -77,16 +77,17 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 
 | Tab | What it shows | What can be done |
 |---|---|---|
-| Overview | FTP up or down, number of users, space used and free, last upload, validity of the FTP certificate, the TLS mode of the FTP, the **Server and containers** band (processor and memory of the server and of the stack containers, each with the use against what exists or what was allocated), the files received per day in the last 14 days, the last upload of each user, the space of each folder, the data to configure the device (server, control port, passive ports, protocol) and the latest activity records | View only; each card ends with the shortcut to the tab with the detail |
+| Overview | FTP up or down, number of users, space used and free, last upload, validity of the FTP certificate, the TLS mode of the FTP, the **Server and containers** band (processor and memory of the server and of the stack containers, each with the use against what exists or what was allocated), the **Sending to destinations** band (destinations on, sent, in the queue and not sent, when there is a saved destination), the files received per day in the last 14 days, the last upload of each user, the space of each folder, the data to configure the device (server, control port, passive ports, protocol) and the latest activity records | View only; each card ends with the shortcut to the tab with the detail |
 | Users | All the accounts in one list, each with the **profile** under the name. First the panel administrators, with the **you** mark on the account of whoever is using the panel and how many sessions each one has open; then the FTP users, one per row: folder, with the **shared** mark when another user also reaches it, and the name, with the **blocked** mark when the FTP is refusing it because of too many wrong passwords, space used, number of files and last upload; the **TLS** column says whether the user is required to use TLS | Create, choosing the profile (Administrator, Full, Upload, Upload only or Read only), the folder and, for a device without TLS support, already exempt from TLS; edit, to change the profile, the folder and the limits and to lift a block; change the password; remove, with their folder or without it; open the user's folder in the Files tab; exempt a user from TLS and require it again; change the password and the name of an administrator and remove them |
 | Files | The folders of the FTP users and what is in each one: name, size and date of each file | Enter the folders, by the name or by the **Open** button, download a file through the browser, upload a file to the open folder, create a folder, change the name of and delete files and folders, send a file right away to a saved [destination](#destinos), and open the user form already with the open folder |
 | Destinations | The outside places to which the panel sends by itself the files of the folders, S3 storages, rclone remotes and Telegram bots: whether each one is on, the folder, the interval, the last run and the total sent, without showing the secrets | **Configure**, **Test**, **Send now**, **Change** and **Remove** each destination; with the destination saved, the Files tab gets the button to send a file right away: see [Destinations](#destinos) |
 | Server | The three containers of the stack (FTP server, panel and web front end), each with what it uses of processor, memory and processes against what was allocated to it, and, separately, the resources of the server the stack runs on: processor, memory, disk and FTP network, with the state, the current measurement and the history of the last minutes | View only; **Auto-refresh** redoes the reading every 10 s, without counting as use of the session: see [Server](#servidor) |
+| Service | What the service holds (users per profile, files, space used and the size of each folder) and the sending to the destinations: for each saved destination, what has already been sent, what was not, with the reason, and what is in the queue, with the names of the files | View only; nothing is sent, repeated or deleted by it: see [Service](#servico) |
 | Security | Check of the installation, with the summary of how many items are in order, need attention or are checked on the server: whether a public address is accepted, whether the panel is published through a proxy or tunnel, addresses of the FTP and of the panel, TLS mode, with the per-user exception and who is exempt, the sign-in of the FTP users, the web front end (nginx), validity and fingerprint of the two certificates, networks that can open the panel, session rules, the cost of the FTP passwords, with the users that still have the previous cost, the security contact published at `/.well-known/security.txt`, container isolation and the firewall reminder | View only |
 | Blocks | The addresses and the prefixes, IPv4 and IPv6, with [blocking by address](security.md#bloqueio-por-endereco): the rule in force, the total and, per block, who blocked it (the FTP, the panel or the administrator), with how many errors, since when and until when. Below, when there are any, the users with blocking by attempts on the FTP | **Block address**, to block an address or a prefix by hand, search for an address, **Change period**, to block for longer or shorten it, and **Unblock**; open the user that has blocking by attempts |
 | Log | The last 300 records of the panel: sign-ins, refusals, downloads, uploads, folders created, blocks and changes to users and administrators, with date, source address and who did it, administrator or FTP user | View only |
 
-The menu stays on the left on a screen 1280 px wide or more: the symbol and the name, the tabs in two groups (**Operation**, with Overview, Users, Files and Destinations, and **System**, with Server, Security, Blocks and Log), the tab in use marked and, at the bottom, the [language](#idioma) button (**PT**, **EN** and **ES**), the name and the role of whoever signed in and the **Sign out** button, which ends the session right away. On a narrower screen, the menu becomes a strip at the top, with the tabs in a row that scrolls sideways. With the installation published (public address accepted or panel through a proxy or tunnel), the administrator sees a warning sign next to **Security**, in whatever tab they are in. The charts are drawn by the panel itself, without script, and every number in the drawing is also written next to it. The footer of every screen carries the version and the authorship: see [Panel brand](#marca).
+The menu stays on the left on a screen 1280 px wide or more: the symbol and the name, the tabs in two groups (**Operation**, with Overview, Users, Files and Destinations, and **System**, with Server, Service, Security, Blocks and Log), the tab in use marked and, at the bottom, the [language](#idioma) button (**PT**, **EN** and **ES**), the name and the role of whoever signed in and the **Sign out** button, which ends the session right away. On a narrower screen, the menu becomes a strip at the top, with the tabs in a row that scrolls sideways. With the installation published (public address accepted or panel through a proxy or tunnel), the administrator sees a warning sign next to **Security**, in whatever tab they are in. The charts are drawn by the panel itself, without script, and every number in the drawing is also written next to it. The footer of every screen carries the version and the authorship: see [Panel brand](#marca).
 
 Each tab opens with a band in the blue of the brand, the same as the menu and the sign-in screen, in the light and dark themes: the icon of the tab, the title, a line that says what the screen shows and, on the right, the main action. On a screen more than 900 px wide, the band also carries the scene of the backup path, the one from the sign-in screen, in miniature: the packets cross once, when the screen is reached, and stop. With **Auto-refresh** on in the Server tab, or with the system asking for less motion, nothing moves. A form screen (new user, edit, change password, rename, delete) carries the thin band, with the title only.
 
@@ -102,7 +103,7 @@ The lists adjust to the width of the screen, without sideways scrolling of the p
 
 A list with nothing to show (empty folder, Log without records) says what is missing and when it starts to appear. The long text of each screen, such as the explanation of the profiles and of the labels in the Users tab, stays collapsed in one line under the list and opens with a click.
 
-The form screens follow the same rule. On the user's **Edit** screen and on the Destinations tab, the cards spread across columns of at least 440 px, from one to five, according to the window width and the browser zoom; the lists inside those cards, the one of the other folders and the one of the user's blocks, always appear as blocks. On the file screens, the **Upload file** and **New folder** forms sit side by side from 748 px of width up and one below the other on a narrower screen.
+The form screens follow the same rule. On the user's **Edit** screen, on the Destinations tab and on the Service tab, the cards spread across columns of at least 440 px, from one to five, according to the window width and the browser zoom; the lists inside those cards, the one of the other folders and the one of the user's blocks, always appear as blocks. On the file screens, the **Upload file** and **New folder** forms sit side by side from 748 px of width up and one below the other on a narrower screen.
 
 Whoever signs in with the FTP account sees none of these tabs: they see a single screen, **My files**, described in [FTP user in the panel](#usuario-ftp).
 
@@ -558,6 +559,8 @@ In the **Destinations** tab, the administrator connects folders of the data to p
 | rclone remote | Every file in the chosen folder and in the folders inside it, including the ones already there when the destination was turned on | At each saved interval, 5 to 1440 minutes | Everything: the remote only receives |
 | Telegram bot | Only the files that arrive after the destination is turned on, one per message, with the path, the size and the date | Within a few seconds, when the file arrives whole by FTP or through the panel; what shows up in the folder any other way, at each saved interval, 5 to 1440 minutes | Everything: the bot never deletes |
 
+What each destination has already sent, what was left out and what waits in the queue, with the names of the files, is on the [Service](#servico) tab.
+
 <details>
 <summary>Flowchart of the sending to the destinations, with the written sequence — click to expand</summary>
 
@@ -855,7 +858,7 @@ docker compose exec -T painel sh -c 'cat > /painel/destinos/ca.pem' < network-au
 - **Routes:** `GET /destinos` shows one card per destination; `GET` and `POST /destinos/s3`, `/destinos/rclone` and `/destinos/telegram` show and save the form of the type, and the `id` field says which destination: blank, the first of the type; `novo`, a new destination; or the name of an existing one. With `id=novo`, the `copiar` field takes the name of the destination the secrets left blank come from; `POST /destinos/testar` and `POST /destinos/agora` take the `destino` field, with the name of the destination; `GET /destinos/arquivo` takes `tipo` and `arquivo` and shows the choice of the destination, when the type has more than one ready; `POST /destinos/arquivo` takes `destino` and `arquivo`, the path inside the data; `GET` and `POST /destinos/remover` confirm and remove. Every `POST` carries the CSRF token of the session. Saving and removing also ask for `senha_atual`, the password of whoever is in the session: wrong or blank gets `403`, writes `admin_senha_atual_recusada` and counts as a sign-in error. Only an administrator has these routes: for the FTP user, they answer `404`.
 - **Form:** a field outside the rule answers `400`, with the page back and what was typed, except the secrets, which are never returned. The folder must exist inside the data. The rclone form carries the `remoto` field, with the type, which only applies to a new destination, and the access fields, with `r_` in front of the name; because of the private key and the credential, it is the only route that accepts a body of up to 32 KiB, and the others stay at 8 KiB. A destination name outside the rule, of another type or with no settings answers `404`; a repeated destination answers `400`, and a new destination in a type that already has the 20 goes back to the list (`303`) with the notice, saving nothing.
 - **Names:** the first destination of each type is called `s3`, `rclone` or `telegram`; the next ones, `s3-2` to `s3-20`, `rclone-2` to `rclone-20` and `telegram-2` to `telegram-20`. A new destination gets the lowest free name of the type, and the name of a removed destination becomes free again. The **Name** field of the form is only what the screen shows, with up to 40 characters: the files, the audit log and the terminal use the fixed name.
-- **Who stores it:** the settings are in `DATA_DIR/painel/destinos/<destino>.conf` and the progress, in `<destino>.estado`; both are part of the backup. The secrets are in `SECRETS_DIR/destinos`, with mode `0600` and the name of the destination in front: `<destino>-chave-de-acesso.txt` and `<destino>-chave-secreta.txt`, in S3; `<destino>-remoto.txt`, in rclone; and `<destino>-token.txt` and `<destino>-conversa.txt`, in the bot. The copy of access between two destinations happens in this folder, from file to file. It is the only secrets folder the panel writes to. Deleting one of these files on the server turns off the sending to that destination on the next run.
+- **Who stores it:** the settings are in `DATA_DIR/painel/destinos/<destino>.conf` and the progress, in `<destino>.estado`; both are part of the backup. The progress also keeps the latest files sent and not sent by each destination, which the [Service](#servico) tab shows. The secrets are in `SECRETS_DIR/destinos`, with mode `0600` and the name of the destination in front: `<destino>-chave-de-acesso.txt` and `<destino>-chave-secreta.txt`, in S3; `<destino>-remoto.txt`, in rclone; and `<destino>-token.txt` and `<destino>-conversa.txt`, in the bot. The copy of access between two destinations happens in this folder, from file to file. It is the only secrets folder the panel writes to. Deleting one of these files on the server turns off the sending to that destination on the next run.
 - **Who applies it:** [`destinos.py`](../../painel/destinos.py), in a thread of the panel itself, which collects the arrival notices every 2 s and checks every minute which destination is due. One run at a time, in this order: the bots, the rclone remotes, the S3 destinations that copy and, last, the ones that keep.
 - **Announced arrival:** the [watcher](scripts.md#vigia) of the FTP server writes a notice in `/auth/chegadas`, a `0700` folder owned by root, for each upload Pure-FTPd logs as finished, and an upload through the panel announces directly. [`chegadas.py`](../../painel/chegadas.py) collects and deletes the notices, and 3 s after a new one the panel does a run of the bot. The notice does not choose what is sent: it only waives the wait of a file the run would find anyway, inside the folder of the destination. It is valid for 4 minutes in the panel, and the watcher deletes what nobody collected in 5. With the FTP user file in use at that instant, or with 2000 notices waiting, the watcher writes no notice, and the file goes after the two-minute wait. When the run of the bot leaves a file waiting, the panel comes back by itself about two minutes later. A run requested from the terminal does not use the notices.
 - **One file only:** `POST /destinos/arquivo` opens the file with the same checks as the Files tab (`400`, `403` or `404` for a path outside the rule, a symbolic link, a folder or a file that does not exist) and sends it in a thread of its own. The page waits up to 20 s; after that, the send goes on by itself. It neither reads nor writes the progress of the runs. A file that changes during the send answers with the reason, to be repeated.
@@ -921,6 +924,80 @@ The **Server** tab has two separate parts: the containers of this stack, each wi
 - **What was not used:** no Docker socket, no extra server folder mounted and no script. The refresh is the `Refresh` header, which only goes out on `GET /servidor?auto=1`.
 - **Session:** `GET /servidor?auto=1` does not renew the use time of the session. Without a session, the route sends to the sign-in; with the session of an FTP user, it answers `404` and writes `recusa_papel`.
 - The version of the system kernel does not appear on the screen.
+
+</details>
+
+---
+
+<a name="servico"></a>
+
+## 📊 Service: what it holds and what it sends
+
+The **Service** tab gathers on one screen what the service holds and what it sends out of the server: the accounts, the files and the size of each folder and, for each saved [destination](#destinos), what has already been sent, what was not and what is in the queue, with the names of the files. Only an administrator opens it. The screen only reads: nothing is sent, repeated or deleted by it.
+
+**What the service holds.** Four measurements, each with the shortcut to where the detail is:
+
+| Measurement | What it shows |
+|---|---|
+| Users | The FTP accounts, with how many there are of each [profile](#perfis) |
+| Files | The files that are now in the folders of the users |
+| Space used | What these folders take up and what is left free on the disk |
+| Folders | How many user folders exist and the size of the largest |
+
+**Sending to destinations.** A band adds up all the saved destinations, of any type and in any number:
+
+| Measurement | What it counts |
+|---|---|
+| Destinations | How many are on and with the secrets in place, among the saved ones |
+| Sent | The files and the size the destinations have already received. A file that went to three destinations counts three times |
+| In the queue | What the destinations that are on still have to send |
+| Not sent | What was left out: refused by the destination or outside what it accepts |
+
+Below the band there is one card per destination, with its type, name and status, the same as on the Destinations tab:
+
+| On the card | What it shows |
+|---|---|
+| Warning | When the last run stopped before the end, the reason. The next run resumes from the same file |
+| Folder sent | The data folder linked to the destination |
+| In the queue | How many files wait and their size. On a destination that is off or without the secrets, the queue appears with `on hold: the destination is not sending` and does not enter the sum of the band |
+| Not sent | How many files were left out since the destination was turned on |
+| Last run and total | The same lines as on the Destinations tab: when the last run was, what it did and what the destination has sent since it was turned on |
+| **Next in the queue** | Up to 30 files of the queue, the ones that arrived first and leave first, with the size and the date |
+| **Latest sent** | The last 30 files sent, from the newest to the oldest, with the size and the time of the sending |
+| **Latest not sent** | The last 30 that were left out, each with the reason |
+
+The three lists stay collapsed and open with a click; an empty list does not appear. With the [system copy](#copia-do-sistema) configured, it gets a card of its own, with the last copy and the one in progress.
+
+**Not sent** are of two kinds: the file the destination refused in three runs in a row and the one that is outside what the destination accepts. The queue goes on without them.
+
+| Reason on the screen | When it happens |
+|---|---|
+| The reason of the refusal, such as `the service answered with code 400` | The destination refused the file in three runs in a row; the reason of the last one stays. The list of reasons is in [Troubleshooting](troubleshooting.md#destinos) |
+| `the file is larger than the service accepts` | File above the size the Telegram bot sends or the largest object the S3 keeps |
+| `the file is empty, and the bot does not send an empty file` | File of 0 bytes in a folder linked to a Telegram bot |
+| `the file name does not fit the destination` | Name longer than the destination keeps |
+
+**Folder sizes.** The folder of each user, from the largest to the smallest, with how many accounts use it, the files, the space and the last upload. A folder that is inside another enters the count of the outer one. The name of the folder opens the Files tab on it.
+
+- **No automatic refresh:** the numbers are those of the moment the screen opened, with the time at the end of it. Reload the page to read again.
+- **Files and space** are valid for one minute, as on the Overview. In a folder too large to be read whole, the screen writes `or more`.
+- **The queue** is what is in the folder of the destination and arrived after the last file it handled. A file that is still arriving counts too. The measurement of each folder is valid for 20 s; in a folder that is too large, it stops before the end and the screen writes `at least`, or `not measured just now` when the time of the screen runs out before that folder.
+- **The lists keep the last 30** of each destination, and the numbers count since the destination was turned on. In an installation updated from a version before `1.15.0`, the lists and the count of not sent start empty and fill up with the following runs; the total sent stays as it was.
+- **A file sent one by one**, with the destination button of the Files tab, does not enter the lists or the sums.
+- **Nothing of the access appears:** no address, no bucket, no key, no token, no chat, and no server or path of the remote. The screen shows the type and the name the administrator gave to the destination, the data folder and the names of the files.
+- With `PAINEL_DESTINOS=nao`, the tab stays, only with what the service holds and the folder sizes, and the band leaves the Overview.
+- The **Overview** carries the summary in four measurements (destinations on, sent, in the queue and not sent), with the shortcut to this tab, when there is a saved destination.
+
+<details>
+<summary>Technical detail — where the numbers come from</summary>
+
+- **Route:** `GET /servico`, only in the table of the administrator. Without a session, it sends to the sign-in; with the session of an FTP user, it answers `404` and writes `recusa_papel`. There is no `POST /servico`: the screen has no form of its own.
+- **What the screen reads:** the user database of the FTP, the data folders and the `<destino>.estado` of each destination. Opening the screen calls no destination and writes nothing.
+- **Lists:** at each file handled, the run keeps in `<destino>.estado` the moment, the path and the size, in `historico.enviados` or, with the code of the reason, in `historico.recusados`, and adds the not sent in `total.recusados`. Each list keeps the last 30. A file that changes or leaves the server in the middle of the sending enters none: the new version goes in another run.
+- **Queue:** the panel walks the folder of the destination and counts what comes after its mark, the last file handled. One reading per folder serves all its destinations, with 2 s and 50 000 files of ceiling per folder and 6 s for all the folders of the screen; on the Overview, 1 s. The measurement stays in the memory of the panel for 20 s, while the marks are the same.
+- **Reason:** the progress keeps a code (`http_400`, `limite`, `vazio`, `nome`), and the screen writes its sentence in the language of whoever is in the session. The answer of the service and the error log of rclone are neither kept nor shown.
+- **File names** come out escaped, as on every screen of the panel.
+- **Old progress:** the `.estado` written by an earlier version stays valid; the new keys enter on the first run.
 
 </details>
 
@@ -1493,6 +1570,7 @@ The code is in [`painel/`](../../painel/), one subject per file, and goes whole 
 | [`aba_destinos.py`](../../painel/aba_destinos.py) | Destinations tab: one card per destination, the forms, the choice of the type of the rclone remote, the choice of the destination, the test, the request of a run, the removal and the send of a file with the button of the Files tab |
 | [`recursos.py`](../../painel/recursos.py) | Resources of the server and of each container of the stack: reading of the processor, of the memory and of the FTP network, of the control group of the panel and of what the ftp and the nginx publish, and the history of the last 10 minutes, kept in memory |
 | [`aba_servidor.py`](../../painel/aba_servidor.py) | Server tab: the containers of the stack, with the use against the allocated, the cards of CPU, memory, disk and network of the server, and the summary band of the Overview |
+| [`aba_servico.py`](../../painel/aba_servico.py) | Service tab: what the service holds, the folder sizes and, per destination, the sent, the not sent and the queue, and the band of sending to the destinations of the Overview |
 | [`aba_administradores.py`](../../painel/aba_administradores.py) | Panel administrators: creation through the New user form, change of password, change of name and removal; the list is that of the Users tab |
 | [`aba_fator.py`](../../painel/aba_fator.py) | Second factor: the steps of the QR code and of the key, the turn-on screen and the ones to turn off, of the administrator and of the FTP user |
 | [`aba_seguranca.py`](../../painel/aba_seguranca.py) | Security tab |

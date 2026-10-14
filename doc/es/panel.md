@@ -35,7 +35,7 @@ flowchart LR
 <details>
 <summary>Índice — haga clic para expandir</summary>
 
-[Abrir el panel](#abrir) · [Qué hay en cada pestaña](#abas) · [Idioma de las pantallas](#idioma) · [Usuarios desde el panel](#usuarios) · [Perfiles](#perfis) · [Archivos y descarga](#arquivos) · [Usuario del FTP en el panel](#usuario-ftp) · [Destinos: S3, rclone y bot de Telegram](#destinos) · [Servidor: contenedores y recursos](#servidor) · [Administradores del panel](#administradores) · [Segundo factor en la entrada](#segundo-fator) · [Recuperar el acceso](#senha) · [Certificado del panel](#certificado) · [Abrir a la red interna](#rede-interna) · [Marca del panel](#marca) · [Cómo decide el panel](#como-decide) · [Auditoría](#auditoria) · [Qué protege el panel](#protecoes)
+[Abrir el panel](#abrir) · [Qué hay en cada pestaña](#abas) · [Idioma de las pantallas](#idioma) · [Usuarios desde el panel](#usuarios) · [Perfiles](#perfis) · [Archivos y descarga](#arquivos) · [Usuario del FTP en el panel](#usuario-ftp) · [Destinos: S3, rclone y bot de Telegram](#destinos) · [Servidor: contenedores y recursos](#servidor) · [Servicio: lo que guarda y lo que envía](#servico) · [Administradores del panel](#administradores) · [Segundo factor en la entrada](#segundo-fator) · [Recuperar el acceso](#senha) · [Certificado del panel](#certificado) · [Abrir a la red interna](#rede-interna) · [Marca del panel](#marca) · [Cómo decide el panel](#como-decide) · [Auditoría](#auditoria) · [Qué protege el panel](#protecoes)
 
 </details>
 
@@ -77,16 +77,17 @@ docker compose exec painel openssl x509 -in /painel/tls/painel-cert.pem -noout -
 
 | Pestaña | Qué muestra | Qué se puede hacer |
 |---|---|---|
-| Visión general | FTP en servicio o fuera, cantidad de usuarios, espacio usado y libre, último envío, validez del certificado del FTP, el modo de TLS del FTP, la franja **Servidor y contenedores** (procesador y memoria del servidor y de los contenedores de la stack, cada uno con el uso frente a lo que hay o a lo que fue asignado), los archivos recibidos por día en los últimos 14 días, el último envío de cada usuario, el espacio de cada carpeta, los datos para configurar el equipo (servidor, puerto de control, puertos pasivos, protocolo) y los últimos registros de la actividad | Solo consultar; cada tarjeta termina en el atajo a la pestaña del detalle |
+| Visión general | FTP en servicio o fuera, cantidad de usuarios, espacio usado y libre, último envío, validez del certificado del FTP, el modo de TLS del FTP, la franja **Servidor y contenedores** (procesador y memoria del servidor y de los contenedores de la stack, cada uno con el uso frente a lo que hay o a lo que fue asignado), la franja **Envío a los destinos** (destinos activados, enviados, en la cola y no enviados, cuando hay destino guardado), los archivos recibidos por día en los últimos 14 días, el último envío de cada usuario, el espacio de cada carpeta, los datos para configurar el equipo (servidor, puerto de control, puertos pasivos, protocolo) y los últimos registros de la actividad | Solo consultar; cada tarjeta termina en el atajo a la pestaña del detalle |
 | Usuarios | Todas las cuentas en una lista, cada una con el **perfil** debajo del nombre. Primero los administradores del panel, con la etiqueta **usted** en la cuenta de quien está usando el panel y cuántas sesiones tiene abiertas cada uno; después los usuarios del FTP, uno por fila: carpeta, con la etiqueta **compartida** cuando otro usuario también la alcanza, y el nombre, con la etiqueta **bloqueado** cuando el FTP lo está rechazando por demasiadas contraseñas incorrectas, espacio usado, cantidad de archivos y último envío; la columna **TLS** dice si el usuario está obligado a usar TLS | Crear, eligiendo el perfil (Administrador, Completo, Envío, Solo envío o Lectura), la carpeta y, para equipo sin soporte de TLS, ya dispensado del TLS; editar, para cambiar el perfil, la carpeta y los límites y quitar un bloqueo; cambiar la contraseña; eliminar, con su carpeta o sin ella; abrir la carpeta del usuario en la pestaña Archivos; dispensar a un usuario del TLS y volver a exigirlo; cambiar la contraseña y el nombre de un administrador y eliminarlo |
 | Archivos | Las carpetas de los usuarios del FTP y lo que hay en cada una: nombre, tamaño y fecha de cada archivo | Entrar en las carpetas, por el nombre o por el botón **Abrir**, descargar un archivo por el navegador, enviar un archivo a la carpeta abierta, crear una carpeta, cambiar el nombre y borrar archivo y carpeta, mandar un archivo en el acto a un [destino](#destinos) guardado, y abrir el registro de usuario ya con la carpeta abierta |
 | Destinos | Los lugares de fuera a donde el panel envía por sí solo los archivos de las carpetas, almacenamientos S3, remotos del rclone y bots de Telegram: si cada uno está activado, la carpeta, el intervalo, la última pasada y el total enviado, sin mostrar los secretos | **Configurar**, **Probar**, **Enviar ahora**, **Modificar** y **Eliminar** cada destino; con el destino guardado, la pestaña Archivos gana el botón de enviar un archivo en el acto: vea [Destinos](#destinos) |
 | Servidor | Los tres contenedores de la stack (servidor FTP, panel y frente web), cada uno con lo que usa de procesador, memoria y procesos frente a lo que le fue asignado, y, separados, los recursos del servidor en que la stack corre: procesador, memoria, disco y red del FTP, con el estado, la medida de ahora y el historial de los últimos minutos | Solo consultar; **Actualizar sola** rehace la lectura cada 10 s, sin contar como uso de la sesión: vea [Servidor](#servidor) |
+| Servicio | Lo que guarda el servicio (usuarios por perfil, archivos, espacio usado y el tamaño de cada carpeta) y el envío a los destinos: para cada destino guardado, lo que ya se envió, lo que no, con el motivo, y lo que está en la cola, con el nombre de los archivos | Solo consultar; nada se envía, se repite ni se borra por ella: vea [Servicio](#servico) |
 | Seguridad | Verificación de la instalación, con el resumen de cuántos elementos están en orden, piden atención o se verifican en el servidor: si se acepta dirección pública, si el panel está publicado por proxy o túnel, direcciones del FTP y del panel, modo TLS, con la excepción por usuario y quién está dispensado, la entrada de los usuarios del FTP, el frente web (nginx), validez y huella digital de los dos certificados, redes que pueden abrir el panel, reglas de la sesión, el costo de las contraseñas del FTP, con los usuarios que aún están con el costo anterior, el contacto de seguridad publicado en `/.well-known/security.txt`, aislamiento del contenedor y el recordatorio del firewall | Solo consultar |
 | Bloqueos | Las direcciones y los prefijos, IPv4 e IPv6, con [bloqueo por dirección](seguridad.md#bloqueio-por-endereco): la regla en vigor, el total y, por bloqueo, quién bloqueó (el FTP, el panel o el administrador), con cuántos errores, desde cuándo y hasta cuándo. Debajo, cuando hay, los usuarios con bloqueo por intento en el FTP | **Bloquear dirección**, para bloquear a mano una dirección o un prefijo, buscar una dirección, **Cambiar plazo**, para bloquear por más tiempo o acortar, y **Desbloquear**; abrir el usuario que está con bloqueo por intento |
 | Log | Los últimos 300 registros del panel: entradas, rechazos, descargas, envíos, carpetas creadas, bloqueos y modificaciones de usuario y de administrador, con fecha, dirección de origen y quién lo hizo, administrador o usuario del FTP | Solo consultar |
 
-El menú queda a la izquierda en pantalla de 1280 px de ancho o más: el símbolo y el nombre, las pestañas en dos grupos (**Operación**, con Visión general, Usuarios, Archivos y Destinos, y **Sistema**, con Servidor, Seguridad, Bloqueos y Log), la pestaña en uso marcada y, debajo, el botón de [idioma](#idioma) (**PT**, **EN** y **ES**), el nombre y el rol de quien entró y el botón **Salir**, que cierra la sesión en el acto. En pantalla más estrecha, el menú se vuelve una franja arriba, con las pestañas en una línea que se desplaza hacia el lado. Con la instalación publicada (dirección pública aceptada o panel por proxy o túnel), el administrador ve una señal de alerta al lado de **Seguridad**, en cualquier pestaña en que esté. Los gráficos son dibujados por el propio panel, sin script, y todo número del dibujo está también escrito a su lado. En el pie de página de todas las pantallas quedan la versión y la autoría: vea [Marca del panel](#marca).
+El menú queda a la izquierda en pantalla de 1280 px de ancho o más: el símbolo y el nombre, las pestañas en dos grupos (**Operación**, con Visión general, Usuarios, Archivos y Destinos, y **Sistema**, con Servidor, Servicio, Seguridad, Bloqueos y Log), la pestaña en uso marcada y, debajo, el botón de [idioma](#idioma) (**PT**, **EN** y **ES**), el nombre y el rol de quien entró y el botón **Salir**, que cierra la sesión en el acto. En pantalla más estrecha, el menú se vuelve una franja arriba, con las pestañas en una línea que se desplaza hacia el lado. Con la instalación publicada (dirección pública aceptada o panel por proxy o túnel), el administrador ve una señal de alerta al lado de **Seguridad**, en cualquier pestaña en que esté. Los gráficos son dibujados por el propio panel, sin script, y todo número del dibujo está también escrito a su lado. En el pie de página de todas las pantallas quedan la versión y la autoría: vea [Marca del panel](#marca).
 
 Cada pestaña abre con una franja en el azul de la marca, el mismo del menú y de la pantalla de entrada, en los temas claro y oscuro: el ícono de la pestaña, el título, una línea que dice qué muestra la pantalla y, a la derecha, la acción principal. En pantalla con más de 900 px de ancho, la franja lleva también la escena del camino de la copia de seguridad, la de la pantalla de entrada, en miniatura: los paquetes atraviesan una vez, al llegar a la pantalla, y se detienen. Con **Actualizar sola** activada en la pestaña Servidor, o con el sistema pidiendo menos movimiento, nada se mueve. La pantalla de formulario (nuevo usuario, editar, cambiar contraseña, renombrar, borrar) lleva la franja fina, solo con el título.
 
@@ -102,7 +103,7 @@ Las listas se ajustan al ancho de la pantalla, sin desplazamiento lateral de la 
 
 Una lista sin nada que mostrar (carpeta vacía, Log sin registro) dice qué falta y cuándo pasa a aparecer. El texto largo de cada pantalla, como la explicación de los perfiles y de las etiquetas de la pestaña Usuarios, queda plegado en una línea debajo de la lista y se abre con un clic.
 
-Las pantallas de formulario siguen la misma regla. En la pantalla **Editar** del usuario y en la pestaña Destinos, las tarjetas se distribuyen en columnas de al menos 440 px, de una a cinco, según el ancho de la ventana y el zoom del navegador; las listas de dentro de esas tarjetas, la de las otras carpetas y la de los bloqueos del usuario, quedan siempre en bloques. En las pantallas de archivos, los formularios **Enviar archivo** y **Nueva carpeta** quedan lado a lado a partir de 748 px de ancho y uno debajo del otro en pantalla más estrecha.
+Las pantallas de formulario siguen la misma regla. En la pantalla **Editar** del usuario, en la pestaña Destinos y en la pestaña Servicio, las tarjetas se distribuyen en columnas de al menos 440 px, de una a cinco, según el ancho de la ventana y el zoom del navegador; las listas de dentro de esas tarjetas, la de las otras carpetas y la de los bloqueos del usuario, quedan siempre en bloques. En las pantallas de archivos, los formularios **Enviar archivo** y **Nueva carpeta** quedan lado a lado a partir de 748 px de ancho y uno debajo del otro en pantalla más estrecha.
 
 Quien entra con la cuenta del FTP no ve ninguna de esas pestañas: ve una sola pantalla, **Mis archivos**, descrita en [Usuario del FTP en el panel](#usuario-ftp).
 
@@ -558,6 +559,8 @@ En la pestaña **Destinos**, el administrador conecta carpetas de los datos a lu
 | Remoto del rclone | Todos los archivos de la carpeta elegida y de las carpetas de dentro de ella, incluso los que ya estaban allí cuando el destino fue conectado | En cada intervalo guardado, de 5 a 1440 minutos | Todo: el remoto solo recibe |
 | Bot de Telegram | Solo los archivos que lleguen después de que el destino sea conectado, uno por mensaje, con la ruta, el tamaño y la fecha | En pocos segundos, cuando el archivo llega entero por FTP o por el panel; lo que aparece en la carpeta de otro modo, en cada intervalo guardado, de 5 a 1440 minutos | Todo: el bot nunca borra |
 
+Lo que cada destino ya envió, lo que quedó fuera y lo que espera en la cola, con el nombre de los archivos, está en la pestaña [Servicio](#servico).
+
 <details>
 <summary>Flujograma del envío a los destinos, con la secuencia escrita — haga clic para expandir</summary>
 
@@ -855,7 +858,7 @@ docker compose exec -T painel sh -c 'cat > /painel/destinos/ca.pem' < autoridade
 - **Rutas:** `GET /destinos` muestra una tarjeta por destino; `GET` y `POST /destinos/s3`, `/destinos/rclone` y `/destinos/telegram` muestran y guardan el formulario del tipo, y el campo `id` dice de cuál destino: en blanco, el primero del tipo; `novo`, un destino nuevo; o el nombre de uno que existe. Con `id=novo`, el campo `copiar` lleva el nombre del destino de donde vienen los secretos dejados en blanco; `POST /destinos/testar` y `POST /destinos/agora` llevan el campo `destino`, con el nombre del destino; `GET /destinos/arquivo` lleva `tipo` y `arquivo` y muestra la elección del destino, cuando el tipo tiene más de uno listo; `POST /destinos/arquivo` lleva `destino` y `arquivo`, la ruta dentro de los datos; `GET` y `POST /destinos/remover` confirman y eliminan. Todo `POST` lleva el token CSRF de la sesión. Guardar y eliminar piden también `senha_atual`, la contraseña de quien está en la sesión: incorrecta o en blanco recibe `403`, escribe `admin_senha_atual_recusada` y cuenta como error de entrada. Solo el administrador tiene esas rutas: para el usuario del FTP, responden `404`.
 - **Formulario:** un campo fuera de la regla responde `400`, con la pantalla de vuelta y lo que fue escrito, menos los secretos, que nunca se devuelven. La carpeta tiene que existir dentro de los datos. El formulario del rclone lleva el campo `remoto`, con el tipo, que solo vale en el destino nuevo, y los campos del acceso, con `r_` delante del nombre; por causa de la clave privada y de la credencial, es la única ruta que acepta cuerpo de hasta 32 KiB, y las otras siguen en 8 KiB. Un nombre de destino fuera de la regla, de otro tipo o sin configuración responde `404`; un destino repetido responde `400`, y un destino nuevo en un tipo que ya tiene los 20 vuelve a la lista (`303`) con el aviso, sin guardar nada.
 - **Nombres:** el primer destino de cada tipo se llama `s3`, `rclone` o `telegram`; los siguientes, `s3-2` a `s3-20`, `rclone-2` a `rclone-20` y `telegram-2` a `telegram-20`. El destino nuevo recibe el menor nombre libre del tipo, y el nombre de un destino eliminado vuelve a quedar libre. El campo **Nombre** del formulario es solo lo que la pantalla muestra, con hasta 40 caracteres: los archivos, la auditoría y la terminal usan el nombre fijo.
-- **Quién guarda:** la configuración queda en `DATA_DIR/painel/destinos/<destino>.conf` y el avance, en `<destino>.estado`; los dos entran en la copia de seguridad. Los secretos quedan en `SECRETS_DIR/destinos`, con el modo `0600` y el nombre del destino delante: `<destino>-chave-de-acesso.txt` y `<destino>-chave-secreta.txt`, en el S3; `<destino>-remoto.txt`, en el rclone; y `<destino>-token.txt` y `<destino>-conversa.txt`, en el bot. La copia de acceso entre dos destinos ocurre en esa carpeta, de archivo a archivo. Es la única carpeta de secretos en la que el panel escribe. Borrar uno de esos archivos en el servidor desactiva el envío de ese destino en la pasada siguiente.
+- **Quién guarda:** la configuración queda en `DATA_DIR/painel/destinos/<destino>.conf` y el avance, en `<destino>.estado`; los dos entran en la copia de seguridad. En el avance quedan también los últimos archivos enviados y no enviados de cada destino, que la pestaña [Servicio](#servico) muestra. Los secretos quedan en `SECRETS_DIR/destinos`, con el modo `0600` y el nombre del destino delante: `<destino>-chave-de-acesso.txt` y `<destino>-chave-secreta.txt`, en el S3; `<destino>-remoto.txt`, en el rclone; y `<destino>-token.txt` y `<destino>-conversa.txt`, en el bot. La copia de acceso entre dos destinos ocurre en esa carpeta, de archivo a archivo. Es la única carpeta de secretos en la que el panel escribe. Borrar uno de esos archivos en el servidor desactiva el envío de ese destino en la pasada siguiente.
 - **Quién aplica:** el [`destinos.py`](../../painel/destinos.py), en un hilo de ejecución del propio panel, que recoge los avisos de llegada cada 2 s y verifica cada minuto qué destino está en hora. Una pasada por vez, en este orden: los bots, los remotos del rclone, los S3 que copian y, por último, los que conservan.
 - **Llegada anunciada:** el [vigía](scripts.md#vigia) del servidor FTP escribe un aviso en `/auth/chegadas`, carpeta `0700` del root, para cada envío que el Pure-FTPd registra como concluido, y el envío por el panel avisa directo. El [`chegadas.py`](../../painel/chegadas.py) recoge y borra los avisos, y 3 s después de un aviso nuevo el panel hace una pasada del bot. El aviso no elige lo que se envía: solo dispensa la espera de un archivo que la pasada encontraría de cualquier modo, dentro de la carpeta del destino. Vale por 4 minutos en el panel, y el vigía borra lo que nadie recogió en 5. Con el registro del FTP en uso en ese instante, o con 2000 avisos a la espera, el vigía no escribe el aviso, y el archivo sale por la espera de dos minutos. Cuando la pasada del bot deja archivo a la espera, el panel vuelve por sí solo cerca de dos minutos después. La pasada pedida por la terminal no usa los avisos.
 - **Un solo archivo:** el `POST /destinos/arquivo` abre el archivo con las mismas verificaciones de la pestaña Archivos (`400`, `403` o `404` para ruta fuera de la regla, enlace simbólico, carpeta o archivo que no existe) y envía en un hilo de ejecución propio. La pantalla espera hasta 20 s; después de eso, el envío sigue solo. No lee ni escribe el avance de las pasadas. Un archivo que cambia durante el envío responde con el motivo, para ser repetido.
@@ -921,6 +924,80 @@ La pestaña **Servidor** tiene dos partes separadas: los contenedores de esta st
 - **Lo que no se usó:** ningún socket del Docker, ninguna carpeta del servidor montada de más y ningún script. La actualización es el encabezado `Refresh`, que solo sale en `GET /servidor?auto=1`.
 - **Sesión:** `GET /servidor?auto=1` no renueva el tiempo de uso de la sesión. Sin sesión, la ruta manda a la entrada; con la sesión de un usuario del FTP, responde `404` y escribe `recusa_papel`.
 - La versión del núcleo del sistema no aparece en la pantalla.
+
+</details>
+
+---
+
+<a name="servico"></a>
+
+## 📊 Servicio: lo que guarda y lo que envía
+
+La pestaña **Servicio** reúne en una pantalla lo que el servicio guarda y lo que manda fuera del servidor: las cuentas, los archivos y el tamaño de cada carpeta y, para cada [destino](#destinos) guardado, lo que ya se envió, lo que no y lo que está en la cola, con el nombre de los archivos. Solo un administrador la abre. La pantalla solo lee: nada se envía, se repite ni se borra por ella.
+
+**Lo que guarda el servicio.** Cuatro medidas, cada una con el atajo hacia donde está el detalle:
+
+| Medida | Qué muestra |
+|---|---|
+| Usuarios | Las cuentas del FTP, con cuántas hay de cada [perfil](#perfis) |
+| Archivos | Los archivos que están ahora en las carpetas de los usuarios |
+| Espacio usado | Lo que ocupan esas carpetas y lo que queda libre en el disco |
+| Carpetas | Cuántas carpetas de usuario existen y el tamaño de la mayor |
+
+**Envío a los destinos.** Una franja suma todos los destinos guardados, de cualquier tipo y en cualquier cantidad:
+
+| Medida | Qué cuenta |
+|---|---|
+| Destinos | Cuántos están activados y con los secretos en su lugar, entre los guardados |
+| Enviados | Los archivos y el tamaño que los destinos ya recibieron. El archivo que fue a tres destinos cuenta tres veces |
+| En la cola | Lo que los destinos activados todavía tienen por enviar |
+| No enviados | Lo que quedó fuera: rechazado por el destino o fuera de lo que él acepta |
+
+Debajo de la franja hay una tarjeta por destino, con el tipo, el nombre y la situación, los mismos de la pestaña Destinos:
+
+| En la tarjeta | Qué muestra |
+|---|---|
+| Aviso | Cuando la última pasada se detuvo antes del final, el motivo. La pasada siguiente vuelve a empezar desde el mismo archivo |
+| Carpeta enviada | La carpeta de los datos vinculada al destino |
+| En la cola | Cuántos archivos esperan y su tamaño. En el destino desactivado o sin los secretos, la cola aparece con `detenida: el destino no está enviando` y no entra en la suma de la franja |
+| No enviados | Cuántos archivos quedaron fuera desde que se activó el destino |
+| Última pasada y total | Las mismas líneas de la pestaña Destinos: cuándo fue la última pasada, qué hizo y lo que el destino envió desde que se activó |
+| **Próximos de la cola** | Hasta 30 archivos de la cola, los que llegaron primero y salen primero, con el tamaño y la fecha |
+| **Últimos enviados** | Los últimos 30 archivos enviados, del más nuevo al más antiguo, con el tamaño y la hora del envío |
+| **Últimos no enviados** | Los últimos 30 que quedaron fuera, cada uno con el motivo |
+
+Las tres listas quedan recogidas y se abren con un clic; la lista vacía no aparece. Con la [copia del sistema](#copia-do-sistema) configurada, ella recibe una tarjeta propia, con la última copia y la que está en curso.
+
+**No enviados** son de dos tipos: el archivo que el destino rechazó en tres pasadas seguidas y el que está fuera de lo que el destino acepta. La cola sigue sin ellos.
+
+| Motivo en la pantalla | Cuándo ocurre |
+|---|---|
+| El motivo del rechazo, como `el servicio respondió con el código 400` | El destino rechazó el archivo en tres pasadas seguidas; queda el motivo de la última. La lista de los motivos está en [Solución de problemas](solucion-de-problemas.md#destinos) |
+| `el archivo es mayor de lo que el servicio acepta` | Archivo por encima del tamaño que el bot de Telegram envía o del mayor objeto que el S3 guarda |
+| `el archivo está vacío, y el bot no envía archivos vacíos` | Archivo de 0 bytes en una carpeta vinculada a un bot de Telegram |
+| `el nombre del archivo no cabe en el destino` | Nombre que pasa del tamaño que el destino guarda |
+
+**Tamaño de las carpetas.** La carpeta de cada usuario, de la mayor a la menor, con cuántas cuentas la usan, los archivos, el espacio y el último envío. La carpeta que queda dentro de otra entra en la cuenta de la de fuera. El nombre de la carpeta abre la pestaña Archivos en ella.
+
+- **Sin actualización automática:** los números son los del instante en que se abrió la pantalla, con la hora al final de ella. Recargue la página para leer de nuevo.
+- **Archivos y espacio** valen por un minuto, como en la Visión general. En una carpeta demasiado grande para leerse entera, la pantalla escribe `o más`.
+- **La cola** es lo que está en la carpeta del destino y llegó después del último archivo que él trató. El archivo que todavía está llegando también cuenta. La medida de cada carpeta vale por 20 s; en una carpeta demasiado grande, se detiene antes del final y la pantalla escribe `al menos`, o `sin medida ahora` cuando el tiempo de la pantalla se acaba antes de esa carpeta.
+- **Las listas guardan los últimos 30** de cada destino, y los números cuentan desde que se activó el destino. En una instalación actualizada desde una versión anterior a la `1.15.0`, las listas y la cuenta de no enviados empiezan vacías y se llenan con las pasadas siguientes; el total enviado sigue siendo el de antes.
+- **El archivo enviado uno a uno**, con el botón de destino de la pestaña Archivos, no entra en las listas ni en las sumas.
+- **Nada del acceso aparece:** ni dirección, ni bucket, ni clave, ni token, ni conversación, ni el servidor o la ruta del remoto. La pantalla muestra el tipo y el nombre que el administrador dio al destino, la carpeta de los datos y los nombres de los archivos.
+- Con `PAINEL_DESTINOS=nao`, la pestaña sigue, solo con lo que guarda el servicio y el tamaño de las carpetas, y la franja sale de la Visión general.
+- La **Visión general** trae el resumen en cuatro medidas (destinos activados, enviados, en la cola y no enviados), con el atajo a esta pestaña, cuando hay destino guardado.
+
+<details>
+<summary>Detalle técnico — de dónde vienen los números</summary>
+
+- **Ruta:** `GET /servico`, solo en la tabla del administrador. Sin sesión, manda a la entrada; con la sesión de un usuario del FTP, responde `404` y escribe `recusa_papel`. No hay `POST /servico`: la pantalla no tiene formulario propio.
+- **Lo que la pantalla lee:** el registro del FTP, las carpetas de los datos y el `<destino>.estado` de cada destino. Abrir la pantalla no llama a ningún destino y no escribe nada.
+- **Listas:** a cada archivo tratado, la pasada guarda en el `<destino>.estado` el instante, la ruta y el tamaño, en `historico.enviados` o, con el código del motivo, en `historico.recusados`, y suma los no enviados en `total.recusados`. Cada lista queda con los 30 últimos. El archivo que cambia o sale del servidor en medio del envío no entra en ninguna: la versión nueva va en otra pasada.
+- **Cola:** el panel recorre la carpeta del destino y cuenta lo que viene después de su marca, el último archivo tratado. Una lectura por carpeta sirve a todos los destinos de ella, con 2 s y 50 000 archivos de tope por carpeta y 6 s para todas las carpetas de la pantalla; en la Visión general, 1 s. La medida queda en la memoria del panel por 20 s, mientras las marcas sean las mismas.
+- **Motivo:** el avance guarda un código (`http_400`, `limite`, `vazio`, `nome`), y la pantalla escribe su frase en el idioma de quien está en la sesión. La respuesta del servicio y el registro de error del rclone no se guardan ni se muestran.
+- **Nombres de archivo** salen escapados, como en toda pantalla del panel.
+- **Avance antiguo:** el `.estado` escrito por una versión anterior sigue valiendo; las claves nuevas entran en la primera pasada.
 
 </details>
 
@@ -1493,6 +1570,7 @@ El código queda en [`painel/`](../../painel/), un tema por archivo, y va entero
 | [`aba_destinos.py`](../../painel/aba_destinos.py) | Pestaña Destinos: una tarjeta por destino, los formularios, la elección del tipo del remoto del rclone, la elección del destino, la prueba, la solicitud de pasada, la eliminación y el envío de un archivo por el botón de la pestaña Archivos |
 | [`recursos.py`](../../painel/recursos.py) | Recursos del servidor y de cada contenedor de la stack: lectura del procesador, de la memoria y de la red del FTP, del grupo de control del panel y de lo que el ftp y el nginx publican, y el historial de los últimos 10 minutos, guardado en la memoria |
 | [`aba_servidor.py`](../../painel/aba_servidor.py) | Pestaña Servidor: los contenedores de la stack, con el uso contra lo asignado, las tarjetas de procesador, memoria, disco y red del servidor, y la franja de resumen de la Visión general |
+| [`aba_servico.py`](../../painel/aba_servico.py) | Pestaña Servicio: lo que guarda el servicio, el tamaño de las carpetas y, por destino, los enviados, los no enviados y la cola, y la franja de envío a los destinos de la Visión general |
 | [`aba_administradores.py`](../../painel/aba_administradores.py) | Administradores del panel: creación por el formulario de Nuevo usuario, cambio de contraseña, cambio de nombre y eliminación; la lista es la de la pestaña Usuarios |
 | [`aba_fator.py`](../../painel/aba_fator.py) | Segundo factor: los pasos del código QR y de la clave, la pantalla de activar y las de desactivar, del administrador y del usuario del FTP |
 | [`aba_seguranca.py`](../../painel/aba_seguranca.py) | Pestaña Seguridad |

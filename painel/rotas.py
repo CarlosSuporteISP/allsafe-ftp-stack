@@ -18,6 +18,7 @@ import aba_destinos
 import aba_fator
 import aba_meus_arquivos
 import aba_seguranca
+import aba_servico
 import aba_servidor
 import aba_usuarios
 import aba_visao_geral
@@ -80,6 +81,7 @@ ROTAS = {
     ('POST', '/usuarios/fator/desligar'): aba_fator.desligar_do_usuario,
     ('GET', '/seguranca'): aba_seguranca.seguranca,
     ('GET', '/servidor'): aba_servidor.servidor,
+    ('GET', '/servico'): aba_servico.servico,
     ('GET', '/bloqueios'): aba_bloqueios.lista,
     ('GET', '/bloqueios/novo'): aba_bloqueios.tela_novo,
     ('POST', '/bloqueios/novo'): aba_bloqueios.bloquear,

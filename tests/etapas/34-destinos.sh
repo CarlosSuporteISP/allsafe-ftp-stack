@@ -33,6 +33,11 @@ vaza34() { grep -c -a -F -f "$D34/lista" "$1" 2>/dev/null || true; }            
 terminal34() { docker exec "$PAINEL" python3 /opt/painel/servidor.py --destinos "$@" > "$W/terminal34" 2>&1; }  # [argumentos]: os destinos pelo terminal
 situ34() { docker exec "$PAINEL" python3 /opt/painel/servidor.py --destinos 2>&1 | grep -m1 "^$1: " || true; }  # <destino>: a linha dele no terminal
 doterminal34() { grep -m1 "^$1: " "$W/passada" || true; }                                      # <destino>: o que a última passada pedida disse dele
+# A aba Serviço: o cartão de um destino sai do <h2> dele até o fim da seção, e cada lista recolhida fica em uma linha só.
+cartao34() { awk -v rotulo="$1 <span class=\"etiqueta" 'index($0, "<section class=\"cartao\"><h2>") && index($0, rotulo) { dentro = 1 } dentro { print } dentro && index($0, "</section>") { dentro = 0 }' "$W/corpo"; }  # <rótulo do destino>: o cartão dele na última tela
+trecho34() { cartao34 "$1" | sed -n "s|.*<summary>$2</summary>||p" | sed 's|</details>.*||'; }   # <rótulo> <título da lista>: os itens dela
+lista34() { trecho34 "$1" "$2" | sed 's|</code>|\n|g' | sed -n 's|.*<code>||p' | tr '\n' ' '; }      # <rótulo> <título da lista>: os arquivos dela, na ordem da tela
+motivo34() { trecho34 "$1" 'Últimos não enviados' | sed -n "s|.*<li><code>$2</code><span class=\"suave\">\([^<]*\)</span>.*|\1|p" | sed 's/.* · //'; }  # <rótulo> <arquivo>: por que ele não foi
 passou34() { # <destino>: espera a primeira passada da configuração gravada (a automática vem em até um minuto)
   local marca=$SECONDS
   while (( SECONDS - marca < 100 )) && [[ "$(situ34 "$1")" != *'última passada: '* ]]; do sleep 3; done
@@ -338,6 +343,9 @@ SH
 m_p=$(marca34); echo 's3 500 1 1 b' > "$D34/falhar"; passa34 s3; r_p1=$?; p_p1="$(doterminal34 s3)"; rm -f "$D34/falhar"
 o_p1="$(sim34 "$m_p" "l['servico']=='s3'" "str(l['codigo'])+':'+l['chave'].rsplit('/', 1)[-1]")"
 aba -b "$J" "$B/destinos" > /dev/null; f_parou="$(tem34 'A última passada parou antes do fim: o serviço respondeu com o código 500. A seguinte recomeça do mesmo arquivo.')"
+# A aba Serviço, com a passada parada no segundo arquivo: o primeiro entre os enviados, os outros dois na fila.
+sv_a="$(aba -b "$J" "$B/servico")"; sv_ae="$(lista34 'Armazenamento S3' 'Últimos enviados')"; sv_af="$(lista34 'Armazenamento S3' 'Próximos da fila')"
+sv_an="$(cartao34 'Armazenamento S3' | sed -n 's|.*<dt>Na fila</dt><dd>\([^<]*\)</dd>.*|\1|p')"; sv_ap="$(cartao34 'Armazenamento S3' | grep -c -F 'A última passada parou antes do fim: o serviço respondeu com o código 500. A seguinte recomeça do mesmo arquivo.' || true)"
 passa34 s3; r_p2=$?; p_p2="$(doterminal34 s3)"; o_p=""; for n in 1 2 3; do o_p+="$(obj34 0 "dst34/p$n.txt") "; done
 auditoria; d_f500=$(( $(linhas34 ' evento=destino_falhou destino=s3 motivo=http_500$') - n_f500 ))
 # O arquivo que o serviço recusa com 4xx: duas passadas param nele, a terceira o deixa para trás e segue.
@@ -348,6 +356,10 @@ SH
 t_q2="$(tam34 dst34/q2.txt)"
 passa34 s3; r_q1=$?; p_q1="$(doterminal34 s3)"; passa34 s3; r_q2=$?; p_q2="$(doterminal34 s3)"; passa34 s3; r_q3=$?; p_q3="$(doterminal34 s3)"
 conf34
+# A aba Serviço, depois da recusa: o arquivo deixado para trás entre os não enviados, com o motivo; o seguinte, entre os enviados; a fila, vazia.
+aba -b "$J" "$B/servico" > /dev/null; sv_be="$(lista34 'Armazenamento S3' 'Últimos enviados')"; sv_bn="$(lista34 'Armazenamento S3' 'Últimos não enviados')"
+sv_bm="$(motivo34 'Armazenamento S3' dst34/q1-recusa34.txt)"; sv_bf="$(lista34 'Armazenamento S3' 'Próximos da fila')"; sv_bp="$(cartao34 'Armazenamento S3' | grep -c -F 'parou antes do fim' || true)"
+sv_bg="$(aba -b "$J" "$B/")"; sv_bv="$(tem34 'href="/servico">ver o serviço</a>')"
 auditoria; l_f400="$(linhas34 ' evento=destino_falhou destino=s3 motivo=http_400$')"; l_pul="$(linhas34 ' evento=destino_pulado destino=s3 arquivo=dst34/q1-recusa34.txt motivo=http_400$')"
 o_q1="$(sim34 0 "l['op']=='gravar' and 'recusa34' in l['chave']")"; o_q1r="$(sim34 0 "l['erro']=='InvalidRequest' and 'recusa34' in l['chave']")"; o_q2="$(obj34 0 dst34/q2.txt)"
 [[ "$r_p1" == 1 && "$p_p1" == "s3: 1 arquivo(s), 3 bytes, $SEM34; parou: http_500" && "$o_p1" == "200:p1.txt 500:p2.txt" && "$f_parou" -ge 1 && "$r_p2" == 0 \
@@ -362,6 +374,9 @@ while (( SECONDS - plantioB < 125 )); do sleep 3; done
 a_79="$(envio /destinos/agora --data-urlencode "csrf=$K" --data-urlencode "destino=telegram")"
 aba -b "$J" "$B/destinos?m=pedido" > /dev/null; f_ped="$(tem34 'Passada pedida: o painel começa em instantes.')"
 aguarda34 " evento=destino_enviado destino=telegram arquivos=2 bytes=$b_B apagados=0 grandes=2 ignorados=1 erros=0\$" 1 100; r_p79=$?
+# A aba Serviço, depois da passada do bot: os dois entregues entre os enviados; os dois grandes e o vazio entre os não enviados, cada um com o motivo.
+aba -b "$J" "$B/servico" > /dev/null; sv_ce="$(lista34 'Bot do Telegram' 'Últimos enviados' | unicos34)"; sv_cn="$(lista34 'Bot do Telegram' 'Últimos não enviados' | unicos34)"
+sv_cm="$(for n in g1.bin g2.bin vazio.txt; do printf '%s; ' "$(motivo34 'Bot do Telegram' "tg34/$n")"; done)"
 l_ped="$(linhas34 " evento=destino_pedido admin=$ADMIN destino=telegram\$")"
 d_b="$(doc34 0 tg34/b1.txt) $(doc34 0 tg34/sub/b2.txt)"
 d_413="$(sim34 0 "l['op']=='sendDocument' and l['codigo']==413 and l['bytes']==700000")"
@@ -391,6 +406,14 @@ auditoria; l_gen="$(linhas34 " evento=destino_gravado admin=$ADMIN destino=teleg
   && "$p_g3" == "telegram: 0 arquivo(s), 0 bytes, 0 apagado(s) do servidor, 1 acima do limite do bot, 0 ignorado(s), 0 recusado(s); chegou ao fim" \
   && "$av_g3" == 1 && "$d_b_fim" == "1 1 1" && "$l_gen" == 1 ]]
 caso $? testes 79 "Bot do Telegram: envia o que chega e avisa do que passa do limite" "bot gravado desligado com a conversa errada: $gt_1, teste $tt_1; com o token errado: $gt_2, teste $tt_2; ligado com os certos: $gt_3, teste $tt_3 e a mensagem de teste na conversa ($o_tt); cartão: $t_ctg, textos que faltam (pasta, limite, idioma e segredos): $f_ctg; cinco arquivos criados depois de ligar (dois pequenos, um vazio, um de 700000 bytes e um de 1572864, com o limite do painel em 1 MB e o do serviço em 600000 bytes) e, passados os dois minutos, o botão Enviar agora: $a_79, tela com 'Passada pedida' ($f_ped), destino_pedido $l_ped e destino_enviado com arquivos=2 bytes=$b_B grandes=2 ignorados=1 (espera: $r_p79); documentos entregues com nome, tamanho, SHA-256 e legenda 'caminho, tamanho · data' (b1.txt e sub/b2.txt): $d_b; o de 700000 bytes recusado pelo serviço com 413: $d_413; avisos 'Arquivo maior que o limite de envio do bot' com o caminho e a data (g1 e g2): $av_g; documento de 1572864 bytes enviado: $d_g2; arquivo vazio enviado: $d_vaz; arquivo que já estava na pasta antes de o bot ser ligado: $d_ant; pelo terminal, com o serviço respondendo 429 uma vez: saída $r_b3, '$p_b3', respostas ao envio do b3.txt: $d_429, entregue $d_b3 vez; idioma trocado para inglês sem digitar os segredos: $g_en (destino_gravado com segredos=mantidos: $l_gen), arquivo novo acima do limite: saída $r_g3, '$p_g3', aviso 'File larger than the bot sending limit' com a data em ano-mês-dia: $av_g3; b1, b2 e b3 entregues uma vez só no total: $d_b_fim"
+
+# ------------------------------------------------------------------ a aba Serviço: o que foi, o que não foi e o que falta, por destino
+GRANDE34='o arquivo é maior do que o serviço aceita'
+[[ "$sv_a" == "200 " && "$sv_ae" == "dst34/p1.txt "* && "$sv_af" == "dst34/p2.txt dst34/p3.txt " && "$sv_an" == "2 arquivos · "* && "$sv_ap" == 1 \
+  && "$sv_be" == "dst34/q2.txt dst34/p3.txt dst34/p2.txt dst34/p1.txt "* && "$sv_bn" == "dst34/q1-recusa34.txt "* && "$sv_bm" == "o serviço respondeu com o código 400" \
+  && -z "$sv_bf" && "$sv_bp" == 0 && "$sv_bg" == "200 " && "$sv_bv" -ge 1 && "$sv_ce" == "tg34/b1.txt tg34/sub/b2.txt " && "$sv_cn" == "tg34/g1.bin tg34/g2.bin tg34/vazio.txt " \
+  && "$sv_cm" == "$GRANDE34; $GRANDE34; o arquivo está vazio, e o bot não envia arquivo vazio; " ]]
+caso $? testes 112 "Aba Serviço: enviados, não enviados e fila por destino" "aba Serviço ($sv_a) com a passada do S3 parada no segundo de três arquivos: Últimos enviados começa por '$sv_ae', Próximos da fila com '$sv_af', Na fila '$sv_an' e o aviso da parada com o código 500 no cartão ($sv_ap); depois do arquivo recusado três vezes: Últimos enviados começa por '$sv_be', Últimos não enviados por '$sv_bn' com o motivo '$sv_bm', fila sem arquivo ('$sv_bf') e o cartão sem o aviso de parada ($sv_bp); Visão geral ($sv_bg) com o atalho 'ver o serviço' ($sv_bv); cartão do bot depois da passada dele: enviados '$sv_ce', não enviados '$sv_cn', com os motivos '$sv_cm'"
 
 # ------------------------------------------------------------------ Guardar no S3: sai do servidor depois de gravado e entregue
 passa34 s3; r_c0=$?
@@ -958,6 +981,14 @@ e_usu3="$(COMO=dst34 entrar "$W/dst34.jar" "$W/dst34.senha")"; proibir "$(biscoi
 m_133=$(marca34); auditoria; n_cp="$(eventos copia_pedida)"; n_cg="$(eventos copia_gravada)"
 cs_k0="$(docker exec "$PAINEL" sha256sum /painel/destinos/copia.conf | cut -c1-64)"
 cs_ru="$(rotasc34 "$W/dst34.jar" "$K_u3")"
+# A aba Serviço, enquanto isso: só o administrador a abre, ela não tem ação nenhuma e não mostra segredo nem endereço do destino.
+sg_u="$(aba -b "$W/dst34.jar" "$B/servico" | cut -c1-3) $(POTE="$W/dst34.jar" envio /servico --data-urlencode "csrf=$K_u3" | cut -c1-3)"; sg_ini=$SECONDS
+sg_um="$(aba -b "$W/dst34.jar" "$B/meus-arquivos" | cut -c1-3) $(tem34 '/servico')"
+sg_s="$(aba -b "$W/vazio34.jar" "$B/servico")"; sg_p="$(envio /servico --data-urlencode "csrf=$K" | cut -c1-3)"
+sg_k0="$(docker exec "$PAINEL" sh -c 'cat /painel/destinos/*.conf | sha256sum' | cut -c1-64)"; sg_c0=$(marca34)
+sg_a="$(aba -b "$J" "$B/servico")"; sg_c=$(( $(marca34) - sg_c0 )); sg_k1="$(docker exec "$PAINEL" sh -c 'cat /painel/destinos/*.conf | sha256sum' | cut -c1-64)"
+sg_v="$(vaza34 "$W/corpo")"; sg_d="$(tem34 'balde34') $(tem34 'copias/teste') $(tem34 "$FIM34")"; sg_m="$(tem34 'href="/servico"')"; sg_t="$(faltam34 'Armazenamento S3 <span class="etiqueta' 'Bot do Telegram <span class="etiqueta' 'Últimos enviados')"
+sg_f="$(grep -o '<form[^>]*>' "$W/corpo" | grep -c -v -e 'action="/idioma"' -e 'action="/sair"' || true)"
 cs_z="$(gcopia34 "$J" "" "$W/painel.senha" prefixo=copia34/invasor)$(gcopia34 "$J" token-errado "$W/painel.senha" prefixo=copia34/invasor)$(ORIGEM34=https://fora.example gcopia34 "$J" "$K" "$W/painel.senha" prefixo=copia34/invasor)$(gcopia34 "$W/vazio34.jar" "$K" "$W/painel.senha" prefixo=copia34/invasor)"
 cs_zb="$(botao34 '')$(botao34 token-errado)$(c -o /dev/null -w '%{http_code} %{redirect_url}' -b "$J" -H 'Origin: https://fora.example' --data-urlencode "csrf=$K" "$B/destinos/copia/agora" | sed "s|$B||")$(POTE="$W/vazio34.jar" botao34)"
 # A chave privada da cópia não existe no painel: ele só tem a pública, e enxerga os certificados sem poder escrever.
@@ -966,6 +997,11 @@ cs_pub="$(docker exec "$PAINEL" cat /run/secrets/backup_chave_publica | cmp -s -
 cs_priv="$(docker exec "$PAINEL" sh -c 'grep -r -l -a -F AGE-SECRET-KEY /run/secrets /painel /certs /auth 2> /dev/null | wc -l') $(grep -c -F AGE-SECRET-KEY "$S/backup-chave-privada.txt" || true)"
 cs_ro="$(docker exec "$PAINEL" sh -c 'touch /certs/x34 2> /dev/null && echo gravou || echo recusou') $(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/certs"}}{{.RW}}{{end}}{{end}}' "$PAINEL")"
 while (( SECONDS - cs_ini < 75 )); do sleep 3; done
+# A recusa por papel fica na auditoria, uma linha por minuto por endereço: passado o minuto das recusas acima, o pedido repetido ganha a linha dele.
+while (( SECONDS - sg_ini < 62 )); do sleep 1; done
+auditoria; n_sg="$(eventos 'recusa_papel usuario=dst34 caminho=/servico')"
+sg_u2="$(aba -b "$W/dst34.jar" "$B/servico" | cut -c1-3)"
+auditoria; sg_r=$(( $(eventos 'recusa_papel usuario=dst34 caminho=/servico') - n_sg ))
 auditoria; cs_d133="$(copias34 "$m_133") $(( $(eventos copia_pedida) - n_cp )) $(( $(eventos copia_gravada) - n_cg ))"; cs_lr="$(linhas34 ' evento=copia_enviada origem=rotina ') $(linhas34 ' evento=copia_falhou origem=rotina ')"
 cs_k1="$(docker exec "$PAINEL" sha256sum /painel/destinos/copia.conf | cut -c1-64)"
 
@@ -992,6 +1028,11 @@ cs_ap="$(sim34 "$m_c0" "l['servico']=='s3' and l['op']=='outra'") $(sim34 "$m_c0
   && "$a_rotasc" == "404 404 404 " && "$r_cnao" == "1 1" && "$cs_seg" == "backup_chave_publica painel_admin_inicial_senha_hash " && "$cs_pub" == 0 && "$cs_priv" == "0 1" && "$cs_ro" == "recusou false" \
   && "$cs_ap" == "0 1" && "$cs_vt" == 0 ]]
 caso $? seguranca 133 "Cópia do sistema: só o administrador, com sessão, token e senha; a chave privada fica fora do painel e nada é apagado no destino" "usuário do FTP dst34 (entrada $e_usu3) nas três rotas da cópia (formulário, gravação e botão): $cs_ru; gravação pelo administrador sem token, com token errado, com origem de fora e sem sessão: $cs_z; o botão, nas mesmas quatro: $cs_zb; depois delas e de mais de um minuto: pedidos ao S3 com chave da cópia, linhas copia_pedida e linhas copia_gravada a mais: $cs_d133; copia.conf igual ao de antes: $([[ -n "$cs_k0" && "$cs_k1" == "$cs_k0" ]] && echo sim || echo nao); com PAINEL_DESTINOS=nao, as três rotas com a sessão do administrador: $a_rotasc, e servidor.py --copia (saída e 'os destinos estão desligados nesta instalação'): $r_cnao; segredos montados no painel: $cs_seg; chave pública igual à do host (cmp): $cs_pub; arquivos com chave privada da cópia em /run/secrets, /painel, /certs e /auth, e o controle (a mesma busca no arquivo da chave privada, no host): $cs_priv; escrita em /certs e o modo da montagem (RW): $cs_ro; no simulador, em todo o trecho da cópia: pedidos de ler, listar ou apagar e envios em partes desfeitos (o da falha forçada): $cs_ap; linhas com segredo dos destinos na saída do terminal: $cs_vt"
+
+# ------------------------------------------------------------------ a aba Serviço: só do administrador, só leitura e sem segredo
+[[ "$sg_u" == "404 404" && "$sg_um" == "200 0" && "$sg_s" == "303 /entrar" && "$sg_p" == 404 && "$sg_a" == "200 " && "$sg_t" == 0 && "$sg_m" -ge 1 && "$sg_f" == 0 \
+  && "$sg_v" == 0 && "$sg_d" == "0 0 0" && "$sg_c" == 0 && "$sg_k1" == "$sg_k0" && -n "$sg_k0" && "$sg_u2" == 404 && "$sg_r" == 1 ]]
+caso $? seguranca 162 "Aba Serviço: só o administrador, só leitura e sem segredo" "usuário do FTP dst34, com a sessão e o token dele: GET e POST em /servico $sg_u; passado o minuto em que a auditoria junta as recusas do mesmo endereço, outro GET: $sg_u2, com $sg_r linha recusa_papel dele para /servico; tela dele ($sg_um: código e vezes em que /servico aparece); sem sessão: $sg_s; POST do administrador, com o token dele: $sg_p (a aba não tem rota de envio); aba com o administrador: $sg_a, cartões dos destinos e listas na tela (faltam $sg_t), no menu ($sg_m), formulários além do idioma e da saída: $sg_f; linhas com chave do S3, token do bot ou conversa: $sg_v; vezes do bucket, do prefixo e do endereço do destino: $sg_d; pedidos ao serviço de exemplo ao abrir a tela: $sg_c; soma dos .conf dos destinos igual antes e depois"
 
 [[ "$cs_uo" == "1 1" && "$cs_rt" == 0 && -n "$cs_nt" && "$cs_nt" != "$cs_n" && "$cs_ht" =~ ^[0-9a-f]{64}$ && "$cs_st" == "$cs_ht" && "$cs_dt" == "$cs_ht" && "$cs_at" == 1 \
   && "$cs_gr" == "303 /destinos?m=copia_gravada" && "$cs_fr" == 0 && "$cs_rw" == 0 && "$cs_lr" == "1 0" \

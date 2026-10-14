@@ -13,8 +13,8 @@ from icones import bandeira, desenhos, icone
 from idioma import N, t, tn
 
 ABAS = (('/', 'painel', N('Visão geral')), ('/usuarios', 'usuarios', N('Usuários')), ('/arquivos', 'pasta', N('Arquivos')),
-        ('/destinos', 'nuvem', N('Destinos')), ('/servidor', 'pulso', N('Servidor')), ('/seguranca', 'cadeado', N('Segurança')),
-        ('/bloqueios', 'bloqueio', N('Bloqueios')), ('/atividade', 'atividade', N('Log')))
+        ('/destinos', 'nuvem', N('Destinos')), ('/servidor', 'pulso', N('Servidor')), ('/servico', 'medidor', N('Serviço')),
+        ('/seguranca', 'cadeado', N('Segurança')), ('/bloqueios', 'bloqueio', N('Bloqueios')), ('/atividade', 'atividade', N('Log')))
 ABAS_USUARIO = (('/meus-arquivos', 'pasta', N('Meus arquivos')),)
 ABAS_SOENVIO = (('/meus-arquivos', 'envio', N('Envio de arquivos')),)   # perfil só envio: sem lista de arquivos
 # Menu lateral do administrador: o dia a dia em cima, o que cuida do próprio painel embaixo.
