@@ -22,6 +22,7 @@ O painel ganha a aba **Serviço**, de monitoramento: o que o serviço guarda e, 
 ### Alterado
 
 - **Menu**: o grupo **Sistema** passa a ter Servidor, Serviço, Segurança, Bloqueios e Log.
+- **Fotos**: as da aplicação foram refeitas, nos três idiomas, com a aba Serviço e a faixa nova da Visão geral.
 - **Andamento dos destinos**: o gravado por versão anterior continua valendo. As listas e a contagem dos não enviados começam vazias e se enchem com as passadas seguintes; o total enviado continua o de antes.
 
 ## [1.14.0] - 2026-10-13

@@ -10,14 +10,14 @@
 
 Todas las pantallas del panel web, menú por menú, con la foto de cada una y la explicación de lo que se puede hacer en ella. Las fotos son capturas reales de la versión **1.11.0**, en tema oscuro y en español, con usuarios de ejemplo, como `olt-centro`, `switch-core` y `roteador-borda`. El panel acompaña el tema claro u oscuro del sistema y también se abre en portugués y en inglés: vea [Idioma](#idioma). Haga clic en cualquier foto para abrirla en tamaño real.
 
-El panel tiene una pantalla de entrada, ocho pestañas para quien administra (Visión general, Usuarios, Archivos, Destinos, Servidor, Seguridad, Bloqueos y Log) y una pantalla para el usuario del FTP, que cambia con el perfil de la cuenta: Mis archivos o Envío de archivos. Las carpetas que el administrador liberó de más a la cuenta se abren en la pantalla Carpeta liberada. Los administradores están en la pestaña Usuarios, junto con las cuentas del FTP. Cómo abrirlo, crear administradores y qué protege el panel está en [Panel web](../panel.md).
+El panel tiene una pantalla de entrada, nueve pestañas para quien administra (Visión general, Usuarios, Archivos, Destinos, Servidor, Servicio, Seguridad, Bloqueos y Log) y una pantalla para el usuario del FTP, que cambia con el perfil de la cuenta: Mis archivos o Envío de archivos. Las carpetas que el administrador liberó de más a la cuenta se abren en la pantalla Carpeta liberada. Los administradores están en la pestaña Usuarios, junto con las cuentas del FTP. Cómo abrirlo, crear administradores y qué protege el panel está en [Panel web](../panel.md).
 
 > 🧱 **Uso solo en red privada:** por defecto, el panel se abre solo en IP privada, detrás de un firewall, fuera de internet. Vea [Seguridad](../seguridad.md#rede-privada).
 
 <details>
 <summary>Índice — haga clic para expandir</summary>
 
-[Entrar](#entrar) · [Visión general](#visao-geral) · [Usuarios](#usuarios) · [Administradores](#administradores) · [Archivos](#arquivos) · [Mis archivos](#meus-arquivos) · [Destinos](#destinos) · [Servidor](#servidor) · [Seguridad](#seguranca) · [Bloqueos](#bloqueios) · [Log](#atividade) · [Idioma](#idioma) · [Cómo se hicieron las fotos](#como-foram-feitas)
+[Entrar](#entrar) · [Visión general](#visao-geral) · [Usuarios](#usuarios) · [Administradores](#administradores) · [Archivos](#arquivos) · [Mis archivos](#meus-arquivos) · [Destinos](#destinos) · [Servidor](#servidor) · [Servicio](#servico) · [Seguridad](#seguranca) · [Bloqueos](#bloqueios) · [Log](#atividade) · [Idioma](#idioma) · [Cómo se hicieron las fotos](#como-foram-feitas)
 
 </details>
 
@@ -29,7 +29,7 @@ El panel tiene una pantalla de entrada, ocho pestañas para quien administra (Vi
 
 <a href="imagenes/entrar.png"><img src="imagenes/entrar.png" alt="Pantalla de entrada del panel: a la izquierda, el logo, el lema Copias de seguridad y archivos, guardados en un solo lugar, cuatro puntos sobre la stack y la escena de OLT, radio, router, switch, empresa, persona y cámara enviando por FTPS a las carpetas del servidor, con el botón Pausar movimiento; a la derecha, el título Entrar en el panel, los campos Usuario y Contraseña, el botón Entrar, la nota de uso restringido a quien fue autorizado y los botones PT, EN y ES" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla de entrada · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla de entrada · captura del 2026-10-13</sub>
 
 **Para qué sirve:** verificar el usuario y la contraseña antes de mostrar cualquier dato de la stack. Es la misma pantalla para quien administra y para el usuario del FTP.
 
@@ -53,7 +53,7 @@ El panel tiene una pantalla de entrada, ocho pestañas para quien administra (Vi
 
 <a href="imagenes/entrar-recusada.png"><img src="imagenes/entrar-recusada.png" alt="Pantalla de entrada con el mensaje No fue posible entrar encima de los campos Usuario y Contraseña" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla de entrada, entrada rechazada · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla de entrada, entrada rechazada · captura del 2026-10-13</sub>
 
 | Mensaje | Cuándo aparece | Qué hacer |
 |---|---|---|
@@ -71,7 +71,7 @@ El panel tiene una pantalla de entrada, ocho pestañas para quien administra (Vi
 
 <a href="imagenes/entrar-cadastro.png"><img src="imagenes/entrar-cadastro.png" alt="Pantalla Registre el segundo factor, en lugar del formulario de entrada: el aviso de que la contraseña coincidió y de que el panel exige el código de una aplicación autenticadora, los tres pasos con el código QR y la clave en grupos de cuatro caracteres, el campo Código de la aplicación, el botón Registrar y entrar, el aviso de que la clave no se mostrará de nuevo y el atajo Volver a usuario y contraseña" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla de entrada, registro del segundo factor, con una clave de ejemplo que no se guardó · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla de entrada, registro del segundo factor, con una clave de ejemplo que no se guardó · captura del 2026-10-13</sub>
 
 Con `PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim`, que es el valor por defecto, aparece justo después de la contraseña para toda cuenta que todavía no registró una aplicación autenticadora, administrador o usuario del FTP: la contraseña correcta no abre el panel, lleva a esta pantalla. Sirve cualquier aplicación de código por tiempo (TOTP). Vale solo para la entrada en este panel: el FTP no cambia.
 
@@ -104,7 +104,7 @@ Después de 10 minutos sin el primer código, la pantalla de entrada vuelve, sin
 
 <a href="imagenes/entrar-codigo.png"><img src="imagenes/entrar-codigo.png" alt="Pantalla Código de verificación, en lugar del formulario de entrada: el aviso de que la contraseña coincidió, el campo Código, el botón Confirmar, la nota para quien está sin el dispositivo y el atajo Volver a usuario y contraseña" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla de entrada, código del segundo factor · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla de entrada, código del segundo factor · captura del 2026-10-13</sub>
 
 Aparece para toda cuenta que ya tiene el [segundo factor](#segundo-fator), administrador o usuario del FTP: la contraseña correcta no abre el panel, lleva a esta pantalla. La cuenta que todavía no lo tiene, con el segundo factor obligatorio, pasa por la pantalla Registre el segundo factor, arriba; con `PAINEL_SEGUNDO_FATOR_OBRIGATORIO=nao`, entra solo con la contraseña.
 
@@ -146,9 +146,9 @@ El código incorrecto cuenta como error de usuario y contraseña de la direcció
 
 ## 📊 Visión general
 
-<a href="imagenes/visao-geral.png"><img src="imagenes/visao-geral.png" alt="Pestaña Visión general con el menú a la izquierda, en dos grupos, la franja Servidor FTP, que dice En servicio y TLS obligatorio en el inicio de sesión, las cuatro medidas Usuarios, Espacio usado, Último envío y Certificado del FTP, cada una con el atajo al detalle, la tarjeta Servidor y contenedores, con el procesador y la memoria del servidor y de los contenedores, los gráficos Archivos recibidos por día, Último envío por usuario y Espacio por carpeta, la tarjeta Actividad reciente, con los seis últimos registros, y la tarjeta Datos para configurar el equipo" width="100%"></a>
+<a href="imagenes/visao-geral.png"><img src="imagenes/visao-geral.png" alt="Pestaña Visión general con el menú a la izquierda, en dos grupos, la franja Servidor FTP, que dice En servicio y TLS obligatorio en el inicio de sesión, las cuatro medidas Usuarios, Espacio usado, Último envío y Certificado del FTP, cada una con el atajo al detalle, la tarjeta Servidor y contenedores, con el procesador y la memoria del servidor y de los contenedores, la franja Envío a los destinos, con los destinos activados, los enviados, la cola y los no enviados, los gráficos Archivos recibidos por día, Último envío por usuario y Espacio por carpeta, la tarjeta Actividad reciente, con los seis últimos registros, y la tarjeta Datos para configurar el equipo" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Visión general · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Visión general · captura del 2026-10-13</sub>
 
 **Para qué sirve:** ver de una vez si el FTP está en marcha y qué datos escribir en el equipo que va a enviar la copia de seguridad.
 
@@ -162,12 +162,13 @@ El código incorrecto cuenta como error de usuario y contraseña de la direcció
 | **Último envío** | Fecha del archivo más nuevo entre todas las carpetas, con atajo a la pestaña Archivos |
 | **Certificado del FTP** | La fecha en que vence el certificado y cuántos días faltan, con atajo a la huella digital, en la pestaña Seguridad |
 | **Servidor y contenedores** | Procesador y memoria del servidor entero y de los tres contenedores de la stack, en uso y asignados, con atajo a la pestaña Servidor |
+| **Envío a los destinos** | Con un destino guardado: cuántos están activados, los archivos enviados, lo que está en la cola y los no enviados, sumados todos los destinos, con atajo a la pestaña Servicio |
 | **Archivos recibidos por día** | Una columna por día de los últimos 14 días, con el total del período encima. Cuenta lo que está en las carpetas ahora, por la fecha de cada archivo: lo que se borró o se sustituyó no entra |
 | **Último envío por usuario** | Los usuarios divididos por la fecha del archivo más nuevo de la carpeta de cada uno: en las últimas 24 horas, entre 1 y 7 días, hace más de 7 días y sin archivo en la carpeta. Debajo, la lista de quienes llevan más de 7 días sin enviar, con atajo a la pestaña Usuarios |
 | **Espacio por carpeta** | Las carpetas que más ocupan, de la mayor a la menor, cada una con la barra, el tamaño y la cantidad de archivos, y el atajo a la carpeta en la pestaña Archivos |
 | **Actividad reciente** | Los seis últimos registros del panel, con la hora y la dirección de quien lo hizo, y el atajo a la pestaña Log |
 | **Datos para configurar el equipo** | Servidor, puerto de control, puertos pasivos, protocolo y de dónde viene el usuario: lo que hay que rellenar en el equipo |
-| Menú de todas las pantallas | A la izquierda, en pantalla de 1280 px de ancho o más: el símbolo y el nombre, las ocho pestañas en dos grupos (**Operación** y **Sistema**), cada una con su ícono y la pestaña en uso marcada, y, debajo, los botones de idioma **PT**, **EN** y **ES**, el nombre y el papel de quien entró y el botón **Salir**. En pantalla más estrecha, el menú se convierte en una franja arriba, con las pestañas en una línea que se desplaza hacia el lado. Con la instalación publicada, una señal de alerta queda al lado de **Seguridad** |
+| Menú de todas las pantallas | A la izquierda, en pantalla de 1280 px de ancho o más: el símbolo y el nombre, las nueve pestañas en dos grupos (**Operación** y **Sistema**), cada una con su ícono y la pestaña en uso marcada, y, debajo, los botones de idioma **PT**, **EN** y **ES**, el nombre y el papel de quien entró y el botón **Salir**. En pantalla más estrecha, el menú se convierte en una franja arriba, con las pestañas en una línea que se desplaza hacia el lado. Con la instalación publicada, una señal de alerta queda al lado de **Seguridad** |
 | Título de cada pestaña | El nombre de la pestaña y una frase que dice para qué sirve |
 | Pie de página de todas las pantallas | La versión de la stack, el recordatorio de red privada (o, solo para el administrador, cómo está publicada la instalación), la autoría y la dirección del repositorio oficial |
 
@@ -180,7 +181,7 @@ Nada se modifica desde esta pestaña.
 
 <a href="imagenes/visao-geral-alerta-tls.png"><img src="imagenes/visao-geral-alerta-tls.png" alt="Pestaña Visión general con la alerta en la parte superior de que dos usuarios, central-pabx y radio-antigo, entran en el FTP sin TLS, y la tarjeta Servidor FTP indicando TLS obligatorio en el inicio de sesión, con excepción por usuario" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Visión general, alerta de usuario sin TLS · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Visión general, alerta de usuario sin TLS · captura del 2026-10-13</sub>
 
 | Alerta al comienzo de la pantalla | Cuándo aparece | Cómo desaparece |
 |---|---|---|
@@ -210,7 +211,7 @@ La misma alerta abre la pestaña Seguridad. Las condiciones para dispensar a un 
 
 <a href="imagenes/usuarios.png"><img src="imagenes/usuarios.png" alt="Pestaña Usuarios con el botón Nuevo usuario y la lista de las cuentas: primero el administrador admin, con la etiqueta usted, la situación segundo factor activado y el botón Segundo factor, después los usuarios del FTP, cada uno con el perfil debajo del nombre y las etiquetas inicial, límites, limpieza y bloqueado, la carpeta, con la etiqueta compartida en dos, uso, archivos, último envío, la columna TLS, con obligatorio en todas las filas, las acciones Editar, Dispensar del TLS, Cambiar contraseña y Eliminar, más Segundo factor en la cuenta que ya registró el suyo, y, debajo de la lista, el plegado Cómo funcionan los perfiles y las etiquetas" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios · captura del 2026-10-13</sub>
 
 **Para qué sirve:** crear la cuenta de cada equipo o persona, elegir su perfil, elegir y cambiar la carpeta en la que queda confinada, cambiar la contraseña, dar límites propios, permitir el envío de archivos por el panel, activar la limpieza automática de los archivos antiguos, quitar el bloqueo por contraseña incorrecta y eliminar la cuenta, con o sin la carpeta, sin línea de comandos. Es también donde están los administradores del panel.
 
@@ -259,7 +260,7 @@ La pantalla de cada perfil está en [Mis archivos](#meus-arquivos); las reglas, 
 
 <a href="imagenes/usuarios-novo.png"><img src="imagenes/usuarios-novo.png" alt="Formulario Nuevo usuario con el campo Perfil, que lista Administrador, Completo, Envío, Solo envío y Lectura, cada uno con lo que permite, los campos Nombre del usuario, Carpeta, Contraseña y Repita la contraseña, el aviso de carpeta compartida, la casilla Equipo sin soporte de TLS, desmarcada, con la alerta del texto plano, y los botones Crear usuario y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, formulario Nuevo usuario · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, formulario Nuevo usuario · captura del 2026-10-13</sub>
 
 | Campo | Obligatorio | Qué rellenar |
 |---|---|---|
@@ -283,7 +284,7 @@ La pantalla de cada perfil está en [Mis archivos](#meus-arquivos); las reglas, 
 
 <a href="imagenes/usuarios-novo-recusado.png"><img src="imagenes/usuarios-novo-recusado.png" alt="Formulario Nuevo usuario con el mensaje Ya existe un usuario con este nombre encima de los campos" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, registro rechazado · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, registro rechazado · captura del 2026-10-13</sub>
 
 El panel devuelve el formulario con el motivo en la parte superior y no se crea nada.
 
@@ -306,7 +307,7 @@ Una carpeta que pasa por un enlace simbólico, o por un nombre que ya es de un a
 
 <a href="imagenes/usuarios-senha-gerada.png"><img src="imagenes/usuarios-senha-gerada.png" alt="Pantalla Usuario creado con la contraseña generada por el panel, aquí sustituida por REDACTED, y el aviso de que no se mostrará de nuevo" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, contraseña generada · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, contraseña generada · captura del 2026-10-13</sub>
 
 Aparece cuando los dos campos de contraseña quedan en blanco, en el registro o en el cambio de contraseña. La contraseña se muestra **una única vez**: cópiela al equipo o al gestor de contraseñas antes de salir de la pantalla. En la foto, el valor fue cambiado por `<REDACTED>`.
 
@@ -319,7 +320,7 @@ Aparece cuando los dos campos de contraseña quedan en blanco, en el registro o 
 
 <a href="imagenes/usuarios-editar.png"><img src="imagenes/usuarios-editar.png" alt="Pantalla Editar usuario de roteador-borda, con la tarjeta Perfil, que lista los cuatro perfiles del FTP, con lo que cada uno permite, y trae el botón Guardar perfil, la tarjeta Carpeta, que muestra la carpeta actual, dice que está liberada en el panel a olt-centro y trae el campo Carpeta nueva, la tarjeta Otras carpetas, sin ninguna carpeta liberada, con el campo Carpeta a liberar y los tres permisos, la tarjeta TLS, que dice que el usuario solo entra con TLS y trae el botón Dispensar del TLS, la tarjeta Límites rellenada con sesiones, tasas, horario, descargas por el panel, contraseñas incorrectas hasta el bloqueo y minutos de bloqueo, con la casilla que permite el envío de archivos por el panel, y la tarjeta Limpieza automática, desactivada, con el aviso de que la carpeta también es alcanzada por olt-centro" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, pantalla Editar usuario · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, pantalla Editar usuario · captura del 2026-10-13</sub>
 
 Reúne lo que cambia en un usuario sin crearlo de nuevo. El nombre no cambia: es con él que el equipo entra en el FTP.
 
@@ -363,7 +364,7 @@ Administrador no está entre las opciones: administrador y usuario del FTP son r
 
 <a href="imagenes/usuarios-limites-gravados.png"><img src="imagenes/usuarios-limites-gravados.png" alt="Pestaña Usuarios con el mensaje Límites guardados, valen en la próxima entrada del usuario en el FTP, y la etiqueta límites al lado del nombre roteador-borda" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, límites guardados · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, límites guardados · captura del 2026-10-13</sub>
 
 La tarjeta **Límites** de la pantalla **Editar** vale solo para ese usuario, sea la cuenta de un equipo, que solo envía, sea la de una persona, que entra, envía y descarga. Campo en blanco quiere decir sin límite propio: vale el de la stack.
 
@@ -395,7 +396,7 @@ En la foto de la pantalla **Editar**, `roteador-borda` está con 2 sesiones, 204
 
 <a href="imagenes/usuarios-outras-pastas.png"><img src="imagenes/usuarios-outras-pastas.png" alt="Pantalla Editar usuario de olt-centro en la tarjeta Otras carpetas: el aviso Carpeta liberada, la lista con comum/relatorios, de permiso Envío y alcanzada también por consulta-filiais y nobreak-sala, y roteador-borda, de permiso Lectura, la alerta de que roteador-borda es la carpeta de otro usuario, el campo Carpeta a liberar, los permisos Lectura, Envío y Completo y el botón Liberar carpeta" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, tarjeta Otras carpetas · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, tarjeta Otras carpetas · captura del 2026-10-13</sub>
 
 Libera a un usuario carpetas además de la del registro, solo en el panel y cada una con su permiso. La carpeta del registro sigue siendo privada, y por FTP la cuenta sigue entrando solo en ella.
 
@@ -422,7 +423,7 @@ Hasta 20 carpetas por usuario; el perfil Solo envío no recibe ninguna. Las regl
 
 <a href="imagenes/usuarios-editar-limpeza.png"><img src="imagenes/usuarios-editar-limpeza.png" alt="Pantalla Editar usuario de olt-centro en la tarjeta Limpieza automática: el estado Desactivada, los campos Mantener solo los archivos más recientes, con 30, y Borrar el archivo con más de tantos días, con 60, el aviso de que el panel no tiene papelera, el campo Su contraseña actual y el botón Guardar limpieza" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, tarjeta Limpieza automática · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, tarjeta Limpieza automática · captura del 2026-10-13</sub>
 
 La tarjeta **Limpieza automática** de la pantalla **Editar** hace que el panel borre por sí solo los archivos antiguos de la carpeta de ese usuario y de las carpetas de dentro de ella. Nace desactivada: sin regla guardada, ningún archivo se borra solo.
 
@@ -436,7 +437,7 @@ Campo en blanco desactiva esa regla, y los dos en blanco desactivan la limpieza.
 
 <a href="imagenes/usuarios-limpeza-gravada.png"><img src="imagenes/usuarios-limpeza-gravada.png" alt="Pestaña Usuarios con el mensaje Limpieza automática guardada, vale en la próxima pasada del panel, y la etiqueta limpieza al lado del nombre olt-centro" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, limpieza automática guardada · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, limpieza automática guardada · captura del 2026-10-13</sub>
 
 **Resultado esperado:** después de **Guardar limpieza**, la lista vuelve con el mensaje `Limpieza automática guardada. Vale en la próxima pasada del panel.` y la etiqueta `limpieza` al lado del nombre; al pasar el mouse sobre ella, aparece la regla. Guardada con los dos campos en blanco, el mensaje es `Limpieza automática desactivada. Ningún archivo de este usuario se borra solo.`
 
@@ -462,7 +463,7 @@ En la foto, `olt-centro` queda con los 30 archivos más recientes de cada carpet
 
 <a href="imagenes/usuarios-editar-bloqueios.png"><img src="imagenes/usuarios-editar-bloqueios.png" alt="Pantalla Editar usuario de switch-core con la tarjeta Bloqueos: el origen bloqueado, la cantidad de contraseñas incorrectas, la hora del bloqueo, hasta cuándo vale y el botón Desbloquear" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, tarjeta Bloqueos · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, tarjeta Bloqueos · captura del 2026-10-13</sub>
 
 La dirección que falla la contraseña de un usuario en el FTP demasiadas veces queda bloqueada para ese usuario, por el tiempo configurado: hasta entonces, ni la contraseña correcta entra desde allí. En la lista, el nombre gana la etiqueta `bloqueado`; al pasar el mouse sobre ella, aparecen las direcciones.
 
@@ -478,7 +479,7 @@ La dirección que falla la contraseña de un usuario en el FTP demasiadas veces 
 
 <a href="imagenes/usuarios-desbloqueado.png"><img src="imagenes/usuarios-desbloqueado.png" alt="Pestaña Usuarios con el mensaje Bloqueo eliminado, el usuario vuelve a poder entrar en el FTP, y el nombre switch-core sin la etiqueta bloqueado" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, después del desbloqueo · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, después del desbloqueo · captura del 2026-10-13</sub>
 
 **Resultado esperado:** la lista vuelve con el mensaje `Bloqueo eliminado. El usuario vuelve a poder entrar en el FTP.`, sin la etiqueta `bloqueado`, y la entrada siguiente del equipo pasa.
 
@@ -495,7 +496,7 @@ Este es el bloqueo corto, de un usuario para una dirección. La dirección que f
 
 <a href="imagenes/usuarios-trocar-senha.png"><img src="imagenes/usuarios-trocar-senha.png" alt="Formulario Cambiar contraseña del usuario switch-core, con los campos Contraseña y Repita la contraseña y los botones Cambiar contraseña y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, formulario Cambiar contraseña · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, formulario Cambiar contraseña · captura del 2026-10-13</sub>
 
 | Campo | Obligatorio | Qué rellenar |
 |---|---|---|
@@ -513,7 +514,7 @@ Este es el bloqueo corto, de un usuario para una dirección. La dirección que f
 
 <a href="imagenes/usuarios-remover.png"><img src="imagenes/usuarios-remover.png" alt="Pantalla Eliminar usuario de ap-deposito, con el aviso de los archivos de la carpeta, la casilla Borrar también la carpeta y todo lo que hay en ella marcada, el campo Su contraseña actual y los botones Sí, eliminar el usuario y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, confirmación de eliminación · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, confirmación de eliminación · captura del 2026-10-13</sub>
 
 | Elemento de la pantalla | Qué hace |
 |---|---|
@@ -525,13 +526,13 @@ Este es el bloqueo corto, de un usuario para una dirección. La dirección que f
 
 <a href="imagenes/usuarios-removido.png"><img src="imagenes/usuarios-removido.png" alt="Pestaña Usuarios después de la eliminación, con el mensaje Usuario eliminado y carpeta borrada" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, después de la eliminación · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, después de la eliminación · captura del 2026-10-13</sub>
 
 **Resultado esperado:** con la casilla marcada y la contraseña correcta, como en la foto, la lista vuelve con el mensaje `Usuario eliminado y carpeta borrada.` y la carpeta desaparece. Sin la casilla, el mensaje es `Usuario eliminado. Los archivos siguen en la carpeta.`: la carpeta queda en `DATA_DIR/dados` y sigue visible en la pestaña Archivos, donde puede borrarse después.
 
 <a href="imagenes/usuarios-remover-inicial.png"><img src="imagenes/usuarios-remover-inicial.png" alt="Pantalla Eliminar usuario del usuario inicial transfer, con el aviso de que, eliminado, no vuelve en los próximos arranques del servicio ftp, la casilla Borrar también la carpeta y todo lo que hay en ella marcada, el campo Su contraseña actual y los botones Sí, eliminar el usuario y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, eliminación del usuario inicial · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, eliminación del usuario inicial · captura del 2026-10-13</sub>
 
 El usuario inicial, el `FTP_USER` de la instalación (`transfer`, en el ejemplo), se elimina del mismo modo, con o sin la carpeta. La pantalla avisa de que no vuelve en los próximos arranques del servicio `ftp`: para tenerlo de nuevo, cree un usuario con el mismo nombre.
 
@@ -544,7 +545,7 @@ El usuario inicial, el `FTP_USER` de la instalación (`transfer`, en el ejemplo)
 
 <a href="imagenes/usuarios-tls.png"><img src="imagenes/usuarios-tls.png" alt="Pestaña Usuarios con el aviso de que el usuario fue dispensado del TLS y su contraseña y sus archivos pasan en texto plano, la columna TLS, que muestra obligatorio o sin TLS en cada fila, y los botones Dispensar del TLS y Exigir TLS al lado de Editar, Cambiar contraseña y Eliminar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, columna TLS · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, columna TLS · captura del 2026-10-13</sub>
 
 La columna y los dos botones sirven para el equipo antiguo que no habla TLS: solo él queda dispensado, y los demás siguen obligados. Lo mismo se hace en la creación, con la casilla **Equipo sin soporte de TLS** de **Nuevo usuario**, y en la tarjeta **TLS** de la pantalla **Editar**.
 
@@ -558,19 +559,19 @@ La columna y los dos botones sirven para el equipo antiguo que no habla TLS: sol
 
 <a href="imagenes/usuarios-novo-sem-tls.png"><img src="imagenes/usuarios-novo-sem-tls.png" alt="Formulario Nuevo usuario rellenado para central-pabx, con la casilla Equipo sin soporte de TLS marcada y la alerta de que la contraseña y los archivos de este usuario pasan a viajar en texto plano" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, usuario nuevo sin TLS · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, usuario nuevo sin TLS · captura del 2026-10-13</sub>
 
 En la creación, la casilla marcada guarda el usuario ya dispensado, y la lista vuelve con el mensaje `Usuario creado y dispensado del TLS: su contraseña y sus archivos pasan en texto plano.`
 
 <a href="imagenes/usuarios-editar-tls.png"><img src="imagenes/usuarios-editar-tls.png" alt="Pantalla Editar usuario de central-pabx, con la tarjeta TLS avisando de que este usuario entra sin TLS y el botón Exigir TLS" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, tarjeta TLS de la pantalla Editar · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, tarjeta TLS de la pantalla Editar · captura del 2026-10-13</sub>
 
 En la pantalla **Editar**, la tarjeta **TLS** dice cómo entra el usuario y trae el botón para cambiarlo: **Dispensar del TLS** para quien está obligado, **Exigir TLS** para quien está dispensado. Para el usuario que ya existe, el botón abre la confirmación:
 
 <a href="imagenes/usuarios-tls-dispensar.png"><img src="imagenes/usuarios-tls-dispensar.png" alt="Pantalla Dispensar del TLS del usuario radio-antigo, con el aviso de que la contraseña y los archivos pasan a viajar en texto plano y los botones Sí, dejar que este usuario entre sin TLS y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, confirmación de la dispensa del TLS · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, confirmación de la dispensa del TLS · captura del 2026-10-13</sub>
 
 **Resultado esperado:** la lista vuelve con el mensaje `Usuario dispensado del TLS: su contraseña y sus archivos pasan en texto plano.`, su fila muestra `sin TLS` y las pestañas Visión general y Seguridad abren con la alerta. La dispensa vale en instantes, sin derribar a quien está conectado. Al volver a exigir, el mensaje es `El usuario vuelve a estar obligado a usar TLS.`
 
@@ -602,7 +603,7 @@ En la pantalla **Editar**, la tarjeta **TLS** dice cómo entra el usuario y trae
 
 <a href="imagenes/administradores.png"><img src="imagenes/administradores.png" alt="Pestaña Usuarios con tres administradores al comienzo de la lista, admin, con la etiqueta usted, noc-plantao y suporte, cada uno con el perfil Administrador, las sesiones abiertas y la situación del segundo factor, activado en admin y en suporte y a registrar en el próximo inicio de sesión en noc-plantao, y las acciones Cambiar contraseña, Cambiar nombre, Segundo factor y Eliminar, y, debajo de ellos, los usuarios del FTP" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, administradores en la lista · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, administradores en la lista · captura del 2026-10-13</sub>
 
 **Para qué sirve:** dar a cada persona que administra el panel su propio usuario y su propia contraseña, y cambiar el usuario y la contraseña del primer administrador después de la instalación.
 
@@ -627,7 +628,7 @@ Todos tienen el mismo acceso, y lo que cada uno hace queda en la pestaña Log co
 
 <a href="imagenes/administradores-novo.png"><img src="imagenes/administradores-novo.png" alt="Formulario Nuevo usuario con el perfil Administrador marcado: el campo Perfil, los campos Nombre del usuario, Contraseña, Repita la contraseña y Su contraseña actual, sin la carpeta y sin la casilla del TLS, y los botones Crear usuario y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, formulario Nuevo usuario con el perfil Administrador · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, formulario Nuevo usuario con el perfil Administrador · captura del 2026-10-13</sub>
 
 Haga clic en **Nuevo usuario** y marque el perfil **Administrador**: los campos de la carpeta y del TLS dan lugar a su contraseña actual.
 
@@ -650,7 +651,7 @@ Haga clic en **Nuevo usuario** y marque el perfil **Administrador**: los campos 
 
 <a href="imagenes/administradores-trocar-senha.png"><img src="imagenes/administradores-trocar-senha.png" alt="Formulario Cambiar contraseña de administrador, del administrador suporte, con los campos Contraseña, Repita la contraseña y Su contraseña actual y los botones Cambiar contraseña y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, formulario Cambiar contraseña de administrador · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, formulario Cambiar contraseña de administrador · captura del 2026-10-13</sub>
 
 | Campo | Obligatorio | Qué rellenar |
 |---|---|---|
@@ -671,7 +672,7 @@ Es por aquí que la contraseña inicial de la instalación se cambia después de
 
 <a href="imagenes/administradores-trocar-nome.png"><img src="imagenes/administradores-trocar-nome.png" alt="Formulario Cambiar nombre de administrador, del administrador suporte, con el campo Nombre nuevo rellenado con suporte-redes, el campo Su contraseña actual y los botones Cambiar nombre y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, formulario Cambiar nombre de administrador · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, formulario Cambiar nombre de administrador · captura del 2026-10-13</sub>
 
 | Campo | Obligatorio | Qué rellenar |
 |---|---|---|
@@ -691,7 +692,7 @@ Cambiar el nombre del primer administrador desde el panel no toca el `.env`: el 
 
 <a href="imagenes/administradores-remover.png"><img src="imagenes/administradores-remover.png" alt="Pantalla Eliminar administrador pidiendo la confirmación para eliminar noc-plantao, con el campo Su contraseña actual y los botones Sí, eliminar el administrador y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, confirmación de eliminación de administrador · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, confirmación de eliminación de administrador · captura del 2026-10-13</sub>
 
 | Elemento de la pantalla | Qué hace |
 |---|---|
@@ -712,7 +713,7 @@ Cambiar el nombre del primer administrador desde el panel no toca el `.env`: el 
 
 <a href="imagenes/administradores-segundo-fator.png"><img src="imagenes/administradores-segundo-fator.png" alt="Pantalla Activar el segundo factor: la explicación de que el panel pasa a pedir el código de seis dígitos de una aplicación autenticadora, los tres pasos con el código QR y la clave en grupos de cuatro caracteres, el aviso de que la clave no se mostrará de nuevo, los campos Código de la aplicación y Su contraseña actual y los botones Activar el segundo factor y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, pantalla Activar el segundo factor, con el segundo factor opcional y una clave de ejemplo que no fue guardada · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, pantalla Activar el segundo factor, con el segundo factor opcional y una clave de ejemplo que no fue guardada · captura del 2026-10-13</sub>
 
 Con el segundo factor obligatorio, que es el valor por defecto, cada cuenta registra el suyo en la entrada: vea [Entrar ➜ Registre el segundo factor](#entrar). Esta pantalla es la del segundo factor opcional (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO=nao`) y la de quien desactivó el suyo y quiere registrarlo de nuevo sin salir del panel: haga clic en **Segundo factor** en la fila de la propia cuenta. Cada administrador activa el suyo, con cualquier aplicación autenticadora de código por tiempo (TOTP).
 
@@ -733,7 +734,7 @@ Con el segundo factor obligatorio, que es el valor por defecto, cada cuenta regi
 
 <a href="imagenes/administradores-segundo-fator-desligar.png"><img src="imagenes/administradores-segundo-fator-desligar.png" alt="Pantalla Desactivar el segundo factor, de la cuenta suporte, con el segundo factor obligatorio: el aviso de que la cuenta registra una aplicación de nuevo en el próximo inicio de sesión, con una clave nueva, y de que la clave guardada se borra, la alerta para cambiar también la contraseña cuando el dispositivo fue perdido o robado, el campo Su contraseña actual y los botones Sí, desactivar el segundo factor y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, pantalla Desactivar el segundo factor, de la cuenta de otro administrador · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, pantalla Desactivar el segundo factor, de la cuenta de otro administrador · captura del 2026-10-13</sub>
 
 Con el segundo factor activado, el mismo botón **Segundo factor** abre esta pantalla, en la propia fila o en la de otro administrador: es el camino de quien perdió el dispositivo. Con el segundo factor obligatorio, desactivar es mandar a la cuenta a registrarse de nuevo: en la entrada siguiente, pasa por la pantalla Registre el segundo factor, con una clave nueva.
 
@@ -751,7 +752,7 @@ Con el segundo factor activado, el mismo botón **Segundo factor** abre esta pan
 
 <a href="imagenes/usuarios-segundo-fator.png"><img src="imagenes/usuarios-segundo-fator.png" alt="Pantalla Desactivar el segundo factor, de la cuenta olt-centro, de usuario del FTP: el aviso de que la cuenta registra una aplicación de nuevo en el próximo inicio de sesión, con una clave nueva, y de que la clave guardada se borra, la alerta para cambiar también la contraseña cuando el dispositivo fue perdido o robado, el campo Su contraseña actual y los botones Sí, desactivar el segundo factor y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, pantalla Desactivar el segundo factor, de un usuario del FTP · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, pantalla Desactivar el segundo factor, de un usuario del FTP · captura del 2026-10-13</sub>
 
 El usuario del FTP registra su segundo factor en la entrada del panel, y solo allí. Después de eso, su fila en la pestaña Usuarios gana el botón **Segundo factor**, que abre esta pantalla: el administrador solo lo desactiva, no ve la clave y no lo registra por él. Vale solo para el panel: en el FTP, la cuenta sigue entrando con la contraseña.
 
@@ -796,7 +797,7 @@ El usuario del FTP registra su segundo factor en la entrada del panel, y solo al
 
 <a href="imagenes/arquivos.png"><img src="imagenes/arquivos.png" alt="Pestaña Archivos en el primer nivel, con la lista de las carpetas de los usuarios, la fecha de cada una, los botones Renombrar y Borrar en cada fila y las tarjetas Nueva carpeta y Enviar archivo" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Archivos · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Archivos · captura del 2026-10-13</sub>
 
 **Para qué sirve:** ver lo que cada equipo envió, descargar una copia de seguridad por el navegador, enviar un archivo a cualquier carpeta, crear la carpeta de un usuario nuevo, cambiar el nombre y borrar archivos y carpetas, sin cliente de FTP.
 
@@ -824,7 +825,7 @@ El panel navega, descarga, envía, crea carpetas, cambia el nombre y borra. Los 
 
 <a href="imagenes/arquivos-pasta.png"><img src="imagenes/arquivos-pasta.png" alt="Pestaña Archivos dentro de la carpeta roteador-borda, con la ruta en lo alto, la fila que dice de qué usuario del FTP es la carpeta, el botón Nuevo usuario en esta carpeta y los botones Descargar, Renombrar y Borrar en cada archivo" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Archivos, carpeta de un usuario · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Archivos, carpeta de un usuario · captura del 2026-10-13</sub>
 
 1. Haga clic en el nombre de la carpeta para entrar.
 2. Verifique, en la línea `Carpeta del usuario del FTP`, de quién es la carpeta.
@@ -847,7 +848,7 @@ El panel navega, descarga, envía, crea carpetas, cambia el nombre y borra. Los 
 
 <a href="imagenes/arquivos-pasta-criada.png"><img src="imagenes/arquivos-pasta-criada.png" alt="Pestaña Archivos con el mensaje Carpeta creada y la carpeta clientes en la lista" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Archivos, carpeta creada · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Archivos, carpeta creada · captura del 2026-10-13</sub>
 
 | Campo | Obligatorio | Qué rellenar |
 |---|---|---|
@@ -871,7 +872,7 @@ El panel navega, descarga, envía, crea carpetas, cambia el nombre y borra. Los 
 
 <a href="imagenes/arquivos-enviado.png"><img src="imagenes/arquivos-enviado.png" alt="Pestaña Archivos dentro de la carpeta clientes, con el mensaje Archivo enviado, el archivo planilha-de-clientes.csv en la lista y la tarjeta Enviar archivo, con los campos Guardar con el nombre y Archivo y el botón Enviar archivo" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Archivos, después del envío · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Archivos, después del envío · captura del 2026-10-13</sub>
 
 1. Entre en la carpeta en la que debe quedar el archivo.
 2. En la tarjeta **Enviar archivo**, elija el archivo.
@@ -908,7 +909,7 @@ El panel navega, descarga, envía, crea carpetas, cambia el nombre y borra. Los 
 
 <a href="imagenes/arquivos-enviado-ao-destino.png"><img src="imagenes/arquivos-enviado-ao-destino.png" alt="Pestaña Archivos dentro de la carpeta clientes, con el mensaje Almacenamiento S3: archivo enviado y, en la fila del archivo planilha-de-clientes.csv, los botones Descargar, Telegram, rclone, S3, Renombrar y Borrar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Archivos, después del envío a un destino · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Archivos, después del envío a un destino · captura del 2026-10-13</sub>
 
 Después de que un destino se guarda en la pestaña [Destinos](#destinos), cada archivo gana un botón con su nombre, **Telegram**, **rclone** o **S3**, al lado de **Descargar**. El botón envía ese archivo al destino en el acto, sin esperar la pasada.
 
@@ -918,7 +919,7 @@ Después de que un destino se guarda en la pestaña [Destinos](#destinos), cada 
 
 <a href="imagenes/arquivos-escolher-destino.png"><img src="imagenes/arquivos-escolher-destino.png" alt="Pantalla Enviar este archivo al almacenamiento S3, con la ruta del archivo, la frase que dice que sigue en el servidor y que el avance de las pasadas no cambia, la elección Destino que recibe con Almacenamiento S3 y Almacenamiento S3: Clientes, cada uno con el bucket y el prefijo, y los botones Enviar y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Archivos, elección del destino · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Archivos, elección del destino · captura del 2026-10-13</sub>
 
 **Resultado esperado:** la pantalla vuelve a la misma carpeta con el mensaje `Almacenamiento S3: archivo enviado.`, `Remoto del rclone: archivo enviado.` o `Bot de Telegram: archivo enviado.`, con el nombre del destino cuando tiene uno, y la pestaña Log gana la línea `Archivo enviado al destino a pedido`, con el administrador, el destino y el archivo.
 
@@ -943,7 +944,7 @@ Después de que un destino se guarda en la pestaña [Destinos](#destinos), cada 
 
 <a href="imagenes/arquivos-renomear.png"><img src="imagenes/arquivos-renomear.png" alt="Pantalla Renombrar del archivo switch-core-antigo.cfg, con la carpeta en la que está, el campo Nombre nuevo rellenado, el campo Su contraseña actual y los botones Cambiar nombre y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Archivos, pantalla Renombrar · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Archivos, pantalla Renombrar · captura del 2026-10-13</sub>
 
 | Campo | Obligatorio | Qué rellenar |
 |---|---|---|
@@ -952,7 +953,7 @@ Después de que un destino se guarda en la pestaña [Destinos](#destinos), cada 
 
 <a href="imagenes/arquivos-renomeado.png"><img src="imagenes/arquivos-renomeado.png" alt="Pestaña Archivos dentro de la carpeta switch-core, con el mensaje Nombre cambiado y el archivo con el nombre nuevo en la lista" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Archivos, después del cambio de nombre · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Archivos, después del cambio de nombre · captura del 2026-10-13</sub>
 
 **Resultado esperado:** la carpeta vuelve con el mensaje `Nombre cambiado.` y el elemento con el nombre nuevo, en el mismo lugar. El panel no mueve de una carpeta a otra, y el equipo que escribe con el nombre antiguo crea otro archivo en el envío siguiente.
 
@@ -972,7 +973,7 @@ Después de que un destino se guarda en la pestaña [Destinos](#destinos), cada 
 
 <a href="imagenes/arquivos-apagar.png"><img src="imagenes/arquivos-apagar.png" alt="Pantalla Borrar del archivo teste-de-envio.txt, con su tamaño, su fecha y su carpeta, el aviso de que el panel no tiene papelera, la casilla de confirmación marcada, el campo Su contraseña actual y los botones Borrar definitivamente y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Archivos, confirmación de borrar · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Archivos, confirmación de borrar · captura del 2026-10-13</sub>
 
 | Elemento de la pantalla | Qué hace |
 |---|---|
@@ -984,7 +985,7 @@ Después de que un destino se guarda en la pestaña [Destinos](#destinos), cada 
 
 <a href="imagenes/arquivos-apagado.png"><img src="imagenes/arquivos-apagado.png" alt="Pestaña Archivos dentro de la carpeta switch-core, con el mensaje Borrado y la lista sin el archivo teste-de-envio.txt" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Archivos, después de borrar · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Archivos, después de borrar · captura del 2026-10-13</sub>
 
 **Resultado esperado:** la carpeta vuelve con el mensaje `Borrado.` y sin el elemento, y la pestaña Log gana la línea `Archivo o carpeta borrado`.
 
@@ -999,7 +1000,7 @@ Después de que un destino se guarda en la pestaña [Destinos](#destinos), cada 
 
 <a href="imagenes/arquivos-pasta-de-usuario.png"><img src="imagenes/arquivos-pasta-de-usuario.png" alt="Pantalla Carpeta de usuario del FTP, que rechaza borrar la carpeta roteador-borda por ser la carpeta de un usuario e indica Usuarios, Editar y Usuarios, Eliminar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Archivos, carpeta de usuario rechazada · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Archivos, carpeta de usuario rechazada · captura del 2026-10-13</sub>
 
 La carpeta de un usuario del FTP, y la carpeta que tiene dentro la de un usuario, no se renombra ni se borra desde la pestaña Archivos: el registro quedaría apuntando a una carpeta que no existe. Para dar otra carpeta al usuario, use **Usuarios ➜ Editar**; para borrar la carpeta junto con él, **Usuarios ➜ Eliminar**. Lo que está dentro de ella se renombra y se borra elemento por elemento.
 
@@ -1029,7 +1030,7 @@ La carpeta de un usuario del FTP, y la carpeta que tiene dentro la de un usuario
 
 <a href="imagenes/meus-arquivos.png"><img src="imagenes/meus-arquivos.png" alt="Pantalla Mis archivos del usuario olt-centro, de perfil Completo, con las carpetas 2026-09 y 2026-10 y un archivo de configuración, el aviso de la limpieza automática encima de la lista, los botones Abrir o Descargar, Renombrar y Borrar en cada fila, las tarjetas Nueva carpeta y Enviar archivo y, en el menú, solo la pestaña Mis archivos, los botones PT, EN y ES, el nombre del usuario y el botón Salir" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla Mis archivos, del usuario del FTP de perfil Completo · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla Mis archivos, del usuario del FTP de perfil Completo · captura del 2026-10-13</sub>
 
 **Para qué sirve:** el dueño de los archivos navega por su propia carpeta y descarga las copias de seguridad por el navegador, sin depender de quien administra y sin cuenta nueva. Lo demás que hace depende del perfil de la cuenta y, en el envío de archivos, del permiso que da el administrador.
 
@@ -1059,7 +1060,7 @@ En esta pantalla, el usuario ve solo la carpeta de su registro y lo que hay dent
 
 <a href="imagenes/meus-arquivos-pasta.png"><img src="imagenes/meus-arquivos-pasta.png" alt="Pantalla Mis archivos del usuario olt-centro dentro de la carpeta 2026-10, con diez archivos de copia de seguridad, el tamaño y la fecha de cada uno y los botones Descargar, Renombrar y Borrar en cada fila" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla Mis archivos, dentro de una carpeta · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla Mis archivos, dentro de una carpeta · captura del 2026-10-13</sub>
 
 1. Haga clic en el nombre de la carpeta para entrar.
 2. Haga clic en **Descargar** en la fila del archivo.
@@ -1082,7 +1083,7 @@ En esta pantalla, el usuario ve solo la carpeta de su registro y lo que hay dent
 
 <a href="imagenes/meus-arquivos-enviado.png"><img src="imagenes/meus-arquivos-enviado.png" alt="Pantalla Mis archivos del usuario olt-centro con el mensaje Archivo enviado, el archivo olt-centro-manual.cfg en la lista y la tarjeta Enviar archivo, con los campos Guardar con el nombre y Archivo y el botón Enviar archivo" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla Mis archivos, después del envío · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla Mis archivos, después del envío · captura del 2026-10-13</sub>
 
 La tarjeta **Enviar archivo** aparece para la cuenta que tiene el permiso **Permitir que este usuario envíe archivos por el panel**, marcado por el administrador en [Usuarios ➜ Límites](#usuarios). El perfil Lectura no envía, con o sin el permiso.
 
@@ -1114,7 +1115,7 @@ La tarjeta **Enviar archivo** aparece para la cuenta que tiene el permiso **Perm
 
 <a href="imagenes/meus-arquivos-envio.png"><img src="imagenes/meus-arquivos-envio.png" alt="Pantalla Mis archivos del usuario roteador-borda, de perfil Envío, con los archivos de copia de seguridad del router, solo el botón Descargar en cada fila y el formulario Nueva carpeta, sin Renombrar, Borrar ni Enviar archivo" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla Mis archivos, perfil Envío · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla Mis archivos, perfil Envío · captura del 2026-10-13</sub>
 
 La cuenta de perfil Envío navega, descarga y crea carpetas. No hay **Renombrar** ni **Borrar**: lo que ya llegó al servidor queda como llegó, en el FTP y en el panel. En la foto, `roteador-borda` no tiene el permiso de envío por el panel, y la tarjeta **Enviar archivo** no aparece.
 
@@ -1127,7 +1128,7 @@ La cuenta de perfil Envío navega, descarga y crea carpetas. No hay **Renombrar*
 
 <a href="imagenes/meus-arquivos-leitura.png"><img src="imagenes/meus-arquivos-leitura.png" alt="Pantalla Mis archivos del usuario consulta-filiais, de perfil Lectura, con la carpeta olt-norte y solo el botón Abrir, sin Nueva carpeta, Renombrar ni Borrar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla Mis archivos, perfil Lectura · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla Mis archivos, perfil Lectura · captura del 2026-10-13</sub>
 
 La cuenta de perfil Lectura solo navega y descarga, y no envía por ningún camino. En la foto, la carpeta de `consulta-filiais` es `filiais`, que tiene dentro la carpeta de `olt-filial-norte`: la cuenta de consulta descarga lo que la OLT envió y no escribe nada.
 
@@ -1140,7 +1141,7 @@ La cuenta de perfil Lectura solo navega y descarga, y no envía por ningún cami
 
 <a href="imagenes/meus-arquivos-so-envio.png"><img src="imagenes/meus-arquivos-so-envio.png" alt="Pantalla Envío de archivos del usuario olt-pop-sul, de perfil Solo envío, con la tarjeta Enviar archivo, la ruta de cada archivo en tres pasos, del equipo hasta la carpeta del usuario, los datos para enviar por FTP y la explicación de lo que hace la cuenta, sin lista de archivos" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla Envío de archivos, perfil Solo envío · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla Envío de archivos, perfil Solo envío · captura del 2026-10-13</sub>
 
 La cuenta de perfil Solo envío no ve las copias de seguridad, ni las que ella misma envió. En lugar de Mis archivos, abre la pantalla **Envío de archivos**, que explica la ruta del archivo y trae los datos para configurar el equipo.
 
@@ -1164,7 +1165,7 @@ Quien necesita verificar o descargar lo que se envió se lo pide a un administra
 
 <a href="imagenes/pasta-liberada.png"><img src="imagenes/pasta-liberada.png" alt="Pantalla Carpeta liberada del usuario olt-centro en la carpeta comum/relatorios: el menú con Mis archivos y el grupo Carpetas liberadas, con relatorios y roteador-borda, la lista con una carpeta y cuatro archivos, cada uno con el botón Descargar, y las tarjetas Enviar archivo y Nueva carpeta" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla Carpeta liberada, permiso Envío · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla Carpeta liberada, permiso Envío · captura del 2026-10-13</sub>
 
 Cada carpeta que el administrador liberó a la cuenta gana una entrada en el menú, en el grupo **Carpetas liberadas**, con el último nombre de la ruta; la ruta entera aparece en lo alto de la pantalla. La pantalla funciona como Mis archivos, con lo que el permiso de esa carpeta deja hacer, y no el perfil de la cuenta.
 
@@ -1202,7 +1203,7 @@ El recogido **Qué puede hacer esta cuenta** dice que la carpeta fue liberada po
 
 <a href="imagenes/destinos.png"><img src="imagenes/destinos.png" alt="Pestaña Destinos con la tarjeta Copia del sistema en lo alto, plegada y marcada como no configurada, la tarjeta Almacenamiento S3 activada, con la dirección, el bucket y el prefijo, la región, la carpeta enviada, las pasadas cada 60 minutos, Copiar después del envío, las claves guardadas sin aparecer en la pantalla, la última pasada y el total enviado, la tarjeta Remoto del rclone: Servidor de archivos activada, con el tipo SFTP, la carpeta en el remoto, la carpeta enviada, las pasadas cada 60 minutos, Copiar después del envío, el acceso guardado sin aparecer en la pantalla, la clave del servidor con la huella digital, la última pasada y el total enviado, la tarjeta Bot de Telegram activada, con la carpeta, las pasadas cada 5 minutos, el mayor archivo que el bot envía, el idioma de los mensajes, la última pasada y el total enviado, los botones Probar, Enviar ahora, Modificar, Nuevo con el mismo acceso y Eliminar en cada tarjeta y, en lo alto de la pantalla, los botones Nuevo S3, Nuevo remoto y Nuevo bot y la explicación Cómo envía el panel, plegada" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos · captura del 2026-10-13</sub>
 
 **Para qué sirve:** mandar por sí solo, fuera del servidor, los archivos que llegan a una carpeta. Son tres tipos de destino, con hasta 20 de cada uno: el almacenamiento S3, que guarda la segunda copia o se queda con los archivos y libera el disco, el remoto del rclone, que lleva la carpeta a un servidor de archivos, a una nube de archivos, al almacenamiento de un proveedor de nube o a un servicio de transferencia de archivos, en 41 tipos, y el bot de Telegram, que entrega cada archivo nuevo a una persona, a un grupo o a un canal.
 
@@ -1242,7 +1243,7 @@ Cada destino tiene su carpeta, su intervalo y sus secretos, y uno no depende del
 
 <a href="imagenes/destinos-sem-destino.png"><img src="imagenes/destinos-sem-destino.png" alt="Pestaña Destinos de una instalación nueva, con la tarjeta Copia del sistema plegada y marcada como no configurada, y las tarjetas Almacenamiento S3, Remoto del rclone y Bot de Telegram marcadas como no configurado, cada una con la explicación de lo que envía y el botón Configurar, y, en lo alto de la pantalla, la explicación Cómo envía el panel, plegada" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, sin destino guardado · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, sin destino guardado · captura del 2026-10-13</sub>
 
 La instalación nace sin destino: mientras el administrador no guarde uno, nada sale del servidor y el panel no abre conexión hacia afuera. Cada tarjeta dice lo que hace el destino y lleva a su formulario, por el botón **Configurar**.
 
@@ -1255,7 +1256,7 @@ La instalación nace sin destino: mientras el administrador no guarde uno, nada 
 
 <a href="imagenes/destinos-s3.png"><img src="imagenes/destinos-s3.png" alt="Formulario Almacenamiento S3 rellenado con un servicio de ejemplo: dirección del servicio, región, bucket, prefijo, dirección del bucket en la ruta, clave de acceso de ejemplo, clave secreta enmascarada, el campo Nombre, la casilla Activado, la carpeta enviada, el intervalo de 60 minutos, Copiar después del envío, los avisos sobre Conservar en S3 y sobre el nombre del objeto, el campo Su contraseña actual y los botones Guardar y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, formulario del S3 · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, formulario del S3 · captura del 2026-10-13</sub>
 
 Sirve cualquier servicio que hable el protocolo del S3, en la nube o en la red interna. Antes de empezar, cree el bucket en el servicio y una clave que solo pueda escribir en él.
 
@@ -1282,7 +1283,7 @@ Sirve cualquier servicio que hable el protocolo del S3, en la nube o en la red i
 
 <a href="imagenes/destinos-gravado.png"><img src="imagenes/destinos-gravado.png" alt="Pestaña Destinos con el aviso Destino guardado, vale a partir de la próxima pasada, la tarjeta Copia del sistema plegada, no configurada, las tarjetas Almacenamiento S3 y Bot de Telegram activadas, cada una con lo que se guardó, los secretos guardados sin aparecer en la pantalla y la última pasada como ninguna todavía, y la tarjeta Remoto del rclone todavía no configurado" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, después de guardar · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, después de guardar · captura del 2026-10-13</sub>
 
 **Resultado esperado:** la pestaña vuelve con el aviso `Destino guardado. Vale a partir de la próxima pasada.`, y la tarjeta muestra la etiqueta `activado`, la dirección, el bucket, la carpeta y que las claves están guardadas, sin mostrarlas. La primera pasada empieza en hasta un minuto y envía todo lo que ya está en la carpeta.
 
@@ -1305,7 +1306,7 @@ Sirve cualquier servicio que hable el protocolo del S3, en la nube o en la red i
 
 <a href="imagenes/destinos-rclone-tipo.png"><img src="imagenes/destinos-rclone-tipo.png" alt="Pantalla Remoto del rclone: nuevo destino, con la frase que dice que el remoto solo recibe, la lista de selección Tipo del remoto todavía en Elija en la lista, el aviso de que el tipo queda fijo después de guardado, el aviso de que un servicio compatible con S3 usa el destino S3 y los botones Continuar y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, elección del tipo del remoto · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, elección del tipo del remoto · captura del 2026-10-13</sub>
 
 El rclone es el programa de envío de archivos que viene dentro de la imagen del panel. Por él, la carpeta va a lo que el S3 no alcanza, en 41 tipos de remoto: servidores de archivos (SFTP, WebDAV, FTP con TLS y Seafile), nubes de archivos (Google Drive, OneDrive, Dropbox, pCloud, Box, Mega y otras), almacenamiento de proveedores de nube y servicios de transferencia de archivos para empresas. El remoto solo recibe: el panel no lista, no descarga, no sincroniza y no borra nada en él.
 
@@ -1314,7 +1315,7 @@ El rclone es el programa de envío de archivos que viene dentro de la imagen del
 
 <a href="imagenes/destinos-rclone.png"><img src="imagenes/destinos-rclone.png" alt="Formulario Remoto del rclone del tipo SFTP, rellenado con un servidor de ejemplo: la carpeta en el remoto copias, el nombre Servidor de archivos, la casilla Activado, la carpeta enviada olt-centro, el intervalo de 60 minutos y, en el acceso del remoto, el servidor, el puerto en blanco, el usuario, la contraseña enmascarada y los campos Clave privada, Frase de la clave privada y Clave pública del servidor en blanco, la explicación de la ruta del archivo en el remoto, el campo Su contraseña actual y los botones Guardar y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, formulario del remoto SFTP · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, formulario del remoto SFTP · captura del 2026-10-13</sub>
 
 3. Rellene la **Carpeta en el remoto**, la **Carpeta enviada** y el **Intervalo entre las pasadas**.
 4. En **Acceso del remoto**, rellene los campos del tipo elegido.
@@ -1340,17 +1341,17 @@ Los campos del acceso cambian con el tipo. Los de los otros 40 tipos están en [
 
 <a href="imagenes/destinos-rclone-mega.png"><img src="imagenes/destinos-rclone-mega.png" alt="Formulario del remoto del rclone del tipo Mega, rellenado con una cuenta de ejemplo: la carpeta en el remoto copias, el nombre Nube de archivos, la casilla Activado, la carpeta enviada olt-centro, el intervalo de 60 minutos y, en el acceso del remoto, el aviso de que una cuenta con verificación en dos pasos no sirve de destino, el usuario y la contraseña enmascarada, la explicación de la ruta del archivo en el remoto, el campo Su contraseña actual y los botones Guardar y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, formulario del remoto Mega, con una cuenta de ejemplo que no se guardó · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, formulario del remoto Mega, con una cuenta de ejemplo que no se guardó · captura del 2026-10-13</sub>
 
 <a href="imagenes/destinos-rclone-gravado.png"><img src="imagenes/destinos-rclone-gravado.png" alt="Pestaña Destinos con el aviso Destino guardado, vale a partir de la próxima pasada, los botones Nuevo S3, Nuevo remoto y Nuevo bot en lo alto y la tarjeta Remoto del rclone: Servidor de archivos con la etiqueta falta probar, el aviso de que el panel todavía no guardó la clave de este servidor y que hasta Probar no se envía nada, el tipo SFTP, la carpeta en el remoto copias, la carpeta enviada olt-centro, las pasadas cada 60 minutos, Copiar después del envío, el acceso guardado sin aparecer en la pantalla y la última pasada como ninguna todavía, al lado de las tarjetas Almacenamiento S3 y Bot de Telegram" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, remoto guardado y todavía sin la prueba · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, remoto guardado y todavía sin la prueba · captura del 2026-10-13</sub>
 
 6. De vuelta en la pestaña, haga clic en **Probar** en la tarjeta del remoto.
 
 <a href="imagenes/destinos-rclone-testado.png"><img src="imagenes/destinos-rclone-testado.png" alt="Pestaña Destinos con el aviso Prueba concluida: el destino recibió, y la tarjeta Remoto del rclone: Servidor de archivos con la etiqueta activado y la línea Clave del servidor, con el tipo de la clave y su huella digital, al lado de las tarjetas Almacenamiento S3 y Bot de Telegram" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, remoto después de la prueba · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, remoto después de la prueba · captura del 2026-10-13</sub>
 
 **Resultado esperado:** al guardar, la pestaña vuelve con el aviso `Destino guardado. Vale a partir de la próxima pasada.` y la tarjeta del remoto, con el tipo, la carpeta en el remoto, la carpeta enviada y el acceso guardado, sin mostrarlo. En el SFTP, la tarjeta queda con la etiqueta `falta probar`. La prueba guarda el archivo `allsafe-ftp-stack-teste.txt` en la carpeta del remoto y responde `Prueba concluida: el destino recibió.`; la tarjeta pasa a `activado` y gana la línea **Clave del servidor**, con la huella digital para compararla con la del servidor. La primera pasada empieza en hasta un minuto y envía todo lo que ya está en la carpeta.
 
@@ -1384,7 +1385,7 @@ Los campos del acceso cambian con el tipo. Los de los otros 40 tipos están en [
 
 <a href="imagenes/destinos-telegram.png"><img src="imagenes/destinos-telegram.png" alt="Formulario Bot de Telegram con la frase que dice que el bot solo envía, el token del bot enmascarado, la conversación que recibe con un nombre de canal de ejemplo, el campo Nombre, la casilla Activado, la carpeta enviada, el intervalo de 5 minutos, el idioma de los mensajes, la explicación del límite de 50 MiB por archivo y del envío en instantes, el campo Su contraseña actual y los botones Guardar y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, formulario del bot · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, formulario del bot · captura del 2026-10-13</sub>
 
 Antes de empezar, cree el bot en el creador de bots de Telegram y guarde el token que entrega. Ponga el bot en el grupo o en el canal que va a recibir; para una persona, ella tiene que haber iniciado la conversación con el bot.
 
@@ -1422,7 +1423,7 @@ Antes de empezar, cree el bot en el creador de bots de Telegram y guarde el toke
 
 <a href="imagenes/destinos-mesmo-acesso.png"><img src="imagenes/destinos-mesmo-acesso.png" alt="Formulario Almacenamiento S3: nuevo destino, con la frase que dice que el secreto dejado en blanco se copia del destino Almacenamiento S3 dentro del servidor, la dirección, la región y el bucket ya rellenados con los de él, el prefijo clientes, las dos claves en blanco con la leyenda en blanco usa el del destino de origen, el nombre Clientes, la casilla Activado, la carpeta enviada clientes, el intervalo de 60 minutos, Copiar después del envío, el campo Su contraseña actual y los botones Guardar y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, destino nuevo con el acceso de otro · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, destino nuevo con el acceso de otro · captura del 2026-10-13</sub>
 
 Cada tipo acepta hasta 20 destinos. El destino nuevo puede usar el acceso de uno que ya funciona: sirve para mandar otra carpeta al mismo bucket, la misma carpeta a otro bucket, otra carpeta al mismo servidor por el rclone u otra carpeta a otro grupo por el mismo bot.
 
@@ -1432,7 +1433,7 @@ Cada tipo acepta hasta 20 destinos. El destino nuevo puede usar el acceso de uno
 
 <a href="imagenes/destinos-varios.png"><img src="imagenes/destinos-varios.png" alt="Pestaña Destinos con el aviso Destino guardado, los botones Nuevo S3, Nuevo remoto y Nuevo bot en lo alto, la tarjeta Copia del sistema plegada y cuatro tarjetas activadas: Almacenamiento S3, con el prefijo copias y la carpeta roteador-borda; Almacenamiento S3: Clientes, con la misma dirección y el mismo bucket, el prefijo clientes, la carpeta clientes y ninguna pasada todavía; Remoto del rclone: Servidor de archivos, con la carpeta olt-centro; y Bot de Telegram, con la carpeta clientes" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, con dos destinos S3 · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, con dos destinos S3 · captura del 2026-10-13</sub>
 
 **Resultado esperado:** la pestaña vuelve con el aviso `Destino guardado. Vale a partir de la próxima pasada.` y una tarjeta más, con el tipo y el nombre dado. El secreto dejado en blanco se copió del otro destino dentro del servidor, sin pasar por el navegador.
 
@@ -1453,7 +1454,7 @@ Cada tipo acepta hasta 20 destinos. El destino nuevo puede usar el acceso de uno
 
 <a href="imagenes/destinos-teste.png"><img src="imagenes/destinos-teste.png" alt="Pestaña Destinos con el aviso Prueba concluida, el destino recibió, encima de la tarjeta Copia del sistema, plegada, y de las tarjetas Almacenamiento S3, Remoto del rclone y Bot de Telegram, cada una de estas con la fecha de la última pasada" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, después de la prueba · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, después de la prueba · captura del 2026-10-13</sub>
 
 1. En la tarjeta del destino, haga clic en **Probar**.
 2. Para no esperar el intervalo, haga clic en **Enviar ahora** y actualice la pantalla enseguida.
@@ -1478,7 +1479,7 @@ Qué quiere decir cada motivo y qué hacer está en [Solución de problemas](../
 
 <a href="imagenes/destinos-copia.png"><img src="imagenes/destinos-copia.png" alt="Formulario Copia del sistema, con la frase que dice que la copia lleva las carpetas auth, dados, certs y painel, cifradas con la clave pública de la copia, y que el .env y los secretos no entran, la opción Almacenamiento S3 que recibe con los dos destinos guardados, la Carpeta en el bucket con copia-do-sistema, la Rutina de 1 día, la Hora de la rutina a las 03:00, el campo Su contraseña actual y los botones Guardar y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, formulario de la copia del sistema · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, formulario de la copia del sistema · captura del 2026-10-13</sub>
 
 La tarjeta **Copia del sistema**, en lo alto de la pestaña, envía el sistema entero, cifrado, a uno de los almacenamientos S3 guardados. Queda plegada: un clic en el título la abre. Abierta, ofrece el **Configurar** después de que existe un S3 con los secretos.
 
@@ -1490,7 +1491,7 @@ La tarjeta **Copia del sistema**, en lo alto de la pestaña, envía el sistema e
 
 <a href="imagenes/destinos-copia-feita.png"><img src="imagenes/destinos-copia-feita.png" alt="Pestaña Destinos con la tarjeta Copia del sistema en lo alto, abierta, con la marca rutina activada, el destino Almacenamiento S3, el bucket backups-da-rede y la carpeta copia-do-sistema, la rutina de todos los días a las 03:00, la línea Última copia con la fecha, el tamaño, la cantidad de archivos y el nombre del objeto, y los botones Copiar y enviar ahora y Modificar, encima de las tarjetas de los dos almacenamientos S3, del Remoto del rclone y del Bot de Telegram" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, después de la copia del sistema · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, después de la copia del sistema · captura del 2026-10-13</sub>
 
 **Resultado esperado:** al guardar, el aviso es `Copia del sistema guardada. La rutina vale a partir de ahora.`; después del botón, `Copia del sistema solicitada: se hace en segundo plano. Actualice la pantalla para seguirla.` Al final, la línea **Última copia** trae la fecha, el tamaño, la cantidad de archivos y el nombre del objeto guardado en el bucket.
 
@@ -1514,7 +1515,7 @@ El funcionamiento completo está en [Copia del sistema a S3](../panel.md#copia-d
 
 <a href="imagenes/destinos-remover.png"><img src="imagenes/destinos-remover.png" alt="Pantalla Eliminar destino del Bot de Telegram, con la frase que dice qué borra el panel y que ningún archivo del servidor sale, el campo Su contraseña actual y los botones Sí, eliminar el destino y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Destinos, confirmación de eliminación · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Destinos, confirmación de eliminación · captura del 2026-10-13</sub>
 
 1. En la tarjeta del destino, haga clic en **Eliminar**.
 2. Escriba su contraseña y haga clic en **Sí, eliminar el destino**.
@@ -1543,7 +1544,7 @@ El funcionamiento completo está en [Copia del sistema a S3](../panel.md#copia-d
 
 <a href="imagenes/servidor.png"><img src="imagenes/servidor.png" alt="Pestaña Servidor con el botón Actualizar sola, la tarjeta Contenedores de la stack, con un cuadro para el Servidor FTP, uno para el Panel y uno para el Frente web, cada uno con procesador, memoria y procesos en uso y asignados, el gráfico de los últimos minutos y la parte del tiempo en que se alcanzó el límite de procesador, y la tarjeta Recursos del servidor, con procesador, memoria, disco y red del FTP" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Servidor · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Servidor · captura del 2026-10-13</sub>
 
 **Para qué sirve:** seguir cuánto usa cada contenedor de la stack de lo que se le asignó y cuánto sobra en la máquina en que corre la stack.
 
@@ -1578,13 +1579,69 @@ Esta pestaña no modifica nada, y solo el administrador la ve. Los límites de c
 
 ---
 
+<a name="servico"></a>
+
+## 📊 Servicio
+
+<a href="imagenes/servico.png"><img src="imagenes/servico.png" alt="Pestaña Servicio con la sección Lo que guarda el servicio, en cuatro medidas (Usuarios, Archivos, Espacio usado y Carpetas), la sección Envío a los destinos, con la franja Destinos, Enviados, En la cola y No enviados y una tarjeta para cada destino de ejemplo y para la Copia del sistema, y la sección Tamaño de las carpetas, con la lista de las carpetas de la mayor a la menor"></a>
+
+<sub><b>v1.15.0</b> · menú Servicio · captura del 2026-10-13</sub>
+
+**Para qué sirve:** ver cuánto guarda el servicio (cuentas, archivos, espacio y el tamaño de cada carpeta) y seguir el envío a cada destino guardado: lo que ya salió, lo que no, con el motivo, y lo que está en la cola.
+
+**Cómo llegar:** menú ➜ **Servicio**; en la Visión general, el atajo `ver el servicio` de la franja **Envío a los destinos**.
+
+| Elemento de la pantalla | Qué muestra |
+|---|---|
+| **Lo que guarda el servicio** | Cuatro medidas: los usuarios del FTP, con la cantidad de cada perfil; los archivos que están en las carpetas; el espacio usado y el libre en el disco; y las carpetas, con el tamaño de la mayor. Cada una tiene el atajo a la pestaña del detalle |
+| **Envío a los destinos** ➜ franja | La suma de todos los destinos guardados: cuántos están activados, los archivos enviados y su tamaño, lo que está en la cola de los destinos activados y los no enviados |
+| **Envío a los destinos** ➜ tarjeta de cada destino | El tipo, el nombre y la situación del destino, la carpeta enviada, la cola, los no enviados, la última pasada y el total desde que se activó |
+| **Próximos de la cola** · **Últimos enviados** · **Últimos no enviados** | Recogidas en cada tarjeta: hasta 30 archivos de cada una, con el tamaño y la fecha; en los no enviados, el motivo. La lista vacía no aparece |
+| **Copia del sistema** | Con la copia configurada: la última copia y la que está en avance |
+| **Tamaño de las carpetas** | La carpeta de cada usuario, de la mayor a la menor, con las cuentas que la usan, los archivos, el espacio y el último envío. El nombre abre la carpeta en la pestaña Archivos |
+| Línea `Leído a las` | La hora de la lectura que está en la pantalla |
+| **Cómo se leen estas medidas** | Recogido al final de la pestaña: de dónde viene cada número y qué guarda cada lista |
+
+Esta pestaña no modifica nada, y solo el administrador la ve: ningún archivo se envía, se repite ni se borra desde ella, y no aparece ningún dato de acceso del destino. La pantalla no se actualiza sola: recargue la página para leer de nuevo.
+
+<details>
+<summary>Servicio ➜ Listas de los destinos abiertas — haga clic para expandir</summary>
+
+### Servicio ➜ Listas de los destinos abiertas
+
+<a href="imagenes/servico-listas.png"><img src="imagenes/servico-listas.png" alt="Pestaña Servicio con las listas Próximos de la cola, Últimos enviados y Últimos no enviados abiertas en las tarjetas de los destinos de ejemplo, cada archivo con el tamaño y la fecha, y el motivo al lado del archivo que no se envió"></a>
+
+<sub><b>v1.15.0</b> · menú Servicio, listas de los destinos abiertas · captura del 2026-10-13</sub>
+
+| Lista | Qué trae |
+|---|---|
+| **Próximos de la cola** | Los archivos que llegaron primero, que son los que salen primero, con el tamaño y la fecha de llegada |
+| **Últimos enviados** | Del más nuevo al más antiguo, con el tamaño y la hora del envío |
+| **Últimos no enviados** | El archivo, el tamaño, la hora y el motivo: rechazado por el destino en tres pasadas seguidas, por encima del límite, vacío, en el bot, o con un nombre que el destino no guarda |
+
+Cada lista se abre con un clic en su nombre. En la foto, el archivo que no se envió es un archivo vacío de ejemplo, que el bot deja fuera, y los de la cola llegaron a la carpeta justo antes de la captura.
+
+</details>
+
+<details>
+<summary>Detalle técnico — de dónde vienen los números</summary>
+
+- Ruta `GET /servico`, solo del administrador; el usuario del FTP recibe `404`. La pantalla no tiene formulario de acción ni ruta `POST`, y la página no usa JavaScript.
+- La pantalla lee el registro del FTP, las carpetas de los datos y el avance guardado de cada destino. Abrir la pantalla no llama a ningún destino.
+- La cola de cada carpeta se mide con plazo y techo: en una carpeta demasiado grande la pantalla escribe `al menos` o `sin medida ahora`.
+- El funcionamiento completo está en [Panel web](../panel.md#servico).
+
+</details>
+
+---
+
 <a name="seguranca"></a>
 
 ## 🔐 Seguridad
 
 <a href="imagenes/seguranca.png"><img src="imagenes/seguranca.png" alt="Pestaña Seguridad con el resumen de la verificación en lo alto, que dice cuántos elementos están en orden, y una línea por elemento: dirección pública, panel por proxy o túnel, direcciones del FTP y del panel, modo TLS, los dos certificados, redes permitidas, sesión, segundo factor, entrada de los usuarios del FTP, bloqueo por intento en el FTP, con el nombre del usuario bloqueado, bloqueo por dirección, con la cantidad de direcciones bloqueadas, costo de las contraseñas, contacto de seguridad, contenedor y firewall" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Seguridad · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Seguridad · captura del 2026-10-13</sub>
 
 **Para qué sirve:** verificar, en una pantalla, si la instalación está dentro de lo que la stack exige: red privada, TLS, certificados válidos, panel aislado y contacto de seguridad publicado.
 
@@ -1619,7 +1676,7 @@ Esta pestaña no modifica nada. Las reglas de firewall de ejemplo están en [Seg
 
 <a href="imagenes/seguranca-tls-por-usuario.png"><img src="imagenes/seguranca-tls-por-usuario.png" alt="Pestaña Seguridad con la alerta en la parte superior de que dos usuarios, central-pabx y radio-antigo, entran en el FTP sin TLS, y la línea TLS del FTP con la marca de atención y los nombres de los usuarios dispensados" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Seguridad, alerta de usuario sin TLS · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Seguridad, alerta de usuario sin TLS · captura del 2026-10-13</sub>
 
 Con al menos un usuario dispensado del TLS, la pestaña se abre con la alerta y la línea **TLS del FTP** cambia la marca de verificado por la de atención, con la cantidad y los nombres de quienes entran sin TLS.
 
@@ -1647,7 +1704,7 @@ Con al menos un usuario dispensado del TLS, la pestaña se abre con la alerta y 
 
 <a href="imagenes/bloqueios.png"><img src="imagenes/bloqueios.png" alt="Pestaña Bloqueos con la regla en uso debajo del título, el botón Bloquear dirección, cuatro direcciones bloqueadas, en IPv4 y en IPv6, por errores en el FTP, por errores en el panel y por un administrador, cada una con desde cuándo, hasta cuándo y los botones Cambiar plazo y Desbloquear, y la tarjeta Usuarios bloqueados en el FTP, con el usuario switch-core" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Bloqueos · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Bloqueos · captura del 2026-10-13</sub>
 
 **Para qué sirve:** seguir las direcciones que fallaron usuario y contraseña demasiadas veces, liberar una de ellas, bloquear por más o por menos tiempo y bloquear una dirección nueva, o una red entera, antes de que falle.
 
@@ -1677,7 +1734,7 @@ La dirección bloqueada es rechazada con cualquier cuenta, incluso con la contra
 
 <a href="imagenes/bloqueios-novo.png"><img src="imagenes/bloqueios-novo.png" alt="Pantalla Bloquear dirección o prefijo, con el campo Dirección o prefijo rellenado con 2001:db8:12::/64, el campo Mantener bloqueado por con 90, la nota de lo que el panel no bloquea y los botones Bloquear y Cancelar" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Bloqueos, pantalla Bloquear dirección o prefijo · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Bloqueos, pantalla Bloquear dirección o prefijo · captura del 2026-10-13</sub>
 
 | Campo | Obligatorio | Qué rellenar |
 |---|---|---|
@@ -1686,7 +1743,7 @@ La dirección bloqueada es rechazada con cualquier cuenta, incluso con la contra
 
 <a href="imagenes/bloqueios-bloqueado.png"><img src="imagenes/bloqueios-bloqueado.png" alt="Pestaña Bloqueos con el mensaje Bloqueo guardado, vale en el FTP y en el panel a partir de la próxima solicitud, y el prefijo 2001:db8:12::/64 en la lista, bloqueado por Administrador, por 90 días" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Bloqueos, después del bloqueo · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Bloqueos, después del bloqueo · captura del 2026-10-13</sub>
 
 **Resultado esperado:** después de **Bloquear**, la lista vuelve con el mensaje `Bloqueo guardado: vale en el FTP y en el panel a partir de la próxima solicitud.` y la fila nueva, con `Administrador` en la columna **Bloqueado por**. Lo que se bloqueó ya no entra en el FTP ni en el panel, con ninguna cuenta, hasta que venza el plazo o alguien lo desbloquee. La dirección que ya estaba en la lista solo tiene el plazo cambiado, con el mensaje `Plazo del bloqueo modificado.`
 
@@ -1709,7 +1766,7 @@ La dirección bloqueada es rechazada con cualquier cuenta, incluso con la contra
 
 <a href="imagenes/bloqueios-endereco.png"><img src="imagenes/bloqueios-endereco.png" alt="Pantalla Bloqueo de 192.0.2.61 con la tarjeta Plazo, que dice quién bloqueó, desde cuándo y hasta cuándo, el campo Mantener bloqueado por rellenado con 365 y el botón Guardar plazo, y la tarjeta Desbloquear, con el botón Desbloquear" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Bloqueos, pantalla de la dirección · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Bloqueos, pantalla de la dirección · captura del 2026-10-13</sub>
 
 | Campo | Obligatorio | Qué rellenar |
 |---|---|---|
@@ -1717,7 +1774,7 @@ La dirección bloqueada es rechazada con cualquier cuenta, incluso con la contra
 
 <a href="imagenes/bloqueios-prazo-alterado.png"><img src="imagenes/bloqueios-prazo-alterado.png" alt="Pestaña Bloqueos con el mensaje Plazo del bloqueo modificado y la dirección 192.0.2.61 bloqueada por 365 días" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Bloqueos, después del cambio del plazo · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Bloqueos, después del cambio del plazo · captura del 2026-10-13</sub>
 
 **Resultado esperado:** después de **Guardar plazo**, la lista vuelve con el mensaje `Plazo del bloqueo modificado.` y la columna **Hasta** muestra la fecha nueva. Un número fuera del rango devuelve la pantalla con `Plazo no válido: de 1 a 3650 días.`
 
@@ -1734,7 +1791,7 @@ La dirección bloqueada es rechazada con cualquier cuenta, incluso con la contra
 
 <a href="imagenes/bloqueios-liberado.png"><img src="imagenes/bloqueios-liberado.png" alt="Pestaña Bloqueos con el mensaje Bloqueo deshecho, quien estaba en él vuelve a entrar en el FTP y en el panel, y tres direcciones en la lista, sin la 198.51.100.24" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Bloqueos, después del desbloqueo · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Bloqueos, después del desbloqueo · captura del 2026-10-13</sub>
 
 **Resultado esperado:** la lista vuelve con el mensaje `Bloqueo deshecho: quien estaba en él vuelve a entrar en el FTP y en el panel.`, la dirección vuelve a entrar en la próxima solicitud y el conteo de sus errores vuelve a empezar. En el prefijo, vuelven a entrar todas sus direcciones. Si el bloqueo ya había salido, el mensaje es `Este bloqueo ya no está en vigor.`
 
@@ -1760,7 +1817,7 @@ El administrador que quedó con su propia dirección bloqueada no abre el panel:
 
 <a href="imagenes/atividade.png"><img src="imagenes/atividade.png" alt="Pestaña Log con los registros del panel en cuatro columnas: cuándo, desde dónde, con la dirección entera en una sola línea o en el servidor, qué ocurrió, con un ícono por evento, y el detalle, como archivos enviados al destino, archivo descargado, carpeta creada, administrador creado, dirección desbloqueada y pantalla fuera del rol o del perfil solicitada por usuario del FTP" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Log · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Log · captura del 2026-10-13</sub>
 
 **Para qué sirve:** saber quién entró en el panel, desde dónde, qué se modificó y quién descargó cada archivo.
 
@@ -1818,7 +1875,7 @@ La pestaña muestra los últimos 300 registros, y el plegado **Qué queda regist
 
 <a href="imagenes/entrar-portugues.png"><img src="imagenes/entrar-portugues.png" alt="Pantalla de entrada en portugués: el lema Backups e arquivos, guardados em um lugar só, el título Entrar no painel, los campos Usuário y Senha, el botón Entrar y, debajo de la nota, los botones PT, EN y ES" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla de entrada, en portugués · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla de entrada, en portugués · captura del 2026-10-13</sub>
 
 **Para qué sirve:** usar el panel en portugués, en inglés o en español. Cada cuenta elige el suyo, y la elección de una no cambia la pantalla de las otras.
 
@@ -1836,19 +1893,19 @@ La pestaña muestra los últimos 300 registros, y el plegado **Qué queda regist
 
 <a href="imagenes/visao-geral-portugues.png"><img src="imagenes/visao-geral-portugues.png" alt="Pestaña Visão geral en portugués, con el menú, la alerta de usuarios sin TLS, las medidas, los gráficos y la actividad reciente en portugués, las fechas en día/mes/año y los números con coma decimal" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Visión general, en portugués · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Visión general, en portugués · captura del 2026-10-13</sub>
 
 <a href="imagenes/usuarios-portugues.png"><img src="imagenes/usuarios-portugues.png" alt="Pestaña Usuarios en portugués: el título Usuários, los perfiles Completo, Envio, Só envio y Leitura, las etiquetas você, limites, dividida e inicial, la columna TLS con obrigatório y sem TLS y los botones Editar, Dispensar TLS, Exigir TLS, Trocar senha, Trocar nome y Remover" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Usuarios, en portugués · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Usuarios, en portugués · captura del 2026-10-13</sub>
 
 <a href="imagenes/entrar-ingles.png"><img src="imagenes/entrar-ingles.png" alt="Pantalla de entrada en inglés: el lema Backups and files, kept in one place, el título Sign in to the panel, los campos User y Password, el botón Sign in y, debajo de la nota, los botones PT, EN y ES" width="100%"></a>
 
-<sub><b>v1.14.0</b> · pantalla de entrada, en inglés · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · pantalla de entrada, en inglés · captura del 2026-10-13</sub>
 
 <a href="imagenes/visao-geral-ingles.png"><img src="imagenes/visao-geral-ingles.png" alt="Pestaña Overview en inglés, con el menú, la alerta de usuarios sin TLS, las medidas, los gráficos y la actividad reciente traducidos, las fechas en año-mes-día y los números con punto decimal" width="100%"></a>
 
-<sub><b>v1.14.0</b> · menú Visión general, en inglés · captura del 2026-10-13</sub>
+<sub><b>v1.15.0</b> · menú Visión general, en inglés · captura del 2026-10-13</sub>
 
 <details>
 <summary>Detalle técnico — dónde queda la elección</summary>
