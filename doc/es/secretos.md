@@ -106,7 +106,7 @@ Sin acceso al panel, la contraseña se define desde el host:
 ```bash
 ./scripts/painel-senha.sh --gerar                    # contraseña fuerte para el primer administrador, mostrada una sola vez
 ./scripts/painel-senha.sh                            # o: pregunta la contraseña nueva dos veces, sin mostrarla en pantalla
-./scripts/painel-senha.sh --usuario NOME --gerar     # otro administrador; si NOME no existe, se crea
+./scripts/painel-senha.sh --usuario NOMBRE --gerar     # otro administrador; si NOMBRE no existe, se crea
 ```
 
 **Resultado esperado:** `Administrador admin com a senha trocada; painel reiniciado e sessões abertas encerradas.` Cuando el administrador es el de `PAINEL_ADMIN_USER`, el archivo `painel-admin-inicial-senha.txt` deja de existir.

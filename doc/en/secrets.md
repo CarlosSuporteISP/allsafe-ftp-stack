@@ -23,6 +23,7 @@ flowchart LR
 
     deploy --> arquivo --> montagem --> entry --> puredb --> fim
 ```
+
 <sub>Level 1 · Diagram · [source](diagrams/)</sub>
 
 **Sequence:** `deploy.sh` ➜ `.secrets/ftp-usuario-inicial-senha.txt` ➜ `/run/secrets/ftp_usuario_inicial_senha` (read-only) ➜ entrypoint ➜ PureDB (stores only the hash) ➜ password outside the image
@@ -105,7 +106,7 @@ Without access to the panel, the password is set from the host:
 ```bash
 ./scripts/painel-senha.sh --gerar                    # strong password for the first administrator, shown only once
 ./scripts/painel-senha.sh                            # or: asks for the new password twice, without showing it on the screen
-./scripts/painel-senha.sh --usuario NOME --gerar     # another administrator; if NOME does not exist, it is created
+./scripts/painel-senha.sh --usuario NAME --gerar     # another administrator; if NAME does not exist, it is created
 ```
 
 **Expected result:** `Administrador admin com a senha trocada; painel reiniciado e sessões abertas encerradas.` When the administrator is the one in `PAINEL_ADMIN_USER`, the file `painel-admin-inicial-senha.txt` ceases to exist.

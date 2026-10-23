@@ -23,6 +23,7 @@ flowchart LR
 
     origem --> backup --> copia --> restaurar --> destino --> fim
 ```
+
 <sub>Level 1 · Diagram · [source](diagrams/)</sub>
 
 **Sequence:** `DATA_DIR` (`dados`, `auth`, `certs` and `painel`) ➜ `scripts/backup.sh` ➜ `BACKUP_DIR` (encrypted copy and `.sha256` sum) ➜ `scripts/restaurar.sh` ➜ `DATA_DIR` (contents of the copy) ➜ stack back
@@ -305,6 +306,9 @@ The panel makes the same copy and sends it straight to an S3 storage, without go
 | `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age` | The copy, encrypted with the same public key of `scripts/backup.sh` |
 | `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age.sha256` | The sum the restore checks |
 
+<details>
+<summary>Diagram of the copy in S3 and of the restore from it — click to expand</summary>
+
 <!-- diagrama: diagrams/backup-s3-diagram.mmd -->
 ```mermaid
 %%{init: {"theme": "dark"}}%%
@@ -323,6 +327,8 @@ flowchart LR
 <sub>Level 1 · Diagram · [source](diagrams/)</sub>
 
 **Sequence:** `DATA_DIR` (`dados`, `auth`, `certs` and `painel`) ➜ panel (reads, encrypts and sends) ➜ S3 bucket (encrypted copy and `.sha256` sum) ➜ download the two objects to `BACKUP_DIR` ➜ `scripts/restaurar.sh` ➜ `DATA_DIR` (contents of the copy) ➜ stack back
+
+</details>
 
 To restore from it:
 

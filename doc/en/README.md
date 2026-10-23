@@ -22,6 +22,7 @@ flowchart LR
 
     equip --> ftp --> puredb --> dados --> fim
 ```
+
 <sub>Level 1 · Diagram · [source](diagrams/)</sub>
 
 **Sequence:** Network device ➜ Pure-FTPd (`allsafe-ftp`) ➜ PureDB ➜ `/data` ➜ backup stored

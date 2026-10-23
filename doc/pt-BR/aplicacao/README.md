@@ -8,7 +8,7 @@
 
 ## 💡 Em poucas palavras
 
-Todas as telas do painel web, menu por menu, com a foto de cada uma e a explicação do que dá para fazer nela. As fotos são capturas reais da versão **1.8.0**, em tema escuro e em português, com usuários de exemplo, como `olt-centro`, `switch-core` e `roteador-borda`. O painel acompanha o tema claro ou escuro do sistema e também abre em inglês e em espanhol: veja [Idioma](#idioma). Clique em qualquer foto para abri-la em tamanho real.
+Todas as telas do painel web, menu por menu, com a foto de cada uma e a explicação do que dá para fazer nela. As fotos são capturas reais da versão **1.15.0**, em tema escuro e em português, com usuários de exemplo, como `olt-centro`, `switch-core` e `roteador-borda`. O painel acompanha o tema claro ou escuro do sistema e também abre em inglês e em espanhol: veja [Idioma](#idioma). Clique em qualquer foto para abri-la em tamanho real.
 
 O painel tem uma tela de entrada, nove abas para quem administra (Visão geral, Usuários, Arquivos, Destinos, Servidor, Serviço, Segurança, Bloqueios e Log) e uma tela para o usuário do FTP, que muda com o perfil da conta: Meus arquivos ou Envio de arquivos. As pastas que o administrador liberou a mais para a conta abrem na tela Pasta liberada. Os administradores ficam na aba Usuários, junto com as contas do FTP. Como abrir, criar administradores e o que protege o painel está em [Painel web](../painel.md).
 

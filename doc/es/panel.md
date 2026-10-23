@@ -14,7 +14,7 @@ El panel es una página, abierta por el navegador **desde dentro de la red inter
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    usuario@{ shape: person, label: "Usuario<br>navegador en la red interna" }
+    usuario@{ shape: person, label: "Usuario<br>navegador en<br>la red interna" }
     nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
     painel@{ shape: rect, label: "Panel web<br>allsafe-ftp-painel" }
     cmd@{ shape: rect, label: "allsafe-ftp-user<br>crea, cambia la contraseña, elimina" }
@@ -533,7 +533,7 @@ PAINEL_ACESSO_USUARIOS_FTP=nao
 
 - **Orden de la entrada:** primero la cuenta de administrador, por el hash `scrypt`. Si no es administrador con esa contraseña, y la entrada de los usuarios está activada, el panel verifica en el servidor FTP. La verificación se hace para todo nombre válido, exista o no y sea o no de administrador; el resultado solo se aprovecha cuando el nombre no es de administrador.
 - **Quién verifica la contraseña:** el `pure-ftpd`. El panel abre una conexión en `ftp:2121`, en la red del Compose, hace el inicio de sesión y sale; no lee el hash del registro ni rehace su cuenta. En los modos de TLS `1`, `2` y `3`, la conexión es TLS 1.2 o superior y el certificado recibido se compara, byte a byte, con la parte pública que el servicio `ftp` escribe en `/auth/ftp-cert.pem`; si es otro, la contraseña no se envía y la entrada es rechazada.
-- **Tiempo de la entrada:** el hash del registro es `argon2id`, y el servidor FTP tarda menos de 1 segundo en verificar una contraseña guardada con el costo del tamaño y de 3 a 6 segundos más, sorteados, en rechazar. El panel traslada ese tiempo. Como solo el nombre que existe tiene la contraseña verificada, tarda un poco más en ser rechazado que el nombre que no existe, la misma diferencia que se mide directo en el puerto del FTP ([Seguridad](seguridad.md#custo-das-senhas)); la pantalla y el código de la respuesta son los mismos en los dos casos.
+- **Tiempo de la entrada:** el hash del registro es `argon2id`, y el servidor FTP tarda menos de 1 segundo en verificar una contraseña guardada con el costo del tamaño y de 3 a 6 segundos más, al azar, en rechazar. El panel traslada ese tiempo. Como solo el nombre que existe tiene la contraseña verificada, tarda un poco más en ser rechazado que el nombre que no existe, la misma diferencia que se mide directo en el puerto del FTP ([Seguridad](seguridad.md#custo-das-senhas)); la pantalla y el código de la respuesta son los mismos en los dos casos.
 - **Límites de la verificación:** dos verificaciones por vez, con hasta 5 segundos de espera por el turno y 15 segundos por etapa de la conversación. Sin respuesta en ese plazo, servidor caído, lleno o con otro certificado, la entrada es rechazada con `401`, cuenta como error y queda en la auditoría como `entrada_falha conferencia=ftp_indisponivel`.
 - **Sesión:** guarda el nombre, la carpeta del registro, el perfil y el resumen SHA-256 de la línea entera del usuario en `/auth/pureftpd.passwd`, leídos antes y después de la verificación, que tienen que ser iguales. En cada solicitud, el panel relee la línea: si cambió, si desapareció, si el nombre pasó a ser de administrador o si la entrada fue desactivada, la sesión se cierra, la cookie se borra y el evento `sessao_encerrada` registra el usuario y el motivo (`cadastro_alterado`, `nome_de_administrador` o `acesso_desligado`).
 - **Rutas:** cada perfil tiene su tabla de rutas, elegida por el perfil guardado en la sesión. Lectura: `GET /` (lleva a `/meus-arquivos`), `GET /meus-arquivos?pasta=<caminho>`, `GET /meus-arquivos/baixar?arquivo=<caminho>` y `POST /sair`. Envío: más `POST /meus-arquivos/pasta` y `POST /meus-arquivos/enviar`. Completo: más `GET` y `POST` en `/meus-arquivos/renomear` y en `/meus-arquivos/apagar`. Solo envío: `GET /`, `GET /meus-arquivos`, que muestra la pantalla Envío de archivos sin leer ninguna carpeta, `POST /meus-arquivos/enviar` y `POST /sair`. La ruta de envío existe para el perfil, y el permiso de la cuenta se verifica en cada solicitud. Cualquier otra ruta responde `404`; cuando es una ruta de administración o de otro perfil, queda el evento `recusa_papel`, con el usuario, la ruta y el perfil. En las [otras carpetas](#outras-pastas), las mismas rutas valen bajo `/pastas/<identificador>`, por el permiso dado en esa carpeta y no por el perfil. Para el administrador, `/meus-arquivos` y `/pastas/` no existen.
@@ -577,12 +577,9 @@ flowchart LR
         inteiro@{ shape: diam, label: "¿el archivo<br>llegó entero?" }
         https@{ shape: rect, label: "salida por HTTPS<br>painel/saida.py" }
         rclone@{ shape: rect, label: "rclone<br>painel/rclone.py" }
-        andamento@{ shape: cyl, label: "avance del destino<br>DATA_DIR/painel/destinos" }
-        segredos@{ shape: docs, label: "secretos del destino<br>SECRETS_DIR/destinos, 0600" }
     end
     subgraph FORA["Fuera del servidor"]
-        bot@{ shape: cloud, label: "bot de Telegram<br>conversación que recibe" }
-        s3@{ shape: bucket, label: "bucket S3<br>Copiar o Conservar en S3" }
+        bot@{ shape: cloud, label: "bot de Telegram o bucket S3<br>conversación, Copiar o Conservar en S3" }
         remoto@{ shape: cloud, label: "remoto del rclone<br>servidor, nube o servicio de archivos" }
     end
     subgraph RESULTADO["Resultado"]
@@ -598,17 +595,12 @@ flowchart LR
     inteiro -- "4a · no" -----> depois
     inteiro -- "4b · sí: bot y S3" --> https
     inteiro -- "4c · sí: remoto del rclone" --> rclone
-    https -- "5a · envía el mensaje, HTTPS" ---> bot
-    https -- "5b · guarda el objeto, HTTPS" ---> s3
-    rclone -- "5c · guarda el archivo, HTTPS, SSH o FTP con TLS" ---> remoto
+    https -- "5a · envía el mensaje o guarda el objeto, HTTPS" ---> bot
+    rclone -- "5b · guarda el archivo, HTTPS, SSH o FTP con TLS" ---> remoto
     bot -- "6a · responde" --> confirmou
-    s3 -- "6b · responde" --> confirmou
-    remoto -- "6c · responde" --> confirmou
+    remoto -- "6b · responde" --> confirmou
     confirmou -- "7a · sí: anota y sigue" --> enviado
     confirmou -- "7b · no: se detiene" --> parou
-    passada -. "lee la configuración y guarda el avance" .-> andamento
-    https -. "lee las claves y el token" .-> segredos
-    rclone -. "lee el acceso del remoto" .-> segredos
 ```
 
 <sub>Nivel 2 · Mapa · [fuente](diagramas/)</sub>
@@ -621,12 +613,10 @@ flowchart LR
 | 4a | ¿el archivo llegó entero? ➜ todavía llegando | No: el archivo cambió hace menos de dos minutos y queda para una próxima pasada |
 | 4b | ¿el archivo llegó entero? ➜ salida por HTTPS | Sí, con bot o S3: la solicitud sale por HTTPS, con el certificado y la dirección verificados. El bot no espera los dos minutos del archivo que el FTP o el panel avisó que terminó de llegar |
 | 4c | ¿el archivo llegó entero? ➜ rclone | Sí, con remoto del rclone: el panel llama al rclone, un archivo por vez, solo para escribir |
-| 5a | salida por HTTPS ➜ bot de Telegram | El bot entrega el archivo a la conversación, en un mensaje; por encima del límite del bot va solo el aviso |
-| 5b | salida por HTTPS ➜ bucket S3 | El panel escribe el objeto en el bucket, en partes cuando es grande |
-| 5c | rclone ➜ remoto del rclone | El rclone escribe el archivo en la carpeta del remoto: por HTTPS o por FTP con TLS, con el certificado verificado, o, en el SFTP, por SSH con la clave del servidor verificada |
-| 6a | bot de Telegram ➜ ¿el destino confirmó? | El servicio del bot responde a la solicitud |
-| 6b | bucket S3 ➜ ¿el destino confirmó? | El servicio del S3 responde a la solicitud |
-| 6c | remoto del rclone ➜ ¿el destino confirmó? | El rclone termina y dice si escribió |
+| 5a | salida por HTTPS ➜ bot de Telegram o bucket S3 | Bot: entrega el archivo a la conversación, en un mensaje; por encima del límite del bot va solo el aviso. S3: el panel escribe el objeto en el bucket, en partes cuando es grande |
+| 5b | rclone ➜ remoto del rclone | El rclone escribe el archivo en la carpeta del remoto: por HTTPS o por FTP con TLS, con el certificado verificado, o, en el SFTP, por SSH con la clave del servidor verificada |
+| 6a | bot de Telegram o bucket S3 ➜ ¿el destino confirmó? | El servicio del bot o del S3 responde a la solicitud |
+| 6b | remoto del rclone ➜ ¿el destino confirmó? | El rclone termina y dice si escribió |
 | 7a | ¿el destino confirmó? ➜ archivo enviado | Sí: el panel anota el archivo como enviado y sigue al próximo; con **Conservar en S3**, el archivo sale del servidor después de entregado por todos los destinos que lo llevan |
 | 7b | ¿el destino confirmó? ➜ pasada terminada | No: la pasada se detiene, la tarjeta muestra el motivo y la siguiente recomienza desde el mismo archivo |
 
@@ -1075,14 +1065,14 @@ Toda cuenta que entra en el panel pasa por la contraseña **y** por el código d
 **Perdí o cambié el aparato:** pida a un administrador que desactive el segundo factor de su cuenta, en Usuarios ➜ **Segundo factor**. En la entrada siguiente, el panel pide el registro de nuevo. Sin otro administrador, quien tiene acceso al servidor lo desactiva por la terminal:
 
 ```bash
-docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME
+docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOMBRE
 ```
 
 ```text
-NOME: segundo fator desligado
+NOMBRE: segundo fator desligado
 ```
 
-Para el usuario del FTP, el nombre lleva `ftp.` delante: `--segundo-fator desligar ftp.NOME`. El mismo comando, sin `desligar NOME`, muestra la situación de cada administrador y los usuarios del FTP que ya registraron.
+Para el usuario del FTP, el nombre lleva `ftp.` delante: `--segundo-fator desligar ftp.NOMBRE`. El mismo comando, sin `desligar NOMBRE`, muestra la situación de cada administrador y los usuarios del FTP que ya registraron.
 
 > ⚠️ Aparato perdido o robado: cambie también la contraseña de la cuenta. Entre la desactivación y el registro nuevo, quien sepa la contraseña registra la aplicación en lugar del dueño.
 
@@ -1111,13 +1101,13 @@ Reglas:
 <details>
 <summary>Detalle técnico — cómo funciona el segundo factor</summary>
 
-- **Estándar:** TOTP (RFC 6238) con SHA-1, seis dígitos y paso de 30 segundos, lo que las aplicaciones autenticadoras leen. La clave tiene 160 bits, sorteada por el panel. El código QR lo dibuja el propio panel, en SVG, sin biblioteca de fuera y sin JavaScript ([`qr.py`](../../painel/qr.py)).
+- **Estándar:** TOTP (RFC 6238) con SHA-1, seis dígitos y paso de 30 segundos, lo que las aplicaciones autenticadoras leen. La clave tiene 160 bits, generada por el panel. El código QR lo dibuja el propio panel, en SVG, sin biblioteca de fuera y sin JavaScript ([`qr.py`](../../painel/qr.py)).
 - **Dónde queda:** la lista de quién está con el segundo factor activado queda en `DATA_DIR/painel/segundo-fator`, junto a los datos del panel. La clave de cada cuenta queda en `.secrets/segundo-fator/`, fuera del Git y de la imagen: `<nome>.txt` para el administrador y `ftp.<nome>.txt` para el usuario del FTP, los dos con modo `0600`. El punto no cabe en ningún nombre, y por eso las dos cuentas no se confunden, ni cuando tienen el mismo nombre. Vea [Secretos](secretos.md#o-que-fica).
 - **Copia de seguridad:** la lista entra en la copia del `scripts/backup.sh`; las claves, no. Restaurada la copia en un servidor sin las claves, la cuenta con el segundo factor activado **no entra** (`503`, evento `entrada_fator_sem_segredo`) hasta que alguien desactive el suyo: la falta de la clave cierra la entrada, no la abre, y la cuenta no recibe registro nuevo mientras esté en la lista. Vea [Copia de seguridad y restauración](backup.md#segredos).
 - **Entrada en dos pasos:** con la contraseña correcta, el panel no abre sesión. Guarda la espera en memoria, atada a la dirección de origen, y entrega la cookie `__Host-etapa` (`Secure`, `HttpOnly`, `SameSite=Strict`), que solo sirve para la pantalla del código o para la del registro, nunca para las dos. La espera del código dura 5 minutos; la del registro, 10. La sesión nace después del código aceptado.
-- **Registro en la entrada:** la clave se sortea cuando la contraseña coincide y queda solo en la memoria de la espera; la pantalla abierta de nuevo muestra la misma. Solo se guarda con el primer código correcto, y solo para una cuenta que todavía no tiene segundo factor: con dos entradas abiertas de la misma cuenta, vale la que registre primero, y la otra vuelve a usuario y contraseña. Hecho el registro, las otras sesiones de la cuenta se cierran.
+- **Registro en la entrada:** la clave se genera cuando la contraseña coincide y queda solo en la memoria de la espera; la pantalla abierta de nuevo muestra la misma. Solo se guarda con el primer código correcto, y solo para una cuenta que todavía no tiene segundo factor: con dos entradas abiertas de la misma cuenta, vale la que registre primero, y la otra vuelve a usuario y contraseña. Hecho el registro, las otras sesiones de la cuenta se cierran.
 - **Rutas:** `GET` y `POST /entrar/codigo` para el código de la entrada y `GET` y `POST /entrar/cadastro` para el registro; `GET /administradores/fator?admin=<nome>` para la pantalla de activar o de desactivar, `POST /administradores/fator/ligar` y `POST /administradores/fator/desligar`; `GET /usuarios/fator?usuario=<nome>` y `POST /usuarios/fator/desligar` para el del usuario del FTP. Las de administración llevan el token CSRF de la sesión, y el usuario del FTP recibe `404` en todas ellas.
-- **Pantalla de activar** (sin la obligación): la clave mostrada espera el primer código por 10 minutos, guardada solo en la memoria de la sesión; la pantalla abierta de nuevo muestra la misma. Pasado el plazo, el panel sortea otra.
+- **Pantalla de activar** (sin la obligación): la clave mostrada espera el primer código por 10 minutos, guardada solo en la memoria de la sesión; la pantalla abierta de nuevo muestra la misma. Pasado el plazo, el panel genera otra.
 - **Respuestas:** código rechazado en la entrada, `401`; verificación pausada o dirección con muchos intentos, `429`; código que no coincide en el registro o en la pantalla de activar, `400`; segundo factor desactivado de otro administrador, abierto para activar, `409`.
 - **Reinicio del panel:** las esperas, el conteo de códigos rechazados y la marca del último código usado quedan en memoria y recomienzan. Quien estaba en la pantalla del código o en la del registro escribe usuario y contraseña de nuevo.
 - **Auditoría:** `entrada_senha_ok` (con `admin=` o `usuario=`), `entrada_codigo_recusado`, `entrada_fator_sem_segredo`, `fator_cadastrado_na_entrada`, `admin_fator_ligado`, `admin_fator_desligado`, `usuario_fator_desligado` y `admin_fator_desligado_no_host`: vea [Auditoría](#auditoria). Ni la clave ni el código escrito se guardan.
@@ -1136,9 +1126,9 @@ Reglas:
 |---|---|
 | Contraseña nueva para el primer administrador (`PAINEL_ADMIN_USER`) | `./scripts/painel-senha.sh --gerar` (la muestra una única vez) |
 | Elegir la contraseña, en vez de generarla | `./scripts/painel-senha.sh` (pregunta dos veces) |
-| Contraseña nueva para otro administrador | `./scripts/painel-senha.sh --usuario NOME --gerar` |
-| Crear un administrador por el host | el mismo comando, con un `NOME` que todavía no existe |
-| Desactivar el segundo factor de quien perdió el aparato | `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME` (usuario del FTP: `ftp.NOME`) |
+| Contraseña nueva para otro administrador | `./scripts/painel-senha.sh --usuario NOMBRE --gerar` |
+| Crear un administrador por el host | el mismo comando, con un `NOMBRE` que todavía no existe |
+| Desactivar el segundo factor de quien perdió el aparato | `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOMBRE` (usuario del FTP: `ftp.NOMBRE`) |
 
 **Resultado esperado:**
 
@@ -1270,7 +1260,7 @@ Cada solicitud pasa por tres verificaciones antes de cambiar algo: la red de ori
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     subgraph QUEM["Quién usa"]
-        usuario@{ shape: person, label: "Usuario<br>navegador en la red interna" }
+        usuario@{ shape: person, label: "Usuario<br>navegador en<br>la red interna" }
     end
     subgraph FRENTE["Frente web"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
@@ -1279,12 +1269,9 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Panel web<br>allsafe-ftp-painel, socket Unix" }
         senha@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
-        hash@{ shape: doc, label: "administradores<br>nombre y hash de la contraseña" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, red interna" }
         fator@{ shape: diam, label: "¿la cuenta ya tiene<br>segundo factor?" }
         cadastro@{ shape: rect, label: "registro del segundo factor<br>código QR y clave nueva" }
         codigo@{ shape: diam, label: "¿el código de la aplicación<br>coincide?" }
-        chave@{ shape: doc, label: "segundo-fator<br>clave de cada cuenta" }
     end
     subgraph SESSAO["Sesión"]
         sessao@{ shape: rect, label: "sesión de 4 h<br>cookie y token CSRF" }
@@ -1311,9 +1298,6 @@ flowchart LR
     sessao -- "9 · cada solicitud pasa por las verificaciones" --> pedidos
     pedidos -- "10a · aceptada" --> atendido
     pedidos -- "10b · rechazada" --> recusa
-    painel -. "administrador: compara con el hash" .-> hash
-    painel -. "otro nombre: el servidor FTP verifica la contraseña" .-> ftp
-    painel -. "segundo factor: guarda la clave en el registro y calcula el código" .-> chave
 ```
 
 <sub>Nivel 2 · Flujograma · [fuente](diagramas/)</sub>
@@ -1328,7 +1312,7 @@ flowchart LR
 | 5a | ¿usuario y contraseña coinciden? ➜ ¿la cuenta ya tiene segundo factor? | Sí: antes de abrir la sesión, el panel ve si la cuenta, de administrador o de usuario del FTP, ya tiene el [segundo factor](#segundo-fator) registrado |
 | 5b | ¿usuario y contraseña coinciden? ➜ solicitud rechazada | No: `401`, sin decir cuál de los dos falló; cinco errores en 15 minutos bloquean la dirección (`429`) |
 | 6a | ¿la cuenta ya tiene segundo factor? ➜ ¿el código de la aplicación coincide? | Sí: no se abre ninguna sesión. El panel guarda una espera de 5 minutos, atada a la dirección, y pide el código de seis dígitos de la aplicación autenticadora |
-| 6b | ¿la cuenta ya tiene segundo factor? ➜ registro del segundo factor | No, y el segundo factor es obligatorio (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim`, el valor por defecto): no se abre ninguna sesión. El panel sortea una clave, guarda una espera de 10 minutos, atada a la dirección, y muestra el código QR y la clave |
+| 6b | ¿la cuenta ya tiene segundo factor? ➜ registro del segundo factor | No, y el segundo factor es obligatorio (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim`, el valor por defecto): no se abre ninguna sesión. El panel genera una clave, guarda una espera de 10 minutos, atada a la dirección, y muestra el código QR y la clave |
 | 6c | ¿la cuenta ya tiene segundo factor? ➜ sesión de 4 h | No, y el segundo factor no es obligatorio: abre la sesión solo con la contraseña, con cookie y token CSRF |
 | 7 | registro del segundo factor ➜ ¿el código de la aplicación coincide? | La cuenta lee la clave con la aplicación autenticadora y escribe el primer código. La clave solo se guarda si coincide |
 | 8a | ¿el código de la aplicación coincide? ➜ sesión de 4 h | Sí: abre la sesión, con cookie y token CSRF. La del administrador alcanza todas las pestañas; la del usuario del FTP, solo la pantalla Mis archivos. El mismo código no vale una segunda vez |

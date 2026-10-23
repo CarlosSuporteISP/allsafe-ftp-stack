@@ -52,7 +52,7 @@ FTP_BIND_IP=192.168.10.20
 FTP_PASSIVE_IP=192.168.10.20
 FTP_PORT=21
 FTP_PASSIVE_PORT_START=30000
-FTP_PASSIVE_PORT_END=30049
+FTP_PASSIVE_PORT_END=30099
 FTP_USER=backup-rede
 FTP_TLS_MODE=2
 FTP_CERT_CN=ftp.exemplo.com.br
@@ -123,7 +123,7 @@ Para uma **segunda instância** no mesmo host, troque os cinco nomes, as três i
 | `FTP_PORT` | Porta de controle publicada no host (mapeada para `2121` no container) | `1` a `65535` | `21` |
 | `FTP_PASSIVE_IP` | IP que o servidor **anuncia** ao cliente no modo passivo (resposta `PASV`): o IP **interno** pelo qual os equipamentos chegam ao servidor (nota abaixo) | IP privado, alcançável pelo cliente; IP público, só com `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.1` |
 | `FTP_PASSIVE_PORT_START` | Início da faixa de portas de dados (modo passivo) | `1024` a `65535`, menor ou igual ao fim | `30000` |
-| `FTP_PASSIVE_PORT_END` | Fim da faixa passiva. Número de portas maior ou igual a `FTP_MAX_CLIENTS` | `1024` a `65535`, maior ou igual ao início | `30049` |
+| `FTP_PASSIVE_PORT_END` | Fim da faixa passiva. Pelo menos o dobro de `FTP_MAX_CLIENTS` (o FTP aceita em sessões no máximo metade das portas) | `1024` a `65535`, maior ou igual ao início | `30099` |
 
 > 🧱 **Rede privada:** por padrão só são aceitos `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` e `192.168.0.0/16`. O [`deploy.sh`](../../deploy.sh) e o container param com `não é IP privado` para qualquer outro valor ([`scripts/rede-privada.sh`](../../scripts/rede-privada.sh)). Em IPv6 a regra é a mesma, com `::1` e a faixa local única (`fc00::/7`): [IPv6](#ipv6).
 
@@ -219,7 +219,7 @@ Trocar o certificado autoassinado por um real: [Operação](operacao.md#certific
 
 | Variável | Para que serve | Valores | Padrão |
 |---|---|---|---|
-| `FTP_MAX_CLIENTS` | Máximo de conexões simultâneas (opção `-c`). Alinhe ao tamanho da faixa passiva. Também define o custo da senha gravada de cada usuário do FTP: [Segurança](seguranca.md#custo-das-senhas) | inteiro maior que zero | `50` |
+| `FTP_MAX_CLIENTS` | Máximo de conexões simultâneas (opção `-c`). A faixa passiva precisa ter pelo menos o dobro de portas. Também define o custo da senha gravada de cada usuário do FTP: [Segurança](seguranca.md#custo-das-senhas) | inteiro maior que zero | `50` |
 | `FTP_MAX_CLIENTS_PER_IP` | Máximo de conexões por IP de origem (opção `-C`) | inteiro maior que zero | `8` |
 | `FTP_BLOQUEIO_TENTATIVAS` | Bloqueio por tentativa: quantas senhas erradas vindas de um mesmo endereço bloqueiam o usuário para aquele endereço. É o padrão da stack; o limite próprio de cada usuário é ajustado no painel: [Painel](painel.md#limites) | `0` a `100`; `0` desliga | `5` |
 | `FTP_BLOQUEIO_MINUTOS` | Minutos que o bloqueio dura. É também o tempo em que as senhas erradas se somam: [Segurança](seguranca.md#bloqueio-por-tentativa) | `1` a `1440` | `15` |

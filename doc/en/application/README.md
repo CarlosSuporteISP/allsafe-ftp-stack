@@ -8,7 +8,7 @@
 
 ## 💡 In a few words
 
-Every screen of the web panel, menu by menu, with a screenshot of each one and an explanation of what can be done on it. The screenshots are real captures of version **1.8.0**, in dark theme and in English, with example users, such as `olt-centro`, `switch-core` and `roteador-borda`. The panel follows the light or dark theme of the system and also opens in Portuguese and in Spanish: see [Language](#idioma). Click any screenshot to open it at full size.
+Every screen of the web panel, menu by menu, with a screenshot of each one and an explanation of what can be done on it. The screenshots are real captures of version **1.15.0**, in dark theme and in English, with example users, such as `olt-centro`, `switch-core` and `roteador-borda`. The panel follows the light or dark theme of the system and also opens in Portuguese and in Spanish: see [Language](#idioma). Click any screenshot to open it at full size.
 
 The panel has a sign-in screen, nine tabs for whoever administers it (Overview, Users, Files, Destinations, Server, Service, Security, Blocks and Log) and one screen for the FTP user, which changes with the profile of the account: My files or File upload. The folders the administrator granted to the account beyond its own open on the Granted folder screen. The administrators are in the Users tab, together with the FTP accounts. How to open it, how to create administrators and what protects the panel are in [Web panel](../panel.md).
 

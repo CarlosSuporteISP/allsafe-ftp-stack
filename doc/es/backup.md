@@ -162,7 +162,7 @@ Qué cambia después de restaurar:
 
 - Los usuarios creados después de la copia dejan de existir; los eliminados después de ella vuelven.
 - Cada usuario vuelve con la contraseña y la carpeta que tenía en la copia. El usuario inicial (`FTP_USER`) queda con la contraseña de `.secrets/ftp-usuario-inicial-senha.txt`; si en la copia su contraseña estaba cambiada desde el panel y el archivo no cambió desde entonces, vale la de la copia. Si en la copia ya había sido eliminado, sigue eliminado.
-- Las contraseñas vuelven con el costo con que fueron guardadas. Una copia hecha antes de la `0.29.0`, o en un porte menor, trae contraseñas con el costo anterior: la pestaña Seguridad del panel lista de quién, y el costo actual pasa a valer cuando se cambia la contraseña.
+- Las contraseñas vuelven con el costo con que fueron guardadas. Una copia hecha antes de la `0.29.0`, o en un tamaño menor, trae contraseñas con el costo anterior: la pestaña Seguridad del panel lista de quién, y el costo actual pasa a valer cuando se cambia la contraseña.
 - Los administradores del panel vuelven a ser los de la copia, cada uno con la contraseña que tenía: quien fue creado después de ella deja de existir y todos entran de nuevo. Una copia hecha antes de la `0.22.0` no tiene administradores: el panel crea el de `PAINEL_ADMIN_USER` con el hash de `.secrets/painel-admin-inicial-senha-hash.txt`.
 - Si la stack estaba detenida, sigue detenida: `Restaurado. A stack estava parada e continua parada: suba com ./deploy.sh`.
 
@@ -236,10 +236,10 @@ La copia no lleva el `.env` ni la carpeta `.secrets/`, para que un archivo de co
 
 La clave privada es la única sin vuelta atrás: sin ella la copia no se abre. Sin los otros, la stack vuelve igual: el `./deploy.sh` crea un `.env` nuevo y contraseñas nuevas, y los secretos de los destinos se escriben de nuevo en la pestaña Destinos, en **Modificar**; hasta entonces, la tarjeta muestra la marca **faltan los secretos** y no se envía nada. En ese caso, el usuario inicial pasa a tener la contraseña nueva, que hay que configurar en el equipo que lo usa. Los demás usuarios y los administradores del panel no se ven afectados: el hash de su contraseña está en la copia. Detalles de cada archivo en [Secretos](secretos.md).
 
-La copia lleva la lista de quién tiene el [segundo factor](panel.md#segundo-fator) activado, pero no la clave de cada uno. Si la carpeta `.secrets/segundo-fator/` no vuelve junto, la cuenta con el factor activado no entra (`503`): desactive su factor desde la terminal (usuario del FTP: `ftp.NOME`). En la entrada siguiente, la cuenta registra la aplicación de nuevo, con una clave nueva; con `PAINEL_SEGUNDO_FATOR_OBRIGATORIO=nao`, entra solo con la contraseña y el administrador lo activa de nuevo desde el panel:
+La copia lleva la lista de quién tiene el [segundo factor](panel.md#segundo-fator) activado, pero no la clave de cada uno. Si la carpeta `.secrets/segundo-fator/` no vuelve junto, la cuenta con el factor activado no entra (`503`): desactive su factor desde la terminal (usuario del FTP: `ftp.NOMBRE`). En la entrada siguiente, la cuenta registra la aplicación de nuevo, con una clave nueva; con `PAINEL_SEGUNDO_FATOR_OBRIGATORIO=nao`, entra solo con la contraseña y el administrador lo activa de nuevo desde el panel:
 
 ```bash
-docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME
+docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOMBRE
 ```
 
 ---
@@ -306,6 +306,9 @@ El panel hace la misma copia y la envía directo a un almacenamiento S3, sin pas
 | `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age` | La copia, cifrada con la misma clave pública del `scripts/backup.sh` |
 | `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age.sha256` | La suma que la restauración verifica |
 
+<details>
+<summary>Diagrama de la copia en S3 y de la restauración — haga clic para expandir</summary>
+
 <!-- diagrama: diagramas/backup-s3-diagrama.mmd -->
 ```mermaid
 %%{init: {"theme": "dark"}}%%
@@ -324,6 +327,8 @@ flowchart LR
 <sub>Nivel 1 · Diagrama · [fuente](diagramas/)</sub>
 
 **Secuencia:** `DATA_DIR` (`dados`, `auth`, `certs` y `painel`) ➜ panel (lee, cifra y envía) ➜ bucket S3 (copia cifrada y suma `.sha256`) ➜ descargar los dos objetos a `BACKUP_DIR` ➜ `scripts/restaurar.sh` ➜ `DATA_DIR` (contenido de la copia) ➜ stack de vuelta
+
+</details>
 
 Para restaurar a partir de ella:
 

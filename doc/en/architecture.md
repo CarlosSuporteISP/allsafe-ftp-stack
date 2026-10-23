@@ -22,6 +22,7 @@ flowchart LR
 
     equip --> ftp --> puredb --> dados --> fim
 ```
+
 <sub>Level 1 · Diagram · [source](diagrams/)</sub>
 
 **Sequence:** Network device ➜ Pure-FTPd (`allsafe-ftp`) ➜ PureDB ➜ `/data` ➜ backup stored
@@ -90,6 +91,7 @@ flowchart LR
     ftp -. "reads the certificate" .-> vcerts
     painel -. "reads for the system copy" .-> vcerts
 ```
+
 <sub>Level 2 · Map · [source](diagrams/)</sub>
 
 | No. | From ➜ To | What happens |
@@ -100,7 +102,7 @@ flowchart LR
 | 4 | nginx ➜ Web panel | The accepted request is forwarded to the panel through the Unix socket, with the client address |
 | 5 | Web panel ➜ `DATA_DIR/auth` | The panel creates, edits or removes the user in PureDB |
 | 6 | Network device ➜ Pure-FTPd | The client connects over FTPS on `21/tcp`, mapped to `2121/tcp` |
-| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | The file is written through the passive channel, in the range of the profile (`30000-30049/tcp` on `small`) |
+| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | The file is written through the passive channel, in the range of the profile (`30000-30099/tcp` on `small`) |
 | 8 | `DATA_DIR/dados` ➜ backup stored | The file stays in the user folder, on the host |
 
 **Support**
@@ -188,7 +190,7 @@ Of the files of `.secrets/`, `ftp` sees one, `painel` sees two, the hash of the 
 | Publication | What for |
 |---|---|
 | `FTP_BIND_IP:FTP_PORT` ➜ `2121/tcp` | control channel |
-| `FTP_BIND_IP:<passive range>` ➜ the same range in the container | data channel, passive mode, 1:1 (`30000-30049/tcp` on `small`, up to `30000-31599/tcp` on `extended`) |
+| `FTP_BIND_IP:<passive range>` ➜ the same range in the container | data channel, passive mode, 1:1 (`30000-30099/tcp` on `small`, up to `30000-32399/tcp` on `extended`) |
 | `PAINEL_BIND_IP:PAINEL_PORT` ➜ `8443/tcp` of `nginx` | web panel, HTTPS |
 
 - The panel neither publishes nor listens on a port: nginx reaches it through the Unix socket of the `DATA_DIR/nginx` folder, without going through the network.
@@ -260,6 +262,7 @@ flowchart LR
     pure -. "looks up" .-> puredb
     pure -. "asks at every login and reports the wrong password" .-> authd
 ```
+
 <sub>Level 3 · Model · [source](diagrams/)</sub>
 
 | No. | From ➜ To | What happens | Protocol and port | Rule |

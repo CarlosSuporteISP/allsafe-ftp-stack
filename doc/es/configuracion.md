@@ -8,7 +8,7 @@
 
 ## 💡 En pocas palabras
 
-Todo lo que cambia de una instalación a otra queda en un solo archivo, el `.env`: la IP, el puerto, el nombre del usuario, el modo de TLS y los límites. El porte del servidor viene de un perfil listo: al elegir el tamaño, el `deploy.sh` guarda sus números de capacidad en el propio `.env`. Docker Compose lee el `.env` y lo aplica a los tres contenedores: el FTP, el panel y el nginx que queda delante del panel.
+Todo lo que cambia de una instalación a otra queda en un solo archivo, el `.env`: la IP, el puerto, el nombre del usuario, el modo de TLS y los límites. El tamaño del servidor viene de un perfil listo: al elegir el tamaño, el `deploy.sh` guarda sus números de capacidad en el propio `.env`. Docker Compose lee el `.env` y lo aplica a los tres contenedores: el FTP, el panel y el nginx que queda delante del panel.
 
 <!-- diagrama: diagramas/configuracion-diagrama.mmd -->
 ```mermaid
@@ -52,7 +52,7 @@ FTP_BIND_IP=192.168.10.20
 FTP_PASSIVE_IP=192.168.10.20
 FTP_PORT=21
 FTP_PASSIVE_PORT_START=30000
-FTP_PASSIVE_PORT_END=30049
+FTP_PASSIVE_PORT_END=30099
 FTP_USER=backup-rede
 FTP_TLS_MODE=2
 FTP_CERT_CN=ftp.exemplo.com.br
@@ -123,7 +123,7 @@ Para una **segunda instancia** en el mismo host, cambie los cinco nombres, las t
 | `FTP_PORT` | Puerto de control publicado en el host (mapeado a `2121` en el contenedor) | `1` a `65535` | `21` |
 | `FTP_PASSIVE_IP` | IP que el servidor **anuncia** al cliente en el modo pasivo (respuesta `PASV`): la IP **interna** por la que los equipos llegan al servidor (nota abajo) | IP privada, alcanzable por el cliente; IP pública, solo con `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.1` |
 | `FTP_PASSIVE_PORT_START` | Inicio del rango de puertos de datos (modo pasivo) | `1024` a `65535`, menor o igual al fin | `30000` |
-| `FTP_PASSIVE_PORT_END` | Fin del rango pasivo. Número de puertos mayor o igual a `FTP_MAX_CLIENTS` | `1024` a `65535`, mayor o igual al inicio | `30049` |
+| `FTP_PASSIVE_PORT_END` | Fin del rango pasivo. Número de puertos de al menos el doble de `FTP_MAX_CLIENTS` | `1024` a `65535`, mayor o igual al inicio | `30099` |
 
 > 🧱 **Red privada:** por defecto solo se aceptan `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` y `192.168.0.0/16`. El [`deploy.sh`](../../deploy.sh) y el contenedor se detienen con `não é IP privado` para cualquier otro valor ([`scripts/rede-privada.sh`](../../scripts/rede-privada.sh)). En IPv6 la regla es la misma, con `::1` y el rango local único (`fc00::/7`): [IPv6](#ipv6).
 
@@ -219,7 +219,7 @@ Cambiar el certificado autofirmado por uno real: [Operación](operacion.md#certi
 
 | Variable | Para qué sirve | Valores | Por defecto |
 |---|---|---|---|
-| `FTP_MAX_CLIENTS` | Máximo de conexiones simultáneas (opción `-c`). Alinéelo con el tamaño del rango pasivo. También define el costo de la contraseña guardada de cada usuario del FTP: [Seguridad](seguridad.md#custo-das-senhas) | entero mayor que cero | `50` |
+| `FTP_MAX_CLIENTS` | Máximo de conexiones simultáneas (opción `-c`). El rango pasivo debe tener el doble de puertos. También define el costo de la contraseña guardada de cada usuario del FTP: [Seguridad](seguridad.md#custo-das-senhas) | entero mayor que cero | `50` |
 | `FTP_MAX_CLIENTS_PER_IP` | Máximo de conexiones por IP de origen (opción `-C`) | entero mayor que cero | `8` |
 | `FTP_BLOQUEIO_TENTATIVAS` | Bloqueo por intento: cuántas contraseñas incorrectas venidas de una misma dirección bloquean al usuario para esa dirección. Es el valor por defecto de la stack; el límite propio de cada usuario se ajusta en el panel: [Panel](panel.md#limites) | `0` a `100`; `0` desactiva | `5` |
 | `FTP_BLOQUEIO_MINUTOS` | Minutos que dura el bloqueo. Es también el tiempo en que las contraseñas incorrectas se suman: [Seguridad](seguridad.md#bloqueio-por-tentativa) | `1` a `1440` | `15` |

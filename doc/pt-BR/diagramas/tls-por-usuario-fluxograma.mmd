@@ -31,7 +31,7 @@ flowchart LR
     marcado -- "5b · não: recusa definitiva" --> recusa
     login -- "6a · sim: abre a sessão" ---> sessao
     login -- "6b · não" ---> recusa
-    algum -. "observador lê a cada segundo" .-> lista
-    marcado -. "porteiro lê a cada entrada" .-> lista
+    algum -. "observador lê<br>a cada segundo" .-> lista
+    marcado -. "porteiro lê<br>a cada entrada" .-> lista
     marcado -. "grava a recusa" .-> registro
     login -. "consulta o usuário" .-> puredb

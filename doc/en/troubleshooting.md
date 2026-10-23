@@ -23,6 +23,7 @@ flowchart LR
 
     usuario --> estado --> logs --> tabela --> valida --> fim
 ```
+
 <sub>Level 1 · Diagram · [source](diagrams/)</sub>
 
 **Sequence:** User ➜ `docker compose ps` ➜ `docker compose logs` ➜ tables in this guide ➜ `validate.sh --runtime` ➜ service healthy
@@ -117,12 +118,13 @@ The three entrypoints abort with `FALHA: <motivo>` and the container restarts in
 | The user is blocked again right after being unblocked | The device still has the wrong password stored and retries by itself, or another device uses the same user from the same address with the old password | `docker compose logs ftp \| grep 'vigia: entrada recusada'` shows the user and the address of each wrong password | Fix the password on every device that uses that user, then unblock. Give each device its own user |
 | `530 Login authentication failed` without TLS, with the right password | The user is not exempt from TLS, and another one is. The password travelled in plain text | `./manage-user.sh tls-lista`; `docker compose logs ftp \| grep porteiro` | Configure the device for TLS and change the password. If it does not speak TLS, exempt the user in the Users tab of the panel or with `./manage-user.sh tls-dispensar <user>`: [Security](security.md#tls-por-usuario) |
 | A user exempt from TLS still cannot sign in without TLS (`421` or timeout) | Per-user TLS has no effect: `FTP_TLS_EXCECOES=nao`, `FTP_TLS_MODE` other than `2` or `REDE_PERMITIR_IP_PUBLICO=sim`. The list of exempt users is kept and does not apply | Security tab of the panel, row **FTP TLS**; `./deploy.sh --check-only` | Leave `FTP_TLS_EXCECOES=sim` and `FTP_TLS_MODE=2` and run `./deploy.sh`. An installation older than `0.45.0` has `FTP_TLS_EXCECOES=nao` written in the `.env` |
-| Login OK, `LIST` or `STOR` hangs and times out | **Active** mode, or passive range or `FTP_PASSIVE_IP` blocked or wrong | `docker compose ps` shows the published range; test port `30000/tcp` from the client | Use **passive** mode; open the passive range of the profile on the firewall (`30000-30049/tcp` on `small`); `FTP_PASSIVE_IP` with the IP the client reaches |
+| Login OK, `LIST` or `STOR` hangs and times out | **Active** mode, or passive range or `FTP_PASSIVE_IP` blocked or wrong | `docker compose ps` shows the published range; test port `30000/tcp` from the client | Use **passive** mode; open the passive range of the profile on the firewall (`30000-30099/tcp` on `small`); `FTP_PASSIVE_IP` with the IP the client reaches |
 | `425 Could not open data connection` | `FTP_PASSIVE_IP` points to an IP the client does not reach | `grep '^FTP_PASSIVE_IP=' .env` | Set `FTP_PASSIVE_IP` to the IP the client reaches and open the passive range up to it. By default the stack only accepts a private IP |
-| Certificate error on the client | The certificate is still the self-signed one | `openssl s_client -connect SEU_IP:21 -starttls ftp` shows the issuer | Install a real certificate ([Operation](operation.md#certificado-real-de-producao)) or, only for testing, turn verification off on the client |
+| Certificate error on the client | The certificate is still the self-signed one | `openssl s_client -connect YOUR_IP:21 -starttls ftp` shows the issuer | Install a real certificate ([Operation](operation.md#certificado-real-de-producao)) or, only for testing, turn verification off on the client |
 | `421 I can't accept more than <n> connections as the same user` | The user reached its own limit of sessions on the FTP | `./manage-user.sh limites <user>` shows `sessoes=` | Close the connections left over on the device, or raise the limit in **Edit**, in the Users tab: [Web panel](panel.md#limites) |
 | Uploading a small file takes seconds | The user has an upload rate: each uploaded file takes at least 256 ÷ rate seconds, whatever the size | `./manage-user.sh limites <user>` shows `envio=` | Raise or remove the upload rate in **Edit**, in the Users tab |
 | `421 Too many connections` | `FTP_MAX_CLIENTS` or `FTP_MAX_CLIENTS_PER_IP` reached | `docker compose logs --tail 50 ftp` | Move up a profile with `./deploy.sh --size medium` and open the new passive range: [Profiles](profiles.md) |
+| Equipment gets `421` for the limit of users before `FTP_MAX_CLIENTS` | Passive range with fewer than twice `FTP_MAX_CLIENTS` ports | The `AVISO` of `./deploy.sh`; `grep -E '^(FTP_MAX_CLIENTS|FTP_PASSIVE_PORT_(START|END))=' .env` | Widen `FTP_PASSIVE_PORT_END` (and the firewall) or run `./deploy.sh --size <profile>`; `deploy.sh` warns |
 
 ---
 
@@ -133,7 +135,7 @@ The three entrypoints abort with `FALHA: <motivo>` and the container restarts in
 The symptom is always the same: the device connects to the control port and the session drops before login. By default (`FTP_TLS_MODE=2`), the server refuses whoever does not ask for TLS. Confirm by simulating the device, without TLS:
 
 ```bash
-curl -v --max-time 10 --user backup-olt ftp://SEU_IP:21/
+curl -v --max-time 10 --user backup-olt ftp://YOUR_IP:21/
 ```
 
 **Expected result**, with the server at the default: `421-Sorry, cleartext sessions and weak ciphers are not accepted on this server.` and `curl` giving up right after. That is the server working as it should.
@@ -170,7 +172,7 @@ While there is any exempt user, the same test changes its answer: the server ask
 |---|---|---|---|
 | The new certificate is not used after copying | Service not restarted, or PEM without the key | `docker compose exec ftp ls -l /etc/ssl/private/` | `docker compose restart ftp`; the PEM must have **key and certificate** together, `0600` |
 | The entrypoint generates a self-signed one at every start | The file `/etc/ssl/private/pure-ftpd.pem` is not persisting | `ls -ld "$DATA_DIR/certs"` on the host | Confirm the `DATA_DIR` of the `.env` and the `certs/` folder inside it |
-| TLS handshake fails with "certificate expired" | Wrong host clock, or expired certificate (the self-signed one lasts 825 days) | `date` on the host; `openssl s_client -connect SEU_IP:21 -starttls ftp` shows the validity | Synchronise the time (stack `allsafe-ntp-nts-stack`); generate or renew the certificate |
+| TLS handshake fails with "certificate expired" | Wrong host clock, or expired certificate (the self-signed one lasts 825 days) | `date` on the host; `openssl s_client -connect YOUR_IP:21 -starttls ftp` shows the validity | Synchronise the time (stack `allsafe-ntp-nts-stack`); generate or renew the certificate |
 
 ---
 

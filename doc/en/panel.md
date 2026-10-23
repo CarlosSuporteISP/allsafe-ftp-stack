@@ -14,7 +14,7 @@ The panel is a page, opened in the browser **from inside the internal network**,
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    usuario@{ shape: person, label: "User<br>browser on the internal network" }
+    usuario@{ shape: person, label: "User<br>browser on the<br>internal network" }
     nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
     painel@{ shape: rect, label: "Web panel<br>allsafe-ftp-painel" }
     cmd@{ shape: rect, label: "allsafe-ftp-user<br>creates, changes the password, removes" }
@@ -577,12 +577,9 @@ flowchart LR
         inteiro@{ shape: diam, label: "file<br>arrived whole?" }
         https@{ shape: rect, label: "way out by HTTPS<br>painel/saida.py" }
         rclone@{ shape: rect, label: "rclone<br>painel/rclone.py" }
-        andamento@{ shape: cyl, label: "progress of the destination<br>DATA_DIR/painel/destinos" }
-        segredos@{ shape: docs, label: "secrets of the destination<br>SECRETS_DIR/destinos, 0600" }
     end
     subgraph FORA["Outside the server"]
-        bot@{ shape: cloud, label: "Telegram bot<br>receiving chat" }
-        s3@{ shape: bucket, label: "S3 bucket<br>Copy or Keep in S3" }
+        bot@{ shape: cloud, label: "Telegram bot or S3 bucket<br>chat, Copy or Keep in S3" }
         remoto@{ shape: cloud, label: "rclone remote<br>file server, cloud or service" }
     end
     subgraph RESULTADO["Result"]
@@ -598,17 +595,12 @@ flowchart LR
     inteiro -- "4a · no" -----> depois
     inteiro -- "4b · yes: bot and S3" --> https
     inteiro -- "4c · yes: rclone remote" --> rclone
-    https -- "5a · sends the message, HTTPS" ---> bot
-    https -- "5b · writes the object, HTTPS" ---> s3
-    rclone -- "5c · writes the file, HTTPS, SSH or FTP with TLS" ---> remoto
+    https -- "5a · sends the message or writes the object, HTTPS" ---> bot
+    rclone -- "5b · writes the file, HTTPS, SSH or FTP with TLS" ---> remoto
     bot -- "6a · answers" --> confirmou
-    s3 -- "6b · answers" --> confirmou
-    remoto -- "6c · answers" --> confirmou
+    remoto -- "6b · answers" --> confirmou
     confirmou -- "7a · yes: records and goes on" --> enviado
     confirmou -- "7b · no: stops" --> parou
-    passada -. "reads the settings and writes the progress" .-> andamento
-    https -. "reads the keys and the token" .-> segredos
-    rclone -. "reads the remote access" .-> segredos
 ```
 
 <sub>Level 2 · Map · [source](diagrams/)</sub>
@@ -621,12 +613,10 @@ flowchart LR
 | 4a | file arrived whole? ➜ still arriving | No: the file changed less than two minutes ago and is left for a next run |
 | 4b | file arrived whole? ➜ way out by HTTPS | Yes, with a bot or S3: the request goes out by HTTPS, with the certificate and the address checked. The bot does not wait the two minutes for the file the FTP or the panel announced as finished |
 | 4c | file arrived whole? ➜ rclone | Yes, with an rclone remote: the panel calls rclone, one file at a time, only to write |
-| 5a | way out by HTTPS ➜ Telegram bot | The bot delivers the file to the chat, in one message; above the bot limit only the notice goes |
-| 5b | way out by HTTPS ➜ S3 bucket | The panel writes the object in the bucket, in parts when it is large |
-| 5c | rclone ➜ rclone remote | rclone writes the file in the folder of the remote: by HTTPS or by FTP with TLS, with the certificate checked, or, for SFTP, by SSH with the server key checked |
-| 6a | Telegram bot ➜ the destination confirmed? | The bot service answers the request |
-| 6b | S3 bucket ➜ the destination confirmed? | The S3 service answers the request |
-| 6c | rclone remote ➜ the destination confirmed? | rclone finishes and says whether it wrote |
+| 5a | way out by HTTPS ➜ Telegram bot or S3 bucket | Bot: it delivers the file to the chat, in one message; above the bot limit only the notice goes. S3: the panel writes the object in the bucket, in parts when it is large |
+| 5b | rclone ➜ rclone remote | rclone writes the file in the folder of the remote: by HTTPS or by FTP with TLS, with the certificate checked, or, for SFTP, by SSH with the server key checked |
+| 6a | Telegram bot or S3 bucket ➜ the destination confirmed? | The bot or S3 service answers the request |
+| 6b | rclone remote ➜ the destination confirmed? | rclone finishes and says whether it wrote |
 | 7a | the destination confirmed? ➜ file sent | Yes: the panel records the file as sent and goes on to the next one; with **Keep in S3**, the file leaves the server after being delivered by every destination that takes it |
 | 7b | the destination confirmed? ➜ run ended | No: the run stops, the card shows the reason and the next one resumes from the same file |
 
@@ -1075,14 +1065,14 @@ Every account that signs in to the panel goes through the password **and** the s
 **I lost or replaced the device:** ask an administrator to turn off the second factor of your account, in Users ➜ **Second factor**. At the following sign-in, the panel asks for the setup again. Without another administrator, whoever has access to the server turns it off from the terminal:
 
 ```bash
-docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME
+docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NAME
 ```
 
 ```text
-NOME: segundo fator desligado
+NAME: segundo fator desligado
 ```
 
-For the FTP user, the name takes `ftp.` in front: `--segundo-fator desligar ftp.NOME`. The same command, without `desligar NOME`, shows the situation of each administrator and the FTP users who have already set it up.
+For the FTP user, the name takes `ftp.` in front: `--segundo-fator desligar ftp.NAME`. The same command, without `desligar NAME`, shows the situation of each administrator and the FTP users who have already set it up.
 
 > ⚠️ Lost or stolen device: change the password of the account too. Between the turning off and the new setup, whoever knows the password sets up the app in place of the owner.
 
@@ -1136,9 +1126,9 @@ Lost the password and there is no other administrator to change it through the p
 |---|---|
 | New password for the first administrator (`PAINEL_ADMIN_USER`) | `./scripts/painel-senha.sh --gerar` (shows it only once) |
 | Choose the password, instead of generating | `./scripts/painel-senha.sh` (asks twice) |
-| New password for another administrator | `./scripts/painel-senha.sh --usuario NOME --gerar` |
-| Create an administrator from the host | the same command, with a `NOME` that does not exist yet |
-| Turn off the second factor of who lost the device | `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME` (FTP user: `ftp.NOME`) |
+| New password for another administrator | `./scripts/painel-senha.sh --usuario NAME --gerar` |
+| Create an administrator from the host | the same command, with a `NAME` that does not exist yet |
+| Turn off the second factor of who lost the device | `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NAME` (FTP user: `ftp.NAME`) |
 
 **Expected result:**
 
@@ -1270,7 +1260,7 @@ Each request goes through three checks before changing anything: the source netw
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     subgraph QUEM["Who uses it"]
-        usuario@{ shape: person, label: "User<br>browser, internal network" }
+        usuario@{ shape: person, label: "User<br>browser,<br>internal network" }
     end
     subgraph FRENTE["Web front end"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
@@ -1279,12 +1269,9 @@ flowchart LR
     subgraph ENTRADA["Sign-in"]
         painel@{ shape: rect, label: "Web panel<br>allsafe-ftp-painel, Unix socket" }
         senha@{ shape: diam, label: "user and password<br>match?" }
-        hash@{ shape: doc, label: "administradores<br>name and password hash" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, internal network" }
         fator@{ shape: diam, label: "account already has<br>a second factor?" }
         cadastro@{ shape: rect, label: "second factor setup<br>QR code and new key" }
         codigo@{ shape: diam, label: "code from the app<br>matches?" }
-        chave@{ shape: doc, label: "segundo-fator<br>key of each account" }
     end
     subgraph SESSAO["Session"]
         sessao@{ shape: rect, label: "4 h session<br>cookie and CSRF token" }
@@ -1311,9 +1298,6 @@ flowchart LR
     sessao -- "9 · every request goes through the checks" --> pedidos
     pedidos -- "10a · accepted" --> atendido
     pedidos -- "10b · refused" --> recusa
-    painel -. "administrator: compares with the hash" .-> hash
-    painel -. "any other name: the FTP server checks the password" .-> ftp
-    painel -. "second factor: saves the key at setup and computes the code" .-> chave
 ```
 
 <sub>Level 2 · Flowchart · [source](diagrams/)</sub>

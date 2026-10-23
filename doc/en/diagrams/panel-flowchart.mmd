@@ -1,7 +1,7 @@
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     subgraph QUEM["Who uses it"]
-        usuario@{ shape: person, label: "User<br>browser, internal network" }
+        usuario@{ shape: person, label: "User<br>browser,<br>internal network" }
     end
     subgraph FRENTE["Web front end"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
@@ -10,12 +10,9 @@ flowchart LR
     subgraph ENTRADA["Sign-in"]
         painel@{ shape: rect, label: "Web panel<br>allsafe-ftp-painel, Unix socket" }
         senha@{ shape: diam, label: "user and password<br>match?" }
-        hash@{ shape: doc, label: "administradores<br>name and password hash" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, internal network" }
         fator@{ shape: diam, label: "account already has<br>a second factor?" }
         cadastro@{ shape: rect, label: "second factor setup<br>QR code and new key" }
         codigo@{ shape: diam, label: "code from the app<br>matches?" }
-        chave@{ shape: doc, label: "segundo-fator<br>key of each account" }
     end
     subgraph SESSAO["Session"]
         sessao@{ shape: rect, label: "4 h session<br>cookie and CSRF token" }
@@ -42,6 +39,3 @@ flowchart LR
     sessao -- "9 · every request goes through the checks" --> pedidos
     pedidos -- "10a · accepted" --> atendido
     pedidos -- "10b · refused" --> recusa
-    painel -. "administrator: compares with the hash" .-> hash
-    painel -. "any other name: the FTP server checks the password" .-> ftp
-    painel -. "second factor: saves the key at setup and computes the code" .-> chave

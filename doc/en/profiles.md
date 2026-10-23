@@ -23,6 +23,7 @@ flowchart LR
 
     perfil --> deploy --> env --> compose --> ftp --> fim
 ```
+
 <sub>Level 1 · Diagram · [source](diagrams/)</sub>
 
 **Sequence:** `profiles/medium.env` ➜ `deploy.sh --size medium` (writes the limits to the `.env`) ➜ `.env` ➜ Docker Compose ➜ Pure-FTPd (`allsafe-ftp`) ➜ limits applied
@@ -76,8 +77,8 @@ The numbers are **starting points**, not a guarantee of capacity. A backup FTP r
 | `FTP_MAX_CLIENTS` | `50` | `120` | `300` | `600` | `1200` |
 | `FTP_MAX_CLIENTS_PER_IP` | `8` | `12` | `24` | `48` | `96` |
 | `FTP_PASSIVE_PORT_START` | `30000` | `30000` | `30000` | `30000` | `30000` |
-| `FTP_PASSIVE_PORT_END` | `30049` | `30149` | `30399` | `30799` | `31599` |
-| Passive ports | 50 | 150 | 400 | 800 | 1600 |
+| `FTP_PASSIVE_PORT_END` | `30099` | `30239` | `30599` | `31199` | `32399` |
+| Passive ports | 100 | 240 | 600 | 1200 | 2400 |
 | `FTP_MEMORY_LIMIT` | `256M` | `512M` | `1G` | `2G` | `4G` |
 | `FTP_CPU_LIMIT` | `1.0` | `2.0` | `4.0` | `8.0` | `16.0` |
 | `FTP_PIDS_LIMIT` | `128` | `256` | `512` | `1024` | `2048` |
@@ -136,17 +137,17 @@ Full description of each variable in [Configuration](configuration.md).
 
 ## ⏱️ Startup time
 
-Docker publishes the passive ports one by one. On the large profiles, starting, changing the profile and removing take minutes, not seconds. `deploy.sh` warns (`Publicando 1600 portas passivas: a subida pode levar alguns minutos.`) and waits a time proportional to the number of ports before giving up.
+Docker publishes the passive ports one by one. On the large profiles, starting, changing the profile and removing take minutes, not seconds. `deploy.sh` warns (`Publicando 2400 portas passivas: a subida pode levar alguns minutos.`) and waits a time proportional to the number of ports before giving up.
 
 | Profile | Passive ports | Maximum wait of `deploy.sh` |
 |---|---|---|
-| `small` | 50 | 192 s |
-| `medium` | 150 | 217 s |
-| `large` | 400 | 280 s |
-| `xlarge` | 800 | 380 s |
-| `extended` | 1600 | 580 s |
+| `small` | 100 | 205 s |
+| `medium` | 240 | 240 s |
+| `large` | 600 | 330 s |
+| `xlarge` | 1200 | 480 s |
+| `extended` | 2400 | 780 s |
 
-The maximum wait is 180 s plus a quarter of a second per passive port. At the gate of version `0.7.0`, on a host with 16 CPUs, the installation of `small` finished in 25 s and the change to `extended` in about 200 s; your time varies with the machine. Going back from `extended` to a smaller profile or removing the stack also takes minutes, because Docker undoes the same ports one by one. Schedule the change of profile outside the backup window.
+The maximum wait is 180 s plus a quarter of a second per passive port. At the gate of version `0.7.0`, on a host with 16 CPUs, the installation of `small` finished in 25 s and the change to `extended`, then with 1600 passive ports, in about 200 s; your time varies with the machine. Going back from `extended` to a smaller profile or removing the stack also takes minutes, because Docker undoes the same ports one by one. Schedule the change of profile outside the backup window.
 
 ---
 
@@ -154,13 +155,40 @@ The maximum wait is 180 s plus a quarter of a second per passive port. At the ga
 
 ## ⚠️ Passive range and firewall
 
-Each profile widens the passive range together with `FTP_MAX_CLIENTS` (`small` 50 ports, `medium` 150, `large` 400, `xlarge` 800, `extended` 1600). When changing the profile:
+Each profile widens the passive range together with `FTP_MAX_CLIENTS` (`small` 100 ports, `medium` 240, `large` 600, `xlarge` 1200, `extended` 2400): twice as many ports as sessions, because Pure-FTPd accepts at most **half** of the passive ports in simultaneous sessions, whatever `FTP_MAX_CLIENTS` says. With 50 ports, a profile that announces 50 sessions would deliver 25. When changing the profile:
 
 1. allow the new range, from `30000` to the end of the profile, in TCP, in the host firewall, only for the management subnets;
 2. if there is NAT, make sure of the **1:1** mapping of the whole range;
 3. keep `FTP_PASSIVE_IP` with the IP that the client really reaches.
 
 **Expected result:** after `./deploy.sh --size <profile>`, `docker compose ps` shows the new range published.
+
+If the range is shorter than twice `FTP_MAX_CLIENTS`, `deploy.sh` warns at the end of the summary and of `--check-only` (the script speaks Portuguese):
+
+```text
+AVISO: FTP_MAX_CLIENTS=50 com 50 portas passivas: o FTP aceita só 25 sessões ao mesmo tempo,
+       metade das portas. Para chegar a 50, amplie a faixa até FTP_PASSIVE_PORT_END=30099
+       (e no firewall), ou rode ./deploy.sh --size <perfil>, que já traz a faixa certa.
+```
+
+Whoever already has an installation and updates keeps the `.env` as it is (the profile is only written with `--size`), so the warning shows until you widen the range in the `.env` and in the firewall, or run `./deploy.sh --size <profile>`. Clients that hit the limit before `FTP_MAX_CLIENTS` get `421`: see [Troubleshooting](troubleshooting.md).
+
+<details>
+<summary>Technical detail — the cost of each published port in Docker</summary>
+
+Docker starts one `docker-proxy` process for each published port. Measured on 2026-10-23, with Docker 29.9.2, the average was 4.45 MB of private memory per process. With that figure:
+
+| Profile | Processes | Memory, about |
+|---|---|---|
+| `small` | 101 | 0.45 GB |
+| `medium` | 241 | 1.1 GB |
+| `large` | 601 | 2.7 GB |
+| `xlarge` | 1201 | 5.3 GB |
+| `extended` | 2401 | 10.7 GB |
+
+The Docker option `"userland-proxy": false` in `/etc/docker/daemon.json` removes these processes (the kernel does the forwarding). It is a setting of the server, it holds for every container on it, and it must be tested on the server before production.
+
+</details>
 
 > ⚠️ Do not put IPs, credentials or customer particulars in the profile files: that belongs to the local `.env` and `.secrets/` folder. See [Secrets](secrets.md).
 

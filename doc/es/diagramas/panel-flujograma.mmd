@@ -1,7 +1,7 @@
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     subgraph QUEM["Quién usa"]
-        usuario@{ shape: person, label: "Usuario<br>navegador en la red interna" }
+        usuario@{ shape: person, label: "Usuario<br>navegador en<br>la red interna" }
     end
     subgraph FRENTE["Frente web"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
@@ -10,12 +10,9 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Panel web<br>allsafe-ftp-painel, socket Unix" }
         senha@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
-        hash@{ shape: doc, label: "administradores<br>nombre y hash de la contraseña" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, red interna" }
         fator@{ shape: diam, label: "¿la cuenta ya tiene<br>segundo factor?" }
         cadastro@{ shape: rect, label: "registro del segundo factor<br>código QR y clave nueva" }
         codigo@{ shape: diam, label: "¿el código de la aplicación<br>coincide?" }
-        chave@{ shape: doc, label: "segundo-fator<br>clave de cada cuenta" }
     end
     subgraph SESSAO["Sesión"]
         sessao@{ shape: rect, label: "sesión de 4 h<br>cookie y token CSRF" }
@@ -42,6 +39,3 @@ flowchart LR
     sessao -- "9 · cada solicitud pasa por las verificaciones" --> pedidos
     pedidos -- "10a · aceptada" --> atendido
     pedidos -- "10b · rechazada" --> recusa
-    painel -. "administrador: compara con el hash" .-> hash
-    painel -. "otro nombre: el servidor FTP verifica la contraseña" .-> ftp
-    painel -. "segundo factor: guarda la clave en el registro y calcula el código" .-> chave

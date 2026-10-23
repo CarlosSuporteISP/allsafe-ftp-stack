@@ -87,3 +87,16 @@ excedente="$(ftp_cru)"
 for fd in "${abertas[@]}"; do exec {fd}>&-; done
 [[ "$aceitas" == "$limite" && "$excedente" == 421* ]]
 caso $? rede 5 "Limite de sessões por IP" "FTP_MAX_CLIENTS_PER_IP=$limite: $aceitas sessões aceitas (220) · a seguinte: $excedente"
+
+# O Pure-FTPd aceita no máximo metade das portas passivas em sessões: a saudação diz o limite que vale de fato.
+maximo="$(env_file="$ENVA" env_valor FTP_MAX_CLIENTS 50)"; anunciado=""
+passivas="$(env_file="$ENVA" env_valor FTP_PASSIVE_PORT_START 30000)-$(env_file="$ENVA" env_valor FTP_PASSIVE_PORT_END 30099)"
+if { exec {fd}<>"/dev/tcp/$IP/$FTP_PORTA"; } 2>/dev/null; then
+  while IFS= read -r -t 8 -u "$fd" l; do
+    [[ "$l" =~ of\ ([0-9]+)\ allowed ]] && anunciado="${BASH_REMATCH[1]}"
+    [[ "$l" =~ ^220\  ]] && break
+  done
+  exec {fd}>&-
+fi
+[[ "$anunciado" == "$maximo" ]]
+caso $? rede 20 "Sessões aceitas pelo FTP" "FTP_MAX_CLIENTS=$maximo, faixa passiva $passivas: a saudação anuncia ${anunciado:-nenhum} sessões ao mesmo tempo"
