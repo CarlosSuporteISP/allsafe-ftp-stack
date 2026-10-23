@@ -6,6 +6,23 @@ Neste projeto a versão sobe sempre no número do meio (`1.1.0`, `1.2.0`) ou no 
 
 ↩ [README do projeto](README.pt-BR.md)
 
+## [1.17.0] - 2026-10-23
+
+Os perfis passam a aceitar de fato o número de sessões que anunciam: o FTP aceita no máximo metade das portas passivas em sessões ao mesmo tempo, e a faixa de cada perfil tinha uma porta por sessão. A imagem base troca para a versão do Debian com a correção da `libpcre2`.
+
+### Corrigido
+
+- **Faixa passiva dos perfis**: o Pure-FTPd limita as sessões a metade das portas passivas, mesmo com `FTP_MAX_CLIENTS` maior. O `small` anunciava 50 sessões e aceitava 25; acima disso, o equipamento recebia `421`. As faixas passam a ter o dobro de `FTP_MAX_CLIENTS`: `small` 30000-30099, `medium` 30000-30239, `large` 30000-30599, `xlarge` 30000-31199 e `extended` 30000-32399. O `.env.example` e os valores padrão do compose, do FTP e do painel seguem o `small`.
+- **Imagem base**: `debian:trixie-slim` de 2026-10-20, com a `libpcre2-8-0` corrigida (CVE-2026-103111), nas três imagens.
+- **`./deploy.sh --size` sem o perfil**: sai com o código 64 e a mensagem `Informe o perfil depois de --size.`, sem tocar em nada.
+
+### Alterado
+
+- **Instalação que já existe**: o `.env` não muda sozinho. Com a faixa curta, o `./deploy.sh` e o `./deploy.sh --check-only` mostram um `AVISO` com quantas sessões valem de fato e o fim da faixa que chega a `FTP_MAX_CLIENTS`. Para corrigir, amplie `FTP_PASSIVE_PORT_END` (e libere as portas novas no firewall) ou rode `./deploy.sh --size <perfil>`.
+- **`scripts/validate.sh`**: recusa o `.env.example` e o perfil cuja faixa passiva tenha menos que o dobro de `FTP_MAX_CLIENTS`.
+- **Casos de teste**: um de rede, que confere na saudação do FTP o número de sessões aceitas. A bateria passa a ter 113 casos funcionais, 162 de segurança e 20 de rede.
+- **Documentação, nos três idiomas**: seção **Instalação avançada** no README, logo depois da instalação rápida, e no menu; guia de perfis com a regra da metade, o aviso do `deploy.sh` e o custo de memória do Docker por porta publicada; linha do `421` na solução de problemas; versões do rclone, do age e do Perl em Tecnologias; os programas do FTP em Perl na estrutura de arquivos; diagramas sem sobreposição; versão das fotos igual nos três idiomas.
+
 ## [1.16.0] - 2026-10-14
 
 A linha **Limite de processador atingido** do container do painel, na aba Servidor, deixa de acusar a cada entrada no painel: a cota de processador do painel passa a ser medida em períodos de 500 ms, com a mesma média de antes.
