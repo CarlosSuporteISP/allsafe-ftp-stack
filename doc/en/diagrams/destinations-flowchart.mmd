@@ -9,12 +9,9 @@ flowchart LR
         inteiro@{ shape: diam, label: "file<br>arrived whole?" }
         https@{ shape: rect, label: "way out by HTTPS<br>painel/saida.py" }
         rclone@{ shape: rect, label: "rclone<br>painel/rclone.py" }
-        andamento@{ shape: cyl, label: "progress of the destination<br>DATA_DIR/painel/destinos" }
-        segredos@{ shape: docs, label: "secrets of the destination<br>SECRETS_DIR/destinos, 0600" }
     end
     subgraph FORA["Outside the server"]
-        bot@{ shape: cloud, label: "Telegram bot<br>receiving chat" }
-        s3@{ shape: bucket, label: "S3 bucket<br>Copy or Keep in S3" }
+        bot@{ shape: cloud, label: "Telegram bot or S3 bucket<br>chat, Copy or Keep in S3" }
         remoto@{ shape: cloud, label: "rclone remote<br>file server, cloud or service" }
     end
     subgraph RESULTADO["Result"]
@@ -30,14 +27,9 @@ flowchart LR
     inteiro -- "4a · no" -----> depois
     inteiro -- "4b · yes: bot and S3" --> https
     inteiro -- "4c · yes: rclone remote" --> rclone
-    https -- "5a · sends the message, HTTPS" ---> bot
-    https -- "5b · writes the object, HTTPS" ---> s3
-    rclone -- "5c · writes the file, HTTPS, SSH or FTP with TLS" ---> remoto
+    https -- "5a · sends the message or writes the object, HTTPS" ---> bot
+    rclone -- "5b · writes the file, HTTPS, SSH or FTP with TLS" ---> remoto
     bot -- "6a · answers" --> confirmou
-    s3 -- "6b · answers" --> confirmou
-    remoto -- "6c · answers" --> confirmou
+    remoto -- "6b · answers" --> confirmou
     confirmou -- "7a · yes: records and goes on" --> enviado
     confirmou -- "7b · no: stops" --> parou
-    passada -. "reads the settings and writes the progress" .-> andamento
-    https -. "reads the keys and the token" .-> segredos
-    rclone -. "reads the remote access" .-> segredos

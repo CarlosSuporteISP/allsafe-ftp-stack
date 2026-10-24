@@ -1,7 +1,7 @@
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     subgraph QUEM["Quem usa"]
-        usuario@{ shape: person, label: "Usuário<br>navegador na rede interna" }
+        usuario@{ shape: person, label: "Usuário<br>navegador na<br>rede interna" }
     end
     subgraph FRENTE["Frente web"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
@@ -10,12 +10,9 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
-        hash@{ shape: doc, label: "administradores<br>nome e hash da senha" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna" }
         fator@{ shape: diam, label: "conta já tem<br>segundo fator?" }
         cadastro@{ shape: rect, label: "cadastro do segundo fator<br>código QR e chave nova" }
         codigo@{ shape: diam, label: "código do aplicativo<br>confere?" }
-        chave@{ shape: doc, label: "segundo-fator<br>chave de cada conta" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 4 h<br>cookie e token CSRF" }
@@ -42,6 +39,3 @@ flowchart LR
     sessao -- "9 · cada pedido passa pelas conferências" --> pedidos
     pedidos -- "10a · aceito" --> atendido
     pedidos -- "10b · recusado" --> recusa
-    painel -. "administrador: compara com o hash" .-> hash
-    painel -. "outro nome: o servidor FTP confere a senha" .-> ftp
-    painel -. "segundo fator: grava a chave no cadastro e calcula o código" .-> chave

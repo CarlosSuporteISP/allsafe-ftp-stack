@@ -12,7 +12,7 @@
 
 Desarrollado por [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versión](https://img.shields.io/badge/versi%C3%B3n-1.16.0-blue)
+![Versión](https://img.shields.io/badge/versi%C3%B3n-1.17.0-blue)
 ![Estado](https://img.shields.io/badge/estado-estable-brightgreen)
 ![Soporte](https://img.shields.io/badge/soporte-LTS-blue)
 [![Licencia](https://img.shields.io/badge/licencia-Apache--2.0-blue)](LICENSE)
@@ -52,14 +52,14 @@ flowchart LR
 
 > 🧱 **Uso solo en red privada.** Por defecto, esta stack es para red interna: escucha **solo en IP privada** (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` o `127.0.0.1`), **detrás de firewall**, y no debe publicarse en internet ni recibir redirección de puertos desde el borde. Una dirección pública solo entra por decisión de quien instala, con `REDE_PERMITIR_IP_PUBLICO=sim` y firewall en el servidor: lea antes la [alerta](doc/es/seguridad.md#ip-publico). Detalles en [doc/es/seguridad.md](doc/es/seguridad.md#rede-privada).
 
-> 📌 **Repositorio oficial:** [github.com/allsafe-inf/allsafe-ftp-stack](https://github.com/allsafe-inf/allsafe-ftp-stack). Las versiones salen primero en él, y es en él donde se reciben issues y pull requests. La copia en `github.com/CarlosSuporteISP/allsafe-ftp-stack` es un espejo, actualizado después.
+> **Repositorio oficial:** [github.com/allsafe-inf/allsafe-ftp-stack](https://github.com/allsafe-inf/allsafe-ftp-stack). Las versiones salen primero en él, y es en él donde se reciben issues y pull requests. La copia en `github.com/CarlosSuporteISP/allsafe-ftp-stack` es un espejo, actualizado después.
 
 ---
 
 <details>
 <summary>Índice — haga clic para expandir</summary>
 
-[Qué es](#o-que-e) · [Aspectos destacados](#destaques) · [Imágenes](#imagens) · [Instalación rápida](#instalacao) · [Cómo funciona](#como-funciona) · [Arquitectura](#arquitetura) · [Tecnologías](#tecnologias) · [Puertos y binds](#portas) · [Configuración](#configuracao) · [Seguridad](#seguranca) · [Pruebas](#testes) · [Estructura de archivos](#arquivos) · [Documentación](#documentacao) · [Plan](#plano) · [Versión](#versao) · [Proyectos relacionados](#relacionados) · [Créditos](#creditos) · [Licencia](#licenca)
+[Qué es](#o-que-e) · [Aspectos destacados](#destaques) · [Imágenes](#imagens) · [Instalación rápida](#instalacao) · [Instalación avanzada](#instalacao-avancada) · [Cómo funciona](#como-funciona) · [Arquitectura](#arquitetura) · [Tecnologías](#tecnologias) · [Puertos y binds](#portas) · [Configuración](#configuracao) · [Seguridad](#seguranca) · [Pruebas](#testes) · [Estructura de archivos](#arquivos) · [Documentación](#documentacao) · [Plan](#plano) · [Versión](#versao) · [Proyectos relacionados](#relacionados) · [Créditos](#creditos) · [Licencia](#licenca)
 
 </details>
 
@@ -77,7 +77,7 @@ Son **tres contenedores**: el servidor FTP, el panel y el **nginx**, la única p
 |---|---|
 | **Para qué** | Recibir por FTPS copias de seguridad y archivos de equipos de red, cámaras, empresas y personas, y consultar todo desde el navegador |
 | **Tecnologías** | Docker Compose · Debian 13 · Pure-FTPd · PureDB · OpenSSL · nginx · Bash · Python |
-| **Acceso** | Cliente FTP con **TLS explícito** (`AUTH TLS`) en el puerto `21/tcp`, modo pasivo en el rango del perfil (`30000-30049/tcp` en el `small`) · panel en `https://<IP privado>:8443`, por el nginx |
+| **Acceso** | Cliente FTP con **TLS explícito** (`AUTH TLS`) en el puerto `21/tcp`, modo pasivo en el rango del perfil (`30000-30099/tcp` en el `small`) · panel en `https://<IP privado>:8443`, por el nginx |
 | **Requisitos** | Docker Engine con Docker Compose v2 o más reciente · CPU y memoria del perfil elegido (2 vCPU y 2 GB en el `small`) · una IP **privada** dedicada · firewall en el host que libere solo la red interna |
 
 > **Panel web:** solo en red interna, detrás de firewall, como el resto de la stack. Rechaza por código la dirección que no sea privada. Cómo usarlo: [doc/es/panel.md](doc/es/panel.md).
@@ -177,15 +177,15 @@ Para atender la red interna, ajuste en el `.env` (modelo en [`.env.example`](.en
 
 | Quiero | Comando |
 |---|---|
-| Arrancar con otro porte | `./deploy.sh --size medium` (o `large`, `xlarge`, `extended`); el porte queda guardado en el `.env` |
+| Arrancar con otro tamaño | `./deploy.sh --size medium` (o `large`, `xlarge`, `extended`); el tamaño queda guardado en el `.env` |
 | Solo validar, sin levantar nada | `./deploy.sh --check-only` |
 | Actualizar los paquetes de las imágenes | `./deploy.sh --atualizar` |
 | Abrir el panel | `https://<PAINEL_BIND_IP>:8443` en el navegador, con el usuario de `PAINEL_ADMIN_USER` y la contraseña de `.secrets/painel-admin-inicial-senha.txt` |
 | Cambiar el usuario o la contraseña del panel | desde el panel, pestaña Usuarios, en la fila del administrador |
 | Crear otro administrador del panel | desde el panel, pestaña Usuarios, **Nuevo usuario** con el perfil Administrador |
-| Recuperar el acceso al panel | `./scripts/painel-senha.sh --gerar` (otro administrador: `--usuario NOME`) |
+| Recuperar el acceso al panel | `./scripts/painel-senha.sh --gerar` (otro administrador: `--usuario NOMBRE`) |
 | Pedir un código además de la contraseña en la entrada del panel | ya viene activado para toda cuenta (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim`): cada una registra la aplicación autenticadora en la primera entrada. Vea [Segundo factor](doc/es/panel.md#segundo-fator) |
-| Restablecer el segundo factor de quien perdió el dispositivo | un administrador, en la pestaña Usuarios, o `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME` (usuario del FTP: `ftp.NOME`). La cuenta lo registra de nuevo en la entrada siguiente |
+| Restablecer el segundo factor de quien perdió el dispositivo | un administrador, en la pestaña Usuarios, o `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOMBRE` (usuario del FTP: `ftp.NOMBRE`). La cuenta lo registra de nuevo en la entrada siguiente |
 | Crear un usuario | desde el panel, pestaña Usuarios, o `./manage-user.sh add backup-olt` |
 | Limitar lo que hace un usuario (envía sin borrar, solo envía sin ver las copias, o solo descarga) | desde el panel, pestaña Usuarios, **Editar**, tarjeta **Perfil**, o `./manage-user.sh perfil backup-olt envio`: vea [Perfiles](doc/es/panel.md#perfis) |
 | Descargar una copia recibida | desde el panel, pestaña Archivos, botón **Descargar** en la fila del archivo |
@@ -203,6 +203,62 @@ Para atender la red interna, ajuste en el `.env` (modelo en [`.env.example`](.en
 | Eliminar y borrar los datos | `./deploy.sh --remover --apagar-dados` (pide escribir `apagar`) |
 
 Paso a paso comentado en [doc/es/instalacion.md](doc/es/instalacion.md).
+
+---
+
+<a name="instalacao-avancada"></a>
+
+## 🚀 Instalación avanzada
+
+Para cuando el valor por defecto no basta: elegir el tamaño (perfil), atender a la red interna, activar el IPv6, publicar solo el panel detrás de un proxy o túnel, o dejar los datos fuera de `/srv`.
+
+1. Clone el repositorio:
+
+   ```bash
+   git clone https://github.com/allsafe-inf/allsafe-ftp-stack.git
+   cd allsafe-ftp-stack
+   ```
+
+2. Opcional: cree el `.env` para ajustarlo antes del primer arranque. Sin él, el `deploy.sh` crea uno a partir del ejemplo, con todo en `127.0.0.1`.
+
+   ```bash
+   cp .env.example .env
+   chmod 600 .env
+   ```
+
+3. Edite el `.env`: `FTP_BIND_IP`, `FTP_PASSIVE_IP` y `PAINEL_BIND_IP` (IP privadas) y, para llevar los archivos a otro lugar, `DATA_DIR`, `BACKUP_DIR` y `TEMP_DIR`. Cada variable está en [Configuración](doc/es/configuracion.md).
+4. Valide sin levantar nada, con el tamaño que quiere:
+
+   ```bash
+   ./deploy.sh --check-only --size medium
+   ```
+
+5. Instale con ese tamaño:
+
+   ```bash
+   ./deploy.sh --size medium
+   ```
+
+6. Verifique los servicios en marcha:
+
+   ```bash
+   scripts/validate.sh --runtime
+   ```
+
+| Quiero | Comando |
+|---|---|
+| Elegir el tamaño | `./deploy.sh --size small\|medium\|large\|xlarge\|extended`; queda guardado en el `.env` y se rechaza antes de cambiar nada si el servidor tiene menos CPU o memoria de las que el tamaño pide |
+| Solo validar | `./deploy.sh --check-only` (con `--size <perfil>` para validar un tamaño) |
+| Actualizar los paquetes de las imágenes | `./deploy.sh --atualizar` |
+| Eliminar, conservando los datos | `./deploy.sh --remover` |
+| Eliminar y borrar los datos | `./deploy.sh --remover --apagar-dados` (pide escribir `apagar`; `--sim` dispensa la pregunta) |
+| Activar el IPv6 | `REDE_IPV6=sim` en el `.env` y `./deploy.sh`: vea [IPv6](doc/es/configuracion.md#ipv6) |
+| Publicar solo el panel detrás de un proxy o túnel | rellene `PAINEL_PROXY_CONFIAVEL` en el `.env`: vea [Seguridad](doc/es/seguridad.md#painel-por-proxy) |
+| Usar una dirección pública | solo con su [opción propia](doc/es/seguridad.md#ip-publico) (`REDE_PERMITIR_IP_PUBLICO=sim`); la verificación de las redes privadas está en `scripts/rede-privada.sh` |
+| Recuperar el acceso al panel | `./scripts/painel-senha.sh --gerar` (otro administrador: `--usuario NOMBRE`) |
+| Guardar una copia de seguridad | `./scripts/backup.sh`; para volver a ella, `./scripts/restaurar.sh <copia>` |
+
+Guía completa en [doc/es/instalacion.md](doc/es/instalacion.md).
 
 ---
 
@@ -265,7 +321,7 @@ flowchart LR
 | 4 | ¿usuario y contraseña coinciden? ➜ PureDB | La cuenta se busca en la base de usuarios virtuales (`/auth/pureftpd.pdb`) |
 | 5a | ¿usuario y contraseña coinciden? ➜ sesión en chroot | Sí: la sesión abre encerrada en la carpeta del usuario |
 | 5b | ¿usuario y contraseña coinciden? ➜ conexión rechazada | No: `530 Login authentication failed`. Por defecto, 5 contraseñas incorrectas desde la misma dirección en 15 minutos bloquean al usuario para esa dirección por 15 minutos; el límite de cada usuario se ajusta en el panel: [bloqueo por intento](doc/es/seguridad.md#bloqueio-por-tentativa). La dirección, IPv4 o IPv6, que pasa de 5 errores en 24 horas, con cualquier usuario, queda 120 días sin entrar al FTP ni al panel: [bloqueo por dirección](doc/es/seguridad.md#bloqueio-por-endereco) |
-| 6 | sesión en chroot ➜ `/data` | El archivo sube por el canal de datos en modo pasivo, en el rango del perfil (`30000-30049/tcp` en el `small`) |
+| 6 | sesión en chroot ➜ `/data` | El archivo sube por el canal de datos en modo pasivo, en el rango del perfil (`30000-30099/tcp` en el `small`) |
 | 7 | `/data` ➜ copia de seguridad guardada | El archivo queda guardado en la carpeta del usuario, dentro del volumen |
 
 **Apoyo**
@@ -289,7 +345,7 @@ Cómo el nginx y el panel deciden si atienden una solicitud, en dos flujogramas:
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     subgraph QUEM["Quién usa"]
-        usuario@{ shape: person, label: "Usuario<br>navegador en la red interna" }
+        usuario@{ shape: person, label: "Usuario<br>navegador en<br>la red interna" }
     end
     subgraph FRENTE["Frente web"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
@@ -298,12 +354,9 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Panel web<br>allsafe-ftp-painel, socket Unix" }
         senha@{ shape: diam, label: "¿usuario y contraseña<br>coinciden?" }
-        hash@{ shape: doc, label: "administradores<br>nombre y hash de la contraseña" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, red interna" }
         fator@{ shape: diam, label: "¿la cuenta ya tiene<br>segundo factor?" }
         cadastro@{ shape: rect, label: "registro del segundo factor<br>código QR y clave nueva" }
         codigo@{ shape: diam, label: "¿el código de la aplicación<br>coincide?" }
-        chave@{ shape: doc, label: "segundo-fator<br>clave de cada cuenta" }
     end
     subgraph SESSAO["Sesión"]
         sessao@{ shape: rect, label: "sesión de 4 h<br>cookie y token CSRF" }
@@ -330,9 +383,6 @@ flowchart LR
     sessao -- "9 · cada solicitud pasa por las verificaciones" --> pedidos
     pedidos -- "10a · aceptada" --> atendido
     pedidos -- "10b · rechazada" --> recusa
-    painel -. "administrador: compara con el hash" .-> hash
-    painel -. "otro nombre: el servidor FTP verifica la contraseña" .-> ftp
-    painel -. "segundo factor: guarda la clave en el registro y calcula el código" .-> chave
 ```
 
 <sub>Nivel 2 · Flujograma · [fuente](doc/es/diagramas/)</sub>
@@ -347,7 +397,7 @@ flowchart LR
 | 5a | ¿usuario y contraseña coinciden? ➜ ¿la cuenta ya tiene segundo factor? | Sí: antes de abrir la sesión, el panel ve si la cuenta, de administrador o de usuario del FTP, ya tiene el [segundo factor](doc/es/panel.md#segundo-fator) registrado |
 | 5b | ¿usuario y contraseña coinciden? ➜ solicitud rechazada | No: `401`, sin decir cuál de los dos falló; cinco errores en 15 minutos bloquean la dirección (`429`) |
 | 6a | ¿la cuenta ya tiene segundo factor? ➜ ¿el código de la aplicación coincide? | Sí: no se abre ninguna sesión. El panel guarda una espera de 5 minutos, atada a la dirección, y pide el código de seis dígitos de la aplicación autenticadora |
-| 6b | ¿la cuenta ya tiene segundo factor? ➜ registro del segundo factor | No, y el segundo factor es obligatorio (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim`, el valor por defecto): no se abre ninguna sesión. El panel sortea una clave, guarda una espera de 10 minutos, atada a la dirección, y muestra el código QR y la clave |
+| 6b | ¿la cuenta ya tiene segundo factor? ➜ registro del segundo factor | No, y el segundo factor es obligatorio (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim`, el valor por defecto): no se abre ninguna sesión. El panel genera una clave, guarda una espera de 10 minutos, atada a la dirección, y muestra el código QR y la clave |
 | 6c | ¿la cuenta ya tiene segundo factor? ➜ sesión de 4 h | No, y el segundo factor no es obligatorio: abre la sesión solo con la contraseña, con cookie y token CSRF |
 | 7 | registro del segundo factor ➜ ¿el código de la aplicación coincide? | La cuenta lee la clave con la aplicación autenticadora y escribe el primer código. La clave solo se guarda si coincide |
 | 8a | ¿el código de la aplicación coincide? ➜ sesión de 4 h | Sí: abre la sesión, con cookie y token CSRF. La del administrador alcanza todas las pestañas; la del usuario del FTP, solo la pantalla Mis archivos. El mismo código no vale una segunda vez |
@@ -491,7 +541,7 @@ flowchart LR
 | 4 | nginx ➜ Panel web | La solicitud aceptada se reenvía al panel por el socket Unix, con la dirección del cliente |
 | 5 | Panel web ➜ `DATA_DIR/auth` | El panel crea, edita o elimina el usuario en el PureDB |
 | 6 | Equipo de red ➜ Pure-FTPd | El cliente se conecta por FTPS en `21/tcp`, mapeado a `2121/tcp` |
-| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | El archivo se guarda por el canal pasivo, en el rango del perfil (`30000-30049/tcp` en el `small`) |
+| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | El archivo se guarda por el canal pasivo, en el rango del perfil (`30000-30099/tcp` en el `small`) |
 | 8 | `DATA_DIR/dados` ➜ copia de seguridad guardada | El archivo queda en la carpeta del usuario, en el host |
 
 **Apoyo**
@@ -523,7 +573,7 @@ El mapa muestra las piezas y los volúmenes. La configuración, los secretos y e
 
 | Pieza | Papel | Puerto | Datos en |
 |---|---|---|---|
-| Contenedor `allsafe-ftp` (servicio `ftp`) | Pure-FTPd con FTPS, `chroot` y límites | `21/tcp` ➜ `2121/tcp` y el rango pasivo del perfil (`30000-30049/tcp` en el `small`) | — |
+| Contenedor `allsafe-ftp` (servicio `ftp`) | Pure-FTPd con FTPS, `chroot` y límites | `21/tcp` ➜ `2121/tcp` y el rango pasivo del perfil (`30000-30099/tcp` en el `small`) | — |
 | Contenedor `allsafe-ftp-painel` (servicio `painel`) | Panel web que administra los usuarios del FTP; atiende solo al nginx, por socket Unix | ninguno | — |
 | Contenedor `allsafe-ftp-nginx` (servicio `nginx`) | Frente web del panel: HTTPS, redes permitidas, límite de solicitudes y archivos estáticos | `8443/tcp` ➜ `8443/tcp` | — |
 | Carpeta `DATA_DIR/auth` | Base PureDB de los usuarios virtuales, compartida por el FTP y el panel | — | `/auth` |
@@ -551,7 +601,7 @@ Detalle completo, con el modelo del arranque, en [doc/es/arquitectura.md](doc/es
 
 ## 🛠️ Tecnologías
 
-Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python y Bash, con la versión real verificada en el host donde se validó la stack.
+Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python, Bash, rclone, age y Perl, con la versión real verificada en el host donde se validó la stack.
 
 <details>
 <summary>Tecnologías, con nombre y versión — haga clic para expandir</summary>
@@ -568,15 +618,18 @@ Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python y Bash, con la vers
 | Python | 3.13.5 (paquete Debian `python3`) | Panel web, solo con la biblioteca estándar |
 | tini | 0.19.0 (`docker-init` del Docker Engine) | Proceso 1 de cada contenedor (`init: true`) |
 | Bash | 5.2 | Scripts del host y de los contenedores |
+| rclone | 1.75.2 (fijada en el `Dockerfile`) | Envía las copias a un S3 y a los remotos del rclone desde el panel |
+| age | 1.2.1 (paquete Debian `age`) | Cifra la copia de seguridad y la abre al restaurar |
+| Perl | 5.40.1 (paquete Debian) | Ejecuta los ayudantes del FTP (`ftp/*.pl`): porteiro, vigía, entrada y direcciones |
 
 </details>
 
 <details>
 <summary>Peso de los lenguajes y de los servicios, medido — haga clic para expandir</summary>
 
-Medido el 2026-10-05, en la versión `0.32.0`, con los tres contenedores en reposo, en el porte `small`:
+Medido el 2026-10-05, en la versión `0.32.0`, con los tres contenedores en reposo, en el tamaño `small`:
 
-| Servicio | Lenguaje o programa | Memoria en uso | Límite del porte | Imagen |
+| Servicio | Lenguaje o programa | Memoria en uso | Límite del tamaño | Imagen |
 |---|---|---|---|---|
 | `ftp` | Pure-FTPd, en C, con entrada en Bash | 2,7 MiB | 256 MiB | 208 MB |
 | `painel` | Python, solo con la biblioteca estándar | 12,9 MiB | 192 MiB | 258 MB |
@@ -608,10 +661,10 @@ FTP en `21/tcp` más el rango pasivo del perfil; panel en `8443/tcp`, por el ngi
 | Puerto (host) | Protocolo | Bind por defecto | Para qué sirve |
 |---|---|---|---|
 | `${FTP_PORT:-21}` | TCP | `${FTP_BIND_IP:-127.0.0.1}` | canal de control FTP (mapeado a `:2121` en el contenedor) |
-| `30000-30049` | TCP | `${FTP_BIND_IP:-127.0.0.1}` | canal de datos en **modo pasivo**; rango del perfil `small` (50 puertos = 50 clientes), hasta `30000-31599` en el `extended` |
+| `30000-30099` | TCP | `${FTP_BIND_IP:-127.0.0.1}` | canal de datos en **modo pasivo**; rango del perfil `small` (100 puertos para 50 clientes), hasta `30000-32399` en el `extended` |
 | `${PAINEL_PORT:-8443}` | TCP | `${PAINEL_BIND_IP:-127.0.0.1}` | panel web, HTTPS; quien publica es el nginx (mapeado a `:8443` en el contenedor `allsafe-ftp-nginx`) |
 
-El rango pasivo es 1:1 entre host y contenedor. Al cambiar `FTP_PASSIVE_PORT_*`, alinee la cantidad de puertos con el `FTP_MAX_CLIENTS`. El contenedor del panel no publica puerto: habla solo con el nginx, por un socket Unix.
+El rango pasivo es 1:1 entre host y contenedor. Al cambiar `FTP_PASSIVE_PORT_*`, deje al menos el doble de puertos que `FTP_MAX_CLIENTS`: el Pure-FTPd acepta, al mismo tiempo, solo la mitad de los puertos pasivos. El contenedor del panel no publica puerto: habla solo con el nginx, por un socket Unix.
 
 </details>
 
@@ -632,7 +685,7 @@ Toda la configuración viene del `.env`, creado a partir del [`.env.example`](.e
 | [`medium`](profiles/medium.env) | 4 vCPU · 4 GB | ~120 | recolección nocturna por lotes (~50 a 200 equipos) |
 | [`large`](profiles/large.env) | 8 vCPU · 8 GB | ~300 | más de 200 equipos o varios recolectores concurrentes |
 | [`xlarge`](profiles/xlarge.env) | 16 vCPU · 16 GB | ~600 | operación grande, con varias regiones o varios recolectores en el mismo servidor |
-| [`extended`](profiles/extended.env) | 32 vCPU · 32 GB | ~1200 | el porte más grande: servidor dedicado, miles de equipos en ventanas cortas |
+| [`extended`](profiles/extended.env) | 32 vCPU · 32 GB | ~1200 | el tamaño más grande: servidor dedicado, miles de equipos en ventanas cortas |
 
 </details>
 
@@ -681,7 +734,7 @@ El camino más seguro para cada decisión de quien instala, en flujograma, está
 | Verificar la instalación en marcha | `./scripts/validate.sh --runtime` | lo mismo, más `servico ftp: running, healthy`, igual para `painel` y `nginx`, y el usuario inicial en el PureDB o eliminado por el administrador |
 | Ejecutar la batería completa: funcional, seguridad y red | `./tests/testar.sh` | una línea por caso y, al final, `Bateria aprovada: nenhum desvio.` |
 
-La batería levanta una instancia de prueba separada, en `127.0.0.2`, y la elimina al terminar: la instalación en uso no se toca. Son 113 casos funcionales, 162 de seguridad y 19 de red, y ninguna versión se publica con desvío. Lo que la batería de seguridad intenta, objetivo por objetivo, está en [pruebas ejecutadas](doc/es/seguridad.md#testes-executados); las opciones del script, en [Scripts](doc/es/scripts.md#testar).
+La batería levanta una instancia de prueba separada, en `127.0.0.2`, y la elimina al terminar: la instalación en uso no se toca. Son 113 casos funcionales, 162 de seguridad y 20 de red, y ninguna versión se publica con desvío. Lo que la batería de seguridad intenta, objetivo por objetivo, está en [pruebas ejecutadas](doc/es/seguridad.md#testes-executados); las opciones del script, en [Scripts](doc/es/scripts.md#testar).
 
 ---
 
@@ -702,6 +755,10 @@ En la raíz están el `compose.yaml`, el `Dockerfile` y los comandos del día a 
 | [`deploy.sh`](deploy.sh) | Instala, aplica de nuevo, actualiza o elimina la stack en un comando |
 | [`manage-user.sh`](manage-user.sh) | Acceso directo del host para `add` (con la carpeta y el perfil, si quiere), `passwd`, `pasta`, `perfil`, `del` y `list` de usuarios |
 | [`ftp/entrypoint.sh`](ftp/entrypoint.sh) | Prepara el usuario inicial y el certificado y ejecuta el `pure-ftpd` |
+| [`ftp/entrada.pl`](ftp/entrada.pl) | Área de entrada del perfil "solo envío": la cuenta entra en `/data/.entrada/<usuario>`, fuera de la carpeta de las copias, y cada archivo terminado se mueve a la carpeta del usuario |
+| [`ftp/endereco.pl`](ftp/endereco.pl) | Escritura única de la dirección y del prefijo del bloqueo por dirección, IPv4 e IPv6, igual a la del panel |
+| [`ftp/porteiro.pl`](ftp/porteiro.pl) | Portero del FTP: el `pure-authd` lo llama en cada entrada, antes de la contraseña, y decide si la sesión puede seguir; no verifica la contraseña |
+| [`ftp/vigia.pl`](ftp/vigia.pl) | Vigía de las entradas del FTP: cuenta las contraseñas incorrectas y crea el bloqueo que el portero aplica |
 | [`ftp/saude.sh`](ftp/saude.sh) | Healthcheck del FTP: abre el puerto de control y espera el saludo del servidor |
 | [`ftp/usuario.sh`](ftp/usuario.sh) | Gestión de usuarios **dentro** de los contenedores (llamado por el `manage-user.sh` y por el panel) |
 | [`painel/servidor.py`](painel/servidor.py) | Panel web, en Python solo con la biblioteca estándar, detrás del nginx: punto de entrada, con los modos `--hash` y `--saude` |
@@ -777,7 +834,7 @@ El plan de creación y cambio de la stack (fases, pruebas, evidencias y avance) 
 
 ## 🏷️ Versión
 
-**1.16.0**, registrada en [`VERSION`](VERSION). Cambios por versión en [`CHANGELOG.md`](CHANGELOG.md). Cada versión publicada tiene una etiqueta `vX.Y.Z` y una Release en el [repositorio oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), el de la empresa; el espejo en la cuenta personal recibe la misma versión enseguida.
+**1.17.0**, registrada en [`VERSION`](VERSION). Cambios por versión en [`CHANGELOG.md`](CHANGELOG.md). Cada versión publicada tiene una etiqueta `vX.Y.Z` y una Release en el [repositorio oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), el de la empresa; el espejo en la cuenta personal recibe la misma versión enseguida.
 
 La versión avanza en cada publicación, siempre en el número del medio (`1.1.0`, `1.2.0`) o en el primero: el número de corrección queda en cero. `0.x` fue la fase de construcción; **la `1.0.0` es la primera versión lista para producción** y abre la línea de largo plazo (LTS) `1.x`. Las versiones se renumeraron el 2026-10-11: el [`CHANGELOG.md`](CHANGELOG.md) trae lo que cambió en cada una y la tabla con los números de antes.
 

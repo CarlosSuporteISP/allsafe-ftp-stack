@@ -102,7 +102,7 @@ flowchart LR
 | 4 | nginx ➜ Painel web | O pedido aceito é repassado ao painel pelo soquete Unix, com o endereço do cliente |
 | 5 | Painel web ➜ `DATA_DIR/auth` | O painel cria, edita ou remove o usuário no PureDB |
 | 6 | Equipamento de rede ➜ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
-| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
+| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo, na faixa do perfil (`30000-30099/tcp` no `small`) |
 | 8 | `DATA_DIR/dados` ➜ backup guardado | O arquivo fica na pasta do usuário, no host |
 
 **Apoio**
@@ -190,7 +190,7 @@ Dos arquivos de `.secrets/`, o `ftp` vê um, o `painel` vê dois, o hash da senh
 | Publicação | Para quê |
 |---|---|
 | `FTP_BIND_IP:FTP_PORT` ➜ `2121/tcp` | canal de controle |
-| `FTP_BIND_IP:<faixa passiva>` ➜ a mesma faixa no container | canal de dados, modo passivo, 1:1 (`30000-30049/tcp` no `small`, até `30000-31599/tcp` no `extended`) |
+| `FTP_BIND_IP:<faixa passiva>` ➜ a mesma faixa no container | canal de dados, modo passivo, 1:1 (`30000-30099/tcp` no `small`, até `30000-32399/tcp` no `extended`) |
 | `PAINEL_BIND_IP:PAINEL_PORT` ➜ `8443/tcp` do `nginx` | painel web, HTTPS |
 
 - O painel não publica nem escuta porta: o nginx o alcança pelo soquete Unix da pasta `DATA_DIR/nginx`, sem passar pela rede.

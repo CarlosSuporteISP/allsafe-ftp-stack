@@ -14,7 +14,7 @@ O painel é uma página, aberta pelo navegador **de dentro da rede interna**, pa
 ```mermaid
 %%{init: {"theme": "dark"}}%%
 flowchart LR
-    usuario@{ shape: person, label: "Usuário<br>navegador na rede interna" }
+    usuario@{ shape: person, label: "Usuário<br>navegador na<br>rede interna" }
     nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
     painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel" }
     cmd@{ shape: rect, label: "allsafe-ftp-user<br>cria, troca a senha, remove" }
@@ -577,12 +577,9 @@ flowchart LR
         inteiro@{ shape: diam, label: "arquivo<br>chegou inteiro?" }
         https@{ shape: rect, label: "saída por HTTPS<br>painel/saida.py" }
         rclone@{ shape: rect, label: "rclone<br>painel/rclone.py" }
-        andamento@{ shape: cyl, label: "andamento do destino<br>DATA_DIR/painel/destinos" }
-        segredos@{ shape: docs, label: "segredos do destino<br>SECRETS_DIR/destinos, 0600" }
     end
     subgraph FORA["Fora do servidor"]
-        bot@{ shape: cloud, label: "bot do Telegram<br>conversa que recebe" }
-        s3@{ shape: bucket, label: "bucket S3<br>Copiar ou Guardar no S3" }
+        bot@{ shape: cloud, label: "bot do Telegram ou bucket S3<br>conversa, Copiar ou Guardar no S3" }
         remoto@{ shape: cloud, label: "remoto do rclone<br>servidor, nuvem ou serviço de arquivos" }
     end
     subgraph RESULTADO["Resultado"]
@@ -598,17 +595,12 @@ flowchart LR
     inteiro -- "4a · não" -----> depois
     inteiro -- "4b · sim: bot e S3" --> https
     inteiro -- "4c · sim: remoto do rclone" --> rclone
-    https -- "5a · envia a mensagem, HTTPS" ---> bot
-    https -- "5b · grava o objeto, HTTPS" ---> s3
-    rclone -- "5c · grava o arquivo, HTTPS, SSH ou FTP com TLS" ---> remoto
+    https -- "5a · envia a mensagem ou grava o objeto, HTTPS" ---> bot
+    rclone -- "5b · grava o arquivo, HTTPS, SSH ou FTP com TLS" ---> remoto
     bot -- "6a · responde" --> confirmou
-    s3 -- "6b · responde" --> confirmou
-    remoto -- "6c · responde" --> confirmou
+    remoto -- "6b · responde" --> confirmou
     confirmou -- "7a · sim: anota e segue" --> enviado
     confirmou -- "7b · não: para" --> parou
-    passada -. "lê a configuração e grava o andamento" .-> andamento
-    https -. "lê as chaves e o token" .-> segredos
-    rclone -. "lê o acesso do remoto" .-> segredos
 ```
 
 <sub>Nível 2 · Mapa · [fonte](diagramas/)</sub>
@@ -621,12 +613,10 @@ flowchart LR
 | 4a | arquivo chegou inteiro? ➜ ainda chegando | Não: o arquivo mudou há menos de dois minutos e fica para uma próxima passada |
 | 4b | arquivo chegou inteiro? ➜ saída por HTTPS | Sim, com bot ou S3: o pedido sai por HTTPS, com o certificado e o endereço conferidos. O bot não espera os dois minutos do arquivo que o FTP ou o painel avisou que terminou de chegar |
 | 4c | arquivo chegou inteiro? ➜ rclone | Sim, com remoto do rclone: o painel chama o rclone, um arquivo por vez, só para gravar |
-| 5a | saída por HTTPS ➜ bot do Telegram | O bot entrega o arquivo à conversa, em uma mensagem; acima do limite do bot vai só o aviso |
-| 5b | saída por HTTPS ➜ bucket S3 | O painel grava o objeto no bucket, em partes quando é grande |
-| 5c | rclone ➜ remoto do rclone | O rclone grava o arquivo na pasta do remoto: por HTTPS ou por FTP com TLS, com o certificado conferido, ou, no SFTP, por SSH com a chave do servidor conferida |
-| 6a | bot do Telegram ➜ o destino confirmou? | O serviço do bot responde ao pedido |
-| 6b | bucket S3 ➜ o destino confirmou? | O serviço do S3 responde ao pedido |
-| 6c | remoto do rclone ➜ o destino confirmou? | O rclone termina e diz se gravou |
+| 5a | saída por HTTPS ➜ bot do Telegram ou bucket S3 | Bot: entrega o arquivo à conversa, em uma mensagem; acima do limite do bot vai só o aviso. S3: o painel grava o objeto no bucket, em partes quando é grande |
+| 5b | rclone ➜ remoto do rclone | O rclone grava o arquivo na pasta do remoto: por HTTPS ou por FTP com TLS, com o certificado conferido, ou, no SFTP, por SSH com a chave do servidor conferida |
+| 6a | bot do Telegram ou bucket S3 ➜ o destino confirmou? | O serviço do bot ou do S3 responde ao pedido |
+| 6b | remoto do rclone ➜ o destino confirmou? | O rclone termina e diz se gravou |
 | 7a | o destino confirmou? ➜ arquivo enviado | Sim: o painel anota o arquivo como enviado e segue para o próximo; com **Guardar no S3**, o arquivo sai do servidor depois de entregue por todos os destinos que o levam |
 | 7b | o destino confirmou? ➜ passada encerrada | Não: a passada para, o cartão mostra o motivo e a seguinte recomeça do mesmo arquivo |
 
@@ -1270,7 +1260,7 @@ Cada pedido passa por três conferências antes de mudar alguma coisa: a rede de
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     subgraph QUEM["Quem usa"]
-        usuario@{ shape: person, label: "Usuário<br>navegador na rede interna" }
+        usuario@{ shape: person, label: "Usuário<br>navegador na<br>rede interna" }
     end
     subgraph FRENTE["Frente web"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
@@ -1279,12 +1269,9 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
-        hash@{ shape: doc, label: "administradores<br>nome e hash da senha" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna" }
         fator@{ shape: diam, label: "conta já tem<br>segundo fator?" }
         cadastro@{ shape: rect, label: "cadastro do segundo fator<br>código QR e chave nova" }
         codigo@{ shape: diam, label: "código do aplicativo<br>confere?" }
-        chave@{ shape: doc, label: "segundo-fator<br>chave de cada conta" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 4 h<br>cookie e token CSRF" }
@@ -1311,9 +1298,6 @@ flowchart LR
     sessao -- "9 · cada pedido passa pelas conferências" --> pedidos
     pedidos -- "10a · aceito" --> atendido
     pedidos -- "10b · recusado" --> recusa
-    painel -. "administrador: compara com o hash" .-> hash
-    painel -. "outro nome: o servidor FTP confere a senha" .-> ftp
-    painel -. "segundo fator: grava a chave no cadastro e calcula o código" .-> chave
 ```
 
 <sub>Nível 2 · Fluxograma · [fonte](diagramas/)</sub>

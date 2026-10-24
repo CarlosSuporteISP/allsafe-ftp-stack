@@ -87,3 +87,21 @@ excedente="$(ftp_cru)"
 for fd in "${abertas[@]}"; do exec {fd}>&-; done
 [[ "$aceitas" == "$limite" && "$excedente" == 421* ]]
 caso $? rede 5 "Limite de sessões por IP" "FTP_MAX_CLIENTS_PER_IP=$limite: $aceitas sessões aceitas (220) · a seguinte: $excedente"
+
+# O Pure-FTPd aceita no máximo metade das portas passivas em sessões: a saudação diz o limite que vale de fato,
+# o deploy.sh avisa quando a faixa é curta para FTP_MAX_CLIENTS e deixa de avisar com a faixa no dobro.
+maximo="$(env_file="$ENVA" env_valor FTP_MAX_CLIENTS 50)"; anunciado=""
+inicio="$(env_file="$ENVA" env_valor FTP_PASSIVE_PORT_START 30000)"; fim="$(env_file="$ENVA" env_valor FTP_PASSIVE_PORT_END 30099)"
+esperado=$(( (fim - inicio + 1) / 2 )); (( esperado > maximo )) && esperado="$maximo"
+if { exec {fd}<>"/dev/tcp/$IP/$FTP_PORTA"; } 2>/dev/null; then
+  while IFS= read -r -t 8 -u "$fd" l; do
+    [[ "$l" =~ of\ ([0-9]+)\ allowed ]] && anunciado="${BASH_REMATCH[1]}"
+    [[ "$l" =~ ^220\  ]] && break
+  done
+  exec {fd}>&-
+fi
+conferir_deploy; aviso_curta="$(grep -c "^AVISO: FTP_MAX_CLIENTS=$maximo com $(( fim - inicio + 1 )) portas passivas" "$W/recusa.log")"
+grep -q "FTP_PASSIVE_PORT_END=$(( inicio + maximo * 2 - 1 ))" "$W/recusa.log"; sugestao=$?
+conferir_deploy "FTP_PASSIVE_PORT_END=$(( inicio + maximo * 2 - 1 ))"; aviso_dobro="$(grep -c '^AVISO: FTP_MAX_CLIENTS=' "$W/recusa.log")"
+[[ "$anunciado" == "$esperado" && "$aviso_curta" == 1 && "$sugestao" == 0 && "$aviso_dobro" == 0 ]]
+caso $? rede 20 "Sessões aceitas pelo FTP" "FTP_MAX_CLIENTS=$maximo, faixa passiva $inicio-$fim: a saudação anuncia ${anunciado:-nenhum} sessões ao mesmo tempo (esperado $esperado, metade das portas) · deploy.sh --check-only com essa faixa: aviso $aviso_curta, sugere FTP_PASSIVE_PORT_END=$(( inicio + maximo * 2 - 1 )): $([[ "$sugestao" == 0 ]] && echo sim || echo NÃO) · com a faixa no dobro: aviso $aviso_dobro"

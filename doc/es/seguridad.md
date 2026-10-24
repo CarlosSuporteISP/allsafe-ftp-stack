@@ -63,7 +63,7 @@ Ejemplo con `iptables`, liberando solo la red de gestión `10.10.0.0/24` en la i
 
 ```bash
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 21 ! -s 10.10.0.0/24 -j DROP
-iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30049 ! -s 10.10.0.0/24 -j DROP
+iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30099 ! -s 10.10.0.0/24 -j DROP
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 8443 ! -s 10.10.0.0/24 -j DROP
 ```
 
@@ -71,7 +71,7 @@ Con `REDE_IPV6=sim`, los mismos puertos quedan publicados también en IPv6, y el
 
 ```bash
 ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 21 ! -s fd00:10:10::/64 -j DROP
-ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30049 ! -s fd00:10:10::/64 -j DROP
+ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30099 ! -s fd00:10:10::/64 -j DROP
 ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 8443 ! -s fd00:10:10::/64 -j DROP
 ```
 
@@ -269,7 +269,7 @@ Para activar el modo `1` o el `0`, edite `FTP_TLS_MODE` en el `.env` y aplique d
 ./deploy.sh
 ```
 
-**Resultado esperado:** el resumen trae `FTP:    127.0.0.1:21, SEM TLS (texto puro), modo passivo 30000-30049` (o `TLS explícito opcional (aceita texto puro)` en el modo `1`) y termina con el aviso:
+**Resultado esperado:** el resumen trae `FTP:    127.0.0.1:21, SEM TLS (texto puro), modo passivo 30000-30099` (o `TLS explícito opcional (aceita texto puro)` en el modo `1`) y termina con el aviso:
 
 ```text
 AVISO: FTP_TLS_MODE=0: o FTP está SEM criptografia. Senhas e arquivos passam em texto puro e podem ser
@@ -384,8 +384,8 @@ flowchart LR
     marcado -- "5b · no: rechazo definitivo" --> recusa
     login -- "6a · sí: abre la sesión" ---> sessao
     login -- "6b · no" ---> recusa
-    algum -. "el observador lee cada segundo" .-> lista
-    marcado -. "el portero lee en cada entrada" .-> lista
+    algum -. "el observador lee<br>cada segundo" .-> lista
+    marcado -. "el portero lee<br>en cada entrada" .-> lista
     marcado -. "registra el rechazo" .-> registro
     login -. "consulta el usuario" .-> puredb
 ```
@@ -896,7 +896,7 @@ El paso a paso, en el orden en que se hace:
 2. `FTP_BIND_IP` con la IP **privada** dedicada y **regla en el firewall** del host liberando solo los orígenes de copia: [red privada](#rede-privada).
 3. **Panel:** cambiar la contraseña inicial ([Secretos](secretos.md#senha-do-painel)), reducir `PAINEL_REDES_PERMITIDAS` a la red de administración y liberar el puerto del panel en el firewall solo para ella. En `PAINEL_BIND_IP=127.0.0.1` el panel solo abre en el propio servidor. Mantenga el [segundo factor](panel.md#segundo-fator) obligatorio, que es el valor por defecto, y haga la primera entrada de cada cuenta justo después de crearla, para que el registro de la aplicación quede con quien es su dueño.
 4. Revisar el [bloqueo por intento](#bloqueio-por-tentativa) del FTP: el valor por defecto de la stack y el límite propio de los usuarios que necesitan otro. Revisar también el [bloqueo por dirección](#bloqueio-por-endereco): el límite de errores, las horas en que se suman y los días de bloqueo.
-5. Revisar `FTP_MAX_CLIENTS` y el rango pasivo según el número real de equipos: [Perfiles](perfiles.md). Después de cambiar el porte, o de actualizar una instalación anterior a la `0.29.0`, cambiar la contraseña de los usuarios que la pestaña Seguridad lista en `Costo de las contraseñas del FTP`: [Costo de las contraseñas del FTP](#custo-das-senhas).
+5. Revisar `FTP_MAX_CLIENTS` y el rango pasivo según el número real de equipos: [Perfiles](perfiles.md). Después de cambiar el tamaño, o de actualizar una instalación anterior a la `0.29.0`, cambiar la contraseña de los usuarios que la pestaña Seguridad lista en `Costo de las contraseñas del FTP`: [Costo de las contraseñas del FTP](#custo-das-senhas).
 6. Copia de seguridad programada y llevada fuera del servidor, y la clave que la abre guardada en un gestor de contraseñas, separada de las copias: [Copia de seguridad y restauración](backup.md#chave).
 7. Verificar que `FTP_TLS_MODE` está en `2` o `3`. Si un equipo antiguo no habla TLS, siga antes [FTP sin TLS](#ftp-sem-tls) y prefiera dispensar solo a su usuario: [TLS por usuario](#tls-por-usuario).
 8. Evaluar `FTP_TLS_MODE=3`, que obliga el cifrado también del archivo: [Configuración](configuracion.md#tls).
@@ -917,7 +917,7 @@ El paso a paso, en el orden en que se hace:
 | 3 | Fuga del directorio del usuario (_path traversal_) | `chroot` de todos (`-A`); cada usuario encerrado en la carpeta del registro, `/data/<usuario>` o la carpeta elegida en la creación |
 | 4 | Uso de cuentas del sistema para login | Usuarios **virtuales** en PureDB y `-u 10000` (UID mínimo). Sin anónimo (`-E`) |
 | 5 | Escalada desde el contenedor | `read_only`, `cap_drop: ALL`, `no-new-privileges`, `tmpfs` con `noexec` |
-| 6 | Abuso de recursos o denegación de servicio local | `-c` y `-C` (límites de sesión), `pids_limit`, `mem_limit` sin swap, `cpus`, `ulimits` y el costo de la contraseña del FTP proporcional al porte |
+| 6 | Abuso de recursos o denegación de servicio local | `-c` y `-C` (límites de sesión), `pids_limit`, `mem_limit` sin swap, `cpus`, `ulimits` y el costo de la contraseña del FTP proporcional al tamaño |
 | 7 | Filtración de secreto por Git o por la imagen | Contraseña en `.secrets/*.txt` (ignorado por Git) y `.dockerignore`; nunca en `ENV` de la imagen. Vea [Secretos](secretos.md) |
 | 8 | Enumeración por DNS inverso o _fingerprint_ | `-H` (sin resolución inversa) |
 | 9 | Adivinación del usuario y de la contraseña del panel | Contraseña inicial de 48 caracteres, guardada solo como hash `scrypt`; el rechazo es el mismo para usuario que no existe y para contraseña incorrecta; cinco errores en 15 minutos bloquean la dirección (`429`); antes de eso, nginx limita las solicitudes por dirección |
@@ -935,7 +935,7 @@ El paso a paso, en el orden en que se hace:
 | 21 | Adivinación de la contraseña de un usuario del FTP por la pantalla del panel | Quien verifica la contraseña es el servidor FTP, que retrasa cada rechazo de 3 a 6 segundos; cinco errores en 15 minutos bloquean la dirección (`429`); solo entra quien está en las redes permitidas del panel; un nombre que también es de administrador solo vale con la contraseña de administrador. `PAINEL_ACESSO_USUARIOS_FTP=nao` desactiva esta entrada |
 | 22 | Entrada sin TLS de quien no fue dispensado | Sin ningún usuario dispensado, el servidor rechaza la sesión sin TLS antes de la contraseña. Con alguno, la decisión llega antes de la verificación de la contraseña: sin TLS solo sigue el nombre que está en la lista guardada por el administrador, y los demás reciben `530` con la contraseña correcta o incorrecta, con el rechazo en el registro. Si el proceso que consulta la lista se detiene, el contenedor del FTP termina en vez de aceptar a todos. La dispensa solo vale sobre `FTP_TLS_MODE=2`, nunca con dirección pública aceptada, y solo un administrador modifica la lista: [TLS por usuario](#tls-por-usuario) |
 | 23 | Lectura del registro de las contraseñas sin pasar por la entrada (por la web, por el FTP, por otro contenedor, por el host) | El registro del FTP y el de los administradores guardan solo hash (`argon2id` y `scrypt`), en carpetas del `root` con modo `0750` y `0700`, fuera de las carpetas de los usuarios y fuera de lo que nginx ve; ninguna ruta del panel entrega esos archivos y ninguna pantalla muestra hash; el `chroot` no deja que el usuario del FTP llegue a ellos: [lo que la batería intenta](#sem-senha-e-exaustao) |
-| 24 | Ráfaga de contraseñas incorrectas en el FTP para retener la entrada de quien tiene la contraseña | Costo del hash proporcional al porte (`pure-pw -C FTP_MAX_CLIENTS`), límite de sesiones por dirección y espera de 3 a 6 segundos en cada rechazo: [Costo de las contraseñas del FTP](#custo-das-senhas) |
+| 24 | Ráfaga de contraseñas incorrectas en el FTP para retener la entrada de quien tiene la contraseña | Costo del hash proporcional al tamaño (`pure-pw -C FTP_MAX_CLIENTS`), límite de sesiones por dirección y espera de 3 a 6 segundos en cada rechazo: [Costo de las contraseñas del FTP](#custo-das-senhas) |
 | 25 | Borrar o cambiar el nombre, por el panel, de lo que está fuera de las carpetas de los datos, o borrar una copia de seguridad con un navegador olvidado abierto o por solicitud falsificada | La ruta pasa por las mismas verificaciones de la lectura (`400` para `..`, ruta absoluta y byte nulo; `403` por dentro de enlace simbólico) y la acción se hace en relación con la carpeta ya abierta. El borrado no sigue enlaces: el enlace sale, el destino queda. Cambiar el nombre no mueve el elemento de carpeta ni sustituye a otro. Borrar pide la casilla de confirmación y la contraseña actual del administrador, además de la sesión, del token del formulario y del `Origin`; la contraseña incorrecta cuenta para el bloqueo de la dirección. La carpeta de un usuario del FTP solo sale junto con él. El usuario del FTP no tiene esas rutas (`404`) |
 | 26 | Adivinación de la contraseña de un usuario por el FTP, o contraseñas incorrectas a propósito para quitarle la entrada | [Bloqueo por intento](#bloqueio-por-tentativa): 5 contraseñas incorrectas desde la misma dirección en 15 minutos bloquean al usuario para esa dirección, con límite propio por usuario en el panel. El bloqueo vale solo para la dirección que falló: el equipo que llega desde otra dirección sigue entrando. Un nombre que no está en el registro no genera conteo ni archivo, y el bloqueo inválido o vencido no bloquea. Si el proceso que cuenta o el que rechaza se detiene, el contenedor del FTP termina en vez de seguir sin el bloqueo |
 | 27 | Lectura de una copia de seguridad que salió del servidor (medio perdido, otra máquina, carpeta de red) | La copia la cifra `scripts/backup.sh` con la clave pública de `.secrets/`, y nada sin cifrado llega al disco; solo la clave privada la abre. Cada bloque se autentica: una copia alterada o cortada no se restaura, y el rechazo llega antes de cualquier cambio en la stack: [Copia de seguridad y restauración](backup.md#chave) |
@@ -960,7 +960,7 @@ El paso a paso, en el orden en que se hace:
 | Puerto | Quién debe alcanzarlo |
 |---|---|
 | `FTP_PORT` (control) | Solo las subredes de gestión de los equipos que hacen copia de seguridad |
-| Rango pasivo (datos): `30000-30049` en `small`, hasta `31599` en `extended` | Los mismos orígenes del puerto de control |
+| Rango pasivo (datos): `30000-30099` en `small`, hasta `32399` en `extended` | Los mismos orígenes del puerto de control |
 | `PAINEL_PORT` (panel, HTTPS, publicado por nginx) | Solo las máquinas de quien administra la stack |
 
 Con [`REDE_IPV6=sim`](configuracion.md#ipv6), los mismos tres puertos se publican también en IPv6, en las direcciones `FTP_BIND_IPV6` y `PAINEL_BIND_IPV6`, y piden las mismas restricciones de origen. Todo lo demás queda interno a los contenedores. El panel no publica puerto: quien atiende en `PAINEL_PORT` es nginx. En `PAINEL_PORT`, lo que responde sin usuario y contraseña es solo la pantalla de entrada, el estilo, el logo y el ícono, `/saude`, `/robots.txt` y, cuando está configurado, `/.well-known/security.txt`: [Contacto de seguridad y robots de búsqueda](#contato-de-seguranca). La gestión de los usuarios es por el [panel](panel.md) o por línea de comandos, con [`manage-user.sh`](../../manage-user.sh).
@@ -1016,7 +1016,7 @@ Ninguna versión se publica sin la batería entera aprobada. Se ejecuta en un cl
 |---|---|---|
 | Funcional | 111 | La instalación hace lo que promete: instalar con un comando, enviar y descargar, usuarios por la terminal y por el panel, reinicio sin pérdida, copia y restauración |
 | Seguridad | 161 | Lo que debería rechazarse se rechaza: cada caso intenta algo que no puede ocurrir y verifica el rechazo |
-| Red | 19 | Solo lo que se configuró queda abierto: puertos, dirección de escucha, modo pasivo, subred y redes aceptadas por el panel, con el IPv6 desactivado y activado |
+| Red | 20 | Solo lo que se configuró queda abierto: puertos, dirección de escucha, modo pasivo, subred y redes aceptadas por el panel, con el IPv6 desactivado y activado |
 
 **Lo que la batería de seguridad intenta**, por objetivo. El número es el del caso, el mismo que aparece en la salida de `./tests/testar.sh`:
 
@@ -1054,7 +1054,7 @@ Ninguna versión se publica sin la batería entera aprobada. Se ejecuta en un cl
 
 Además de la batería, cada versión pasa por:
 
-- **Verificación sin levantar nada:** `./scripts/validate.sh` verifica la sintaxis de los scripts, los módulos del panel, el Compose de cada porte y los archivos de licencia, marca y política de seguridad.
+- **Verificación sin levantar nada:** `./scripts/validate.sh` verifica la sintaxis de los scripts, los módulos del panel, el Compose de cada tamaño y los archivos de licencia, marca y política de seguridad.
 - **Revisión del código por clase de falla:** inyección, recorrido de rutas, solicitud falsificada, sesión, secreto en lugar equivocado, agotamiento y exposición de red, una a una, con lo que cambió en la versión. El informe queda en el plan del proyecto.
 - **Panel por proxy, con un proxy de verdad:** la publicación solo del panel se verificó con un nginx de borde y con un túnel de salida en el mismo servidor: el nombre público abre la pantalla de entrada, el envío desde otro origen se rechaza y la dirección falsificada en el encabezado se ignora.
 
@@ -1064,7 +1064,7 @@ Además de la batería, cada versión pasa por:
 ./tests/testar.sh
 ```
 
-**Resultado esperado:** una línea por caso y, al final, `Bateria aprovada: nenhum desvio.`, con 112 casos funcionales, 162 de seguridad y 19 de red. La batería tarda cerca de 1 hora y 40 minutos; las opciones y lo que se guarda están en [Scripts](scripts.md#testar).
+**Resultado esperado:** una línea por caso y, al final, `Bateria aprovada: nenhum desvio.`, con 113 casos funcionales, 162 de seguridad y 20 de red. La batería tarda cerca de 1 hora y 40 minutos; las opciones y lo que se guarda están en [Scripts](scripts.md#testar).
 
 > ⚠️ **Límite — lo que la batería no alcanza:** se ejecuta en el propio servidor, contra la instancia de prueba. El firewall del host, el proxy o el túnel del borde y el equipo que envía la copia de seguridad son de quien instala y no entran en ella: verifíquelos con el [paso a paso de producción](#boas-praticas).
 
@@ -1089,9 +1089,9 @@ Cuatro preguntas que la batería de seguridad responde en cada versión, en una 
 
 ### Costo de las contraseñas del FTP
 
-La contraseña de cada usuario del FTP queda guardada como hash `argon2id`. Cuanto más caro es el hash, más tiempo tarda en probar contraseñas quien consiga una copia del registro, y más procesador gasta el servidor en cada entrada. El `pure-pw` divide la memoria del cálculo por el número de sesiones que el servidor acepta al mismo tiempo, y la stack le pasa el `FTP_MAX_CLIENTS` del porte:
+La contraseña de cada usuario del FTP queda guardada como hash `argon2id`. Cuanto más caro es el hash, más tiempo tarda en probar contraseñas quien consiga una copia del registro, y más procesador gasta el servidor en cada entrada. El `pure-pw` divide la memoria del cálculo por el número de sesiones que el servidor acepta al mismo tiempo, y la stack le pasa el `FTP_MAX_CLIENTS` del tamaño:
 
-| Porte | `FTP_MAX_CLIENTS` | Memoria por verificación de contraseña |
+| Tamaño | `FTP_MAX_CLIENTS` | Memoria por verificación de contraseña |
 |---|---|---|
 | `small` | `50` | 1310 KiB |
 | `medium` | `120` | 546 KiB |
@@ -1099,21 +1099,21 @@ La contraseña de cada usuario del FTP queda guardada como hash `argon2id`. Cuan
 | `xlarge` | `600` | 109 KiB |
 | `extended` | `1200` | 54 KiB |
 
-La contraseña ya guardada no cambia de costo por sí sola: el costo del porte vale cuando se cambia. La pestaña Seguridad del panel trae el elemento `Costo de las contraseñas del FTP`, con los usuarios que todavía tienen un costo mayor que el actual. Para corregirlo, cambie la contraseña de cada uno en la pestaña Usuarios o con `./manage-user.sh passwd`. La referencia es el costo del porte actual, calculado a partir de `FTP_MAX_CLIENTS`.
+La contraseña ya guardada no cambia de costo por sí sola: el costo del tamaño vale cuando se cambia. La pestaña Seguridad del panel trae el elemento `Costo de las contraseñas del FTP`, con los usuarios que todavía tienen un costo mayor que el actual. Para corregirlo, cambie la contraseña de cada uno en la pestaña Usuarios o con `./manage-user.sh passwd`. La referencia es el costo del tamaño actual, calculado a partir de `FTP_MAX_CLIENTS`.
 
 **Resultado esperado:** en la pestaña Seguridad, el elemento `Costo de las contraseñas del FTP` con `Todas las contraseñas están guardadas con el costo del dimensionamiento actual`.
 
 <details>
 <summary>Detalle técnico — el cálculo y lo que se midió</summary>
 
-- **Cálculo:** `pure-pw useradd` y `pure-pw passwd` reciben `-C FTP_MAX_CLIENTS`. La memoria del `argon2id` queda en `65536 / FTP_MAX_CLIENTS` KiB, y el número de pasadas lo elige el `pure-pw` en cada escritura, por el tiempo que el hash tarda en ese momento: por eso varía de un usuario a otro. En la máquina de prueba, la verificación quedó entre medio segundo y un segundo en todos los portes.
-- **Sin la opción**, el `pure-pw` supone 8 sesiones: 8192 KiB y cerca de 3 segundos de procesador por verificación. Era así hasta la `0.28.0`. En la máquina de prueba, 7 contraseñas incorrectas al mismo tiempo, desde una sola dirección, retenían por cerca de 50 segundos la entrada de quien tenía la contraseña correcta; con el costo del porte `small`, cerca de 8 segundos.
+- **Cálculo:** `pure-pw useradd` y `pure-pw passwd` reciben `-C FTP_MAX_CLIENTS`. La memoria del `argon2id` queda en `65536 / FTP_MAX_CLIENTS` KiB, y el número de pasadas lo elige el `pure-pw` en cada escritura, por el tiempo que el hash tarda en ese momento: por eso varía de un usuario a otro. En la máquina de prueba, la verificación quedó entre medio segundo y un segundo en todos los tamaños.
+- **Sin la opción**, el `pure-pw` supone 8 sesiones: 8192 KiB y cerca de 3 segundos de procesador por verificación. Era así hasta la `0.28.0`. En la máquina de prueba, 7 contraseñas incorrectas al mismo tiempo, desde una sola dirección, retenían por cerca de 50 segundos la entrada de quien tenía la contraseña correcta; con el costo del tamaño `small`, cerca de 8 segundos.
 - **Dónde se aplica:** en el [`ftp/entrypoint.sh`](../../ftp/entrypoint.sh), para el usuario inicial, y en el [`ftp/usuario.sh`](../../ftp/usuario.sh), para los usuarios creados o modificados por el panel y por el `manage-user.sh`. El servicio `painel` recibe el mismo `FTP_MAX_CLIENTS` del servicio `ftp` y lo reenvía al comando que guarda la contraseña.
-- **Aviso del panel:** la pestaña Seguridad lee solo el parámetro de memoria de cada línea del registro y lo compara con el del porte, `65536 / FTP_MAX_CLIENTS` KiB, con el mínimo de 8; el hash no sale del archivo ni aparece en la pantalla.
+- **Aviso del panel:** la pestaña Seguridad lee solo el parámetro de memoria de cada línea del registro y lo compara con el del tamaño, `65536 / FTP_MAX_CLIENTS` KiB, con el mínimo de 8; el hash no sale del archivo ni aparece en la pantalla.
 
 </details>
 
-> ⚠️ **Límite — menos memoria en los portes mayores:** cuantas más sesiones acepta el servidor, menos memoria usa cada hash, y más barato resulta probar contraseñas para quien tenga una copia del registro. Lo que protege es el registro fuera de alcance (`0600`, del `root`) y la contraseña generada, de 12 caracteres o más.
+> ⚠️ **Límite — menos memoria en los tamaños mayores:** cuantas más sesiones acepta el servidor, menos memoria usa cada hash, y más barato resulta probar contraseñas para quien tenga una copia del registro. Lo que protege es el registro fuera de alcance (`0600`, del `root`) y la contraseña generada, de 12 caracteres o más.
 
 > ⚠️ **Límite — el nombre que existe tarda más en ser rechazado:** el `pure-ftpd` solo verifica la contraseña cuando el nombre está en el registro. La espera aleatoria antes del rechazo, de 3 a 6 segundos, encubre buena parte de la diferencia, pero quien repite la medida muchas veces puede llegar a saber si un nombre existe. El [bloqueo por dirección](#bloqueio-por-endereco) limita cuántas veces una dirección repite la medida; aun así, abra el puerto, en el firewall del host, solo para las direcciones de los equipos.
 
@@ -1179,7 +1179,7 @@ Las RFC son las normas públicas de los protocolos de internet. La tabla dice qu
 | RFC 6266 y RFC 8187 | Nombre del archivo en la descarga | `Content-Disposition: attachment`, con el nombre en ASCII y en UTF-8 | Cumple |
 | RFC 9116 y RFC 8615 | Contacto de seguridad | `/.well-known/security.txt` con `Contact`, `Expires` y `Preferred-Languages` | Cumple |
 | RFC 9309 | Robots de búsqueda | `/robots.txt` con `User-agent: *` y `Disallow: /` | Cumple |
-| RFC 9106 | Hash de contraseña Argon2 | Contraseña del FTP en `argon2id`, con la memoria del porte, por debajo de la que la norma recomienda | Parcial |
+| RFC 9106 | Hash de contraseña Argon2 | Contraseña del FTP en `argon2id`, con la memoria del tamaño, por debajo de la que la norma recomienda | Parcial |
 | RFC 7914 | Hash de contraseña scrypt | Contraseña de administrador en `scrypt`, con `N=32768`, `r=8`, `p=1`, 32 MiB por verificación y sal de 16 bytes | Cumple |
 | RFC 1918 | Direcciones privadas | La stack solo publica en `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` y `127.0.0.0/8`, salvo con `REDE_PERMITIR_IP_PUBLICO=sim` | Cumple |
 | RFC 5737 | Direcciones de documentación | Las pruebas de IP pública usan solo los rangos reservados para ejemplo, que no pertenecen a nadie | Cumple |
@@ -1197,7 +1197,7 @@ Medido en 2026-10-05, en una instancia de prueba, en la versión `0.32.0`; los m
 - **Versiones de TLS:** `openssl s_client` con TLS 1.0 y con TLS 1.1 no cierra la conexión, ni en el FTP ni en el panel. Con TLS 1.2, el panel cerró con `ECDHE-ECDSA-AES256-GCM-SHA384` y el FTP con `ECDHE-RSA-CHACHA20-POLY1305`; con TLS 1.3, los dos con `TLS_AES_256_GCM_SHA384`.
 - **Métodos:** en las pantallas del panel y en el `security.txt`, `GET` y `HEAD` responden `200`, el `HEAD` con el `Content-Length` del `GET` y ningún cuerpo, y `OPTIONS`, `PUT`, `DELETE` y `PATCH` responden `501`. En el `robots.txt` y en el `estilo.css`, entregados por el nginx, `GET` y `HEAD` responden `200` y los demás, `405`. `TRACE` responde `405` en todos. El `HEAD` de un archivo, en la pestaña Archivos y en la pantalla Mis archivos, trae el tamaño y el nombre y no cuenta como descarga.
 - **`security.txt` y `robots.txt`:** los dos responden `200` sin sesión; el primero sale como `text/plain; charset=utf-8`, con tres líneas.
-- **Argon2:** la RFC 9106 recomienda 64 MiB o más de memoria por hash. El `pure-pw` usa de 54 KiB a 1310 KiB, según el porte, para que el servidor aguante muchas entradas al mismo tiempo: el cálculo está en [Costo de las contraseñas del FTP](#custo-das-senhas).
+- **Argon2:** la RFC 9106 recomienda 64 MiB o más de memoria por hash. El `pure-pw` usa de 54 KiB a 1310 KiB, según el tamaño, para que el servidor aguante muchas entradas al mismo tiempo: el cálculo está en [Costo de las contraseñas del FTP](#custo-das-senhas).
 
 Encabezados de seguridad que no vienen de una RFC, sino de las normas del navegador (W3C y WHATWG): `Content-Security-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`, `Referrer-Policy` y `X-Content-Type-Options`. Todos salen en toda respuesta del panel: [Protecciones del panel](#painel).
 

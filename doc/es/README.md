@@ -48,7 +48,7 @@ flowchart LR
 |---|---|---|
 | 1 | [Instalación](instalacion.md) | Requisitos previos, paso a paso comentado, primera validación y cómo deshacer |
 | 2 | [Configuración](configuracion.md) | Todas las variables del `.env`: nombre, para qué sirve, valores válidos y valor por defecto |
-| 3 | [Perfiles](perfiles.md) | Perfiles `small`, `medium`, `large`, `xlarge` y `extended`: dimensionamiento por porte, lo que el servidor debe tener y el impacto en el rango pasivo |
+| 3 | [Perfiles](perfiles.md) | Perfiles `small`, `medium`, `large`, `xlarge` y `extended`: dimensionamiento por tamaño, lo que el servidor debe tener y el impacto en el rango pasivo |
 | 4 | [Arquitectura](arquitectura.md) | Contenedores, imágenes, entrypoints, volúmenes, red y las opciones del `pure-ftpd` |
 | 5 | [Seguridad](seguridad.md) | Red privada y firewall, la opción de IP pública y su alerta, solo el panel publicado por proxy o túnel, el modo sin TLS para equipo antiguo, las buenas prácticas antes de producción en flujograma, las pruebas ejecutadas en cada versión, modelo de amenaza, superficie expuesta, protecciones del panel y del nginx, conformidad con las RFC y el endurecimiento del Compose línea por línea |
 | 6 | [Secretos](secretos.md) | Lo que queda en `.secrets/`, quién genera cada archivo y cómo cambiar las contraseñas del FTP y del panel |

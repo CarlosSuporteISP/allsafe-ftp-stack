@@ -63,7 +63,7 @@ Exemplo com `iptables`, liberando só a rede de gerência `10.10.0.0/24` na inte
 
 ```bash
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 21 ! -s 10.10.0.0/24 -j DROP
-iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30049 ! -s 10.10.0.0/24 -j DROP
+iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30099 ! -s 10.10.0.0/24 -j DROP
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 8443 ! -s 10.10.0.0/24 -j DROP
 ```
 
@@ -71,7 +71,7 @@ Com `REDE_IPV6=sim`, as mesmas portas ficam publicadas também em IPv6, e o `ipt
 
 ```bash
 ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 21 ! -s fd00:10:10::/64 -j DROP
-ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30049 ! -s fd00:10:10::/64 -j DROP
+ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30099 ! -s fd00:10:10::/64 -j DROP
 ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 8443 ! -s fd00:10:10::/64 -j DROP
 ```
 
@@ -269,7 +269,7 @@ Para ligar o modo `1` ou o `0`, edite `FTP_TLS_MODE` no `.env` e reaplique:
 ./deploy.sh
 ```
 
-**Resultado esperado:** o resumo traz `FTP:    127.0.0.1:21, SEM TLS (texto puro), modo passivo 30000-30049` (ou `TLS explícito opcional (aceita texto puro)` no modo `1`) e termina com o aviso:
+**Resultado esperado:** o resumo traz `FTP:    127.0.0.1:21, SEM TLS (texto puro), modo passivo 30000-30099` (ou `TLS explícito opcional (aceita texto puro)` no modo `1`) e termina com o aviso:
 
 ```text
 AVISO: FTP_TLS_MODE=0: o FTP está SEM criptografia. Senhas e arquivos passam em texto puro e podem ser
@@ -384,8 +384,8 @@ flowchart LR
     marcado -- "5b · não: recusa definitiva" --> recusa
     login -- "6a · sim: abre a sessão" ---> sessao
     login -- "6b · não" ---> recusa
-    algum -. "observador lê a cada segundo" .-> lista
-    marcado -. "porteiro lê a cada entrada" .-> lista
+    algum -. "observador lê<br>a cada segundo" .-> lista
+    marcado -. "porteiro lê<br>a cada entrada" .-> lista
     marcado -. "grava a recusa" .-> registro
     login -. "consulta o usuário" .-> puredb
 ```
@@ -960,7 +960,7 @@ O passo a passo, na ordem em que é feito:
 | Porta | Quem deve alcançar |
 |---|---|
 | `FTP_PORT` (controle) | Só as sub-redes de gerência dos equipamentos que fazem backup |
-| Faixa passiva (dados): `30000-30049` no `small`, até `31599` no `extended` | As mesmas origens da porta de controle |
+| Faixa passiva (dados): `30000-30099` no `small`, até `32399` no `extended` | As mesmas origens da porta de controle |
 | `PAINEL_PORT` (painel, HTTPS, publicada pelo nginx) | Só as máquinas de quem administra a stack |
 
 Com [`REDE_IPV6=sim`](configuracao.md#ipv6), as mesmas três portas são publicadas também em IPv6, nos endereços `FTP_BIND_IPV6` e `PAINEL_BIND_IPV6`, e pedem as mesmas restrições de origem. Todo o resto fica interno aos containers. O painel não publica porta: quem atende na `PAINEL_PORT` é o nginx. Na `PAINEL_PORT`, o que responde sem usuário e senha é só a tela de entrada, o estilo, a logo e o ícone, o `/saude`, o `/robots.txt` e, quando configurado, o `/.well-known/security.txt`: [Contato de segurança e robôs de busca](#contato-de-seguranca). A gestão dos usuários é pelo [painel](painel.md) ou por linha de comando, com [`manage-user.sh`](../../manage-user.sh).
@@ -1016,7 +1016,7 @@ Nenhuma versão é publicada sem a bateria inteira aprovada. Ela roda em um clon
 |---|---|---|
 | Funcional | 111 | A instalação faz o que promete: instalar em um comando, enviar e baixar, usuários pelo terminal e pelo painel, reinício sem perda, cópia e restauração |
 | Segurança | 161 | O que deveria ser recusado é recusado: cada caso tenta uma coisa que não pode acontecer e confere a recusa |
-| Rede | 19 | Só o que foi configurado fica aberto: portas, endereço de escuta, modo passivo, sub-rede e redes aceitas pelo painel, com o IPv6 desligado e ligado |
+| Rede | 20 | Só o que foi configurado fica aberto: portas, endereço de escuta, modo passivo, sub-rede e redes aceitas pelo painel, com o IPv6 desligado e ligado |
 
 **O que a bateria de segurança tenta**, por alvo. O número é o do caso, o mesmo que aparece na saída do `./tests/testar.sh`:
 
@@ -1064,7 +1064,7 @@ Além da bateria, cada versão passa por:
 ./tests/testar.sh
 ```
 
-**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 112 casos funcionais, 162 de segurança e 19 de rede. A bateria leva cerca de 1 hora e 40 minutos; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
+**Resultado esperado:** uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.`, com 113 casos funcionais, 162 de segurança e 20 de rede. A bateria leva cerca de 1 hora e 40 minutos; as opções e o que é gravado estão em [Scripts](scripts.md#testar).
 
 > ⚠️ **Limite — o que a bateria não alcança:** ela roda no próprio servidor, contra a instância de teste. O firewall do host, o proxy ou o túnel da borda e o equipamento que envia o backup são de quem instala e não entram nela: confira-os pelo [passo a passo de produção](#boas-praticas).
 

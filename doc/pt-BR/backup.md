@@ -306,6 +306,9 @@ O painel faz a mesma cópia e a envia direto a um armazenamento S3, sem passar p
 | `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age` | A cópia, cifrada com a mesma chave pública do `scripts/backup.sh` |
 | `<pasta>/<STACK_NAME>-AAAAMMDD-HHMMSS.tar.gz.age.sha256` | A soma que a restauração confere |
 
+<details>
+<summary>Diagrama da cópia no S3 e da restauração a partir dela — clique para expandir</summary>
+
 <!-- diagrama: diagramas/backup-s3-diagrama.mmd -->
 ```mermaid
 %%{init: {"theme": "dark"}}%%
@@ -324,6 +327,8 @@ flowchart LR
 <sub>Nível 1 · Diagrama · [fonte](diagramas/)</sub>
 
 **Sequência:** `DATA_DIR` (`dados`, `auth`, `certs` e `painel`) ➜ painel (lê, cifra e envia) ➜ bucket S3 (cópia cifrada e soma `.sha256`) ➜ baixar os dois objetos para `BACKUP_DIR` ➜ `scripts/restaurar.sh` ➜ `DATA_DIR` (conteúdo da cópia) ➜ stack de volta
+
+</details>
 
 Para restaurar a partir dela:
 

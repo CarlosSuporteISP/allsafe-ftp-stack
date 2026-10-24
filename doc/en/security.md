@@ -63,7 +63,7 @@ Example with `iptables`, allowing only the management network `10.10.0.0/24` on 
 
 ```bash
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 21 ! -s 10.10.0.0/24 -j DROP
-iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30049 ! -s 10.10.0.0/24 -j DROP
+iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30099 ! -s 10.10.0.0/24 -j DROP
 iptables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 8443 ! -s 10.10.0.0/24 -j DROP
 ```
 
@@ -71,7 +71,7 @@ With `REDE_IPV6=sim`, the same ports are published on IPv6 too, and `iptables` d
 
 ```bash
 ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 21 ! -s fd00:10:10::/64 -j DROP
-ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30049 ! -s fd00:10:10::/64 -j DROP
+ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 30000:30099 ! -s fd00:10:10::/64 -j DROP
 ip6tables -I DOCKER-USER -i eth0 -p tcp -m conntrack --ctdir ORIGINAL --ctorigdstport 8443 ! -s fd00:10:10::/64 -j DROP
 ```
 
@@ -269,7 +269,7 @@ To turn on mode `1` or `0`, edit `FTP_TLS_MODE` in the `.env` and reapply:
 ./deploy.sh
 ```
 
-**Expected result:** the summary brings `FTP:    127.0.0.1:21, SEM TLS (texto puro), modo passivo 30000-30049` (or `TLS explícito opcional (aceita texto puro)` in mode `1`) and ends with the warning:
+**Expected result:** the summary brings `FTP:    127.0.0.1:21, SEM TLS (texto puro), modo passivo 30000-30099` (or `TLS explícito opcional (aceita texto puro)` in mode `1`) and ends with the warning:
 
 ```text
 AVISO: FTP_TLS_MODE=0: o FTP está SEM criptografia. Senhas e arquivos passam em texto puro e podem ser
@@ -384,8 +384,8 @@ flowchart LR
     marcado -- "5b · no: final refusal" --> recusa
     login -- "6a · yes: opens the session" ---> sessao
     login -- "6b · no" ---> recusa
-    algum -. "observer reads every second" .-> lista
-    marcado -. "gatekeeper reads at every login" .-> lista
+    algum -. "observer reads<br>every second" .-> lista
+    marcado -. "gatekeeper reads<br>at every login" .-> lista
     marcado -. "writes the refusal" .-> registro
     login -. "looks up the user" .-> puredb
 ```
@@ -960,7 +960,7 @@ The step by step, in the order in which it is done:
 | Port | Who should reach it |
 |---|---|
 | `FTP_PORT` (control) | Only the management subnets of the devices that do backups |
-| Passive range (data): `30000-30049` in `small`, up to `31599` in `extended` | The same sources of the control port |
+| Passive range (data): `30000-30099` in `small`, up to `32399` in `extended` | The same sources of the control port |
 | `PAINEL_PORT` (panel, HTTPS, published by nginx) | Only the machines of whoever administers the stack |
 
 With [`REDE_IPV6=sim`](configuration.md#ipv6), the same three ports are published on IPv6 too, on the addresses `FTP_BIND_IPV6` and `PAINEL_BIND_IPV6`, and ask for the same origin restrictions. Everything else stays internal to the containers. The panel does not publish a port: the one that answers on `PAINEL_PORT` is nginx. On `PAINEL_PORT`, what answers without user and password is only the sign-in screen, the stylesheet, the logo and the icon, `/saude`, `/robots.txt` and, when configured, `/.well-known/security.txt`: [Security contact and search robots](#contato-de-seguranca). The management of the users is through the [panel](panel.md) or by command line, with [`manage-user.sh`](../../manage-user.sh).
@@ -1016,7 +1016,7 @@ No version is published without the whole suite approved. It runs on a clean clo
 |---|---|---|
 | Functional | 111 | The installation does what it promises: install in one command, upload and download, users from the terminal and from the panel, restart without loss, copy and restore |
 | Security | 161 | What should be refused is refused: each case tries something that cannot happen and checks the refusal |
-| Network | 19 | Only what was configured stays open: ports, listening address, passive mode, subnet and networks accepted by the panel, with IPv6 turned off and on |
+| Network | 20 | Only what was configured stays open: ports, listening address, passive mode, subnet and networks accepted by the panel, with IPv6 turned off and on |
 
 **What the security suite tries**, by target. The number is that of the case, the same that appears in the output of `./tests/testar.sh`:
 
@@ -1064,7 +1064,7 @@ Besides the suite, each version goes through:
 ./tests/testar.sh
 ```
 
-**Expected result:** one line per case and, at the end, `Bateria aprovada: nenhum desvio.`, with 112 functional cases, 162 of security and 19 of network. The suite takes about 1 hour and 40 minutes; the options and what is written are in [Scripts](scripts.md#testar).
+**Expected result:** one line per case and, at the end, `Bateria aprovada: nenhum desvio.`, with 113 functional cases, 162 of security and 20 of network. The suite takes about 1 hour and 40 minutes; the options and what is written are in [Scripts](scripts.md#testar).
 
 > ⚠️ **Limit — what the suite does not reach:** it runs on the server itself, against the test instance. The host firewall, the proxy or the tunnel at the edge and the device that sends the backup are up to whoever installs and are not part of it: check them by the [production step by step](#boas-praticas).
 

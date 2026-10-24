@@ -193,6 +193,15 @@ for arquivo in Dockerfile compose.yaml compose.ipv6.yaml deploy.sh manage-user.s
 done
 [[ "$sem_licenca" == 0 ]] || exit 1
 echo "licença OK: LICENSE (Apache-2.0), NOTICE, MARCA.md e a linha SPDX em $com_licenca arquivos de código"
+# Cada perfil tem o dobro de portas passivas que de sessões: o Pure-FTPd aceita no máximo metade das portas em sessões.
+for profile in .env.example profiles/*.env; do
+  awk -F= -v arquivo="$profile" '
+    $1 == "FTP_MAX_CLIENTS" { c = $2 } $1 == "FTP_PASSIVE_PORT_START" { i = $2 } $1 == "FTP_PASSIVE_PORT_END" { f = $2 }
+    END {
+      if ((f - i + 1) < 2 * c) { print "ERRO: " arquivo ": FTP_MAX_CLIENTS=" c " pede " 2 * c " portas passivas e a faixa tem " f - i + 1 > "/dev/stderr"; exit 1 }
+      print "sessões OK em " arquivo ": " c " sessões, " f - i + 1 " portas passivas"
+    }' "$profile"
+done
 for profile in profiles/*.env; do
   docker compose --env-file .env.example --env-file "$profile" config --quiet
   COMPOSE_FILE=compose.yaml:compose.ipv6.yaml docker compose --env-file .env.example --env-file "$profile" config --quiet

@@ -77,8 +77,8 @@ Os números são **pontos de partida**, não garantia de capacidade. FTP de back
 | `FTP_MAX_CLIENTS` | `50` | `120` | `300` | `600` | `1200` |
 | `FTP_MAX_CLIENTS_PER_IP` | `8` | `12` | `24` | `48` | `96` |
 | `FTP_PASSIVE_PORT_START` | `30000` | `30000` | `30000` | `30000` | `30000` |
-| `FTP_PASSIVE_PORT_END` | `30049` | `30149` | `30399` | `30799` | `31599` |
-| Portas passivas | 50 | 150 | 400 | 800 | 1600 |
+| `FTP_PASSIVE_PORT_END` | `30099` | `30239` | `30599` | `31199` | `32399` |
+| Portas passivas | 100 | 240 | 600 | 1200 | 2400 |
 | `FTP_MEMORY_LIMIT` | `256M` | `512M` | `1G` | `2G` | `4G` |
 | `FTP_CPU_LIMIT` | `1.0` | `2.0` | `4.0` | `8.0` | `16.0` |
 | `FTP_PIDS_LIMIT` | `128` | `256` | `512` | `1024` | `2048` |
@@ -137,15 +137,15 @@ Descrição completa de cada variável em [Configuração](configuracao.md).
 
 ## ⏱️ Tempo de subida
 
-O Docker publica as portas passivas uma a uma. Nos perfis grandes, subir, trocar de perfil e remover levam minutos, e não segundos. O `deploy.sh` avisa (`Publicando 1600 portas passivas: a subida pode levar alguns minutos.`) e espera o tempo proporcional ao número de portas antes de desistir.
+O Docker publica as portas passivas uma a uma. Nos perfis grandes, subir, trocar de perfil e remover levam minutos, e não segundos. O `deploy.sh` avisa (`Publicando 2400 portas passivas: a subida pode levar alguns minutos.`) e espera o tempo proporcional ao número de portas antes de desistir.
 
 | Perfil | Portas passivas | Espera máxima do `deploy.sh` |
 |---|---|---|
-| `small` | 50 | 192 s |
-| `medium` | 150 | 217 s |
-| `large` | 400 | 280 s |
-| `xlarge` | 800 | 380 s |
-| `extended` | 1600 | 580 s |
+| `small` | 100 | 205 s |
+| `medium` | 240 | 240 s |
+| `large` | 600 | 330 s |
+| `xlarge` | 1200 | 480 s |
+| `extended` | 2400 | 780 s |
 
 A espera máxima é de 180 s mais um quarto de segundo por porta passiva. No portão da versão `0.7.0`, em um host de 16 CPUs, a instalação do `small` terminou em 25 s e a troca para o `extended` em cerca de 200 s; o seu tempo varia com a máquina. Voltar do `extended` para um perfil menor ou remover a stack também leva minutos, porque o Docker desfaz as mesmas portas uma a uma. Programe a troca de perfil para fora da janela de backup.
 
@@ -155,13 +155,42 @@ A espera máxima é de 180 s mais um quarto de segundo por porta passiva. No por
 
 ## ⚠️ Faixa passiva e firewall
 
-Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS` (`small` 50 portas, `medium` 150, `large` 400, `xlarge` 800, `extended` 1600). Ao trocar de perfil:
+Cada perfil amplia a faixa passiva junto com `FTP_MAX_CLIENTS`, com o dobro de portas que de sessões (`small` 100 portas, `medium` 240, `large` 600, `xlarge` 1200, `extended` 2400). Ao trocar de perfil:
 
 1. libere a nova faixa, de `30000` até o fim do perfil, em TCP, no firewall do host, só para as sub-redes de gerência;
 2. se houver NAT, garanta o mapeamento **1:1** da faixa inteira;
 3. mantenha `FTP_PASSIVE_IP` com o IP que o cliente realmente alcança.
 
 **Resultado esperado:** depois do `./deploy.sh --size <perfil>`, `docker compose ps` mostra a faixa nova publicada.
+
+**Por que o dobro.** O Pure-FTPd aceita em sessões ao mesmo tempo, no máximo, **metade** das portas passivas da faixa, mesmo com `FTP_MAX_CLIENTS` maior. Por isso a faixa tem o dobro de `FTP_MAX_CLIENTS`; com menos, o equipamento recebe `421` antes do limite configurado.
+
+**Aviso do `deploy.sh`.** Quando a faixa tem menos do dobro de `FTP_MAX_CLIENTS`, o resumo do `./deploy.sh` e o do `--check-only` trazem o aviso abaixo (o script fala português; o exemplo é de um `.env` com `FTP_MAX_CLIENTS=50` e 50 portas):
+
+```text
+AVISO: FTP_MAX_CLIENTS=50 com 50 portas passivas: o FTP aceita só 25 sessões ao mesmo tempo,
+       metade das portas. Para chegar a 50, amplie a faixa até FTP_PASSIVE_PORT_END=30099
+       (e no firewall), ou rode ./deploy.sh --size <perfil>, que já traz a faixa certa.
+```
+
+Quem já tem uma instalação e só atualiza mantém o `.env` como está, porque o perfil só é gravado com `--size`. Essa pessoa vê o aviso até ampliar a faixa no `.env` e no firewall, ou rodar `./deploy.sh --size <perfil>`.
+
+<details>
+<summary>Detalhe técnico — o custo de memória de cada porta publicada</summary>
+
+O Docker sobe um processo `docker-proxy` por porta publicada. Medido em 2026-10-23, com o Docker 29.9.2, cada processo usou em média 4,45 MB de memória privada. A conta, por perfil:
+
+| Perfil | Processos `docker-proxy` | Memória aproximada |
+|---|---|---|
+| `small` | 101 | 0,45 GB |
+| `medium` | 241 | 1,1 GB |
+| `large` | 601 | 2,7 GB |
+| `xlarge` | 1201 | 5,3 GB |
+| `extended` | 2401 | 10,7 GB |
+
+A opção do Docker `"userland-proxy": false`, em `/etc/docker/daemon.json`, tira esses processos: o kernel faz o encaminhamento. É um ajuste do servidor, vale para todos os containers dele e deve ser testado no servidor antes da produção.
+
+</details>
 
 > ⚠️ Não coloque IPs, credenciais ou particularidades de cliente nos arquivos de perfil: isso pertence ao `.env` e à pasta `.secrets/` locais. Veja [Segredos](segredos.md).
 

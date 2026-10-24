@@ -31,7 +31,7 @@ flowchart LR
     marcado -- "5b · no: final refusal" --> recusa
     login -- "6a · yes: opens the session" ---> sessao
     login -- "6b · no" ---> recusa
-    algum -. "observer reads every second" .-> lista
-    marcado -. "gatekeeper reads at every login" .-> lista
+    algum -. "observer reads<br>every second" .-> lista
+    marcado -. "gatekeeper reads<br>at every login" .-> lista
     marcado -. "writes the refusal" .-> registro
     login -. "looks up the user" .-> puredb

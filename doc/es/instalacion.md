@@ -46,8 +46,8 @@ flowchart LR
 |---|---|
 | Docker Engine con Docker Compose v2 o más nuevo | `docker compose version` debe responder |
 | CPU y memoria para el perfil | El `small` pide 1 CPU y 256 MB; el `extended`, 16 CPU y 4 GB. El `deploy.sh` verifica y rechaza el perfil mayor que el servidor: [Perfiles](perfiles.md#o-servidor-aguenta) |
-| Una IP dedicada para el FTP | No comparta la IP con otros servicios; el modo pasivo abre de 50 a 1600 puertos, según el perfil |
-| Firewall en el host | Libere `21/tcp` y el rango pasivo del perfil (`30000-30049/tcp` en el `small`) **solo** para las redes de gestión de los equipos, y el puerto del panel (`8443/tcp`) **solo** para quien administra |
+| Una IP dedicada para el FTP | No comparta la IP con otros servicios; el modo pasivo abre de 100 a 2400 puertos, según el perfil |
+| Firewall en el host | Libere `21/tcp` y el rango pasivo del perfil (`30000-30099/tcp` en el `small`) **solo** para las redes de gestión de los equipos, y el puerto del panel (`8443/tcp`) **solo** para quien administra |
 | Red privada | Por defecto la stack solo acepta IP interna: vea [Seguridad](seguridad.md#rede-privada). La dirección pública depende de una opción con alerta: [IP pública](seguridad.md#ip-publico) |
 | IPv6 (opcional) | De fábrica la stack queda solo en IPv4. Para publicar el FTP y el panel también en IPv6, el servidor necesita Docker Engine 27 o más nuevo y el IPv6 activado en el sistema: [IPv6](configuracion.md#ipv6) |
 | Carpeta para los datos | El valor por defecto es `/srv/allsafe-ftp-stack`, con `data`, `backups` y `tmp` dentro. Quien instala sin ser root crea la carpeta una vez: `sudo install -d -o "$USER" /srv/allsafe-ftp-stack`. Otro lugar: `DATA_DIR`, `BACKUP_DIR` y `TEMP_DIR` en [Configuración](configuracion.md#pastas-e-nomes) |
@@ -119,14 +119,14 @@ chmod 600 .secrets/ftp-usuario-inicial-senha.txt
 ## 3️⃣ Levantar la stack
 
 ```bash
-./deploy.sh                  # otro porte: ./deploy.sh --size medium (o large, xlarge, extended)
+./deploy.sh                  # otro tamaño: ./deploy.sh --size medium (o large, xlarge, extended)
 ```
 
 **Resultado esperado:** el comando solo termina con los tres contenedores `healthy` y cierra con el resumen:
 
 ```text
 Pronto: FTP, painel e nginx no ar (healthy), perfil 'small'.
-FTP:    127.0.0.1:21, TLS explícito obrigatório no login, modo passivo 30000-30049
+FTP:    127.0.0.1:21, TLS explícito obrigatório no login, modo passivo 30000-30099
         usuário 'transfer', senha no arquivo ./.secrets/ftp-usuario-inicial-senha.txt
 Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede privada, atrás de firewall)
         usuário 'admin', senha inicial no arquivo ./.secrets/painel-admin-inicial-senha.txt
@@ -195,7 +195,7 @@ Prueba manual con un cliente (FTP **explícito** sobre TLS, modo pasivo):
 
 ```bash
 # el lftp usa FTPS explícito por defecto
-lftp -u "$FTP_USER" -e 'set ssl:verify-certificate no; ls; bye' ftp://SU_IP
+lftp -u "$FTP_USER" -e 'set ssl:verify-certificate no; ls; bye' ftp://TU_IP
 ```
 
 **Resultado esperado:** el `lftp` pide la contraseña y lista la carpeta del usuario, vacía la primera vez.

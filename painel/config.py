@@ -264,7 +264,7 @@ def configuracao():
         'endereco_erros': int(erros),
         'endereco_janela': int(horas) * 3600,
         'endereco_dias': int(dias),
-        'ftp_passiva': f"{amb('FTP_PASSIVE_PORT_START', '30000')}–{amb('FTP_PASSIVE_PORT_END', '30049')}",
+        'ftp_passiva': f"{amb('FTP_PASSIVE_PORT_START', '30000')}–{amb('FTP_PASSIVE_PORT_END', '30099')}",
         'pasta_host': amb('PAINEL_PASTA_DADOS', 'DATA_DIR/dados').rstrip('/'),
         'versao': versao,
         'estilo': estilo,

@@ -12,7 +12,7 @@
 
 Developed by [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Version](https://img.shields.io/badge/version-1.16.0-blue)
+![Version](https://img.shields.io/badge/version-1.17.0-blue)
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
 ![Support](https://img.shields.io/badge/support-LTS-blue)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -41,6 +41,7 @@ flowchart LR
 
     equip --> ftp --> puredb --> dados --> fim
 ```
+
 <sub>Level 1 · Diagram · [source](doc/en/diagrams/)</sub>
 
 <sub><b>v0.48.0</b> · stack overview · 2026-10-09</sub>
@@ -51,14 +52,14 @@ flowchart LR
 
 > 🧱 **For private networks only.** By default, this stack is for an internal network: it listens **only on a private IP** (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` or `127.0.0.1`), **behind a firewall**, and must not be published on the internet or receive a port forward from the edge. A public address is only accepted by choice of whoever installs, with `REDE_PERMITIR_IP_PUBLICO=sim` and a firewall on the server: read the [warning](doc/en/security.md#ip-publico) first. Details in [doc/en/security.md](doc/en/security.md#rede-privada).
 
-> 📌 **Official repository:** [github.com/allsafe-inf/allsafe-ftp-stack](https://github.com/allsafe-inf/allsafe-ftp-stack). Versions are released there first, and that is where issues and pull requests are received. The copy at `github.com/CarlosSuporteISP/allsafe-ftp-stack` is a mirror, updated afterwards.
+> **Official repository:** [github.com/allsafe-inf/allsafe-ftp-stack](https://github.com/allsafe-inf/allsafe-ftp-stack). Versions are released there first, and that is where issues and pull requests are received. The copy at `github.com/CarlosSuporteISP/allsafe-ftp-stack` is a mirror, updated afterwards.
 
 ---
 
 <details>
 <summary>Contents — click to expand</summary>
 
-[What it is](#o-que-e) · [Highlights](#destaques) · [Screenshots](#imagens) · [Quick install](#instalacao) · [How it works](#como-funciona) · [Architecture](#arquitetura) · [Technologies](#tecnologias) · [Ports and binds](#portas) · [Configuration](#configuracao) · [Security](#seguranca) · [Tests](#testes) · [File structure](#arquivos) · [Documentation](#documentacao) · [Plan](#plano) · [Version](#versao) · [Related projects](#relacionados) · [Credits](#creditos) · [License](#licenca)
+[What it is](#o-que-e) · [Highlights](#destaques) · [Screenshots](#imagens) · [Quick install](#instalacao) · [Advanced install](#instalacao-avancada) · [How it works](#como-funciona) · [Architecture](#arquitetura) · [Technologies](#tecnologias) · [Ports and binds](#portas) · [Configuration](#configuracao) · [Security](#seguranca) · [Tests](#testes) · [File structure](#arquivos) · [Documentation](#documentacao) · [Plan](#plano) · [Version](#versao) · [Related projects](#relacionados) · [Credits](#creditos) · [License](#licenca)
 
 </details>
 
@@ -76,7 +77,7 @@ There are **three containers**: the FTP server, the panel and **nginx**, the onl
 |---|---|
 | **What for** | Receiving over FTPS the backups and files of network devices, cameras, companies and people, and browsing everything in the browser |
 | **Technologies** | Docker Compose · Debian 13 · Pure-FTPd · PureDB · OpenSSL · nginx · Bash · Python |
-| **Access** | FTP client with **explicit TLS** (`AUTH TLS`) on port `21/tcp`, passive mode in the range of the profile (`30000-30049/tcp` on `small`) · panel at `https://<private IP>:8443`, through nginx |
+| **Access** | FTP client with **explicit TLS** (`AUTH TLS`) on port `21/tcp`, passive mode in the range of the profile (`30000-30099/tcp` on `small`) · panel at `https://<private IP>:8443`, through nginx |
 | **Requirements** | Docker Engine with Docker Compose v2 or newer · CPU and memory of the chosen profile (2 vCPU and 2 GB on `small`) · one dedicated **private** IP · firewall on the host allowing only the internal network |
 
 > **Web panel:** internal network only, behind a firewall, like the rest of the stack. It refuses, in code, any address that is not private. How to use it: [doc/en/panel.md](doc/en/panel.md).
@@ -182,9 +183,9 @@ To serve the internal network, adjust the `.env` (template in [`.env.example`](.
 | Open the panel | `https://<PAINEL_BIND_IP>:8443` in the browser, with the user in `PAINEL_ADMIN_USER` and the password in `.secrets/painel-admin-inicial-senha.txt` |
 | Change the panel user or password | in the panel, Users tab, on the row of the administrator |
 | Create another panel administrator | in the panel, Users tab, **New user** with the Administrator profile |
-| Recover access to the panel | `./scripts/painel-senha.sh --gerar` (another administrator: `--usuario NOME`) |
+| Recover access to the panel | `./scripts/painel-senha.sh --gerar` (another administrator: `--usuario NAME`) |
 | Ask for a code besides the password at the panel sign-in | already on for every account (`PAINEL_SEGUNDO_FATOR_OBRIGATORIO=sim`): each one sets up the authenticator app at the first sign-in. See [Second factor](doc/en/panel.md#segundo-fator) |
-| Reset the second factor of whoever lost the device | an administrator, in the Users tab, or `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NOME` (FTP user: `ftp.NOME`). The account sets it up again at the next sign-in |
+| Reset the second factor of whoever lost the device | an administrator, in the Users tab, or `docker compose exec painel python3 /opt/painel/servidor.py --segundo-fator desligar NAME` (FTP user: `ftp.NAME`). The account sets it up again at the next sign-in |
 | Create a user | in the panel, Users tab, or `./manage-user.sh add backup-olt` |
 | Limit what a user does (uploads without deleting, only uploads without seeing the backups, or only downloads) | in the panel, Users tab, **Edit**, **Profile** card, or `./manage-user.sh perfil backup-olt envio`: see [Profiles](doc/en/panel.md#perfis) |
 | Download a backup that was received | in the panel, Files tab, **Download** button on the row of the file |
@@ -202,6 +203,62 @@ To serve the internal network, adjust the `.env` (template in [`.env.example`](.
 | Remove and delete the data | `./deploy.sh --remover --apagar-dados` (asks you to type `apagar`) |
 
 Commented step by step in [doc/en/installation.md](doc/en/installation.md).
+
+---
+
+<a name="instalacao-avancada"></a>
+
+## 🚀 Advanced install
+
+For when the defaults are not enough: choosing the size (profile), serving the internal network, turning on IPv6, publishing only the panel behind a proxy or tunnel, or keeping the data outside `/srv`.
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/allsafe-inf/allsafe-ftp-stack.git
+   cd allsafe-ftp-stack
+   ```
+
+2. Optional: create the `.env` to adjust before the first start. Without it, `deploy.sh` creates one from the example, with everything on `127.0.0.1`.
+
+   ```bash
+   cp .env.example .env
+   chmod 600 .env
+   ```
+
+3. Edit the `.env`: `FTP_BIND_IP`, `FTP_PASSIVE_IP` and `PAINEL_BIND_IP` (private IPs), and, to move the files, `DATA_DIR`, `BACKUP_DIR` and `TEMP_DIR`. Each variable is in [Configuration](doc/en/configuration.md).
+4. Validate without starting anything, with the size you want:
+
+   ```bash
+   ./deploy.sh --check-only --size medium
+   ```
+
+5. Install with that size:
+
+   ```bash
+   ./deploy.sh --size medium
+   ```
+
+6. Check the running services:
+
+   ```bash
+   scripts/validate.sh --runtime
+   ```
+
+| I want to | Command |
+|---|---|
+| Choose the size | `./deploy.sh --size small\|medium\|large\|xlarge\|extended`; written to the `.env`, and refused before any change if the server has less CPU or memory than the size asks |
+| Only validate | `./deploy.sh --check-only` (with `--size <profile>` to validate a size) |
+| Update the packages of the images | `./deploy.sh --atualizar` |
+| Remove, keeping the data | `./deploy.sh --remover` |
+| Remove and delete the data | `./deploy.sh --remover --apagar-dados` (asks you to type `apagar`; `--sim` skips the question) |
+| Turn on IPv6 | `REDE_IPV6=sim` in the `.env` and `./deploy.sh`: see [IPv6](doc/en/configuration.md#ipv6) |
+| Publish only the panel behind a proxy or tunnel | fill in `PAINEL_PROXY_CONFIAVEL` in the `.env`: see [Security](doc/en/security.md#painel-por-proxy) |
+| Use a public address | only with its [own option](doc/en/security.md#ip-publico) (`REDE_PERMITIR_IP_PUBLICO=sim`); the check of private networks is in `scripts/rede-privada.sh` |
+| Recover access to the panel | `./scripts/painel-senha.sh --gerar` (another administrator: `--usuario NAME`) |
+| Keep a backup copy | `./scripts/backup.sh`; to go back, `./scripts/restaurar.sh <copy>` |
+
+Full guide in [doc/en/installation.md](doc/en/installation.md).
 
 ---
 
@@ -252,6 +309,7 @@ flowchart LR
     ftp -. "presents" .-> cert
     ftp -. "logs logins and transfers" .-> logs
 ```
+
 <sub>Level 2 · Flowchart · [source](doc/en/diagrams/)</sub>
 
 | No. | From ➜ To | What happens |
@@ -263,7 +321,7 @@ flowchart LR
 | 4 | user and password match? ➜ PureDB | The account is looked up in the virtual users database (`/auth/pureftpd.pdb`) |
 | 5a | user and password match? ➜ chroot session | Yes: the session opens locked to the user folder |
 | 5b | user and password match? ➜ connection refused | No: `530 Login authentication failed`. By default, 5 wrong passwords from the same address in 15 minutes block the user for that address for 15 minutes; the limit of each user is adjusted in the panel: [blocking by attempts](doc/en/security.md#bloqueio-por-tentativa). The address, IPv4 or IPv6, that goes over 5 errors in 24 hours, with any user, stays 120 days without signing in to the FTP and to the panel: [blocking by address](doc/en/security.md#bloqueio-por-endereco) |
-| 6 | chroot session ➜ `/data` | The file goes up through the data channel in passive mode, in the range of the profile (`30000-30049/tcp` on `small`) |
+| 6 | chroot session ➜ `/data` | The file goes up through the data channel in passive mode, in the range of the profile (`30000-30099/tcp` on `small`) |
 | 7 | `/data` ➜ backup stored | The file is written to the user folder, inside the volume |
 
 **Support**
@@ -287,7 +345,7 @@ How nginx and the panel decide whether to serve a request, in two flowcharts: fr
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     subgraph QUEM["Who uses it"]
-        usuario@{ shape: person, label: "User<br>browser, internal network" }
+        usuario@{ shape: person, label: "User<br>browser,<br>internal network" }
     end
     subgraph FRENTE["Web front end"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
@@ -296,12 +354,9 @@ flowchart LR
     subgraph ENTRADA["Sign-in"]
         painel@{ shape: rect, label: "Web panel<br>allsafe-ftp-painel, Unix socket" }
         senha@{ shape: diam, label: "user and password<br>match?" }
-        hash@{ shape: doc, label: "administradores<br>name and password hash" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, internal network" }
         fator@{ shape: diam, label: "account already has<br>a second factor?" }
         cadastro@{ shape: rect, label: "second factor setup<br>QR code and new key" }
         codigo@{ shape: diam, label: "code from the app<br>matches?" }
-        chave@{ shape: doc, label: "segundo-fator<br>key of each account" }
     end
     subgraph SESSAO["Session"]
         sessao@{ shape: rect, label: "4 h session<br>cookie and CSRF token" }
@@ -328,10 +383,8 @@ flowchart LR
     sessao -- "9 · every request goes through the checks" --> pedidos
     pedidos -- "10a · accepted" --> atendido
     pedidos -- "10b · refused" --> recusa
-    painel -. "administrator: compares with the hash" .-> hash
-    painel -. "any other name: the FTP server checks the password" .-> ftp
-    painel -. "second factor: saves the key at setup and computes the code" .-> chave
 ```
+
 <sub>Level 2 · Flowchart · [source](doc/en/diagrams/)</sub>
 
 | No. | From ➜ To | What happens |
@@ -401,6 +454,7 @@ flowchart LR
     dados -- "7 · delivers the file, writes the uploaded one, creates the folder, renames or deletes" --> feito
     painel -. "records every action" .-> auditoria
 ```
+
 <sub>Level 2 · Flowchart · [source](doc/en/diagrams/)</sub>
 
 | No. | From ➜ To | What happens |
@@ -476,6 +530,7 @@ flowchart LR
     ftp -. "reads the certificate" .-> vcerts
     painel -. "reads for the system copy" .-> vcerts
 ```
+
 <sub>Level 2 · Map · [source](doc/en/diagrams/)</sub>
 
 | No. | From ➜ To | What happens |
@@ -486,7 +541,7 @@ flowchart LR
 | 4 | nginx ➜ Web panel | The accepted request is forwarded to the panel through the Unix socket, with the client address |
 | 5 | Web panel ➜ `DATA_DIR/auth` | The panel creates, edits or removes the user in PureDB |
 | 6 | Network device ➜ Pure-FTPd | The client connects over FTPS on `21/tcp`, mapped to `2121/tcp` |
-| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | The file is written through the passive channel, in the range of the profile (`30000-30049/tcp` on `small`) |
+| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | The file is written through the passive channel, in the range of the profile (`30000-30099/tcp` on `small`) |
 | 8 | `DATA_DIR/dados` ➜ backup stored | The file stays in the user folder, on the host |
 
 **Support**
@@ -518,7 +573,7 @@ The map shows the parts and the volumes. The configuration, the secrets and the 
 
 | Part | Role | Port | Data in |
 |---|---|---|---|
-| Container `allsafe-ftp` (service `ftp`) | Pure-FTPd with FTPS, `chroot` and limits | `21/tcp` ➜ `2121/tcp` and the passive range of the profile (`30000-30049/tcp` on `small`) | — |
+| Container `allsafe-ftp` (service `ftp`) | Pure-FTPd with FTPS, `chroot` and limits | `21/tcp` ➜ `2121/tcp` and the passive range of the profile (`30000-30099/tcp` on `small`) | — |
 | Container `allsafe-ftp-painel` (service `painel`) | Web panel that administers the FTP users; serves only nginx, through a Unix socket | none | — |
 | Container `allsafe-ftp-nginx` (service `nginx`) | Web front end of the panel: HTTPS, allowed networks, request limit and static files | `8443/tcp` ➜ `8443/tcp` | — |
 | Folder `DATA_DIR/auth` | PureDB database of the virtual users, shared by the FTP and the panel | — | `/auth` |
@@ -563,6 +618,9 @@ Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python and Bash, with the 
 | Python | 3.13.5 (Debian package `python3`) | Web panel, with the standard library only |
 | tini | 0.19.0 (`docker-init` of Docker Engine) | Process 1 of each container (`init: true`) |
 | Bash | 5.2 | Scripts of the host and of the containers |
+| rclone | 1.75.2 (`ARG RCLONE` of the [`Dockerfile`](Dockerfile)) | Sends the backup to an S3 storage |
+| age | 1.2.1 | Encrypts the backup copy |
+| Perl | 5.40.1 | Runs the helpers of the FTP (`ftp/*.pl`) |
 
 </details>
 
@@ -603,7 +661,7 @@ FTP on `21/tcp` plus the passive range of the profile; panel on `8443/tcp`, thro
 | Port (host) | Protocol | Default bind | What it is for |
 |---|---|---|---|
 | `${FTP_PORT:-21}` | TCP | `${FTP_BIND_IP:-127.0.0.1}` | FTP control channel (mapped to `:2121` in the container) |
-| `30000-30049` | TCP | `${FTP_BIND_IP:-127.0.0.1}` | data channel in **passive mode**; range of the `small` profile (50 ports = 50 clients), up to `30000-31599` on `extended` |
+| `30000-30099` | TCP | `${FTP_BIND_IP:-127.0.0.1}` | data channel in **passive mode**; range of the `small` profile (100 ports for 50 clients), up to `30000-32399` on `extended` |
 | `${PAINEL_PORT:-8443}` | TCP | `${PAINEL_BIND_IP:-127.0.0.1}` | web panel, HTTPS; nginx is the one that publishes it (mapped to `:8443` in the `allsafe-ftp-nginx` container) |
 
 The passive range is 1:1 between host and container. When changing `FTP_PASSIVE_PORT_*`, match the number of ports to `FTP_MAX_CLIENTS`. The panel container publishes no port: it only talks to nginx, through a Unix socket.
@@ -676,7 +734,7 @@ The safest path for each decision of whoever installs, as a flowchart, is in [be
 | Check the running installation | `./scripts/validate.sh --runtime` | the same, plus `servico ftp: running, healthy`, likewise for `painel` and `nginx`, and the initial user in PureDB or removed by the administrator |
 | Run the full suite: functional, security and network | `./tests/testar.sh` | one line per case and, at the end, `Bateria aprovada: nenhum desvio.` |
 
-The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 113 functional cases, 162 security cases and 19 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
+The suite starts a separate test instance, on `127.0.0.2`, and removes it when it finishes: the installation in use is not touched. There are 113 functional cases, 162 security cases and 20 network cases, and no version is published with a deviation. What the security suite tries, target by target, is in [tests run](doc/en/security.md#testes-executados); the options of the script, in [Scripts](doc/en/scripts.md#testar).
 
 ---
 
@@ -698,6 +756,10 @@ At the root are `compose.yaml`, the `Dockerfile` and the day-to-day commands (`d
 | [`manage-user.sh`](manage-user.sh) | Host shortcut for `add` (with the folder and the profile, if you want), `passwd`, `pasta`, `perfil`, `del` and `list` of users |
 | [`ftp/entrypoint.sh`](ftp/entrypoint.sh) | Prepares the initial user and the certificate and runs `pure-ftpd` |
 | [`ftp/saude.sh`](ftp/saude.sh) | FTP healthcheck: opens the control port and waits for the greeting of the server |
+| [`ftp/entrada.pl`](ftp/entrada.pl) | Entry area of the upload-only profile (`soenvio`): moves each file that finishes arriving to the user folder, which the account cannot reach |
+| [`ftp/endereco.pl`](ftp/endereco.pl) | Single writing of the address and of the prefix of the blocking by address, IPv4 and IPv6 |
+| [`ftp/porteiro.pl`](ftp/porteiro.pl) | Gatekeeper called by `pure-authd` at every sign-in, before the password check: refuses blocked addresses and applies per-user TLS |
+| [`ftp/vigia.pl`](ftp/vigia.pl) | Watcher of the FTP log: counts wrong passwords and creates the block, and writes the transfers to the container log |
 | [`ftp/usuario.sh`](ftp/usuario.sh) | User management **inside** the containers (called by `manage-user.sh` and by the panel) |
 | [`painel/servidor.py`](painel/servidor.py) | Web panel, in Python with the standard library only, behind nginx: entry point, with the `--hash` and `--saude` modes |
 | [`painel/`](painel/), other `.py` files | The other modules of the panel, one subject per file: configuration, password, session, audit log, state of the stack, request handling, routes and one tab per file. List in [Web panel](doc/en/panel.md#modulos) |
@@ -772,7 +834,7 @@ The plan for creating and changing the stack (phases, tests, evidence and progre
 
 ## 🏷️ Version
 
-**1.16.0**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
+**1.17.0**, recorded in [`VERSION`](VERSION). Changes per version in [`CHANGELOG.md`](CHANGELOG.md). Each published version has a `vX.Y.Z` tag and a Release in the [official repository](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), the company one; the mirror in the personal account receives the same version next.
 
 The version advances at every publication, always in the middle number (`1.1.0`, `1.2.0`) or in the first one: the correction number stays at zero. `0.x` was the construction phase; **`1.0.0` is the first version ready for production** and opens the long-term support (LTS) line `1.x`. The versions were renumbered on 2026-10-11: [`CHANGELOG.md`](CHANGELOG.md) has what changed in each one and the table with the numbers from before.
 

@@ -33,7 +33,7 @@ flowchart LR
 <details>
 <summary>Índice — haga clic para expandir</summary>
 
-[Cómo usar](#como-usar) · [Tabla de perfiles](#tabela-de-perfis) · [¿El servidor lo soporta?](#o-servidor-aguenta) · [Campos dimensionados](#campos-dimensionados) · [Tiempo de arranque](#tempo-de-subida) · [Rango pasivo y firewall](#faixa-passiva-e-firewall)
+[Cómo usar](#como-usar) · [Tabla de perfiles](#tabela-de-perfis) · [¿El servidor lo soporta?](#o-servidor-aguenta) · [Campos dimensionados](#campos-dimensionados) · [Sesiones y rango pasivo](#sessoes-e-faixa-passiva) · [Tiempo de arranque](#tempo-de-subida) · [Rango pasivo y firewall](#faixa-passiva-e-firewall)
 
 </details>
 
@@ -65,7 +65,7 @@ Pase el nombre del perfil en `--size` al [`deploy.sh`](../../deploy.sh). Este gu
 | [`medium`](../../profiles/medium.env) | 4 vCPU · 4 GB · SSD | hasta ~120 | recolección nocturna por lotes de ~50 a ~200 equipos |
 | [`large`](../../profiles/large.env) | 8 vCPU · 8 GB · NVMe | hasta ~300 | más de 200 equipos o varios recolectores enviando copias de seguridad al mismo tiempo |
 | [`xlarge`](../../profiles/xlarge.env) | 16 vCPU · 16 GB · NVMe | hasta ~600 | operación grande, con varias regiones o varios recolectores en el mismo servidor |
-| [`extended`](../../profiles/extended.env) | 32 vCPU · 32 GB · NVMe | hasta ~1200 | el porte mayor: servidor dedicado, miles de equipos enviando en ventanas cortas |
+| [`extended`](../../profiles/extended.env) | 32 vCPU · 32 GB · NVMe | hasta ~1200 | el tamaño mayor: servidor dedicado, miles de equipos enviando en ventanas cortas |
 
 Los números son **puntos de partida**, no garantía de capacidad. El FTP de copias de seguridad rara vez necesita más que `small`; suba de perfil solo si ve `421 Too many connections` o saturación de CPU o de memoria del contenedor. Los cinco perfiles existen para que la misma stack sirva en cualquier máquina, de la VPS pequeña al servidor dedicado.
 
@@ -77,14 +77,14 @@ Los números son **puntos de partida**, no garantía de capacidad. El FTP de cop
 | `FTP_MAX_CLIENTS` | `50` | `120` | `300` | `600` | `1200` |
 | `FTP_MAX_CLIENTS_PER_IP` | `8` | `12` | `24` | `48` | `96` |
 | `FTP_PASSIVE_PORT_START` | `30000` | `30000` | `30000` | `30000` | `30000` |
-| `FTP_PASSIVE_PORT_END` | `30049` | `30149` | `30399` | `30799` | `31599` |
-| Puertos pasivos | 50 | 150 | 400 | 800 | 1600 |
+| `FTP_PASSIVE_PORT_END` | `30099` | `30239` | `30599` | `31199` | `32399` |
+| Puertos pasivos | 100 | 240 | 600 | 1200 | 2400 |
 | `FTP_MEMORY_LIMIT` | `256M` | `512M` | `1G` | `2G` | `4G` |
 | `FTP_CPU_LIMIT` | `1.0` | `2.0` | `4.0` | `8.0` | `16.0` |
 | `FTP_PIDS_LIMIT` | `128` | `256` | `512` | `1024` | `2048` |
 | `FTP_NOFILE` | `16384` | `32768` | `65536` | `131072` | `262144` |
 
-El `deploy.sh --size <perfil>` copia cada `CLAVE=VALOR` de `profiles/<perfil>.env` al `.env` (cambia la línea de la clave o la agrega al final) y guarda `FTP_PROFILE=<perfil>`. Compose lee solo el `.env`: los límites valen también para un `docker compose up -d` directo. Cambiar de perfil recrea el contenedor del FTP, porque cambia el rango de puertos publicado; los datos quedan. Los perfiles no tocan el panel ni el nginx: sus límites son los mismos en cualquier porte.
+El `deploy.sh --size <perfil>` copia cada `CLAVE=VALOR` de `profiles/<perfil>.env` al `.env` (cambia la línea de la clave o la agrega al final) y guarda `FTP_PROFILE=<perfil>`. Compose lee solo el `.env`: los límites valen también para un `docker compose up -d` directo. Cambiar de perfil recrea el contenedor del FTP, porque cambia el rango de puertos publicado; los datos quedan. Los perfiles no tocan el panel ni el nginx: sus límites son los mismos en cualquier tamaño.
 
 > ¿Instaló con `--size medium` o `large` antes de la versión `0.6.0`? Ejecute una vez `./deploy.sh --size <perfil>` para guardar el perfil en el `.env`.
 
@@ -133,19 +133,54 @@ Descripción completa de cada variable en [Configuración](configuracion.md).
 
 ---
 
+<a name="sessoes-e-faixa-passiva"></a>
+
+## 🔌 Sesiones y rango pasivo
+
+El Pure-FTPd acepta, al mismo tiempo, como máximo **la mitad** de los puertos pasivos. Por eso cada perfil trae el **doble** de puertos que de sesiones (`small`: 50 sesiones y 100 puertos). Con menos puertos que eso, el límite real baja sin avisar: con 50 puertos, el banner decía `You are user number 1 of 25 allowed` aunque `FTP_MAX_CLIENTS` fuera 50.
+
+Si el rango del `.env` es más corto que el doble de `FTP_MAX_CLIENTS`, el `deploy.sh` lo dice en el resumen (y también con `--check-only`). El texto sale en portugués, como el resto del script:
+
+```text
+AVISO: FTP_MAX_CLIENTS=50 com 50 portas passivas: o FTP aceita só 25 sessões ao mesmo tempo,
+       metade das portas. Para chegar a 50, amplie a faixa até FTP_PASSIVE_PORT_END=30099
+       (e no firewall), ou rode ./deploy.sh --size <perfil>, que já traz a faixa certa.
+```
+
+Quien ya tiene una instalación y actualiza mantiene el `.env` como está, porque el perfil solo se guarda con `--size`: verá el aviso hasta que amplíe el rango en el `.env` y en el firewall, o ejecute `./deploy.sh --size <perfil>`.
+
+<details>
+<summary>Detalle técnico — costo de memoria de los puertos publicados en Docker</summary>
+
+Docker levanta un proceso `docker-proxy` por cada puerto publicado. Medido el 2026-10-23, con Docker 29.9.2, cada proceso usa en promedio 4,45 MB de memoria privada. Con eso, el rango pasivo cuesta:
+
+| Perfil | Puertos publicados | Memoria aproximada |
+|---|---|---|
+| `small` | 100 (101 procesos medidos) | 0,45 GB |
+| `medium` | 240 | 1,1 GB |
+| `large` | 600 | 2,7 GB |
+| `xlarge` | 1200 | 5,3 GB |
+| `extended` | 2400 | 10,7 GB |
+
+La opción `"userland-proxy": false` en `/etc/docker/daemon.json` quita esos procesos: el kernel hace el reenvío. Es un ajuste del servidor, vale para todos los contenedores de él y debe probarse en el servidor antes de la producción.
+
+</details>
+
+---
+
 <a name="tempo-de-subida"></a>
 
 ## ⏱️ Tiempo de arranque
 
-Docker publica los puertos pasivos uno por uno. En los perfiles grandes, levantar, cambiar de perfil y eliminar llevan minutos, y no segundos. El `deploy.sh` avisa (`Publicando 1600 portas passivas: a subida pode levar alguns minutos.`) y espera el tiempo proporcional al número de puertos antes de desistir.
+Docker publica los puertos pasivos uno por uno. En los perfiles grandes, levantar, cambiar de perfil y eliminar llevan minutos, y no segundos. El `deploy.sh` avisa (`Publicando 2400 portas passivas: a subida pode levar alguns minutos.`) y espera el tiempo proporcional al número de puertos antes de desistir.
 
 | Perfil | Puertos pasivos | Espera máxima del `deploy.sh` |
 |---|---|---|
-| `small` | 50 | 192 s |
-| `medium` | 150 | 217 s |
-| `large` | 400 | 280 s |
-| `xlarge` | 800 | 380 s |
-| `extended` | 1600 | 580 s |
+| `small` | 100 | 205 s |
+| `medium` | 240 | 240 s |
+| `large` | 600 | 330 s |
+| `xlarge` | 1200 | 480 s |
+| `extended` | 2400 | 780 s |
 
 La espera máxima es de 180 s más un cuarto de segundo por puerto pasivo. En la validación de la versión `0.7.0`, en un host de 16 CPU, la instalación del `small` terminó en 25 s y el cambio al `extended` en cerca de 200 s; su tiempo varía con la máquina. Volver del `extended` a un perfil menor o eliminar la stack también lleva minutos, porque Docker deshace los mismos puertos uno por uno. Programe el cambio de perfil fuera de la ventana de copias de seguridad.
 
@@ -155,7 +190,7 @@ La espera máxima es de 180 s más un cuarto de segundo por puerto pasivo. En la
 
 ## ⚠️ Rango pasivo y firewall
 
-Cada perfil amplía el rango pasivo junto con `FTP_MAX_CLIENTS` (`small` 50 puertos, `medium` 150, `large` 400, `xlarge` 800, `extended` 1600). Al cambiar de perfil:
+Cada perfil amplía el rango pasivo junto con `FTP_MAX_CLIENTS` (`small` 100 puertos, `medium` 240, `large` 600, `xlarge` 1200, `extended` 2400), siempre el doble de `FTP_MAX_CLIENTS`. Al cambiar de perfil:
 
 1. libere el nuevo rango, de `30000` hasta el final del perfil, en TCP, en el firewall del host, solo para las subredes de gestión;
 2. si hay NAT, garantice el mapeo **1:1** del rango completo;

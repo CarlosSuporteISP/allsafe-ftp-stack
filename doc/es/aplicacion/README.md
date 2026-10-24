@@ -8,7 +8,7 @@
 
 ## 💡 En pocas palabras
 
-Todas las pantallas del panel web, menú por menú, con la foto de cada una y la explicación de lo que se puede hacer en ella. Las fotos son capturas reales de la versión **1.11.0**, en tema oscuro y en español, con usuarios de ejemplo, como `olt-centro`, `switch-core` y `roteador-borda`. El panel acompaña el tema claro u oscuro del sistema y también se abre en portugués y en inglés: vea [Idioma](#idioma). Haga clic en cualquier foto para abrirla en tamaño real.
+Todas las pantallas del panel web, menú por menú, con la foto de cada una y la explicación de lo que se puede hacer en ella. Las fotos son capturas reales de la versión **1.15.0**, en tema oscuro y en español, con usuarios de ejemplo, como `olt-centro`, `switch-core` y `roteador-borda`. El panel acompaña el tema claro u oscuro del sistema y también se abre en portugués y en inglés: vea [Idioma](#idioma). Haga clic en cualquier foto para abrirla en tamaño real.
 
 El panel tiene una pantalla de entrada, nueve pestañas para quien administra (Visión general, Usuarios, Archivos, Destinos, Servidor, Servicio, Seguridad, Bloqueos y Log) y una pantalla para el usuario del FTP, que cambia con el perfil de la cuenta: Mis archivos o Envío de archivos. Las carpetas que el administrador liberó de más a la cuenta se abren en la pantalla Carpeta liberada. Los administradores están en la pestaña Usuarios, junto con las cuentas del FTP. Cómo abrirlo, crear administradores y qué protege el panel está en [Panel web](../panel.md).
 
@@ -1662,7 +1662,7 @@ Cada lista se abre con un clic en su nombre. En la foto, el archivo que no se en
 | Entrada de los usuarios del FTP | Si los usuarios del FTP entran en el panel (`PAINEL_ACESSO_USUARIOS_FTP`) y cómo se verifica su contraseña |
 | Bloqueo por intento en el FTP | Cuántas contraseñas incorrectas desde la misma dirección bloquean a un usuario y por cuánto tiempo (`FTP_BLOQUEIO_TENTATIVAS` y `FTP_BLOQUEIO_MINUTOS`), y quién está bloqueado ahora |
 | Bloqueo por dirección | Cuántos errores de usuario y contraseña, en cuántas horas, bloquean una dirección en el FTP y en el panel, por cuántos días (`BLOQUEIO_ENDERECO_ERROS`, `BLOQUEIO_ENDERECO_HORAS` y `BLOQUEIO_ENDERECO_DIAS`), y cuántas están bloqueadas ahora, con el atajo a la pestaña Bloqueos |
-| Costo de las contraseñas del FTP | Si todas las contraseñas están guardadas con el costo del porte actual, o qué usuarios siguen con el anterior |
+| Costo de las contraseñas del FTP | Si todas las contraseñas están guardadas con el costo del tamaño actual, o qué usuarios siguen con el anterior |
 | Contacto de seguridad | El correo publicado en `/.well-known/security.txt` (`SEGURANCA_CONTATO_EMAIL`), o el aviso de que no hay contacto |
 | Contenedor del panel | Raíz de solo lectura y sin acceso al Docker del host |
 | Firewall del host | Recordatorio: el panel no ve el firewall; la verificación es de quien administra el servidor |
@@ -1690,7 +1690,7 @@ Con al menos un usuario dispensado del TLS, la pestaña se abre con la alerta y 
 - Ruta `GET /seguranca`.
 - Las huellas digitales se calculan de los archivos `DATA_DIR/certs` (FTP) y `DATA_DIR/painel/tls` (panel), los mismos que usan los servicios.
 - Las líneas con dirección y red vienen del `.env`. Por defecto la stack no arranca con un valor que no sea privado; con `REDE_PERMITIR_IP_PUBLICO=sim`, la dirección y la red públicas aparecen con la marca de atención: [Seguridad](../seguridad.md#ip-publico).
-- El costo de las contraseñas compara la memoria guardada en la contraseña de cada usuario con la del porte actual, calculada de `FTP_MAX_CLIENTS`; el hash no sale del registro: [Costo de las contraseñas](../seguridad.md#custo-das-senhas).
+- El costo de las contraseñas compara la memoria guardada en la contraseña de cada usuario con la del tamaño actual, calculada de `FTP_MAX_CLIENTS`; el hash no sale del registro: [Costo de las contraseñas](../seguridad.md#custo-das-senhas).
 - El contacto es el valor de `SEGURANCA_CONTATO_EMAIL`; el archivo `/.well-known/security.txt` sigue la RFC 9116: [Contacto de seguridad](../seguridad.md#contato-de-seguranca).
 - La última línea no tiene marca de verificado a propósito: ningún contenedor de la stack lee las reglas de firewall del host.
 

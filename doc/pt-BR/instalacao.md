@@ -46,8 +46,8 @@ flowchart LR
 |---|---|
 | Docker Engine com Docker Compose v2 ou mais novo | `docker compose version` deve responder |
 | CPU e memória para o perfil | O `small` pede 1 CPU e 256 MB; o `extended`, 16 CPUs e 4 GB. O `deploy.sh` confere e recusa o perfil maior que o servidor: [Perfis](perfis.md#o-servidor-aguenta) |
-| Um IP dedicado para o FTP | Não compartilhe o IP com outros serviços; o modo passivo abre de 50 a 1600 portas, conforme o perfil |
-| Firewall no host | Libere `21/tcp` e a faixa passiva do perfil (`30000-30049/tcp` no `small`) **só** para as redes de gerência dos equipamentos, e a porta do painel (`8443/tcp`) **só** para quem administra |
+| Um IP dedicado para o FTP | Não compartilhe o IP com outros serviços; o modo passivo abre de 100 a 2400 portas, conforme o perfil |
+| Firewall no host | Libere `21/tcp` e a faixa passiva do perfil (`30000-30099/tcp` no `small`) **só** para as redes de gerência dos equipamentos, e a porta do painel (`8443/tcp`) **só** para quem administra |
 | Rede privada | Por padrão a stack só aceita IP interno: veja [Segurança](seguranca.md#rede-privada). Endereço público depende de uma opção com alerta: [IP público](seguranca.md#ip-publico) |
 | IPv6 (opcional) | De fábrica a stack fica só em IPv4. Para publicar o FTP e o painel também em IPv6, o servidor precisa de Docker Engine 27 ou mais novo e do IPv6 ligado no sistema: [IPv6](configuracao.md#ipv6) |
 | Pasta para os dados | O padrão é `/srv/allsafe-ftp-stack`, com `data`, `backups` e `tmp` dentro. Quem instala sem ser root cria a pasta uma vez: `sudo install -d -o "$USER" /srv/allsafe-ftp-stack`. Outro lugar: `DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR` em [Configuração](configuracao.md#pastas-e-nomes) |
@@ -126,7 +126,7 @@ chmod 600 .secrets/ftp-usuario-inicial-senha.txt
 
 ```text
 Pronto: FTP, painel e nginx no ar (healthy), perfil 'small'.
-FTP:    127.0.0.1:21, TLS explícito obrigatório no login, modo passivo 30000-30049
+FTP:    127.0.0.1:21, TLS explícito obrigatório no login, modo passivo 30000-30099
         usuário 'transfer', senha no arquivo ./.secrets/ftp-usuario-inicial-senha.txt
 Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede privada, atrás de firewall)
         usuário 'admin', senha inicial no arquivo ./.secrets/painel-admin-inicial-senha.txt

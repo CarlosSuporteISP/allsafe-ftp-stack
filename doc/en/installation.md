@@ -22,6 +22,7 @@ flowchart LR
 
     usuario --> deploy --> stack --> valida --> fim
 ```
+
 <sub>Level 1 · Diagram · [source](diagrams/)</sub>
 
 **Sequence:** User ➜ `deploy.sh` (creates the `.env`, generates the passwords and starts) ➜ Docker Compose (FTP, panel and nginx) ➜ `validate.sh` ➜ FTP and panel ready
@@ -45,8 +46,8 @@ flowchart LR
 |---|---|
 | Docker Engine with Docker Compose v2 or newer | `docker compose version` must answer |
 | CPU and memory for the profile | `small` asks for 1 CPU and 256 MB; `extended`, 16 CPUs and 4 GB. `deploy.sh` checks and refuses the profile larger than the server: [Profiles](profiles.md#o-servidor-aguenta) |
-| One dedicated IP for the FTP | Do not share the IP with other services; passive mode opens from 50 to 1600 ports, depending on the profile |
-| Firewall on the host | Allow `21/tcp` and the passive range of the profile (`30000-30049/tcp` on `small`) **only** for the management networks of the devices, and the panel port (`8443/tcp`) **only** for whoever administers |
+| One dedicated IP for the FTP | Do not share the IP with other services; passive mode opens from 100 to 2400 ports, depending on the profile |
+| Firewall on the host | Allow `21/tcp` and the passive range of the profile (`30000-30099/tcp` on `small`) **only** for the management networks of the devices, and the panel port (`8443/tcp`) **only** for whoever administers |
 | Private network | By default the stack only accepts an internal IP: see [Security](security.md#rede-privada). A public address depends on an option with a warning: [Public IP](security.md#ip-publico) |
 | IPv6 (optional) | Out of the box the stack stays on IPv4 only. To publish the FTP and the panel on IPv6 too, the server needs Docker Engine 27 or newer and IPv6 turned on in the system: [IPv6](configuration.md#ipv6) |
 | Folder for the data | The default is `/srv/allsafe-ftp-stack`, with `data`, `backups` and `tmp` inside. Whoever installs without being root creates the folder once: `sudo install -d -o "$USER" /srv/allsafe-ftp-stack`. Another place: `DATA_DIR`, `BACKUP_DIR` and `TEMP_DIR` in [Configuration](configuration.md#pastas-e-nomes) |
@@ -125,7 +126,7 @@ chmod 600 .secrets/ftp-usuario-inicial-senha.txt
 
 ```text
 Pronto: FTP, painel e nginx no ar (healthy), perfil 'small'.
-FTP:    127.0.0.1:21, TLS explícito obrigatório no login, modo passivo 30000-30049
+FTP:    127.0.0.1:21, TLS explícito obrigatório no login, modo passivo 30000-30099
         usuário 'transfer', senha no arquivo ./.secrets/ftp-usuario-inicial-senha.txt
 Painel: https://127.0.0.1:8443  (pelo nginx; certificado autoassinado; rede privada, atrás de firewall)
         usuário 'admin', senha inicial no arquivo ./.secrets/painel-admin-inicial-senha.txt
@@ -194,7 +195,7 @@ Manual test with a client (**explicit** FTP over TLS, passive mode):
 
 ```bash
 # lftp uses explicit FTPS by default
-lftp -u "$FTP_USER" -e 'set ssl:verify-certificate no; ls; bye' ftp://SEU_IP
+lftp -u "$FTP_USER" -e 'set ssl:verify-certificate no; ls; bye' ftp://YOUR_IP
 ```
 
 **Expected result:** `lftp` asks for the password and lists the user folder, empty the first time.

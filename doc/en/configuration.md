@@ -23,6 +23,7 @@ flowchart LR
 
     perfil --> deploy --> env --> compose --> ftp --> fim
 ```
+
 <sub>Level 1 · Diagram · [source](diagrams/)</sub>
 
 **Sequence:** `profiles/medium.env` ➜ `deploy.sh --size medium` (writes the limits to the `.env`) ➜ `.env` ➜ Docker Compose ➜ Pure-FTPd (`allsafe-ftp`) ➜ limits applied
@@ -51,7 +52,7 @@ FTP_BIND_IP=192.168.10.20
 FTP_PASSIVE_IP=192.168.10.20
 FTP_PORT=21
 FTP_PASSIVE_PORT_START=30000
-FTP_PASSIVE_PORT_END=30049
+FTP_PASSIVE_PORT_END=30099
 FTP_USER=backup-rede
 FTP_TLS_MODE=2
 FTP_CERT_CN=ftp.exemplo.com.br
@@ -122,7 +123,7 @@ For a **second instance** on the same host, change the five names, the three ima
 | `FTP_PORT` | Control port published on the host (mapped to `2121` in the container) | `1` to `65535` | `21` |
 | `FTP_PASSIVE_IP` | IP that the server **announces** to the client in passive mode (`PASV` reply): the **internal** IP through which the devices reach the server (note below) | Private IP, reachable by the client; public IP, only with `REDE_PERMITIR_IP_PUBLICO=sim` | `127.0.0.1` |
 | `FTP_PASSIVE_PORT_START` | Start of the range of data ports (passive mode) | `1024` to `65535`, less than or equal to the end | `30000` |
-| `FTP_PASSIVE_PORT_END` | End of the passive range. Number of ports greater than or equal to `FTP_MAX_CLIENTS` | `1024` to `65535`, greater than or equal to the start | `30049` |
+| `FTP_PASSIVE_PORT_END` | End of the passive range. Number of ports of at least twice `FTP_MAX_CLIENTS`: Pure-FTPd accepts at most half of the passive ports in simultaneous sessions | `1024` to `65535`, greater than or equal to the start | `30099` |
 
 > 🧱 **Private network:** by default only `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` and `192.168.0.0/16` are accepted. [`deploy.sh`](../../deploy.sh) and the container stop with `não é IP privado` for any other value ([`scripts/rede-privada.sh`](../../scripts/rede-privada.sh)). In IPv6 the rule is the same, with `::1` and the unique local range (`fc00::/7`): [IPv6](#ipv6).
 
@@ -218,7 +219,7 @@ Replacing the self-signed certificate with a real one: [Operation](operation.md#
 
 | Variable | What it is for | Values | Default |
 |---|---|---|---|
-| `FTP_MAX_CLIENTS` | Maximum of simultaneous connections (option `-c`). Align it with the size of the passive range. It also sets the cost of the stored password of each FTP user: [Security](security.md#custo-das-senhas) | integer greater than zero | `50` |
+| `FTP_MAX_CLIENTS` | Maximum of simultaneous connections (option `-c`). Keep the passive range at no less than twice this value. It also sets the cost of the stored password of each FTP user: [Security](security.md#custo-das-senhas) | integer greater than zero | `50` |
 | `FTP_MAX_CLIENTS_PER_IP` | Maximum of connections per source IP (option `-C`) | integer greater than zero | `8` |
 | `FTP_BLOQUEIO_TENTATIVAS` | Blocking by attempts: how many wrong passwords coming from the same address block the user for that address. It is the default of the stack; the limit of each user is adjusted in the panel: [Panel](panel.md#limites) | `0` to `100`; `0` turns it off | `5` |
 | `FTP_BLOQUEIO_MINUTOS` | Minutes that the block lasts. It is also the time in which the wrong passwords add up: [Security](security.md#bloqueio-por-tentativa) | `1` to `1440` | `15` |

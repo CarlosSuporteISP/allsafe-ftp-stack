@@ -39,7 +39,7 @@ die() { echo "ERRO: $*" >&2; exit 1; }
 uso_invalido() { echo "$*" >&2; usage >&2; exit 64; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --size) size="${2:?Informe o perfil}"; shift 2 ;;
+    --size) [[ -n "${2:-}" ]] || uso_invalido "Informe o perfil depois de --size."; size="$2"; shift 2 ;;
     --check-only) check_only=true; shift ;;
     --atualizar) atualizar=true; shift ;;
     --remover) remover=true; shift ;;
@@ -340,6 +340,17 @@ aviso_tls() {
   echo "       lidos por quem estiver na mesma rede. Use só para equipamento antigo sem suporte a TLS, em rede interna"
   echo "       isolada, com o firewall liberando só esses equipamentos, e volte para FTP_TLS_MODE=2 assim que puder."
 }
+# O Pure-FTPd aceita no máximo metade das portas passivas em sessões ao mesmo tempo, mesmo com FTP_MAX_CLIENTS maior.
+aviso_sessoes() {
+  local clientes inicio fim portas
+  clientes="$(do_perfil FTP_MAX_CLIENTS 50)"; inicio="$(do_perfil FTP_PASSIVE_PORT_START 30000)"; fim="$(do_perfil FTP_PASSIVE_PORT_END 30099)"
+  [[ "$clientes" =~ ^[0-9]{1,5}$ && "$inicio" =~ ^[0-9]{1,5}$ && "$fim" =~ ^[0-9]{1,5}$ ]] || return 0
+  portas=$(( fim - inicio + 1 ))
+  (( clientes * 2 > portas )) || return 0
+  echo "AVISO: FTP_MAX_CLIENTS=$clientes com $portas portas passivas: o FTP aceita só $(( portas / 2 )) sessões ao mesmo tempo,"
+  echo "       metade das portas. Para chegar a $clientes, amplie a faixa até FTP_PASSIVE_PORT_END=$(( inicio + clientes * 2 - 1 ))"
+  echo "       (e no firewall), ou rode ./deploy.sh --size <perfil>, que já traz a faixa certa."
+}
 painel_cn="$(env_valor PAINEL_CERT_CN)"
 if [[ "$painel_cn" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   exigir_ip PAINEL_CERT_CN "$painel_cn" || exit 1
@@ -373,6 +384,7 @@ if [[ "$check_only" == true ]]; then
   fi
   echo "OK: perfil '$perfil_nome', $rede_texto$ipv6_texto, recursos do servidor e compose validados; nada foi alterado."
   aviso_tls
+  aviso_sessoes
   aviso_ip_publico
   aviso_proxy
   exit 0
@@ -435,7 +447,7 @@ if command -v ss >/dev/null 2>&1; then
   porta_em_uso "$ftp_ip" "$(env_valor FTP_PORT 21)" && ocupadas+=("$ftp_ip:$(env_valor FTP_PORT 21)")
   porta_em_uso "$painel_ip" "$(env_valor PAINEL_PORT 8443)" && ocupadas+=("$painel_ip:$(env_valor PAINEL_PORT 8443)")
   passiva_inicio="$(env_valor FTP_PASSIVE_PORT_START 30000)"
-  passiva_fim="$(env_valor FTP_PASSIVE_PORT_END 30049)"
+  passiva_fim="$(env_valor FTP_PASSIVE_PORT_END 30099)"
   for ((porta = passiva_inicio; porta <= passiva_fim; porta++)); do
     porta_em_uso "$ftp_ip" "$porta" && ocupadas+=("$ftp_ip:$porta")
   done
@@ -455,7 +467,7 @@ fi
 
 # Pastas dos dados (bind mount). O container ajusta dono e modo de cada uma ao subir.
 # O padrão fica em /srv, onde só o root grava: a pasta de cima é criada uma vez para quem instala.
-mkdir -p "$data_dir/dados" "$data_dir/auth" "$data_dir/certs" "$data_dir/painel" "$data_dir/nginx" \
+mkdir -p "$data_dir/dados" "$data_dir/auth" "$data_dir/certs" "$data_dir/painel" "$data_dir/nginx" 2>/dev/null \
   || die "não foi possível criar as pastas em $data_dir. Crie a pasta de cima uma vez para o seu usuário (sudo install -d -o $(id -un) $(dirname -- "$data_dir")) ou aponte DATA_DIR, BACKUP_DIR e TEMP_DIR para outro lugar em $env_file."
 
 # Senha do usuário inicial: gerada forte na primeira execução; nunca regravada se já existe.
@@ -585,7 +597,7 @@ chmod 0600 "$chave_publica"
 
 # Sobe e espera os três containers ficarem healthy; só então informa onde acessar. O Docker publica
 # as portas passivas uma a uma: nos perfis grandes a subida leva minutos, e a espera acompanha.
-portas_passivas=$(( $(env_valor FTP_PASSIVE_PORT_END 30049) - $(env_valor FTP_PASSIVE_PORT_START 30000) + 1 ))
+portas_passivas=$(( $(env_valor FTP_PASSIVE_PORT_END 30099) - $(env_valor FTP_PASSIVE_PORT_START 30000) + 1 ))
 if (( portas_passivas > 400 )); then
   echo "Publicando $portas_passivas portas passivas: a subida pode levar alguns minutos."
 fi
@@ -617,7 +629,7 @@ compose ps
 ftp_ip="$(env_valor FTP_BIND_IP 127.0.0.1)"
 echo
 echo "Pronto: FTP, painel e nginx no ar (healthy), perfil '$(env_valor FTP_PROFILE small)'."
-echo "FTP:    $ftp_ip:$(env_valor FTP_PORT 21), $tls_texto, modo passivo $(env_valor FTP_PASSIVE_PORT_START 30000)-$(env_valor FTP_PASSIVE_PORT_END 30049)"
+echo "FTP:    $ftp_ip:$(env_valor FTP_PORT 21), $tls_texto, modo passivo $(env_valor FTP_PASSIVE_PORT_START 30000)-$(env_valor FTP_PASSIVE_PORT_END 30099)"
 if rede_ipv6; then echo "        e em IPv6: [$(env_valor FTP_BIND_IPV6 ::1)]:$(env_valor FTP_PORT 21), mesma faixa passiva"; fi
 [[ "$tls_por_usuario" != sim ]] || echo "        equipamento sem suporte a TLS: o administrador dispensa o usuário dele na aba Usuários do painel"
 ftp_usuario="$(env_valor FTP_USER transfer)"
@@ -642,6 +654,7 @@ echo "Segredos: $secrets_dir/LEIAME.txt diz para que serve cada arquivo."
 echo "Remover: ./deploy.sh --remover  (os dados ficam em $data_dir)"
 aviso_contato
 aviso_tls
+aviso_sessoes
 aviso_dispensados
 aviso_ip_publico
 aviso_proxy

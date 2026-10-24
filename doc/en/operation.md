@@ -23,6 +23,7 @@ flowchart LR
 
     usuario --> manage --> interno --> puredb --> pasta --> fim
 ```
+
 <sub>Level 1 · Diagram · [source](diagrams/)</sub>
 
 **Sequence:** User ➜ `manage-user.sh` ➜ `allsafe-ftp-user` ➜ PureDB ➜ `/data` ➜ account ready

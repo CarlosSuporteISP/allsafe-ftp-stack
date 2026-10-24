@@ -23,6 +23,7 @@ flowchart LR
 
     usuario --> host --> compose --> interno --> ftp --> fim
 ```
+
 <sub>Level 1 · Diagram · [source](diagrams/)</sub>
 
 **Sequence:** User ➜ `deploy.sh`, `manage-user.sh` and `validate.sh`, on the host ➜ Docker Compose ➜ entrypoints and `allsafe-ftp-user` (inside the containers) ➜ Pure-FTPd (`allsafe-ftp`) ➜ service running
@@ -88,7 +89,7 @@ The [`scripts/`](../../scripts/) folder has what runs outside the containers: on
 | `--sim` | With `--apagar-dados`: skips the confirmation (required when there is no terminal) |
 | `-h`, `--help` | Shows the usage |
 
-**Expected result:** the command only ends with `allsafe-ftp`, `allsafe-ftp-painel` and `allsafe-ftp-nginx` in `healthy` and closes with `Pronto: FTP, painel e nginx no ar (healthy), perfil '<perfil>'.`, the addresses of the FTP and of the panel, the TLS mode of the FTP and the file where each password is (the password itself never appears). With `FTP_TLS_MODE` at `0` or `1`, the last thing on the screen is the `AVISO` of FTP without encryption: [Security](security.md#ftp-sem-tls). With `FTP_TLS_EXCECOES=sim`, the FTP line ends in `com exceção por usuário` and the `AVISO` is that of the exception: [Security](security.md#tls-por-usuario). With `--remover`: `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` With `--check-only`: `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.` With `REDE_PERMITIR_IP_PUBLICO=sim`, the summary has `endereço público aceito` in place of `rede privada` and the last thing on the screen is the `ALERTA` of public address: [Security](security.md#ip-publico).
+**Expected result:** the command only ends with `allsafe-ftp`, `allsafe-ftp-painel` and `allsafe-ftp-nginx` in `healthy` and closes with `Pronto: FTP, painel e nginx no ar (healthy), perfil '<perfil>'.`, the addresses of the FTP and of the panel, the TLS mode of the FTP and the file where each password is (the password itself never appears). With `FTP_TLS_MODE` at `0` or `1`, the last thing on the screen is the `AVISO` of FTP without encryption: [Security](security.md#ftp-sem-tls). With `FTP_TLS_EXCECOES=sim`, the FTP line ends in `com exceção por usuário` and the `AVISO` is that of the exception: [Security](security.md#tls-por-usuario). With a passive range shorter than twice `FTP_MAX_CLIENTS`, the summary and `--check-only` also bring the `AVISO` of sessions (`AVISO: FTP_MAX_CLIENTS=<n> com <portas> portas passivas: o FTP aceita só <metade> sessões ao mesmo tempo, ...`): [Profiles](profiles.md#faixa-passiva-e-firewall). With `--remover`: `Removidos os containers e a rede. Os dados continuam em <DATA_DIR>.` With `--check-only`: `OK: perfil '<perfil>', rede privada, recursos do servidor e compose validados; nada foi alterado.` With `REDE_PERMITIR_IP_PUBLICO=sim`, the summary has `endereço público aceito` in place of `rede privada` and the last thing on the screen is the `ALERTA` of public address: [Security](security.md#ip-publico).
 
 <details>
 <summary>Technical detail — behaviour and exit codes</summary>
@@ -114,11 +115,12 @@ The [`scripts/`](../../scripts/) folder has what runs outside the containers: on
 - It checks `PAINEL_AVISO_EXPOSICAO` before acting: a value other than `sim` and `nao` stops with `ERRO: PAINEL_AVISO_EXPOSICAO deve ser 'sim' ou 'nao'`.
 - It checks `PAINEL_ADMIN_USER` before acting: a name outside the rule stops with `ERRO: PAINEL_ADMIN_USER inválido em .env: ...` and code `1`. In the summary, it shows the user and the file of the initial password while that file exists; afterwards, `usuário e senha: os definidos na aba Usuários ou com ./scripts/painel-senha.sh`.
 - It checks `SEGURANCA_CONTATO_EMAIL` before acting: filled in with something that is not a single e-mail address, it stops with `ERRO: SEGURANCA_CONTATO_EMAIL inválido em .env: um endereço de e-mail só, como seguranca@exemplo.com.br, ou vazio.` and code `1`. Empty is accepted: the `security.txt` is not published.
+- `--size` without the name of the profile: `Informe o perfil depois de --size.`, the usage and code `64`.
 - Unknown option or profile that does not exist: message `Opção inválida: ...` or `ERRO: perfil inexistente: ...` and code `64`.
 - Compose is always called only with `--env-file .env`. The profile is not a second file at startup: `--size` writes its values to the `.env`, so a direct `docker compose up -d` keeps the same limits.
 - Invalid combination (`--remover` with `--size`, `--apagar-dados` without `--remover`, `--sim` without `--apagar-dados`): `Opção inválida: ...`, the usage and code `64`.
 - `--apagar-dados` deletes the folders through a throwaway container without network (the files belong to the user of the container, not to that of the host) and only accepts a `DATA_DIR` with at least two folder levels.
-- It builds the three images with `docker compose build` (`build --no-cache` with `--atualizar`), starts with `docker compose up -d --wait` and ends showing `docker compose ps` and the summary. The waiting time is 180 s plus a quarter of a second per passive port (192 s on `small`, 580 s on `extended`), because Docker publishes the ports one by one; above 400 ports, it says `Publicando <n> portas passivas: a subida pode levar alguns minutos.` If any container is not `healthy` in time: `ERRO: os containers não ficaram healthy. Veja o motivo com: docker compose logs --tail 50 ftp painel nginx`.
+- It builds the three images with `docker compose build` (`build --no-cache` with `--atualizar`), starts with `docker compose up -d --wait` and ends showing `docker compose ps` and the summary. The waiting time is 180 s plus a quarter of a second per passive port (205 s on `small`, 780 s on `extended`), because Docker publishes the ports one by one; above 400 ports, it says `Publicando <n> portas passivas: a subida pode levar alguns minutos.` If any container is not `healthy` in time: `ERRO: os containers não ficaram healthy. Veja o motivo com: docker compose logs --tail 50 ftp painel nginx`.
 
 </details>
 
@@ -178,10 +180,10 @@ Recovers access to the panel from the host. Day to day, user and password are ch
 ```bash
 ./scripts/painel-senha.sh                           # asks for the new password twice, without echoing
 ./scripts/painel-senha.sh --gerar                   # creates a strong password and shows it only once
-./scripts/painel-senha.sh --usuario NOME --gerar    # another administrator; if NOME does not exist, it is created
+./scripts/painel-senha.sh --usuario NAME --gerar    # another administrator; if NAME does not exist, it is created
 ```
 
-**Expected result:** `Administrador admin com a senha trocada; painel reiniciado e sessões abertas encerradas.` For a new name, `Administrador NOME criado; ...`.
+**Expected result:** `Administrador admin com a senha trocada; painel reiniciado e sessões abertas encerradas.` For a new name, `Administrador NAME criado; ...`.
 
 Without `--usuario`, the administrator is the one in `PAINEL_ADMIN_USER`. The password has to have at least 12 characters and only the hash is written. When to use it: [Web panel](panel.md#senha).
 
@@ -191,7 +193,7 @@ Without `--usuario`, the administrator is the one in `PAINEL_ADMIN_USER`. The pa
 - It reads `SECRETS_DIR`, `DATA_DIR`, `PAINEL_IMAGE` and `PAINEL_ADMIN_USER` from the `.env` (or from the file in `ENV_FILE`), without executing the file.
 - The password can also come through standard input: `./scripts/painel-senha.sh < arquivo`.
 - The `scrypt` hash is calculated **inside the panel image**, in a throwaway container without network, with the root read-only and without capabilities (`docker run --rm -i --network none --read-only --cap-drop ALL`). The host does not need Python.
-- The one that writes the administrators file is the panel: the script hands the hash through standard input to `servidor.py --administrador NOME`, in the container that is running (`docker compose exec`) or, with the panel stopped, in a single-use container, without the other services (`docker compose run --rm --no-deps`). The change stays in the audit log as `admin_definido_no_host`.
+- The one that writes the administrators file is the panel: the script hands the hash through standard input to `servidor.py --administrador NAME`, in the container that is running (`docker compose exec`) or, with the panel stopped, in a single-use container, without the other services (`docker compose run --rm --no-deps`). The change stays in the audit log as `admin_definido_no_host`.
 - With the panel running, it restarts the `painel` service (closes all sessions and resets the block by attempts). With the panel stopped, it closes with `...; vale na próxima subida do painel.`
 - When the administrator is the one in `PAINEL_ADMIN_USER`, it also rewrites the hash of `.secrets/painel-admin-inicial-senha-hash.txt`, over the same file, and deletes `.secrets/painel-admin-inicial-senha.txt`. For another administrator, the `.secrets/` folder is not touched.
 - `--inicial` is for the use of `deploy.sh`: it writes only the hash of the initial password, before the first start, restarts nothing and keeps `painel-admin-inicial-senha.txt`.
@@ -376,7 +378,7 @@ Runs at every start of the container. It has no parameters: everything comes fro
 5. With per-user TLS in effect, starts the observer, which checks the list of exempt users every second. When it goes from empty to filled, or the opposite, only the `pure-ftpd` process that listens on the port is replaced: the sessions in progress continue and the container does not restart.
 6. Keeps watching the processes: if one of them exits for another reason, it ends the container, and Docker starts it again.
 
-**Expected result:** the lines `vigia: pronto: 5 senhas erradas do mesmo endereço bloqueiam o usuário para ele por 15 min; ...` and `FTP pronto em 2121/tcp; TLS=2; TLS por usuário: nenhum dispensado, sessão sem TLS recusada antes da senha; passivo=30000-30049` in the container log; with one exempt user, `FTP pronto em 2121/tcp; TLS=2 com exceção por usuário (1 dispensado(s) do TLS); passivo=30000-30049`. At each change, the line `TLS por usuário: a lista dos dispensados mudou; o FTP troca o modo de entrada sem derrubar as sessões em andamento.` comes before a new `FTP pronto`. With the option without effect, the startup says `TLS por usuário sem efeito: só vale com FTP_TLS_MODE=2; está <modo>.` or `TLS por usuário sem efeito: não vale com REDE_PERMITIR_IP_PUBLICO=sim (...)`, and goes on.
+**Expected result:** the lines `vigia: pronto: 5 senhas erradas do mesmo endereço bloqueiam o usuário para ele por 15 min; ...` and `FTP pronto em 2121/tcp; TLS=2; TLS por usuário: nenhum dispensado, sessão sem TLS recusada antes da senha; passivo=30000-30099` in the container log; with one exempt user, `FTP pronto em 2121/tcp; TLS=2 com exceção por usuário (1 dispensado(s) do TLS); passivo=30000-30099`. At each change, the line `TLS por usuário: a lista dos dispensados mudou; o FTP troca o modo de entrada sem derrubar as sessões em andamento.` comes before a new `FTP pronto`. With the option without effect, the startup says `TLS por usuário sem efeito: só vale com FTP_TLS_MODE=2; está <modo>.` or `TLS por usuário sem efeito: não vale com REDE_PERMITIR_IP_PUBLICO=sim (...)`, and goes on.
 
 <details>
 <summary>Technical detail — process 1 and failure messages</summary>

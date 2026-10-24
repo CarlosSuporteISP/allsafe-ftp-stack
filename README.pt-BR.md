@@ -12,7 +12,7 @@
 
 Desenvolvido pela [allsafe.inf.br](https://allsafe.inf.br) · [github.com/allsafe-inf](https://github.com/allsafe-inf)
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.16.0-blue)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.17.0-blue)
 ![Status](https://img.shields.io/badge/status-est%C3%A1vel-brightgreen)
 ![Suporte](https://img.shields.io/badge/suporte-LTS-blue)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Apache--2.0-blue)](LICENSE)
@@ -52,14 +52,14 @@ flowchart LR
 
 > 🧱 **Uso só em rede privada.** Por padrão, esta stack é para rede interna: escuta **apenas em IP privado** (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` ou `127.0.0.1`), **atrás de firewall**, e não deve ser publicada na internet nem receber redirecionamento de porta da borda. Endereço público só entra por escolha de quem instala, com `REDE_PERMITIR_IP_PUBLICO=sim` e firewall no servidor: leia antes o [alerta](doc/pt-BR/seguranca.md#ip-publico). Detalhes em [doc/pt-BR/seguranca.md](doc/pt-BR/seguranca.md#rede-privada).
 
-> 📌 **Repositório oficial:** [github.com/allsafe-inf/allsafe-ftp-stack](https://github.com/allsafe-inf/allsafe-ftp-stack). As versões saem nele primeiro, e é nele que issues e pull requests são recebidos. A cópia em `github.com/CarlosSuporteISP/allsafe-ftp-stack` é um espelho, atualizado depois.
+> **Repositório oficial:** [github.com/allsafe-inf/allsafe-ftp-stack](https://github.com/allsafe-inf/allsafe-ftp-stack). As versões saem nele primeiro, e é nele que issues e pull requests são recebidos. A cópia em `github.com/CarlosSuporteISP/allsafe-ftp-stack` é um espelho, atualizado depois.
 
 ---
 
 <details>
 <summary>Sumário — clique para expandir</summary>
 
-[O que é](#o-que-e) · [Destaques](#destaques) · [Imagens](#imagens) · [Instalação rápida](#instalacao) · [Como funciona](#como-funciona) · [Arquitetura](#arquitetura) · [Tecnologias](#tecnologias) · [Portas e binds](#portas) · [Configuração](#configuracao) · [Segurança](#seguranca) · [Testes](#testes) · [Estrutura de arquivos](#arquivos) · [Documentação](#documentacao) · [Plano](#plano) · [Versão](#versao) · [Projetos relacionados](#relacionados) · [Créditos](#creditos) · [Licença](#licenca)
+[O que é](#o-que-e) · [Destaques](#destaques) · [Imagens](#imagens) · [Instalação rápida](#instalacao) · [Instalação avançada](#instalacao-avancada) · [Como funciona](#como-funciona) · [Arquitetura](#arquitetura) · [Tecnologias](#tecnologias) · [Portas e binds](#portas) · [Configuração](#configuracao) · [Segurança](#seguranca) · [Testes](#testes) · [Estrutura de arquivos](#arquivos) · [Documentação](#documentacao) · [Plano](#plano) · [Versão](#versao) · [Projetos relacionados](#relacionados) · [Créditos](#creditos) · [Licença](#licenca)
 
 </details>
 
@@ -77,7 +77,7 @@ São **três containers**: o servidor FTP, o painel e o **nginx**, a única port
 |---|---|
 | **Para quê** | Receber por FTPS backups e arquivos de equipamentos de rede, câmeras, empresas e pessoas, e consultar tudo pelo navegador |
 | **Tecnologias** | Docker Compose · Debian 13 · Pure-FTPd · PureDB · OpenSSL · nginx · Bash · Python |
-| **Acesso** | Cliente FTP com **TLS explícito** (`AUTH TLS`) na porta `21/tcp`, modo passivo na faixa do perfil (`30000-30049/tcp` no `small`) · painel em `https://<IP privado>:8443`, pelo nginx |
+| **Acesso** | Cliente FTP com **TLS explícito** (`AUTH TLS`) na porta `21/tcp`, modo passivo na faixa do perfil (`30000-30099/tcp` no `small`) · painel em `https://<IP privado>:8443`, pelo nginx |
 | **Requisitos** | Docker Engine com Docker Compose v2 ou mais novo · CPU e memória do perfil escolhido (2 vCPU e 2 GB no `small`) · um IP **privado** dedicado · firewall no host liberando só a rede interna |
 
 > **Painel web:** só em rede interna, atrás de firewall, como o resto da stack. Ele recusa por código o endereço que não for privado. Como usar: [doc/pt-BR/painel.md](doc/pt-BR/painel.md).
@@ -206,6 +206,71 @@ Passo a passo comentado em [doc/pt-BR/instalacao.md](doc/pt-BR/instalacao.md).
 
 ---
 
+<a name="instalacao-avancada"></a>
+
+## 🧩 Instalação avançada
+
+Use quando a instalação rápida não basta: escolher o perfil de capacidade, definir a rede, ligar o IPv6, publicar só o painel por proxy ou túnel, ou guardar os dados fora de `/srv`.
+
+1. Clone o repositório:
+
+   ```bash
+   git clone https://github.com/allsafe-inf/allsafe-ftp-stack.git
+   cd allsafe-ftp-stack
+   ```
+
+2. Crie o `.env` para editar antes da primeira subida (opcional: sem ele, o `deploy.sh` cria um a partir do exemplo, com tudo em `127.0.0.1`):
+
+   ```bash
+   cp .env.example .env
+   chmod 600 .env
+   ```
+
+3. Ajuste no `.env` o que a sua rede pede: `FTP_BIND_IP`, `FTP_PASSIVE_IP` e `PAINEL_BIND_IP` (IPs privados) e, para guardar os dados em outro lugar, `DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR`.
+4. Valide o perfil escolhido, sem alterar nada:
+
+   ```bash
+   ./deploy.sh --check-only --size medium
+   ```
+
+5. Suba com o perfil (`small`, `medium`, `large`, `xlarge` ou `extended`); o perfil fica gravado no `.env`:
+
+   ```bash
+   ./deploy.sh --size medium
+   ```
+
+6. Confira os três serviços no ar:
+
+   ```bash
+   scripts/validate.sh --runtime
+   ```
+
+| Quero | Comando |
+|---|---|
+| Ver o que o perfil exige, sem subir nada | `./deploy.sh --check-only --size <perfil>` |
+| Trocar de perfil | `./deploy.sh --size <perfil>`; libere a faixa passiva nova no firewall |
+| Atualizar os pacotes das imagens | `./deploy.sh --atualizar` |
+| Remover, mantendo os dados | `./deploy.sh --remover` |
+| Remover e apagar os dados | `./deploy.sh --remover --apagar-dados` (pede para digitar `apagar`; `--sim` dispensa a confirmação) |
+| Recuperar o acesso ao painel | `./scripts/painel-senha.sh --gerar` (outro administrador: `--usuario NOME`) |
+| Guardar uma cópia de segurança | `./scripts/backup.sh`, que a grava cifrada; para voltar a ela, `./scripts/restaurar.sh <cópia>` |
+
+<details>
+<summary>Rede, IPv6, proxy e pastas — clique para expandir</summary>
+
+| Quero | No `.env` |
+|---|---|
+| Publicar também em IPv6 | `REDE_IPV6=sim`, com `FTP_BIND_IPV6` e `PAINEL_BIND_IPV6`; exige Docker Engine 27 ou mais novo: [IPv6](doc/pt-BR/configuracao.md#ipv6) |
+| Aceitar endereço público | `REDE_PERMITIR_IP_PUBLICO=sim`, com firewall no servidor: leia o [alerta](doc/pt-BR/seguranca.md#ip-publico) antes. As regras de rede ficam em [`scripts/rede-privada.sh`](scripts/rede-privada.sh) |
+| Publicar só o painel por proxy ou túnel | `PAINEL_PROXY_CONFIAVEL`: [alerta](doc/pt-BR/configuracao.md#painel-proxy-confiavel) |
+| Guardar dados, cópias e temporários fora de `/srv` | `DATA_DIR`, `BACKUP_DIR` e `TEMP_DIR`: [Pastas e nomes](doc/pt-BR/configuracao.md#pastas-e-nomes) |
+
+</details>
+
+Passo a passo completo em [doc/pt-BR/instalacao.md](doc/pt-BR/instalacao.md).
+
+---
+
 <a name="como-funciona"></a>
 
 ## 🔄 Como funciona
@@ -265,7 +330,7 @@ flowchart LR
 | 4 | usuário e senha conferem? ➜ PureDB | A conta é procurada no banco de usuários virtuais (`/auth/pureftpd.pdb`) |
 | 5a | usuário e senha conferem? ➜ sessão em chroot | Sim: a sessão abre presa na pasta do usuário |
 | 5b | usuário e senha conferem? ➜ conexão recusada | Não: `530 Login authentication failed`. No padrão, 5 senhas erradas do mesmo endereço em 15 minutos bloqueiam o usuário para aquele endereço por 15 minutos; o limite de cada usuário é ajustado no painel: [bloqueio por tentativa](doc/pt-BR/seguranca.md#bloqueio-por-tentativa). O endereço, IPv4 ou IPv6, que passa de 5 erros em 24 horas, com qualquer usuário, fica 120 dias sem entrar no FTP e no painel: [bloqueio por endereço](doc/pt-BR/seguranca.md#bloqueio-por-endereco) |
-| 6 | sessão em chroot ➜ `/data` | O arquivo sobe pelo canal de dados em modo passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
+| 6 | sessão em chroot ➜ `/data` | O arquivo sobe pelo canal de dados em modo passivo, na faixa do perfil (`30000-30099/tcp` no `small`) |
 | 7 | `/data` ➜ backup guardado | O arquivo fica gravado na pasta do usuário, dentro do volume |
 
 **Apoio**
@@ -289,7 +354,7 @@ Como o nginx e o painel decidem se atendem um pedido, em dois fluxogramas: da ab
 %%{init: {"theme": "dark"}}%%
 flowchart LR
     subgraph QUEM["Quem usa"]
-        usuario@{ shape: person, label: "Usuário<br>navegador na rede interna" }
+        usuario@{ shape: person, label: "Usuário<br>navegador na<br>rede interna" }
     end
     subgraph FRENTE["Frente web"]
         nginx@{ shape: rect, label: "nginx<br>allsafe-ftp-nginx, HTTPS" }
@@ -298,12 +363,9 @@ flowchart LR
     subgraph ENTRADA["Entrada"]
         painel@{ shape: rect, label: "Painel web<br>allsafe-ftp-painel, soquete Unix" }
         senha@{ shape: diam, label: "usuário e senha<br>conferem?" }
-        hash@{ shape: doc, label: "administradores<br>nome e hash da senha" }
-        ftp@{ shape: rect, label: "Pure-FTPd<br>allsafe-ftp, rede interna" }
         fator@{ shape: diam, label: "conta já tem<br>segundo fator?" }
         cadastro@{ shape: rect, label: "cadastro do segundo fator<br>código QR e chave nova" }
         codigo@{ shape: diam, label: "código do aplicativo<br>confere?" }
-        chave@{ shape: doc, label: "segundo-fator<br>chave de cada conta" }
     end
     subgraph SESSAO["Sessão"]
         sessao@{ shape: rect, label: "sessão de 4 h<br>cookie e token CSRF" }
@@ -330,9 +392,6 @@ flowchart LR
     sessao -- "9 · cada pedido passa pelas conferências" --> pedidos
     pedidos -- "10a · aceito" --> atendido
     pedidos -- "10b · recusado" --> recusa
-    painel -. "administrador: compara com o hash" .-> hash
-    painel -. "outro nome: o servidor FTP confere a senha" .-> ftp
-    painel -. "segundo fator: grava a chave no cadastro e calcula o código" .-> chave
 ```
 
 <sub>Nível 2 · Fluxograma · [fonte](doc/pt-BR/diagramas/)</sub>
@@ -491,7 +550,7 @@ flowchart LR
 | 4 | nginx ➜ Painel web | O pedido aceito é repassado ao painel pelo soquete Unix, com o endereço do cliente |
 | 5 | Painel web ➜ `DATA_DIR/auth` | O painel cria, edita ou remove o usuário no PureDB |
 | 6 | Equipamento de rede ➜ Pure-FTPd | O cliente conecta por FTPS em `21/tcp`, mapeada para `2121/tcp` |
-| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo, na faixa do perfil (`30000-30049/tcp` no `small`) |
+| 7 | Pure-FTPd ➜ `DATA_DIR/dados` | O arquivo é gravado pelo canal passivo, na faixa do perfil (`30000-30099/tcp` no `small`) |
 | 8 | `DATA_DIR/dados` ➜ backup guardado | O arquivo fica na pasta do usuário, no host |
 
 **Apoio**
@@ -523,7 +582,7 @@ O mapa mostra as peças e os volumes. A configuração, os segredos e o registro
 
 | Peça | Papel | Porta | Dados em |
 |---|---|---|---|
-| Container `allsafe-ftp` (serviço `ftp`) | Pure-FTPd com FTPS, `chroot` e limites | `21/tcp` ➜ `2121/tcp` e a faixa passiva do perfil (`30000-30049/tcp` no `small`) | — |
+| Container `allsafe-ftp` (serviço `ftp`) | Pure-FTPd com FTPS, `chroot` e limites | `21/tcp` ➜ `2121/tcp` e a faixa passiva do perfil (`30000-30099/tcp` no `small`) | — |
 | Container `allsafe-ftp-painel` (serviço `painel`) | Painel web que administra os usuários do FTP; atende só o nginx, por soquete Unix | nenhuma | — |
 | Container `allsafe-ftp-nginx` (serviço `nginx`) | Frente web do painel: HTTPS, redes permitidas, limite de pedidos e arquivos estáticos | `8443/tcp` ➜ `8443/tcp` | — |
 | Pasta `DATA_DIR/auth` | Banco PureDB dos usuários virtuais, dividido pelo FTP e pelo painel | — | `/auth` |
@@ -551,7 +610,7 @@ Detalhe completo, com o modelo da subida, em [doc/pt-BR/arquitetura.md](doc/pt-B
 
 ## 🛠️ Tecnologias
 
-Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python e Bash, com a versão real conferida no host onde a stack foi validada.
+Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python, Perl, rclone, age e Bash, com a versão real conferida no host onde a stack foi validada.
 
 <details>
 <summary>Tecnologias, com nome e versão — clique para expandir</summary>
@@ -567,6 +626,9 @@ Docker Compose, Debian 13, Pure-FTPd, OpenSSL, nginx, Python e Bash, com a vers�
 | nginx | 1.26.3 (pacote Debian `nginx`) | Frente web do painel: HTTPS, redes permitidas, limite de pedidos e arquivos estáticos |
 | Python | 3.13.5 (pacote Debian `python3`) | Painel web, só com a biblioteca padrão |
 | tini | 0.19.0 (`docker-init` do Docker Engine) | Processo 1 de cada container (`init: true`) |
+| Perl | 5.40.1 (`perl-base` do Debian 13, imagem do FTP) | Roda os ajudantes do FTP (`ftp/*.pl`): porteiro, vigia, área de entrada e endereços do bloqueio |
+| rclone | 1.75.2 (`ARG RCLONE` do [`Dockerfile`](Dockerfile)) | Envia os backups para um S3 ou outro remoto |
+| age | 1.2.1 (pacote Debian `age`, imagem do painel) | Criptografa as cópias de segurança |
 | Bash | 5.2 | Scripts do host e dos containers |
 
 </details>
@@ -608,10 +670,10 @@ FTP em `21/tcp` mais a faixa passiva do perfil; painel em `8443/tcp`, pelo nginx
 | Porta (host) | Protocolo | Bind padrão | Para que serve |
 |---|---|---|---|
 | `${FTP_PORT:-21}` | TCP | `${FTP_BIND_IP:-127.0.0.1}` | canal de controle FTP (mapeada para `:2121` no container) |
-| `30000-30049` | TCP | `${FTP_BIND_IP:-127.0.0.1}` | canal de dados em **modo passivo**; faixa do perfil `small` (50 portas = 50 clientes), até `30000-31599` no `extended` |
+| `30000-30099` | TCP | `${FTP_BIND_IP:-127.0.0.1}` | canal de dados em **modo passivo**; faixa do perfil `small` (100 portas para 50 sessões), até `30000-32399` no `extended` |
 | `${PAINEL_PORT:-8443}` | TCP | `${PAINEL_BIND_IP:-127.0.0.1}` | painel web, HTTPS; quem publica é o nginx (mapeada para `:8443` no container `allsafe-ftp-nginx`) |
 
-A faixa passiva é 1:1 entre host e container. Ao mudar `FTP_PASSIVE_PORT_*`, alinhe a quantidade de portas ao `FTP_MAX_CLIENTS`. O container do painel não publica porta: fala só com o nginx, por um soquete Unix.
+A faixa passiva é 1:1 entre host e container. Ao mudar `FTP_PASSIVE_PORT_*`, deixe a faixa com pelo menos o dobro de portas que `FTP_MAX_CLIENTS`. O container do painel não publica porta: fala só com o nginx, por um soquete Unix.
 
 </details>
 
@@ -681,7 +743,7 @@ O caminho mais seguro para cada decisão de quem instala, em fluxograma, está e
 | Conferir a instalação no ar | `./scripts/validate.sh --runtime` | o mesmo, mais `servico ftp: running, healthy`, igual para `painel` e `nginx`, e o usuário inicial no PureDB ou removido pelo administrador |
 | Rodar a bateria completa: funcional, segurança e rede | `./tests/testar.sh` | uma linha por caso e, no fim, `Bateria aprovada: nenhum desvio.` |
 
-A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 113 casos funcionais, 162 de segurança e 19 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
+A bateria sobe uma instância de teste separada, em `127.0.0.2`, e a remove ao terminar: a instalação em uso não é tocada. São 113 casos funcionais, 162 de segurança e 20 de rede, e nenhuma versão é publicada com desvio. O que a bateria de segurança tenta, alvo por alvo, está em [testes executados](doc/pt-BR/seguranca.md#testes-executados); as opções do script, em [Scripts](doc/pt-BR/scripts.md#testar).
 
 ---
 
@@ -702,6 +764,10 @@ Na raiz ficam o `compose.yaml`, o `Dockerfile` e os comandos do dia a dia (`depl
 | [`deploy.sh`](deploy.sh) | Instala, reaplica, atualiza ou remove a stack em um comando |
 | [`manage-user.sh`](manage-user.sh) | Atalho do host para `add` (com a pasta e o perfil, se quiser), `passwd`, `pasta`, `perfil`, `del` e `list` de usuários |
 | [`ftp/entrypoint.sh`](ftp/entrypoint.sh) | Prepara o usuário inicial e o certificado e executa o `pure-ftpd` |
+| [`ftp/entrada.pl`](ftp/entrada.pl) | Área de entrada do perfil só envio: a conta entra presa em `/data/.entrada/<usuario>` e cada arquivo que termina de chegar é movido para a pasta do usuário |
+| [`ftp/endereco.pl`](ftp/endereco.pl) | Escrita única de endereço e prefixo (IPv4 e IPv6) do bloqueio por endereço, a mesma do painel |
+| [`ftp/porteiro.pl`](ftp/porteiro.pl) | Porteiro chamado pelo `pure-authd` a cada entrada, antes da senha: decide se a sessão segue ou é recusada com `530` |
+| [`ftp/vigia.pl`](ftp/vigia.pl) | Vigia das entradas: conta as senhas erradas pelo syslog e cria o bloqueio que o porteiro aplica |
 | [`ftp/saude.sh`](ftp/saude.sh) | Healthcheck do FTP: abre a porta de controle e espera a saudação do servidor |
 | [`ftp/usuario.sh`](ftp/usuario.sh) | Gestão de usuários **dentro** dos containers (chamado pelo `manage-user.sh` e pelo painel) |
 | [`painel/servidor.py`](painel/servidor.py) | Painel web, em Python só com a biblioteca padrão, atrás do nginx: ponto de entrada, com os modos `--hash` e `--saude` |
@@ -777,7 +843,7 @@ O plano de criação e mudança da stack (fases, testes, evidências e progresso
 
 ## 🏷️ Versão
 
-**1.16.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
+**1.17.0**, registrada em [`VERSION`](VERSION). Mudanças por versão em [`CHANGELOG.md`](CHANGELOG.md). Cada versão publicada tem uma tag `vX.Y.Z` e uma Release no [repositório oficial](https://github.com/allsafe-inf/allsafe-ftp-stack/releases), o da empresa; o espelho na conta pessoal recebe a mesma versão em seguida.
 
 A versão avança a cada publicação, sempre no número do meio (`1.1.0`, `1.2.0`) ou no primeiro: o número de correção fica em zero. `0.x` foi a fase de construção; **a `1.0.0` é a primeira versão pronta para produção** e abre a linha de longo prazo (LTS) `1.x`. As versões foram renumeradas em 2026-10-11: o [`CHANGELOG.md`](CHANGELOG.md) traz o que mudou em cada uma e a tabela com os números de antes.
 
